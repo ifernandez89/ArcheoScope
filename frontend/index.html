@@ -1808,6 +1808,313 @@
         let selectionAreas = [];
         let currentSelectionArea = null;
 
+        // SISTEMA DE VALIDACIÓN CIENTÍFICA
+        function validateDetections(coordinates, analysisData) {
+            console.log('🔬 ===== INICIANDO VALIDACIÓN CIENTÍFICA =====');
+            
+            const lat = coordinates.lat;
+            const lng = coordinates.lng;
+            
+            // 1. VALIDACIÓN GEOGRÁFICA
+            const geoValidation = validateGeographicContext(lat, lng);
+            
+            // 2. VALIDACIÓN TÉCNICA
+            const techValidation = validateTechnicalCoherence(analysisData);
+            
+            // 3. VALIDACIÓN HISTÓRICA
+            const histValidation = validateHistoricalContext(lat, lng);
+            
+            // 4. CÁLCULO DE CONFIANZA GENERAL
+            const overallConfidence = calculateOverallConfidence(geoValidation, techValidation, histValidation);
+            
+            const validationReport = {
+                coordinates: { lat, lng },
+                geographic: geoValidation,
+                technical: techValidation,
+                historical: histValidation,
+                overallConfidence: overallConfidence,
+                recommendations: generateRecommendations(lat, lng, overallConfidence)
+            };
+            
+            console.log('📊 REPORTE DE VALIDACIÓN:', validationReport);
+            displayValidationReport(validationReport);
+            
+            return validationReport;
+        }
+
+        function validateGeographicContext(lat, lng) {
+            console.log(`🌍 Validando contexto geográfico: ${lat}, ${lng}`);
+            
+            // Identificar región geográfica
+            let region = 'Desconocida';
+            let plausibility = 'Media';
+            let context = '';
+            
+            // Bermudas
+            if (lat >= 32.0 && lat <= 32.5 && lng >= -65.0 && lng <= -64.5) {
+                region = 'Bermudas (Triángulo de las Bermudas)';
+                plausibility = 'Alta';
+                context = 'Archipiélago con rica historia naval y colonial británica desde 1609. Sitios arqueológicos conocidos incluyen St. George\'s (UNESCO) y Royal Naval Dockyard.';
+            }
+            // Mediterráneo (Roma, Grecia)
+            else if (lat >= 35.0 && lat <= 45.0 && lng >= 10.0 && lng <= 25.0) {
+                region = 'Mediterráneo (Roma/Grecia)';
+                plausibility = 'Muy Alta';
+                context = 'Región con densidad arqueológica extremadamente alta. Civilizaciones romana, griega y prehistóricas bien documentadas.';
+            }
+            // Mesoamérica
+            else if (lat >= 14.0 && lat <= 32.0 && lng >= -118.0 && lng <= -86.0) {
+                region = 'Mesoamérica';
+                plausibility = 'Muy Alta';
+                context = 'Región con civilizaciones maya, azteca, olmeca. Alta probabilidad de sitios arqueológicos no descubiertos.';
+            }
+            // Amazonía
+            else if (lat >= -10.0 && lat <= 5.0 && lng >= -75.0 && lng <= -50.0) {
+                region = 'Amazonía';
+                plausibility = 'Alta';
+                context = 'Región con creciente evidencia de civilizaciones precolombinas complejas. LiDAR ha revelado estructuras masivas.';
+            }
+            // Océanos
+            else if ((lat >= -90 && lat <= 90) && (lng >= -180 && lng <= 180)) {
+                if (Math.abs(lat) < 60) { // No polar
+                    region = 'Océano/Zona Marina';
+                    plausibility = 'Baja-Media';
+                    context = 'Posibles estructuras sumergidas, puertos antiguos, o artefactos en zona costera. Requiere validación adicional.';
+                } else {
+                    region = 'Zona Polar';
+                    plausibility = 'Muy Baja';
+                    context = 'Región con baja probabilidad de asentamientos humanos antiguos debido a condiciones climáticas extremas.';
+                }
+            }
+            
+            return {
+                region,
+                plausibility,
+                context,
+                score: plausibility === 'Muy Alta' ? 0.9 : 
+                       plausibility === 'Alta' ? 0.7 : 
+                       plausibility === 'Media' ? 0.5 : 
+                       plausibility === 'Baja-Media' ? 0.3 : 0.1
+            };
+        }
+
+        function validateTechnicalCoherence(analysisData) {
+            console.log('🔧 Validando coherencia técnica...');
+            
+            if (!analysisData || !analysisData.statistical_results) {
+                return { coherent: false, score: 0, issues: ['No hay datos de análisis'] };
+            }
+            
+            const stats = analysisData.statistical_results;
+            const probabilities = Object.values(stats).map(s => s.archaeological_probability || 0);
+            
+            const issues = [];
+            let score = 1.0;
+            
+            // Verificar rango de probabilidades
+            const minProb = Math.min(...probabilities);
+            const maxProb = Math.max(...probabilities);
+            const avgProb = probabilities.reduce((a, b) => a + b, 0) / probabilities.length;
+            
+            if (maxProb > 0.95) {
+                issues.push('Probabilidad sospechosamente alta (>95%)');
+                score -= 0.2;
+            }
+            
+            if (minProb < 0 || maxProb > 1) {
+                issues.push('Probabilidades fuera de rango válido [0,1]');
+                score -= 0.3;
+            }
+            
+            // Verificar coherencia entre sensores
+            const variance = probabilities.reduce((acc, p) => acc + Math.pow(p - avgProb, 2), 0) / probabilities.length;
+            if (variance > 0.1) {
+                issues.push('Alta varianza entre sensores (posible inconsistencia)');
+                score -= 0.1;
+            }
+            
+            // Verificar número de instrumentos
+            if (probabilities.length < 5) {
+                issues.push('Pocos instrumentos para validación cruzada');
+                score -= 0.1;
+            }
+            
+            return {
+                coherent: issues.length === 0,
+                score: Math.max(0, score),
+                issues,
+                statistics: {
+                    instruments: probabilities.length,
+                    avgProbability: avgProb,
+                    variance: variance,
+                    range: [minProb, maxProb]
+                }
+            };
+        }
+
+        function validateHistoricalContext(lat, lng) {
+            console.log('📚 Validando contexto histórico...');
+            
+            // Base de datos simplificada de sitios arqueológicos conocidos
+            const knownSites = [
+                { name: 'St. George\'s, Bermudas', lat: 32.3783, lng: -64.6783, radius: 0.1, period: 'Colonial (1612+)' },
+                { name: 'Royal Naval Dockyard, Bermudas', lat: 32.3214, lng: -64.8369, radius: 0.05, period: 'Naval (1809-1951)' },
+                { name: 'Roma, Italia', lat: 41.9028, lng: 12.4964, radius: 0.5, period: 'Romano (753 AC+)' },
+                { name: 'Atenas, Grecia', lat: 37.9755, lng: 23.7348, radius: 0.3, period: 'Clásico (800 AC+)' },
+                { name: 'Teotihuacán, México', lat: 19.6925, lng: -98.8438, radius: 0.1, period: 'Mesoamericano (100-650 DC)' },
+                { name: 'Machu Picchu, Perú', lat: -13.1631, lng: -72.5450, radius: 0.05, period: 'Inca (1450+)' }
+            ];
+            
+            let nearestSite = null;
+            let minDistance = Infinity;
+            
+            knownSites.forEach(site => {
+                const distance = Math.sqrt(Math.pow(lat - site.lat, 2) + Math.pow(lng - site.lng, 2));
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearestSite = site;
+                }
+            });
+            
+            const isNearKnownSite = nearestSite && minDistance <= nearestSite.radius;
+            const distanceKm = minDistance * 111; // Aproximación grados a km
+            
+            return {
+                nearKnownSite: isNearKnownSite,
+                nearestSite: nearestSite,
+                distanceKm: distanceKm,
+                score: isNearKnownSite ? 0.9 : Math.max(0.1, 1 - (distanceKm / 1000)) // Decae con distancia
+            };
+        }
+
+        function calculateOverallConfidence(geoVal, techVal, histVal) {
+            // Pesos para cada tipo de validación
+            const weights = {
+                geographic: 0.3,
+                technical: 0.4,
+                historical: 0.3
+            };
+            
+            const weightedScore = 
+                (geoVal.score * weights.geographic) +
+                (techVal.score * weights.technical) +
+                (histVal.score * weights.historical);
+            
+            let confidenceLevel = 'Muy Baja';
+            let color = '#dc3545';
+            
+            if (weightedScore >= 0.8) {
+                confidenceLevel = 'Muy Alta';
+                color = '#28a745';
+            } else if (weightedScore >= 0.6) {
+                confidenceLevel = 'Alta';
+                color = '#ffc107';
+            } else if (weightedScore >= 0.4) {
+                confidenceLevel = 'Media';
+                color = '#fd7e14';
+            } else if (weightedScore >= 0.2) {
+                confidenceLevel = 'Baja';
+                color = '#dc3545';
+            }
+            
+            return {
+                score: weightedScore,
+                level: confidenceLevel,
+                color: color,
+                percentage: Math.round(weightedScore * 100)
+            };
+        }
+
+        function generateRecommendations(lat, lng, confidence) {
+            const recommendations = [];
+            
+            if (confidence.score >= 0.7) {
+                recommendations.push('✅ Detecciones altamente confiables - Proceder con análisis detallado');
+                recommendations.push('📋 Documentar hallazgos para validación por expertos');
+            } else if (confidence.score >= 0.4) {
+                recommendations.push('⚠️ Validación adicional recomendada');
+                recommendations.push('🔍 Comparar con mapas históricos y bases de datos arqueológicas');
+                recommendations.push('📞 Consultar con expertos locales en arqueología');
+            } else {
+                recommendations.push('🚨 Baja confianza - Verificar posibles falsos positivos');
+                recommendations.push('🔧 Revisar parámetros de análisis y calidad de datos');
+                recommendations.push('📊 Considerar análisis con mayor resolución');
+            }
+            
+            // Recomendaciones específicas por región
+            if (lat >= 32.0 && lat <= 32.5 && lng >= -65.0 && lng <= -64.5) {
+                recommendations.push('🏛️ Bermudas: Consultar Bermuda National Museum');
+                recommendations.push('📚 Revisar registros del Royal Naval Dockyard');
+                recommendations.push('🗺️ Comparar con mapas coloniales británicos');
+            }
+            
+            return recommendations;
+        }
+
+        function displayValidationReport(report) {
+            console.log('📋 Mostrando reporte de validación...');
+            
+            // Crear mensaje de validación para mostrar al usuario
+            const validationMessage = `
+                🔬 VALIDACIÓN CIENTÍFICA COMPLETADA
+                
+                📍 Ubicación: ${report.geographic.region}
+                🎯 Confianza General: ${report.overallConfidence.level} (${report.overallConfidence.percentage}%)
+                
+                📊 Detalles:
+                • Geográfica: ${(report.geographic.score * 100).toFixed(0)}%
+                • Técnica: ${(report.technical.score * 100).toFixed(0)}%
+                • Histórica: ${(report.historical.score * 100).toFixed(0)}%
+                
+                ${report.recommendations.slice(0, 2).join('\n')}
+            `;
+            
+            showMessage(validationMessage, 'success');
+            
+            // Actualizar panel de análisis con información de validación
+            updateValidationDisplay(report);
+        }
+
+        function updateValidationDisplay(report) {
+            // Buscar o crear sección de validación en el panel de análisis
+            let validationSection = document.getElementById('validationSection');
+            
+            if (!validationSection) {
+                // Crear sección de validación
+                const analysisPanel = document.querySelector('.analysis-panel');
+                if (analysisPanel) {
+                    validationSection = document.createElement('div');
+                    validationSection.id = 'validationSection';
+                    validationSection.className = 'controls-section';
+                    validationSection.innerHTML = `
+                        <h3>🔬 Validación Científica</h3>
+                        <div id="validationContent"></div>
+                    `;
+                    analysisPanel.insertBefore(validationSection, analysisPanel.firstChild);
+                }
+            }
+            
+            const validationContent = document.getElementById('validationContent');
+            if (validationContent) {
+                validationContent.innerHTML = `
+                    <div style="background: ${report.overallConfidence.color}20; padding: 1rem; border-radius: 4px; border-left: 3px solid ${report.overallConfidence.color}; margin-bottom: 0.5rem;">
+                        <div style="font-weight: 600; color: ${report.overallConfidence.color}; margin-bottom: 0.5rem;">
+                            Confianza: ${report.overallConfidence.level} (${report.overallConfidence.percentage}%)
+                        </div>
+                        <div style="font-size: 0.8rem; line-height: 1.4;">
+                            <strong>📍 Región:</strong> ${report.geographic.region}<br>
+                            <strong>🔧 Coherencia Técnica:</strong> ${(report.technical.score * 100).toFixed(0)}%<br>
+                            <strong>📚 Contexto Histórico:</strong> ${(report.historical.score * 100).toFixed(0)}%<br>
+                            ${report.historical.nearKnownSite ? 
+                                `<strong>🏛️ Sitio Cercano:</strong> ${report.historical.nearestSite.name} (${report.historical.distanceKm.toFixed(1)}km)` : 
+                                `<strong>📏 Distancia a Sitio Conocido:</strong> ${report.historical.distanceKm.toFixed(1)}km`
+                            }
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
         // FUNCIÓN DE TEST: Forzar activación de lupa para debugging
         function testLupaActivation() {
             console.log('🧪 TEST: Forzando activación de lupa...');
@@ -1866,6 +2173,13 @@
             console.log(`🎯 UMBRAL REQUERIDO: 15%`);
             console.log(`🎯 ¿SUPERA UMBRAL?: ${avgProbability > 0.15 ? 'SÍ ✅' : 'NO ❌'}`);
             
+            // NUEVA INTEGRACIÓN: VALIDACIÓN CIENTÍFICA
+            if (selectedCoordinates && avgProbability > 0.15) {
+                console.log('🔬 Ejecutando validación científica...');
+                const validationReport = validateDetections(selectedCoordinates, analysisResults);
+                console.log('📋 Reporte de validación:', validationReport);
+            }
+            
             const lupaBtn = document.getElementById('lupaBtn');
             console.log('🔍 Botón de lupa encontrado:', !!lupaBtn);
             
@@ -1904,8 +2218,10 @@
                 currentAnalysisData = analysisResults;
                 console.log('✅ Datos guardados para lupa');
                 
-                // Mostrar mensaje al usuario
-                showMessage(`🔍 ¡ANOMALÍAS DETECTADAS! Lupa arqueológica disponible (${(avgProbability * 100).toFixed(1)}%)`, 'success');
+                // Mostrar mensaje al usuario con validación
+                const validationInfo = selectedCoordinates ? 
+                    ' - Validación científica completada' : '';
+                showMessage(`🔍 ¡ANOMALÍAS DETECTADAS! Lupa arqueológica disponible (${(avgProbability * 100).toFixed(1)}%)${validationInfo}`, 'success');
                 
                 // Hacer scroll hacia arriba para que el usuario vea el botón
                 setTimeout(() => {
