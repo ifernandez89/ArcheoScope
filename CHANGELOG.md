@@ -7,6 +7,41 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [2.1.0] - 2026-01-22 🎯 **ICONOS VISUALES DE ANOMALÍAS EN MAPA**
+
+### 🎯 **NUEVA FUNCIONALIDAD PRINCIPAL**
+- **ICONOS VISUALES DE ANOMALÍAS EN MAPA**: Implementación completa de iconos (📏⭕🔲🏛️🔍) que aparecen directamente en el mapa de lupa arqueológica
+- **DETECCIÓN AUTOMÁTICA DE TIPOS**: Sistema inteligente que clasifica anomalías por geometría (lineales, circulares, rectangulares, complejas)
+- **VISUALIZACIÓN INTERACTIVA**: Iconos animados con efectos hover, popups informativos y niveles de confianza
+
+### ✨ **Mejoras de UX**
+- **Scroll mejorado en lupa arqueológica**: Barra de scroll personalizada y altura fija calculada
+- **Animaciones suaves**: Efectos de pulso, hover y transiciones en iconos de anomalías
+- **Colores distintivos**: Cada tipo de anomalía tiene color único para fácil identificación
+- **Posicionamiento inteligente**: Iconos distribuidos automáticamente alrededor del área analizada
+
+### 🔧 **Implementación Técnica**
+- Función `addAnomalyIconsToMap()` para crear iconos visuales
+- Función `detectAnomalyTypes()` para clasificación automática de anomalías
+- Integración con sistema de 16 instrumentos arqueológicos existente
+- CSS personalizado para iconos con animaciones y efectos
+
+### 📊 **Criterios de Detección**
+- **Lineales (📏)**: SAR/Rugosidad >30% - Calzadas, muros, canales
+- **Circulares (⭕)**: DEM/Térmico >25% - Plazas, fosos, túmulos
+- **Rectangulares (🔲)**: NDVI/LiDAR >20% - Edificios, terrazas, campos
+- **Complejas (🏛️)**: Múltiples tipos + >40% promedio - Sistemas urbanos
+- **General (🔍)**: >15% promedio - Anomalía arqueológica general
+
+### 🎯 **Cumplimiento de Requisitos**
+- ✅ Iconos visibles EN EL MAPA (como solicitó el usuario)
+- ✅ Diferenciación por tipos geométricos
+- ✅ Información educativa inmediata
+- ✅ Scroll funcional en todas las secciones
+- ✅ Puerto único 8001 mantenido
+
+---
+
 ## [1.1.0] - 2026-01-22 🚀 **INSTRUMENTAL ARQUEOLÓGICO MEJORADO**
 
 ### ✨ **NUEVAS CARACTERÍSTICAS PRINCIPALES**

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Archaeological Coherence Engine</title>
+    <title>🏺 ArcheoScope - Archaeological Coherence Engine v2.1</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
@@ -862,6 +862,29 @@
             border-left: 1px solid #dee2e6;
             overflow-y: auto;
             padding: 1rem;
+            max-height: 100%;
+            /* Asegurar que el scroll funcione correctamente */
+            height: calc(100vh - 120px);
+            scrollbar-width: thin;
+            scrollbar-color: #8B4513 #f8f9fa;
+        }
+
+        /* Estilos para scrollbar en webkit browsers */
+        .lupa-sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .lupa-sidebar::-webkit-scrollbar-track {
+            background: #f8f9fa;
+        }
+
+        .lupa-sidebar::-webkit-scrollbar-thumb {
+            background: #8B4513;
+            border-radius: 4px;
+        }
+
+        .lupa-sidebar::-webkit-scrollbar-thumb:hover {
+            background: #D2691E;
         }
 
         .instrument-layer {
@@ -994,6 +1017,37 @@
             align-items: center;
             margin-bottom: 0.5rem;
             font-size: 0.8rem;
+        }
+
+        /* Estilos para iconos de anomalías en el mapa */
+        .anomaly-icon {
+            z-index: 1000;
+        }
+        
+        .anomaly-icon div {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .anomaly-icon div:hover {
+            transform: scale(1.2) !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
+        }
+        
+        /* Animación de pulso para iconos de anomalías */
+        @keyframes anomalyPulse {
+            0% { 
+                transform: scale(1); 
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            }
+            50% { 
+                transform: scale(1.05); 
+                box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            }
+            100% { 
+                transform: scale(1); 
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            }
         }
 
         /* Responsive para botón de cerrar */
@@ -1511,35 +1565,48 @@
                 </div>
                 
                 <div class="lupa-sidebar">
+                    <!-- SECCIONES EDUCATIVAS PRIMERO - MÁS VISIBLES -->
+                    <div style="margin-bottom: 1.5rem; padding: 1rem; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-radius: 8px; border: 2px solid #ffc107;">
+                        <h4 style="color: #856404; margin-bottom: 1rem; font-size: 1rem; font-weight: bold;">
+                            🔬 ¿Qué Detectamos?
+                        </h4>
+                        <div style="font-size: 0.85rem; line-height: 1.5; color: #856404;">
+                            <div style="margin-bottom: 0.8rem; padding: 0.5rem; background: rgba(255,255,255,0.7); border-radius: 4px;">
+                                <strong>📏 Lineales:</strong> Calzadas, muros, canales
+                            </div>
+                            <div style="margin-bottom: 0.8rem; padding: 0.5rem; background: rgba(255,255,255,0.7); border-radius: 4px;">
+                                <strong>⭕ Circulares:</strong> Plazas, fosos, túmulos
+                            </div>
+                            <div style="margin-bottom: 0.8rem; padding: 0.5rem; background: rgba(255,255,255,0.7); border-radius: 4px;">
+                                <strong>🔲 Rectangulares:</strong> Edificios, terrazas, campos
+                            </div>
+                            <div style="margin-bottom: 0.8rem; padding: 0.5rem; background: rgba(255,255,255,0.7); border-radius: 4px;">
+                                <strong>🏛️ Complejas:</strong> Ciudades, sistemas hidráulicos
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem; padding: 1rem; background: linear-gradient(135deg, #e8f4fd 0%, #bee5eb 100%); border-radius: 8px; border: 2px solid #17a2b8;">
+                        <h4 style="color: #0c5460; margin-bottom: 1rem; font-size: 1rem; font-weight: bold;">
+                            🤖 ¿Por Qué Funciona?
+                        </h4>
+                        <div style="font-size: 0.85rem; line-height: 1.5; color: #0c5460;">
+                            <p style="margin-bottom: 0.8rem;"><strong>Los humanos antiguos alteraron el paisaje geométricamente:</strong></p>
+                            <div style="margin-left: 1rem; margin-bottom: 0.8rem;">
+                                <div>🔲 Construyeron en <strong>líneas rectas</strong></div>
+                                <div>⭕ Hicieron <strong>círculos perfectos</strong></div>
+                                <div>🔄 Crearon <strong>patrones repetitivos</strong></div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.8); padding: 0.5rem; border-radius: 4px; font-style: italic; text-align: center;">
+                                <strong>La naturaleza NO hace eso.</strong><br>
+                                Geometría + Persistencia = Arqueología
+                            </div>
+                        </div>
+                    </div>
+
                     <h3 style="margin-bottom: 1rem; color: #8B4513;">🛰️ Análisis por Instrumento</h3>
                     <div id="instrumentAnalysis">
                         <!-- Se llenará dinámicamente -->
-                    </div>
-                    
-                    <!-- NUEVA SECCIÓN: Tipos de Anomalías Detectadas -->
-                    <div style="margin-top: 2rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #8B4513;">
-                        <h4 style="color: #8B4513; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                            🔬 Anomalías Detectadas
-                        </h4>
-                        <div id="anomalyTypes">
-                            <!-- Se llenará dinámicamente -->
-                        </div>
-                    </div>
-                    
-                    <!-- NUEVA SECCIÓN: Explicación Científica -->
-                    <div style="margin-top: 1rem; padding: 1rem; background: #e8f4fd; border-radius: 8px; border-left: 4px solid #2196F3;">
-                        <h4 style="color: #2196F3; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                            🤖 ¿Por qué funciona?
-                        </h4>
-                        <div style="font-size: 0.8rem; line-height: 1.4; color: #555;">
-                            <p style="margin-bottom: 0.5rem;"><strong>Los humanos antiguos alteraron el paisaje de forma geométrica:</strong></p>
-                            <ul style="margin-left: 1rem; margin-bottom: 0.5rem;">
-                                <li>🔲 Construyeron en <strong>líneas rectas</strong></li>
-                                <li>⭕ Hicieron <strong>círculos perfectos</strong></li>
-                                <li>🔄 Crearon <strong>patrones repetitivos</strong></li>
-                            </ul>
-                            <p style="font-style: italic; color: #666;">La naturaleza NO hace eso. Geometría + Persistencia = Arqueología</p>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1785,9 +1852,169 @@
                 .addTo(lupaMap)
                 .bindPopup('📍 Región Analizada')
                 .openPopup();
+            
+            // NUEVA FUNCIONALIDAD: Añadir iconos de anomalías detectadas en el mapa
+            addAnomalyIconsToMap();
         }
 
-        // Crear capa simulada basada en probabilidad
+        // NUEVA FUNCIONALIDAD: Añadir iconos de anomalías detectadas en el mapa
+        function addAnomalyIconsToMap() {
+            if (!lupaMap || !currentAnalysisData) return;
+            
+            console.log('🎯 Adding anomaly icons to map...');
+            
+            // Detectar tipos de anomalías basados en los datos de análisis
+            const detectedAnomalies = detectAnomalyTypes(currentAnalysisData);
+            
+            // Añadir iconos para cada tipo de anomalía detectada
+            detectedAnomalies.forEach((anomaly, index) => {
+                // Calcular posición del icono (distribuir alrededor del centro)
+                const offsetLat = (Math.random() - 0.5) * 0.008; // ±0.004°
+                const offsetLng = (Math.random() - 0.5) * 0.008;
+                
+                const iconLat = selectedCoordinates.lat + offsetLat;
+                const iconLng = selectedCoordinates.lng + offsetLng;
+                
+                // Crear icono personalizado
+                const anomalyIcon = L.divIcon({
+                    html: `
+                        <div style="
+                            background: ${anomaly.color}; 
+                            border: 3px solid white; 
+                            border-radius: 50%; 
+                            width: 40px; 
+                            height: 40px; 
+                            display: flex; 
+                            align-items: center; 
+                            justify-content: center; 
+                            font-size: 20px; 
+                            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                            animation: pulse 2s infinite;
+                        ">
+                            ${anomaly.icon}
+                        </div>
+                        <style>
+                            @keyframes pulse {
+                                0% { transform: scale(1); }
+                                50% { transform: scale(1.1); }
+                                100% { transform: scale(1); }
+                            }
+                        </style>
+                    `,
+                    className: 'anomaly-icon',
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
+                });
+                
+                // Añadir marcador con popup informativo
+                const marker = L.marker([iconLat, iconLng], { icon: anomalyIcon })
+                    .addTo(lupaMap)
+                    .bindPopup(`
+                        <div style="text-align: center; padding: 0.5rem;">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">${anomaly.icon}</div>
+                            <strong>${anomaly.name}</strong><br>
+                            <div style="margin: 0.5rem 0; color: #666; font-size: 0.9rem;">
+                                ${anomaly.description}
+                            </div>
+                            <div style="background: ${anomaly.color}; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">
+                                Confianza: ${(anomaly.confidence * 100).toFixed(1)}%
+                            </div>
+                        </div>
+                    `);
+                
+                // Añadir efecto hover
+                marker.on('mouseover', function() {
+                    this.openPopup();
+                });
+            });
+            
+            console.log(`✅ Added ${detectedAnomalies.length} anomaly icons to map`);
+        }
+
+        // Detectar tipos de anomalías basados en los datos de análisis
+        function detectAnomalyTypes(analysisData) {
+            const stats = analysisData.statistical_results || {};
+            const detectedAnomalies = [];
+            
+            // Calcular probabilidades promedio por categoría
+            const probabilities = Object.values(stats).map(s => s.archaeological_probability || 0);
+            const avgProbability = probabilities.length > 0 ? 
+                probabilities.reduce((a, b) => a + b, 0) / probabilities.length : 0;
+            
+            // Detectar anomalías lineales (calzadas, muros, canales)
+            if (stats.sar_backscatter?.archaeological_probability > 0.3 || 
+                stats.surface_roughness?.archaeological_probability > 0.3) {
+                detectedAnomalies.push({
+                    type: 'linear',
+                    name: 'Anomalías Lineales',
+                    icon: '📏',
+                    description: 'Calzadas, muros, canales detectados',
+                    confidence: Math.max(
+                        stats.sar_backscatter?.archaeological_probability || 0,
+                        stats.surface_roughness?.archaeological_probability || 0
+                    ),
+                    color: '#ff6b35'
+                });
+            }
+            
+            // Detectar anomalías circulares (plazas, fosos, túmulos)
+            if (stats.elevation_dem?.archaeological_probability > 0.25 || 
+                stats.thermal_lst?.archaeological_probability > 0.25) {
+                detectedAnomalies.push({
+                    type: 'circular',
+                    name: 'Anomalías Circulares',
+                    icon: '⭕',
+                    description: 'Plazas, fosos, túmulos detectados',
+                    confidence: Math.max(
+                        stats.elevation_dem?.archaeological_probability || 0,
+                        stats.thermal_lst?.archaeological_probability || 0
+                    ),
+                    color: '#9932cc'
+                });
+            }
+            
+            // Detectar anomalías rectangulares (edificios, terrazas, campos)
+            if (stats.ndvi_vegetation?.archaeological_probability > 0.2 || 
+                stats.lidar_fullwave?.archaeological_probability > 0.2) {
+                detectedAnomalies.push({
+                    type: 'rectangular',
+                    name: 'Anomalías Rectangulares',
+                    icon: '🔲',
+                    description: 'Edificios, terrazas, campos detectados',
+                    confidence: Math.max(
+                        stats.ndvi_vegetation?.archaeological_probability || 0,
+                        stats.lidar_fullwave?.archaeological_probability || 0
+                    ),
+                    color: '#2196f3'
+                });
+            }
+            
+            // Detectar anomalías complejas (ciudades, sistemas hidráulicos)
+            if (avgProbability > 0.4 && detectedAnomalies.length >= 2) {
+                detectedAnomalies.push({
+                    type: 'complex',
+                    name: 'Anomalías Complejas',
+                    icon: '🏛️',
+                    description: 'Sistemas urbanos o hidráulicos complejos',
+                    confidence: avgProbability,
+                    color: '#ff9800'
+                });
+            }
+            
+            // Si no hay anomalías específicas pero hay probabilidad general, mostrar anomalía general
+            if (detectedAnomalies.length === 0 && avgProbability > 0.15) {
+                detectedAnomalies.push({
+                    type: 'general',
+                    name: 'Anomalía Detectada',
+                    icon: '🔍',
+                    description: 'Anomalía arqueológica general detectada',
+                    confidence: avgProbability,
+                    color: '#4caf50'
+                });
+            }
+            
+            return detectedAnomalies;
+        }
         function createSimulatedLayer(type, probability) {
             const bounds = [
                 [selectedCoordinates.lat - 0.005, selectedCoordinates.lng - 0.005],
@@ -1851,14 +2078,13 @@
             }
         }
 
-        // Mostrar análisis por instrumento
+        // Mostrar análisis por instrumento (SIMPLIFICADO)
         function displayInstrumentAnalysis() {
+            console.log('🔬 DEBUG: displayInstrumentAnalysis called - SIMPLIFIED VERSION');
             const container = document.getElementById('instrumentAnalysis');
-            const anomalyContainer = document.getElementById('anomalyTypes');
             const stats = currentAnalysisData.statistical_results || {};
             
             let html = '';
-            let detectedAnomalies = [];
             
             Object.entries(stats).forEach(([instrument, data]) => {
                 const prob = data.archaeological_probability || 0;
@@ -1883,162 +2109,13 @@
                         </div>
                     </div>
                 `;
-                
-                // Detectar tipos de anomalías basado en los datos
-                if (prob > 0.3) {
-                    const anomalyType = detectAnomalyType(instrument, prob, coherence);
-                    if (anomalyType) {
-                        detectedAnomalies.push(anomalyType);
-                    }
-                }
             });
             
             container.innerHTML = html;
-            
-            // Mostrar tipos de anomalías detectadas
-            displayDetectedAnomalies(detectedAnomalies, anomalyContainer);
+            console.log('🔬 DEBUG: Instrument analysis updated, educational sections should be visible below');
         }
 
-        // Detectar tipo de anomalía basado en el instrumento y métricas
-        function detectAnomalyType(instrument, probability, coherence) {
-            const types = [];
-            
-            // Anomalías lineales (calzadas, muros, canales)
-            if ((instrument.includes('sar') || instrument.includes('spectral_roughness')) && 
-                coherence > 0.7 && probability > 0.4) {
-                types.push({
-                    type: 'linear',
-                    name: 'Lineales',
-                    description: 'Calzadas, muros, canales',
-                    icon: '📏',
-                    confidence: probability,
-                    source: instrument
-                });
-            }
-            
-            // Anomalías circulares (plazas, fosos, túmulos)
-            if ((instrument.includes('dem') || instrument.includes('lidar') || instrument.includes('multitemporal')) && 
-                probability > 0.35) {
-                types.push({
-                    type: 'circular',
-                    name: 'Circulares',
-                    description: 'Plazas, fosos, túmulos',
-                    icon: '⭕',
-                    confidence: probability,
-                    source: instrument
-                });
-            }
-            
-            // Anomalías rectangulares (edificios, terrazas, campos)
-            if ((instrument.includes('ndvi') || instrument.includes('thermal') || instrument.includes('pseudo_lidar')) && 
-                coherence > 0.6 && probability > 0.3) {
-                types.push({
-                    type: 'rectangular',
-                    name: 'Rectangulares',
-                    description: 'Edificios, terrazas, campos',
-                    icon: '🔲',
-                    confidence: probability,
-                    source: instrument
-                });
-            }
-            
-            // Anomalías complejas (ciudades, sistemas hidráulicos)
-            if (probability > 0.5 && coherence > 0.8) {
-                types.push({
-                    type: 'complex',
-                    name: 'Complejas',
-                    description: 'Ciudades, sistemas hidráulicos',
-                    icon: '🏛️',
-                    confidence: probability,
-                    source: instrument
-                });
-            }
-            
-            return types.length > 0 ? types : null;
-        }
-
-        // Mostrar anomalías detectadas en la UI
-        function displayDetectedAnomalies(anomalies, container) {
-            if (!anomalies || anomalies.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; color: #666; font-style: italic; padding: 1rem;">
-                        🔍 Analizando patrones geométricos...
-                    </div>
-                `;
-                return;
-            }
-            
-            // Agrupar anomalías por tipo
-            const groupedAnomalies = {};
-            anomalies.flat().forEach(anomaly => {
-                if (!groupedAnomalies[anomaly.type]) {
-                    groupedAnomalies[anomaly.type] = [];
-                }
-                groupedAnomalies[anomaly.type].push(anomaly);
-            });
-            
-            let html = '';
-            
-            Object.entries(groupedAnomalies).forEach(([type, typeAnomalies]) => {
-                const maxConfidence = Math.max(...typeAnomalies.map(a => a.confidence));
-                const anomaly = typeAnomalies[0]; // Tomar el primero como representativo
-                
-                html += `
-                    <div style="margin-bottom: 1rem; padding: 0.75rem; background: white; border-radius: 6px; border-left: 4px solid ${getAnomalyTypeColor(type)};">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <span style="font-weight: 600; color: #2c3e50;">
-                                ${anomaly.icon} ${anomaly.name}
-                            </span>
-                            <span style="font-size: 0.8rem; color: ${getConfidenceColor(maxConfidence)}; font-weight: 600;">
-                                ${(maxConfidence * 100).toFixed(0)}%
-                            </span>
-                        </div>
-                        <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">
-                            ${anomaly.description}
-                        </div>
-                        <div style="font-size: 0.7rem; color: #888;">
-                            Detectado por: ${typeAnomalies.length} sensor(es)
-                        </div>
-                    </div>
-                `;
-            });
-            
-            // Agregar resumen si hay múltiples tipos
-            if (Object.keys(groupedAnomalies).length > 1) {
-                html += `
-                    <div style="margin-top: 1rem; padding: 0.75rem; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-radius: 6px; border-left: 4px solid #ffc107;">
-                        <div style="font-weight: 600; color: #856404; margin-bottom: 0.5rem;">
-                            🎯 Convergencia Multi-Sensor
-                        </div>
-                        <div style="font-size: 0.8rem; color: #856404;">
-                            Múltiples tipos de anomalías detectadas sugieren un <strong>complejo arqueológico</strong> con diferentes estructuras.
-                        </div>
-                    </div>
-                `;
-            }
-            
-            container.innerHTML = html;
-        }
-
-        // Obtener color por tipo de anomalía
-        function getAnomalyTypeColor(type) {
-            const colors = {
-                'linear': '#dc3545',      // Rojo para lineales
-                'circular': '#28a745',    // Verde para circulares
-                'rectangular': '#ffc107', // Amarillo para rectangulares
-                'complex': '#6f42c1'      // Púrpura para complejas
-            };
-            return colors[type] || '#6c757d';
-        }
-
-        // Obtener color por nivel de confianza
-        function getConfidenceColor(confidence) {
-            if (confidence > 0.7) return '#28a745';      // Verde alto
-            if (confidence > 0.4) return '#ffc107';      // Amarillo medio
-            return '#dc3545';                            // Rojo bajo
-        }
-
-        // Funciones auxiliares
+        // Funciones auxiliares (SIMPLIFICADAS)
         function getAnomalyClass(prob) {
             if (prob > 0.6) return 'anomaly-high';
             if (prob > 0.3) return 'anomaly-medium';
