@@ -7,18 +7,28 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
-## [2.1.0] - 2026-01-22 🎯 **ICONOS VISUALES DE ANOMALÍAS EN MAPA**
+## [2.1.0] - 2026-01-22 🎯 **ICONOS VISUALES DE ANOMALÍAS + SELECCIÓN INTERACTIVA**
 
-### 🎯 **NUEVA FUNCIONALIDAD PRINCIPAL**
+### 🎯 **NUEVAS FUNCIONALIDADES PRINCIPALES**
 - **ICONOS VISUALES DE ANOMALÍAS EN MAPA**: Implementación completa de iconos (📏⭕🔲🏛️🔍) que aparecen directamente en el mapa de lupa arqueológica
+- **SELECCIÓN INTERACTIVA EN MAPA**: Sistema completo de selección con 3 modos (Click/Pin, Área/Cuadro, Múltiple)
 - **DETECCIÓN AUTOMÁTICA DE TIPOS**: Sistema inteligente que clasifica anomalías por geometría (lineales, circulares, rectangulares, complejas)
 - **VISUALIZACIÓN INTERACTIVA**: Iconos animados con efectos hover, popups informativos y niveles de confianza
 
+### 🎯 **Sistema de Selección Interactiva**
+- **Modo Click (🎯)**: Colocar pins individuales con análisis automático de 1km²
+- **Modo Área (🔲)**: Dibujar rectángulos de selección con dimensiones calculadas
+- **Modo Múltiple (📍)**: Selecciones múltiples para análisis comparativo
+- **Ctrl+Click**: Inspección de píxel (funcionalidad original mantenida)
+- **Popups informativos**: Coordenadas, dimensiones y botones de análisis directo
+
 ### ✨ **Mejoras de UX**
+- **Panel de controles limpio**: Eliminados botones duplicados y reorganizado
 - **Scroll mejorado en lupa arqueológica**: Barra de scroll personalizada y altura fija calculada
 - **Animaciones suaves**: Efectos de pulso, hover y transiciones en iconos de anomalías
 - **Colores distintivos**: Cada tipo de anomalía tiene color único para fácil identificación
 - **Posicionamiento inteligente**: Iconos distribuidos automáticamente alrededor del área analizada
+- **Feedback visual inmediato**: Confirmación de selecciones y acciones
 
 ### 🔧 **Implementación Técnica**
 - Función `addAnomalyIconsToMap()` para crear iconos visuales

@@ -1019,6 +1019,44 @@
             font-size: 0.8rem;
         }
 
+        /* Estilos para selección interactiva en mapa */
+        .selection-pin {
+            background: #ff4444;
+            border: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            animation: pinPulse 2s infinite;
+        }
+        
+        .selection-area {
+            border: 2px dashed #2196F3;
+            background: rgba(33, 150, 243, 0.1);
+            fill-opacity: 0.1;
+        }
+        
+        .selection-mode-active {
+            cursor: crosshair !important;
+        }
+        
+        @keyframes pinPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .selection-tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
         /* Estilos para iconos de anomalías en el mapa */
         .anomaly-icon {
             z-index: 1000;
@@ -1082,9 +1120,6 @@
         
         <!-- Navegación de módulos -->
         <div class="module-nav" style="display: flex; gap: 15px; margin-left: auto; margin-right: 20px;">
-            <a href="index.html" class="module-link active" style="color: white; text-decoration: none; padding: 8px 15px; background: rgba(255,255,255,0.2); border-radius: 4px; transition: all 0.3s;">
-                <i class="fas fa-map"></i> Análisis Regional
-            </a>
             <a href="volumetric_lidar_viewer.html" class="module-link" style="color: white; text-decoration: none; padding: 8px 15px; background: rgba(255,255,255,0.1); border-radius: 4px; transition: all 0.3s;">
                 <i class="fas fa-cube"></i> Volumétrico LIDAR
             </a>
@@ -1120,8 +1155,25 @@
 
     <!-- Layout principal: CORREGIDO -->
     <div class="main-layout">
-        <!-- Panel de controles (izquierda) - SOLO controles -->
+        <!-- Panel de controles (izquierda) - LIMPIO Y CORREGIDO -->
         <div class="controls-panel">
+            <div class="controls-section">
+                <h3>🎯 Selección de Área</h3>
+                <div style="margin-bottom: 1rem;">
+                    <button id="selectionModeBtn" onclick="toggleSelectionMode()" style="padding: 0.5rem; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%; margin-bottom: 0.5rem;">
+                        🎯 MODO SELECCIÓN: Click
+                    </button>
+                    <button onclick="clearSelections()" style="padding: 0.5rem; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%; margin-bottom: 0.5rem;">
+                        🧹 LIMPIAR SELECCIONES
+                    </button>
+                    <div style="font-size: 0.7rem; color: #666; text-align: center; line-height: 1.3;">
+                        <strong>Click:</strong> Colocar pin<br>
+                        <strong>Arrastrar:</strong> Dibujar área<br>
+                        <strong>Ctrl+Click:</strong> Inspeccionar píxel
+                    </div>
+                </div>
+            </div>
+
             <div class="controls-section">
                 <h3>📡 Capas Espectrales</h3>
                 <div class="layer-toggle">
@@ -1154,7 +1206,7 @@
                 </div>
                 <div class="layer-toggle">
                     <input type="checkbox" id="ruleGeometricPersistence" checked>
-                    <label for="ruleGeometricPersistence">Persistencia Geométrica (Centuriación)</label>
+                    <label for="ruleGeometricPersistence">Persistencia Geométrica</label>
                 </div>
                 <div class="layer-toggle">
                     <input type="checkbox" id="ruleSeasonalNDVI" checked>
@@ -1163,47 +1215,10 @@
             </div>
 
             <div class="controls-section">
-                <h3>📦 Exportación de Datos</h3>
-                <button onclick="exportHighResolutionImages()" class="export-btn">
-                    🖼️ IMÁGENES PNG (Mapa + Gráficos)
-                </button>
-                <button onclick="exportCompleteAnalysis()" class="export-btn json">
-                    📊 ANÁLISIS COMPLETO (JSON)
-                </button>
-                <button onclick="show3DVisualization()" class="export-btn viz3d">
-                    🎲 VISUALIZACIÓN 3D
-                </button>
-                <button onclick="exportScientificDataset()" class="export-btn dataset">
-                    🔬 DATASET CIENTÍFICO
-                </button>
-                <div style="font-size: 0.7rem; color: #666; text-align: center; margin-top: 0.5rem;">
-                    Formatos: GeoTIFF, NetCDF, CSV, KML, JSON
-                </div>
-            </div>
-
-            <div class="controls-section">
-                <h3>🎲 Visualización 3D</h3>
-                <button onclick="show3DVolumetricModel()" style="padding: 0.5rem; background: #9932CC; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%; margin-bottom: 0.5rem;">
-                    🎲 MODELO VOLUMÉTRICO 3D
-                </button>
-                <button onclick="show3DDataVisualization()" style="padding: 0.5rem; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%; margin-bottom: 0.5rem;">
-                    📊 VISUALIZACIÓN DE DATOS 3D
-                </button>
-                <button onclick="show3DRegionOverview()" style="padding: 0.5rem; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%;">
-                    🗺️ VISTA 3D DE REGIÓN
-                </button>
-                <div style="font-size: 0.7rem; color: #666; margin-top: 0.5rem; text-align: center;">
-                    <strong>Modelo Volumétrico:</strong> Estructuras inferidas<br>
-                    <strong>Datos 3D:</strong> Gráficos espectrales<br>
-                    <strong>Vista Región:</strong> Topografía + anomalías
-                </div>
-            </div>
-
-            <div class="controls-section">
-                <h3>🎛️ Configuración</h3>
+                <h3>🎛️ Configuración de Análisis</h3>
                 <div class="metric-item">
                     <span class="metric-label">Resolución:</span>
-                    <select id="resolution" style="font-family: inherit; font-size: 0.8rem;">
+                    <select id="resolution" style="font-family: inherit; font-size: 0.8rem; width: 100%; padding: 0.25rem;">
                         <option value="10">10m (Sentinel-2 - Óptimo)</option>
                         <option value="30">30m (Landsat - Bueno)</option>
                         <option value="100">100m (Moderado)</option>
@@ -1213,14 +1228,34 @@
                 </div>
                 <div class="layer-toggle">
                     <input type="checkbox" id="includeExplainability">
-                    <label for="includeExplainability">Incluir Explicabilidad</label>
+                    <label for="includeExplainability">Incluir Explicabilidad IA</label>
                 </div>
                 <div class="layer-toggle">
                     <input type="checkbox" id="includeValidation">
                     <label for="includeValidation">Métricas de Validación</label>
                 </div>
-                <button onclick="clearBrowserCache()" style="padding: 0.5rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%; margin-top: 0.5rem;">
-                    🗑️ LIMPIAR CACHÉ DEL NAVEGADOR
+            </div>
+
+            <div class="controls-section">
+                <h3>📦 Exportación</h3>
+                <button onclick="exportCompleteAnalysis()" class="export-btn json" style="margin-bottom: 0.5rem;">
+                    📊 ANÁLISIS COMPLETO (JSON)
+                </button>
+                <button onclick="show3DVisualization()" class="export-btn viz3d" style="margin-bottom: 0.5rem;">
+                    🎲 VISUALIZACIÓN 3D
+                </button>
+                <button onclick="exportScientificDataset()" class="export-btn dataset">
+                    🔬 DATASET CIENTÍFICO
+                </button>
+                <div style="font-size: 0.7rem; color: #666; text-align: center; margin-top: 0.5rem;">
+                    Formatos: JSON, KML, GeoTIFF, CSV
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <h3>🧹 Utilidades</h3>
+                <button onclick="clearBrowserCache()" style="padding: 0.5rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%;">
+                    🗑️ LIMPIAR CACHÉ
                 </button>
             </div>
         </div>
@@ -1712,11 +1747,18 @@
     <script src="archaeological_app.js"></script>
     
     <script>
-        // Variables globales para lupa arqueológica
+        // Variables globales para lupa arqueológica y selección interactiva
         let lupaMap;
         let currentAnalysisData = null;
         let selectedCoordinates = null;
         let archaeoLayers = {};
+        
+        // Variables para selección interactiva
+        let selectionMode = 'click'; // 'click', 'area', 'multi'
+        let isDrawing = false;
+        let selectionMarkers = [];
+        let selectionAreas = [];
+        let currentSelectionArea = null;
 
         // Función para verificar anomalías y mostrar botón de lupa
         function checkForAnomalies(analysisResults) {
@@ -1736,6 +1778,216 @@
             } else {
                 lupaBtn.classList.remove('active');
             }
+        }
+
+        // NUEVA FUNCIONALIDAD: Selección interactiva en mapa
+        function toggleSelectionMode() {
+            const modes = ['click', 'area', 'multi'];
+            const currentIndex = modes.indexOf(selectionMode);
+            selectionMode = modes[(currentIndex + 1) % modes.length];
+            
+            const btn = document.getElementById('selectionModeBtn');
+            const modeNames = {
+                'click': '🎯 MODO SELECCIÓN: Click',
+                'area': '🔲 MODO SELECCIÓN: Área', 
+                'multi': '📍 MODO SELECCIÓN: Múltiple'
+            };
+            
+            btn.textContent = modeNames[selectionMode];
+            
+            // Actualizar cursor del mapa
+            if (map) {
+                const mapContainer = map.getContainer();
+                if (selectionMode === 'area') {
+                    mapContainer.classList.add('selection-mode-active');
+                } else {
+                    mapContainer.classList.remove('selection-mode-active');
+                }
+            }
+            
+            console.log(`🎯 Modo de selección cambiado a: ${selectionMode}`);
+        }
+
+        function setupInteractiveSelection() {
+            if (!map) return;
+            
+            // Limpiar eventos anteriores
+            map.off('click');
+            map.off('mousedown');
+            map.off('mousemove');
+            map.off('mouseup');
+            
+            // Configurar eventos según el modo de selección
+            map.on('click', handleMapClick);
+            map.on('mousedown', handleMouseDown);
+            map.on('mousemove', handleMouseMove);
+            map.on('mouseup', handleMouseUp);
+        }
+
+        function handleMapClick(e) {
+            if (selectionMode === 'click' || selectionMode === 'multi') {
+                addSelectionPin(e.latlng);
+            }
+            
+            // Mantener funcionalidad de inspección de píxel con Ctrl+Click
+            if (e.originalEvent.ctrlKey) {
+                inspectPixel(e.latlng);
+            }
+        }
+
+        function handleMouseDown(e) {
+            if (selectionMode === 'area' && !e.originalEvent.ctrlKey) {
+                isDrawing = true;
+                const startLatLng = e.latlng;
+                
+                // Crear área de selección inicial
+                currentSelectionArea = L.rectangle([startLatLng, startLatLng], {
+                    className: 'selection-area',
+                    color: '#2196F3',
+                    weight: 2,
+                    fillOpacity: 0.1,
+                    dashArray: '5, 5'
+                }).addTo(map);
+                
+                // Prevenir el comportamiento por defecto del mapa
+                e.originalEvent.preventDefault();
+            }
+        }
+
+        function handleMouseMove(e) {
+            if (isDrawing && currentSelectionArea) {
+                // Actualizar el área de selección mientras se arrastra
+                const bounds = currentSelectionArea.getBounds();
+                const newBounds = L.latLngBounds(bounds.getSouthWest(), e.latlng);
+                currentSelectionArea.setBounds(newBounds);
+            }
+        }
+
+        function handleMouseUp(e) {
+            if (isDrawing && currentSelectionArea) {
+                isDrawing = false;
+                
+                // Finalizar área de selección
+                const bounds = currentSelectionArea.getBounds();
+                
+                // Verificar que el área tenga un tamaño mínimo
+                const latDiff = Math.abs(bounds.getNorth() - bounds.getSouth());
+                const lngDiff = Math.abs(bounds.getEast() - bounds.getWest());
+                
+                if (latDiff > 0.001 && lngDiff > 0.001) {
+                    // Área válida - añadir a la lista y configurar coordenadas
+                    selectionAreas.push(currentSelectionArea);
+                    
+                    // Actualizar campos de coordenadas automáticamente
+                    document.getElementById('latMin').value = bounds.getSouth().toFixed(6);
+                    document.getElementById('latMax').value = bounds.getNorth().toFixed(6);
+                    document.getElementById('lonMin').value = bounds.getWest().toFixed(6);
+                    document.getElementById('lonMax').value = bounds.getEast().toFixed(6);
+                    
+                    // Configurar coordenadas seleccionadas para análisis
+                    selectedCoordinates = {
+                        lat: bounds.getCenter().lat,
+                        lng: bounds.getCenter().lng
+                    };
+                    
+                    // Añadir popup informativo
+                    currentSelectionArea.bindPopup(`
+                        <div style="text-align: center;">
+                            <strong>🔲 Área Seleccionada</strong><br>
+                            <div style="margin: 0.5rem 0; font-size: 0.9rem;">
+                                ${latDiff.toFixed(4)}° × ${lngDiff.toFixed(4)}°<br>
+                                (~${(latDiff * 111).toFixed(0)}m × ${(lngDiff * 111 * Math.cos(bounds.getCenter().lat * Math.PI / 180)).toFixed(0)}m)
+                            </div>
+                            <button onclick="analyzeSelectedArea()" style="padding: 0.25rem 0.5rem; background: #2196F3; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                                🔍 Analizar Área
+                            </button>
+                        </div>
+                    `).openPopup();
+                    
+                    showMessage(`✅ Área seleccionada: ${(latDiff * 111).toFixed(0)}m × ${(lngDiff * 111 * Math.cos(bounds.getCenter().lat * Math.PI / 180)).toFixed(0)}m`, 'success');
+                } else {
+                    // Área muy pequeña - eliminar
+                    map.removeLayer(currentSelectionArea);
+                    showMessage('⚠️ Área demasiado pequeña. Dibuja un área más grande.', 'error');
+                }
+                
+                currentSelectionArea = null;
+            }
+        }
+
+        function addSelectionPin(latlng) {
+            // Crear icono de pin personalizado
+            const pinIcon = L.divIcon({
+                html: '<div class="selection-pin"></div>',
+                className: 'selection-pin-marker',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+            
+            // Crear marcador
+            const marker = L.marker(latlng, { icon: pinIcon }).addTo(map);
+            
+            // Añadir popup informativo
+            marker.bindPopup(`
+                <div style="text-align: center;">
+                    <strong>📍 Sitio Seleccionado</strong><br>
+                    <div style="margin: 0.5rem 0; font-size: 0.9rem; font-family: monospace;">
+                        ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}
+                    </div>
+                    <button onclick="analyzeSelectedSite(${latlng.lat}, ${latlng.lng})" style="padding: 0.25rem 0.5rem; background: #ff4444; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                        🔍 Analizar Sitio
+                    </button>
+                </div>
+            `).openPopup();
+            
+            // Añadir a la lista de marcadores
+            selectionMarkers.push(marker);
+            
+            // Si no es modo múltiple, limpiar marcadores anteriores
+            if (selectionMode !== 'multi' && selectionMarkers.length > 1) {
+                const oldMarker = selectionMarkers.shift();
+                map.removeLayer(oldMarker);
+            }
+            
+            // Configurar coordenadas para análisis automático (área pequeña alrededor del pin)
+            const offset = 0.005; // ±0.005° = ~1km
+            document.getElementById('latMin').value = (latlng.lat - offset).toFixed(6);
+            document.getElementById('latMax').value = (latlng.lat + offset).toFixed(6);
+            document.getElementById('lonMin').value = (latlng.lng - offset).toFixed(6);
+            document.getElementById('lonMax').value = (latlng.lng + offset).toFixed(6);
+            
+            selectedCoordinates = { lat: latlng.lat, lng: latlng.lng };
+            
+            showMessage(`📍 Pin colocado en: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`, 'success');
+        }
+
+        function analyzeSelectedSite(lat, lng) {
+            console.log(`🔍 Analizando sitio seleccionado: ${lat}, ${lng}`);
+            selectedCoordinates = { lat, lng };
+            investigateRegion();
+        }
+
+        function analyzeSelectedArea() {
+            console.log('🔲 Analizando área seleccionada');
+            investigateRegion();
+        }
+
+        function clearSelections() {
+            // Limpiar marcadores
+            selectionMarkers.forEach(marker => map.removeLayer(marker));
+            selectionMarkers = [];
+            
+            // Limpiar áreas
+            selectionAreas.forEach(area => map.removeLayer(area));
+            selectionAreas = [];
+            
+            // Limpiar área actual si existe
+            if (currentSelectionArea) {
+                map.removeLayer(currentSelectionArea);
+                currentSelectionArea = null;
+            }
+            
+            showMessage('🧹 Selecciones limpiadas', 'success');
         }
 
         // Abrir modal de lupa
@@ -2207,6 +2459,37 @@
                 originalInvestigateRegion();
             }
         };
+
+        // Integrar selección interactiva con inicialización del mapa
+        const originalInitializeMap = window.initializeMap;
+        window.initializeMap = function() {
+            if (originalInitializeMap) {
+                originalInitializeMap();
+            }
+            
+            // Configurar selección interactiva después de que el mapa esté listo
+            setTimeout(() => {
+                if (map) {
+                    setupInteractiveSelection();
+                    console.log('✅ Selección interactiva configurada');
+                }
+            }, 1500);
+        };
+
+        // Asegurar que la selección interactiva se configure cuando el mapa esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar periódicamente si el mapa está listo
+            const checkMapReady = setInterval(() => {
+                if (typeof map !== 'undefined' && map) {
+                    setupInteractiveSelection();
+                    clearInterval(checkMapReady);
+                    console.log('✅ Selección interactiva configurada (fallback)');
+                }
+            }, 2000);
+            
+            // Limpiar el intervalo después de 30 segundos
+            setTimeout(() => clearInterval(checkMapReady), 30000);
+        });
     </script>
 </body>
 </html>
