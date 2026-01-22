@@ -5514,6 +5514,15 @@ function cleanUndefinedFromUI() {
 function safeDisplayResults(data) {
     try {
         displayResults(data);
+        
+        // ASEGURAR QUE LA LUPA SE ACTIVE: Verificar anomalías después de mostrar resultados
+        if (typeof checkForAnomalies === 'function') {
+            console.log('🔍 Llamando checkForAnomalies desde safeDisplayResults...');
+            checkForAnomalies(data);
+        } else {
+            console.warn('⚠️ Función checkForAnomalies no disponible');
+        }
+        
         // Limpiar cualquier "undefined" que haya quedado
         setTimeout(cleanUndefinedFromUI, 100);
     } catch (error) {

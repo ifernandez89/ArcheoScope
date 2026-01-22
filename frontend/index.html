@@ -176,7 +176,7 @@
         /* Layout principal: CORREGIDO - Controles izquierda, Análisis derecha */
         .main-layout {
             display: grid;
-            grid-template-columns: 260px 1fr 340px;
+            grid-template-columns: 300px 1fr 360px;
             height: calc(100vh - 60px);
         }
 
@@ -202,18 +202,24 @@
 
         .layer-toggle, .rule-toggle {
             display: flex;
-            align-items: center;
-            margin-bottom: 0.5rem;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
             font-size: 0.8rem;
+            line-height: 1.4;
         }
 
         .layer-toggle input, .rule-toggle input {
-            margin-right: 0.5rem;
+            margin-right: 0.75rem;
+            margin-top: 0.1rem;
+            flex-shrink: 0;
         }
 
         .layer-toggle label, .rule-toggle label {
             cursor: pointer;
             color: #34495e;
+            word-wrap: break-word;
+            hyphens: auto;
+            flex: 1;
         }
 
         /* Mapa principal (centro) */
@@ -760,38 +766,58 @@
             margin: 0.5rem 0;
         }
 
-        /* Botón de lupa arqueológica */
+        /* Botón de lupa arqueológica - MEJORADO Y MÁS VISIBLE */
         .lupa-btn {
             position: absolute;
             top: 10px;
             right: 10px;
             z-index: 1000;
-            background: #8B4513;
+            background: linear-gradient(135deg, #8B4513 0%, #D2691E 100%);
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 12px 18px;
             border-radius: 25px;
             cursor: pointer;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+            box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4);
             transition: all 0.3s ease;
             display: none;
+            min-width: 180px;
+            text-align: center;
         }
 
         .lupa-btn:hover {
-            background: #D2691E;
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(139, 69, 19, 0.5);
         }
 
         .lupa-btn.active {
-            display: block;
-            animation: bounce 2s infinite;
+            display: block !important;
+            animation: lupaAppear 0.5s ease-out, lupaPulse 2s infinite 0.5s;
         }
 
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+        @keyframes lupaAppear {
+            0% { 
+                opacity: 0; 
+                transform: scale(0.8) translateY(-10px); 
+            }
+            100% { 
+                opacity: 1; 
+                transform: scale(1) translateY(0); 
+            }
+        }
+
+        @keyframes lupaPulse {
+            0%, 100% { 
+                transform: scale(1); 
+                box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4);
+            }
+            50% { 
+                transform: scale(1.05); 
+                box-shadow: 0 8px 25px rgba(139, 69, 19, 0.6);
+            }
         }
 
         /* Modal de lupa arqueológica */
@@ -1779,23 +1805,59 @@
         let selectionAreas = [];
         let currentSelectionArea = null;
 
-        // Función para verificar anomalías y mostrar botón de lupa
+        // FUNCIÓN MEJORADA: Verificar anomalías y mostrar botón de lupa
         function checkForAnomalies(analysisResults) {
-            if (!analysisResults || !analysisResults.statistical_results) return;
+            console.log('🔍 Verificando anomalías para activar lupa...', analysisResults);
+            
+            if (!analysisResults || !analysisResults.statistical_results) {
+                console.log('❌ No hay datos de análisis para verificar anomalías');
+                return;
+            }
             
             const stats = analysisResults.statistical_results;
             const probabilities = Object.values(stats).map(s => s.archaeological_probability || 0);
             const avgProbability = probabilities.length > 0 ? 
                 probabilities.reduce((a, b) => a + b, 0) / probabilities.length : 0;
             
+            console.log(`📊 Probabilidad promedio de anomalías: ${(avgProbability * 100).toFixed(1)}%`);
+            
             const lupaBtn = document.getElementById('lupaBtn');
             
-            if (avgProbability > 0.2) { // Umbral para mostrar lupa
+            if (!lupaBtn) {
+                console.error('❌ Botón de lupa no encontrado en el DOM');
+                return;
+            }
+            
+            // Umbral más bajo para mostrar la lupa (15% en lugar de 20%)
+            if (avgProbability > 0.15) {
+                console.log('✅ Activando lupa arqueológica...');
+                
+                // Asegurar que el botón sea visible
                 lupaBtn.classList.add('active');
+                lupaBtn.style.display = 'block';
                 lupaBtn.innerHTML = `🔍 Lupa Arqueológica (${(avgProbability * 100).toFixed(1)}%)`;
+                
+                // Guardar datos para la lupa
                 currentAnalysisData = analysisResults;
+                
+                // Mostrar mensaje al usuario
+                showMessage(`🔍 ¡Anomalías detectadas! Lupa arqueológica disponible (${(avgProbability * 100).toFixed(1)}%)`, 'success');
+                
+                // Hacer scroll hacia arriba para que el usuario vea el botón
+                setTimeout(() => {
+                    const mapContainer = document.querySelector('.map-container');
+                    if (mapContainer) {
+                        mapContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 500);
+                
             } else {
+                console.log('ℹ️ Probabilidad insuficiente para activar lupa');
                 lupaBtn.classList.remove('active');
+                lupaBtn.style.display = 'none';
+                
+                // Mostrar mensaje informativo
+                showMessage(`📊 Análisis completado. Probabilidad de anomalías: ${(avgProbability * 100).toFixed(1)}% (umbral: 15%)`, 'success');
             }
         }
 
