@@ -1299,8 +1299,11 @@
 
             <div class="controls-section">
                 <h3>🧹 Utilidades</h3>
-                <button onclick="clearBrowserCache()" style="padding: 0.5rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%;">
+                <button onclick="clearBrowserCache()" style="padding: 0.5rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%; margin-bottom: 0.5rem;">
                     🗑️ LIMPIAR CACHÉ
+                </button>
+                <button onclick="testLupaActivation()" style="padding: 0.5rem; background: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%;">
+                    🧪 TEST LUPA
                 </button>
             </div>
         </div>
@@ -1805,51 +1808,122 @@
         let selectionAreas = [];
         let currentSelectionArea = null;
 
+        // FUNCIÓN DE TEST: Forzar activación de lupa para debugging
+        function testLupaActivation() {
+            console.log('🧪 TEST: Forzando activación de lupa...');
+            
+            const lupaBtn = document.getElementById('lupaBtn');
+            console.log('🔍 Botón encontrado:', lupaBtn);
+            
+            if (lupaBtn) {
+                lupaBtn.classList.add('active');
+                lupaBtn.style.display = 'block';
+                lupaBtn.innerHTML = '🔍 Lupa Arqueológica (TEST - 85.5%)';
+                console.log('✅ Lupa activada manualmente');
+                
+                // Crear datos de prueba
+                currentAnalysisData = {
+                    statistical_results: {
+                        test_instrument: { archaeological_probability: 0.855 }
+                    }
+                };
+                
+                showMessage('🧪 TEST: Lupa activada manualmente', 'success');
+            } else {
+                console.error('❌ No se pudo encontrar el botón de lupa');
+            }
+        }
+
         // FUNCIÓN MEJORADA: Verificar anomalías y mostrar botón de lupa
         function checkForAnomalies(analysisResults) {
-            console.log('🔍 Verificando anomalías para activar lupa...', analysisResults);
+            console.log('🔍 ===== INICIO VERIFICACIÓN DE ANOMALÍAS =====');
+            console.log('📊 Datos recibidos:', analysisResults);
             
-            if (!analysisResults || !analysisResults.statistical_results) {
-                console.log('❌ No hay datos de análisis para verificar anomalías');
+            if (!analysisResults) {
+                console.error('❌ analysisResults es null o undefined');
+                return;
+            }
+            
+            if (!analysisResults.statistical_results) {
+                console.error('❌ No hay statistical_results en analysisResults');
+                console.log('📋 Estructura disponible:', Object.keys(analysisResults));
                 return;
             }
             
             const stats = analysisResults.statistical_results;
-            const probabilities = Object.values(stats).map(s => s.archaeological_probability || 0);
+            console.log('📈 Statistical results:', stats);
+            
+            const probabilities = Object.values(stats).map(s => {
+                const prob = s.archaeological_probability || 0;
+                console.log(`📊 Instrumento: ${JSON.stringify(s).substring(0, 50)}... → Probabilidad: ${(prob * 100).toFixed(1)}%`);
+                return prob;
+            });
+            
             const avgProbability = probabilities.length > 0 ? 
                 probabilities.reduce((a, b) => a + b, 0) / probabilities.length : 0;
             
-            console.log(`📊 Probabilidad promedio de anomalías: ${(avgProbability * 100).toFixed(1)}%`);
+            console.log(`🎯 PROBABILIDAD PROMEDIO: ${(avgProbability * 100).toFixed(1)}%`);
+            console.log(`🎯 UMBRAL REQUERIDO: 15%`);
+            console.log(`🎯 ¿SUPERA UMBRAL?: ${avgProbability > 0.15 ? 'SÍ ✅' : 'NO ❌'}`);
             
             const lupaBtn = document.getElementById('lupaBtn');
+            console.log('🔍 Botón de lupa encontrado:', !!lupaBtn);
             
             if (!lupaBtn) {
-                console.error('❌ Botón de lupa no encontrado en el DOM');
+                console.error('❌ CRÍTICO: Botón de lupa no encontrado en el DOM');
+                // Intentar crearlo dinámicamente
+                const mapContainer = document.querySelector('.map-container');
+                if (mapContainer) {
+                    const newBtn = document.createElement('button');
+                    newBtn.id = 'lupaBtn';
+                    newBtn.className = 'lupa-btn';
+                    newBtn.onclick = openLupaModal;
+                    newBtn.innerHTML = '🔍 Lupa Arqueológica';
+                    mapContainer.appendChild(newBtn);
+                    console.log('✅ Botón de lupa creado dinámicamente');
+                }
                 return;
             }
             
             // Umbral más bajo para mostrar la lupa (15% en lugar de 20%)
             if (avgProbability > 0.15) {
-                console.log('✅ Activando lupa arqueológica...');
+                console.log('🎉 ===== ACTIVANDO LUPA ARQUEOLÓGICA =====');
                 
-                // Asegurar que el botón sea visible
+                // Asegurar que el botón sea visible con múltiples métodos
                 lupaBtn.classList.add('active');
-                lupaBtn.style.display = 'block';
+                lupaBtn.style.display = 'block !important';
+                lupaBtn.style.visibility = 'visible';
+                lupaBtn.style.opacity = '1';
                 lupaBtn.innerHTML = `🔍 Lupa Arqueológica (${(avgProbability * 100).toFixed(1)}%)`;
+                
+                console.log('✅ Clases añadidas:', lupaBtn.classList.toString());
+                console.log('✅ Estilo display:', lupaBtn.style.display);
+                console.log('✅ Texto actualizado:', lupaBtn.innerHTML);
                 
                 // Guardar datos para la lupa
                 currentAnalysisData = analysisResults;
+                console.log('✅ Datos guardados para lupa');
                 
                 // Mostrar mensaje al usuario
-                showMessage(`🔍 ¡Anomalías detectadas! Lupa arqueológica disponible (${(avgProbability * 100).toFixed(1)}%)`, 'success');
+                showMessage(`🔍 ¡ANOMALÍAS DETECTADAS! Lupa arqueológica disponible (${(avgProbability * 100).toFixed(1)}%)`, 'success');
                 
                 // Hacer scroll hacia arriba para que el usuario vea el botón
                 setTimeout(() => {
                     const mapContainer = document.querySelector('.map-container');
                     if (mapContainer) {
                         mapContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        console.log('✅ Scroll realizado hacia el mapa');
                     }
                 }, 500);
+                
+                // Verificar que el botón sea realmente visible
+                setTimeout(() => {
+                    const rect = lupaBtn.getBoundingClientRect();
+                    const isVisible = rect.width > 0 && rect.height > 0;
+                    console.log(`🔍 Verificación final - Botón visible: ${isVisible ? 'SÍ ✅' : 'NO ❌'}`);
+                    console.log(`📐 Dimensiones: ${rect.width}x${rect.height}`);
+                    console.log(`📍 Posición: top=${rect.top}, left=${rect.left}`);
+                }, 1000);
                 
             } else {
                 console.log('ℹ️ Probabilidad insuficiente para activar lupa');
@@ -1859,6 +1933,8 @@
                 // Mostrar mensaje informativo
                 showMessage(`📊 Análisis completado. Probabilidad de anomalías: ${(avgProbability * 100).toFixed(1)}% (umbral: 15%)`, 'success');
             }
+            
+            console.log('🔍 ===== FIN VERIFICACIÓN DE ANOMALÍAS =====');
         }
 
         // NUEVA FUNCIONALIDAD: Selección interactiva en mapa
