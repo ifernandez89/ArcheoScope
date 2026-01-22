@@ -1302,8 +1302,11 @@
                 <button onclick="clearBrowserCache()" style="padding: 0.5rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%; margin-bottom: 0.5rem;">
                     🗑️ LIMPIAR CACHÉ
                 </button>
-                <button onclick="testLupaActivation()" style="padding: 0.5rem; background: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%;">
+                <button onclick="testLupaActivation()" style="padding: 0.5rem; background: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%; margin-bottom: 0.5rem;">
                     🧪 TEST LUPA
+                </button>
+                <button onclick="testAnomalyDetection()" style="padding: 0.5rem; background: #ff5722; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%;">
+                    🔍 TEST DETECCIÓN
                 </button>
             </div>
         </div>
@@ -2115,6 +2118,73 @@
             }
         }
 
+        // FUNCIÓN DE TEST: Probar detección de anomalías con datos realistas
+        function testAnomalyDetection() {
+            console.log('🧪 ===== TEST DE DETECCIÓN DE ANOMALÍAS =====');
+            
+            // Crear datos de prueba con diferentes escenarios
+            const testScenarios = [
+                {
+                    name: 'Solo Lineales (SAR alto)',
+                    data: {
+                        statistical_results: {
+                            sar_backscatter: { archaeological_probability: 0.45 },
+                            surface_roughness: { archaeological_probability: 0.38 },
+                            ndvi_vegetation: { archaeological_probability: 0.15 },
+                            thermal_lst: { archaeological_probability: 0.12 },
+                            elevation_dem: { archaeological_probability: 0.18 }
+                        }
+                    }
+                },
+                {
+                    name: 'Solo Circulares (DEM alto)',
+                    data: {
+                        statistical_results: {
+                            elevation_dem: { archaeological_probability: 0.42 },
+                            thermal_lst: { archaeological_probability: 0.35 },
+                            sar_backscatter: { archaeological_probability: 0.18 },
+                            ndvi_vegetation: { archaeological_probability: 0.20 }
+                        }
+                    }
+                },
+                {
+                    name: 'Sin anomalías específicas',
+                    data: {
+                        statistical_results: {
+                            sar_backscatter: { archaeological_probability: 0.25 },
+                            surface_roughness: { archaeological_probability: 0.22 },
+                            ndvi_vegetation: { archaeological_probability: 0.18 },
+                            thermal_lst: { archaeological_probability: 0.20 },
+                            elevation_dem: { archaeological_probability: 0.15 }
+                        }
+                    }
+                },
+                {
+                    name: 'Múltiples tipos (Complejo)',
+                    data: {
+                        statistical_results: {
+                            sar_backscatter: { archaeological_probability: 0.40 },
+                            elevation_dem: { archaeological_probability: 0.38 },
+                            ndvi_vegetation: { archaeological_probability: 0.35 },
+                            thermal_lst: { archaeological_probability: 0.42 },
+                            lidar_fullwave: { archaeological_probability: 0.45 }
+                        }
+                    }
+                }
+            ];
+            
+            testScenarios.forEach((scenario, index) => {
+                console.log(`\n🧪 ESCENARIO ${index + 1}: ${scenario.name}`);
+                const detectedAnomalies = detectAnomalyTypes(scenario.data);
+                console.log(`📊 Resultado: ${detectedAnomalies.length} tipos detectados`);
+                detectedAnomalies.forEach(anomaly => {
+                    console.log(`   ${anomaly.icon} ${anomaly.name} - ${(anomaly.confidence * 100).toFixed(1)}%`);
+                });
+            });
+            
+            showMessage('🧪 Test de detección completado - Ver consola para resultados detallados', 'success');
+        }
+
         // FUNCIÓN DE TEST: Forzar activación de lupa para debugging
         function testLupaActivation() {
             console.log('🧪 TEST: Forzando activación de lupa...');
@@ -2582,23 +2652,40 @@
             addAnomalyIconsToMap();
         }
 
-        // NUEVA FUNCIONALIDAD: Añadir iconos de anomalías detectadas en el mapa
+        // NUEVA FUNCIONALIDAD: Añadir iconos de anomalías detectadas en el mapa - CORREGIDO
         function addAnomalyIconsToMap() {
-            if (!lupaMap || !currentAnalysisData) return;
+            if (!lupaMap || !currentAnalysisData) {
+                console.log('❌ No se pueden añadir iconos: mapa o datos no disponibles');
+                return;
+            }
             
-            console.log('🎯 Adding anomaly icons to map...');
+            console.log('🎯 ===== AÑADIENDO ICONOS DE ANOMALÍAS AL MAPA =====');
             
             // Detectar tipos de anomalías basados en los datos de análisis
             const detectedAnomalies = detectAnomalyTypes(currentAnalysisData);
             
+            console.log(`📊 Anomalías a mostrar: ${detectedAnomalies.length}`);
+            
+            if (detectedAnomalies.length === 0) {
+                console.log('ℹ️ No hay anomalías específicas para mostrar iconos');
+                return;
+            }
+            
             // Añadir iconos para cada tipo de anomalía detectada
             detectedAnomalies.forEach((anomaly, index) => {
+                console.log(`🎯 Añadiendo icono ${index + 1}: ${anomaly.icon} ${anomaly.name} (${(anomaly.confidence * 100).toFixed(1)}%)`);
+                
                 // Calcular posición del icono (distribuir alrededor del centro)
-                const offsetLat = (Math.random() - 0.5) * 0.008; // ±0.004°
-                const offsetLng = (Math.random() - 0.5) * 0.008;
+                const angle = (index / detectedAnomalies.length) * 2 * Math.PI; // Distribuir en círculo
+                const radius = 0.003; // Radio en grados
+                
+                const offsetLat = Math.sin(angle) * radius;
+                const offsetLng = Math.cos(angle) * radius;
                 
                 const iconLat = selectedCoordinates.lat + offsetLat;
                 const iconLng = selectedCoordinates.lng + offsetLng;
+                
+                console.log(`📍 Posición del icono: ${iconLat.toFixed(6)}, ${iconLng.toFixed(6)}`);
                 
                 // Crear icono personalizado
                 const anomalyIcon = L.divIcon({
@@ -2631,18 +2718,21 @@
                     iconAnchor: [20, 20]
                 });
                 
-                // Añadir marcador con popup informativo
+                // Añadir marcador con popup informativo detallado
                 const marker = L.marker([iconLat, iconLng], { icon: anomalyIcon })
                     .addTo(lupaMap)
                     .bindPopup(`
-                        <div style="text-align: center; padding: 0.5rem;">
+                        <div style="text-align: center; padding: 0.5rem; min-width: 200px;">
                             <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">${anomaly.icon}</div>
                             <strong>${anomaly.name}</strong><br>
-                            <div style="margin: 0.5rem 0; color: #666; font-size: 0.9rem;">
+                            <div style="margin: 0.5rem 0; color: #666; font-size: 0.9rem; line-height: 1.3;">
                                 ${anomaly.description}
                             </div>
-                            <div style="background: ${anomaly.color}; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">
+                            <div style="background: ${anomaly.color}; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold; margin-bottom: 0.5rem;">
                                 Confianza: ${(anomaly.confidence * 100).toFixed(1)}%
+                            </div>
+                            <div style="font-size: 0.75rem; color: #888; font-style: italic;">
+                                ${anomaly.evidence || 'Evidencia basada en análisis multi-sensor'}
                             </div>
                         </div>
                     `);
@@ -2651,92 +2741,147 @@
                 marker.on('mouseover', function() {
                     this.openPopup();
                 });
+                
+                console.log(`✅ Icono ${anomaly.icon} añadido correctamente`);
             });
             
-            console.log(`✅ Added ${detectedAnomalies.length} anomaly icons to map`);
+            console.log(`✅ ${detectedAnomalies.length} iconos de anomalías añadidos al mapa`);
+            console.log('🎯 ===== FIN AÑADIR ICONOS DE ANOMALÍAS =====');
         }
 
-        // Detectar tipos de anomalías basados en los datos de análisis
+        // Detectar tipos de anomalías basados en los datos de análisis - CORREGIDO
         function detectAnomalyTypes(analysisData) {
+            console.log('🔍 ===== ANÁLISIS RIGUROSO DE TIPOS DE ANOMALÍAS =====');
+            
             const stats = analysisData.statistical_results || {};
             const detectedAnomalies = [];
+            
+            console.log('📊 Instrumentos disponibles:', Object.keys(stats));
             
             // Calcular probabilidades promedio por categoría
             const probabilities = Object.values(stats).map(s => s.archaeological_probability || 0);
             const avgProbability = probabilities.length > 0 ? 
                 probabilities.reduce((a, b) => a + b, 0) / probabilities.length : 0;
             
-            // Detectar anomalías lineales (calzadas, muros, canales)
-            if (stats.sar_backscatter?.archaeological_probability > 0.3 || 
-                stats.surface_roughness?.archaeological_probability > 0.3) {
+            console.log(`📈 Probabilidad promedio general: ${(avgProbability * 100).toFixed(1)}%`);
+            
+            // ANÁLISIS ESPECÍFICO POR TIPO DE ANOMALÍA CON UMBRALES ESTRICTOS
+            
+            // 1. ANOMALÍAS LINEALES - Requiere evidencia específica de SAR o rugosidad
+            const sarProb = stats.sar_backscatter?.archaeological_probability || 0;
+            const roughnessProb = stats.surface_roughness?.archaeological_probability || 0;
+            const sarLBandProb = stats.sar_l_band?.archaeological_probability || 0;
+            
+            const linearEvidence = Math.max(sarProb, roughnessProb, sarLBandProb);
+            console.log(`📏 Evidencia LINEAL: SAR=${(sarProb*100).toFixed(1)}%, Rugosidad=${(roughnessProb*100).toFixed(1)}%, SAR-L=${(sarLBandProb*100).toFixed(1)}% → Max=${(linearEvidence*100).toFixed(1)}%`);
+            
+            if (linearEvidence > 0.35) { // Umbral alto para lineales
+                console.log('✅ ANOMALÍA LINEAL DETECTADA');
                 detectedAnomalies.push({
                     type: 'linear',
                     name: 'Anomalías Lineales',
                     icon: '📏',
-                    description: 'Calzadas, muros, canales detectados',
-                    confidence: Math.max(
-                        stats.sar_backscatter?.archaeological_probability || 0,
-                        stats.surface_roughness?.archaeological_probability || 0
-                    ),
-                    color: '#ff6b35'
+                    description: 'Calzadas, muros, canales detectados por SAR/Rugosidad',
+                    confidence: linearEvidence,
+                    color: '#ff6b35',
+                    evidence: `SAR: ${(sarProb*100).toFixed(1)}%, Rugosidad: ${(roughnessProb*100).toFixed(1)}%`
                 });
+            } else {
+                console.log(`❌ ANOMALÍA LINEAL NO DETECTADA (evidencia: ${(linearEvidence*100).toFixed(1)}% < 35%)`);
             }
             
-            // Detectar anomalías circulares (plazas, fosos, túmulos)
-            if (stats.elevation_dem?.archaeological_probability > 0.25 || 
-                stats.thermal_lst?.archaeological_probability > 0.25) {
+            // 2. ANOMALÍAS CIRCULARES - Requiere evidencia específica de DEM o térmico
+            const demProb = stats.elevation_dem?.archaeological_probability || 0;
+            const thermalProb = stats.thermal_lst?.archaeological_probability || 0;
+            const icesat2Prob = stats.icesat2_profiles?.archaeological_probability || 0;
+            
+            const circularEvidence = Math.max(demProb, thermalProb, icesat2Prob);
+            console.log(`⭕ Evidencia CIRCULAR: DEM=${(demProb*100).toFixed(1)}%, Térmico=${(thermalProb*100).toFixed(1)}%, ICESat-2=${(icesat2Prob*100).toFixed(1)}% → Max=${(circularEvidence*100).toFixed(1)}%`);
+            
+            if (circularEvidence > 0.30) { // Umbral moderado para circulares
+                console.log('✅ ANOMALÍA CIRCULAR DETECTADA');
                 detectedAnomalies.push({
                     type: 'circular',
                     name: 'Anomalías Circulares',
                     icon: '⭕',
-                    description: 'Plazas, fosos, túmulos detectados',
-                    confidence: Math.max(
-                        stats.elevation_dem?.archaeological_probability || 0,
-                        stats.thermal_lst?.archaeological_probability || 0
-                    ),
-                    color: '#9932cc'
+                    description: 'Plazas, fosos, túmulos detectados por DEM/Térmico',
+                    confidence: circularEvidence,
+                    color: '#9932cc',
+                    evidence: `DEM: ${(demProb*100).toFixed(1)}%, Térmico: ${(thermalProb*100).toFixed(1)}%`
                 });
+            } else {
+                console.log(`❌ ANOMALÍA CIRCULAR NO DETECTADA (evidencia: ${(circularEvidence*100).toFixed(1)}% < 30%)`);
             }
             
-            // Detectar anomalías rectangulares (edificios, terrazas, campos)
-            if (stats.ndvi_vegetation?.archaeological_probability > 0.2 || 
-                stats.lidar_fullwave?.archaeological_probability > 0.2) {
+            // 3. ANOMALÍAS RECTANGULARES - Requiere evidencia específica de NDVI o LiDAR
+            const ndviProb = stats.ndvi_vegetation?.archaeological_probability || 0;
+            const lidarProb = stats.lidar_fullwave?.archaeological_probability || 0;
+            const gediProb = stats.vegetation_height?.archaeological_probability || 0;
+            
+            const rectangularEvidence = Math.max(ndviProb, lidarProb, gediProb);
+            console.log(`🔲 Evidencia RECTANGULAR: NDVI=${(ndviProb*100).toFixed(1)}%, LiDAR=${(lidarProb*100).toFixed(1)}%, GEDI=${(gediProb*100).toFixed(1)}% → Max=${(rectangularEvidence*100).toFixed(1)}%`);
+            
+            if (rectangularEvidence > 0.25) { // Umbral moderado-bajo para rectangulares
+                console.log('✅ ANOMALÍA RECTANGULAR DETECTADA');
                 detectedAnomalies.push({
                     type: 'rectangular',
                     name: 'Anomalías Rectangulares',
                     icon: '🔲',
-                    description: 'Edificios, terrazas, campos detectados',
-                    confidence: Math.max(
-                        stats.ndvi_vegetation?.archaeological_probability || 0,
-                        stats.lidar_fullwave?.archaeological_probability || 0
-                    ),
-                    color: '#2196f3'
+                    description: 'Edificios, terrazas, campos detectados por NDVI/LiDAR',
+                    confidence: rectangularEvidence,
+                    color: '#2196f3',
+                    evidence: `NDVI: ${(ndviProb*100).toFixed(1)}%, LiDAR: ${(lidarProb*100).toFixed(1)}%`
                 });
+            } else {
+                console.log(`❌ ANOMALÍA RECTANGULAR NO DETECTADA (evidencia: ${(rectangularEvidence*100).toFixed(1)}% < 25%)`);
             }
             
-            // Detectar anomalías complejas (ciudades, sistemas hidráulicos)
-            if (avgProbability > 0.4 && detectedAnomalies.length >= 2) {
+            // 4. ANOMALÍAS COMPLEJAS - Solo si hay múltiples tipos Y alta probabilidad general
+            const multipleTypesDetected = detectedAnomalies.length >= 2;
+            const highOverallProbability = avgProbability > 0.45;
+            
+            console.log(`🏛️ Evidencia COMPLEJA: Tipos múltiples=${multipleTypesDetected}, Prob alta=${highOverallProbability} (${(avgProbability*100).toFixed(1)}%)`);
+            
+            if (multipleTypesDetected && highOverallProbability) {
+                console.log('✅ ANOMALÍA COMPLEJA DETECTADA');
                 detectedAnomalies.push({
                     type: 'complex',
                     name: 'Anomalías Complejas',
                     icon: '🏛️',
-                    description: 'Sistemas urbanos o hidráulicos complejos',
+                    description: `Sistema complejo con ${detectedAnomalies.length} tipos de anomalías`,
                     confidence: avgProbability,
-                    color: '#ff9800'
+                    color: '#ff9800',
+                    evidence: `${detectedAnomalies.length} tipos detectados, probabilidad general: ${(avgProbability*100).toFixed(1)}%`
                 });
+            } else {
+                console.log(`❌ ANOMALÍA COMPLEJA NO DETECTADA (tipos: ${detectedAnomalies.length}, prob: ${(avgProbability*100).toFixed(1)}%)`);
             }
             
-            // Si no hay anomalías específicas pero hay probabilidad general, mostrar anomalía general
-            if (detectedAnomalies.length === 0 && avgProbability > 0.15) {
+            // 5. ANOMALÍA GENERAL - Solo si no hay tipos específicos pero hay probabilidad moderada
+            if (detectedAnomalies.length === 0 && avgProbability > 0.20) {
+                console.log('✅ ANOMALÍA GENERAL DETECTADA (sin tipos específicos)');
                 detectedAnomalies.push({
                     type: 'general',
                     name: 'Anomalía Detectada',
                     icon: '🔍',
-                    description: 'Anomalía arqueológica general detectada',
+                    description: 'Anomalía arqueológica general sin tipo específico identificado',
                     confidence: avgProbability,
-                    color: '#4caf50'
+                    color: '#4caf50',
+                    evidence: `Probabilidad general: ${(avgProbability*100).toFixed(1)}%, sin patrones geométricos claros`
                 });
             }
+            
+            console.log(`🎯 RESULTADO FINAL: ${detectedAnomalies.length} tipos de anomalías detectados`);
+            detectedAnomalies.forEach((anomaly, index) => {
+                console.log(`   ${index + 1}. ${anomaly.icon} ${anomaly.name} - Confianza: ${(anomaly.confidence * 100).toFixed(1)}%`);
+                console.log(`      Evidencia: ${anomaly.evidence}`);
+            });
+            
+            if (detectedAnomalies.length === 0) {
+                console.log('❌ NO SE DETECTARON ANOMALÍAS ESPECÍFICAS - No se mostrarán iconos');
+            }
+            
+            console.log('🔍 ===== FIN ANÁLISIS DE TIPOS DE ANOMALÍAS =====');
             
             return detectedAnomalies;
         }
