@@ -1,0 +1,51 @@
+{
+  "protocol_summary": {
+    "total_controls": 5,
+    "confirmed": 5,
+    "falsified": 0,
+    "confirmation_rate": 1.0
+  },
+  "detailed_results": {
+    "Selva Congo (África)": {
+      "site_name": "Selva Congo (África)",
+      "temporal_persistence": 0.37204746978987924,
+      "archaeological_probability": 0.12350400000000002,
+      "expected_result": "low_persistence",
+      "falsification_status": "CONFIRMED",
+      "interpretation": "El sitio Selva Congo (África) se comporta como esperado para un control negativo, fortaleciendo la hipótesis de que ArcheoScope detecta específicamente persistencia antrópica."
+    },
+    "Bosque Boreal Canadá": {
+      "site_name": "Bosque Boreal Canadá",
+      "temporal_persistence": 0.44832477435422574,
+      "archaeological_probability": 0.09844480000000003,
+      "expected_result": "natural_processes",
+      "falsification_status": "CONFIRMED",
+      "interpretation": "El sitio Bosque Boreal Canadá se comporta como esperado para un control negativo, fortaleciendo la hipótesis de que ArcheoScope detecta específicamente persistencia antrópica."
+    },
+    "Manglar Australia": {
+      "site_name": "Manglar Australia",
+      "temporal_persistence": 0.7570000619242128,
+      "archaeological_probability": 0.0031042000000000005,
+      "expected_result": "natural_processes",
+      "falsification_status": "CONFIRMED",
+      "interpretation": "El sitio Manglar Australia se comporta como esperado para un control negativo, fortaleciendo la hipótesis de que ArcheoScope detecta específicamente persistencia antrópica."
+    },
+    "Desierto Sahara": {
+      "site_name": "Desierto Sahara",
+      "temporal_persistence": 0.5853686601019519,
+      "archaeological_probability": 0.0371712,
+      "expected_result": "low_persistence",
+      "falsification_status": "CONFIRMED",
+      "interpretation": "El sitio Desierto Sahara se comporta como esperado para un control negativo, fortaleciendo la hipótesis de que ArcheoScope detecta específicamente persistencia antrópica."
+    },
+    "Océano Pacífico": {
+      "site_name": "Océano Pacífico",
+      "temporal_persistence": 0.75779893751385,
+      "archaeological_probability": 0.0030952,
+      "expected_result": "natural_processes",
+      "falsification_status": "CONFIRMED",
+      "interpretation": "El sitio Océano Pacífico se comporta como esperado para un control negativo, fortaleciendo la hipótesis de que ArcheoScope detecta específicamente persistencia antrópica."
+    }
+  },
+  "scientific_conclusion": "HYPOTHESIS_STRONGLY_SUPPORTED"
+}

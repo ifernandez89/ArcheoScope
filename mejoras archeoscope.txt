@@ -1,0 +1,203 @@
+1. Dimensión que hoy no estás explotando del todo: el tiempo como sensor
+
+Ahora usás series temporales para confirmar persistencia.
+Podés ir un paso más allá:
+
+⏳ “Firma temporal arqueológica”
+
+No solo si persiste, sino cómo persiste.
+
+Idea
+Extraer curvas temporales características:
+
+NDVI anual multianual
+
+Fase térmica día/noche a lo largo del año
+
+Estabilidad SAR estacional
+
+Y buscar:
+
+Desfase sistemático
+
+Amortiguación anómala
+
+Respuestas retardadas
+
+Ejemplo:
+
+Un muro enterrado responde más lento a lluvias, calor o sequías que el suelo natural.
+
+Esa “inercia temporal” es tan diagnóstica como la térmica.
+
+Resultado:
+📈 pasás de anomalías espaciales → anomalías dinámicas
+
+Esto reduce aún más falsos positivos agrícolas.
+
+2. Índices “no estándar” (ahí está la ventaja competitiva)
+
+Todo el mundo usa NDVI. Pocos van más allá.
+
+🌱 Estrés vegetal diferencial
+
+Combinar índices menos usados:
+
+NDRE (Red Edge)
+
+MSI (Moisture Stress Index)
+
+Variabilidad intra-pixel
+
+Idea innovadora
+No medir “vegetación baja”, sino:
+
+heterogeneidad vegetal no explicable
+
+estrés localizado dentro de parcelas homogéneas
+
+Eso es muy típico de estructuras enterradas.
+
+3. SAR más profundo (sin cambiar de satélite)
+
+Sentinel-1 da más de lo que parece.
+
+📡 Coherencia direccional
+
+Analizar:
+
+Diferencias VV vs VH
+
+Cambios de backscatter según ángulo de incidencia
+
+Hipótesis
+Estructuras lineales enterradas generan anisotropía radar:
+
+reflejan distinto según orientación del satélite
+
+Eso permite inferir:
+
+dirección dominante
+
+geometría subyacente
+
+Sin ver nada “ópticamente”.
+
+4. Geomorfología negativa (muy poco usada)
+
+La mayoría busca elevaciones.
+Pero muchas estructuras antiguas generan lo contrario.
+
+🏞️ Micro-depresiones persistentes
+
+Ejemplos:
+
+zanjas
+
+fosos
+
+canales colapsados
+
+fundaciones erosionadas
+
+Idea
+Analizar:
+
+curvatura negativa
+
+acumulación de humedad
+
+estrés vegetal inverso
+
+Esto abre la puerta a:
+
+sistemas hidráulicos
+
+límites urbanos antiguos
+
+campos agrícolas históricos
+
+5. Módulo “anti-humano moderno” (clave para escalar)
+
+Tu filtro anti-pareidolia es conceptual.
+Podés volverlo formal.
+
+🚫 Catálogo de firmas modernas
+
+Base de conocimiento con patrones conocidos:
+
+drenajes agrícolas
+
+líneas eléctricas
+
+caminos modernos
+
+terrazas recientes
+
+No con ML pesado, sino:
+
+reglas geométricas
+
+periodicidad
+
+alineación con catastros actuales
+
+Resultado:
+
+reducción brutal de ruido
+
+confianza institucional (muy importante si esto llega a academia o gobierno)
+
+6. Score probabilístico explicable (no caja negra)
+
+Tu 85% es heurístico. Eso está bien, pero podés refinarlo.
+
+🎯 Evidencia bayesiana ligera
+
+Asignar pesos:
+
+físico (qué tan fuerte es la señal)
+
+temporal (persistencia)
+
+multisensorial (redundancia)
+
+contradicciones (factores negativos)
+
+Resultado:
+
+probabilidad explicable
+
+cada anomalía viene con “por qué”
+
+Eso es oro para arqueólogos.
+
+7. Idea verdaderamente innovadora (poco explorada)
+🧭 “Memoria del paisaje”
+
+No detectar estructuras, sino:
+
+lugares que se resisten a volver a ser naturales
+
+Es decir:
+
+zonas donde el terreno nunca se comporta como debería
+aunque pasen siglos.
+
+Esto convierte ArcheoScope en algo más profundo:
+
+no busca ruinas
+
+busca persistencia antropogénica invisible
+
+Eso es un concepto casi nuevo en arqueología computacional.
+
+8. En una frase
+
+Hoy ArcheoScope:
+
+detecta convergencia de anomalías físicas
+
+Potenciado, podría:
+
+detectar historias enterradas que el paisaje aún no logró olvidar

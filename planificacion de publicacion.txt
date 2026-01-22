@@ -1,0 +1,196 @@
+🧭 PRINCIPIO ESTRATÉGICO (CLAVE)
+
+Primero que lo vean quienes saben leerlo.
+Después, que el resto lo entienda.
+
+Si invertís ese orden, perdés credibilidad.
+Si lo hacés bien, te buscan ellos.
+
+🥇 CAPA 1 — “AVISO” CIENTÍFICO CONTROLADO (AHORA)
+🎯 Objetivo
+
+Que arqueólogos, geoarqueólogos y especialistas en paisaje sepan que esto existe, sin todavía “venderlo”.
+
+✅ Qué hacer ahora (1–2 semanas)
+1️⃣ Publicar un preprint (NO paper final aún)
+
+Plataformas ideales:
+
+EarthArXiv
+
+SocArXiv
+
+ArXiv (cs.AI + earth sciences)
+
+📌 Título sugerido (sobrio, fuerte):
+
+Detecting Persistent Functional Landscapes: Multisensor Evidence of Long-Term Archaeological Infrastructure Activity
+
+📌 Autodefinición correcta:
+
+❌ “Revolutionary AI”
+
+✅ “Multisensor analytical framework”
+
+Esto avisa sin exponerte a revisión hostil todavía.
+
+2️⃣ Liberar un whitepaper técnico de ArcheoScope
+
+NO académico, NO marketing.
+
+Contenido:
+
+Qué mide
+
+Qué no mide
+
+Por qué LIDAR no alcanza
+
+Qué significa “persistencia funcional”
+
+Por qué Angkor / Petén / Tiwanaku
+
+👉 Este documento es el que circula entre colegas.
+
+🥈 CAPA 2 — DEMO CIENTÍFICA INTERACTIVA (CLAVE)
+🎯 Objetivo
+
+Que quien dude pueda mirar los datos.
+
+Qué mostrar (simple, elegante)
+
+Una web minimalista con:
+
+Mapa
+
+Capas con toggle:
+
+NDVI persistente
+
+SAR
+
+Rugosidad
+
+“Persistencia funcional”
+
+Comparador LIDAR vs ArcheoScope
+
+Línea temporal (años → señal persiste)
+
+⚠️ Importantísimo:
+
+Sin conclusiones grandilocuentes
+
+Sin “descubrimos X”
+
+Solo: “esto persiste, esto no”
+
+Eso mata críticas.
+
+🥉 CAPA 3 — CONTACTO DIRIGIDO (NO MASIVO)
+🎯 Objetivo
+
+Que las personas correctas lo vean primero.
+
+A quién avisar (ejemplos de perfiles):
+
+Equipos que trabajan con:
+
+Angkor (EFEO, Australian National University)
+
+Maya lowlands (Brown, Tulane, UNAM)
+
+Andes (PUCP, Universidad Mayor de San Andrés)
+
+Grupos de:
+
+Geoarqueología
+
+Arqueología del paisaje
+
+Remote sensing aplicado
+
+📧 Cómo escribir:
+No “te presento mi herramienta”.
+Sí:
+
+Estamos explorando persistencia funcional post-abandono con análisis multitemporal.
+Angkor / Petén / Tiwanaku mostraron resultados comparables.
+Nos interesa saber si esto dialoga con tu trabajo.
+
+Eso abre puertas.
+
+🏆 CAPA 4 — DIVULGACIÓN ABIERTA (DESPUÉS)
+
+Cuando ya exista:
+
+preprint
+
+demo
+
+feedback de expertos
+
+👉 recién ahí:
+
+Hilo largo en X / Bluesky
+
+Artículo tipo “What LIDAR can’t tell us”
+
+Charla online grabada
+
+Medium / Substack técnico
+
+Ahí sí podés decir:
+
+“Arqueología viva”
+
+Porque ya no es marketing, es síntesis.
+
+🧠 CÓMO POSICIONAR ARCHEOSCOPE (FRASE CLAVE)
+
+Usá siempre esta idea (es oro):
+
+LIDAR shows structure.
+ArcheoScope reveals persistence.
+
+O en español:
+
+El LIDAR muestra qué hubo.
+ArcheoScope muestra qué sigue actuando.
+
+Eso es claro, humilde y demoledor.
+
+🧩 QUÉ NO HACER (MUY IMPORTANTE)
+
+❌ No hablar de “descubrimientos ocultos”
+❌ No hablar de civilizaciones perdidas
+❌ No competir con arqueólogos
+❌ No vender como “IA mágica”
+
+Vos no reemplazás a nadie.
+Vos les das una nueva variable.
+
+🧭 MI RECOMENDACIÓN FINAL, SIN DUDAS
+
+Tu trilogía:
+
+Angkor
+
+Petén
+
+Tiwanaku
+
+👉 ya justifica:
+
+Preprint
+
+Whitepaper
+
+Demo científica
+
+Contacto dirigido
+
+No más datos.
+No más esperar.
+
+Ahora se avisa con rigor.

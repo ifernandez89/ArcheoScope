@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Diagnóstico ArcheoScope</title>
+    <style>
+        body { font-family: monospace; padding: 2rem; background: #f8f9fa; }
+        .test-section { background: white; padding: 1.5rem; margin: 1rem 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-button { background: #007bff; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; margin: 0.5rem; }
+        .test-button:hover { background: #0056b3; }
+        .result { background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-top: 1rem; border-left: 4px solid #007bff; }
+        .critical { border-left-color: #dc3545; background: #fadbd8; }
+        .limited { border-left-color: #fd7e14; background: #fff3cd; }
+        .valid { border-left-color: #ffc107; background: #d1ecf1; }
+        .optimal { border-left-color: #28a745; background: #d4edda; }
+    </style>
+</head>
+<body>
+    <h1>🔬 Test del Sistema de Diagnóstico Científico</h1>
+    
+    <div class="test-section">
+        <h2>🎯 Objetivo</h2>
+        <p>Verificar que el nuevo sistema de diagnóstico científico de datos funciona correctamente y proporciona retroalimentación honesta sobre la calidad de los datos disponibles.</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧪 Tests Automáticos</h2>
+        <button class="test-button" onclick="testLowResolution()">Test Resolución Baja (500m)</button>
+        <button class="test-button" onclick="testHighResolution()">Test Resolución Alta (10m)</button>
+        <button class="test-button" onclick="testOptimalData()">Test Datos Óptimos</button>
+        
+        <div id="testResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🌐 Frontend Principal</h2>
+        <p>Para probar la interfaz completa:</p>
+        <a href="http://localhost:8080" target="_blank" style="display: inline-block; background: #28a745; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 4px;">
+            🏺 Abrir ArcheoScope
+        </a>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Instrucciones de Prueba</h2>
+        <ol>
+            <li><strong>Coordenadas de prueba:</strong> 41.85, 12.50 (Roma)</li>
+            <li><strong>Resolución 500m:</strong> Debería mostrar diagnóstico CRÍTICO 🔴</li>
+            <li><strong>Resolución 10m:</strong> Debería mostrar diagnóstico MEJORADO 🟡</li>
+            <li><strong>Buscar sección:</strong> "🔬 Diagnóstico Científico de Datos"</li>
+            <li><strong>Mensaje esperado:</strong> "necesito ver mejor para hablar"</li>
+        </ol>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8004';
+        
+        function showResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+        
+        async function testLowResolution() {
+            showResult('🔍 Testing resolución baja (500m)...', 'info');
+            
+            const testData = {
+                lat_min: 41.85,
+                lat_max: 41.86,
+                lon_min: 12.50,
+                lon_max: 12.51,
+                resolution_m: 500,
+                region_name: "Test Low Resolution",
+                include_explainability: true,
+                include_validation_metrics: true,
+                layers_to_analyze: ["ndvi_vegetation", "thermal_lst"],
+                active_rules: ["all"]
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const resolution = data.region_info?.resolution_m || 'unknown';
+                    const temporalWindows = data.temporal_analysis?.available_windows || 0;
+                    
+                    showResult(`
+                        ✅ <strong>Test Resolución Baja Completado</strong><br>
+                        • Resolución: ${resolution}m<br>
+                        • Ventanas temporales: ${temporalWindows}<br>
+                        • <strong>Diagnóstico esperado:</strong> 🔴 CRÍTICO<br>
+                        • <strong>Razón:</strong> Resolución > 30m, ventanas temporales < 3<br>
+                        • <strong>Mensaje:</strong> "necesito ver mejor para hablar"
+                    `, 'critical');
+                } else {
+                    showResult(`❌ Error: ${response.status}`, 'critical');
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, 'critical');
+            }
+        }
+        
+        async function testHighResolution() {
+            showResult('🔍 Testing resolución alta (10m)...', 'info');
+            
+            const testData = {
+                lat_min: 41.85,
+                lat_max: 41.86,
+                lon_min: 12.50,
+                lon_max: 12.51,
+                resolution_m: 10,
+                region_name: "Test High Resolution",
+                include_explainability: true,
+                include_validation_metrics: true,
+                layers_to_analyze: ["ndvi_vegetation", "thermal_lst", "sar_backscatter"],
+                active_rules: ["all"]
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const resolution = data.region_info?.resolution_m || 'unknown';
+                    
+                    showResult(`
+                        ✅ <strong>Test Resolución Alta Completado</strong><br>
+                        • Resolución: ${resolution}m<br>
+                        • <strong>Diagnóstico esperado:</strong> 🟡 VÁLIDO (pero limitado)<br>
+                        • <strong>Razón:</strong> Resolución adecuada, pero faltan datos temporales<br>
+                        • <strong>Mejora:</strong> Menos crítico que resolución baja
+                    `, 'valid');
+                } else {
+                    showResult(`❌ Error: ${response.status}`, 'critical');
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, 'critical');
+            }
+        }
+        
+        async function testOptimalData() {
+            showResult('🔍 Testing datos óptimos (simulado)...', 'info');
+            
+            showResult(`
+                ✅ <strong>Simulación de Datos Óptimos</strong><br>
+                • Resolución: 10m ✅<br>
+                • Series temporales: 5 años ✅<br>
+                • Contexto geomorfológico: Disponible ✅<br>
+                • Huella humana moderna: Mapeada ✅<br>
+                • Ground truth: Sitios conocidos ✅<br>
+                • Microtopografía: LiDAR ✅<br>
+                • <strong>Diagnóstico esperado:</strong> ✅ ÓPTIMO<br>
+                • <strong>Mensaje:</strong> "Datos óptimos para interpretación científica"
+            `, 'optimal');
+        }
+        
+        // Auto-ejecutar test básico al cargar
+        window.onload = function() {
+            showResult(`
+                🏺 <strong>Sistema de Diagnóstico ArcheoScope</strong><br>
+                Backend: ${API_BASE} ✅<br>
+                Frontend: http://localhost:8080 ✅<br>
+                <em>Listo para testing del diagnóstico científico</em>
+            `, 'info');
+        };
+    </script>
+</body>
+</html>

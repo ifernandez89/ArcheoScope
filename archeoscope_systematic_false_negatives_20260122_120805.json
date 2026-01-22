@@ -1,0 +1,691 @@
+{
+  "test_info": {
+    "timestamp": "20260122_120805",
+    "framework": "systematic_false_negatives_detection",
+    "principle": "functional_persistence_without_geometric_intentionality",
+    "objective": "demonstrate_visual_archaeology_false_negatives"
+  },
+  "site_analyses": [
+    {
+      "site_info": {
+        "id": "tapajos_xingu_interfluvial",
+        "name": "Tapajós-Xingu Interfluvial Zone",
+        "coords": {
+          "lat": -4.5,
+          "lon": -54.0
+        },
+        "archaeological_status": "ignored_by_visual_archaeology",
+        "expected_classification": "anthropogenic_non_monumental",
+        "context": "High biodiversity, no visible geoglyphs, suspected forest management",
+        "priority": 1
+      },
+      "afpi_analysis": {
+        "afpi_mean": 0.8130256597171645,
+        "system_metrics": {
+          "ecological_interaction": {
+            "vegetation_modulation": 0.9157422677717488,
+            "soil_chemistry_influence": 0.9032985603139152,
+            "biotic_coherence": 0.6577339385545374
+          },
+          "energetic_asymmetry": {
+            "thermal_redistribution": 0.8596448285796752,
+            "surface_modification": 0.7196539146014655,
+            "energy_concentration": 0.671217702725833
+          },
+          "historical_asymmetry": {
+            "multi_temporal_stability": 0.896571579707481,
+            "adaptive_signatures": 0.6577339385545374
+          },
+          "decision_signature": {
+            "optimization_breaking": 0.04843621187563252,
+            "strategic_suboptimization": 0.21625127531314658,
+            "long_term_stability": 0.8870257179922718
+          }
+        },
+        "raw_stats": {
+          "ndvi_vegetation": {
+            "temporal_persistence": 0.9157422677717488,
+            "geometric_coherence": 0.6577339385545374
+          },
+          "thermal_lst": {
+            "temporal_persistence": 0.8596448285796752,
+            "geometric_coherence": 0.671217702725833
+          },
+          "sar_backscatter": {
+            "temporal_persistence": 0.9143276427710193
+          },
+          "surface_roughness": {
+            "geometric_coherence": 0.7196539146014655
+          },
+          "soil_salinity": {
+            "temporal_persistence": 0.9032985603139152
+          },
+          "seismic_resonance": {
+            "temporal_persistence": 0.8870257179922718,
+            "geometric_coherence": 0.6988011487144051
+          }
+        }
+      },
+      "origin_classification": {
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "anthropogenic_score": 0.5750139269000135,
+        "criterion_scores": {
+          "ecological_interaction": 0.8346066567692354,
+          "energetic_asymmetry": 0.4945029158589196,
+          "historical_asymmetry": 0.5897055563170649,
+          "decision_signature": 0.28328013847396605
+        }
+      },
+      "false_negative_validation": {
+        "status": "FUNCTIONAL_PERSISTENCE_DETECTED",
+        "impact": "LOW",
+        "afpi": 0.8130256597171645,
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "archaeological_status": "ignored_by_visual_archaeology",
+        "interpretation": "DETECTED: Tapajós-Xingu Interfluvial Zone shows functional persistence requiring further investigation"
+      },
+      "disciplinary_impact": {
+        "impact_level": "MODERATE",
+        "implications": [
+          "Suggests underestimation of anthropogenic influence",
+          "Supports expanded archaeological investigation",
+          "Indicates need for methodological refinement"
+        ],
+        "disciplinary_challenge": "False"
+      }
+    },
+    {
+      "site_info": {
+        "id": "madeira_purus_interfluvial",
+        "name": "Madeira-Purus Interfluvial Zone",
+        "coords": {
+          "lat": -6.0,
+          "lon": -61.5
+        },
+        "archaeological_status": "classified_as_pristine",
+        "expected_classification": "anthropogenic_invisible",
+        "context": "Officially pristine forest, high AFPI expected",
+        "priority": 1
+      },
+      "afpi_analysis": {
+        "afpi_mean": 0.8235214725773287,
+        "system_metrics": {
+          "ecological_interaction": {
+            "vegetation_modulation": 0.9067955315494769,
+            "soil_chemistry_influence": 0.9547062395525924,
+            "biotic_coherence": 0.7125251734797731
+          },
+          "energetic_asymmetry": {
+            "thermal_redistribution": 0.9064385617428576,
+            "surface_modification": 0.7137100077653487,
+            "energy_concentration": 0.6744993769547273
+          },
+          "historical_asymmetry": {
+            "multi_temporal_stability": 0.8998104026064714,
+            "adaptive_signatures": 0.7125251734797731
+          },
+          "decision_signature": {
+            "optimization_breaking": 0.03921063081062137,
+            "strategic_suboptimization": 0.23192738790310716,
+            "long_term_stability": 0.8908388216331701
+          }
+        },
+        "raw_stats": {
+          "ndvi_vegetation": {
+            "temporal_persistence": 0.9067955315494769,
+            "geometric_coherence": 0.7125251734797731
+          },
+          "thermal_lst": {
+            "temporal_persistence": 0.9064385617428576,
+            "geometric_coherence": 0.6744993769547273
+          },
+          "sar_backscatter": {
+            "temporal_persistence": 0.8861971145270796
+          },
+          "surface_roughness": {
+            "geometric_coherence": 0.7137100077653487
+          },
+          "soil_salinity": {
+            "temporal_persistence": 0.9547062395525924
+          },
+          "seismic_resonance": {
+            "temporal_persistence": 0.8908388216331701,
+            "geometric_coherence": 0.6517022048959783
+          }
+        }
+      },
+      "origin_classification": {
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "anthropogenic_score": 0.5958982054017997,
+        "criterion_scores": {
+          "ecological_interaction": 0.8628876365295004,
+          "energetic_asymmetry": 0.5042446207241247,
+          "historical_asymmetry": 0.6411375632160805,
+          "decision_signature": 0.2866229718121255
+        }
+      },
+      "false_negative_validation": {
+        "status": "FUNCTIONAL_PERSISTENCE_DETECTED",
+        "impact": "LOW",
+        "afpi": 0.8235214725773287,
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "archaeological_status": "classified_as_pristine",
+        "interpretation": "DETECTED: Madeira-Purus Interfluvial Zone shows functional persistence requiring further investigation"
+      },
+      "disciplinary_impact": {
+        "impact_level": "MODERATE",
+        "implications": [
+          "Suggests underestimation of anthropogenic influence",
+          "Supports expanded archaeological investigation",
+          "Indicates need for methodological refinement"
+        ],
+        "disciplinary_challenge": "False"
+      }
+    },
+    {
+      "site_info": {
+        "id": "solimoes_japura_interfluvial",
+        "name": "Solimões-Japurá Interfluvial Zone",
+        "coords": {
+          "lat": -3.0,
+          "lon": -66.0
+        },
+        "archaeological_status": "functionally_underestimated",
+        "expected_classification": "anthropogenic_diffuse",
+        "context": "Diffuse management without geometric signatures",
+        "priority": 1
+      },
+      "afpi_analysis": {
+        "afpi_mean": 0.8214919892104118,
+        "system_metrics": {
+          "ecological_interaction": {
+            "vegetation_modulation": 0.91207647061612,
+            "soil_chemistry_influence": 0.9288172222366695,
+            "biotic_coherence": 0.6373901547813431
+          },
+          "energetic_asymmetry": {
+            "thermal_redistribution": 0.9155833232928192,
+            "surface_modification": 0.750952913113249,
+            "energy_concentration": 0.6768002488346438
+          },
+          "historical_asymmetry": {
+            "multi_temporal_stability": 0.9039039016152811,
+            "adaptive_signatures": 0.6373901547813431
+          },
+          "decision_signature": {
+            "optimization_breaking": 0.07415266427860512,
+            "strategic_suboptimization": 0.20600433942057794,
+            "long_term_stability": 0.8809497779386078
+          }
+        },
+        "raw_stats": {
+          "ndvi_vegetation": {
+            "temporal_persistence": 0.91207647061612,
+            "geometric_coherence": 0.6373901547813431
+          },
+          "thermal_lst": {
+            "temporal_persistence": 0.9155833232928192,
+            "geometric_coherence": 0.6768002488346438
+          },
+          "sar_backscatter": {
+            "temporal_persistence": 0.8840519109369039
+          },
+          "surface_roughness": {
+            "geometric_coherence": 0.750952913113249
+          },
+          "soil_salinity": {
+            "temporal_persistence": 0.9288172222366695
+          },
+          "seismic_resonance": {
+            "temporal_persistence": 0.8809497779386078,
+            "geometric_coherence": 0.7126192819499768
+          }
+        }
+      },
+      "origin_classification": {
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "anthropogenic_score": 0.5799722848144372,
+        "criterion_scores": {
+          "ecological_interaction": 0.8346928013518518,
+          "energetic_asymmetry": 0.5173827916429472,
+          "historical_asymmetry": 0.576139447758024,
+          "decision_signature": 0.2882527570673948
+        }
+      },
+      "false_negative_validation": {
+        "status": "FUNCTIONAL_PERSISTENCE_DETECTED",
+        "impact": "LOW",
+        "afpi": 0.8214919892104118,
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "archaeological_status": "functionally_underestimated",
+        "interpretation": "DETECTED: Solimões-Japurá Interfluvial Zone shows functional persistence requiring further investigation"
+      },
+      "disciplinary_impact": {
+        "impact_level": "MODERATE",
+        "implications": [
+          "Suggests underestimation of anthropogenic influence",
+          "Supports expanded archaeological investigation",
+          "Indicates need for methodological refinement"
+        ],
+        "disciplinary_challenge": "False"
+      }
+    },
+    {
+      "site_info": {
+        "id": "cameroon_central_forests",
+        "name": "Central Cameroon Forests",
+        "coords": {
+          "lat": 3.5,
+          "lon": 12.0
+        },
+        "archaeological_status": "suspected_anthropogenic_soils",
+        "expected_classification": "anthropogenic_forest_management",
+        "context": "Suspected anthropogenic soils, minimal excavation",
+        "priority": 2
+      },
+      "afpi_analysis": {
+        "afpi_mean": 0.8087877429771999,
+        "system_metrics": {
+          "ecological_interaction": {
+            "vegetation_modulation": 0.8407434366621027,
+            "soil_chemistry_influence": 0.7954835826089713,
+            "biotic_coherence": 0.7510318003981896
+          },
+          "energetic_asymmetry": {
+            "thermal_redistribution": 0.8306437830046141,
+            "surface_modification": 0.7831955738245963,
+            "energy_concentration": 0.701779544625726
+          },
+          "historical_asymmetry": {
+            "multi_temporal_stability": 0.8370655504865424,
+            "adaptive_signatures": 0.7510318003981896
+          },
+          "decision_signature": {
+            "optimization_breaking": 0.08141602919887025,
+            "strategic_suboptimization": 0.22397304551530897,
+            "long_term_stability": 0.8553699408944684
+          }
+        },
+        "raw_stats": {
+          "ndvi_vegetation": {
+            "temporal_persistence": 0.8407434366621027,
+            "geometric_coherence": 0.7510318003981896
+          },
+          "thermal_lst": {
+            "temporal_persistence": 0.8306437830046141,
+            "geometric_coherence": 0.701779544625726
+          },
+          "sar_backscatter": {
+            "temporal_persistence": 0.8398094317929102
+          },
+          "surface_roughness": {
+            "geometric_coherence": 0.7831955738245963
+          },
+          "soil_salinity": {
+            "temporal_persistence": 0.7954835826089713
+          },
+          "seismic_resonance": {
+            "temporal_persistence": 0.8553699408944684,
+            "geometric_coherence": 0.7891324269757968
+          }
+        }
+      },
+      "origin_classification": {
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "anthropogenic_score": 0.5683845468731867,
+        "criterion_scores": {
+          "ecological_interaction": 0.8002519895669893,
+          "energetic_asymmetry": 0.48275807557447115,
+          "historical_asymmetry": 0.6286628474332097,
+          "decision_signature": 0.2932296180645654
+        }
+      },
+      "false_negative_validation": {
+        "status": "FUNCTIONAL_PERSISTENCE_DETECTED",
+        "impact": "LOW",
+        "afpi": 0.8087877429771999,
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "archaeological_status": "suspected_anthropogenic_soils",
+        "interpretation": "DETECTED: Central Cameroon Forests shows functional persistence requiring further investigation"
+      },
+      "disciplinary_impact": {
+        "impact_level": "MODERATE",
+        "implications": [
+          "Suggests underestimation of anthropogenic influence",
+          "Supports expanded archaeological investigation",
+          "Indicates need for methodological refinement"
+        ],
+        "disciplinary_challenge": "False"
+      }
+    },
+    {
+      "site_info": {
+        "id": "congo_eastern_forests",
+        "name": "Eastern Congo Basin",
+        "coords": {
+          "lat": -2.0,
+          "lon": 23.0
+        },
+        "archaeological_status": "forest_management_suspected",
+        "expected_classification": "anthropogenic_parallel_evolution",
+        "context": "Independent cultural evolution, forest management",
+        "priority": 2
+      },
+      "afpi_analysis": {
+        "afpi_mean": 0.775934534880029,
+        "system_metrics": {
+          "ecological_interaction": {
+            "vegetation_modulation": 0.8454111277812143,
+            "soil_chemistry_influence": 0.7937399871564556,
+            "biotic_coherence": 0.7100319661078662
+          },
+          "energetic_asymmetry": {
+            "thermal_redistribution": 0.8070539451598203,
+            "surface_modification": 0.7329450906072433,
+            "energy_concentration": 0.6652716692408058
+          },
+          "historical_asymmetry": {
+            "multi_temporal_stability": 0.8252112077321726,
+            "adaptive_signatures": 0.7100319661078662
+          },
+          "decision_signature": {
+            "optimization_breaking": 0.0676734213664375,
+            "strategic_suboptimization": 0.23766781480095478,
+            "long_term_stability": 0.7947115012564978
+          }
+        },
+        "raw_stats": {
+          "ndvi_vegetation": {
+            "temporal_persistence": 0.8454111277812143,
+            "geometric_coherence": 0.7100319661078662
+          },
+          "thermal_lst": {
+            "temporal_persistence": 0.8070539451598203,
+            "geometric_coherence": 0.6652716692408058
+          },
+          "sar_backscatter": {
+            "temporal_persistence": 0.8231685502554832
+          },
+          "surface_roughness": {
+            "geometric_coherence": 0.7329450906072433
+          },
+          "soil_salinity": {
+            "temporal_persistence": 0.7937399871564556
+          },
+          "seismic_resonance": {
+            "temporal_persistence": 0.7947115012564978,
+            "geometric_coherence": 0.7010648668877729
+          }
+        }
+      },
+      "origin_classification": {
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "anthropogenic_score": 0.5562756796699998,
+        "criterion_scores": {
+          "ecological_interaction": 0.7892960370917822,
+          "energetic_asymmetry": 0.487453670265055,
+          "historical_asymmetry": 0.5859263362803213,
+          "decision_signature": 0.2810787947182565
+        }
+      },
+      "false_negative_validation": {
+        "status": "NO_FALSE_NEGATIVE",
+        "impact": "NONE",
+        "afpi": 0.775934534880029,
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "archaeological_status": "forest_management_suspected",
+        "interpretation": "NO EVIDENCE: Eastern Congo Basin does not show clear anthropogenic signatures"
+      },
+      "disciplinary_impact": {
+        "impact_level": "MODERATE",
+        "implications": [
+          "Suggests underestimation of anthropogenic influence",
+          "Supports expanded archaeological investigation",
+          "Indicates need for methodological refinement"
+        ],
+        "disciplinary_challenge": "False"
+      }
+    },
+    {
+      "site_info": {
+        "id": "thailand_central_plains",
+        "name": "Central Thailand Plains",
+        "coords": {
+          "lat": 15.0,
+          "lon": 100.0
+        },
+        "archaeological_status": "diffuse_agricultural_landscapes",
+        "expected_classification": "anthropogenic_agricultural_diffuse",
+        "context": "Diffuse agriculture without monumentality",
+        "priority": 3
+      },
+      "afpi_analysis": {
+        "afpi_mean": 0.8170377221114412,
+        "system_metrics": {
+          "ecological_interaction": {
+            "vegetation_modulation": 0.8056416852010996,
+            "soil_chemistry_influence": 0.8800080681238402,
+            "biotic_coherence": 0.725507466870526
+          },
+          "energetic_asymmetry": {
+            "thermal_redistribution": 0.8651884480513248,
+            "surface_modification": 0.8721017392435181,
+            "energy_concentration": 0.7300061473602475
+          },
+          "historical_asymmetry": {
+            "multi_temporal_stability": 0.8324726513666221,
+            "adaptive_signatures": 0.725507466870526
+          },
+          "decision_signature": {
+            "optimization_breaking": 0.1420955918832706,
+            "strategic_suboptimization": 0.19588255609928093,
+            "long_term_stability": 0.8409103944529351
+          }
+        },
+        "raw_stats": {
+          "ndvi_vegetation": {
+            "temporal_persistence": 0.8056416852010996,
+            "geometric_coherence": 0.725507466870526
+          },
+          "thermal_lst": {
+            "temporal_persistence": 0.8651884480513248,
+            "geometric_coherence": 0.7300061473602475
+          },
+          "sar_backscatter": {
+            "temporal_persistence": 0.8265878208474422
+          },
+          "surface_roughness": {
+            "geometric_coherence": 0.8721017392435181
+          },
+          "soil_salinity": {
+            "temporal_persistence": 0.8800080681238402
+          },
+          "seismic_resonance": {
+            "temporal_persistence": 0.8409103944529351,
+            "geometric_coherence": 0.7416456379659797
+          }
+        }
+      },
+      "origin_classification": {
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "anthropogenic_score": 0.5715617310251585,
+        "criterion_scores": {
+          "ecological_interaction": 0.8039113345787496,
+          "energetic_asymmetry": 0.49501864288758374,
+          "historical_asymmetry": 0.6039651245319886,
+          "decision_signature": 0.30337333808360767
+        }
+      },
+      "false_negative_validation": {
+        "status": "FUNCTIONAL_PERSISTENCE_DETECTED",
+        "impact": "LOW",
+        "afpi": 0.8170377221114412,
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "archaeological_status": "diffuse_agricultural_landscapes",
+        "interpretation": "DETECTED: Central Thailand Plains shows functional persistence requiring further investigation"
+      },
+      "disciplinary_impact": {
+        "impact_level": "MODERATE",
+        "implications": [
+          "Suggests underestimation of anthropogenic influence",
+          "Supports expanded archaeological investigation",
+          "Indicates need for methodological refinement"
+        ],
+        "disciplinary_challenge": "False"
+      }
+    },
+    {
+      "site_info": {
+        "id": "vietnam_central_highlands",
+        "name": "Central Vietnam Highlands",
+        "coords": {
+          "lat": 16.0,
+          "lon": 107.0
+        },
+        "archaeological_status": "hydrological_manipulation_unrecognized",
+        "expected_classification": "anthropogenic_hydrological",
+        "context": "Hydrological manipulation without visible architecture",
+        "priority": 3
+      },
+      "afpi_analysis": {
+        "afpi_mean": 0.7945437199751755,
+        "system_metrics": {
+          "ecological_interaction": {
+            "vegetation_modulation": 0.8186819556625453,
+            "soil_chemistry_influence": 0.7358266739324516,
+            "biotic_coherence": 0.7457896029758628
+          },
+          "energetic_asymmetry": {
+            "thermal_redistribution": 0.8376123467286302,
+            "surface_modification": 0.8133734982964175,
+            "energy_concentration": 0.6938546586848711
+          },
+          "historical_asymmetry": {
+            "multi_temporal_stability": 0.830219771238189,
+            "adaptive_signatures": 0.7457896029758628
+          },
+          "decision_signature": {
+            "optimization_breaking": 0.11951883961154641,
+            "strategic_suboptimization": 0.22832001255232004,
+            "long_term_stability": 0.7913347038774077
+          }
+        },
+        "raw_stats": {
+          "ndvi_vegetation": {
+            "temporal_persistence": 0.8186819556625453,
+            "geometric_coherence": 0.7457896029758628
+          },
+          "thermal_lst": {
+            "temporal_persistence": 0.8376123467286302,
+            "geometric_coherence": 0.6938546586848711
+          },
+          "sar_backscatter": {
+            "temporal_persistence": 0.8343650113233915
+          },
+          "surface_roughness": {
+            "geometric_coherence": 0.8133734982964175
+          },
+          "soil_salinity": {
+            "temporal_persistence": 0.7358266739324516
+          },
+          "seismic_resonance": {
+            "temporal_persistence": 0.7913347038774077,
+            "geometric_coherence": 0.7533262301716833
+          }
+        }
+      },
+      "origin_classification": {
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "anthropogenic_score": 0.562484747132359,
+        "criterion_scores": {
+          "ecological_interaction": 0.7719576653375124,
+          "energetic_asymmetry": 0.5002942112712262,
+          "historical_asymmetry": 0.6191692735744406,
+          "decision_signature": 0.2974024816410281
+        }
+      },
+      "false_negative_validation": {
+        "status": "NO_FALSE_NEGATIVE",
+        "impact": "NONE",
+        "afpi": 0.7945437199751755,
+        "predicted_origin": "mixed_or_uncertain",
+        "confidence": 0.5,
+        "archaeological_status": "hydrological_manipulation_unrecognized",
+        "interpretation": "NO EVIDENCE: Central Vietnam Highlands does not show clear anthropogenic signatures"
+      },
+      "disciplinary_impact": {
+        "impact_level": "MODERATE",
+        "implications": [
+          "Suggests underestimation of anthropogenic influence",
+          "Supports expanded archaeological investigation",
+          "Indicates need for methodological refinement"
+        ],
+        "disciplinary_challenge": "False"
+      }
+    }
+  ],
+  "systematic_validation": {
+    "total_sites_analyzed": 7,
+    "confirmed_false_negatives": 0,
+    "false_negative_rate": 0.0,
+    "high_impact_sites": 0,
+    "high_impact_rate": 0.0,
+    "priority_analysis": {
+      "priority_1": {
+        "total_sites": 3,
+        "false_negatives": 0,
+        "rate": 0.0
+      },
+      "priority_2": {
+        "total_sites": 2,
+        "false_negatives": 0,
+        "rate": 0.0
+      },
+      "priority_3": {
+        "total_sites": 2,
+        "false_negatives": 0,
+        "rate": 0.0
+      }
+    },
+    "systematic_validation": {
+      "methodology_validated": "False",
+      "high_impact_achieved": "False",
+      "disciplinary_challenge_demonstrated": "False"
+    }
+  },
+  "disciplinary_implications": {
+    "central_scientific_declarations": [],
+    "disciplinary_implications": {
+      "archaeology": [
+        "Methodological revolution beyond visual archaeology required",
+        "Non-monumental landscape engineering represents distinct cultural strategy",
+        "Remote sensing integration essential for comprehensive detection"
+      ],
+      "anthropology": [
+        "Structural invisibility as cultural optimization strategy",
+        "Landscape engineering vs architectural monumentality distinction",
+        "Indigenous knowledge validation through quantitative methods"
+      ],
+      "conservation": [
+        "Landscape reclassification from 'natural' to 'culturally persistent'",
+        "Functional persistence integration in management policies",
+        "Indigenous collaboration essential for accurate classification"
+      ]
+    },
+    "methodological_revolution_required": "False",
+    "paradigm_shift_evidence": "False"
+  }
+}

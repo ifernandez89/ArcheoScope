@@ -1,0 +1,11 @@
+{
+  "test_info": {
+    "timestamp": "20260122_120400",
+    "framework": "origin_classification_over_afpi",
+    "principle": "origin_agnostic_detection_with_secondary_classification"
+  },
+  "site_analyses": [],
+  "framework_validation": {
+    "error": "No site analyses available"
+  }
+}

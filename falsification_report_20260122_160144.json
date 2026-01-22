@@ -1,0 +1,51 @@
+{
+  "protocol_summary": {
+    "total_controls": 5,
+    "confirmed": 0,
+    "falsified": 5,
+    "confirmation_rate": 0.0
+  },
+  "detailed_results": {
+    "Selva Congo (África)": {
+      "site_name": "Selva Congo (África)",
+      "temporal_persistence": 0.8165457944847334,
+      "archaeological_probability": 0.61132,
+      "expected_result": "low_persistence",
+      "falsification_status": "FALSIFIED",
+      "interpretation": "El sitio Selva Congo (África) muestra persistencia inesperada, sugiriendo: (1) el sitio no es realmente 'natural', (2) ArcheoScope detecta procesos naturales no conocidos, o (3) la metodología requiere calibración."
+    },
+    "Bosque Boreal Canadá": {
+      "site_name": "Bosque Boreal Canadá",
+      "temporal_persistence": 0.8165457944847334,
+      "archaeological_probability": 0.61132,
+      "expected_result": "natural_processes",
+      "falsification_status": "FALSIFIED",
+      "interpretation": "El sitio Bosque Boreal Canadá muestra persistencia inesperada, sugiriendo: (1) el sitio no es realmente 'natural', (2) ArcheoScope detecta procesos naturales no conocidos, o (3) la metodología requiere calibración."
+    },
+    "Manglar Australia": {
+      "site_name": "Manglar Australia",
+      "temporal_persistence": 0.8165457944847334,
+      "archaeological_probability": 0.61132,
+      "expected_result": "natural_processes",
+      "falsification_status": "FALSIFIED",
+      "interpretation": "El sitio Manglar Australia muestra persistencia inesperada, sugiriendo: (1) el sitio no es realmente 'natural', (2) ArcheoScope detecta procesos naturales no conocidos, o (3) la metodología requiere calibración."
+    },
+    "Desierto Sahara": {
+      "site_name": "Desierto Sahara",
+      "temporal_persistence": 0.8165457944847334,
+      "archaeological_probability": 0.61132,
+      "expected_result": "low_persistence",
+      "falsification_status": "FALSIFIED",
+      "interpretation": "El sitio Desierto Sahara muestra persistencia inesperada, sugiriendo: (1) el sitio no es realmente 'natural', (2) ArcheoScope detecta procesos naturales no conocidos, o (3) la metodología requiere calibración."
+    },
+    "Océano Pacífico": {
+      "site_name": "Océano Pacífico",
+      "temporal_persistence": 0.8165457944847334,
+      "archaeological_probability": 0.61132,
+      "expected_result": "natural_processes",
+      "falsification_status": "FALSIFIED",
+      "interpretation": "El sitio Océano Pacífico muestra persistencia inesperada, sugiriendo: (1) el sitio no es realmente 'natural', (2) ArcheoScope detecta procesos naturales no conocidos, o (3) la metodología requiere calibración."
+    }
+  },
+  "scientific_conclusion": "HYPOTHESIS_FALSIFIED_OR_METHODOLOGY_FLAWED"
+}

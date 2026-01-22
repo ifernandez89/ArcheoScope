@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-01-21T10:17:53.841138",
+  "total_time": 201.81726384162903,
+  "results": [
+    {
+      "site": "nazca",
+      "name": "Nazca Lines",
+      "success": true,
+      "time": 64.24160170555115,
+      "score": 100,
+      "quality": "EXCELENTE",
+      "meets_expectations": true,
+      "expected_score": 70,
+      "archaeological_sig": 0.0,
+      "spatial_anomalies": 55.84,
+      "natural_processes": 44.16,
+      "veg_prob": 0.43497890046377125,
+      "thermal_prob": 0.21125304060907718,
+      "ai_available": true
+    },
+    {
+      "site": "machu_picchu",
+      "name": "Machu Picchu",
+      "success": true,
+      "time": 64.269211769104,
+      "score": 100,
+      "quality": "EXCELENTE",
+      "meets_expectations": true,
+      "expected_score": 80,
+      "archaeological_sig": 0.0,
+      "spatial_anomalies": 55.84,
+      "natural_processes": 44.16,
+      "veg_prob": 0.43497890046377125,
+      "thermal_prob": 0.21125304060907718,
+      "ai_available": true
+    },
+    {
+      "site": "caral",
+      "name": "Caral",
+      "success": true,
+      "time": 64.28598141670227,
+      "score": 100,
+      "quality": "EXCELENTE",
+      "meets_expectations": true,
+      "expected_score": 75,
+      "archaeological_sig": 0.0,
+      "spatial_anomalies": 55.84,
+      "natural_processes": 44.16,
+      "veg_prob": 0.43497890046377125,
+      "thermal_prob": 0.21125304060907718,
+      "ai_available": true
+    }
+  ],
+  "summary": {
+    "total_tests": 3,
+    "successful": 3,
+    "failed": 0,
+    "success_rate": 100.0,
+    "average_score": 100.0,
+    "average_time": 64.26559829711914
+  }
+}

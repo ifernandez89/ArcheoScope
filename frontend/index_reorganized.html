@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archaeological Coherence Engine</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin="" />
+    
+    <!-- Estilos científicos reorganizados -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            background-color: #ffffff;
+            color: #2c3e50;
+            overflow: hidden;
+        }
+
+        /* Barra superior */
+        .top-bar {
+            background-color: #8B4513;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #D2691E;
+            position: relative;
+        }
+
+        .top-bar h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* Indicadores de estado */
+        .system-status {
+            position: absolute;
+            top: 50%;
+            right: 200px;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-online { background-color: #4CAF50; }
+        .status-offline { background-color: #f44336; }
+        .status-warning { background-color: #ff9800; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .status-tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .status-tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        .region-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .coord-input {
+            width: 80px;
+            padding: 0.25rem;
+            border: 1px solid #bdc3c7;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-family: inherit;
+        }
+
+        .coord-search {
+            width: 200px;
+            padding: 0.25rem;
+            border: 1px solid #bdc3c7;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            margin-right: 0.5rem;
+        }
+
+        .search-btn {
+            padding: 0.25rem 0.75rem;
+            background-color: #D2691E;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-family: inherit;
+            margin-right: 0.5rem;
+        }
+
+        .search-btn:hover {
+            background-color: #CD853F;
+        }
+
+        .investigate-btn {
+            padding: 0.5rem 1.5rem;
+            background-color: #D2691E;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .investigate-btn:hover {
+            background-color: #CD853F;
+        }
+
+        .investigate-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        /* Layout principal: REORGANIZADO - Controles izquierda, Análisis derecha */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            height: calc(100vh - 60px);
+        }
+
+        /* Panel de controles (izquierda) */
+        .controls-panel {
+            background-color: #ffffff;
+            border-right: 1px solid #dee2e6;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .controls-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .controls-section h3 {
+            font-size: 0.9rem;
+            color: #2c3e50;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid #D2691E;
+        }
+
+        .layer-toggle, .rule-toggle {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .layer-toggle input, .rule-toggle input {
+            margin-right: 0.5rem;
+        }
+
+        .layer-toggle label, .rule-toggle label {
+            cursor: pointer;
+            color: #34495e;
+        }
+
+        /* Mapa principal (centro) */
+        .map-container {
+            position: relative;
+            background-color: #f8f9fa;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+            color: #8B4513;
+            font-weight: 600;
+        }
+
+        /* Panel de análisis (derecha) */
+        .analysis-panel {
+            background-color: #ffffff;
+            border-left: 1px solid #dee2e6;
+            padding: 1rem;
+            overflow-y: auto;
+            font-size: 0.85rem;
+        }
+
+        .analysis-panel h3 {
+            font-size: 0.9rem;
+            color: #2c3e50;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid #D2691E;
+        }
+
+        .inspection-section {
+            background-color: #f8f9fa;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            border-left: 3px solid #D2691E;
+        }
+
+        .pixel-coords {
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .data-values {
+            margin-bottom: 0.75rem;
+        }
+
+        .data-value {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.3rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+        }
+
+        .data-label {
+            color: #5d6d7e;
+            flex: 1;
+        }
+
+        .data-number {
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: right;
+            min-width: 60px;
+        }
+
+        .rules-evaluation {
+            margin-bottom: 0.75rem;
+        }
+
+        .rule-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.3rem;
+            padding: 0.4rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+        }
+
+        .rule-pass {
+            background-color: #d5f4e6;
+            color: #27ae60;
+        }
+
+        .rule-fail {
+            background-color: #fadbd8;
+            color: #e74c3c;
+        }
+
+        .rule-name {
+            font-size: 0.75rem;
+            flex: 1;
+        }
+
+        .rule-status {
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.3rem;
+            font-size: 0.8rem;
+        }
+
+        .metric-label {
+            color: #5d6d7e;
+            flex: 1;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: #8B4513;
+            text-align: right;
+            min-width: 80px;
+        }
+
+        .archaeological-data {
+            background-color: #fdf6e3;
+            border-left: 3px solid #D2691E;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+
+        .archaeological-data h4 {
+            font-size: 0.85rem;
+            color: #8B4513;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .volumetric-info {
+            background-color: #f0f8ff;
+            border-left: 3px solid #4682b4;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+
+        .volumetric-info h4 {
+            font-size: 0.85rem;
+            color: #4682b4;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .anomaly-details {
+            background-color: #fff3cd;
+            border-left: 3px solid #ffc107;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+
+        .anomaly-details h4 {
+            font-size: 0.85rem;
+            color: #856404;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .inference-system {
+            background-color: #e7f3ff;
+            border-left: 3px solid #007bff;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+
+        .inference-system h4 {
+            font-size: 0.85rem;
+            color: #0056b3;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin-top: 0.25rem;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #dc3545 0%, #ffc107 50%, #28a745 100%);
+            transition: width 0.3s ease;
+        }
+
+        .message {
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .message.error {
+            background-color: #fadbd8;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        .message.success {
+            background-color: #d5f4e6;
+            color: #27ae60;
+            border: 1px solid #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra superior -->
+    <div class="top-bar">
+        <h1>🏺 ArcheoScope - Archaeological Coherence Engine</h1>
+        
+        <!-- Indicadores de estado -->
+        <div class="system-status">
+            <div class="status-indicator status-tooltip" id="backendStatus" data-tooltip="Estado del backend ArcheoScope">
+                <div class="status-dot status-offline"></div>
+                <span>Backend</span>
+            </div>
+            <div class="status-indicator status-tooltip" id="aiStatus" data-tooltip="Estado de Ollama/OpenRouter">
+                <div class="status-dot status-offline"></div>
+                <span>IA</span>
+            </div>
+            <div class="status-indicator status-tooltip" id="volumetricStatus" data-tooltip="Estado del motor volumétrico">
+                <div class="status-dot status-offline"></div>
+                <span>3D</span>
+            </div>
+        </div>
+        
+        <div class="region-controls">
+            <input type="text" class="coord-search" id="coordSearch" placeholder="41.87230285419031, 12.504327806909155">
+            <button class="search-btn" onclick="searchCoordinates()">🔍 Buscar</button>
+            
+            <input type="number" class="coord-input" id="latMin" placeholder="Lat Min" step="0.0001">
+            <input type="number" class="coord-input" id="latMax" placeholder="Lat Max" step="0.0001">
+            <input type="number" class="coord-input" id="lonMin" placeholder="Lon Min" step="0.0001">
+            <input type="number" class="coord-input" id="lonMax" placeholder="Lon Max" step="0.0001">
+            <button class="investigate-btn" onclick="investigateRegion()" id="investigateBtn">INVESTIGAR</button>
+        </div>
+    </div>
+
+    <!-- Layout principal: REORGANIZADO -->
+    <div class="main-layout">
+        <!-- Panel de controles (izquierda) -->
+        <div class="controls-panel">
+            <div class="controls-section">
+                <h3>📡 Capas Espectrales</h3>
+                <div class="layer-toggle">
+                    <input type="checkbox" id="layerAnomalies" checked>
+                    <label for="layerAnomalies">Anomalías Espaciales</label>
+                </div>
+                <div class="layer-toggle">
+                    <input type="checkbox" id="layerSignatures" checked>
+                    <label for="layerSignatures">Firmas Arqueológicas</label>
+                </div>
+                <div class="layer-toggle">
+                    <input type="checkbox" id="layerNatural">
+                    <label for="layerNatural">Procesos Naturales</label>
+                </div>
+                <div class="layer-toggle">
+                    <input type="checkbox" id="layerVolumetric">
+                    <label for="layerVolumetric">Inferencia Volumétrica</label>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <h3>⚖️ Reglas Arqueológicas</h3>
+                <div class="rule-toggle">
+                    <input type="checkbox" id="ruleVegetation" checked>
+                    <label for="ruleVegetation">Desacople Vegetación-Topografía</label>
+                </div>
+                <div class="rule-toggle">
+                    <input type="checkbox" id="ruleThermal" checked>
+                    <label for="ruleThermal">Patrones Térmicos Residuales</label>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <h3>📦 Exportación de Datos</h3>
+                <div style="margin-bottom: 1rem;">
+                    <button onclick="exportHighResolutionImages()" 
+                            style="background-color: #e74c3c; color: white; border: none; padding: 0.5rem 1rem; 
+                                   border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600; width: 100%; margin-bottom: 0.5rem;">
+                        🖼️ IMÁGENES ALTA RESOLUCIÓN
+                    </button>
+                    <button onclick="exportCompleteAnalysis()" 
+                            style="background-color: #f39c12; color: white; border: none; padding: 0.5rem 1rem; 
+                                   border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600; width: 100%; margin-bottom: 0.5rem;">
+                        📊 ANÁLISIS COMPLETO (JSON)
+                    </button>
+                    <button onclick="show3DVisualization()" 
+                            style="background-color: #9b59b6; color: white; border: none; padding: 0.5rem 1rem; 
+                                   border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600; width: 100%; margin-bottom: 0.5rem;">
+                        🎲 VISUALIZACIÓN 3D
+                    </button>
+                    <button onclick="exportScientificDataset()" 
+                            style="background-color: #27ae60; color: white; border: none; padding: 0.5rem 1rem; 
+                                   border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600; width: 100%;">
+                        🔬 DATASET CIENTÍFICO
+                    </button>
+                </div>
+                <div style="font-size: 0.7rem; color: #666; text-align: center;">
+                    Formatos: GeoTIFF, NetCDF, CSV, KML, JSON
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <h3>🎲 Visualización 3D</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <button onclick="show3DVolumetricModel()" style="padding: 0.5rem; background: #9932CC; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem;">
+                        🎲 MODELO VOLUMÉTRICO
+                    </button>
+                    <div style="font-size: 0.7rem; color: #666; margin-top: 0.25rem;">
+                        Visualización interactiva del modelo geométrico inferido
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <h3>🎛️ Configuración</h3>
+                <div class="metric-item">
+                    <span class="metric-label">Resolución:</span>
+                    <select id="resolution" style="font-family: inherit; font-size: 0.8rem;">
+                        <option value="200">200m</option>
+                        <option value="300">300m</option>
+                        <option value="500" selected>500m</option>
+                        <option value="1000">1000m</option>
+                    </select>
+                </div>
+                <div class="layer-toggle">
+                    <input type="checkbox" id="includeExplainability">
+                    <label for="includeExplainability">Incluir Explicabilidad</label>
+                </div>
+                <div class="layer-toggle">
+                    <input type="checkbox" id="includeValidation">
+                    <label for="includeValidation">Métricas de Validación</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mapa principal (centro) -->
+        <div class="map-container">
+            <div id="map">
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: rgba(255,255,255,0.9); padding: 1rem; border-radius: 4px; font-family: monospace;">
+                    🗺️ Cargando mapa ArcheoScope...
+                </div>
+            </div>
+            <div class="loading" id="loading">
+                🔍 Analizando región arqueológica...
+            </div>
+        </div>
+
+        <!-- Panel de análisis (derecha) -->
+        <div class="analysis-panel">
+            <h3>🔍 Inspección de Píxel</h3>
+            
+            <div class="inspection-section" id="pixelInfo">
+                <div class="pixel-coords" id="pixelCoords">Haz clic en el mapa para inspeccionar</div>
+                
+                <div class="data-values" id="dataValues">
+                    <div class="data-value">
+                        <span class="data-label">NDVI Vegetación:</span>
+                        <span class="data-number" id="ndviValue">--</span>
+                    </div>
+                    <div class="data-value">
+                        <span class="data-label">Térmica LST:</span>
+                        <span class="data-number" id="thermalValue">--</span>
+                    </div>
+                    <div class="data-value">
+                        <span class="data-label">SAR Backscatter:</span>
+                        <span class="data-number" id="sarValue">--</span>
+                    </div>
+                    <div class="data-value">
+                        <span class="data-label">Rugosidad:</span>
+                        <span class="data-number" id="roughnessValue">--</span>
+                    </div>
+                    <div class="data-value">
+                        <span class="data-label">Salinidad:</span>
+                        <span class="data-number" id="salinityValue">--</span>
+                    </div>
+                    <div class="data-value">
+                        <span class="data-label">Resonancia:</span>
+                        <span class="data-number" id="resonanceValue">--</span>
+                    </div>
+                </div>
+
+                <div class="rules-evaluation" id="rulesEvaluation">
+                    <div class="rule-item rule-pass">
+                        <span class="rule-name">Desacople Vegetación-Topografía</span>
+                        <span class="rule-status">PASS</span>
+                    </div>
+                    <div class="rule-item rule-fail">
+                        <span class="rule-name">Patrones Térmicos Residuales</span>
+                        <span class="rule-status">FAIL*</span>
+                    </div>
+                    <div style="font-size: 0.7rem; color: #6c757d; margin-top: 0.5rem; font-style: italic;">
+                        *La ausencia de señal térmica residual es compatible con estructuras lineales compactadas de baja masa volumétrica
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <h3>📈 Resultados del Análisis</h3>
+                <div class="metric-item">
+                    <span class="metric-label">Área Total:</span>
+                    <span class="metric-value" id="totalArea">-- km²</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Anomalías Detectadas:</span>
+                    <span class="metric-value" id="anomaliesCount">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Volumen Total Estimado:</span>
+                    <span class="metric-value" id="totalVolume">-- m³</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Confianza IA:</span>
+                    <span class="metric-value" id="aiConfidence">--</span>
+                </div>
+            </div>
+
+            <div class="anomaly-details">
+                <h4>🎯 Análisis de Anomalías Espaciales</h4>
+                <div class="metric-item">
+                    <span class="metric-label">Tipo de Anomalía:</span>
+                    <span class="metric-value" id="anomalyType">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Intensidad de Señal:</span>
+                    <span class="metric-value" id="anomalyIntensity">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Extensión Espacial:</span>
+                    <span class="metric-value" id="anomalyArea">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Coherencia Métrica:</span>
+                    <span class="metric-value" id="metricCoherence">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Coherencia Geométrica:</span>
+                    <span class="metric-value" id="geometricCoherence">--</span>
+                </div>
+            </div>
+
+            <div class="archaeological-data">
+                <h4>📊 Análisis Arqueológico</h4>
+                <div class="metric-item">
+                    <span class="metric-label">Compatibilidad:</span>
+                    <span class="metric-value" id="archaeoProb">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Coherencia Geométrica:</span>
+                    <span class="metric-value" id="geomCoherence">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Persistencia Multitemporal:</span>
+                    <span class="metric-value" id="tempPersistence">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Clasificación Espectral:</span>
+                    <span class="metric-value" id="spectralSignature">--</span>
+                </div>
+            </div>
+
+            <div class="inference-system">
+                <h4>🏗️ Sistema de Inferencia Volumétrica</h4>
+                <div class="metric-item">
+                    <span class="metric-label">Estado del Motor:</span>
+                    <span class="metric-value" id="inferenceStatus">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Nivel de Reconstrucción:</span>
+                    <span class="metric-value" id="inferenceStage">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Progreso:</span>
+                    <span class="metric-value" id="inferenceProgress">--</span>
+                </div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="inferenceProgressBar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="volumetric-info">
+                <h4>🎲 Modelo Volumétrico (Nivel I)</h4>
+                <div class="metric-item">
+                    <span class="metric-label">Volumen Estimado:</span>
+                    <span class="metric-value" id="estimatedVolume">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Rango de Altura:</span>
+                    <span class="metric-value" id="maxHeight">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Interpretación Física:</span>
+                    <span class="metric-value" id="morphologyClass">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Nivel de Inferencia:</span>
+                    <span class="metric-value" id="volumetricConfidence">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Vértices:</span>
+                    <span class="metric-value" id="modelVertices">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Caras:</span>
+                    <span class="metric-value" id="modelFaces">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Resolución Efectiva:</span>
+                    <span class="metric-value" id="spatialResolution">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Incertidumbre Espacial:</span>
+                    <span class="metric-value" id="spatialUncertainty">--</span>
+                </div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="volumetricConfidenceBar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <h3>📋 Interpretación Sintética</h3>
+                <div style="background: #f8f9fa; padding: 0.75rem; border-radius: 4px; border-left: 3px solid #8B4513; font-size: 0.8rem; line-height: 1.4;">
+                    <div id="syntheticInterpretation">
+                        Esperando análisis...
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <h3>⚠️ Limitaciones del Análisis</h3>
+                <div class="metric-item">
+                    <span class="metric-label">Firmas Arqueológicas Confirmadas:</span>
+                    <span class="metric-value" id="signaturesCount">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Persistencia Multitemporal:</span>
+                    <span class="metric-value" id="temporalPersistenceStatus">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Resolución de Análisis:</span>
+                    <span class="metric-value" id="analysisResolution">--</span>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <h3>🎲 Inferencia Volumétrica</h3>
+                <div class="metric-item">
+                    <span class="metric-label">Estado del Motor:</span>
+                    <span class="metric-value" id="volumetricEngineStatus">Inactivo</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Modelos Generados:</span>
+                    <span class="metric-value" id="modelsGenerated">0</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Clases Morfológicas:</span>
+                    <span class="metric-value" id="morphologyClasses">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Precisión Geométrica:</span>
+                    <span class="metric-value" id="geometricPrecision">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Campo Probabilístico:</span>
+                    <span class="metric-value" id="probabilisticField">--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""
+            onerror="handleLeafletError()"></script>
+    
+    <!-- Three.js para visualización 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Leaflet Image para exportar mapas -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-image@0.4.0/leaflet-image.js"></script>
+    
+    <!-- Fallback y script principal -->
+    <script>
+        function handleLeafletError() {
+            console.error('❌ Error cargando Leaflet desde CDN');
+            initializeSimpleMap();
+        }
+        
+        function initializeSimpleMap() {
+            const mapContainer = document.getElementById('map');
+            if (mapContainer) {
+                mapContainer.innerHTML = `
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; background: rgba(255,255,255,0.9); padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                        <h3 style="color: #8B4513; margin-bottom: 1rem;">🗺️ Mapa ArcheoScope</h3>
+                        <p style="margin-bottom: 1rem;">Modo sin conexión - Funcionalidad básica disponible</p>
+                        <div style="width: 400px; height: 300px; background: linear-gradient(45deg, #e8f5e8 25%, transparent 25%), linear-gradient(-45deg, #e8f5e8 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e8f5e8 75%), linear-gradient(-45deg, transparent 75%, #e8f5e8 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; border: 2px solid #8B4513; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #8B4513; font-weight: bold;">
+                            Región: Via Appia, Roma<br>
+                            41.8550°N, 12.5150°E
+                        </div>
+                        <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                            Las funciones de análisis arqueológico están disponibles
+                        </p>
+                    </div>
+                `;
+            }
+        }
+        
+        setTimeout(function() {
+            if (typeof L === 'undefined') {
+                console.warn('⚠️ Leaflet no disponible, usando mapa alternativo');
+                handleLeafletError();
+            }
+        }, 3000);
+    </script>
+    
+    <script src="archaeological_app.js"></script>
+</body>
+</html>

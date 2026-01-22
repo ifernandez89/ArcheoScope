@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Volumétrico 3D - ArcheoScope</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: monospace;
+            background: #1a1a1a;
+            color: white;
+        }
+        
+        #container {
+            width: 800px;
+            height: 600px;
+            border: 2px solid #444;
+            margin: 20px 0;
+            background: #000;
+        }
+        
+        .controls {
+            margin: 10px 0;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        .error {
+            color: #ff4444;
+            background: #330000;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            color: #44ff44;
+            background: #003300;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎲 Test Volumétrico 3D - ArcheoScope</h1>
+    
+    <div class="controls">
+        <button onclick="testThreeJS()">🔧 Test Three.js</button>
+        <button onclick="testVolumetricField()">🎯 Test Campo Volumétrico</button>
+        <button onclick="testFullVisualization()">🏺 Test Visualización Completa</button>
+        <button onclick="clearContainer()">🗑️ Limpiar</button>
+    </div>
+    
+    <div id="messages"></div>
+    <div id="container"></div>
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        let scene, camera, renderer, controls;
+        
+        function showMessage(message, type = 'info') {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            messagesDiv.appendChild(messageDiv);
+            console.log(message);
+        }
+        
+        function clearContainer() {
+            const container = document.getElementById('container');
+            container.innerHTML = '';
+            document.getElementById('messages').innerHTML = '';
+        }
+        
+        function testThreeJS() {
+            showMessage('🔧 Probando Three.js...', 'info');
+            
+            if (typeof THREE === 'undefined') {
+                showMessage('❌ Three.js no está disponible', 'error');
+                return false;
+            }
+            
+            showMessage('✅ Three.js disponible: ' + THREE.REVISION, 'success');
+            
+            if (THREE.OrbitControls) {
+                showMessage('✅ OrbitControls disponible', 'success');
+            } else {
+                showMessage('⚠️ OrbitControls no disponible', 'error');
+            }
+            
+            return true;
+        }
+        
+        function testVolumetricField() {
+            if (!testThreeJS()) return;
+            
+            showMessage('🎯 Creando campo volumétrico de prueba...', 'info');
+            
+            try {
+                const container = document.getElementById('container');
+                container.innerHTML = '';
+                
+                // Configurar Three.js
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x000000);
+                
+                camera = new THREE.PerspectiveCamera(75, 800/600, 0.1, 1000);
+                camera.position.set(50, 30, 50);
+                
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(800, 600);
+                container.appendChild(renderer.domElement);
+                
+                // Controles
+                if (THREE.OrbitControls) {
+                    controls = new THREE.OrbitControls(camera, renderer.domElement);
+                    controls.enableDamping = true;
+                    controls.dampingFactor = 0.05;
+                }
+                
+                // Iluminación
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+                scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(50, 50, 25);
+                scene.add(directionalLight);
+                
+                // Crear elipsoide de prueba
+                const geometry = new THREE.SphereGeometry(1, 16, 12);
+                geometry.scale(25, 10, 15); // 50x20x30m
+                
+                const material = new THREE.MeshLambertMaterial({
+                    color: 0x4CAF50,
+                    transparent: true,
+                    opacity: 0.6,
+                    wireframe: false
+                });
+                
+                const ellipsoid = new THREE.Mesh(geometry, material);
+                ellipsoid.position.y = 10;
+                scene.add(ellipsoid);
+                
+                // Crear partículas
+                const particleGeometry = new THREE.BufferGeometry();
+                const positions = [];
+                const colors = [];
+                
+                for (let i = 0; i < 1000; i++) {
+                    // Generar posición dentro del elipsoide
+                    let x, y, z;
+                    do {
+                        x = (Math.random() - 0.5) * 50;
+                        y = Math.random() * 20;
+                        z = (Math.random() - 0.5) * 30;
+                        
+                        const normalizedX = x / 25;
+                        const normalizedY = (y - 10) / 10;
+                        const normalizedZ = z / 15;
+                        
+                        if (normalizedX*normalizedX + normalizedY*normalizedY + normalizedZ*normalizedZ <= 1) {
+                            break;
+                        }
+                    } while (true);
+                    
+                    positions.push(x, y, z);
+                    colors.push(0.8, 0.4, 1.0); // Púrpura
+                }
+                
+                particleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+                particleGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+                
+                const particleMaterial = new THREE.PointsMaterial({
+                    size: 2,
+                    transparent: true,
+                    opacity: 0.8,
+                    vertexColors: true,
+                    blending: THREE.AdditiveBlending
+                });
+                
+                const particles = new THREE.Points(particleGeometry, particleMaterial);
+                scene.add(particles);
+                
+                // Grid de referencia
+                const gridHelper = new THREE.GridHelper(100, 20, 0x444444, 0x222222);
+                scene.add(gridHelper);
+                
+                // Ejes de referencia
+                const axesHelper = new THREE.AxesHelper(20);
+                scene.add(axesHelper);
+                
+                // Configurar cámara
+                camera.position.set(70, 40, 70);
+                camera.lookAt(0, 10, 0);
+                
+                // Iniciar animación
+                animate();
+                
+                showMessage('✅ Campo volumétrico creado: 50×20×30m, 1000 partículas', 'success');
+                
+            } catch (error) {
+                showMessage('❌ Error creando campo volumétrico: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+        
+        function testFullVisualization() {
+            showMessage('🏺 Probando visualización completa con datos simulados...', 'info');
+            
+            // Simular datos de análisis
+            window.lastAnalysisData = {
+                scientific_report: {
+                    volumetric_geometric_inference: {
+                        analysis_summary: {
+                            total_estimated_volume_m3: 2500,
+                            max_estimated_height_m: 8,
+                            average_confidence: 0.75
+                        }
+                    }
+                },
+                anomaly_map: {
+                    statistics: {
+                        spatial_anomaly_pixels: 150,
+                        archaeological_signature_pixels: 80,
+                        total_pixels: 1000
+                    }
+                },
+                region_info: {
+                    resolution_m: 10
+                }
+            };
+            
+            // Simular función show3DVolumetricModel simplificada
+            if (typeof show3DVolumetricModel === 'function') {
+                show3DVolumetricModel();
+            } else {
+                testVolumetricField();
+                showMessage('✅ Usando visualización de prueba (función principal no disponible)', 'success');
+            }
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (controls) {
+                controls.update();
+            }
+            
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+        
+        // Test automático al cargar
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testThreeJS();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

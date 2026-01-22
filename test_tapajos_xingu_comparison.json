@@ -1,0 +1,18 @@
+{
+  "lat_min": -6.7310,
+  "lat_max": -6.7110,
+  "lon_min": -55.0250,
+  "lon_max": -55.0050,
+  "resolution_m": 500,
+  "layers_to_analyze": [
+    "ndvi_vegetation",
+    "thermal_lst", 
+    "sar_backscatter",
+    "surface_roughness",
+    "soil_salinity"
+  ],
+  "active_rules": ["all"],
+  "region_name": "Interfluvio Tapajós-Xingu (Brasil) - Persistencia Sistémica",
+  "include_explainability": true,
+  "include_validation_metrics": true
+}

@@ -1,0 +1,1087 @@
+🧭 OBJETIVO FORMAL DEL SISTEMA
+
+Construir un entorno integrado de hipótesis que permita:
+
+analizar superficies congeladas (Antártida, glaciares, permafrost)
+
+detectar anomalías estructurales persistentes
+
+explicar por qué una anomalía no se ajusta a modelos conocidos
+
+mantener trazabilidad epistemológica completa
+
+usar IA solo como amplificador, nunca como oráculo
+
+Frase guía (queda fija):
+
+No buscamos lo que hay bajo el hielo.
+Buscamos lo que el hielo no explica por sí solo.
+
+I. LOS 5 PILARES QUE NECESITÁS (SIN ESTO, NO FUNCIONA)
+1️⃣ Datos correctos (no muchos, correctos)
+Datos imprescindibles (todos públicos)
+🛰️ Observación remota
+
+SAR (Sentinel-1) → atraviesa nubes y oscuridad
+
+Altimetría láser (ICESat-2)
+
+Imágenes ópticas históricas (Landsat desde 1972)
+
+🧊 Subsuperficie
+
+Radar de penetración de hielo
+
+Modelos de espesor del hielo
+
+Topografía del lecho rocoso
+
+⏳ Tiempo
+
+series temporales largas (mín. 20–50 años)
+
+snapshots comparables
+
+📌 Regla de oro:
+
+mejor 5 fuentes bien alineadas que 30 mal integradas.
+
+2️⃣ Núcleo de normalización espacio-temporal (CRÍTICO)
+
+Este es el corazón invisible del sistema.
+
+Tenés que lograr:
+
+misma proyección
+
+misma resolución lógica
+
+alineación temporal
+
+manejo explícito de incertidumbre
+
+Cada dato debe saber:
+
+de dónde viene
+
+qué precisión tiene
+
+qué NO puede afirmar
+
+👉 Sin esto, todo lo demás es humo.
+
+3️⃣ Motor determinista de modelos físicos (NO IA)
+
+Acá es donde sos serio.
+
+Modelás:
+
+flujo glaciar
+
+erosión esperable
+
+sedimentación
+
+deformación
+
+conductividad térmica
+
+evolución temporal
+
+Esto permite responder:
+
+“¿Esto es compatible con comportamiento glaciar conocido?”
+
+📌 Si no modelás el hielo, no podés decir que algo no lo explica.
+
+4️⃣ Motor de detección de desviaciones (el verdadero detector)
+
+No buscás “estructuras”.
+
+Buscás:
+
+desviaciones persistentes
+
+anomalías geométricas
+
+rupturas de simetría
+
+comportamientos no esperados
+
+Ejemplos:
+
+algo que no se mueve con el hielo
+
+algo que genera turbulencia estable
+
+geometría ortogonal persistente
+
+reflejos radar no coherentes con hielo
+
+Esto es:
+
+estadística espacial
+
+análisis multiescala
+
+comparación entre capas
+
+📌 Esto es computacionalmente pesado → perfecto para IA como apoyo.
+
+5️⃣ IA EXPLICABLE COMO AMPLIFICADOR
+Qué SÍ hace la IA
+
+prioriza regiones
+
+agrupa anomalías
+
+sugiere reglas
+
+detecta patrones débiles
+
+ayuda a explorar combinaciones imposibles para humanos
+
+Qué NO hace
+
+no decide
+
+no afirma
+
+no interpreta narrativamente
+
+Cada output de IA debe poder responder:
+
+“¿Por qué sugeriste esto?”
+
+II. EL ENTORNO DE HIPÓTESIS (LO QUE NO EXISTE HOY)
+
+Esto es lo que te hace único.
+
+Cada análisis guarda:
+
+datos usados
+
+modelos aplicados
+
+reglas activas
+
+supuestos
+
+resultados
+
+contradicciones
+
+Una hipótesis no es una conclusión, es un estado navegable.
+
+Ejemplo:
+
+Hipótesis H-023
+“Anomalía estructural persistente no explicada por dinámica glaciar estándar”
+
+Y se puede:
+
+revisar
+
+refutar
+
+comparar
+
+mejorar
+
+Eso es ciencia real.
+
+III. QUÉ NO NECESITÁS AL PRINCIPIO (MUY IMPORTANTE)
+
+❌ No necesitás:
+
+hardware propio
+
+sensores físicos
+
+expediciones
+
+permisos
+
+narrativa espectacular
+
+“descubrimientos”
+
+Tu plataforma vive de escritorio.
+
+IV. ORDEN CORRECTO DE CONSTRUCCIÓN
+Fase 1 — Instrumento mínimo viable
+
+ingestión de 3–4 fuentes
+
+alineación temporal
+
+visualización comparativa
+
+detección básica de anomalías
+
+Fase 2 — Modelos físicos explícitos
+
+comportamiento glaciar esperado
+
+comparación real vs modelo
+
+Fase 3 — IA exploratoria
+
+clustering
+
+priorización
+
+reducción del espacio de análisis
+
+Fase 4 — Entorno de hipótesis
+
+trazabilidad
+
+versionado
+
+reproducibilidad
+
+V. POR QUÉ ESTO ES REALMENTE POTENTE
+
+Porque:
+
+no promete lo que no puede probar
+
+hace visible lo invisible
+
+reduce sesgos humanos
+
+escala cognitivamente
+
+puede ser usado por científicos reales
+
+puede refutar hipótesis tanto como apoyarlas
+
+Eso es instrumentación científica, no divulgación.
+
+VI. MANIFIESTO FINAL (GUÁRDALO)
+
+No buscamos secretos enterrados.
+Construimos instrumentos que revelan dónde los modelos fallan.
+Donde fallan los modelos, comienza la pregunta científica.
+
+Si querés, el próximo paso lógico sería:
+
+definir el MVP exacto
+
+o diseñar la arquitectura técnica concreta
+
+o elegir el primer dataset antártico real
+
+Pero ya hiciste lo más difícil:
+👉 definiste un problema legítimo y una forma honesta de atacarlo.
+
+
+/************************************************************************/
+
+1. Principio rector del sistema (no técnico)
+
+Antes del software:
+
+El sistema no busca “descubrir cosas”.
+Busca detectar cuándo los datos no se explican entre sí.
+
+Eso define todo.
+
+La IA no concluye, propone hipótesis explicables.
+El humano explora, descarta, confirma.
+
+Esto te ahorra potencia de cómputo y te da rigor.
+
+2. Arquitectura conceptual (lo mínimo imprescindible)
+Capas claras (no microservicios)
+
+Capa de datos
+
+Raster (imágenes satelitales, radar, altimetría)
+
+Series temporales
+
+Modelos físicos simplificados
+
+Metadatos completos (fuente, fecha, resolución)
+
+Capa de análisis explícito
+
+Estadística
+
+Diferencias temporales
+
+Correlaciones cruzadas
+
+Detección de anomalías definidas, no “aprendidas”
+
+Capa de hipótesis
+
+Reglas
+
+Supuestos
+
+Contradicciones
+
+Trazabilidad
+
+Capa IA (asistiva, no central)
+
+Explicación
+
+Comparación
+
+Priorización
+
+Narrativa científica
+
+3. Tecnología base (adaptada a tu hardware)
+Recomendación clara
+
+Backend liviano + frontend simple
+No solo frontend.
+
+Backend
+
+Python (no NestJS acá)
+
+numpy
+
+scipy
+
+rasterio
+
+xarray
+
+geopandas
+
+Corre local
+
+Scripts claros, auditables
+
+¿Por qué Python?
+
+Es el lenguaje del dominio científico
+
+Miles de libs gratuitas
+
+Bajo consumo
+
+Ideal para “pensamiento explícito”
+
+Frontend
+
+HTML + JS + CSS
+
+Canvas / WebGL liviano
+
+Nada de frameworks pesados al inicio
+
+Cuando tengas algo validado → recién ahí React/Next si querés.
+
+4. IA local (Ollama) – rol correcto
+Modelos recomendados (livianos)
+
+qwen2.5:3b
+
+phi-3:mini
+
+mistral:7b (solo si entra)
+
+Qué hace la IA (y qué NO)
+Hace:
+
+Explicar resultados estadísticos
+
+Comparar mapas
+
+Detectar inconsistencias lógicas
+
+Generar hipótesis estructuradas
+
+Resumir anomalías
+
+NO hace:
+
+Clasificación primaria
+
+Segmentación pesada
+
+“Descubrimientos automáticos”
+
+Eso lo hacen las matemáticas explícitas.
+
+5. Datos gratuitos clave (Antártida / polos)
+Satélite / hielo
+
+NASA NSIDC
+
+Ice velocity
+
+Ice thickness
+
+BedMachine Antarctica
+
+ICESat-2
+
+Altimetría láser
+
+Sentinel-1
+
+Radar (atraviesa nubes y oscuridad)
+
+MODIS
+
+Series temporales largas
+
+Topografía enterrada
+
+BEDMAP2 / BEDMAP3
+
+Operation IceBridge
+
+Todo gratuito.
+
+6. Qué “software antiguo” rescatar (conceptualmente)
+
+No código viejo. Ideas viejas bien hechas:
+
+Sistemas a emular
+
+SIG clásicos
+
+Capas explícitas
+
+Operaciones visibles
+
+Análisis geofísico determinista
+
+Modelos simples
+
+Parámetros claros
+
+Sistemas expertos
+
+Reglas
+
+Inferencias
+
+Explicaciones
+
+Ejemplo de regla explícita:
+
+“Si el hielo se mueve lento, pero la topografía indica pendiente, hay contradicción.”
+
+Eso es oro.
+
+7. Núcleo del sistema: “Entorno de hipótesis”
+Estructura mínima
+Hipótesis:
+- ID
+- Supuesto base
+- Datos usados
+- Qué explica
+- Qué NO explica
+- Confianza (no probabilidad)
+- Observaciones IA
+
+
+Todo queda registrado.
+Nada se pierde.
+Nada es “caja negra”.
+
+8. Flujo de trabajo realista (vos solo)
+Fase 1 – MVP científico
+
+Cargar 3 datasets:
+
+Hielo
+
+Topografía
+
+Tiempo
+
+Visualizar
+
+Diferencias simples
+
+IA explica anomalías
+
+Fase 2 – Cruces
+
+Velocidad vs topografía
+
+Espesor vs anomalías térmicas
+
+Cambios temporales
+
+Fase 3 – Reglas
+
+Sistema de contradicciones
+
+Alertas estructurales
+
+Priorización IA
+
+9. Qué hace esto “imposible para el ojo humano”
+
+Series temporales de décadas
+
+Miles de píxeles cruzados
+
+Capas incompatibles detectadas
+
+Reglas explícitas + estadística + contexto
+
+No es fuerza bruta.
+Es coherencia forzada.
+
+10. Nombre conceptual del sistema (importante)
+
+No lo vendas como “buscador”.
+
+Algo como:
+
+Subglacial Coherence Engine
+
+Polar Anomaly Hypothesis Lab
+
+Ice Inconsistency Explorer
+
+Porque tu frase es clave:
+
+No buscamos lo que hay bajo el hielo.
+Buscamos lo que el hielo no explica por sí solo.
+
+Eso es ciencia real.
+
+Cierre honesto
+
+Sí:
+Con tecnología chica, solo, y con IA local esto es posible.
+
+Porque:
+
+No estás compitiendo con glaciólogos
+
+Estás dándoles un instrumento cognitivo nuevo
+
+Y estás recuperando lo que la modernidad perdió: pensamiento explícito
+
+/**************************************************************************************************/
+
+🧠 VISIÓN PARA KIRO (1 párrafo)
+
+Estamos construyendo una plataforma científica liviana para explorar anomalías subglaciales mediante la incompatibilidad entre capas de datos, no mediante predicción.
+La IA explica y asiste, no decide.
+El sistema debe ser determinista, trazable y auditable.
+
+🧱 ARQUITECTURA GENERAL
+Backend
+
+Python
+
+Scripts explícitos
+
+API mínima (FastAPI)
+
+Procesamiento offline/asincrónico
+
+Frontend
+
+HTML + JS + CSS
+
+Canvas/WebGL simple
+
+Visualización + control de hipótesis
+
+IA
+
+Ollama local
+
+Modelos chicos
+
+Rol explicativo y comparativo
+
+🧩 ETAPA 0 — Preparación (1–2 días)
+Objetivo
+
+Base sólida, sin escribir “producto” todavía.
+
+Tareas
+
+Crear repo
+
+Estructura carpetas
+
+Documentar visión
+
+Verificar Ollama
+
+Prompt para Kiro
+Actuá como arquitecto técnico senior.
+Definí la estructura de carpetas ideal para una plataforma científica liviana
+con backend en Python y frontend HTML/JS.
+Priorizá claridad, trazabilidad y simplicidad.
+No microservicios.
+
+Resultado esperado
+/backend
+  /data
+  /analysis
+  /rules
+  /ai
+/frontend
+  /viewer
+  /controls
+/docs
+
+🧩 ETAPA 1 — Backend científico mínimo (7–10 días)
+Objetivo
+
+Cargar, procesar y cruzar datos reales.
+
+Funcionalidades
+
+Cargar raster (GeoTIFF)
+
+Normalizar resolución
+
+Comparar capas
+
+Diferencias temporales
+
+Exportar resultados
+
+Librerías
+
+rasterio
+
+xarray
+
+numpy
+
+scipy
+
+geopandas
+
+Prompt para Kiro
+Diseñá un backend científico en Python que:
+- Cargue datasets raster (hielo, topografía, tiempo)
+- Permita comparar capas por píxel
+- Genere mapas de diferencia y estadísticos
+Todo debe ser explícito y auditable.
+No optimices prematuramente.
+
+Output
+
+Scripts claros
+
+Resultados en archivos intermedios
+
+Nada “automágico”
+
+🧩 ETAPA 2 — Reglas y contradicciones (5–7 días)
+Objetivo
+
+El corazón conceptual del sistema.
+
+Ejemplos de reglas
+
+Pendiente alta + velocidad baja → contradicción
+
+Espesor constante + subsidencia → anomalía
+
+Cambio térmico sin correlato mecánico
+
+Prompt para Kiro
+Diseñá un sistema de reglas explícitas tipo “motor de hipótesis”.
+Cada regla debe:
+- Tener nombre
+- Supuesto
+- Datos requeridos
+- Qué explica
+- Qué contradice
+Nada probabilístico. Todo lógico.
+
+Output
+
+rules.yaml o rules.py
+
+Evaluador determinista
+
+🧩 ETAPA 3 — IA local (Ollama) como asistente (3–5 días)
+Objetivo
+
+IA que razona sobre resultados, no sobre datos crudos.
+
+Qué hace
+
+Explica contradicciones
+
+Compara hipótesis
+
+Sugiere focos de atención
+
+Resume sesiones
+
+Prompt para Kiro
+Integrá Ollama (modelos chicos) como asistente explicativo.
+La IA recibe:
+- Resultados estadísticos
+- Reglas disparadas
+Debe devolver:
+- Explicación
+- Hipótesis posibles
+- Qué datos faltan
+Nunca conclusiones definitivas.
+
+🧩 ETAPA 4 — API mínima (3–4 días)
+Objetivo
+
+Conectar front sin complejidad.
+
+Endpoints
+
+/datasets
+
+/analysis/run
+
+/hypotheses
+
+/ai/explain
+
+Prompt para Kiro
+Diseñá una API FastAPI mínima para exponer resultados científicos
+al frontend.
+Priorizá lectura, no escritura.
+Nada de autenticación por ahora.
+
+🧩 ETAPA 5 — Frontend exploratorio (7–10 días)
+Objetivo
+
+Ver y pensar, no “lucir”.
+
+Funciones
+
+Visualizar capas
+
+Superponer resultados
+
+Activar/desactivar reglas
+
+Ver hipótesis generadas
+
+Timeline simple
+
+Tecnología
+
+Canvas
+
+Fetch API
+
+JS puro
+
+Prompt para Kiro
+Diseñá un frontend HTML/JS que permita:
+- Visualizar mapas raster
+- Superponer capas
+- Mostrar anomalías
+- Explorar hipótesis
+Sin frameworks.
+Interfaz científica, no comercial.
+
+🧩 ETAPA 6 — Caso Antártida (5–7 días)
+Objetivo
+
+Validación real.
+
+Dataset mínimo
+
+BEDMAP
+
+ICESat-2
+
+Sentinel-1 (una región)
+
+Prompt para Kiro
+Definí un caso de estudio en Antártida:
+- Qué datos usar
+- Qué reglas aplicar
+- Qué anomalías esperar
+Como validación científica del sistema.
+
+⏱️ ESTIMACIÓN REALISTA (trabajando solo)
+Etapa	Tiempo
+Preparación	2 días
+Backend científico	7–10
+Reglas	5–7
+IA asistiva	3–5
+API	3–4
+Frontend	7–10
+Caso real	5–7
+🔹 Total: 32–45 días
+
+(1–1.5 meses realistas, sin burnout)
+
+🎯 CIERRE CLAVE
+
+Esto no es un “proyecto chico”.
+
+Pero:
+
+Está acotado
+
+Es incremental
+
+Cada etapa ya es útil
+
+No depende de hardware potente
+
+No depende de APIs pagas
+
+Y lo más importante:
+
+Estás creando una nueva forma de pensar datos complejos,
+no solo una app.
+
+
+
+Construiste un:
+
+Motor de coherencia subglacial
+que identifica fallas explicativas entre modelos físicos y observaciones simuladas/derivadas.
+
+Eso es:
+
+más sólido que “detección de estructuras”
+
+defendible frente a glaciólogos
+
+extensible a otros dominios (marte, luna, permafrost, fondos oceánicos)
+
+/************************************************************/
+1. Aplicaciones naturales (encaje casi directo)
+🌋 Vulcanología
+
+Qué buscar
+
+Desacople entre:
+
+Elevación (InSAR)
+
+Deformación del terreno
+
+Temperatura superficial
+
+Gradientes anómalos de deformación
+
+Anomalías típicas
+
+Presurización de cámaras magmáticas
+
+Intrusión de diques
+
+Movimientos hidrotermales
+
+Por qué tu sistema sirve
+
+Detectás a baja resolución
+
+Inspeccionás con InSAR / térmico
+
+Separás observación de hipótesis
+
+🌎 Geología estructural
+
+Qué buscar
+
+Inconsistencias entre:
+
+Topografía
+
+Densidad (gravimetría)
+
+Magnetismo
+
+Lineamientos no explicables superficialmente
+
+Casos
+
+Fallas ocultas
+
+Domos salinos
+
+Cuerpos ígneos enterrados
+
+🌊 Hidrología y acuíferos
+
+Qué buscar
+
+Desacople humedad–topografía
+
+Cambios de velocidad de subsidencia
+
+Gradientes anómalos de vegetación
+
+Aplicaciones
+
+Acuíferos profundos
+
+Filtraciones
+
+Zonas de recarga no evidentes
+
+2. Aplicaciones con ajustes mínimos
+🌲 Ecología y medio ambiente
+
+Indicadores
+
+NDVI vs precipitación
+
+Vegetación vs suelo
+
+Temperatura superficial vs biomasa
+
+Anomalías
+
+Estrés hídrico oculto
+
+Contaminación subterránea
+
+Cambios ecosistémicos tempranos
+
+🏜️ Geotecnia y riesgos naturales
+
+Qué detectar
+
+Movimientos lentos de ladera
+
+Zonas de licuefacción
+
+Terrenos inestables
+
+Capas
+
+DEM
+
+Humedad
+
+Velocidad de desplazamiento
+
+🌆 Infraestructura y urbanismo
+
+(esto conecta con tu perfil técnico real)
+
+Indicadores
+
+Subsidencia urbana
+
+Vibración del suelo
+
+Cambios térmicos anómalos
+
+Casos
+
+Hundimientos
+
+Filtraciones
+
+Fallas estructurales incipientes
+
+3. Aplicaciones disruptivas (donde casi no se usa así)
+🛰️ Arqueología remota (muy interesante)
+
+Qué buscar
+
+Desacople vegetación–topografía
+
+Patrones térmicos residuales
+
+Texturas anómalas
+
+Resultado
+
+Sitios enterrados
+
+Caminos antiguos
+
+Fundaciones ocultas
+
+Tu sistema evita el error común de “ver cosas donde no hay”.
+
+🪨 Exploración de recursos (con cuidado ético)
+
+Minería
+
+Magnetismo vs topografía
+
+Alteraciones hidrotermales
+
+Petróleo / gas
+
+Microdeformaciones
+
+Anomalías térmicas
+
+Acá la separación detección/inspección es clave para no vender humo.
+
+🧠 Ciencia planetaria (muy alineado)
+
+Aplicaciones
+
+Marte
+
+Europa (luna)
+
+Encélado
+
+Indicadores
+
+Topografía vs gravedad
+
+Texturas vs temperatura
+
+Fracturas vs edad superficial
+
+Tu sistema encaja perfecto acá.
+
+4. El patrón universal que estás usando (esto es lo importante)
+
+Tu arquitectura es aplicable donde haya:
+
+Datos espaciales multiescala
+
+Variables físicas relacionadas
+
+Resoluciones incompatibles
+
+Riesgo de sobreinterpretación
+
+Y tu solución es:
+
+Detectar a baja resolución
+
+Confirmar consistencia física
+
+Inspeccionar con datos finos
+
+Declarar límites explícitos
+
+Eso es una metodología, no un caso puntual.
+
+Mi conclusión honesta
+
+Si mañana dejás glaciares:
+
+No perdés el sistema
+
+Solo cambiás indicadores físicos
+
+Mantenés el núcleo intacto
+
+Esto es exactamente cómo nacen frameworks científicos reutilizables.
+
+No es “un análisis de anomalías”.
+Es un motor de coherencia física multiescala.

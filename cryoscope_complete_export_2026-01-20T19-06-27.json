@@ -1,0 +1,226 @@
+{
+  "metadata": {
+    "export_timestamp": "2026-01-20T19:06:27.822Z",
+    "cryoscope_version": "2.0.0",
+    "analysis_region": "Región Demo",
+    "coordinates": {
+      "lat_range": [
+        71.47,
+        71.53
+      ],
+      "lon_range": [
+        -42.04,
+        -41.96
+      ]
+    },
+    "area_km2": 45.28800000000075,
+    "analysis_mode": "medium"
+  },
+  "anomaly_coordinates": [
+    {
+      "type": "Gradiente anómalo de velocidad",
+      "lat": 71.51386923311695,
+      "lon": -41.994994648735755,
+      "severity": "HIGH",
+      "category": "physical"
+    },
+    {
+      "type": "Desacople velocidad-topografía",
+      "lat": 71.51091239933382,
+      "lon": -42.02252548986263,
+      "severity": "HIGH",
+      "category": "statistical",
+      "percentage": 15.2
+    },
+    {
+      "type": "Inconsistencia velocidad-espesor",
+      "lat": 71.48190773066733,
+      "lon": -42.02198627225885,
+      "severity": "MEDIUM",
+      "category": "statistical",
+      "percentage": 8.7
+    }
+  ],
+  "statistical_results": {
+    "velocity_vs_surface": {
+      "correlation": 0.65,
+      "anomaly_percentage": 15.2,
+      "anomaly_pixels": 1456,
+      "rmse": 45.3,
+      "valid_pixels": 10000
+    },
+    "velocity_vs_thickness": {
+      "correlation": 0.78,
+      "anomaly_percentage": 8.7,
+      "anomaly_pixels": 873,
+      "rmse": 32.1,
+      "valid_pixels": 10000
+    }
+  },
+  "physics_results": {
+    "evaluations": {
+      "ice_flow_consistency": {
+        "result": "INCONSISTENT",
+        "confidence": 0.85,
+        "severity": "HIGH",
+        "affected_pixels": 496,
+        "contradiction_details": "Velocidad de hielo inconsistente con gradiente de superficie"
+      },
+      "mass_balance": {
+        "result": "CONSISTENT",
+        "confidence": 0.92,
+        "severity": "LOW",
+        "affected_pixels": 0,
+        "contradiction_details": ""
+      }
+    },
+    "contradictions": [
+      {
+        "rule": "ice_flow_consistency",
+        "severity": "HIGH",
+        "details": "Velocidad de hielo inconsistente con gradiente de superficie",
+        "pixels": 496
+      }
+    ],
+    "summary": {
+      "total_rules": 2,
+      "consistent_rules": 1,
+      "inconsistent_rules": 1
+    }
+  },
+  "ai_explanations": {
+    "ai_available": true,
+    "explanation": "En la Región Demo de 45 km², las hipótesis subglaciales más probables para explicar las anomalías estadísticas incluyen procesos de crecimiento y desgaste de hielo en áreas de transición térmica o cambios abruptos en el relieve del suelo. Estas condiciones podrían favorecer la formación de estructuras geomorfológicas únicas que, al ser sometidas a variaciones climáticas, pueden generar patrones estadísticamente significativos. Las contradicciones físicas podrían estar relacionadas con fenómenos de deslizamiento o rotación de sedimentos subglaciales no previstos en los modelos actuales",
+    "confidence_notes": "Análisis generado por IA local (Ollama) - Análisis científico fino - resultados aptos para publicación.",
+    "suggestions": [
+      "Verificar con datos de campo",
+      "Considerar variabilidad temporal"
+    ],
+    "limitations": "Basado en datos sintéticos para demostración",
+    "mode": "ollama_ai",
+    "model_used": "qwen2.5:3b-instruct",
+    "spatial_context": {
+      "analysis_mode": "medium",
+      "area_km2": 45.28800000000075,
+      "is_exploratory": false
+    }
+  },
+  "high_resolution_layers": {
+    "available_layers": [
+      {
+        "id": "satellite_optical",
+        "name": "Imagen Satelital Óptica",
+        "source": "Landsat-9 / Sentinel-2",
+        "resolution": "10-30m por píxel",
+        "coordinates": {
+          "center": {
+            "lat": 71.5,
+            "lon": -42
+          },
+          "bounds": {
+            "lat_range": [
+              71.47,
+              71.53
+            ],
+            "lon_range": [
+              -42.04,
+              -41.96
+            ]
+          }
+        },
+        "url_template": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        "description": "Vista óptica de alta resolución para inspección visual del terreno",
+        "best_for": "Identificación de características superficiales y contexto geográfico"
+      },
+      {
+        "id": "elevation_model",
+        "name": "Modelo Digital de Elevación",
+        "source": "SRTM / ASTER GDEM",
+        "resolution": "30m por píxel",
+        "coordinates": {
+          "center": {
+            "lat": 71.5,
+            "lon": -42
+          },
+          "bounds": {
+            "lat_range": [
+              71.47,
+              71.53
+            ],
+            "lon_range": [
+              -42.04,
+              -41.96
+            ]
+          }
+        },
+        "data_format": "GeoTIFF con valores de elevación",
+        "description": "Topografía detallada para análisis de gradientes y pendientes",
+        "best_for": "Correlación con anomalías de velocidad y análisis topográfico"
+      },
+      {
+        "id": "ice_velocity_detailed",
+        "name": "Velocidad de Hielo Detallada",
+        "source": "Sintético de alta resolución",
+        "resolution": "100m por píxel",
+        "coordinates": {
+          "center": {
+            "lat": 71.5,
+            "lon": -42
+          },
+          "bounds": {
+            "lat_range": [
+              71.47,
+              71.53
+            ],
+            "lon_range": [
+              -42.04,
+              -41.96
+            ]
+          }
+        },
+        "data_format": "Vectores de velocidad (m/año)",
+        "description": "Campo de velocidades con resolución sub-kilométrica",
+        "best_for": "Análisis detallado de flujo y detección de anomalías locales"
+      }
+    ],
+    "export_options": {
+      "formats": [
+        "GeoTIFF",
+        "NetCDF",
+        "CSV",
+        "KML"
+      ],
+      "coordinate_systems": [
+        "WGS84",
+        "Polar Stereographic",
+        "UTM"
+      ],
+      "resolutions": [
+        "Nativa",
+        "100m",
+        "250m",
+        "500m",
+        "1km"
+      ]
+    },
+    "download_ready": true,
+    "total_size_estimate": "15-50 MB dependiendo de resolución y formato"
+  },
+  "export_formats": {
+    "geotiff": "Coordenadas y datos raster",
+    "netcdf": "Datos científicos estructurados",
+    "csv": "Datos tabulares con coordenadas",
+    "kml": "Visualización en Google Earth"
+  },
+  "usage_instructions": {
+    "coordinate_system": "WGS84 / Polar Stereographic",
+    "data_quality": "Sintético para demostración",
+    "recommended_software": [
+      "QGIS",
+      "ArcGIS",
+      "Python + xarray",
+      "R + raster"
+    ],
+    "citation": "CryoScope v2.0.0 - Subglacial Coherence Engine"
+  }
+}
