@@ -1007,6 +1007,17 @@
             .lupa-header h2 {
                 font-size: 1.1rem;
             }
+            
+            .lupa-sidebar {
+                width: 100%;
+                height: 250px;
+                border-left: none;
+                border-top: 1px solid #dee2e6;
+            }
+            
+            .lupa-body {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -1504,6 +1515,32 @@
                     <div id="instrumentAnalysis">
                         <!-- Se llenará dinámicamente -->
                     </div>
+                    
+                    <!-- NUEVA SECCIÓN: Tipos de Anomalías Detectadas -->
+                    <div style="margin-top: 2rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #8B4513;">
+                        <h4 style="color: #8B4513; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            🔬 Anomalías Detectadas
+                        </h4>
+                        <div id="anomalyTypes">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+                    
+                    <!-- NUEVA SECCIÓN: Explicación Científica -->
+                    <div style="margin-top: 1rem; padding: 1rem; background: #e8f4fd; border-radius: 8px; border-left: 4px solid #2196F3;">
+                        <h4 style="color: #2196F3; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            🤖 ¿Por qué funciona?
+                        </h4>
+                        <div style="font-size: 0.8rem; line-height: 1.4; color: #555;">
+                            <p style="margin-bottom: 0.5rem;"><strong>Los humanos antiguos alteraron el paisaje de forma geométrica:</strong></p>
+                            <ul style="margin-left: 1rem; margin-bottom: 0.5rem;">
+                                <li>🔲 Construyeron en <strong>líneas rectas</strong></li>
+                                <li>⭕ Hicieron <strong>círculos perfectos</strong></li>
+                                <li>🔄 Crearon <strong>patrones repetitivos</strong></li>
+                            </ul>
+                            <p style="font-style: italic; color: #666;">La naturaleza NO hace eso. Geometría + Persistencia = Arqueología</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1817,9 +1854,11 @@
         // Mostrar análisis por instrumento
         function displayInstrumentAnalysis() {
             const container = document.getElementById('instrumentAnalysis');
+            const anomalyContainer = document.getElementById('anomalyTypes');
             const stats = currentAnalysisData.statistical_results || {};
             
             let html = '';
+            let detectedAnomalies = [];
             
             Object.entries(stats).forEach(([instrument, data]) => {
                 const prob = data.archaeological_probability || 0;
@@ -1844,9 +1883,159 @@
                         </div>
                     </div>
                 `;
+                
+                // Detectar tipos de anomalías basado en los datos
+                if (prob > 0.3) {
+                    const anomalyType = detectAnomalyType(instrument, prob, coherence);
+                    if (anomalyType) {
+                        detectedAnomalies.push(anomalyType);
+                    }
+                }
             });
             
             container.innerHTML = html;
+            
+            // Mostrar tipos de anomalías detectadas
+            displayDetectedAnomalies(detectedAnomalies, anomalyContainer);
+        }
+
+        // Detectar tipo de anomalía basado en el instrumento y métricas
+        function detectAnomalyType(instrument, probability, coherence) {
+            const types = [];
+            
+            // Anomalías lineales (calzadas, muros, canales)
+            if ((instrument.includes('sar') || instrument.includes('spectral_roughness')) && 
+                coherence > 0.7 && probability > 0.4) {
+                types.push({
+                    type: 'linear',
+                    name: 'Lineales',
+                    description: 'Calzadas, muros, canales',
+                    icon: '📏',
+                    confidence: probability,
+                    source: instrument
+                });
+            }
+            
+            // Anomalías circulares (plazas, fosos, túmulos)
+            if ((instrument.includes('dem') || instrument.includes('lidar') || instrument.includes('multitemporal')) && 
+                probability > 0.35) {
+                types.push({
+                    type: 'circular',
+                    name: 'Circulares',
+                    description: 'Plazas, fosos, túmulos',
+                    icon: '⭕',
+                    confidence: probability,
+                    source: instrument
+                });
+            }
+            
+            // Anomalías rectangulares (edificios, terrazas, campos)
+            if ((instrument.includes('ndvi') || instrument.includes('thermal') || instrument.includes('pseudo_lidar')) && 
+                coherence > 0.6 && probability > 0.3) {
+                types.push({
+                    type: 'rectangular',
+                    name: 'Rectangulares',
+                    description: 'Edificios, terrazas, campos',
+                    icon: '🔲',
+                    confidence: probability,
+                    source: instrument
+                });
+            }
+            
+            // Anomalías complejas (ciudades, sistemas hidráulicos)
+            if (probability > 0.5 && coherence > 0.8) {
+                types.push({
+                    type: 'complex',
+                    name: 'Complejas',
+                    description: 'Ciudades, sistemas hidráulicos',
+                    icon: '🏛️',
+                    confidence: probability,
+                    source: instrument
+                });
+            }
+            
+            return types.length > 0 ? types : null;
+        }
+
+        // Mostrar anomalías detectadas en la UI
+        function displayDetectedAnomalies(anomalies, container) {
+            if (!anomalies || anomalies.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #666; font-style: italic; padding: 1rem;">
+                        🔍 Analizando patrones geométricos...
+                    </div>
+                `;
+                return;
+            }
+            
+            // Agrupar anomalías por tipo
+            const groupedAnomalies = {};
+            anomalies.flat().forEach(anomaly => {
+                if (!groupedAnomalies[anomaly.type]) {
+                    groupedAnomalies[anomaly.type] = [];
+                }
+                groupedAnomalies[anomaly.type].push(anomaly);
+            });
+            
+            let html = '';
+            
+            Object.entries(groupedAnomalies).forEach(([type, typeAnomalies]) => {
+                const maxConfidence = Math.max(...typeAnomalies.map(a => a.confidence));
+                const anomaly = typeAnomalies[0]; // Tomar el primero como representativo
+                
+                html += `
+                    <div style="margin-bottom: 1rem; padding: 0.75rem; background: white; border-radius: 6px; border-left: 4px solid ${getAnomalyTypeColor(type)};">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 600; color: #2c3e50;">
+                                ${anomaly.icon} ${anomaly.name}
+                            </span>
+                            <span style="font-size: 0.8rem; color: ${getConfidenceColor(maxConfidence)}; font-weight: 600;">
+                                ${(maxConfidence * 100).toFixed(0)}%
+                            </span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">
+                            ${anomaly.description}
+                        </div>
+                        <div style="font-size: 0.7rem; color: #888;">
+                            Detectado por: ${typeAnomalies.length} sensor(es)
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Agregar resumen si hay múltiples tipos
+            if (Object.keys(groupedAnomalies).length > 1) {
+                html += `
+                    <div style="margin-top: 1rem; padding: 0.75rem; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-radius: 6px; border-left: 4px solid #ffc107;">
+                        <div style="font-weight: 600; color: #856404; margin-bottom: 0.5rem;">
+                            🎯 Convergencia Multi-Sensor
+                        </div>
+                        <div style="font-size: 0.8rem; color: #856404;">
+                            Múltiples tipos de anomalías detectadas sugieren un <strong>complejo arqueológico</strong> con diferentes estructuras.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Obtener color por tipo de anomalía
+        function getAnomalyTypeColor(type) {
+            const colors = {
+                'linear': '#dc3545',      // Rojo para lineales
+                'circular': '#28a745',    // Verde para circulares
+                'rectangular': '#ffc107', // Amarillo para rectangulares
+                'complex': '#6f42c1'      // Púrpura para complejas
+            };
+            return colors[type] || '#6c757d';
+        }
+
+        // Obtener color por nivel de confianza
+        function getConfidenceColor(confidence) {
+            if (confidence > 0.7) return '#28a745';      // Verde alto
+            if (confidence > 0.4) return '#ffc107';      // Amarillo medio
+            return '#dc3545';                            // Rojo bajo
         }
 
         // Funciones auxiliares
