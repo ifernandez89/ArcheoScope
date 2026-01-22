@@ -425,8 +425,15 @@ async function investigateRegion() {
         include_explainability: document.getElementById('includeExplainability').checked,
         include_validation_metrics: document.getElementById('includeValidation').checked,
         layers_to_analyze: [
+            // Base (6)
             "ndvi_vegetation", "thermal_lst", "sar_backscatter", 
-            "surface_roughness", "soil_salinity", "seismic_resonance"
+            "surface_roughness", "soil_salinity", "seismic_resonance",
+            // Enhanced (5)
+            "elevation_dem", "sar_l_band", "icesat2_profiles",
+            "vegetation_height", "soil_moisture",
+            // NUEVAS CAPAS AVANZADAS (5)
+            "lidar_fullwave", "dem_multiscale", "spectral_roughness",
+            "pseudo_lidar_ai", "multitemporal_topo"
         ],
         active_rules: ["all"]
     };
@@ -468,6 +475,18 @@ async function investigateRegion() {
         
         // Visualizar en el mapa
         visualizeArchaeologicalData(data);
+        
+        // NUEVA INTEGRACIÓN: Verificar anomalías para activar lupa arqueológica
+        if (typeof checkForAnomalies === 'function') {
+            // Capturar coordenadas para la lupa
+            selectedCoordinates = {
+                lat: (latMin + latMax) / 2,
+                lng: (lonMin + lonMax) / 2
+            };
+            
+            // Verificar si hay anomalías suficientes para mostrar la lupa
+            checkForAnomalies(data);
+        }
         
     } catch (error) {
         console.error('❌ Error en análisis arqueológico:', error);

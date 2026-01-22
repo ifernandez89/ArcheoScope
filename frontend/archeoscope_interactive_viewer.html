@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏺 ArcheoScope - Lupa Arqueológica Multi-Sensor</title>
+    <link rel="stylesheet" href="archeoscope_interactive_map.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏺</text></svg>">
+</head>
+<body>
+    <div id="archeoScopeContainer">
+        <!-- El contenido será generado por JavaScript -->
+    </div>
+
+    <!-- Scripts -->
+    <script src="archeoscope_interactive_map.js"></script>
+    
+    <!-- Información adicional -->
+    <div id="infoModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏺 ArcheoScope - Información del Sistema</h2>
+                <button class="close-btn" onclick="closeInfoModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-section">
+                    <h3>🛰️ Instrumentos Integrados (10)</h3>
+                    
+                    <h4>📡 Instrumentos Base (5)</h4>
+                    <ul>
+                        <li><strong>Sentinel-2/Landsat:</strong> NDVI y análisis multiespectral</li>
+                        <li><strong>MODIS Térmico:</strong> Temperatura superficial y anomalías térmicas</li>
+                        <li><strong>Sentinel-1 SAR:</strong> Backscatter SAR banda C</li>
+                        <li><strong>Scatterometer:</strong> Rugosidad superficial</li>
+                        <li><strong>SMOS:</strong> Salinidad superficial del suelo</li>
+                        <li><strong>IRIS Sísmico:</strong> Resonancia sísmica pasiva</li>
+                    </ul>
+                    
+                    <h4>🚀 Instrumentos Mejorados (5)</h4>
+                    <ul>
+                        <li><strong>🏔️ OpenTopography DEM:</strong> Micro-relieve crítico (1-30m)</li>
+                        <li><strong>📡 ASF PALSAR L-band:</strong> Penetración bajo vegetación densa</li>
+                        <li><strong>📏 ICESat-2:</strong> Perfiles láser precisión centimétrica</li>
+                        <li><strong>🌳 GEDI:</strong> Estructura 3D de vegetación</li>
+                        <li><strong>💧 SMAP:</strong> Humedad del suelo y drenaje</li>
+                    </ul>
+                </div>
+                
+                <div class="info-section">
+                    <h3>🎯 Capacidades Únicas</h3>
+                    <ul>
+                        <li><strong>Micro-Topografía:</strong> Detecta alteraciones de 1-2 metros</li>
+                        <li><strong>Penetración Vegetal:</strong> Ve estructuras bajo dosel denso</li>
+                        <li><strong>Precisión Centimétrica:</strong> Validación láser de alta precisión</li>
+                        <li><strong>Análisis 3D:</strong> Estructura vertical de vegetación</li>
+                        <li><strong>Hidrología Histórica:</strong> Sistemas de drenaje antiguos</li>
+                    </ul>
+                </div>
+                
+                <div class="info-section">
+                    <h3>🔬 Metodología</h3>
+                    <p>ArcheoScope utiliza <strong>detección de persistencias espaciales</strong> no explicables por procesos naturales actuales mediante análisis multi-espectral integrado.</p>
+                    
+                    <h4>Niveles de Detección:</h4>
+                    <ol>
+                        <li><strong>Detección Inicial:</strong> Sentinel-2, Landsat, MODIS</li>
+                        <li><strong>Confirmación Geométrica:</strong> SAR, DEM, PALSAR</li>
+                        <li><strong>Validación de Precisión:</strong> ICESat-2, GEDI, IRIS</li>
+                        <li><strong>Análisis Integrado:</strong> SMAP, convergencia multi-sensor</li>
+                    </ol>
+                </div>
+                
+                <div class="info-section">
+                    <h3>📊 Interpretación de Resultados</h3>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <span class="color-box high"></span>
+                            <span><strong>Alta (>60%):</strong> Anomalías significativas, investigación recomendada</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="color-box moderate"></span>
+                            <span><strong>Moderada (30-60%):</strong> Patrones anómalos, análisis complementario</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="color-box low"></span>
+                            <span><strong>Baja (10-30%):</strong> Anomalías menores, patrones naturales</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="color-box very-low"></span>
+                            <span><strong>Muy Baja (<10%):</strong> Procesos naturales dominantes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeInfoModal()">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Estilos para el modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .info-section {
+            margin-bottom: 2rem;
+        }
+
+        .info-section h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            border-bottom: 2px solid #d4af37;
+            padding-bottom: 0.5rem;
+        }
+
+        .info-section h4 {
+            color: #495057;
+            margin: 1rem 0 0.5rem 0;
+            font-size: 1rem;
+        }
+
+        .info-section ul,
+        .info-section ol {
+            margin-left: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .info-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .color-box.high {
+            background: #dc3545;
+        }
+
+        .color-box.moderate {
+            background: #ffc107;
+        }
+
+        .color-box.low {
+            background: #28a745;
+        }
+
+        .color-box.very-low {
+            background: #6c757d;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+        }
+
+        .modal-footer .btn-primary {
+            padding: 0.75rem 2rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-footer .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        /* Botón de información en el header */
+        .info-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+    </style>
+
+    <script>
+        // Agregar botón de información al header
+        document.addEventListener('DOMContentLoaded', () => {
+            const header = document.querySelector('.archeoscope-header');
+            if (header) {
+                const infoBtn = document.createElement('button');
+                infoBtn.className = 'info-btn';
+                infoBtn.innerHTML = 'ℹ️ Información';
+                infoBtn.onclick = showInfoModal;
+                
+                const statusIndicators = header.querySelector('.status-indicators');
+                statusIndicators.appendChild(infoBtn);
+            }
+        });
+
+        function showInfoModal() {
+            document.getElementById('infoModal').classList.remove('hidden');
+        }
+
+        function closeInfoModal() {
+            document.getElementById('infoModal').classList.add('hidden');
+        }
+
+        // Cerrar modal con ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeInfoModal();
+            }
+        });
+
+        // Cerrar modal clickeando fuera
+        document.getElementById('infoModal').addEventListener('click', (e) => {
+            if (e.target.id === 'infoModal') {
+                closeInfoModal();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -111,6 +111,52 @@ class ArchaeologicalDataLoader:
             units = 'resonance_factor'
             description = f'Resonancia realista para {environment_type}'
             
+        # NUEVAS CAPAS AVANZADAS PARA VISUALIZACIÓN IMPACTANTE
+        elif data_type == 'lidar_fullwave':
+            data = self.enhanced_apis.get_lidar_fullwave_data(bounds)
+            if data is not None:
+                return data  # Ya viene como DataArray completo
+            else:
+                data = self._generate_generic_realistic(height, width, environment_type)
+                units = 'meters'
+                description = f'LiDAR Full-Waveform sintético para {environment_type}'
+            
+        elif data_type == 'dem_multiscale':
+            data = self.enhanced_apis.get_dem_multiscale_fusion(bounds)
+            if data is not None:
+                return data  # Ya viene como DataArray completo
+            else:
+                data = self._generate_generic_realistic(height, width, environment_type)
+                units = 'meters'
+                description = f'DEM Multiescala sintético para {environment_type}'
+            
+        elif data_type == 'spectral_roughness':
+            data = self.enhanced_apis.get_spectral_roughness_analysis(bounds)
+            if data is not None:
+                return data  # Ya viene como DataArray completo
+            else:
+                data = self._generate_generic_realistic(height, width, environment_type)
+                units = 'log_power_spectrum'
+                description = f'Rugosidad Espectral sintética para {environment_type}'
+            
+        elif data_type == 'pseudo_lidar_ai':
+            data = self.enhanced_apis.get_pseudo_lidar_ai(bounds)
+            if data is not None:
+                return data  # Ya viene como DataArray completo
+            else:
+                data = self._generate_generic_realistic(height, width, environment_type)
+                units = 'meters_inferred'
+                description = f'Pseudo-LiDAR IA sintético para {environment_type}'
+            
+        elif data_type == 'multitemporal_topo':
+            data = self.enhanced_apis.get_multitemporal_topography(bounds)
+            if data is not None:
+                return data  # Ya viene como DataArray completo
+            else:
+                data = self._generate_generic_realistic(height, width, environment_type)
+                units = 'meters_change'
+                description = f'Topografía Multitemporal sintética para {environment_type}'
+            
         else:
             # Datos genéricos realistas
             data = self._generate_generic_realistic(height, width, environment_type)
@@ -759,7 +805,14 @@ class ArchaeologicalDataLoader:
             'sar_l_band',             # ASF DAAC PALSAR
             'icesat2_profiles',       # ICESat-2 ATL08
             'vegetation_height',      # GEDI
-            'soil_moisture'           # SMAP
+            'soil_moisture',          # SMAP
+            
+            # NUEVAS CAPAS AVANZADAS PARA VISUALIZACIÓN IMPACTANTE
+            'lidar_fullwave',         # LiDAR full-waveform
+            'dem_multiscale',         # DEM multiescala fusionado
+            'spectral_roughness',     # Rugosidad espectral (Fourier/Wavelets)
+            'pseudo_lidar_ai',        # Pseudo-LiDAR por IA
+            'multitemporal_topo'      # Topografía multitemporal
         ]
         
         return base_datasets + enhanced_datasets

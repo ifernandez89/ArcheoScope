@@ -740,6 +740,274 @@
             border-left: 3px solid #ffc107;
             margin: 0.5rem 0;
         }
+
+        /* Botón de lupa arqueológica */
+        .lupa-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: #8B4513;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .lupa-btn:hover {
+            background: #D2691E;
+            transform: translateY(-2px);
+        }
+
+        .lupa-btn.active {
+            display: block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* Modal de lupa arqueológica */
+        .lupa-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            display: none;
+        }
+
+        .lupa-modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .lupa-content {
+            width: 95%;
+            height: 95%;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .lupa-header {
+            background: linear-gradient(135deg, #8B4513 0%, #D2691E 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lupa-header h2 {
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .close-lupa {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-lupa:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+
+        .lupa-body {
+            flex: 1;
+            display: flex;
+        }
+
+        .lupa-map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #lupaMap {
+            width: 100%;
+            height: 100%;
+        }
+
+        .lupa-sidebar {
+            width: 350px;
+            background: #f8f9fa;
+            border-left: 1px solid #dee2e6;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .instrument-layer {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .instrument-layer:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .instrument-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .instrument-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .layer-toggle {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .layer-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #8B4513;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .instrument-data {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+
+        .anomaly-indicator {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .anomaly-high {
+            background: #dc3545;
+            color: white;
+        }
+
+        .anomaly-medium {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .anomaly-low {
+            background: #28a745;
+            color: white;
+        }
+
+        .anomaly-none {
+            background: #6c757d;
+            color: white;
+        }
+
+        /* Controles de capas en el mapa de lupa */
+        .lupa-layer-controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .lupa-layer-controls h4 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .layer-control-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive para botón de cerrar */
+        @media (max-width: 768px) {
+            .close-lupa {
+                width: 40px;
+                height: 40px;
+                font-size: 1.6rem;
+            }
+            
+            .lupa-header h2 {
+                font-size: 1.1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -902,6 +1170,11 @@
             <div class="loading" id="loading">
                 🔍 Analizando región arqueológica...
             </div>
+            
+            <!-- Botón de lupa arqueológica -->
+            <button class="lupa-btn" id="lupaBtn" onclick="openLupaModal()">
+                🔍 Lupa Arqueológica
+            </button>
         </div>
 
         <!-- Panel de análisis (derecha) - TODO el análisis -->
@@ -1146,6 +1419,96 @@
         </div>
     </div>
 
+    <!-- Modal de lupa arqueológica -->
+    <div class="lupa-modal" id="lupaModal">
+        <div class="lupa-content">
+            <div class="lupa-header">
+                <h2>🔍 Lupa Arqueológica Multi-Sensor</h2>
+                <button class="close-lupa" onclick="closeLupaModal()" title="Cerrar">&times;</button>
+            </div>
+            <div class="lupa-body">
+                <div class="lupa-map-container">
+                    <div id="lupaMap"></div>
+                    
+                    <!-- Controles de capas -->
+                    <div class="lupa-layer-controls">
+                        <h4>🗂️ Capas Arqueológicas</h4>
+                        <div class="layer-control-item">
+                            <span>📡 Óptico (NDVI)</span>
+                            <label class="layer-toggle">
+                                <input type="checkbox" checked onchange="toggleLupaLayer('optical')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="layer-control-item">
+                            <span>🌡️ Térmico (LST)</span>
+                            <label class="layer-toggle">
+                                <input type="checkbox" checked onchange="toggleLupaLayer('thermal')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="layer-control-item">
+                            <span>📊 SAR</span>
+                            <label class="layer-toggle">
+                                <input type="checkbox" checked onchange="toggleLupaLayer('sar')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="layer-control-item">
+                            <span>🏔️ DEM</span>
+                            <label class="layer-toggle">
+                                <input type="checkbox" checked onchange="toggleLupaLayer('dem')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="layer-control-item">
+                            <span>📡 LiDAR Full-Wave</span>
+                            <label class="layer-toggle">
+                                <input type="checkbox" checked onchange="toggleLupaLayer('lidar_fullwave')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="layer-control-item">
+                            <span>🗺️ DEM Multiescala</span>
+                            <label class="layer-toggle">
+                                <input type="checkbox" checked onchange="toggleLupaLayer('dem_multiscale')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="layer-control-item">
+                            <span>🌊 Rugosidad Espectral</span>
+                            <label class="layer-toggle">
+                                <input type="checkbox" checked onchange="toggleLupaLayer('spectral_roughness')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="layer-control-item">
+                            <span>🤖 Pseudo-LiDAR IA</span>
+                            <label class="layer-toggle">
+                                <input type="checkbox" checked onchange="toggleLupaLayer('pseudo_lidar_ai')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="layer-control-item">
+                            <span>⏳ Multitemporal</span>
+                            <label class="layer-toggle">
+                                <input type="checkbox" checked onchange="toggleLupaLayer('multitemporal_topo')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="lupa-sidebar">
+                    <h3 style="margin-bottom: 1rem; color: #8B4513;">🛰️ Análisis por Instrumento</h3>
+                    <div id="instrumentAnalysis">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -1243,5 +1606,341 @@
     </script>
     
     <script src="archaeological_app.js"></script>
+    
+    <script>
+        // Variables globales para lupa arqueológica
+        let lupaMap;
+        let currentAnalysisData = null;
+        let selectedCoordinates = null;
+        let archaeoLayers = {};
+
+        // Función para verificar anomalías y mostrar botón de lupa
+        function checkForAnomalies(analysisResults) {
+            if (!analysisResults || !analysisResults.statistical_results) return;
+            
+            const stats = analysisResults.statistical_results;
+            const probabilities = Object.values(stats).map(s => s.archaeological_probability || 0);
+            const avgProbability = probabilities.length > 0 ? 
+                probabilities.reduce((a, b) => a + b, 0) / probabilities.length : 0;
+            
+            const lupaBtn = document.getElementById('lupaBtn');
+            
+            if (avgProbability > 0.2) { // Umbral para mostrar lupa
+                lupaBtn.classList.add('active');
+                lupaBtn.innerHTML = `🔍 Lupa Arqueológica (${(avgProbability * 100).toFixed(1)}%)`;
+                currentAnalysisData = analysisResults;
+            } else {
+                lupaBtn.classList.remove('active');
+            }
+        }
+
+        // Abrir modal de lupa
+        function openLupaModal() {
+            if (!currentAnalysisData || !selectedCoordinates) {
+                alert('Primero realiza un análisis arqueológico con anomalías detectadas');
+                return;
+            }
+            
+            document.getElementById('lupaModal').classList.add('active');
+            
+            // Inicializar mapa de lupa
+            setTimeout(() => {
+                initLupaMap();
+                setupLupaLayers();
+                displayInstrumentAnalysis();
+            }, 100);
+        }
+
+        // Cerrar modal de lupa (función mejorada ya definida arriba)
+        // Esta función ya está implementada con mejor funcionalidad
+
+        // Inicializar mapa de lupa
+        function initLupaMap() {
+            if (lupaMap) {
+                lupaMap.remove();
+            }
+            
+            lupaMap = L.map('lupaMap').setView([0, 0], 15);
+            
+            // Capa base
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(lupaMap);
+        }
+
+        // Configurar capas arqueológicas en la lupa
+        function setupLupaLayers() {
+            if (!lupaMap || !selectedCoordinates || !currentAnalysisData) return;
+            
+            // Centrar en la región analizada
+            lupaMap.setView([selectedCoordinates.lat, selectedCoordinates.lng], 15);
+            
+            // Crear capas simuladas basadas en los resultados
+            const stats = currentAnalysisData.statistical_results || {};
+            
+            // Capa NDVI (óptico)
+            if (stats.ndvi_vegetation) {
+                const prob = stats.ndvi_vegetation.archaeological_probability || 0;
+                archaeoLayers.optical = createSimulatedLayer('optical', prob);
+                archaeoLayers.optical.addTo(lupaMap);
+            }
+            
+            // Capa térmica
+            if (stats.thermal_lst) {
+                const prob = stats.thermal_lst.archaeological_probability || 0;
+                archaeoLayers.thermal = createSimulatedLayer('thermal', prob);
+                archaeoLayers.thermal.addTo(lupaMap);
+            }
+            
+            // Capa SAR
+            if (stats.sar_backscatter) {
+                const prob = stats.sar_backscatter.archaeological_probability || 0;
+                archaeoLayers.sar = createSimulatedLayer('sar', prob);
+                archaeoLayers.sar.addTo(lupaMap);
+            }
+            
+            // Capa DEM
+            if (stats.elevation_dem || stats.surface_roughness) {
+                const prob = (stats.elevation_dem?.archaeological_probability || stats.surface_roughness?.archaeological_probability) || 0;
+                archaeoLayers.dem = createSimulatedLayer('dem', prob);
+                archaeoLayers.dem.addTo(lupaMap);
+            }
+            
+            // NUEVAS CAPAS AVANZADAS PARA VISUALIZACIÓN IMPACTANTE
+            
+            // LiDAR Full-Waveform
+            if (stats.lidar_fullwave) {
+                const prob = stats.lidar_fullwave.archaeological_probability || 0;
+                archaeoLayers.lidar_fullwave = createSimulatedLayer('lidar_fullwave', prob);
+                archaeoLayers.lidar_fullwave.addTo(lupaMap);
+            }
+            
+            // DEM Multiescala
+            if (stats.dem_multiscale) {
+                const prob = stats.dem_multiscale.archaeological_probability || 0;
+                archaeoLayers.dem_multiscale = createSimulatedLayer('dem_multiscale', prob);
+                archaeoLayers.dem_multiscale.addTo(lupaMap);
+            }
+            
+            // Rugosidad Espectral
+            if (stats.spectral_roughness) {
+                const prob = stats.spectral_roughness.archaeological_probability || 0;
+                archaeoLayers.spectral_roughness = createSimulatedLayer('spectral_roughness', prob);
+                archaeoLayers.spectral_roughness.addTo(lupaMap);
+            }
+            
+            // Pseudo-LiDAR IA
+            if (stats.pseudo_lidar_ai) {
+                const prob = stats.pseudo_lidar_ai.archaeological_probability || 0;
+                archaeoLayers.pseudo_lidar_ai = createSimulatedLayer('pseudo_lidar_ai', prob);
+                archaeoLayers.pseudo_lidar_ai.addTo(lupaMap);
+            }
+            
+            // Topografía Multitemporal
+            if (stats.multitemporal_topo) {
+                const prob = stats.multitemporal_topo.archaeological_probability || 0;
+                archaeoLayers.multitemporal_topo = createSimulatedLayer('multitemporal_topo', prob);
+                archaeoLayers.multitemporal_topo.addTo(lupaMap);
+            }
+            
+            // Añadir marcador central
+            L.marker([selectedCoordinates.lat, selectedCoordinates.lng])
+                .addTo(lupaMap)
+                .bindPopup('📍 Región Analizada')
+                .openPopup();
+        }
+
+        // Crear capa simulada basada en probabilidad
+        function createSimulatedLayer(type, probability) {
+            const bounds = [
+                [selectedCoordinates.lat - 0.005, selectedCoordinates.lng - 0.005],
+                [selectedCoordinates.lat + 0.005, selectedCoordinates.lng + 0.005]
+            ];
+            
+            let color, opacity;
+            
+            switch(type) {
+                case 'optical':
+                    color = probability > 0.5 ? '#ff0000' : probability > 0.3 ? '#ffaa00' : '#00ff00';
+                    break;
+                case 'thermal':
+                    color = probability > 0.5 ? '#ff4500' : probability > 0.3 ? '#ffa500' : '#87ceeb';
+                    break;
+                case 'sar':
+                    color = probability > 0.5 ? '#8b0000' : probability > 0.3 ? '#cd853f' : '#4169e1';
+                    break;
+                case 'dem':
+                    color = probability > 0.5 ? '#654321' : probability > 0.3 ? '#d2691e' : '#8fbc8f';
+                    break;
+                    
+                // NUEVAS CAPAS AVANZADAS CON COLORES DISTINTIVOS
+                case 'lidar_fullwave':
+                    color = probability > 0.5 ? '#ff1493' : probability > 0.3 ? '#ff69b4' : '#dda0dd';
+                    break;
+                case 'dem_multiscale':
+                    color = probability > 0.5 ? '#8b4513' : probability > 0.3 ? '#a0522d' : '#deb887';
+                    break;
+                case 'spectral_roughness':
+                    color = probability > 0.5 ? '#00ced1' : probability > 0.3 ? '#48d1cc' : '#afeeee';
+                    break;
+                case 'pseudo_lidar_ai':
+                    color = probability > 0.5 ? '#9932cc' : probability > 0.3 ? '#ba55d3' : '#dda0dd';
+                    break;
+                case 'multitemporal_topo':
+                    color = probability > 0.5 ? '#ff6347' : probability > 0.3 ? '#ffa07a' : '#ffe4e1';
+                    break;
+                default:
+                    color = '#cccccc';
+            }
+            
+            opacity = Math.max(0.3, probability);
+            
+            return L.rectangle(bounds, {
+                color: color,
+                fillColor: color,
+                fillOpacity: opacity,
+                weight: 2
+            }).bindPopup(`${type.toUpperCase()}<br>Probabilidad: ${(probability * 100).toFixed(1)}%`);
+        }
+
+        // Toggle de capas en lupa
+        function toggleLupaLayer(layerType) {
+            if (archaeoLayers[layerType]) {
+                if (lupaMap.hasLayer(archaeoLayers[layerType])) {
+                    lupaMap.removeLayer(archaeoLayers[layerType]);
+                } else {
+                    archaeoLayers[layerType].addTo(lupaMap);
+                }
+            }
+        }
+
+        // Mostrar análisis por instrumento
+        function displayInstrumentAnalysis() {
+            const container = document.getElementById('instrumentAnalysis');
+            const stats = currentAnalysisData.statistical_results || {};
+            
+            let html = '';
+            
+            Object.entries(stats).forEach(([instrument, data]) => {
+                const prob = data.archaeological_probability || 0;
+                const coherence = data.geometric_coherence || 0;
+                const instrumentName = getInstrumentName(instrument);
+                
+                html += `
+                    <div class="instrument-layer">
+                        <div class="instrument-header">
+                            <span class="instrument-name">${instrumentName}</span>
+                            <label class="layer-toggle">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="instrument-data">
+                            Probabilidad: ${(prob * 100).toFixed(1)}%<br>
+                            Coherencia: ${(coherence * 100).toFixed(1)}%
+                        </div>
+                        <div class="anomaly-indicator ${getAnomalyClass(prob)}">
+                            ${getAnomalyText(prob)}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Funciones auxiliares
+        function getAnomalyClass(prob) {
+            if (prob > 0.6) return 'anomaly-high';
+            if (prob > 0.3) return 'anomaly-medium';
+            if (prob > 0.1) return 'anomaly-low';
+            return 'anomaly-none';
+        }
+
+        function getAnomalyText(prob) {
+            if (prob > 0.6) return 'ALTA ANOMALÍA';
+            if (prob > 0.3) return 'Anomalía Moderada';
+            if (prob > 0.1) return 'Anomalía Baja';
+            return 'Sin Anomalía';
+        }
+
+        function getInstrumentName(key) {
+            const names = {
+                'ndvi_vegetation': '📡 Sentinel-2 NDVI',
+                'thermal_lst': '🌡️ MODIS Térmico',
+                'sar_backscatter': '📊 Sentinel-1 SAR',
+                'surface_roughness': '🌊 Rugosidad Superficial',
+                'soil_salinity': '🧂 SMOS Salinidad',
+                'seismic_resonance': '📳 IRIS Sísmico',
+                'elevation_dem': '🏔️ OpenTopography DEM',
+                'sar_l_band': '📡 PALSAR L-band',
+                'icesat2_profiles': '📏 ICESat-2',
+                'vegetation_height': '🌳 GEDI',
+                'soil_moisture': '💧 SMAP',
+                
+                // NUEVAS CAPAS AVANZADAS
+                'lidar_fullwave': '📡 LiDAR Full-Waveform',
+                'dem_multiscale': '🗺️ DEM Multiescala Fusionado',
+                'spectral_roughness': '🌊 Rugosidad Espectral (FFT)',
+                'pseudo_lidar_ai': '🤖 Pseudo-LiDAR IA',
+                'multitemporal_topo': '⏳ Topografía Multitemporal'
+            };
+            return names[key] || key;
+        }
+
+        // Cerrar modal con ESC o haciendo clic fuera del contenido
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeLupaModal();
+            }
+        });
+
+        // Cerrar modal haciendo clic en el fondo oscuro
+        document.getElementById('lupaModal').addEventListener('click', (e) => {
+            if (e.target.id === 'lupaModal') {
+                closeLupaModal();
+            }
+        });
+
+        // Mejorar función de cerrar modal
+        function closeLupaModal() {
+            const modal = document.getElementById('lupaModal');
+            modal.classList.remove('active');
+            
+            // Limpiar el mapa de lupa para liberar memoria
+            if (lupaMap) {
+                lupaMap.remove();
+                lupaMap = null;
+            }
+            
+            // Limpiar capas arqueológicas
+            archaeoLayers = {};
+            
+            console.log('🔍 Lupa arqueológica cerrada');
+        }
+
+        // Integrar con el sistema existente
+        // Modificar la función investigateRegion existente para activar la lupa
+        const originalInvestigateRegion = window.investigateRegion;
+        window.investigateRegion = function() {
+            // Capturar coordenadas seleccionadas
+            const latMin = parseFloat(document.getElementById('latMin').value);
+            const latMax = parseFloat(document.getElementById('latMax').value);
+            const lonMin = parseFloat(document.getElementById('lonMin').value);
+            const lonMax = parseFloat(document.getElementById('lonMax').value);
+            
+            if (!isNaN(latMin) && !isNaN(latMax) && !isNaN(lonMin) && !isNaN(lonMax)) {
+                selectedCoordinates = {
+                    lat: (latMin + latMax) / 2,
+                    lng: (lonMin + lonMax) / 2
+                };
+            }
+            
+            // Llamar función original
+            if (originalInvestigateRegion) {
+                originalInvestigateRegion();
+            }
+        };
+    </script>
 </body>
 </html>
