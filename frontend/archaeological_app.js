@@ -457,7 +457,27 @@ async function investigateRegion() {
         });
         
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+            let errorMessage = `Error HTTP: ${response.status}`;
+            
+            // Mensajes específicos por código de error
+            switch (response.status) {
+                case 404:
+                    errorMessage = `🔍 Servicio no encontrado (404) - Verifica que el backend esté ejecutándose en puerto 8003`;
+                    break;
+                case 500:
+                    errorMessage = `⚠️ Error interno del servidor (500) - Problema en el análisis arqueológico`;
+                    break;
+                case 503:
+                    errorMessage = `🔧 Servicio no disponible (503) - Backend temporalmente inaccesible`;
+                    break;
+                case 429:
+                    errorMessage = `⏳ Demasiadas solicitudes (429) - Espera un momento antes de intentar de nuevo`;
+                    break;
+                default:
+                    errorMessage = `❌ Error de conexión (${response.status}) - Problema de comunicación con el servidor`;
+            }
+            
+            throw new Error(errorMessage);
         }
         
         // Actualizar mensaje de estado
@@ -576,15 +596,7 @@ function displayResults(data) {
             temporalElement.innerHTML = temporalSensorAnalysis.formatted || 'Análisis temporal integrado no disponible';
         }
         
-        // NUEVO: Análisis temporal y geométrico avanzado
-        const advancedAnalysis = generateAdvancedTemporalGeometricAnalysis(data, regionInfo);
-        console.log('🚀 Advanced analysis:', advancedAnalysis);
-        
-        // Actualizar sección de análisis avanzado
-        const advancedElement = document.getElementById('advancedAnalysis');
-        if (advancedElement && advancedAnalysis) {
-            advancedElement.innerHTML = advancedAnalysis.formatted || 'Análisis avanzado no disponible';
-        }
+        // Análisis temporal y geométrico avanzado removido - ahora incluido por defecto en el sensor temporal
         
         // NUEVO: Protocolo de calibración científica
         const calibrationProtocol = generateCalibrationProtocol(data, regionInfo);
@@ -849,6 +861,12 @@ function visualizeArchaeologicalData(data) {
     // Limpiar capas anteriores
     clearVisualizationLayers();
     
+    // Validación segura antes de acceder a anomaly_mask
+    if (!data.anomaly_map || !data.anomaly_map.anomaly_mask) {
+        console.warn('⚠️ No se encontró anomaly_mask, saltando visualización');
+        return;
+    }
+    
     const anomalyMask = data.anomaly_map.anomaly_mask;
     const bounds = [
         [data.region_info.coordinates.lat_range[0], data.region_info.coordinates.lon_range[0]],
@@ -860,6 +878,16 @@ function visualizeArchaeologicalData(data) {
 }
 
 function createVisualizationLayers(anomalyMask, bounds) {
+    // Validación segura para evitar error
+    if (!anomalyMask || !Array.isArray(anomalyMask) || anomalyMask.length === 0) {
+        console.warn('⚠️ anomalyMask no válido, saltando visualización');
+        return;
+    }
+    if (!Array.isArray(anomalyMask[0])) {
+        console.warn('⚠️ anomalyMask no es 2D, saltando visualización');
+        return;
+    }
+    
     const height = anomalyMask.length;
     const width = anomalyMask[0].length;
     
@@ -6172,423 +6200,9 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(addCalibrationButton, 1000); // Esperar a que se cargue la UI
 });
 // ========================================
-// SISTEMA DE ANÁLISIS TEMPORAL Y GEOMÉTRICO AVANZADO
+// NOTA: Sistema de análisis temporal y geométrico avanzado REMOVIDO
+// El sensor temporal ahora está incluido por defecto en todos los análisis
 // ========================================
-
-function generateAdvancedTemporalGeometricAnalysis(data, regionInfo) {
-    console.log('🚀 Generating advanced temporal-geometric analysis...');
-    
-    const lat = (regionInfo.lat_min + regionInfo.lat_max) / 2;
-    const lon = (regionInfo.lon_min + regionInfo.lon_max) / 2;
-    
-    // ANÁLISIS TEMPORAL MULTIANUAL (2017-2024)
-    const temporalAnalysis = {
-        title: "⏳ Análisis Temporal Multianual",
-        timeRange: "2017–2024 (7 años)",
-        currentData: analyzeCurrentTemporalData(data),
-        requirements: [
-            "🛰️ Sentinel-2: Misma zona, años separados (2017, 2019, 2021, 2023, 2024)",
-            "📅 Ventanas estacionales idénticas (ej: marzo-abril cada año)",
-            "🔍 Resolución constante: 10m para comparabilidad"
-        ],
-        purpose: "Detectar persistencia de patrones a través del tiempo",
-        status: evaluateTemporalDataAvailability(data)
-    };
-    
-    // SUPERPOSICIÓN DE CAPAS MODERNAS
-    const modernLayersAnalysis = {
-        title: "🗺️ Superposición de Capas Modernas",
-        layers: [
-            {
-                type: "🏘️ Catastros modernos",
-                purpose: "Identificar límites parcelarios actuales",
-                source: "Registros catastrales oficiales",
-                status: "Requerido para exclusión de patrones modernos"
-            },
-            {
-                type: "🛣️ Vías actuales",
-                purpose: "Mapear infraestructura de transporte moderna",
-                source: "OpenStreetMap / Cartografía oficial",
-                status: "Esencial para distinguir de vías históricas"
-            }
-        ],
-        integration: "Superposición con anomalías detectadas para exclusión de patrones modernos",
-        currentStatus: evaluateModernLayersAvailability(data)
-    };
-    
-    // ANÁLISIS GEOMÉTRICO ROMANO
-    const geometricAnalysis = {
-        title: "📐 Análisis Geométrico Romano",
-        measurements: [
-            {
-                parameter: "Ángulo dominante",
-                method: "Análisis de orientación de anomalías lineales",
-                expected: "Múltiplos de orientaciones cardinales romanas",
-                tolerance: "±2° (precisión de agrimensura romana)"
-            },
-            {
-                parameter: "Módulo repetitivo",
-                reference: "≈710 m (actus quadratus romano)",
-                fractions: ["355 m (1/2 actus)", "177.5 m (1/4 actus)", "118.3 m (1/6 actus)"],
-                method: "Análisis espectral de distancias entre anomalías",
-                tolerance: "±5% (variación por topografía)"
-            }
-        ],
-        romanStandards: {
-            actusQuadratus: 710.4, // metros
-            actusLinear: 35.52,     // metros
-            orientations: [0, 90, 45, 135], // grados cardinales
-            centuriationGrid: "Cuadrícula de 20x20 actus (≈14.2 km)"
-        },
-        currentResults: analyzeGeometricPatterns(data)
-    };
-    
-    // CRITERIOS DE VALIDACIÓN CIENTÍFICA
-    const validationCriteria = {
-        title: "🎯 Criterios de Validación Científica",
-        strongEvidence: [
-            "✅ Ángulos coinciden con orientaciones romanas (±2°)",
-            "✅ Módulos se repiten en fracciones de 710m (±5%)",
-            "✅ Persistencia temporal 2017-2024",
-            "✅ Exclusión de patrones catastrales modernos"
-        ],
-        confidence: "Si los ángulos coinciden y los módulos se repiten...",
-        conclusion: "👉 El sistema va a poder decir algo muy fuerte, y sin ruborizarse",
-        methodology: "Análisis convergente: temporal + geométrico + exclusión moderna"
-    };
-    
-    return {
-        temporalAnalysis,
-        modernLayersAnalysis,
-        geometricAnalysis,
-        validationCriteria,
-        coordinates: { lat, lon },
-        formatted: formatAdvancedAnalysis(temporalAnalysis, modernLayersAnalysis, geometricAnalysis, validationCriteria)
-    };
-}
-
-function analyzeCurrentTemporalData(data) {
-    const temporal = data?.temporal_analysis || {};
-    const availableWindows = temporal.available_windows || 0;
-    const timeSpan = temporal.time_span_years || 0;
-    
-    return {
-        windows: availableWindows,
-        timeSpan: timeSpan,
-        adequacy: timeSpan >= 5 ? "✅ Adecuado" : "⚠️ Insuficiente (< 5 años)",
-        recommendation: timeSpan < 5 ? "Ampliar ventana temporal a 2017-2024" : "Continuar con análisis"
-    };
-}
-
-function evaluateTemporalDataAvailability(data) {
-    const temporal = data?.temporal_analysis || {};
-    const windows = temporal.available_windows || 0;
-    
-    if (windows >= 5) {
-        return "✅ Datos temporales suficientes para análisis multianual";
-    } else if (windows >= 3) {
-        return "🟡 Datos temporales limitados - ampliar ventana recomendado";
-    } else {
-        return "🔴 Datos temporales insuficientes - requerido 2017-2024";
-    }
-}
-
-function evaluateModernLayersAvailability(data) {
-    const modernFootprint = data?.modern_human_footprint || {};
-    const cadastral = modernFootprint.cadastral_data || false;
-    const roads = modernFootprint.road_network || false;
-    
-    if (cadastral && roads) {
-        return "✅ Capas modernas disponibles para superposición";
-    } else if (cadastral || roads) {
-        return "🟡 Capas modernas parciales - completar dataset";
-    } else {
-        return "🔴 Capas modernas no disponibles - requeridas para validación";
-    }
-}
-
-function analyzeGeometricPatterns(data) {
-    const stats = data?.anomaly_map?.statistics || {};
-    const geometricInfo = data?.geometric_analysis || {};
-    
-    // Análisis de ángulos dominantes
-    const dominantAngles = geometricInfo.dominant_angles || [];
-    const romanAngles = [0, 45, 90, 135]; // Orientaciones cardinales romanas
-    
-    let angleMatches = [];
-    dominantAngles.forEach(angle => {
-        const closestRoman = romanAngles.reduce((prev, curr) => 
-            Math.abs(curr - angle) < Math.abs(prev - angle) ? curr : prev
-        );
-        const deviation = Math.abs(angle - closestRoman);
-        if (deviation <= 2) {
-            angleMatches.push({
-                detected: angle,
-                roman: closestRoman,
-                deviation: deviation,
-                match: true
-            });
-        }
-    });
-    
-    // Análisis de módulos repetitivos
-    const detectedDistances = geometricInfo.repetitive_distances || [];
-    const romanModules = [710.4, 355.2, 177.6, 118.4]; // Actus y fracciones
-    
-    let moduleMatches = [];
-    detectedDistances.forEach(distance => {
-        const closestModule = romanModules.reduce((prev, curr) => 
-            Math.abs(curr - distance) < Math.abs(prev - distance) ? curr : prev
-        );
-        const deviation = Math.abs(distance - closestModule) / closestModule * 100;
-        if (deviation <= 5) {
-            moduleMatches.push({
-                detected: distance,
-                roman: closestModule,
-                deviation: deviation,
-                match: true
-            });
-        }
-    });
-    
-    return {
-        angleMatches,
-        moduleMatches,
-        confidence: calculateGeometricConfidence(angleMatches, moduleMatches),
-        romanCompatibility: angleMatches.length > 0 && moduleMatches.length > 0
-    };
-}
-
-function calculateGeometricConfidence(angleMatches, moduleMatches) {
-    const angleScore = Math.min(angleMatches.length * 25, 50); // Max 50% por ángulos
-    const moduleScore = Math.min(moduleMatches.length * 25, 50); // Max 50% por módulos
-    const totalScore = angleScore + moduleScore;
-    
-    if (totalScore >= 75) return "Alta (evidencia convergente)";
-    if (totalScore >= 50) return "Media (patrones detectados)";
-    if (totalScore >= 25) return "Baja (indicios geométricos)";
-    return "Muy baja (sin patrones claros)";
-}
-
-function formatAdvancedAnalysis(temporal, modernLayers, geometric, validation) {
-    return `
-        <div class="advanced-analysis">
-            <div class="analysis-header">
-                <strong>🚀 ANÁLISIS TEMPORAL Y GEOMÉTRICO AVANZADO</strong>
-            </div>
-            
-            <div class="analysis-section">
-                <div class="section-title">${temporal.title}</div>
-                <div class="time-range"><strong>Ventana:</strong> ${temporal.timeRange}</div>
-                <div class="requirements">
-                    ${temporal.requirements.map(req => `<div>• ${req}</div>`).join('')}
-                </div>
-                <div class="current-status">
-                    <strong>Estado actual:</strong> ${temporal.currentData.adequacy}<br>
-                    <strong>Ventanas disponibles:</strong> ${temporal.currentData.windows}<br>
-                    <strong>Años cubiertos:</strong> ${temporal.currentData.timeSpan}
-                </div>
-                <div class="status-indicator">${temporal.status}</div>
-            </div>
-            
-            <div class="analysis-section">
-                <div class="section-title">${modernLayers.title}</div>
-                <div class="modern-layers">
-                    ${modernLayers.layers.map(layer => `
-                        <div class="layer-info">
-                            <strong>${layer.type}</strong><br>
-                            <em>Propósito:</em> ${layer.purpose}<br>
-                            <em>Fuente:</em> ${layer.source}<br>
-                            <em>Estado:</em> ${layer.status}
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="integration-note">
-                    <strong>🔗 Integración:</strong> ${modernLayers.integration}
-                </div>
-                <div class="status-indicator">${modernLayers.currentStatus}</div>
-            </div>
-            
-            <div class="analysis-section">
-                <div class="section-title">${geometric.title}</div>
-                <div class="measurements">
-                    ${geometric.measurements.map(measurement => `
-                        <div class="measurement-item">
-                            <strong>📏 ${measurement.parameter}</strong><br>
-                            <em>Método:</em> ${measurement.method}<br>
-                            ${measurement.reference ? `<em>Referencia:</em> ${measurement.reference}<br>` : ''}
-                            ${measurement.expected ? `<em>Esperado:</em> ${measurement.expected}<br>` : ''}
-                            ${measurement.fractions ? `<em>Fracciones:</em> ${measurement.fractions.join(', ')}<br>` : ''}
-                            <em>Tolerancia:</em> ${measurement.tolerance}
-                        </div>
-                    `).join('')}
-                </div>
-                
-                <div class="roman-standards">
-                    <strong>📐 Estándares Romanos:</strong><br>
-                    • Actus quadratus: ${geometric.romanStandards.actusQuadratus} m<br>
-                    • Orientaciones: ${geometric.romanStandards.orientations.join('°, ')}°<br>
-                    • Sistema: ${geometric.romanStandards.centuriationGrid}
-                </div>
-                
-                ${geometric.currentResults.romanCompatibility ? `
-                    <div class="geometric-results success">
-                        <strong>✅ PATRONES ROMANOS DETECTADOS</strong><br>
-                        • Ángulos coincidentes: ${geometric.currentResults.angleMatches.length}<br>
-                        • Módulos coincidentes: ${geometric.currentResults.moduleMatches.length}<br>
-                        • Confianza geométrica: ${geometric.currentResults.confidence}
-                    </div>
-                ` : `
-                    <div class="geometric-results pending">
-                        <strong>🔍 ANÁLISIS GEOMÉTRICO PENDIENTE</strong><br>
-                        Requiere datos temporales y superposición moderna
-                    </div>
-                `}
-            </div>
-            
-            <div class="validation-section">
-                <div class="section-title">${validation.title}</div>
-                <div class="strong-evidence">
-                    <strong>🎯 Evidencia Fuerte:</strong><br>
-                    ${validation.strongEvidence.map(evidence => `<div>${evidence}</div>`).join('')}
-                </div>
-                <div class="confidence-statement">
-                    <strong>🔬 Confianza:</strong> ${validation.confidence}
-                </div>
-                <div class="conclusion">
-                    <strong>🚀 Conclusión:</strong> ${validation.conclusion}
-                </div>
-                <div class="methodology">
-                    <strong>📋 Metodología:</strong> ${validation.methodology}
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Función para ejecutar análisis avanzado con coordenadas de los campos de entrada
-function executeAdvancedAnalysis() {
-    console.log('🚀 Executing advanced temporal-geometric analysis with user input coordinates...');
-    
-    // Obtener coordenadas de los campos de entrada del usuario
-    const latMin = parseFloat(document.getElementById('latMin').value);
-    const latMax = parseFloat(document.getElementById('latMax').value);
-    const lonMin = parseFloat(document.getElementById('lonMin').value);
-    const lonMax = parseFloat(document.getElementById('lonMax').value);
-    
-    // Validar que hay coordenadas válidas
-    if (isNaN(latMin) || isNaN(latMax) || isNaN(lonMin) || isNaN(lonMax)) {
-        // Si no hay coordenadas, usar las de ejemplo y configurarlas
-        const defaultLat = -63.441533826185974;
-        const defaultLon = -83.12466836825169;
-        const offset = 0.01; // Área más amplia para análisis geométrico
-        
-        document.getElementById('latMin').value = (defaultLat - offset).toFixed(6);
-        document.getElementById('latMax').value = (defaultLat + offset).toFixed(6);
-        document.getElementById('lonMin').value = (defaultLon - offset).toFixed(6);
-        document.getElementById('lonMax').value = (defaultLon + offset).toFixed(6);
-        
-        showMessage(`🚀 Coordenadas de análisis avanzado configuradas: ${defaultLat.toFixed(6)}, ${defaultLon.toFixed(6)} - Modifica las coordenadas si deseas usar otras`, 'success');
-    } else {
-        // Expandir área existente para análisis geométrico si es muy pequeña
-        const currentLatSpan = latMax - latMin;
-        const currentLonSpan = lonMax - lonMin;
-        const minSpan = 0.02; // Mínimo 0.02° para análisis geométrico
-        
-        if (currentLatSpan < minSpan || currentLonSpan < minSpan) {
-            const centerLat = (latMin + latMax) / 2;
-            const centerLon = (lonMin + lonMax) / 2;
-            const expandedOffset = minSpan / 2;
-            
-            document.getElementById('latMin').value = (centerLat - expandedOffset).toFixed(6);
-            document.getElementById('latMax').value = (centerLat + expandedOffset).toFixed(6);
-            document.getElementById('lonMin').value = (centerLon - expandedOffset).toFixed(6);
-            document.getElementById('lonMax').value = (centerLon + expandedOffset).toFixed(6);
-            
-            showMessage(`🚀 Área ampliada para análisis geométrico: ${centerLat.toFixed(6)}, ${centerLon.toFixed(6)} - Área expandida para detectar patrones`, 'success');
-        } else {
-            // Usar coordenadas existentes del usuario
-            const centerLat = (latMin + latMax) / 2;
-            const centerLon = (lonMin + lonMax) / 2;
-            
-            showMessage(`🚀 Análisis temporal-geométrico avanzado configurado para coordenadas del usuario: ${centerLat.toFixed(6)}, ${centerLon.toFixed(6)} - Listo para investigar`, 'success');
-        }
-    }
-    
-    // Configuración óptima para análisis temporal-geométrico
-    document.getElementById('resolution').value = '10'; // Sentinel-2 para precisión geométrica
-    document.getElementById('includeExplainability').checked = true;
-    document.getElementById('includeValidation').checked = true;
-    
-    // Obtener coordenadas finales
-    const finalLatMin = parseFloat(document.getElementById('latMin').value);
-    const finalLatMax = parseFloat(document.getElementById('latMax').value);
-    const finalLonMin = parseFloat(document.getElementById('lonMin').value);
-    const finalLonMax = parseFloat(document.getElementById('lonMax').value);
-    
-    const finalLat = (finalLatMin + finalLatMax) / 2;
-    const finalLon = (finalLonMin + finalLonMax) / 2;
-    
-    // Si el mapa está disponible, centrarlo y mostrar área ampliada
-    if (map && typeof L !== 'undefined') {
-        try {
-            map.setView([finalLat, finalLon], 14); // Zoom un poco más alejado para ver área ampliada
-            
-            const bounds = L.latLngBounds(
-                [finalLatMin, finalLonMin],
-                [finalLatMax, finalLonMax]
-            );
-            
-            const advancedRect = L.rectangle(bounds, {
-                color: '#dc3545',
-                weight: 3,
-                fillOpacity: 0.1,
-                dashArray: '5, 10'
-            }).addTo(map);
-            
-            // Agregar popup de análisis avanzado
-            advancedRect.bindPopup(`
-                <strong>🚀 Análisis Temporal-Geométrico Avanzado</strong><br>
-                Coordenadas: ${finalLat.toFixed(6)}, ${finalLon.toFixed(6)}<br>
-                Área: ${((finalLatMax - finalLatMin) * 111).toFixed(1)} x ${((finalLonMax - finalLonMin) * 111).toFixed(1)} km<br>
-                Resolución: 10m (Sentinel-2)<br>
-                <em>Análisis convergente: Temporal + Geométrico + Exclusión moderna</em>
-            `).openPopup();
-            
-            currentRegionBounds = advancedRect;
-        } catch (error) {
-            console.warn('⚠️ Error actualizando mapa para análisis avanzado:', error);
-        }
-    }
-    
-    return {
-        coordinates: { lat: finalLat, lon: finalLon },
-        analysisType: "temporal-geometric-advanced",
-        configured: true,
-        message: "Análisis avanzado configurado con coordenadas del usuario - Ejecutar INVESTIGAR para proceder"
-    };
-}
-
-// Botón de análisis avanzado
-function addAdvancedAnalysisButton() {
-    const regionControls = document.querySelector('.region-controls');
-    if (regionControls) {
-        const advancedBtn = document.createElement('button');
-        advancedBtn.className = 'search-btn';
-        advancedBtn.style.background = '#dc3545';
-        advancedBtn.style.marginLeft = '0.5rem';
-        advancedBtn.innerHTML = '🚀 AVANZADO';
-        advancedBtn.onclick = () => executeAdvancedAnalysis();
-        advancedBtn.title = 'Análisis temporal-geométrico avanzado (2017-2024)';
-        
-        regionControls.appendChild(advancedBtn);
-    }
-}
-
-// Inicializar botón de análisis avanzado
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(addAdvancedAnalysisButton, 1200); // Después del botón de calibración
-});
 // ========================================
 // SISTEMA DE VENTANA TEMPORAL COMO SENSOR
 // ========================================
