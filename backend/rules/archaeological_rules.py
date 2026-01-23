@@ -778,11 +778,11 @@ class ArchaeologicalRulesEngine:
         avg_temporal_persistence = np.mean(temporal_persistences) if temporal_persistences else 0.0
         
         # Clasificación integrada
-        if integrated_probability > 0.7 and archaeological_rules >= 2:
+        if integrated_probability > 0.6 and archaeological_rules >= 2:
             classification = "high_archaeological_potential"
-        elif integrated_probability > 0.5 and (archaeological_rules >= 1 or anomalous_rules >= 2):
+        elif integrated_probability > 0.4 and (archaeological_rules >= 1 or anomalous_rules >= 2):
             classification = "moderate_archaeological_potential"
-        elif integrated_probability > 0.3 or anomalous_rules >= 1:
+        elif integrated_probability > 0.25 or anomalous_rules >= 1:
             classification = "low_archaeological_potential"
         else:
             classification = "natural_processes_sufficient"
@@ -844,105 +844,3 @@ class ArchaeologicalRulesEngine:
             'engine_type': 'archaeological',
             'paradigm': 'spatial_persistence_detection'
         }
-    def _calculate_resolution_penalty(self, resolution_m: float, anomaly_data: np.ndarray) -> float:
-        """
-        Calcular penalización por resolución gruesa.
-        
-        Penaliza cuando el píxel es mayor que el tamaño esperado de estructuras.
-        """
-        # Tamaños típicos de estructuras arqueológicas
-        typical_structure_sizes = {
-            'walls': 1.0,           # 1m ancho típico
-            'foundations': 5.0,     # 5m estructura típica
-            'buildings': 15.0,      # 15m edificio típico
-            'complexes': 50.0       # 50m complejo típico
-        }
-        
-        # Calcular penalización basada en resolución vs estructura esperada
-        penalty = 0.0
-        
-        if resolution_m > 100:  # Muy grueso
-            penalty += 0.3
-        elif resolution_m > 50:  # Grueso
-            penalty += 0.2
-        elif resolution_m > 20:  # Moderadamente grueso
-            penalty += 0.1
-        
-        # Penalización adicional si la anomalía es muy pequeña para la resolución
-        anomaly_extent = np.sum(anomaly_data > 0.1)  # Píxeles con anomalía
-        if anomaly_extent < 4:  # Menos de 4 píxeles
-            penalty += 0.15
-        
-        return min(penalty, 0.5)  # Máximo 50% de penalización
-    
-    def _requires_geophysical_validation(self, archaeological_prob: float, 
-                                       geometric_score: float, resolution_m: float) -> bool:
-        """
-        Determinar si requiere validación geofísica.
-        
-        Criterios académicos para requerir GPR/magnetometría.
-        """
-        # Siempre requiere validación si:
-        if archaeological_prob > 0.4 and resolution_m > 50:
-            return bool(True)
-        
-        # Requiere si hay alta geometría pero resolución gruesa
-        if geometric_score > 0.6 and resolution_m > 100:
-            return bool(True)
-        
-        # Requiere si la probabilidad es moderada-alta
-        if archaeological_prob > 0.5:
-            return bool(True)
-        
-        return bool(False)
-    
-    def _classify_archaeological_result(self, archaeological_prob: float, 
-                                      geometric_score: float, persistence_score: float,
-                                      resolution_penalty: float, anomaly_data: np.ndarray) -> ArchaeologicalResult:
-        """
-        Clasificar resultado arqueológico con nueva categoría intermedia.
-        
-        Evita el binarismo natural/arqueológico agregando categoría intermedia.
-        """
-        # Aplicar penalización por resolución
-        adjusted_prob = max(0.0, archaeological_prob - resolution_penalty)
-        
-        # Detectar si es paisaje modificado no estructural
-        is_landscape_modified = self._detect_landscape_modification(
-            anomaly_data, geometric_score, persistence_score
-        )
-        
-        # Clasificación mejorada
-        if adjusted_prob > 0.75 and geometric_score > 0.6:
-            return ArchaeologicalResult.ARCHAEOLOGICAL
-        elif is_landscape_modified and 0.3 < adjusted_prob < 0.7:
-            return ArchaeologicalResult.LANDSCAPE_MODIFIED_NON_STRUCTURAL
-        elif adjusted_prob > 0.4:
-            return ArchaeologicalResult.ANOMALOUS
-        else:
-            return ArchaeologicalResult.CONSISTENT
-    
-    def _detect_landscape_modification(self, anomaly_data: np.ndarray, 
-                                     geometric_score: float, persistence_score: float) -> bool:
-        """
-        Detectar si es paisaje modificado no estructural.
-        
-        Características:
-        - Anomalías persistentes pero no muy geométricas
-        - Patrones difusos o extensos
-        - Modificación del paisaje sin estructuras claras
-        """
-        # Criterios para paisaje modificado
-        anomaly_extent = np.sum(anomaly_data > 0.1) / anomaly_data.size
-        
-        # Es paisaje modificado si:
-        # 1. Extensión moderada (5-30% del área)
-        # 2. Persistencia alta pero geometría moderada
-        # 3. Patrones difusos
-        
-        if (0.05 < anomaly_extent < 0.3 and 
-            persistence_score > 0.5 and 
-            0.2 < geometric_score < 0.6):
-            return bool(True)
-        
-        return bool(False)

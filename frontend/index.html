@@ -1305,9 +1305,10 @@
                 <button onclick="testLupaActivation()" style="padding: 0.5rem; background: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%; margin-bottom: 0.5rem;">
                     🧪 TEST LUPA
                 </button>
-                <button onclick="testAnomalyDetection()" style="padding: 0.5rem; background: #ff5722; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%;">
+                <button onclick="testAnomalyDetection()" style="padding: 0.5rem; background: #ff5722; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; width: 100%; margin-bottom: 0.5rem;">
                     🔍 TEST DETECCIÓN
                 </button>
+
             </div>
         </div>
 
@@ -1848,19 +1849,13 @@
         function validateGeographicContext(lat, lng) {
             console.log(`🌍 Validando contexto geográfico: ${lat}, ${lng}`);
             
-            // Identificar región geográfica
-            let region = 'Desconocida';
+            // Identificar región geográfica basada en coordenadas del usuario
+            let region = 'Región Seleccionada';
             let plausibility = 'Media';
             let context = '';
             
-            // Bermudas
-            if (lat >= 32.0 && lat <= 32.5 && lng >= -65.0 && lng <= -64.5) {
-                region = 'Bermudas (Triángulo de las Bermudas)';
-                plausibility = 'Alta';
-                context = 'Archipiélago con rica historia naval y colonial británica desde 1609. Sitios arqueológicos conocidos incluyen St. George\'s (UNESCO) y Royal Naval Dockyard.';
-            }
             // Mediterráneo (Roma, Grecia)
-            else if (lat >= 35.0 && lat <= 45.0 && lng >= 10.0 && lng <= 25.0) {
+            if (lat >= 35.0 && lat <= 45.0 && lng >= 10.0 && lng <= 25.0) {
                 region = 'Mediterráneo (Roma/Grecia)';
                 plausibility = 'Muy Alta';
                 context = 'Región con densidad arqueológica extremadamente alta. Civilizaciones romana, griega y prehistóricas bien documentadas.';
@@ -1958,35 +1953,30 @@
         function validateHistoricalContext(lat, lng) {
             console.log('📚 Validando contexto histórico...');
             
-            // Base de datos simplificada de sitios arqueológicos conocidos
+            // Base de datos simplificada de sitios arqueológicos conocidos - SIN COORDENADAS HARDCODEADAS
             const knownSites = [
-                { name: 'St. George\'s, Bermudas', lat: 32.3783, lng: -64.6783, radius: 0.1, period: 'Colonial (1612+)' },
-                { name: 'Royal Naval Dockyard, Bermudas', lat: 32.3214, lng: -64.8369, radius: 0.05, period: 'Naval (1809-1951)' },
-                { name: 'Roma, Italia', lat: 41.9028, lng: 12.4964, radius: 0.5, period: 'Romano (753 AC+)' },
-                { name: 'Atenas, Grecia', lat: 37.9755, lng: 23.7348, radius: 0.3, period: 'Clásico (800 AC+)' },
-                { name: 'Teotihuacán, México', lat: 19.6925, lng: -98.8438, radius: 0.1, period: 'Mesoamericano (100-650 DC)' },
-                { name: 'Machu Picchu, Perú', lat: -13.1631, lng: -72.5450, radius: 0.05, period: 'Inca (1450+)' }
+                { name: 'Región Mediterránea', latMin: 35.0, latMax: 45.0, lngMin: 10.0, lngMax: 25.0, period: 'Romano/Griego' },
+                { name: 'Mesoamérica', latMin: 14.0, latMax: 32.0, lngMin: -118.0, lngMax: -86.0, period: 'Maya/Azteca' },
+                { name: 'Amazonía', latMin: -10.0, latMax: 5.0, lngMin: -75.0, lngMax: -50.0, period: 'Precolombino' },
+                { name: 'Atlántico Norte', latMin: 30.0, latMax: 35.0, lngMin: -70.0, lngMax: -60.0, period: 'Colonial' }
             ];
             
-            let nearestSite = null;
-            let minDistance = Infinity;
+            let nearestRegion = null;
+            let isInKnownRegion = false;
             
-            knownSites.forEach(site => {
-                const distance = Math.sqrt(Math.pow(lat - site.lat, 2) + Math.pow(lng - site.lng, 2));
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    nearestSite = site;
+            knownSites.forEach(region => {
+                if (lat >= region.latMin && lat <= region.latMax && 
+                    lng >= region.lngMin && lng <= region.lngMax) {
+                    nearestRegion = region;
+                    isInKnownRegion = true;
                 }
             });
             
-            const isNearKnownSite = nearestSite && minDistance <= nearestSite.radius;
-            const distanceKm = minDistance * 111; // Aproximación grados a km
-            
             return {
-                nearKnownSite: isNearKnownSite,
-                nearestSite: nearestSite,
-                distanceKm: distanceKm,
-                score: isNearKnownSite ? 0.9 : Math.max(0.1, 1 - (distanceKm / 1000)) // Decae con distancia
+                nearKnownSite: isInKnownRegion,
+                nearestSite: nearestRegion,
+                distanceKm: isInKnownRegion ? 0 : 999,
+                score: isInKnownRegion ? 0.8 : 0.3
             };
         }
 
@@ -2044,11 +2034,11 @@
                 recommendations.push('📊 Considerar análisis con mayor resolución');
             }
             
-            // Recomendaciones específicas por región
-            if (lat >= 32.0 && lat <= 32.5 && lng >= -65.0 && lng <= -64.5) {
-                recommendations.push('🏛️ Bermudas: Consultar Bermuda National Museum');
-                recommendations.push('📚 Revisar registros del Royal Naval Dockyard');
-                recommendations.push('🗺️ Comparar con mapas coloniales británicos');
+            // Recomendaciones generales basadas en región detectada
+            if (lat >= 35.0 && lat <= 45.0 && lng >= 10.0 && lng <= 25.0) {
+                recommendations.push('🏛️ Mediterráneo: Consultar bases de datos arqueológicas regionales');
+                recommendations.push('📚 Revisar registros de excavaciones previas');
+                recommendations.push('🗺️ Comparar con mapas históricos romanos/griegos');
             }
             
             return recommendations;
@@ -2185,7 +2175,7 @@
             showMessage('🧪 Test de detección completado - Ver consola para resultados detallados', 'success');
         }
 
-        // FUNCIÓN DE TEST: Forzar activación de lupa para debugging
+        // FUNCIÓN DE TEST: Forzar activación de lupa para debugging - CORREGIDA
         function testLupaActivation() {
             console.log('🧪 TEST: Forzando activación de lupa...');
             
@@ -2193,19 +2183,40 @@
             console.log('🔍 Botón encontrado:', lupaBtn);
             
             if (lupaBtn) {
-                lupaBtn.classList.add('active');
-                lupaBtn.style.display = 'block';
-                lupaBtn.innerHTML = '🔍 Lupa Arqueológica (TEST - 85.5%)';
-                console.log('✅ Lupa activada manualmente');
+                // NO crear datos falsos - usar datos reales si existen
+                if (currentAnalysisData && currentAnalysisData.statistical_results) {
+                    console.log('✅ Usando datos reales existentes para test');
+                    
+                    // Calcular probabilidad real
+                    const stats = currentAnalysisData.statistical_results;
+                    const probabilities = Object.values(stats).map(s => s.archaeological_probability || 0);
+                    const realAvgProbability = probabilities.length > 0 ? 
+                        probabilities.reduce((a, b) => a + b, 0) / probabilities.length : 0;
+                    
+                    lupaBtn.classList.add('active');
+                    lupaBtn.style.display = 'block';
+                    lupaBtn.innerHTML = `🔍 Lupa Arqueológica (${(realAvgProbability * 100).toFixed(1)}%)`;
+                    
+                    showMessage(`🧪 TEST: Lupa activada con datos REALES (${(realAvgProbability * 100).toFixed(1)}%)`, 'success');
+                } else {
+                    console.log('⚠️ No hay datos reales - creando datos mínimos para test visual');
+                    
+                    // Solo para test visual - datos mínimos
+                    lupaBtn.classList.add('active');
+                    lupaBtn.style.display = 'block';
+                    lupaBtn.innerHTML = '🔍 Lupa Arqueológica (TEST)';
+                    
+                    // Crear datos mínimos solo para que la lupa se abra
+                    currentAnalysisData = {
+                        statistical_results: {
+                            test_visual: { archaeological_probability: 0.25 }
+                        }
+                    };
+                    
+                    showMessage('🧪 TEST: Lupa activada (datos mínimos para test visual)', 'success');
+                }
                 
-                // Crear datos de prueba
-                currentAnalysisData = {
-                    statistical_results: {
-                        test_instrument: { archaeological_probability: 0.855 }
-                    }
-                };
-                
-                showMessage('🧪 TEST: Lupa activada manualmente', 'success');
+                console.log('✅ Lupa activada para test');
             } else {
                 console.error('❌ No se pudo encontrar el botón de lupa');
             }
@@ -2278,11 +2289,14 @@
                 lupaBtn.style.display = 'block !important';
                 lupaBtn.style.visibility = 'visible';
                 lupaBtn.style.opacity = '1';
-                lupaBtn.innerHTML = `🔍 Lupa Arqueológica (${(avgProbability * 100).toFixed(1)}%)`;
+                
+                // USAR PROBABILIDAD REAL CALCULADA - NO HARDCODEAR
+                const realPercentage = (avgProbability * 100).toFixed(1);
+                lupaBtn.innerHTML = `🔍 Lupa Arqueológica (${realPercentage}%)`;
                 
                 console.log('✅ Clases añadidas:', lupaBtn.classList.toString());
                 console.log('✅ Estilo display:', lupaBtn.style.display);
-                console.log('✅ Texto actualizado:', lupaBtn.innerHTML);
+                console.log('✅ Texto actualizado con porcentaje REAL:', lupaBtn.innerHTML);
                 
                 // Guardar datos para la lupa
                 currentAnalysisData = analysisResults;
@@ -2291,7 +2305,7 @@
                 // Mostrar mensaje al usuario con validación
                 const validationInfo = selectedCoordinates ? 
                     ' - Validación científica completada' : '';
-                showMessage(`🔍 ¡ANOMALÍAS DETECTADAS! Lupa arqueológica disponible (${(avgProbability * 100).toFixed(1)}%)${validationInfo}`, 'success');
+                showMessage(`🔍 ¡ANOMALÍAS DETECTADAS! Lupa arqueológica disponible (${realPercentage}%)${validationInfo}`, 'success');
                 
                 // Hacer scroll hacia arriba para que el usuario vea el botón
                 setTimeout(() => {
@@ -2948,41 +2962,74 @@
             }
         }
 
-        // Mostrar análisis por instrumento (SIMPLIFICADO)
+        // Mostrar análisis por instrumento (USANDO DATOS REALES)
         function displayInstrumentAnalysis() {
-            console.log('🔬 DEBUG: displayInstrumentAnalysis called - SIMPLIFIED VERSION');
+            console.log('🔬 ===== MOSTRANDO ANÁLISIS POR INSTRUMENTO (DATOS REALES) =====');
             const container = document.getElementById('instrumentAnalysis');
-            const stats = currentAnalysisData.statistical_results || {};
+            
+            if (!currentAnalysisData || !currentAnalysisData.statistical_results) {
+                console.log('❌ No hay datos de análisis disponibles');
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No hay datos de análisis disponibles</div>';
+                return;
+            }
+            
+            const stats = currentAnalysisData.statistical_results;
+            console.log('📊 Datos estadísticos disponibles:', Object.keys(stats));
             
             let html = '';
             
-            Object.entries(stats).forEach(([instrument, data]) => {
+            // Procesar cada instrumento con sus datos REALES
+            Object.entries(stats).forEach(([instrumentKey, data]) => {
                 const prob = data.archaeological_probability || 0;
-                const coherence = data.geometric_coherence || 0;
-                const instrumentName = getInstrumentName(instrument);
+                const coherence = data.geometric_coherence || data.coherence || 0;
+                const instrumentName = getInstrumentName(instrumentKey);
                 
-                html += `
-                    <div class="instrument-layer">
-                        <div class="instrument-header">
-                            <span class="instrument-name">${instrumentName}</span>
-                            <label class="layer-toggle">
-                                <input type="checkbox" checked>
-                                <span class="slider"></span>
-                            </label>
+                console.log(`📡 ${instrumentName}: Prob=${(prob*100).toFixed(1)}%, Coherencia=${(coherence*100).toFixed(1)}%`);
+                
+                // Solo mostrar si tiene datos válidos
+                if (prob > 0 || coherence > 0) {
+                    html += `
+                        <div class="instrument-layer">
+                            <div class="instrument-header">
+                                <span class="instrument-name">${instrumentName}</span>
+                                <label class="layer-toggle">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="instrument-data">
+                                Probabilidad: ${(prob * 100).toFixed(1)}%<br>
+                                Coherencia: ${(coherence * 100).toFixed(1)}%
+                            </div>
+                            <div class="anomaly-indicator ${getAnomalyClass(prob)}">
+                                ${getAnomalyText(prob)}
+                            </div>
                         </div>
-                        <div class="instrument-data">
-                            Probabilidad: ${(prob * 100).toFixed(1)}%<br>
-                            Coherencia: ${(coherence * 100).toFixed(1)}%
-                        </div>
-                        <div class="anomaly-indicator ${getAnomalyClass(prob)}">
-                            ${getAnomalyText(prob)}
-                        </div>
-                    </div>
-                `;
+                    `;
+                }
             });
             
+            if (html === '') {
+                html = '<div style="text-align: center; color: #666; padding: 2rem;">No se detectaron instrumentos con datos válidos</div>';
+            }
+            
             container.innerHTML = html;
-            console.log('🔬 DEBUG: Instrument analysis updated, educational sections should be visible below');
+            
+            // Calcular y mostrar probabilidad promedio REAL
+            const probabilities = Object.values(stats).map(s => s.archaeological_probability || 0).filter(p => p > 0);
+            if (probabilities.length > 0) {
+                const avgProbability = probabilities.reduce((a, b) => a + b, 0) / probabilities.length;
+                console.log(`📊 Probabilidad promedio REAL: ${(avgProbability * 100).toFixed(1)}%`);
+                
+                // Actualizar el botón de lupa con el porcentaje REAL
+                const lupaBtn = document.getElementById('lupaBtn');
+                if (lupaBtn && lupaBtn.classList.contains('active')) {
+                    lupaBtn.innerHTML = `🔍 Lupa Arqueológica (${(avgProbability * 100).toFixed(1)}%)`;
+                    console.log('✅ Porcentaje de lupa actualizado con datos reales');
+                }
+            }
+            
+            console.log('🔬 ===== ANÁLISIS POR INSTRUMENTO COMPLETADO =====');
         }
 
         // Funciones auxiliares (SIMPLIFICADAS)

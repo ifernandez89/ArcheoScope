@@ -111,6 +111,22 @@ class GeometricInferenceEngine:
         
         logger.info("GeometricInferenceEngine inicializado - Nivel II")
     
+    def _default_spatial_signature(self) -> SpatialSignature:
+        """Generar firma espacial por defecto para casos de error."""
+        return SpatialSignature(
+            area_m2=1000.0,
+            elongation_ratio=1.5,
+            symmetry_index=0.5,
+            anisotropy_factor=0.5,
+            thermal_amplitude=5.0,
+            sar_roughness=0.5,
+            multitemporal_coherence=0.5,
+            residual_slope=0.5,
+            signature_confidence=0.3,
+            sensor_convergence=0.5,
+            temporal_persistence=0.5
+        )
+    
     def extract_spatial_signature(self, 
                                 anomaly_data: Dict[str, Any],
                                 layer_results: Dict[str, Any]) -> SpatialSignature:
@@ -120,67 +136,90 @@ class GeometricInferenceEngine:
         Convierte datos multi-espectrales en vector de firma física.
         """
         
-        # Extraer métricas geométricas básicas
-        area_m2 = anomaly_data.get('footprint_area_m2', 1000.0)
-        
-        # Calcular elongación desde dimensiones
-        length = anomaly_data.get('estimated_length_m', np.sqrt(area_m2 * 1.5))
-        width = anomaly_data.get('estimated_width_m', np.sqrt(area_m2 / 1.5))
-        elongation_ratio = max(length, width) / min(length, width)
-        
-        # Índice de simetría (basado en coherencia geométrica)
-        geometric_coherence = anomaly_data.get('geometric_coherence', 0.5)
-        symmetry_index = min(geometric_coherence * 1.2, 1.0)
-        
-        # Factor de anisotropía (basado en orientación preferencial)
-        orientation_coherence = anomaly_data.get('orientation_coherence', 0.5)
-        anisotropy_factor = orientation_coherence
-        
-        # Amplitud térmica (diferencia día/noche simulada)
-        thermal_data = layer_results.get('thermal_lst', {})
-        thermal_amplitude = thermal_data.get('archaeological_probability', 0.3) * 15.0  # Max 15°C
-        
-        # Rugosidad SAR
-        sar_data = layer_results.get('sar_backscatter', {})
-        sar_roughness = sar_data.get('geometric_coherence', 0.5)
-        
-        # Coherencia multitemporal
-        multitemporal_coherence = np.mean([
-            result.get('temporal_persistence', 0.5) 
-            for result in layer_results.values()
-        ])
-        
-        # Pendiente residual (desacople topográfico)
-        vegetation_data = layer_results.get('ndvi_vegetation', {})
-        residual_slope = 1.0 - vegetation_data.get('natural_explanation_score', 0.5)
-        
-        # Métricas de confianza
-        signature_confidence = anomaly_data.get('confidence_level', 0.5)
-        
-        # Convergencia entre sensores
-        archaeological_probs = [r.get('archaeological_probability', 0) for r in layer_results.values()]
-        sensor_convergence = 1.0 - np.var(archaeological_probs) if archaeological_probs else 0.5
-        
-        # Persistencia temporal promedio
-        temporal_persistence = multitemporal_coherence
-        
-        signature = SpatialSignature(
-            area_m2=area_m2,
-            elongation_ratio=elongation_ratio,
-            symmetry_index=symmetry_index,
-            anisotropy_factor=anisotropy_factor,
-            thermal_amplitude=thermal_amplitude,
-            sar_roughness=sar_roughness,
-            multitemporal_coherence=multitemporal_coherence,
-            residual_slope=residual_slope,
-            signature_confidence=signature_confidence,
-            sensor_convergence=sensor_convergence,
-            temporal_persistence=temporal_persistence
-        )
-        
-        logger.info(f"Firma espacial extraída: área={area_m2:.0f}m², elongación={elongation_ratio:.2f}")
-        
-        return signature
+        try:
+            # Validación de entrada
+            if not anomaly_data or not layer_results:
+                logger.warning("Datos insuficientes para extracción de firma espacial")
+                return self._default_spatial_signature()
+            
+            # Extraer métricas geométricas básicas con valores por defecto
+            area_m2 = max(1.0, anomaly_data.get('footprint_area_m2', 1000.0))
+            
+            # Calcular elongación desde dimensiones
+            length = anomaly_data.get('estimated_length_m', np.sqrt(area_m2 * 1.5))
+            width = anomaly_data.get('estimated_width_m', np.sqrt(area_m2 / 1.5))
+            
+            # Evitar división por cero
+            min_dimension = max(1.0, min(length, width))
+            max_dimension = max(1.0, max(length, width))
+            elongation_ratio = max_dimension / min_dimension
+            
+            # Índice de simetría (basado en coherencia geométrica)
+            geometric_coherence = max(0.0, min(1.0, anomaly_data.get('geometric_coherence', 0.5)))
+            symmetry_index = min(geometric_coherence * 1.2, 1.0)
+            
+            # Factor de anisotropía (basado en orientación preferencial)
+            orientation_coherence = max(0.0, min(1.0, anomaly_data.get('orientation_coherence', 0.5)))
+            anisotropy_factor = orientation_coherence
+            
+            # Amplitud térmica (diferencia día/noche simulada)
+            thermal_data = layer_results.get('thermal_lst', {})
+            thermal_prob = max(0.0, min(1.0, thermal_data.get('archaeological_probability', 0.3)))
+            thermal_amplitude = thermal_prob * 15.0  # Max 15°C
+            
+            # Rugosidad SAR
+            sar_data = layer_results.get('sar_backscatter', {})
+            sar_roughness = max(0.0, min(1.0, sar_data.get('geometric_coherence', 0.5)))
+            
+            # Coherencia multitemporal
+            temporal_values = [
+                max(0.0, min(1.0, result.get('temporal_persistence', 0.5))) 
+                for result in layer_results.values()
+            ]
+            multitemporal_coherence = np.mean(temporal_values) if temporal_values else 0.5
+            
+            # Pendiente residual (desacople topográfico)
+            vegetation_data = layer_results.get('ndvi_vegetation', {})
+            natural_explanation = max(0.0, min(1.0, vegetation_data.get('natural_explanation_score', 0.5)))
+            residual_slope = 1.0 - natural_explanation
+            
+            # Métricas de confianza
+            signature_confidence = max(0.0, min(1.0, anomaly_data.get('confidence_level', 0.5)))
+            
+            # Convergencia entre sensores
+            archaeological_probs = [
+                max(0.0, min(1.0, r.get('archaeological_probability', 0))) 
+                for r in layer_results.values()
+            ]
+            if archaeological_probs:
+                sensor_convergence = max(0.0, 1.0 - np.var(archaeological_probs))
+            else:
+                sensor_convergence = 0.5
+            
+            # Persistencia temporal promedio
+            temporal_persistence = multitemporal_coherence
+            
+            signature = SpatialSignature(
+                area_m2=area_m2,
+                elongation_ratio=elongation_ratio,
+                symmetry_index=symmetry_index,
+                anisotropy_factor=anisotropy_factor,
+                thermal_amplitude=thermal_amplitude,
+                sar_roughness=sar_roughness,
+                multitemporal_coherence=multitemporal_coherence,
+                residual_slope=residual_slope,
+                signature_confidence=signature_confidence,
+                sensor_convergence=sensor_convergence,
+                temporal_persistence=temporal_persistence
+            )
+            
+            logger.info(f"Firma espacial extraída: área={area_m2:.0f}m², elongación={elongation_ratio:.2f}")
+            
+            return signature
+            
+        except Exception as e:
+            logger.error(f"Error extrayendo firma espacial: {e}")
+            return self._default_spatial_signature()
     
     def classify_morphology(self, signature: SpatialSignature) -> MorphologicalClass:
         """

@@ -418,7 +418,7 @@ class ArcheoScopeInteractiveMap {
     }
     
     async callArcheoScopeAPI(lat, lon) {
-        const response = await fetch('http://localhost:8004/analyze', {
+        const response = await fetch('http://localhost:8003/analyze', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

@@ -143,7 +143,7 @@ class AdvancedArchaeologicalRulesEngine:
             ndre_stress = self._calculate_stress_anomaly(ndre)
             
             # 2. MSI (Moisture Stress Index) - Estrés hídrico
-            msi = swir / nir
+            msi = swir / (nir + 1e-10)  # Evitar división por cero
             msi_anomaly = self._calculate_moisture_anomaly(msi)
             
             # 3. Variabilidad intra-píxel
