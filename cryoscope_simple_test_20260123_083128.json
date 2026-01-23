@@ -1,0 +1,124 @@
+{
+  "test_date": "2026-01-23T08:31:28.016040",
+  "results": [
+    {
+      "location": "Ötzi (Alpes)",
+      "coordinates": [
+        46.7869,
+        10.8493
+      ],
+      "expected": "glacier",
+      "detected_ice": true,
+      "ice_type": "glacier",
+      "archaeological_potential": "high",
+      "preservation_quality": "excellent",
+      "detection_correct": true,
+      "type_correct": true
+    },
+    {
+      "location": "Groenlandia Central",
+      "coordinates": [
+        72.0,
+        -38.0
+      ],
+      "expected": "ice_sheet",
+      "detected_ice": true,
+      "ice_type": "ice_sheet",
+      "archaeological_potential": "low",
+      "preservation_quality": "excellent",
+      "detection_correct": true,
+      "type_correct": true
+    },
+    {
+      "location": "Antártida",
+      "coordinates": [
+        -78.45,
+        106.87
+      ],
+      "expected": "ice_sheet",
+      "detected_ice": true,
+      "ice_type": "ice_sheet",
+      "archaeological_potential": "low",
+      "preservation_quality": "excellent",
+      "detection_correct": true,
+      "type_correct": true
+    },
+    {
+      "location": "Alaska (Permafrost)",
+      "coordinates": [
+        65.0,
+        -150.0
+      ],
+      "expected": "permafrost",
+      "detected_ice": true,
+      "ice_type": "glacier",
+      "archaeological_potential": "medium",
+      "preservation_quality": "excellent",
+      "detection_correct": true,
+      "type_correct": false
+    },
+    {
+      "location": "Siberia (Permafrost)",
+      "coordinates": [
+        70.0,
+        100.0
+      ],
+      "expected": "permafrost",
+      "detected_ice": true,
+      "ice_type": "sea_ice",
+      "archaeological_potential": "low",
+      "preservation_quality": "poor",
+      "detection_correct": true,
+      "type_correct": false
+    },
+    {
+      "location": "Alpes Suizos",
+      "coordinates": [
+        46.5,
+        8.0
+      ],
+      "expected": "glacier",
+      "detected_ice": true,
+      "ice_type": "glacier",
+      "archaeological_potential": "high",
+      "preservation_quality": "excellent",
+      "detection_correct": true,
+      "type_correct": true
+    },
+    {
+      "location": "Tierra templada (París)",
+      "coordinates": [
+        48.8566,
+        2.3522
+      ],
+      "expected": "no_ice",
+      "detected_ice": true,
+      "ice_type": "permafrost",
+      "archaeological_potential": "high",
+      "preservation_quality": "excellent",
+      "detection_correct": false,
+      "type_correct": false
+    },
+    {
+      "location": "Trópicos (Ecuador)",
+      "coordinates": [
+        0.0,
+        -78.0
+      ],
+      "expected": "no_ice",
+      "detected_ice": false,
+      "ice_type": null,
+      "archaeological_potential": "none",
+      "preservation_quality": "unknown",
+      "detection_correct": true,
+      "type_correct": true
+    }
+  ],
+  "summary": {
+    "correct_detections": 7,
+    "correct_types": 5,
+    "total_tests": 8,
+    "detection_accuracy": 0.875,
+    "type_accuracy": 0.625
+  }
+}

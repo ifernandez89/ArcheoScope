@@ -1,0 +1,351 @@
+{
+  "test_info": {
+    "test_name": "CryoScope Calibration with Real Ice Anomalies",
+    "test_date": "2026-01-23T08:30:44.754221",
+    "sites_tested": 6,
+    "successful_tests": 6
+  },
+  "overall_metrics": {
+    "overall_accuracy": 0.8666666666666667,
+    "successful_detections": 6,
+    "total_sites": 6
+  },
+  "detailed_results": [
+    {
+      "site_name": "Lago Vostok (Antártida)",
+      "coordinates": {
+        "lat": -78.45,
+        "lon": 106.87
+      },
+      "site_type": "subglacial_lake",
+      "real_data": {
+        "name": "Lago Vostok (Antártida)",
+        "coordinates": {
+          "lat": -78.45,
+          "lon": 106.87
+        },
+        "type": "subglacial_lake",
+        "size_km": {
+          "length": 250,
+          "width": 50,
+          "depth": 0.5
+        },
+        "ice_thickness_m": 4000,
+        "description": "Lago subglacial líquido bajo 4km de hielo",
+        "validation": "GPR y estudios sísmicos",
+        "expected_detection": {
+          "ice_environment": true,
+          "ice_type": "ice_sheet",
+          "thickness_range": [
+            3000,
+            5000
+          ],
+          "archaeological_potential": "low",
+          "preservation_quality": "excellent"
+        }
+      },
+      "detection_results": {
+        "ice_detected": true,
+        "ice_type": "ice_sheet",
+        "estimated_thickness_m": 2726.7018576312757,
+        "archaeological_potential": "low",
+        "preservation_quality": "excellent",
+        "accessibility": "extreme",
+        "confidence": 1.0
+      },
+      "validation": {
+        "ice_detected": true,
+        "ice_type_correct": true,
+        "thickness_reasonable": false,
+        "archaeological_potential_correct": true,
+        "preservation_correct": true
+      },
+      "accuracy": 0.8,
+      "cryo_analysis": {
+        "performed": false,
+        "candidates": 0,
+        "instruments": 0
+      }
+    },
+    {
+      "site_name": "Grieta Thwaites (Antártida)",
+      "coordinates": {
+        "lat": -75.0,
+        "lon": -104.0
+      },
+      "site_type": "deep_fracture",
+      "real_data": {
+        "name": "Grieta Thwaites (Antártida)",
+        "coordinates": {
+          "lat": -75.0,
+          "lon": -104.0
+        },
+        "type": "deep_fracture",
+        "size_km": {
+          "length": 10,
+          "width": 0.5,
+          "depth": 0.8
+        },
+        "ice_thickness_m": 2000,
+        "description": "Grieta profunda en glaciar, cambios volumétricos",
+        "validation": "Radar y estudios satelitales",
+        "expected_detection": {
+          "ice_environment": true,
+          "ice_type": "glacier",
+          "thickness_range": [
+            1500,
+            2500
+          ],
+          "archaeological_potential": "low",
+          "preservation_quality": "excellent"
+        }
+      },
+      "detection_results": {
+        "ice_detected": true,
+        "ice_type": "ice_sheet",
+        "estimated_thickness_m": 2389.0519060422484,
+        "archaeological_potential": "low",
+        "preservation_quality": "excellent",
+        "accessibility": "extreme",
+        "confidence": 1.0
+      },
+      "validation": {
+        "ice_detected": true,
+        "ice_type_correct": false,
+        "thickness_reasonable": true,
+        "archaeological_potential_correct": true,
+        "preservation_correct": true
+      },
+      "accuracy": 0.8,
+      "cryo_analysis": {
+        "performed": false,
+        "candidates": 0,
+        "instruments": 0
+      }
+    },
+    {
+      "site_name": "Depresión Groenlandia",
+      "coordinates": {
+        "lat": 72.0,
+        "lon": -38.0
+      },
+      "site_type": "subglacial_depression",
+      "real_data": {
+        "name": "Depresión Groenlandia",
+        "coordinates": {
+          "lat": 72.0,
+          "lon": -38.0
+        },
+        "type": "subglacial_depression",
+        "size_km": {
+          "diameter": 5,
+          "depth": 0.3
+        },
+        "ice_thickness_m": 1500,
+        "description": "Depresión subglacial documentada con radar",
+        "validation": "Radar aéreo y gravimetría",
+        "expected_detection": {
+          "ice_environment": true,
+          "ice_type": "ice_sheet",
+          "thickness_range": [
+            1000,
+            2000
+          ],
+          "archaeological_potential": "low",
+          "preservation_quality": "excellent"
+        }
+      },
+      "detection_results": {
+        "ice_detected": true,
+        "ice_type": "ice_sheet",
+        "estimated_thickness_m": 1516.2295911210556,
+        "archaeological_potential": "low",
+        "preservation_quality": "excellent",
+        "accessibility": "difficult",
+        "confidence": 1.0
+      },
+      "validation": {
+        "ice_detected": true,
+        "ice_type_correct": true,
+        "thickness_reasonable": true,
+        "archaeological_potential_correct": true,
+        "preservation_correct": true
+      },
+      "accuracy": 1.0,
+      "cryo_analysis": {
+        "performed": false,
+        "candidates": 0,
+        "instruments": 0
+      }
+    },
+    {
+      "site_name": "Cráter Hiawatha (Groenlandia)",
+      "coordinates": {
+        "lat": 77.5,
+        "lon": -63.25
+      },
+      "site_type": "impact_crater",
+      "real_data": {
+        "name": "Cráter Hiawatha (Groenlandia)",
+        "coordinates": {
+          "lat": 77.5,
+          "lon": -63.25
+        },
+        "type": "impact_crater",
+        "size_km": {
+          "diameter": 31,
+          "depth": 0.32
+        },
+        "ice_thickness_m": 930,
+        "description": "Cráter de impacto subglacial circular",
+        "validation": "ICESat-2, CryoSat-2, radar",
+        "expected_detection": {
+          "ice_environment": true,
+          "ice_type": "ice_sheet",
+          "thickness_range": [
+            800,
+            1200
+          ],
+          "archaeological_potential": "low",
+          "preservation_quality": "excellent"
+        }
+      },
+      "detection_results": {
+        "ice_detected": true,
+        "ice_type": "ice_sheet",
+        "estimated_thickness_m": 1046.7738064955163,
+        "archaeological_potential": "low",
+        "preservation_quality": "excellent",
+        "accessibility": "extreme",
+        "confidence": 1.0
+      },
+      "validation": {
+        "ice_detected": true,
+        "ice_type_correct": true,
+        "thickness_reasonable": true,
+        "archaeological_potential_correct": true,
+        "preservation_correct": true
+      },
+      "accuracy": 1.0,
+      "cryo_analysis": {
+        "performed": false,
+        "candidates": 0,
+        "instruments": 0
+      }
+    },
+    {
+      "site_name": "Lagos Mercer-Whillans (Antártida)",
+      "coordinates": {
+        "lat": -84.0,
+        "lon": 135.0
+      },
+      "site_type": "subglacial_lakes",
+      "real_data": {
+        "name": "Lagos Mercer-Whillans (Antártida)",
+        "coordinates": {
+          "lat": -84.0,
+          "lon": 135.0
+        },
+        "type": "subglacial_lakes",
+        "size_km": {
+          "area": 45,
+          "depth": 0.01
+        },
+        "ice_thickness_m": 1200,
+        "description": "Lagos subglaciales poco profundos",
+        "validation": "GPR, resistividad, gravimetría",
+        "expected_detection": {
+          "ice_environment": true,
+          "ice_type": "ice_sheet",
+          "thickness_range": [
+            1000,
+            1500
+          ],
+          "archaeological_potential": "low",
+          "preservation_quality": "excellent"
+        }
+      },
+      "detection_results": {
+        "ice_detected": true,
+        "ice_type": "ice_sheet",
+        "estimated_thickness_m": 689.7694192107205,
+        "archaeological_potential": "low",
+        "preservation_quality": "excellent",
+        "accessibility": "extreme",
+        "confidence": 1.0
+      },
+      "validation": {
+        "ice_detected": true,
+        "ice_type_correct": true,
+        "thickness_reasonable": false,
+        "archaeological_potential_correct": true,
+        "preservation_correct": true
+      },
+      "accuracy": 0.8,
+      "cryo_analysis": {
+        "performed": false,
+        "candidates": 0,
+        "instruments": 0
+      }
+    },
+    {
+      "site_name": "Glaciar Alpino (Alpes Suizos)",
+      "coordinates": {
+        "lat": 46.5,
+        "lon": 8.0
+      },
+      "site_type": "alpine_glacier",
+      "real_data": {
+        "name": "Glaciar Alpino (Alpes Suizos)",
+        "coordinates": {
+          "lat": 46.5,
+          "lon": 8.0
+        },
+        "type": "alpine_glacier",
+        "size_km": {
+          "length": 15,
+          "width": 2,
+          "thickness": 0.2
+        },
+        "ice_thickness_m": 200,
+        "description": "Glaciar alpino con potencial arqueológico",
+        "validation": "Sitio de control para arqueología alpina",
+        "expected_detection": {
+          "ice_environment": true,
+          "ice_type": "glacier",
+          "thickness_range": [
+            100,
+            400
+          ],
+          "archaeological_potential": "high",
+          "preservation_quality": "excellent"
+        }
+      },
+      "detection_results": {
+        "ice_detected": true,
+        "ice_type": "glacier",
+        "estimated_thickness_m": 481.2526247333359,
+        "archaeological_potential": "high",
+        "preservation_quality": "excellent",
+        "accessibility": "difficult",
+        "confidence": 1.0
+      },
+      "validation": {
+        "ice_detected": true,
+        "ice_type_correct": true,
+        "thickness_reasonable": false,
+        "archaeological_potential_correct": true,
+        "preservation_correct": true
+      },
+      "accuracy": 0.8,
+      "cryo_analysis": {
+        "performed": true,
+        "candidates": 0,
+        "instruments": 7
+      }
+    }
+  ],
+  "calibration_recommendations": [
+    "Thickness Reasonable"
+  ]
+}
