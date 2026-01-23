@@ -10,6 +10,9 @@
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
           crossorigin="" />
     
+    <!-- LiDAR Availability Checker -->
+    <script src="lidar_availability_checker.js"></script>
+    
     <!-- Estilos científicos corregidos -->
     <style>
         * {
@@ -2842,8 +2845,17 @@
             const lidarProb = stats.lidar_fullwave?.archaeological_probability || 0;
             const gediProb = stats.vegetation_height?.archaeological_probability || 0;
             
+            // Verificar disponibilidad real de LiDAR
+            let lidarLabel = "LiDAR-Sintético";
+            let lidarAvailable = false;
+            if (window.lidarChecker && selectedCoordinates) {
+                const availability = window.lidarChecker.checkLiDARAvailability(selectedCoordinates.lat, selectedCoordinates.lng);
+                lidarAvailable = availability.available;
+                lidarLabel = window.lidarChecker.generateLiDARLabel(availability);
+            }
+            
             const rectangularEvidence = Math.max(ndviProb, lidarProb, gediProb);
-            console.log(`🔲 Evidencia RECTANGULAR: NDVI=${(ndviProb*100).toFixed(1)}%, LiDAR-Sintético=${(lidarProb*100).toFixed(1)}%, GEDI=${(gediProb*100).toFixed(1)}% → Max=${(rectangularEvidence*100).toFixed(1)}%`);
+            console.log(`🔲 Evidencia RECTANGULAR: NDVI=${(ndviProb*100).toFixed(1)}%, ${lidarLabel}=${(lidarProb*100).toFixed(1)}%, GEDI=${(gediProb*100).toFixed(1)}% → Max=${(rectangularEvidence*100).toFixed(1)}%`);
             
             if (rectangularEvidence > 0.25) { // Umbral moderado-bajo para rectangulares
                 console.log('✅ ANOMALÍA RECTANGULAR DETECTADA');
@@ -2851,10 +2863,10 @@
                     type: 'rectangular',
                     name: 'Anomalías Rectangulares',
                     icon: '🔲',
-                    description: 'Edificios, terrazas, campos detectados por NDVI/LiDAR-Sintético',
+                    description: `Edificios, terrazas, campos detectados por NDVI/${lidarLabel}`,
                     confidence: rectangularEvidence,
                     color: '#2196f3',
-                    evidence: `NDVI: ${(ndviProb*100).toFixed(1)}%, LiDAR-Sintético: ${(lidarProb*100).toFixed(1)}%`
+                    evidence: `NDVI: ${(ndviProb*100).toFixed(1)}%, ${lidarLabel}: ${(lidarProb*100).toFixed(1)}%`
                 });
             } else {
                 console.log(`❌ ANOMALÍA RECTANGULAR NO DETECTADA (evidencia: ${(rectangularEvidence*100).toFixed(1)}% < 25%)`);
@@ -3023,6 +3035,12 @@
                 html = '<div style="text-align: center; color: #666; padding: 2rem;">No se detectaron instrumentos con datos válidos</div>';
             }
             
+            // Agregar información de disponibilidad de LiDAR al inicio
+            const lidarInfo = displayLiDARAvailabilityInfo();
+            if (lidarInfo) {
+                html = lidarInfo + html;
+            }
+            
             container.innerHTML = html;
             
             // Calcular y mostrar probabilidad promedio REAL
@@ -3040,6 +3058,34 @@
             }
             
             console.log('🔬 ===== ANÁLISIS POR INSTRUMENTO COMPLETADO =====');
+        }
+        
+        // Función para mostrar información de disponibilidad de LiDAR
+        function displayLiDARAvailabilityInfo() {
+            if (!window.lidarChecker || !selectedCoordinates) {
+                return '';
+            }
+            
+            const availability = window.lidarChecker.checkLiDARAvailability(selectedCoordinates.lat, selectedCoordinates.lng);
+            const description = window.lidarChecker.getAvailabilityDescription(availability);
+            
+            if (availability.available) {
+                return `
+                    <div class="data-diagnostic optimal" style="margin-bottom: 1rem;">
+                        <strong>✅ LiDAR Disponible</strong><br>
+                        ${description}<br>
+                        <small>Confianza: ${(availability.confidence * 100).toFixed(0)}%</small>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="data-diagnostic critical" style="margin-bottom: 1rem;">
+                        <strong>❌ LiDAR No Disponible</strong><br>
+                        ${description}<br>
+                        <small>Los datos LiDAR mostrados son sintéticos/simulados</small>
+                    </div>
+                `;
+            }
         }
 
         // Funciones auxiliares (SIMPLIFICADAS)
@@ -3065,20 +3111,30 @@
                 'surface_roughness': '🌊 Rugosidad Superficial',
                 'soil_salinity': '🧂 SMOS Salinidad',
                 'seismic_resonance': '📳 IRIS Sísmico',
-                'elevation_dem': '🏔️ OpenTopography DEM',
+                'elevation_dem': '🏔️ DEM-Grueso (30m)',
                 'sar_l_band': '📡 PALSAR L-band',
                 'icesat2_profiles': '📏 ICESat-2',
                 'vegetation_height': '🌳 GEDI',
                 'soil_moisture': '💧 SMAP',
                 
                 // NUEVAS CAPAS AVANZADAS
-                'lidar_fullwave': '📡 LiDAR Full-Waveform',
+                'lidar_fullwave': getLiDARInstrumentName(),
                 'dem_multiscale': '🗺️ DEM Multiescala Fusionado',
                 'spectral_roughness': '🌊 Rugosidad Espectral (FFT)',
                 'pseudo_lidar_ai': '🤖 Pseudo-LiDAR IA',
                 'multitemporal_topo': '⏳ Topografía Multitemporal'
             };
             return names[key] || key;
+        }
+        
+        function getLiDARInstrumentName() {
+            if (window.lidarChecker && selectedCoordinates) {
+                const availability = window.lidarChecker.checkLiDARAvailability(selectedCoordinates.lat, selectedCoordinates.lng);
+                if (availability.available) {
+                    return `📡 ${window.lidarChecker.generateLiDARLabel(availability)}`;
+                }
+            }
+            return '📡 LiDAR-Sintético';
         }
 
         // Cerrar modal con ESC o haciendo clic fuera del contenido
@@ -3127,6 +3183,7 @@
                     lat: (latMin + latMax) / 2,
                     lng: (lonMin + lonMax) / 2
                 };
+                console.log(`📍 Coordenadas capturadas para análisis LiDAR: ${selectedCoordinates.lat.toFixed(6)}, ${selectedCoordinates.lng.toFixed(6)}`);
             }
             
             // Llamar función original
