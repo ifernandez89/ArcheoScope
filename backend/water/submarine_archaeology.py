@@ -271,29 +271,43 @@ class SubmarineArchaeologyEngine:
                 bathymetry[i, :] += i * (base_depth * 0.02)
         
         # Añadir anomalías potenciales (naufragios simulados)
-        # Para aguas profundas con rutas históricas, garantizar al menos una anomalía
-        if water_context.water_type == WaterBodyType.DEEP_OCEAN and water_context.historical_shipping_routes:
+        # Para aguas con rutas históricas o naufragios conocidos, garantizar anomalías
+        if (water_context.historical_shipping_routes or 
+            water_context.known_wrecks_nearby or 
+            water_context.archaeological_potential in ["high", "medium"]):
             num_anomalies = np.random.randint(1, 3)  # Garantizar al menos 1 anomalía
         else:
-            num_anomalies = np.random.randint(1, 4)
+            num_anomalies = np.random.randint(0, 2)  # Posibles anomalías
             
         for _ in range(num_anomalies):
             x, y = np.random.randint(10, grid_size-10, 2)
-            # Anomalía tipo naufragio con dimensiones realistas
-            wreck_length = np.random.uniform(50, 300)  # 50-300m longitud
-            wreck_width = np.random.uniform(10, 40)    # 10-40m anchura
-            wreck_height = np.random.uniform(5, 25)    # 5-25m altura
+            # Anomalía tipo naufragio con dimensiones realistas basadas en profundidad
+            
+            # Ajustar tamaño según profundidad del agua
+            if base_depth > 3000:  # Aguas muy profundas - naufragios grandes
+                wreck_length = np.random.uniform(150, 350)  # 150-350m longitud
+                wreck_width = np.random.uniform(20, 50)     # 20-50m anchura
+            elif base_depth > 1000:  # Aguas profundas - naufragios medianos
+                wreck_length = np.random.uniform(100, 250)  # 100-250m longitud
+                wreck_width = np.random.uniform(15, 35)     # 15-35m anchura
+            else:  # Aguas someras - naufragios variados
+                wreck_length = np.random.uniform(50, 200)   # 50-200m longitud
+                wreck_width = np.random.uniform(8, 30)      # 8-30m anchura
+            
+            wreck_height = np.random.uniform(8, 30)    # 8-30m altura
             
             # Crear depresión con forma de barco
-            length_pixels = int(wreck_length / 10)  # Conversión aproximada a píxeles
-            width_pixels = int(wreck_width / 10)
+            length_pixels = max(3, int(wreck_length / 10))  # Conversión aproximada a píxeles
+            width_pixels = max(2, int(wreck_width / 10))
             
             x_start = max(0, x - length_pixels//2)
             x_end = min(grid_size, x + length_pixels//2)
             y_start = max(0, y - width_pixels//2)
             y_end = min(grid_size, y + width_pixels//2)
             
-            bathymetry[x_start:x_end, y_start:y_end] -= np.random.uniform(wreck_height/2, wreck_height)
+            # Crear depresión más pronunciada
+            depth_change = np.random.uniform(wreck_height/2, wreck_height)
+            bathymetry[x_start:x_end, y_start:y_end] -= depth_change
         
         return bathymetry
     
@@ -375,8 +389,8 @@ class SubmarineArchaeologyEngine:
             mean_depth = np.mean(bathymetry)
             std_depth = np.std(bathymetry)
             
-            # Buscar áreas significativamente más profundas
-            anomaly_mask = bathymetry < (mean_depth - 2 * std_depth)
+            # Buscar áreas significativamente más profundas (umbral más sensible)
+            anomaly_mask = bathymetry < (mean_depth - 1.5 * std_depth)  # Reducido de 2 a 1.5
             
             # Encontrar regiones conectadas (implementación simplificada sin scipy)
             anomaly_positions = np.where(anomaly_mask)
@@ -403,7 +417,7 @@ class SubmarineArchaeologyEngine:
                                     region_pixels.append(other_pos)
                                     processed.add(other_pos)
                         
-                        if len(region_pixels) > 10:  # Mínimo 10 píxeles
+                        if len(region_pixels) > 5:  # Reducido de 10 a 5 píxeles mínimos
                             regions.append(region_pixels)
                 
                 # Procesar regiones encontradas
