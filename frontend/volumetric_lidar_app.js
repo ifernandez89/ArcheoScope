@@ -3,10 +3,19 @@
  * Modelado Volumétrico Arqueológico (LIDAR + ArcheoScope)
  */
 
-// Configuración
+// Configuración adaptativa
 const CONFIG = {
-    API_BASE_URL: 'http://localhost:8002',
-    VOLUMETRIC_API_URL: 'http://localhost:8002/volumetric'
+    API_BASE_URL: window.location.hostname === 'localhost' ? 'http://localhost:8002' : '/api',
+    VOLUMETRIC_API_URL: window.location.hostname === 'localhost' ? 'http://localhost:8002/volumetric' : '/api/volumetric',
+    
+    // Configuración visual adaptativa
+    VISUAL: {
+        BACKGROUND_COLOR: 0xf5f5f5,  // Gris claro más suave
+        TERRAIN_COLOR: 0x8B7355,     // Color tierra más natural
+        CAMERA_DISTANCE_FACTOR: 1.5,  // Factor para posición de cámara
+        LIGHT_INTENSITY: 0.8,
+        AMBIENT_INTENSITY: 0.4
+    }
 };
 
 // Variables globales
@@ -345,7 +354,7 @@ function initialize3DViewer(model3D) {
     
     // Inicializar Three.js
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf0f0f0);
+    scene.background = new THREE.Color(CONFIG.VISUAL.BACKGROUND_COLOR);
     
     camera = new THREE.PerspectiveCamera(75, viewerContainer.clientWidth / viewerContainer.clientHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
@@ -357,20 +366,29 @@ function initialize3DViewer(model3D) {
         controls.enableDamping = true;
     }
     
-    // Iluminación
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+    // Iluminación adaptativa
+    const ambientLight = new THREE.AmbientLight(0x404040, CONFIG.VISUAL.AMBIENT_INTENSITY);
     scene.add(ambientLight);
     
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, CONFIG.VISUAL.LIGHT_INTENSITY);
     directionalLight.position.set(10, 10, 5);
     scene.add(directionalLight);
     
     // Crear geometría del modelo
-    create3DModel(model3D);
+    const modelBounds = create3DModel(model3D);
     
-    // Posicionar cámara
-    camera.position.set(50, 50, 50);
-    camera.lookAt(0, 0, 0);
+    // Posicionar cámara adaptativamente basada en el modelo
+    const maxDimension = Math.max(modelBounds.width, modelBounds.height, modelBounds.depth);
+    const cameraDistance = maxDimension * CONFIG.VISUAL.CAMERA_DISTANCE_FACTOR;
+    
+    camera.position.set(
+        cameraDistance * 0.7, 
+        cameraDistance * 0.5, 
+        cameraDistance * 0.7
+    );
+    camera.lookAt(modelBounds.center.x, modelBounds.center.y, modelBounds.center.z);
+    
+    logger.info(`Cámara posicionada adaptativamente: distancia=${cameraDistance.toFixed(1)}, centro=${modelBounds.center.x.toFixed(1)},${modelBounds.center.y.toFixed(1)},${modelBounds.center.z.toFixed(1)}`);
     
     // Mostrar controles de capas
     layerControls.style.display = 'block';
@@ -384,10 +402,36 @@ function initialize3DViewer(model3D) {
 }
 
 function create3DModel(model3D) {
-    console.log('🏗️ Creando modelo 3D...');
+    console.log('🏗️ Creando modelo 3D adaptativo...');
     
     const vertices = new Float32Array(model3D.vertices.flat());
     const faces = new Uint32Array(model3D.faces.flat());
+    
+    // Calcular bounds del modelo para posicionamiento adaptativo
+    const bounds = {
+        min: { x: Infinity, y: Infinity, z: Infinity },
+        max: { x: -Infinity, y: -Infinity, z: -Infinity }
+    };
+    
+    for (let i = 0; i < vertices.length; i += 3) {
+        bounds.min.x = Math.min(bounds.min.x, vertices[i]);
+        bounds.max.x = Math.max(bounds.max.x, vertices[i]);
+        bounds.min.y = Math.min(bounds.min.y, vertices[i + 1]);
+        bounds.max.y = Math.max(bounds.max.y, vertices[i + 1]);
+        bounds.min.z = Math.min(bounds.min.z, vertices[i + 2]);
+        bounds.max.z = Math.max(bounds.max.z, vertices[i + 2]);
+    }
+    
+    const modelBounds = {
+        width: bounds.max.x - bounds.min.x,
+        height: bounds.max.y - bounds.min.y,
+        depth: bounds.max.z - bounds.min.z,
+        center: {
+            x: (bounds.max.x + bounds.min.x) / 2,
+            y: (bounds.max.y + bounds.min.y) / 2,
+            z: (bounds.max.z + bounds.min.z) / 2
+        }
+    };
     
     // Crear geometría
     const geometry = new THREE.BufferGeometry();
@@ -395,12 +439,30 @@ function create3DModel(model3D) {
     geometry.setIndex(new THREE.BufferAttribute(faces, 1));
     geometry.computeVertexNormals();
     
-    // Material base
+    // Material adaptativo basado en datos del modelo
+    let materialColor = CONFIG.VISUAL.TERRAIN_COLOR;
+    let opacity = 0.8;
+    
+    // Adaptar color según tipo de sitio si está disponible
+    if (model3D.metadata && model3D.metadata.site_type) {
+        switch (model3D.metadata.site_type) {
+            case 'archaeological_confirmed':
+                materialColor = 0x8B4513; // Marrón arqueológico
+                break;
+            case 'modern_control':
+                materialColor = 0x708090; // Gris moderno
+                break;
+            case 'natural_control':
+                materialColor = 0x228B22; // Verde natural
+                break;
+        }
+    }
+    
     const material = new THREE.MeshLambertMaterial({
-        color: 0x8B4513,
+        color: materialColor,
         wireframe: false,
         transparent: true,
-        opacity: 0.8
+        opacity: opacity
     });
     
     // Crear mesh
@@ -408,22 +470,26 @@ function create3DModel(model3D) {
     mesh.name = 'terrain_base';
     scene.add(mesh);
     
-    // Agregar atributos de vértice como colores
+    // Agregar atributos de vértice como colores si están disponibles
     if (model3D.vertex_attributes && model3D.vertex_attributes.anthropic_probability) {
         const probabilities = model3D.vertex_attributes.anthropic_probability;
         const colors = new Float32Array(probabilities.length * 3);
         
         for (let i = 0; i < probabilities.length; i++) {
             const prob = probabilities[i];
-            // Color mapping: azul (bajo) -> verde (medio) -> rojo (alto)
-            colors[i * 3] = prob; // R
-            colors[i * 3 + 1] = 1 - Math.abs(prob - 0.5) * 2; // G
-            colors[i * 3 + 2] = 1 - prob; // B
+            // Color mapping adaptativo: azul (bajo) -> verde (medio) -> rojo (alto)
+            colors[i * 3] = Math.min(1.0, prob * 1.5); // R
+            colors[i * 3 + 1] = Math.sin(prob * Math.PI); // G (pico en 0.5)
+            colors[i * 3 + 2] = Math.max(0.0, 1.0 - prob * 1.5); // B
         }
         
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         material.vertexColors = true;
     }
+    
+    console.log(`Modelo 3D creado: ${vertices.length/3} vértices, bounds: ${modelBounds.width.toFixed(1)}x${modelBounds.height.toFixed(1)}x${modelBounds.depth.toFixed(1)}`);
+    
+    return modelBounds;
 }
 
 function setupLayerControls(activatableLayers) {

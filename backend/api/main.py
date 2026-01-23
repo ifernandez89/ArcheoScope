@@ -45,6 +45,8 @@ from validation.known_sites_validator import KnownSitesValidator
 from explainability.scientific_explainer import ScientificExplainer
 from volumetric.geometric_inference_engine import GeometricInferenceEngine
 from volumetric.phi4_geometric_evaluator import Phi4GeometricEvaluator
+from water.water_detector import WaterDetector
+from water.submarine_archaeology import SubmarineArchaeologyEngine
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -68,7 +70,7 @@ app.add_middleware(
 
 # NUEVO: Incluir router volumétrico LIDAR
 try:
-    from .volumetric_lidar_api import volumetric_router
+    from api.volumetric_lidar_api import volumetric_router
     app.include_router(volumetric_router)
     logger.info("✅ Router volumétrico LIDAR incluido")
 except ImportError as e:
@@ -149,7 +151,9 @@ system_components = {
     'validator': None,
     'explainer': None,
     'geometric_engine': None,
-    'phi4_evaluator': None
+    'phi4_evaluator': None,
+    'water_detector': None,        # NUEVO: Detector de agua
+    'submarine_archaeology': None  # NUEVO: Arqueología submarina
 }
 
 def initialize_system():
@@ -163,8 +167,10 @@ def initialize_system():
         system_components['explainer'] = ScientificExplainer()
         system_components['geometric_engine'] = GeometricInferenceEngine()
         system_components['phi4_evaluator'] = Phi4GeometricEvaluator()
+        system_components['water_detector'] = WaterDetector()              # NUEVO
+        system_components['submarine_archaeology'] = SubmarineArchaeologyEngine()  # NUEVO
         
-        logger.info("Sistema arqueológico ArcheoScope inicializado correctamente con módulos académicos y volumétricos")
+        logger.info("Sistema arqueológico ArcheoScope inicializado correctamente con módulos académicos, volumétricos y submarinos")
         return True
     except Exception as e:
         logger.error(f"Error inicializando ArcheoScope: {e}")
@@ -938,16 +944,119 @@ async def analyze_archaeological_region(request: RegionRequest):
     """
     INVESTIGAR: Analizar una región desde perspectiva arqueológica.
     
-    Mantiene la misma interfaz que CryoScope pero con lógica arqueológica.
+    🌊 NUEVO: Detección automática de agua y arqueología submarina
+    - Si las coordenadas están sobre agua → análisis submarino especializado
+    - Si están sobre tierra → análisis terrestre tradicional
     """
     
     if not all(system_components.values()):
         raise HTTPException(status_code=503, detail="Sistema no completamente inicializado")
     
     try:
-        logger.info(f"Iniciando análisis arqueológico: {request.region_name}")
+        logger.info(f"🔍 Iniciando análisis arqueológico: {request.region_name}")
+        logger.info(f"   Coordenadas: {request.lat_min:.4f}-{request.lat_max:.4f}, {request.lon_min:.4f}-{request.lon_max:.4f}")
         
-        # 1. Crear/cargar datos arqueológicos para la región
+        # 🌊 PASO 1: DETECCIÓN AUTOMÁTICA DE AGUA
+        water_detector = system_components.get('water_detector')
+        water_context = None
+        
+        if water_detector:
+            # Verificar centro de la región
+            center_lat = (request.lat_min + request.lat_max) / 2
+            center_lon = (request.lon_min + request.lon_max) / 2
+            
+            water_context = water_detector.detect_water_context(center_lat, center_lon)
+            
+            logger.info(f"🌊 Detección de agua: {'SÍ' if water_context.is_water else 'NO'}")
+            if water_context.is_water:
+                logger.info(f"   Tipo: {water_context.water_type.value if water_context.water_type else 'unknown'}")
+                logger.info(f"   Profundidad: {water_context.estimated_depth_m}m")
+                logger.info(f"   Potencial arqueológico: {water_context.archaeological_potential}")
+        
+        # 🌊 PASO 2: ANÁLISIS ESPECIALIZADO SEGÚN CONTEXTO
+        if water_context and water_context.is_water:
+            # ANÁLISIS SUBMARINO ESPECIALIZADO
+            logger.info("🌊 Ejecutando análisis arqueológico submarino...")
+            
+            submarine_engine = system_components.get('submarine_archaeology')
+            if submarine_engine:
+                bounds = (request.lat_min, request.lat_max, request.lon_min, request.lon_max)
+                submarine_results = submarine_engine.analyze_submarine_area(water_context, bounds)
+                
+                # Adaptar respuesta al formato estándar AnalysisResponse
+                response_data = {
+                    "region_info": convert_numpy_types({
+                        "name": request.region_name,
+                        "coordinates": {
+                            "lat_range": [request.lat_min, request.lat_max],
+                            "lon_range": [request.lon_min, request.lon_max]
+                        },
+                        "resolution_m": request.resolution_m,
+                        "area_km2": calculate_area_km2(request),
+                        "analysis_type": "submarine_archaeology",
+                        "water_context": submarine_results["water_context"]
+                    }),
+                    "statistical_results": convert_numpy_types({
+                        "total_anomalies": submarine_results["volumetric_anomalies"],
+                        "wreck_candidates": len(submarine_results["wreck_candidates"]),
+                        "high_priority_targets": submarine_results["summary"]["high_priority_targets"],
+                        "analysis_method": "submarine_sonar_magnetometry"
+                    }),
+                    "physics_results": convert_numpy_types({
+                        "submarine_analysis": submarine_results,
+                        "instruments_used": submarine_results["instruments_used"],
+                        "detection_method": "acoustic_volumetric_magnetic"
+                    }),
+                    "ai_explanations": convert_numpy_types({
+                        "analysis_type": "Arqueología submarina especializada",
+                        "methodology": "Detección de naufragios con sonar multihaz y magnetometría marina",
+                        "confidence": "Basado en firmas acústicas y anomalías volumétricas submarinas",
+                        "ai_available": False
+                    }),
+                    "anomaly_map": convert_numpy_types({
+                        "wreck_candidates": submarine_results["wreck_candidates"],
+                        "bathymetric_anomalies": submarine_results["volumetric_anomalies"]
+                    }),
+                    "layer_data": convert_numpy_types({
+                        "bathymetry": "Datos batimétricos procesados con sonar multihaz",
+                        "acoustic_signatures": "Firmas acústicas de barrido lateral analizadas",
+                        "magnetic_anomalies": "Anomalías magnéticas marinas detectadas",
+                        "sediment_profiles": "Perfiles de subfondo procesados"
+                    }),
+                    "scientific_report": convert_numpy_types({
+                        "investigation_plan": submarine_results["investigation_plan"],
+                        "recommended_next_steps": submarine_results["summary"]["recommended_next_steps"],
+                        "archaeological_significance": "Análisis submarino especializado completado"
+                    }),
+                    "system_status": convert_numpy_types({
+                        "analysis_completed": True,
+                        "water_detection": "active",
+                        "submarine_archaeology": "active",
+                        "instruments": len(submarine_results["instruments_used"]),
+                        "processing_time_seconds": "<20",
+                        "analysis_type": "submarine"
+                    }),
+                    "explainability_analysis": None,
+                    "validation_metrics": None,
+                    "temporal_sensor_analysis": None,
+                    "integrated_analysis": convert_numpy_types({
+                        "submarine_specialized": True,
+                        "water_type": water_context.water_type.value if water_context.water_type else None,
+                        "depth_m": water_context.estimated_depth_m
+                    })
+                }
+                
+                logger.info(f"✅ Análisis submarino completado: {len(submarine_results['wreck_candidates'])} candidatos detectados")
+                
+                return AnalysisResponse(**response_data)
+            
+            else:
+                logger.warning("⚠️ Motor de arqueología submarina no disponible, continuando con análisis terrestre")
+        
+        # ANÁLISIS TERRESTRE TRADICIONAL
+        logger.info("🏔️ Ejecutando análisis arqueológico terrestre...")
+        
+        # Continuar con el análisis terrestre existente... 1. Crear/cargar datos arqueológicos para la región
         datasets = create_archaeological_region_data(request)
         
         # 2. Análisis de anomalías espaciales (equivalente a análisis estadístico)

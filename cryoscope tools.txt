@@ -1,0 +1,45 @@
+🔹 Instrumentos que usamos en CryoScope:
+
+ICESat-2 ATL08 / ATL06
+
+Láser altimétrico: detecta perfiles de elevación del hielo con precisión centimétrica.
+
+Permite ver cambios en la superficie y detectar depresiones o anomalías sobre y bajo hielo fino.
+
+IRIS Seismic Network
+
+Detecta resonancias y cavidades bajo el hielo y permafrost.
+
+Penetra decenas de metros en hielo compacto y suelo congelado.
+
+ASF PALSAR (banda L)
+
+Penetra vegetación y hielo fino.
+
+Detecta estructuras enterradas o irregularidades de densidad bajo hielo superficial.
+
+Sentinel-1 SAR (banda C)
+
+Radar activo que detecta anomalías de coherencia, fracturas en hielo, grietas y cambios estructurales.
+
+Útil para ver lineamientos y patrones geométricos bajo hielo superficial o nieve compacta.
+
+MODIS / Landsat / Sentinel-2
+
+Contexto óptico y multiespectral, principalmente para mapear el terreno visible, acumulación de nieve y cambios estacionales.
+
+No penetra hielo profundo, pero da referencia de superficie y NDVI de vegetación bordeando glaciares.
+
+SMOS / SMAP (opcional)
+
+Detecta humedad y salinidad en el hielo y nieve, útil para permafrost y hielo costero.
+
+✅ Filosofía CryoScope:
+
+Detección inicial: ICESat-2 + SAR → anomalías de elevación o densidad.
+
+Confirmación estructural: IRIS sísmico y PALSAR → cavidades, densidad y continuidad.
+
+Contexto multitemporal: MODIS/Landsat → evolución estacional del hielo y nieve.
+
+Análisis convergente: todos los sensores combinados para diferenciar hielo natural de estructuras “extrañas” (cavidades, objetos enterrados).

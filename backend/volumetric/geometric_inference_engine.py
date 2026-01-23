@@ -104,12 +104,12 @@ class GeometricInferenceEngine:
     5. Metadatos y validación
     """
     
-    def __init__(self):
-        self.inference_level = InferenceLevel.LEVEL_II
-        self.voxel_resolution_m = 2.0  # Resolución volumétrica
-        self.confidence_threshold = 0.65
+    def __init__(self, voxel_resolution_m: float = 2.0, confidence_threshold: float = 0.65, inference_level: InferenceLevel = InferenceLevel.LEVEL_II):
+        self.inference_level = inference_level
+        self.voxel_resolution_m = voxel_resolution_m  # Resolución volumétrica configurable
+        self.confidence_threshold = confidence_threshold  # Umbral configurable
         
-        logger.info("GeometricInferenceEngine inicializado - Nivel II")
+        logger.info(f"GeometricInferenceEngine inicializado - Nivel {inference_level.value}, resolución {voxel_resolution_m}m")
     
     def _default_spatial_signature(self) -> SpatialSignature:
         """Generar firma espacial por defecto para casos de error."""
@@ -271,27 +271,40 @@ class GeometricInferenceEngine:
     def generate_volumetric_field(self, 
                                 signature: SpatialSignature,
                                 morphology: MorphologicalClass,
-                                bounds: Tuple[float, float, float, float]) -> VolumetricField:
+                                bounds: Tuple[float, float, float, float],
+                                base_elevation: Optional[float] = None) -> VolumetricField:
         """
         ETAPA 3: Inferencia volumétrica probabilística.
         
         Genera campo volumétrico de probabilidad (NO mesh sólido).
         """
         
-        # Calcular dimensiones del volumen
+        # Calcular dimensiones del volumen basadas en datos reales
         lat_min, lat_max, lon_min, lon_max = bounds
         
         # Convertir a metros (aproximado)
         width_m = (lon_max - lon_min) * 85000  # ~85km por grado longitud
         height_m = (lat_max - lat_min) * 111000  # ~111km por grado latitud
         
-        # Dimensiones del grid volumétrico
-        nx = max(10, int(width_m / self.voxel_resolution_m))
-        ny = max(10, int(height_m / self.voxel_resolution_m))
-        nz = max(5, int(signature.area_m2**0.5 / self.voxel_resolution_m))  # Altura basada en área
+        # Dimensiones del grid volumétrico adaptativas
+        nx = max(10, min(200, int(width_m / self.voxel_resolution_m)))
+        ny = max(10, min(200, int(height_m / self.voxel_resolution_m)))
         
-        # Limitar dimensiones para eficiencia
-        nx, ny, nz = min(nx, 100), min(ny, 100), min(nz, 50)
+        # Altura basada en área y morfología (NO hardcodeada)
+        if morphology == MorphologicalClass.TRUNCATED_PYRAMIDAL:
+            estimated_height_m = (signature.area_m2**0.5) * 0.3  # Proporción arquitectónica
+        elif morphology == MorphologicalClass.STEPPED_PLATFORM:
+            estimated_height_m = (signature.area_m2**0.5) * 0.2  # Plataformas más bajas
+        elif morphology == MorphologicalClass.LINEAR_COMPACT:
+            estimated_height_m = min(5.0, signature.area_m2**0.5 * 0.1)  # Estructuras lineales bajas
+        elif morphology == MorphologicalClass.CAVITY_VOID:
+            estimated_height_m = (signature.area_m2**0.5) * 0.15  # Profundidad de cavidades
+        else:
+            estimated_height_m = (signature.area_m2**0.5) * 0.25  # Altura genérica
+        
+        nz = max(5, min(100, int(estimated_height_m / self.voxel_resolution_m)))
+        
+        logger.info(f"Grid volumétrico adaptativo: {nx}x{ny}x{nz}, altura estimada: {estimated_height_m:.1f}m")
         
         # Inicializar campos volumétricos
         probability_volume = np.zeros((nx, ny, nz))
@@ -369,9 +382,11 @@ class GeometricInferenceEngine:
                     distance_uncertainty = r_horizontal * 0.3 + dz * 0.4
                     uncertainty_field[i, j, k] = min(base_uncertainty + distance_uncertainty, 1.0)
         
-        # Aplicar suavizado para evitar pareidolia
+        # Aplicar suavizado adaptativo para evitar pareidolia
         from scipy.ndimage import gaussian_filter
-        probability_volume = gaussian_filter(probability_volume, sigma=1.0)
+        # Sigma adaptativo basado en confianza (mayor confianza = menos suavizado)
+        adaptive_sigma = max(0.5, 2.0 * (1.0 - signature.signature_confidence))
+        probability_volume = gaussian_filter(probability_volume, sigma=adaptive_sigma)
         
         # Calcular capas de confianza
         confidence_layers = {
@@ -396,15 +411,20 @@ class GeometricInferenceEngine:
         
         return volumetric_field
     
-    def extract_geometric_model(self, volumetric_field: VolumetricField) -> GeometricModel:
+    def extract_geometric_model(self, volumetric_field: VolumetricField, iso_threshold: Optional[float] = None) -> GeometricModel:
         """
         ETAPA 4: Reconstrucción geométrica mínima.
         
         Extrae modelo 3D low-poly del campo volumétrico.
         """
         
-        # Umbral de iso-superficie
-        iso_threshold = 0.5
+        # Umbral de iso-superficie adaptativo
+        if iso_threshold is None:
+            # Umbral adaptativo basado en confianza y morfología
+            base_threshold = 0.3 + (volumetric_field.confidence_layers.get('core', 0) * 0.4)
+            iso_threshold = min(0.7, max(0.2, base_threshold))
+        
+        logger.info(f"Usando umbral iso-superficie adaptativo: {iso_threshold:.3f}")
         
         # Extraer iso-superficie usando marching cubes (simplificado)
         prob_vol = volumetric_field.probability_volume

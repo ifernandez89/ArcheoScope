@@ -11,7 +11,26 @@ import json
 import logging
 from pathlib import Path
 
-from ..volumetric.lidar_fusion_engine import (
+def convert_numpy_types(obj):
+    """Convertir tipos numpy a tipos Python nativos para serialización JSON."""
+    if isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(convert_numpy_types(item) for item in obj)
+    elif isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    else:
+        return obj
+
+from volumetric.lidar_fusion_engine import (
     LidarFusionEngine, LidarSite, VolumetricAnalysis, 
     FusionResult, LidarType, SiteType
 )
@@ -223,7 +242,7 @@ async def perform_volumetric_analysis(request: VolumetricAnalysisRequest):
                 volumetric_analysis, fusion_results, request.output_format
             )
         
-        # Preparar respuesta
+        # Preparar respuesta con conversión de tipos numpy
         response_data = {
             "site_info": {
                 "site_id": request.site_id,
@@ -231,19 +250,19 @@ async def perform_volumetric_analysis(request: VolumetricAnalysisRequest):
                 "coordinates": site.coordinates,
                 "site_type": site.site_type.value,
                 "lidar_type": site.lidar_type.value,
-                "resolution_cm": site.resolution_cm,
-                "acquisition_year": site.acquisition_year
+                "resolution_cm": float(site.resolution_cm),
+                "acquisition_year": int(site.acquisition_year)
             },
             "volumetric_analysis": {
-                "positive_volume_m3": volumetric_analysis.positive_volume_m3,
-                "negative_volume_m3": volumetric_analysis.negative_volume_m3,
-                "dtm_shape": volumetric_analysis.dtm.shape,
-                "dsm_shape": volumetric_analysis.dsm.shape,
-                "processing_metadata": volumetric_analysis.processing_metadata
+                "positive_volume_m3": float(volumetric_analysis.positive_volume_m3),
+                "negative_volume_m3": float(volumetric_analysis.negative_volume_m3),
+                "dtm_shape": list(volumetric_analysis.dtm.shape),
+                "dsm_shape": list(volumetric_analysis.dsm.shape),
+                "processing_metadata": convert_numpy_types(volumetric_analysis.processing_metadata)
             },
             "archeoscope_results": _serialize_archeoscope_results(archeoscope_results) if archeoscope_results else None,
             "fusion_results": _serialize_fusion_results(fusion_results) if fusion_results else None,
-            "model_3d": model_3d,
+            "model_3d": convert_numpy_types(model_3d) if model_3d else None,
             "processing_metadata": {
                 "analysis_timestamp": np.datetime64('now').astype(str),
                 "include_archeoscope": request.include_archeoscope,
@@ -388,35 +407,65 @@ def _get_validation_purpose(site_type: SiteType) -> str:
         return "Sin clasificación de validación"
 
 def _generate_simulated_lidar_data(site: LidarSite) -> np.ndarray:
-    """Generar datos LIDAR simulados para testing"""
+    """Generar datos LIDAR simulados adaptativos para testing"""
     # En implementación real, cargaría datos LIDAR reales
     np.random.seed(hash(site.name) % 2**32)  # Seed consistente por sitio
     
-    # Simular nube de puntos LIDAR
-    size = max(100, int(1000 / site.resolution_cm))  # Más puntos para mayor resolución
+    # Tamaño adaptativo basado en resolución
+    base_size = 100
+    resolution_factor = max(0.5, min(2.0, 50.0 / site.resolution_cm))  # Factor de escala
+    size = int(base_size * resolution_factor)
+    
+    # Elevación base realista basada en coordenadas
+    lat, lon = site.coordinates
+    base_elevation = max(0, 50 + lat * 5 + abs(lon) * 2)  # Aproximación geográfica
     
     if site.site_type == SiteType.ARCHAEOLOGICAL_CONFIRMED:
-        # Simular características arqueológicas
-        base_elevation = 100 + np.random.random() * 50
-        lidar_data = np.random.random((size, size)) * 5 + base_elevation
+        # Simular características arqueológicas realistas
+        lidar_data = np.random.random((size, size)) * 3 + base_elevation
         
-        # Añadir características arqueológicas simuladas
+        # Añadir características arqueológicas basadas en área del sitio
+        if hasattr(site, 'metadata') and site.metadata:
+            expected_area = site.metadata.get('expected_area_m2', 2000)
+        else:
+            expected_area = 2000  # Área por defecto
+        
+        # Escalar características según área esperada
+        feature_size = int(np.sqrt(expected_area) / (site.resolution_cm / 100))
         center_x, center_y = size // 2, size // 2
         
-        # Estructura rectangular (edificio/muro)
-        lidar_data[center_x-10:center_x+10, center_y-15:center_y+15] += 2.0
+        # Estructura principal (proporcional al área)
+        struct_half_size = max(5, feature_size // 4)
+        lidar_data[center_x-struct_half_size:center_x+struct_half_size, 
+                  center_y-struct_half_size:center_y+struct_half_size] += np.random.uniform(1.0, 3.0)
         
-        # Depresión (excavación/foso)
-        lidar_data[center_x+20:center_x+30, center_y-5:center_y+5] -= 1.5
+        # Características secundarias
+        if expected_area > 5000:  # Sitios grandes
+            # Depresión (excavación/foso)
+            depression_size = max(3, struct_half_size // 2)
+            lidar_data[center_x+struct_half_size+5:center_x+struct_half_size+5+depression_size, 
+                      center_y-depression_size//2:center_y+depression_size//2] -= np.random.uniform(0.5, 1.5)
+        
+    elif site.site_type == SiteType.MODERN_CONTROL:
+        # Simular características modernas
+        lidar_data = np.random.random((size, size)) * 1.5 + base_elevation
+        
+        # Características modernas (carreteras, edificios)
+        road_width = max(2, size // 20)
+        lidar_data[size//4:size//4+road_width, :] += np.random.uniform(0.2, 0.8)  # Carretera
+        
+        # Edificios modernos (más altos y regulares)
+        building_size = max(5, size // 10)
+        lidar_data[size//2:size//2+building_size, size//2:size//2+building_size] += np.random.uniform(3.0, 8.0)
         
     else:
-        # Simular topografía natural o moderna
-        base_elevation = 100 + np.random.random() * 20
+        # Simular topografía natural
         lidar_data = np.random.random((size, size)) * 2 + base_elevation
         
-        if site.site_type == SiteType.MODERN_CONTROL:
-            # Añadir características modernas (carreteras, edificios)
-            lidar_data[size//4:size//4+5, :] += 0.5  # Carretera elevada
+        # Añadir variaciones naturales suaves
+        from scipy.ndimage import gaussian_filter
+        natural_variation = gaussian_filter(np.random.random((size, size)) * 5, sigma=size/20)
+        lidar_data += natural_variation
     
     return lidar_data
 

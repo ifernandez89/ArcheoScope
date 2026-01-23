@@ -1,0 +1,78 @@
+{
+  "test_info": {
+    "test_name": "Titanic Water Detection and Submarine Archaeology Test",
+    "test_date": "2026-01-23T08:19:34.799522",
+    "coordinates": {
+      "lat": 41.7325,
+      "lon": -49.9469
+    },
+    "real_wreck_data": {
+      "length_m": 269.1,
+      "width_m": 28.2,
+      "depth_m": 3800,
+      "vessel_type": "passenger_liner",
+      "historical_period": "modern",
+      "preservation_state": "debris_field",
+      "discovery_year": 1985,
+      "archaeological_significance": "extremely_high"
+    }
+  },
+  "water_detection": {
+    "is_water": true,
+    "water_type": "deep_ocean",
+    "estimated_depth_m": 4739.179306010118,
+    "salinity_type": "saltwater",
+    "archaeological_potential": "high",
+    "confidence": 1.0
+  },
+  "submarine_analysis": {
+    "analysis_type": "submarine_archaeology",
+    "water_context": {
+      "water_type": "deep_ocean",
+      "estimated_depth_m": 4739.179306010118,
+      "salinity_type": "saltwater",
+      "archaeological_potential": "high",
+      "historical_shipping_routes": true,
+      "known_wrecks_nearby": true
+    },
+    "instruments_used": [
+      "multibeam_sonar",
+      "acoustic_reflectance",
+      "sub_bottom_profiler",
+      "magnetometer",
+      "side_scan_sonar"
+    ],
+    "volumetric_anomalies": 0,
+    "wreck_candidates": [],
+    "investigation_plan": {
+      "immediate_actions": [],
+      "phase_1_survey": [],
+      "phase_2_investigation": [],
+      "long_term_monitoring": [],
+      "resource_requirements": {
+        "vessel_type": "research_vessel_with_rov",
+        "estimated_duration_days": 0,
+        "specialized_equipment": [
+          "multibeam_sonar",
+          "rov",
+          "magnetometer"
+        ],
+        "personnel": [
+          "marine_archaeologist",
+          "rov_pilot",
+          "sonar_technician"
+        ]
+      }
+    },
+    "summary": {
+      "high_priority_targets": 0,
+      "total_anomalies": 0,
+      "recommended_next_steps": []
+    }
+  },
+  "validation_metrics": {
+    "detection_successful": true,
+    "depth_estimation_accuracy": 0.24715244895003108,
+    "archaeological_potential_correct": true
+  }
+}

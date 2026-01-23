@@ -1,0 +1,70 @@
+{
+  "test_date": "2026-01-23T08:20:00.675950",
+  "results": [
+    {
+      "location": "Titanic (Atlántico Norte)",
+      "coordinates": [
+        41.7325,
+        -49.9469
+      ],
+      "expected": "deep_ocean",
+      "detected_water": true,
+      "water_type": "deep_ocean",
+      "archaeological_potential": "high",
+      "detection_correct": true
+    },
+    {
+      "location": "Mediterráneo",
+      "coordinates": [
+        35.0,
+        20.0
+      ],
+      "expected": "sea",
+      "detected_water": true,
+      "water_type": "sea",
+      "archaeological_potential": "high",
+      "detection_correct": true
+    },
+    {
+      "location": "Río Amazonas",
+      "coordinates": [
+        -3.0,
+        -60.0
+      ],
+      "expected": "river",
+      "detected_water": true,
+      "water_type": "river",
+      "archaeological_potential": "high",
+      "detection_correct": true
+    },
+    {
+      "location": "Tierra firme (París)",
+      "coordinates": [
+        48.8566,
+        2.3522
+      ],
+      "expected": "land",
+      "detected_water": false,
+      "water_type": null,
+      "archaeological_potential": "none",
+      "detection_correct": true
+    },
+    {
+      "location": "Golfo de México",
+      "coordinates": [
+        25.0,
+        -90.0
+      ],
+      "expected": "sea",
+      "detected_water": true,
+      "water_type": "sea",
+      "archaeological_potential": "high",
+      "detection_correct": true
+    }
+  ],
+  "summary": {
+    "correct_detections": 5,
+    "total_tests": 5,
+    "accuracy": 1.0
+  }
+}
