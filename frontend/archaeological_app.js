@@ -1256,7 +1256,7 @@ function calculateResolutionPenalty(data) {
     
     if (resolution <= 10) {
         penalty = 0;
-        warningMessage = `✅ Resolución óptima (${resolution}m) - Sentinel-2`;
+        warningMessage = `✅ Resolución óptima para espectral (${resolution}m) - Sentinel-2`;
         scientificCapabilities = [
             "✅ Coherencia geométrica activada",
             "✅ Clasificación espectral precisa", 
@@ -5508,15 +5508,124 @@ function cleanUndefinedFromUI() {
     console.log('✅ UI cleanup completed');
 }
 
+// ========================================
+// SENSOR TEMPORAL OBLIGATORIO - CONDICIÓN NECESARIA
+// ========================================
+
+function evaluateTemporalSensorMandatory(data) {
+    /**
+     * Evaluación OBLIGATORIA del sensor temporal para CONFIRMAR anomalías
+     * Filosofía: "Tiempo como sensor" - condición necesaria, no opcional
+     * Mínimo: 3-5 años de datos temporales para validar persistencia
+     */
+    
+    console.log('⏳ ===== SENSOR TEMPORAL OBLIGATORIO =====');
+    
+    const temporalValidation = {
+        hasTemporalData: false,
+        yearsAvailable: 0,
+        minYearsRequired: 5,
+        persistenceConfirmed: false,
+        validationStatus: 'PENDIENTE',
+        message: '',
+        anomaliesConfirmed: [],
+        anomaliesRejected: [],
+        temporalScore: 0
+    };
+    
+    try {
+        // Extraer datos temporales del backend
+        const temporalData = data.temporal_sensor_analysis || data.temporal_analysis || {};
+        const yearsAnalyzed = temporalData.years_analyzed || [];
+        const persistenceScore = temporalData.persistence_score || 0;
+        
+        temporalValidation.yearsAvailable = yearsAnalyzed.length;
+        temporalValidation.hasTemporalData = yearsAnalyzed.length > 0;
+        temporalValidation.temporalScore = persistenceScore;
+        
+        console.log(`📊 Años disponibles: ${temporalValidation.yearsAvailable}/${temporalValidation.minYearsRequired}`);
+        console.log(`📈 Score de persistencia: ${persistenceScore}`);
+        
+        if (temporalValidation.yearsAvailable >= temporalValidation.minYearsRequired) {
+            // DATOS SUFICIENTES: Evaluar persistencia temporal
+            if (persistenceScore >= 0.6) {
+                temporalValidation.persistenceConfirmed = true;
+                temporalValidation.validationStatus = 'CONFIRMADO';
+                temporalValidation.message = `✅ Sensor temporal CONFIRMA anomalías (${temporalValidation.yearsAvailable} años, persistencia: ${(persistenceScore * 100).toFixed(1)}%)`;
+                
+                // Confirmar anomalías que pasan el filtro temporal
+                const stats = data.statistical_results || {};
+                const wreckCandidates = stats.wreck_candidates || 0;
+                
+                for (let i = 0; i < wreckCandidates; i++) {
+                    temporalValidation.anomaliesConfirmed.push({
+                        id: `temporal_confirmed_${i + 1}`,
+                        name: `Candidato ${i + 1} - Confirmado temporalmente`,
+                        persistence: persistenceScore,
+                        years: temporalValidation.yearsAvailable
+                    });
+                }
+                
+            } else if (persistenceScore >= 0.3) {
+                temporalValidation.persistenceConfirmed = false;
+                temporalValidation.validationStatus = 'DUDOSO';
+                temporalValidation.message = `⚠️ Sensor temporal DUDOSO (${temporalValidation.yearsAvailable} años, persistencia: ${(persistenceScore * 100).toFixed(1)}% - requiere validación adicional)`;
+                
+            } else {
+                temporalValidation.persistenceConfirmed = false;
+                temporalValidation.validationStatus = 'RECHAZADO';
+                temporalValidation.message = `❌ Sensor temporal RECHAZA anomalías (${temporalValidation.yearsAvailable} años, persistencia: ${(persistenceScore * 100).toFixed(1)}% - probablemente natural/cíclico)`;
+                
+                // Rechazar anomalías que no pasan el filtro temporal
+                const stats = data.statistical_results || {};
+                const wreckCandidates = stats.wreck_candidates || 0;
+                
+                for (let i = 0; i < wreckCandidates; i++) {
+                    temporalValidation.anomaliesRejected.push({
+                        id: `temporal_rejected_${i + 1}`,
+                        name: `Candidato ${i + 1} - Rechazado temporalmente`,
+                        reason: 'Baja persistencia temporal - probablemente natural'
+                    });
+                }
+            }
+            
+        } else {
+            // DATOS INSUFICIENTES: Advertir claramente
+            temporalValidation.persistenceConfirmed = false;
+            temporalValidation.validationStatus = 'SIN_DATOS';
+            temporalValidation.message = `🚨 SENSOR TEMPORAL SIN DATOS SUFICIENTES (${temporalValidation.yearsAvailable}/${temporalValidation.minYearsRequired} años) - ANOMALÍAS NO CONFIRMADAS`;
+            
+            console.warn('🚨 CRÍTICO: Sensor temporal sin datos suficientes');
+        }
+        
+        console.log(`⏳ Estado final: ${temporalValidation.validationStatus}`);
+        console.log(`💬 Mensaje: ${temporalValidation.message}`);
+        console.log('⏳ ===== FIN SENSOR TEMPORAL OBLIGATORIO =====');
+        
+        return temporalValidation;
+        
+    } catch (error) {
+        console.error('❌ Error en sensor temporal obligatorio:', error);
+        temporalValidation.validationStatus = 'ERROR';
+        temporalValidation.message = '❌ Error evaluando sensor temporal - anomalías no validadas';
+        return temporalValidation;
+    }
+}
+
 // Llamar la función de limpieza después de cada actualización
 function safeDisplayResults(data) {
     try {
         displayResults(data);
         
+        // SENSOR TEMPORAL OBLIGATORIO: Evaluar SIEMPRE antes de verificar anomalías
+        console.log('⏳ Evaluando sensor temporal (condición necesaria)...');
+        const temporalValidation = evaluateTemporalSensorMandatory(data);
+        
         // ASEGURAR QUE LA LUPA SE ACTIVE: Verificar anomalías después de mostrar resultados
         if (typeof checkForAnomalies === 'function') {
             console.log('🔍 Llamando checkForAnomalies desde safeDisplayResults...');
-            checkForAnomalies(data);
+            // Pasar validación temporal a checkForAnomalies
+            checkForAnomalies(data, temporalValidation);
         } else {
             console.warn('⚠️ Función checkForAnomalies no disponible');
         }
@@ -5719,7 +5828,7 @@ function generateDataDiagnostic(data, regionInfo) {
     // 6. Microtopografía
     const microtopography = data?.microtopography || {};
     if (!microtopography?.high_resolution) {
-        level3Issues.push("🟡 Microtopografía limitada (SRTM)");
+        level3Issues.push("🟡 Insuficiente para micro-relieve (SRTM)");
         level3Solutions.push("📌 Ideal: LiDAR (cuando exista), fotogrametría, DEM local");
         level3Solutions.push("🔍 Esto habilita: distinguir micro-relieves antrópicos de ondulaciones naturales");
     } else {

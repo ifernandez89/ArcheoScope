@@ -2459,9 +2459,10 @@
         }
 
         // FUNCIÓN MEJORADA: Verificar anomalías y mostrar botón de lupa
-        function checkForAnomalies(analysisResults) {
+        function checkForAnomalies(analysisResults, temporalValidation = null) {
             console.log('🔍 ===== INICIO VERIFICACIÓN DE ANOMALÍAS =====');
             console.log('📊 Datos recibidos:', analysisResults);
+            console.log('⏳ Validación temporal:', temporalValidation);
             
             if (!analysisResults) {
                 console.error('❌ analysisResults es null o undefined');
@@ -2477,6 +2478,26 @@
             const stats = analysisResults.statistical_results;
             console.log('📈 Statistical results:', stats);
             
+            // SENSOR TEMPORAL OBLIGATORIO: Verificar validación temporal
+            let temporalMessage = '';
+            let temporallyValidatedCandidates = 0;
+            
+            if (temporalValidation) {
+                temporalMessage = temporalValidation.message;
+                
+                if (temporalValidation.validationStatus === 'CONFIRMADO') {
+                    temporallyValidatedCandidates = temporalValidation.anomaliesConfirmed.length;
+                    console.log(`✅ Sensor temporal CONFIRMA ${temporallyValidatedCandidates} anomalías`);
+                } else if (temporalValidation.validationStatus === 'SIN_DATOS') {
+                    console.warn('🚨 SENSOR TEMPORAL SIN DATOS - Anomalías no confirmadas');
+                } else if (temporalValidation.validationStatus === 'RECHAZADO') {
+                    console.warn('❌ SENSOR TEMPORAL RECHAZA anomalías - Probablemente naturales');
+                }
+            } else {
+                console.warn('⚠️ No hay validación temporal disponible');
+                temporalMessage = '⚠️ Sensor temporal no disponible - Anomalías sin validar temporalmente';
+            }
+            
             // NUEVA LÓGICA: Manejar estructura real del backend
             let shouldActivateLupa = false;
             let activationReason = '';
@@ -2491,11 +2512,26 @@
             console.log(`🎯 Total anomalías: ${totalAnomalies}`);
             console.log(`⭐ Objetivos de alta prioridad: ${highPriority}`);
             
-            // Determinar si activar lupa basado en candidatos detectados
+            // Determinar si activar lupa basado en candidatos detectados Y validación temporal
             if (wreckCandidates > 0) {
-                shouldActivateLupa = true;
-                simulatedProbability = Math.min(0.9, 0.3 + (wreckCandidates * 0.15));
-                activationReason = `${wreckCandidates} candidatos a naufragios detectados`;
+                // CONDICIÓN TEMPORAL: Solo activar si hay validación temporal positiva
+                if (temporalValidation && temporalValidation.validationStatus === 'CONFIRMADO') {
+                    shouldActivateLupa = true;
+                    simulatedProbability = Math.min(0.9, 0.3 + (temporallyValidatedCandidates * 0.15));
+                    activationReason = `${temporallyValidatedCandidates} candidatos confirmados temporalmente (${wreckCandidates} detectados)`;
+                } else if (temporalValidation && temporalValidation.validationStatus === 'DUDOSO') {
+                    shouldActivateLupa = true;
+                    simulatedProbability = Math.min(0.6, 0.2 + (wreckCandidates * 0.1));
+                    activationReason = `${wreckCandidates} candidatos detectados (validación temporal dudosa)`;
+                } else if (temporalValidation && temporalValidation.validationStatus === 'SIN_DATOS') {
+                    shouldActivateLupa = true;
+                    simulatedProbability = Math.min(0.5, 0.1 + (wreckCandidates * 0.1));
+                    activationReason = `${wreckCandidates} candidatos detectados (SIN validación temporal)`;
+                } else {
+                    // RECHAZADO por sensor temporal
+                    shouldActivateLupa = false;
+                    activationReason = `${wreckCandidates} candidatos RECHAZADOS por sensor temporal`;
+                }
             } else if (totalAnomalies > 0) {
                 shouldActivateLupa = true;
                 simulatedProbability = Math.min(0.7, 0.2 + (totalAnomalies * 0.1));
@@ -2590,10 +2626,11 @@
                     }
                 }
                 
-                // Mostrar mensaje al usuario con información específica
+                // Mostrar mensaje al usuario con información específica (INCLUYE VALIDACIÓN TEMPORAL)
                 const validationInfo = selectedCoordinates ? 
                     ' - Validación científica completada' : '';
-                showMessage(`🔍 ¡ANOMALÍAS DETECTADAS! ${activationReason}${validationInfo}`, 'success');
+                const temporalInfo = temporalMessage ? ` | ${temporalMessage}` : '';
+                showMessage(`🔍 ¡ANOMALÍAS DETECTADAS! ${activationReason}${validationInfo}${temporalInfo}`, 'success');
                 
                 // Hacer scroll hacia arriba para que el usuario vea el botón
                 setTimeout(() => {
@@ -2624,8 +2661,9 @@
                 lupaBtn.classList.remove('active');
                 lupaBtn.style.display = 'none';
                 
-                // Mostrar mensaje informativo
-                showMessage(`📊 Análisis completado. ${activationReason || 'No se detectaron anomalías significativas'}`, 'success');
+                // Mostrar mensaje informativo (INCLUYE VALIDACIÓN TEMPORAL)
+                const temporalInfo = temporalMessage ? ` | ${temporalMessage}` : '';
+                showMessage(`📊 Análisis completado. ${activationReason || 'No se detectaron anomalías significativas'}${temporalInfo}`, 'success');
             }
             
             console.log('🔍 ===== FIN VERIFICACIÓN DE ANOMALÍAS =====');
