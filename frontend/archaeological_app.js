@@ -477,16 +477,14 @@ async function investigateRegion() {
         visualizeArchaeologicalData(data);
         
         // NUEVA INTEGRACIÓN: Verificar anomalías para activar lupa arqueológica
-        if (typeof checkForAnomalies === 'function') {
-            // Capturar coordenadas para la lupa
-            selectedCoordinates = {
-                lat: (latMin + latMax) / 2,
-                lng: (lonMin + lonMax) / 2
-            };
-            
-            // Verificar si hay anomalías suficientes para mostrar la lupa
-            checkForAnomalies(data);
-        }
+        // NOTA: checkForAnomalies ya se llama desde safeDisplayResults, no duplicar aquí
+        // Solo capturar coordenadas para la lupa
+        selectedCoordinates = {
+            lat: (latMin + latMax) / 2,
+            lng: (lonMin + lonMax) / 2
+        };
+        
+        console.log('📍 Coordenadas capturadas para lupa:', selectedCoordinates);
         
     } catch (error) {
         console.error('❌ Error en análisis arqueológico:', error);
