@@ -93,9 +93,13 @@ class SubmarineArchaeologyEngine:
         """
         try:
             logger.info(f"🌊 Iniciando análisis arqueológico submarino DETERMINÍSTICO")
+            logger.info(f"   Coordenadas: {water_context.coordinates}")
+            logger.info(f"   Bounds: {bounds}")
             logger.info(f"   Tipo de agua: {water_context.water_type.value if water_context.water_type else 'unknown'}")
             logger.info(f"   Profundidad estimada: {water_context.estimated_depth_m}m")
             logger.info(f"   Potencial arqueológico: {water_context.archaeological_potential}")
+            logger.info(f"   Rutas históricas: {water_context.historical_shipping_routes}")
+            logger.info(f"   Naufragios conocidos: {water_context.known_wrecks_nearby}")
             
             # 1. Seleccionar instrumentos según contexto (solo para metadata)
             selected_instruments = self._select_instruments_for_context(water_context)
