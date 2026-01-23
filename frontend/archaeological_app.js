@@ -523,16 +523,17 @@ function displayResults(data) {
         // Guardar datos para exportación
         updateLastAnalysisData(data);
         
-        // Validar estructura de datos
-        if (!data || !data.region_info || !data.anomaly_map || !data.anomaly_map.statistics) {
+        // Validar estructura de datos - SOPORTAR AMBAS ESTRUCTURAS (terrestre y agua)
+        const stats = data.anomaly_map?.statistics || data.statistical_results || {};
+        const regionInfo = data.region_info || {};
+        
+        if (!data || Object.keys(stats).length === 0) {
             console.error('❌ Datos incompletos en displayResults:', data);
             showMessage('Error: Datos de análisis incompletos', 'error');
             return;
         }
         
         // Actualizar métricas principales
-        const regionInfo = data.region_info;
-        const stats = data.anomaly_map.statistics;
         const volumetricInfo = data.scientific_report?.volumetric_geometric_inference;
         
         console.log('📊 Processing data:', { regionInfo, stats, volumetricInfo });
@@ -5640,7 +5641,83 @@ function evaluateTemporalSensorMandatory(data) {
     }
 }
 
-// Llamar la función de limpieza después de cada actualización
+// Función para ocultar secciones vacías del panel de resultados
+function hideEmptySections() {
+    console.log('🧹 Ocultando secciones vacías del panel de resultados...');
+    
+    // Lista de secciones que pueden estar vacías
+    const sectionsToCheck = [
+        { selector: '.controls-section h3:contains("Método Recomendado")', parent: '.controls-section' },
+        { id: 'recommendedMethod', checkContent: true },
+        { className: 'inference-system' },
+        { className: 'volumetric-info' },
+        { id: 'syntheticInterpretation' }
+    ];
+    
+    // Ocultar sección de Método Recomendado si está vacía
+    const recommendedMethod = document.getElementById('recommendedMethod');
+    if (recommendedMethod) {
+        const text = recommendedMethod.textContent.trim();
+        if (text === 'Prioridad: No determinada ▸ Esperando análisis...' || text === '' || text === '--') {
+            const parentSection = recommendedMethod.closest('.controls-section');
+            if (parentSection) {
+                parentSection.style.display = 'none';
+                console.log('   ✓ Ocultada: Método Recomendado (vacía)');
+            }
+        }
+    }
+    
+    // Ocultar Sistema de Inferencia Volumétrica si está vacío
+    const inferenceSystem = document.querySelector('.inference-system');
+    if (inferenceSystem) {
+        const values = inferenceSystem.querySelectorAll('.metric-value');
+        let allEmpty = true;
+        values.forEach(val => {
+            const text = val.textContent.trim();
+            if (text !== '--' && text !== '' && text !== 'Esperando análisis...') {
+                allEmpty = false;
+            }
+        });
+        if (allEmpty) {
+            inferenceSystem.style.display = 'none';
+            console.log('   ✓ Ocultada: Sistema de Inferencia Volumétrica (vacía)');
+        }
+    }
+    
+    // Ocultar Modelo Volumétrico si está vacío
+    const volumetricInfo = document.querySelector('.volumetric-info');
+    if (volumetricInfo) {
+        const values = volumetricInfo.querySelectorAll('.metric-value');
+        let allEmpty = true;
+        values.forEach(val => {
+            const text = val.textContent.trim();
+            if (text !== '--' && text !== '' && text !== 'Esperando análisis...') {
+                allEmpty = false;
+            }
+        });
+        if (allEmpty) {
+            volumetricInfo.style.display = 'none';
+            console.log('   ✓ Ocultada: Modelo Volumétrico (vacía)');
+        }
+    }
+    
+    // Ocultar Interpretación Sintética si está vacía
+    const syntheticInterpretation = document.getElementById('syntheticInterpretation');
+    if (syntheticInterpretation) {
+        const text = syntheticInterpretation.textContent.trim();
+        if (text === 'Esperando análisis...' || text === '' || text === '--') {
+            const parentDiv = syntheticInterpretation.closest('.volumetric-info, .controls-section');
+            if (parentDiv && parentDiv.querySelector('h4')?.textContent.includes('Interpretación Sintética')) {
+                parentDiv.style.display = 'none';
+                console.log('   ✓ Ocultada: Interpretación Sintética (vacía)');
+            }
+        }
+    }
+    
+    console.log('✅ Secciones vacías ocultadas');
+}
+
+// Llamar después de displayResults
 function safeDisplayResults(data) {
     try {
         displayResults(data);
@@ -5657,6 +5734,9 @@ function safeDisplayResults(data) {
         } else {
             console.warn('⚠️ Función checkForAnomalies no disponible');
         }
+        
+        // Ocultar secciones vacías del panel de resultados
+        hideEmptySections();
         
         // Limpiar cualquier "undefined" que haya quedado
         setTimeout(cleanUndefinedFromUI, 100);
