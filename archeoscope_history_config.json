@@ -1,0 +1,115 @@
+{
+  "history_system_config": {
+    "version": "2.1.0",
+    "auto_sync": true,
+    "permanent_storage": true,
+    "scientific_validation": true,
+    "backup_frequency": "daily",
+    "max_entries": 1000,
+    "compression_enabled": false,
+    "export_formats": [
+      "json",
+      "csv",
+      "kml",
+      "geojson"
+    ]
+  },
+  "scientific_standards": {
+    "confidence_reporting": {
+      "never_report_100_percent": true,
+      "use_terminology": "alta_confianza_instrumental_pendiente_validación_visual",
+      "require_evidence_description": true,
+      "include_uncertainty_assessment": true
+    },
+    "dimensional_validation": {
+      "min_length_m": 10,
+      "max_length_m": 500,
+      "aspect_ratio_limits": [
+        2.0,
+        15.0
+      ],
+      "require_magnetic_correlation": true
+    },
+    "classification_standards": {
+      "require_multiple_sensors": true,
+      "minimum_instruments": 3,
+      "triada_clasica": [
+        "magnetometer",
+        "multibeam_sonar",
+        "sub_bottom_profiler"
+      ],
+      "validation_hierarchy": [
+        "instrumental",
+        "geometric",
+        "historical",
+        "visual_rov"
+      ]
+    }
+  },
+  "regional_contexts": {
+    "caribbean_triangle": {
+      "name": "Triángulo Funcional Miami-PR-Bermudas",
+      "coordinates": {
+        "center": [
+          25.55,
+          -70.25
+        ],
+        "bounds": [
+          [
+            25.0,
+            -71.0
+          ],
+          [
+            26.0,
+            -69.5
+          ]
+        ]
+      },
+      "scientific_significance": "Convergencia de rutas históricas transatlánticas",
+      "bathymetric_context": "Borde de plataforma continental - profundidad óptima para preservación",
+      "preservation_factors": [
+        "menos_remoción_por_oleaje",
+        "menos_pesca_de_arrastre",
+        "mejor_resolución_sonar_magnetómetro"
+      ],
+      "historical_routes": [
+        "España-Caribe",
+        "EEUU-Europa",
+        "Convoyes_WWII",
+        "Rutas_comerciales_coloniales"
+      ]
+    }
+  },
+  "data_sources": {
+    "permanent_history_file": "archeoscope_permanent_history.json",
+    "backup_directory": "history_backups/",
+    "export_directory": "exports/",
+    "validation_logs": "validation_logs/"
+  },
+  "auto_backup": {
+    "enabled": true,
+    "frequency": "on_new_entry",
+    "retention_days": 365,
+    "compress_old_backups": true,
+    "backup_naming": "archeoscope_history_backup_YYYYMMDD_HHMMSS.json"
+  },
+  "integration": {
+    "frontend_sync": true,
+    "backend_validation": true,
+    "real_time_updates": true,
+    "cross_session_persistence": true
+  },
+  "quality_control": {
+    "validate_coordinates": true,
+    "check_duplicate_entries": true,
+    "verify_scientific_standards": true,
+    "flag_suspicious_data": true,
+    "require_metadata": true
+  },
+  "last_sync": {
+    "timestamp": "2026-01-23T09:17:45.998018",
+    "sync_id": "20260123_091745",
+    "entries_synced": 3,
+    "files_synced": 3
+  }
+}

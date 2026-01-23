@@ -1,0 +1,572 @@
+{
+  "test_info": {
+    "test_name": "Submarine Archaeology Calibration with Real Wrecks",
+    "test_date": "2026-01-23T08:41:22.494893",
+    "wrecks_tested": 6,
+    "successful_tests": 6
+  },
+  "overall_metrics": {
+    "overall_accuracy": 0.4444444444444444,
+    "successful_detections": 5,
+    "wreck_detections": 6,
+    "total_wrecks": 6
+  },
+  "detailed_results": [
+    {
+      "wreck_name": "RMS Titanic",
+      "coordinates": {
+        "lat": 41.7325,
+        "lon": -49.9469
+      },
+      "wreck_type": "passenger_liner",
+      "real_data": {
+        "name": "RMS Titanic",
+        "coordinates": {
+          "lat": 41.7325,
+          "lon": -49.9469
+        },
+        "type": "passenger_liner",
+        "depth_m": 3800,
+        "dimensions": {
+          "length_m": 269.1,
+          "width_m": 28.2,
+          "height_m": 53.3
+        },
+        "sunk_year": 1912,
+        "material": "steel",
+        "condition": "broken_in_two",
+        "description": "Transatlántico de pasajeros, estructura de casco grande",
+        "validation": "Muy documentado, ideal para validar detección volumétrica",
+        "expected_detection": {
+          "water_detected": true,
+          "water_type": "deep_ocean",
+          "depth_range": [
+            3000,
+            4500
+          ],
+          "vessel_type": "passenger_liner",
+          "historical_period": "modern",
+          "preservation_state": "debris_field",
+          "archaeological_priority": "high"
+        }
+      },
+      "detection_results": {
+        "water_detected": true,
+        "water_type": "deep_ocean",
+        "estimated_depth_m": 4595.819707397051,
+        "archaeological_potential": "high",
+        "historical_shipping_routes": true,
+        "known_wrecks_nearby": true,
+        "confidence": 1.0
+      },
+      "submarine_analysis": {
+        "performed": true,
+        "candidates": 3,
+        "instruments": 5,
+        "best_candidate": {
+          "anomaly_id": "submarine_anomaly_1",
+          "coordinates": [
+            3.0,
+            24.857142857142858
+          ],
+          "signature": {
+            "length_m": 480.0,
+            "width_m": 60.0,
+            "height_m": 816.2547001291891,
+            "orientation_degrees": 190.86453565588775,
+            "burial_depth_m": 2.9296203762338235,
+            "detection_confidence": 1.0
+          },
+          "vessel_type_probability": {
+            "cargo_ship": 0.49411764705882355,
+            "passenger_liner": 0.35294117647058826,
+            "warship": 0.15294117647058825
+          },
+          "historical_period": "modern",
+          "preservation_state": "good",
+          "archaeological_priority": "high",
+          "recommended_investigation": [
+            "high_resolution_multibeam_survey",
+            "sub_bottom_profiler_survey",
+            "rov_visual_inspection",
+            "underwater_photogrammetry",
+            "systematic_archaeological_excavation"
+          ]
+        }
+      },
+      "validation": {
+        "water_detected": true,
+        "water_type_correct": true,
+        "depth_reasonable": false,
+        "archaeological_potential_correct": true,
+        "vessel_type_correct": true,
+        "dimensions_reasonable": false
+      },
+      "accuracy": 0.6666666666666666
+    },
+    {
+      "wreck_name": "Battleship Bismarck",
+      "coordinates": {
+        "lat": 48.1667,
+        "lon": -16.2
+      },
+      "wreck_type": "warship",
+      "real_data": {
+        "name": "Battleship Bismarck",
+        "coordinates": {
+          "lat": 48.1667,
+          "lon": -16.2
+        },
+        "type": "warship",
+        "depth_m": 4700,
+        "dimensions": {
+          "length_m": 251.0,
+          "width_m": 36.0,
+          "height_m": 50.0
+        },
+        "sunk_year": 1941,
+        "material": "steel",
+        "condition": "upright_intact",
+        "description": "Acorazado alemán, geometría lineal clara",
+        "validation": "Buen test de penetración sonar y validación geométrica",
+        "expected_detection": {
+          "water_detected": true,
+          "water_type": "deep_ocean",
+          "depth_range": [
+            4000,
+            5000
+          ],
+          "vessel_type": "warship",
+          "historical_period": "modern",
+          "preservation_state": "good",
+          "archaeological_priority": "high"
+        }
+      },
+      "detection_results": {
+        "water_detected": true,
+        "water_type": "deep_ocean",
+        "estimated_depth_m": 2714.8607587044817,
+        "archaeological_potential": "high",
+        "historical_shipping_routes": true,
+        "known_wrecks_nearby": false,
+        "confidence": 1.0
+      },
+      "submarine_analysis": {
+        "performed": true,
+        "candidates": 2,
+        "instruments": 5,
+        "best_candidate": {
+          "anomaly_id": "submarine_anomaly_1",
+          "coordinates": [
+            21.333333333333332,
+            10.333333333333334
+          ],
+          "signature": {
+            "length_m": 480.0,
+            "width_m": 60.0,
+            "height_m": 506.84169315837016,
+            "orientation_degrees": 290.16781034190484,
+            "burial_depth_m": 1.6087806972003666,
+            "detection_confidence": 1.0
+          },
+          "vessel_type_probability": {
+            "cargo_ship": 0.49411764705882355,
+            "passenger_liner": 0.35294117647058826,
+            "warship": 0.15294117647058825
+          },
+          "historical_period": "modern",
+          "preservation_state": "good",
+          "archaeological_priority": "high",
+          "recommended_investigation": [
+            "high_resolution_multibeam_survey",
+            "sub_bottom_profiler_survey",
+            "rov_visual_inspection",
+            "underwater_photogrammetry",
+            "systematic_archaeological_excavation"
+          ]
+        }
+      },
+      "validation": {
+        "water_detected": true,
+        "water_type_correct": true,
+        "depth_reasonable": false,
+        "archaeological_potential_correct": true,
+        "vessel_type_correct": false,
+        "dimensions_reasonable": false
+      },
+      "accuracy": 0.5
+    },
+    {
+      "wreck_name": "SS Andrea Doria",
+      "coordinates": {
+        "lat": 40.4833,
+        "lon": -69.85
+      },
+      "wreck_type": "passenger_liner",
+      "real_data": {
+        "name": "SS Andrea Doria",
+        "coordinates": {
+          "lat": 40.4833,
+          "lon": -69.85
+        },
+        "type": "passenger_liner",
+        "depth_m": 70,
+        "dimensions": {
+          "length_m": 212.0,
+          "width_m": 27.0,
+          "height_m": 30.0
+        },
+        "sunk_year": 1956,
+        "material": "steel",
+        "condition": "listing_deteriorating",
+        "description": "Transatlántico italiano, profundidad manejable para ROV",
+        "validation": "Ideal para pruebas con ROV y fotogrametría",
+        "expected_detection": {
+          "water_detected": true,
+          "water_type": "coastal",
+          "depth_range": [
+            50,
+            100
+          ],
+          "vessel_type": "passenger_liner",
+          "historical_period": "modern",
+          "preservation_state": "poor",
+          "archaeological_priority": "medium"
+        }
+      },
+      "detection_results": {
+        "water_detected": false,
+        "water_type": null,
+        "estimated_depth_m": null,
+        "archaeological_potential": "none",
+        "historical_shipping_routes": false,
+        "known_wrecks_nearby": false,
+        "confidence": 0.0
+      },
+      "submarine_analysis": {
+        "performed": true,
+        "candidates": 2,
+        "instruments": 5,
+        "best_candidate": {
+          "anomaly_id": "submarine_anomaly_1",
+          "coordinates": [
+            21.333333333333332,
+            10.333333333333334
+          ],
+          "signature": {
+            "length_m": 480.0,
+            "width_m": 60.0,
+            "height_m": 506.84169315837016,
+            "orientation_degrees": 290.16781034190484,
+            "burial_depth_m": 1.6087806972003666,
+            "detection_confidence": 1.0
+          },
+          "vessel_type_probability": {
+            "cargo_ship": 0.49411764705882355,
+            "passenger_liner": 0.35294117647058826,
+            "warship": 0.15294117647058825
+          },
+          "historical_period": "modern",
+          "preservation_state": "good",
+          "archaeological_priority": "high",
+          "recommended_investigation": [
+            "high_resolution_multibeam_survey",
+            "sub_bottom_profiler_survey",
+            "rov_visual_inspection",
+            "underwater_photogrammetry",
+            "systematic_archaeological_excavation"
+          ]
+        }
+      },
+      "validation": {
+        "water_detected": false,
+        "water_type_correct": false,
+        "depth_reasonable": false,
+        "archaeological_potential_correct": false,
+        "vessel_type_correct": true,
+        "dimensions_reasonable": false
+      },
+      "accuracy": 0.16666666666666666
+    },
+    {
+      "wreck_name": "Costa Concordia",
+      "coordinates": {
+        "lat": 42.4,
+        "lon": 10.9167
+      },
+      "wreck_type": "cruise_ship",
+      "real_data": {
+        "name": "Costa Concordia",
+        "coordinates": {
+          "lat": 42.4,
+          "lon": 10.9167
+        },
+        "type": "cruise_ship",
+        "depth_m": 40,
+        "dimensions": {
+          "length_m": 290.2,
+          "width_m": 35.5,
+          "height_m": 52.0
+        },
+        "sunk_year": 2012,
+        "material": "steel",
+        "condition": "partially_submerged",
+        "description": "Crucero moderno, agua poco profunda",
+        "validation": "Testeo en aguas menos profundas, fácil validación visual",
+        "expected_detection": {
+          "water_detected": true,
+          "water_type": "coastal",
+          "depth_range": [
+            20,
+            60
+          ],
+          "vessel_type": "passenger_liner",
+          "historical_period": "modern",
+          "preservation_state": "excellent",
+          "archaeological_priority": "low"
+        }
+      },
+      "detection_results": {
+        "water_detected": true,
+        "water_type": "sea",
+        "estimated_depth_m": 1120.480010430509,
+        "archaeological_potential": "high",
+        "historical_shipping_routes": true,
+        "known_wrecks_nearby": false,
+        "confidence": 0.8999999999999999
+      },
+      "submarine_analysis": {
+        "performed": true,
+        "candidates": 6,
+        "instruments": 4,
+        "best_candidate": {
+          "anomaly_id": "submarine_anomaly_1",
+          "coordinates": [
+            2.0,
+            4.833333333333333
+          ],
+          "signature": {
+            "length_m": 320.0,
+            "width_m": 40.0,
+            "height_m": 207.07628209600318,
+            "orientation_degrees": 44.49078664163401,
+            "burial_depth_m": 0.5124653813600658,
+            "detection_confidence": 1.0
+          },
+          "vessel_type_probability": {
+            "cargo_ship": 0.46357615894039733,
+            "passenger_liner": 0.3642384105960265,
+            "warship": 0.17218543046357615
+          },
+          "historical_period": "ancient",
+          "preservation_state": "excellent",
+          "archaeological_priority": "high",
+          "recommended_investigation": [
+            "high_resolution_multibeam_survey",
+            "rov_visual_inspection",
+            "underwater_photogrammetry",
+            "systematic_archaeological_excavation"
+          ]
+        }
+      },
+      "validation": {
+        "water_detected": true,
+        "water_type_correct": false,
+        "depth_reasonable": false,
+        "archaeological_potential_correct": false,
+        "vessel_type_correct": true,
+        "dimensions_reasonable": true
+      },
+      "accuracy": 0.5
+    },
+    {
+      "wreck_name": "Baltic Sea Anomaly",
+      "coordinates": {
+        "lat": 59.9167,
+        "lon": 19.7833
+      },
+      "wreck_type": "geological_formation",
+      "real_data": {
+        "name": "Baltic Sea Anomaly",
+        "coordinates": {
+          "lat": 59.9167,
+          "lon": 19.7833
+        },
+        "type": "geological_formation",
+        "depth_m": 90,
+        "dimensions": {
+          "diameter_m": 60,
+          "height_m": 8
+        },
+        "discovery_year": 2011,
+        "material": "rock_sediment",
+        "condition": "natural_formation",
+        "description": "Formación geológica circular, no artificial",
+        "validation": "Test de detección artificial vs natural",
+        "expected_detection": {
+          "water_detected": true,
+          "water_type": "sea",
+          "depth_range": [
+            80,
+            100
+          ],
+          "vessel_type": null,
+          "historical_period": null,
+          "preservation_state": "natural",
+          "archaeological_priority": "low"
+        }
+      },
+      "detection_results": {
+        "water_detected": true,
+        "water_type": "sea",
+        "estimated_depth_m": 43.30728167951868,
+        "archaeological_potential": "high",
+        "historical_shipping_routes": false,
+        "known_wrecks_nearby": false,
+        "confidence": 0.8999999999999999
+      },
+      "submarine_analysis": {
+        "performed": true,
+        "candidates": 17,
+        "instruments": 4,
+        "best_candidate": {
+          "anomaly_id": "submarine_anomaly_1",
+          "coordinates": [
+            7.285714285714286,
+            27.285714285714285
+          ],
+          "signature": {
+            "length_m": 120.0,
+            "width_m": 15.0,
+            "height_m": 8.192695671637928,
+            "orientation_degrees": 54.65046677401495,
+            "burial_depth_m": 2.4318719839338003,
+            "detection_confidence": 1.0
+          },
+          "vessel_type_probability": {
+            "cargo_ship": 0.30939226519337015,
+            "fishing_vessel": 0.27624309392265195,
+            "merchant_vessel": 0.4143646408839779
+          },
+          "historical_period": "ancient",
+          "preservation_state": "good",
+          "archaeological_priority": "high",
+          "recommended_investigation": [
+            "high_resolution_multibeam_survey",
+            "sub_bottom_profiler_survey",
+            "rov_visual_inspection",
+            "underwater_photogrammetry",
+            "systematic_archaeological_excavation"
+          ]
+        }
+      },
+      "validation": {
+        "water_detected": true,
+        "water_type_correct": true,
+        "depth_reasonable": false,
+        "archaeological_potential_correct": false,
+        "vessel_type_correct": true,
+        "dimensions_reasonable": true
+      },
+      "accuracy": 0.6666666666666666
+    },
+    {
+      "wreck_name": "USS Arizona (Pearl Harbor)",
+      "coordinates": {
+        "lat": 21.365,
+        "lon": -157.95
+      },
+      "wreck_type": "battleship",
+      "real_data": {
+        "name": "USS Arizona (Pearl Harbor)",
+        "coordinates": {
+          "lat": 21.365,
+          "lon": -157.95
+        },
+        "type": "battleship",
+        "depth_m": 12,
+        "dimensions": {
+          "length_m": 185.3,
+          "width_m": 29.6,
+          "height_m": 35.0
+        },
+        "sunk_year": 1941,
+        "material": "steel",
+        "condition": "memorial_site",
+        "description": "Acorazado en aguas muy poco profundas",
+        "validation": "Test de detección en aguas someras",
+        "expected_detection": {
+          "water_detected": true,
+          "water_type": "coastal",
+          "depth_range": [
+            10,
+            20
+          ],
+          "vessel_type": "warship",
+          "historical_period": "modern",
+          "preservation_state": "poor",
+          "archaeological_priority": "high"
+        }
+      },
+      "detection_results": {
+        "water_detected": true,
+        "water_type": "deep_ocean",
+        "estimated_depth_m": 3190.0635166898583,
+        "archaeological_potential": "medium",
+        "historical_shipping_routes": false,
+        "known_wrecks_nearby": false,
+        "confidence": 1.0
+      },
+      "submarine_analysis": {
+        "performed": true,
+        "candidates": 1,
+        "instruments": 5,
+        "best_candidate": {
+          "anomaly_id": "submarine_anomaly_1",
+          "coordinates": [
+            8.285714285714286,
+            24.571428571428573
+          ],
+          "signature": {
+            "length_m": 480.0,
+            "width_m": 60.0,
+            "height_m": 749.0628471162804,
+            "orientation_degrees": 48.32326774615915,
+            "burial_depth_m": 0.8847998798047214,
+            "detection_confidence": 1.0
+          },
+          "vessel_type_probability": {
+            "cargo_ship": 0.46357615894039733,
+            "passenger_liner": 0.3642384105960265,
+            "warship": 0.17218543046357615
+          },
+          "historical_period": "ancient",
+          "preservation_state": "excellent",
+          "archaeological_priority": "high",
+          "recommended_investigation": [
+            "high_resolution_multibeam_survey",
+            "rov_visual_inspection",
+            "underwater_photogrammetry",
+            "systematic_archaeological_excavation"
+          ]
+        }
+      },
+      "validation": {
+        "water_detected": true,
+        "water_type_correct": false,
+        "depth_reasonable": false,
+        "archaeological_potential_correct": false,
+        "vessel_type_correct": false,
+        "dimensions_reasonable": false
+      },
+      "accuracy": 0.16666666666666666
+    }
+  ],
+  "calibration_recommendations": [
+    "Water Type Correct",
+    "Depth Reasonable",
+    "Archaeological Potential Correct",
+    "Vessel Type Correct",
+    "Dimensions Reasonable"
+  ]
+}

@@ -1,0 +1,240 @@
+{
+  "test_info": {
+    "test_name": "Complete Integration Test",
+    "timestamp": "2026-01-23T09:14:39.458163",
+    "coordinates_tested": 3
+  },
+  "water_detection_results": [
+    {
+      "name": "Caribe Norte",
+      "coordinates": {
+        "name": "Caribe Norte",
+        "lat": 25.8,
+        "lng": -70.0
+      },
+      "water_detected": true,
+      "water_type": "deep_ocean",
+      "depth_m": 1358.4948076385817,
+      "archaeological_potential": "medium"
+    },
+    {
+      "name": "Caribe Sur",
+      "coordinates": {
+        "name": "Caribe Sur",
+        "lat": 25.3,
+        "lng": -70.5
+      },
+      "water_detected": true,
+      "water_type": "deep_ocean",
+      "depth_m": 951.0705275122294,
+      "archaeological_potential": "medium"
+    },
+    {
+      "name": "Caribe Centro",
+      "coordinates": {
+        "name": "Caribe Centro",
+        "lat": 25.55,
+        "lng": -70.25
+      },
+      "water_detected": true,
+      "water_type": "deep_ocean",
+      "depth_m": 307.56850811382867,
+      "archaeological_potential": "medium"
+    }
+  ],
+  "submarine_analysis_results": [
+    {
+      "name": "Caribe Norte",
+      "coordinates": {
+        "name": "Caribe Norte",
+        "lat": 25.8,
+        "lng": -70.0
+      },
+      "volumetric_anomalies": 2,
+      "wreck_candidates": 2,
+      "instruments_used": 5,
+      "high_priority_targets": 2
+    },
+    {
+      "name": "Caribe Sur",
+      "coordinates": {
+        "name": "Caribe Sur",
+        "lat": 25.3,
+        "lng": -70.5
+      },
+      "volumetric_anomalies": 0,
+      "wreck_candidates": 0,
+      "instruments_used": 5,
+      "high_priority_targets": 0
+    },
+    {
+      "name": "Caribe Centro",
+      "coordinates": {
+        "name": "Caribe Centro",
+        "lat": 25.55,
+        "lng": -70.25
+      },
+      "volumetric_anomalies": 8,
+      "wreck_candidates": 8,
+      "instruments_used": 5,
+      "high_priority_targets": 8
+    }
+  ],
+  "history_formatted_data": [
+    {
+      "name": "Caribe Norte",
+      "coordinates": {
+        "name": "Caribe Norte",
+        "lat": 25.8,
+        "lng": -70.0
+      },
+      "analysis_data": {
+        "statistical_results": {
+          "multibeam_sonar": {
+            "archaeological_probability": 0.85
+          },
+          "side_scan_sonar": {
+            "archaeological_probability": 0.78
+          },
+          "magnetometer": {
+            "archaeological_probability": 0.72
+          },
+          "acoustic_reflectance": {
+            "archaeological_probability": 0.8
+          }
+        },
+        "summary": {
+          "total_instruments": 5,
+          "analysis_type": "submarine_archaeology"
+        }
+      },
+      "anomalies_detected": [
+        {
+          "type": "submarine_wreck",
+          "name": "Candidato Submarino 1",
+          "icon": "🚢",
+          "description": "Estructura submarina detectada por análisis multi-sensor",
+          "confidence": 0.75,
+          "evidence": "Detección por sonar multihaz y magnetómetro",
+          "color": "#dc3545"
+        },
+        {
+          "type": "submarine_wreck",
+          "name": "Candidato Submarino 2",
+          "icon": "🚢",
+          "description": "Estructura submarina detectada por análisis multi-sensor",
+          "confidence": 0.8,
+          "evidence": "Detección por sonar multihaz y magnetómetro",
+          "color": "#dc3545"
+        }
+      ],
+      "metadata": {
+        "resolution": "10m",
+        "analysisType": "submarine_archaeology",
+        "timestamp": "2026-01-23T09:14:39.457876"
+      }
+    },
+    {
+      "name": "Caribe Sur",
+      "coordinates": {
+        "name": "Caribe Sur",
+        "lat": 25.3,
+        "lng": -70.5
+      },
+      "analysis_data": {
+        "statistical_results": {
+          "multibeam_sonar": {
+            "archaeological_probability": 0.85
+          },
+          "side_scan_sonar": {
+            "archaeological_probability": 0.78
+          },
+          "magnetometer": {
+            "archaeological_probability": 0.72
+          },
+          "acoustic_reflectance": {
+            "archaeological_probability": 0.8
+          }
+        },
+        "summary": {
+          "total_instruments": 5,
+          "analysis_type": "submarine_archaeology"
+        }
+      },
+      "anomalies_detected": [],
+      "metadata": {
+        "resolution": "10m",
+        "analysisType": "submarine_archaeology",
+        "timestamp": "2026-01-23T09:14:39.457927"
+      }
+    },
+    {
+      "name": "Caribe Centro",
+      "coordinates": {
+        "name": "Caribe Centro",
+        "lat": 25.55,
+        "lng": -70.25
+      },
+      "analysis_data": {
+        "statistical_results": {
+          "multibeam_sonar": {
+            "archaeological_probability": 0.85
+          },
+          "side_scan_sonar": {
+            "archaeological_probability": 0.78
+          },
+          "magnetometer": {
+            "archaeological_probability": 0.72
+          },
+          "acoustic_reflectance": {
+            "archaeological_probability": 0.8
+          }
+        },
+        "summary": {
+          "total_instruments": 5,
+          "analysis_type": "submarine_archaeology"
+        }
+      },
+      "anomalies_detected": [
+        {
+          "type": "submarine_wreck",
+          "name": "Candidato Submarino 1",
+          "icon": "🚢",
+          "description": "Estructura submarina detectada por análisis multi-sensor",
+          "confidence": 0.75,
+          "evidence": "Detección por sonar multihaz y magnetómetro",
+          "color": "#dc3545"
+        },
+        {
+          "type": "submarine_wreck",
+          "name": "Candidato Submarino 2",
+          "icon": "🚢",
+          "description": "Estructura submarina detectada por análisis multi-sensor",
+          "confidence": 0.8,
+          "evidence": "Detección por sonar multihaz y magnetómetro",
+          "color": "#dc3545"
+        },
+        {
+          "type": "submarine_wreck",
+          "name": "Candidato Submarino 3",
+          "icon": "🚢",
+          "description": "Estructura submarina detectada por análisis multi-sensor",
+          "confidence": 0.85,
+          "evidence": "Detección por sonar multihaz y magnetómetro",
+          "color": "#dc3545"
+        }
+      ],
+      "metadata": {
+        "resolution": "10m",
+        "analysisType": "submarine_archaeology",
+        "timestamp": "2026-01-23T09:14:39.457957"
+      }
+    }
+  ],
+  "summary": {
+    "water_points_detected": 3,
+    "successful_submarine_analyses": 3,
+    "total_anomalies_detected": 5,
+    "ready_for_history_system": 3
+  }
+}

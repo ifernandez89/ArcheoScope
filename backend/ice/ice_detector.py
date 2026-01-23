@@ -280,25 +280,98 @@ class IceDetector:
         return False
     
     def _estimate_ice_thickness(self, lat: float, lon: float, glacier: bool, permafrost: bool) -> Optional[float]:
-        """Estimar espesor del hielo"""
+        """Estimar espesor del hielo con calibración mejorada"""
         
         if glacier:
-            # Glaciares continentales (muy espesos)
-            if lat >= 70 or lat <= -70:  # Polar
-                return np.random.uniform(500, 3000)  # 0.5-3km
-            else:  # Glaciares alpinos
-                return np.random.uniform(50, 500)    # 50-500m
+            # Glaciares: espesor basado en ubicación y tipo
+            if lat >= 75 or lat <= -75:  # Regiones polares extremas
+                # Groenlandia y Antártida - muy espesos
+                if 60 <= lat <= 84 and -73 <= lon <= -12:  # Groenlandia
+                    return np.random.uniform(800, 3200)  # 0.8-3.2km
+                elif lat <= -70:  # Antártida
+                    return np.random.uniform(1000, 4000)  # 1-4km
+                else:
+                    return np.random.uniform(500, 2000)  # Otros glaciares polares
+            
+            elif 60 <= lat < 75:  # Subártico
+                # Alaska, norte de Canadá, Siberia
+                if -170 <= lon <= -130:  # Alaska
+                    return np.random.uniform(200, 1200)
+                elif 60 <= lon <= 180:  # Siberia
+                    return np.random.uniform(100, 800)
+                else:
+                    return np.random.uniform(150, 1000)
+            
+            else:  # Glaciares alpinos (latitudes medias)
+                # Alpes, Andes, Himalaya, Montañas Rocosas
+                altitude_factor = abs(lat - 45) * 10  # Aproximación de altitud
+                base_thickness = 50 + altitude_factor
+                
+                if 45 <= lat <= 48 and 6 <= lon <= 13:  # Alpes
+                    return np.random.uniform(base_thickness, base_thickness + 300)
+                elif 27 <= lat <= 37 and 70 <= lon <= 105:  # Himalaya
+                    return np.random.uniform(base_thickness + 100, base_thickness + 800)
+                elif -55 <= lat <= -40 and -75 <= lon <= -65:  # Patagonia
+                    return np.random.uniform(base_thickness, base_thickness + 400)
+                else:  # Otros glaciares alpinos
+                    return np.random.uniform(base_thickness, base_thickness + 200)
         
         elif permafrost:
-            # Permafrost (variable)
-            if lat >= 65:  # Continuo
-                return np.random.uniform(100, 1000)  # 100m-1km
-            else:  # Discontinuo
-                return np.random.uniform(10, 200)    # 10-200m
+            # Permafrost: espesor basado en latitud y continentalidad
+            if lat >= 70:  # Permafrost continuo profundo
+                # Ártico profundo
+                return np.random.uniform(300, 1500)
+            elif 65 <= lat < 70:  # Permafrost continuo
+                # Distancia del océano afecta el espesor
+                ocean_distance = self._estimate_distance_to_ocean(lat, lon)
+                if ocean_distance > 500:  # Interior continental
+                    return np.random.uniform(200, 1200)
+                else:  # Cerca del océano
+                    return np.random.uniform(100, 800)
+            elif 55 <= lat < 65:  # Permafrost discontinuo
+                return np.random.uniform(50, 400)
+            else:  # Permafrost alpino
+                return np.random.uniform(10, 200)
         
         else:
-            # Nieve estacional
-            return np.random.uniform(1, 10)  # 1-10m
+            # Nieve estacional: espesor basado en latitud y estación
+            if lat >= 60 or lat <= -60:  # Latitudes altas
+                return np.random.uniform(2, 15)
+            else:  # Latitudes medias (montañas)
+                return np.random.uniform(1, 8)
+    
+    def _estimate_distance_to_ocean(self, lat: float, lon: float) -> float:
+        """Estimar distancia al océano más cercano (km)"""
+        
+        # Distancias aproximadas a océanos principales
+        distances = []
+        
+        # Océano Ártico
+        if lat >= 60:
+            arctic_distance = (90 - lat) * 111  # Distancia al polo
+            distances.append(arctic_distance)
+        
+        # Océano Atlántico
+        if -80 <= lon <= 20:
+            if lon < -30:  # Costa americana
+                atlantic_distance = abs(lon + 30) * 85
+            else:  # Costa europea/africana
+                atlantic_distance = abs(lon - 20) * 85
+            distances.append(atlantic_distance)
+        
+        # Océano Pacífico
+        if lon >= 120 or lon <= -60:
+            if lon > 0:  # Costa asiática
+                pacific_distance = abs(lon - 120) * 85
+            else:  # Costa americana
+                pacific_distance = abs(lon + 60) * 85
+            distances.append(pacific_distance)
+        
+        # Si no hay océanos cercanos, asumir interior continental
+        if not distances:
+            return 1000
+        
+        return min(distances)
     
     def _determine_ice_type(self, lat: float, lon: float, glacier: bool, permafrost: bool, sea_ice: bool, seasonal_snow: bool) -> Tuple[Optional[IceEnvironmentType], Optional[float]]:
         """Determinar tipo de ambiente de hielo y densidad"""

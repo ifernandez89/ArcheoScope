@@ -1,0 +1,79 @@
+{
+  "test_info": {
+    "test_name": "Final Calibration Validation",
+    "test_date": "2026-01-23T08:44:09.919881",
+    "cases_tested": 4,
+    "successful_tests": 4
+  },
+  "overall_accuracy": 0.9375,
+  "detailed_results": [
+    {
+      "case": "Titanic (Océano Profundo)",
+      "environment": "water",
+      "accuracy": 1.0,
+      "validation": {
+        "detected": true,
+        "type_correct": true,
+        "depth_in_range": true,
+        "potential_correct": true
+      },
+      "results": {
+        "detected": true,
+        "type": "deep_ocean",
+        "depth": 3729.2834037205225,
+        "potential": "high"
+      }
+    },
+    {
+      "case": "Andrea Doria (Costero)",
+      "environment": "water",
+      "accuracy": 1.0,
+      "validation": {
+        "detected": true,
+        "type_correct": true,
+        "depth_in_range": true,
+        "potential_correct": true
+      },
+      "results": {
+        "detected": true,
+        "type": "coastal",
+        "depth": 72.83154967880553,
+        "potential": "medium"
+      }
+    },
+    {
+      "case": "Glaciar Alpino (Arqueología)",
+      "environment": "ice",
+      "accuracy": 1.0,
+      "validation": {
+        "detected": true,
+        "type_correct": true,
+        "thickness_in_range": true,
+        "potential_correct": true
+      },
+      "results": {
+        "detected": true,
+        "type": "glacier",
+        "thickness": 322.80518267711216,
+        "potential": "high"
+      }
+    },
+    {
+      "case": "Antártida (Polar Extremo)",
+      "environment": "ice",
+      "accuracy": 0.75,
+      "validation": {
+        "detected": true,
+        "type_correct": true,
+        "thickness_in_range": false,
+        "potential_correct": true
+      },
+      "results": {
+        "detected": true,
+        "type": "ice_sheet",
+        "thickness": 2638.252913845021,
+        "potential": "low"
+      }
+    }
+  ]
+}

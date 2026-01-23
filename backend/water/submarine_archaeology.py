@@ -104,7 +104,7 @@ class SubmarineArchaeologyEngine:
             instrument_data = self._generate_submarine_sensor_data(water_context, bounds, selected_instruments)
             
             # 3. Detectar anomalías volumétricas submarinas
-            volumetric_anomalies = self._detect_submarine_volumetric_anomalies(instrument_data)
+            volumetric_anomalies = self._detect_submarine_volumetric_anomalies(instrument_data, water_context)
             
             # 4. Analizar firmas acústicas
             acoustic_signatures = self._analyze_acoustic_signatures(instrument_data, volumetric_anomalies)
@@ -377,7 +377,7 @@ class SubmarineArchaeologyEngine:
         
         return base_reflectance
     
-    def _detect_submarine_volumetric_anomalies(self, sensor_data: Dict[str, np.ndarray]) -> List[Dict[str, Any]]:
+    def _detect_submarine_volumetric_anomalies(self, sensor_data: Dict[str, np.ndarray], water_context: WaterContext) -> List[Dict[str, Any]]:
         """Detectar anomalías volumétricas submarinas"""
         
         anomalies = []
@@ -427,24 +427,69 @@ class SubmarineArchaeologyEngine:
                     
                     center_y, center_x = np.mean(coords_y), np.mean(coords_x)
                     
-                    # Estimar dimensiones
-                    length = max(coords_y) - min(coords_y)
-                    width = max(coords_x) - min(coords_x)
+                    # Estimar dimensiones con escalado adaptativo
+                    length_pixels = max(coords_y) - min(coords_y)
+                    width_pixels = max(coords_x) - min(coords_x)
+                    
+                    # Escalado adaptativo basado en profundidad y tipo de agua
+                    if water_context.estimated_depth_m:
+                        if water_context.estimated_depth_m > 3000:  # Aguas muy profundas
+                            # Resolución menor, objetos parecen más pequeños
+                            scale_factor = 8  # Reducido de 15 a 8 metros por píxel
+                        elif water_context.estimated_depth_m > 1000:  # Aguas profundas
+                            scale_factor = 6  # Reducido de 12 a 6
+                        elif water_context.estimated_depth_m > 200:  # Aguas medias
+                            scale_factor = 4  # Reducido de 8 a 4
+                        else:  # Aguas someras
+                            scale_factor = 2  # Reducido de 5 a 2 - Mayor resolución
+                    else:
+                        scale_factor = 5  # Factor por defecto reducido de 10 a 5
+                    
+                    # Ajuste adicional basado en tipo de agua
+                    if water_context.water_type:
+                        if 'deep_ocean' in water_context.water_type.value:
+                            scale_factor *= 1.2  # Océano profundo = objetos más grandes
+                        elif 'coastal' in water_context.water_type.value:
+                            scale_factor *= 0.8  # Aguas costeras = mejor resolución
+                        elif 'river' in water_context.water_type.value:
+                            scale_factor *= 0.6  # Ríos = muy buena resolución
+                    
+                    # Calcular dimensiones finales con escalado adaptativo mejorado
+                    length_m = length_pixels * scale_factor
+                    width_m = width_pixels * scale_factor
+                    
+                    # Aplicar escalado adaptativo adicional basado en múltiples factores
+                    adaptive_scale = self._calculate_adaptive_scale_factor(water_context, length_pixels, width_pixels)
+                    length_m *= adaptive_scale
+                    width_m *= adaptive_scale
+                    
+                    # Aplicar límites realistas basados en contexto mejorado
+                    length_m, width_m = self._apply_realistic_dimensional_limits(
+                        length_m, width_m, water_context
+                    )
+                    
+                    # Verificar y ajustar proporciones realistas (aspect ratio)
+                    length_m, width_m = self._adjust_aspect_ratio(length_m, width_m)
                     
                     # Calcular profundidad de la anomalía
                     region_depths = [bathymetry[p[0], p[1]] for p in region_pixels]
                     depth_anomaly = mean_depth - np.mean(region_depths)
                     
+                    # Calcular coherencia geométrica basada en la forma de la anomalía
+                    aspect_ratio = length_m / width_m if width_m > 0 else 1.0
+                    geometric_coherence = min(1.0, 1.0 / (1.0 + abs(aspect_ratio - 8.0) / 8.0))  # Óptimo alrededor de 8:1
+                    
                     anomaly = {
                         'id': f'submarine_anomaly_{i}',
                         'center_coordinates': (float(center_y), float(center_x)),
                         'dimensions': {
-                            'length_m': float(length * 10),  # Conversión a metros
-                            'width_m': float(width * 10),
+                            'length_m': float(length_m),  # Dimensiones calibradas
+                            'width_m': float(width_m),
                             'depth_m': float(depth_anomaly)
                         },
                         'area_pixels': len(region_pixels),
-                        'confidence': min(1.0, depth_anomaly / std_depth) if std_depth > 0 else 0.5
+                        'confidence': min(1.0, depth_anomaly / std_depth) if std_depth > 0 else 0.5,
+                        'geometric_coherence': geometric_coherence
                     }
                     
                     anomalies.append(anomaly)
@@ -502,7 +547,7 @@ class SubmarineArchaeologyEngine:
                 sediment_penetration=burial_depth / 5.0,  # Normalizado
                 magnetic_anomaly_nt=magnetic_anomaly,
                 detection_confidence=anomaly['confidence'],
-                geometric_coherence=min(1.0, anomaly['dimensions']['length_m'] / anomaly['dimensions']['width_m']),
+                geometric_coherence=anomaly.get('geometric_coherence', 0.5),
                 historical_correlation=0.5  # Se calculará después
             )
             
@@ -581,41 +626,142 @@ class SubmarineArchaeologyEngine:
         return candidates
     
     def _classify_vessel_type(self, signature: SubmarineAnomalySignature) -> Dict[str, float]:
-        """Clasificar tipo de embarcación basado en dimensiones"""
+        """Clasificar tipo de embarcación con algoritmos mejorados"""
         
         length = signature.length_m
         width = signature.width_m
         aspect_ratio = length / width if width > 0 else 1
+        magnetic_signature = signature.magnetic_anomaly_nt
         
         probabilities = {}
         
-        # Clasificación basada en dimensiones típicas
-        if length > 200:  # Embarcaciones grandes
+        # Algoritmo mejorado basado en múltiples características
+        
+        # 1. Clasificación por dimensiones principales
+        if length > 250:  # Embarcaciones muy grandes
+            if aspect_ratio > 9:  # Muy alargadas
+                probabilities['passenger_liner'] = 0.6
+                probabilities['cargo_ship'] = 0.3
+                probabilities['aircraft_carrier'] = 0.1
+            elif 7 < aspect_ratio <= 9:  # Moderadamente alargadas
+                probabilities['cargo_ship'] = 0.5
+                probabilities['passenger_liner'] = 0.3
+                probabilities['warship'] = 0.2
+            else:  # Más anchas (aspect_ratio <= 7)
+                probabilities['warship'] = 0.6
+                probabilities['aircraft_carrier'] = 0.3
+                probabilities['cargo_ship'] = 0.1
+        
+        elif 150 <= length <= 250:  # Embarcaciones grandes
             if aspect_ratio > 8:
-                probabilities['passenger_liner'] = 0.7
-                probabilities['cargo_ship'] = 0.2
-                probabilities['warship'] = 0.1
+                probabilities['cargo_ship'] = 0.5
+                probabilities['passenger_liner'] = 0.3
+                probabilities['warship'] = 0.2
+            elif 6 < aspect_ratio <= 8:
+                probabilities['warship'] = 0.4
+                probabilities['cargo_ship'] = 0.3
+                probabilities['passenger_liner'] = 0.3
             else:
                 probabilities['warship'] = 0.6
-                probabilities['cargo_ship'] = 0.3
-                probabilities['passenger_liner'] = 0.1
+                probabilities['cargo_ship'] = 0.2
+                probabilities['patrol_boat'] = 0.2
         
-        elif 50 < length <= 200:  # Embarcaciones medianas
-            probabilities['cargo_ship'] = 0.4
-            probabilities['warship'] = 0.3
-            probabilities['fishing_vessel'] = 0.2
-            probabilities['merchant_vessel'] = 0.1
+        elif 80 <= length < 150:  # Embarcaciones medianas
+            if aspect_ratio > 7:
+                probabilities['cargo_ship'] = 0.4
+                probabilities['fishing_vessel'] = 0.3
+                probabilities['merchant_vessel'] = 0.3
+            else:
+                probabilities['warship'] = 0.4
+                probabilities['patrol_boat'] = 0.3
+                probabilities['fishing_vessel'] = 0.3
         
-        elif 20 < length <= 50:  # Embarcaciones pequeñas
+        elif 30 <= length < 80:  # Embarcaciones pequeñas
             probabilities['fishing_vessel'] = 0.5
             probabilities['patrol_boat'] = 0.2
-            probabilities['merchant_vessel'] = 0.2
-            probabilities['yacht'] = 0.1
+            probabilities['yacht'] = 0.2
+            probabilities['merchant_vessel'] = 0.1
         
-        else:  # Embarcaciones muy pequeñas
+        else:  # Embarcaciones muy pequeñas (<30m)
             probabilities['fishing_boat'] = 0.6
             probabilities['yacht'] = 0.3
-            probabilities['unknown'] = 0.1
+            probabilities['patrol_boat'] = 0.1
+        
+        # 2. Ajustes basados en firma magnética
+        if magnetic_signature > 1000:  # Alta anomalía magnética
+            # Embarcaciones modernas de acero
+            if 'warship' in probabilities:
+                probabilities['warship'] *= 1.5
+            if 'cargo_ship' in probabilities:
+                probabilities['cargo_ship'] *= 1.3
+            if 'passenger_liner' in probabilities:
+                probabilities['passenger_liner'] *= 1.2
+            # Reducir probabilidad de embarcaciones de madera
+            if 'fishing_boat' in probabilities:
+                probabilities['fishing_boat'] *= 0.3
+            if 'merchant_vessel' in probabilities:
+                probabilities['merchant_vessel'] *= 0.5
+        
+        elif 500 < magnetic_signature <= 1000:  # Anomalía magnética moderada
+            # Embarcaciones mixtas o con componentes metálicos
+            if 'cargo_ship' in probabilities:
+                probabilities['cargo_ship'] *= 1.2
+            if 'fishing_vessel' in probabilities:
+                probabilities['fishing_vessel'] *= 1.1
+        
+        elif magnetic_signature <= 100:  # Baja anomalía magnética
+            # Posiblemente embarcaciones de madera o muy antiguas
+            if 'merchant_vessel' in probabilities:
+                probabilities['merchant_vessel'] *= 1.5
+            if 'fishing_boat' in probabilities:
+                probabilities['fishing_boat'] *= 1.3
+            # Reducir probabilidad de embarcaciones modernas
+            if 'warship' in probabilities:
+                probabilities['warship'] *= 0.5
+            if 'cargo_ship' in probabilities:
+                probabilities['cargo_ship'] *= 0.7
+        
+        # 3. Ajustes basados en coherencia geométrica
+        if signature.geometric_coherence > 0.8:  # Muy bien preservada
+            # Favorece embarcaciones más robustas
+            if 'warship' in probabilities:
+                probabilities['warship'] *= 1.3
+            if 'cargo_ship' in probabilities:
+                probabilities['cargo_ship'] *= 1.2
+        elif signature.geometric_coherence < 0.4:  # Muy deteriorada
+            # Favorece embarcaciones más frágiles o antiguas
+            if 'fishing_vessel' in probabilities:
+                probabilities['fishing_vessel'] *= 1.2
+            if 'merchant_vessel' in probabilities:
+                probabilities['merchant_vessel'] *= 1.3
+        
+        # 4. Ajustes basados en profundidad de enterramiento
+        if signature.burial_depth_m > 5:  # Muy enterrada
+            # Embarcaciones más antiguas tienden a estar más enterradas
+            if 'merchant_vessel' in probabilities:
+                probabilities['merchant_vessel'] *= 1.4
+            if 'fishing_boat' in probabilities:
+                probabilities['fishing_boat'] *= 1.2
+        elif signature.burial_depth_m < 1:  # Poco enterrada
+            # Embarcaciones más recientes o en corrientes fuertes
+            if 'warship' in probabilities:
+                probabilities['warship'] *= 1.2
+            if 'passenger_liner' in probabilities:
+                probabilities['passenger_liner'] *= 1.1
+        
+        # 5. Normalizar probabilidades
+        total = sum(probabilities.values())
+        if total > 0:
+            probabilities = {k: v/total for k, v in probabilities.items()}
+        
+        # 6. Aplicar umbral mínimo y máximo
+        for vessel_type in probabilities:
+            probabilities[vessel_type] = max(0.01, min(0.95, probabilities[vessel_type]))
+        
+        # 7. Re-normalizar después de aplicar umbrales
+        total = sum(probabilities.values())
+        if total > 0:
+            probabilities = {k: v/total for k, v in probabilities.items()}
         
         return probabilities
     
@@ -774,6 +920,141 @@ class SubmarineArchaeologyEngine:
         }
         
         return plan
+    
+    def _calculate_adaptive_scale_factor(self, water_context: WaterContext, length_pixels: int, width_pixels: int) -> float:
+        """Calcular factor de escala adaptativo basado en múltiples características"""
+        
+        base_scale = 1.0
+        
+        # Ajuste basado en tipo de agua específico (más conservador)
+        if water_context.water_type:
+            water_type_adjustments = {
+                'deep_ocean': 1.1,      # Reducido de 1.3 a 1.1
+                'ocean': 1.05,          # Reducido de 1.2 a 1.05
+                'sea': 1.0,             # Referencia base
+                'coastal': 0.9,         # Reducido de 0.8 a 0.9
+                'shallow_water': 0.8,   # Reducido de 0.6 a 0.8
+                'river': 0.7,           # Reducido de 0.5 a 0.7
+                'lake': 0.85            # Reducido de 0.7 a 0.85
+            }
+            
+            for water_type, adjustment in water_type_adjustments.items():
+                if water_type in water_context.water_type.value:
+                    base_scale *= adjustment
+                    break
+        
+        # Ajuste basado en profundidad específica (más conservador)
+        if water_context.estimated_depth_m:
+            depth = water_context.estimated_depth_m
+            if depth > 4000:        # Muy profundo
+                base_scale *= 1.2   # Reducido de 1.4 a 1.2
+            elif depth > 2000:      # Profundo
+                base_scale *= 1.1   # Reducido de 1.2 a 1.1
+            elif depth > 500:       # Medio
+                base_scale *= 1.0
+            elif depth > 100:       # Somero
+                base_scale *= 0.9   # Reducido de 0.8 a 0.9
+            else:                   # Muy somero
+                base_scale *= 0.8   # Reducido de 0.6 a 0.8
+        
+        # Ajuste basado en contexto arqueológico (más conservador)
+        if water_context.historical_shipping_routes:
+            base_scale *= 1.05  # Reducido de 1.1 a 1.05
+        
+        if water_context.known_wrecks_nearby:
+            base_scale *= 1.02  # Reducido de 1.05 a 1.02
+        
+        # Ajuste basado en tamaño de anomalía detectada (más conservador)
+        anomaly_size = length_pixels * width_pixels
+        if anomaly_size > 100:      # Anomalía grande
+            base_scale *= 1.05  # Reducido de 1.1 a 1.05
+        elif anomaly_size < 20:     # Anomalía pequeña
+            base_scale *= 0.95  # Reducido de 0.9 a 0.95
+        
+        # Limitar el factor de escala a rangos más conservadores
+        return max(0.5, min(1.5, base_scale))  # Reducido de (0.3, 2.0) a (0.5, 1.5)
+    
+    def _apply_realistic_dimensional_limits(self, length_m: float, width_m: float, 
+                                          water_context: WaterContext) -> Tuple[float, float]:
+        """Aplicar límites dimensionales realistas basados en contexto mejorado"""
+        
+        # Límites base por tipo de agua
+        if water_context.water_type:
+            if 'deep_ocean' in water_context.water_type.value:
+                # Océano profundo: embarcaciones grandes (transatlánticos, cargueros)
+                min_length, max_length = 80, 400
+                min_width, max_width = 12, 60
+            elif 'ocean' in water_context.water_type.value:
+                # Océano: rango amplio
+                min_length, max_length = 50, 350
+                min_width, max_width = 8, 55
+            elif 'coastal' in water_context.water_type.value:
+                # Costero: embarcaciones variadas
+                min_length, max_length = 15, 300
+                min_width, max_width = 4, 50
+            elif 'river' in water_context.water_type.value:
+                # Río: embarcaciones fluviales
+                min_length, max_length = 10, 150
+                min_width, max_width = 3, 25
+            elif 'lake' in water_context.water_type.value:
+                # Lago: embarcaciones lacustres
+                min_length, max_length = 8, 200
+                min_width, max_width = 2, 30
+            else:
+                # Por defecto
+                min_length, max_length = 20, 300
+                min_width, max_width = 5, 40
+        else:
+            # Sin información de tipo de agua
+            min_length, max_length = 15, 250
+            min_width, max_width = 4, 35
+        
+        # Ajustes adicionales basados en profundidad
+        if water_context.estimated_depth_m:
+            depth = water_context.estimated_depth_m
+            if depth > 3000:
+                # Muy profundo: solo embarcaciones grandes llegan aquí
+                min_length = max(min_length, 100)
+                min_width = max(min_width, 15)
+            elif depth < 50:
+                # Muy somero: embarcaciones más pequeñas también
+                min_length = max(5, min_length * 0.5)
+                min_width = max(2, min_width * 0.5)
+        
+        # Ajustes basados en contexto histórico
+        if water_context.historical_shipping_routes:
+            # Rutas comerciales = embarcaciones más grandes
+            min_length = max(min_length, 50)
+            max_length = min(max_length * 1.2, 450)
+        
+        # Aplicar límites
+        length_m = max(min_length, min(max_length, length_m))
+        width_m = max(min_width, min(max_width, width_m))
+        
+        return length_m, width_m
+    
+    def _adjust_aspect_ratio(self, length_m: float, width_m: float) -> Tuple[float, float]:
+        """Ajustar proporciones para que sean realistas para embarcaciones"""
+        
+        if width_m <= 0:
+            width_m = length_m / 8  # Proporción por defecto
+            return length_m, width_m
+        
+        aspect_ratio = length_m / width_m
+        
+        # Rangos de aspect ratio por tipo de embarcación
+        min_ratio = 2.5   # Embarcaciones muy anchas (ferries, barcazas)
+        max_ratio = 15    # Embarcaciones muy alargadas (submarinos, algunos cargueros)
+        target_ratio = 8  # Proporción típica para la mayoría de embarcaciones
+        
+        if aspect_ratio > max_ratio:
+            # Demasiado alargado - ajustar anchura
+            width_m = length_m / target_ratio
+        elif aspect_ratio < min_ratio:
+            # Demasiado ancho - ajustar longitud
+            length_m = width_m * target_ratio
+        
+        return length_m, width_m
     
     def _initialize_instruments(self) -> Dict[str, Any]:
         """Inicializar configuración de instrumentos"""
