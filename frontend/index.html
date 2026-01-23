@@ -1283,6 +1283,16 @@
 
             <div class="controls-section">
                 <h3>📦 Exportación</h3>
+                
+                <!-- NOTA DE TRANSPARENCIA DE DATOS -->
+                <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 0.75rem; margin-bottom: 1rem; font-size: 0.8rem;">
+                    <strong>⚠️ Transparencia de Datos:</strong><br>
+                    • <strong>NDVI/Térmico</strong>: Datos reales disponibles<br>
+                    • <strong>LiDAR</strong>: Datos sintéticos realistas<br>
+                    • <strong>DEM</strong>: Resolución gruesa (30m)<br>
+                    • Los porcentajes reflejan potencial arqueológico basado en datos disponibles
+                </div>
+                
                 <button onclick="exportCompleteAnalysis()" class="export-btn json" style="margin-bottom: 0.5rem;">
                     📊 ANÁLISIS COMPLETO (JSON)
                 </button>
@@ -2810,7 +2820,7 @@
             const icesat2Prob = stats.icesat2_profiles?.archaeological_probability || 0;
             
             const circularEvidence = Math.max(demProb, thermalProb, icesat2Prob);
-            console.log(`⭕ Evidencia CIRCULAR: DEM=${(demProb*100).toFixed(1)}%, Térmico=${(thermalProb*100).toFixed(1)}%, ICESat-2=${(icesat2Prob*100).toFixed(1)}% → Max=${(circularEvidence*100).toFixed(1)}%`);
+            console.log(`⭕ Evidencia CIRCULAR: DEM-Grueso=${(demProb*100).toFixed(1)}%, Térmico=${(thermalProb*100).toFixed(1)}%, ICESat-2=${(icesat2Prob*100).toFixed(1)}% → Max=${(circularEvidence*100).toFixed(1)}%`);
             
             if (circularEvidence > 0.30) { // Umbral moderado para circulares
                 console.log('✅ ANOMALÍA CIRCULAR DETECTADA');
@@ -2818,10 +2828,10 @@
                     type: 'circular',
                     name: 'Anomalías Circulares',
                     icon: '⭕',
-                    description: 'Plazas, fosos, túmulos detectados por DEM/Térmico',
+                    description: 'Plazas, fosos, túmulos detectados por DEM-Grueso/Térmico',
                     confidence: circularEvidence,
                     color: '#9932cc',
-                    evidence: `DEM: ${(demProb*100).toFixed(1)}%, Térmico: ${(thermalProb*100).toFixed(1)}%`
+                    evidence: `DEM-Grueso: ${(demProb*100).toFixed(1)}%, Térmico: ${(thermalProb*100).toFixed(1)}%`
                 });
             } else {
                 console.log(`❌ ANOMALÍA CIRCULAR NO DETECTADA (evidencia: ${(circularEvidence*100).toFixed(1)}% < 30%)`);
@@ -2833,7 +2843,7 @@
             const gediProb = stats.vegetation_height?.archaeological_probability || 0;
             
             const rectangularEvidence = Math.max(ndviProb, lidarProb, gediProb);
-            console.log(`🔲 Evidencia RECTANGULAR: NDVI=${(ndviProb*100).toFixed(1)}%, LiDAR=${(lidarProb*100).toFixed(1)}%, GEDI=${(gediProb*100).toFixed(1)}% → Max=${(rectangularEvidence*100).toFixed(1)}%`);
+            console.log(`🔲 Evidencia RECTANGULAR: NDVI=${(ndviProb*100).toFixed(1)}%, LiDAR-Sintético=${(lidarProb*100).toFixed(1)}%, GEDI=${(gediProb*100).toFixed(1)}% → Max=${(rectangularEvidence*100).toFixed(1)}%`);
             
             if (rectangularEvidence > 0.25) { // Umbral moderado-bajo para rectangulares
                 console.log('✅ ANOMALÍA RECTANGULAR DETECTADA');
@@ -2841,10 +2851,10 @@
                     type: 'rectangular',
                     name: 'Anomalías Rectangulares',
                     icon: '🔲',
-                    description: 'Edificios, terrazas, campos detectados por NDVI/LiDAR',
+                    description: 'Edificios, terrazas, campos detectados por NDVI/LiDAR-Sintético',
                     confidence: rectangularEvidence,
                     color: '#2196f3',
-                    evidence: `NDVI: ${(ndviProb*100).toFixed(1)}%, LiDAR: ${(lidarProb*100).toFixed(1)}%`
+                    evidence: `NDVI: ${(ndviProb*100).toFixed(1)}%, LiDAR-Sintético: ${(lidarProb*100).toFixed(1)}%`
                 });
             } else {
                 console.log(`❌ ANOMALÍA RECTANGULAR NO DETECTADA (evidencia: ${(rectangularEvidence*100).toFixed(1)}% < 25%)`);
