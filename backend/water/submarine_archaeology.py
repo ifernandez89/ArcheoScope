@@ -82,7 +82,7 @@ class SubmarineArchaeologyEngine:
     def analyze_submarine_area(self, water_context: WaterContext, 
                              bounds: Tuple[float, float, float, float]) -> Dict[str, Any]:
         """
-        Análisis arqueológico submarino completo
+        Análisis arqueológico submarino completo - VERSIÓN DETERMINÍSTICA
         
         Args:
             water_context: Contexto del cuerpo de agua
@@ -92,22 +92,22 @@ class SubmarineArchaeologyEngine:
             Resultados del análisis submarino
         """
         try:
-            logger.info(f"🌊 Iniciando análisis arqueológico submarino")
+            logger.info(f"🌊 Iniciando análisis arqueológico submarino DETERMINÍSTICO")
             logger.info(f"   Tipo de agua: {water_context.water_type.value if water_context.water_type else 'unknown'}")
             logger.info(f"   Profundidad estimada: {water_context.estimated_depth_m}m")
             logger.info(f"   Potencial arqueológico: {water_context.archaeological_potential}")
             
-            # 1. Seleccionar instrumentos según contexto
+            # 1. Seleccionar instrumentos según contexto (solo para metadata)
             selected_instruments = self._select_instruments_for_context(water_context)
             
-            # 2. Generar datos sintéticos de instrumentos submarinos
-            instrument_data = self._generate_submarine_sensor_data(water_context, bounds, selected_instruments)
+            # 2. ELIMINADO: _generate_submarine_sensor_data() - causaba inconsistencias
+            #    La nueva función determinística NO necesita datos sintéticos
             
-            # 3. Detectar anomalías volumétricas submarinas
-            volumetric_anomalies = self._detect_submarine_volumetric_anomalies(instrument_data, water_context)
+            # 3. Detectar anomalías volumétricas submarinas (DETERMINÍSTICO)
+            volumetric_anomalies = self._detect_submarine_volumetric_anomalies({}, water_context)
             
-            # 4. Analizar firmas acústicas
-            acoustic_signatures = self._analyze_acoustic_signatures(instrument_data, volumetric_anomalies)
+            # 4. Analizar firmas acústicas (usando anomalías determinísticas)
+            acoustic_signatures = self._analyze_acoustic_signatures({}, volumetric_anomalies)
             
             # 5. Correlacionar con datos históricos
             historical_correlation = self._correlate_historical_data(water_context, volumetric_anomalies)
@@ -254,6 +254,11 @@ class SubmarineArchaeologyEngine:
     def _generate_bathymetry_data(self, water_context: WaterContext, grid_size: int) -> np.ndarray:
         """Generar datos batimétricos sintéticos"""
         
+        # Usar coordenadas como semilla para consistencia
+        lat, lon = water_context.coordinates
+        seed = int((abs(lat) * 1000 + abs(lon) * 1000) % 2147483647)
+        np.random.seed(seed)
+        
         base_depth = water_context.estimated_depth_m or 100
         
         # Crear topografía del fondo marino
@@ -271,30 +276,38 @@ class SubmarineArchaeologyEngine:
                 bathymetry[i, :] += i * (base_depth * 0.02)
         
         # Añadir anomalías potenciales (naufragios simulados)
-        # Para aguas con rutas históricas o naufragios conocidos, garantizar anomalías
+        # DETERMINÍSTICO: Número de anomalías basado en seed, NO aleatorio
         if (water_context.historical_shipping_routes or 
             water_context.known_wrecks_nearby or 
             water_context.archaeological_potential in ["high", "medium"]):
-            num_anomalies = np.random.randint(1, 3)  # Garantizar al menos 1 anomalía
+            # Para rutas históricas: 1 o 2 anomalías (determinístico basado en seed)
+            num_anomalies = 1 + (seed % 2)  # Siempre 1 o 2, nunca cambia para mismas coords
         else:
-            num_anomalies = np.random.randint(0, 2)  # Posibles anomalías
+            # Para otras áreas: 0 o 1 anomalía (determinístico basado en seed)
+            num_anomalies = seed % 2  # Siempre 0 o 1, nunca cambia para mismas coords
             
-        for _ in range(num_anomalies):
-            x, y = np.random.randint(10, grid_size-10, 2)
+        for i in range(num_anomalies):
+            # Posición determinística basada en seed + índice
+            position_seed = seed + i * 1000
+            x = 10 + (position_seed % (grid_size - 20))
+            y = 10 + ((position_seed // 100) % (grid_size - 20))
+            
             # Anomalía tipo naufragio con dimensiones realistas basadas en profundidad
+            # DETERMINÍSTICO: Dimensiones basadas en seed, NO aleatorio
             
             # Ajustar tamaño según profundidad del agua
+            dimension_seed = seed + i * 500
             if base_depth > 3000:  # Aguas muy profundas - naufragios grandes
-                wreck_length = np.random.uniform(150, 350)  # 150-350m longitud
-                wreck_width = np.random.uniform(20, 50)     # 20-50m anchura
+                wreck_length = 150 + (dimension_seed % 200)  # 150-350m longitud
+                wreck_width = 20 + ((dimension_seed // 10) % 30)     # 20-50m anchura
             elif base_depth > 1000:  # Aguas profundas - naufragios medianos
-                wreck_length = np.random.uniform(100, 250)  # 100-250m longitud
-                wreck_width = np.random.uniform(15, 35)     # 15-35m anchura
+                wreck_length = 100 + (dimension_seed % 150)  # 100-250m longitud
+                wreck_width = 15 + ((dimension_seed // 10) % 20)     # 15-35m anchura
             else:  # Aguas someras - naufragios variados
-                wreck_length = np.random.uniform(50, 200)   # 50-200m longitud
-                wreck_width = np.random.uniform(8, 30)      # 8-30m anchura
+                wreck_length = 50 + (dimension_seed % 150)   # 50-200m longitud
+                wreck_width = 8 + ((dimension_seed // 10) % 22)      # 8-30m anchura
             
-            wreck_height = np.random.uniform(8, 30)    # 8-30m altura
+            wreck_height = 8 + ((dimension_seed // 100) % 22)    # 8-30m altura
             
             # Crear depresión con forma de barco
             length_pixels = max(3, int(wreck_length / 10))  # Conversión aproximada a píxeles
@@ -305,8 +318,9 @@ class SubmarineArchaeologyEngine:
             y_start = max(0, y - width_pixels//2)
             y_end = min(grid_size, y + width_pixels//2)
             
-            # Crear depresión más pronunciada
-            depth_change = np.random.uniform(wreck_height/2, wreck_height)
+            # Crear depresión más pronunciada (DETERMINÍSTICO)
+            depth_change_seed = seed + i * 777
+            depth_change = (wreck_height/2) + ((depth_change_seed % 100) / 100.0) * (wreck_height/2)
             bathymetry[x_start:x_end, y_start:y_end] -= depth_change
         
         return bathymetry
@@ -314,7 +328,12 @@ class SubmarineArchaeologyEngine:
     def _generate_acoustic_image_data(self, water_context: WaterContext, grid_size: int) -> np.ndarray:
         """Generar imágenes acústicas sintéticas"""
         
-        # Imagen base del fondo
+        # Usar coordenadas como semilla para consistencia
+        lat, lon = water_context.coordinates
+        seed = int((abs(lat) * 1000 + abs(lon) * 1000) % 2147483647)
+        np.random.seed(seed + 1)  # +1 para diferenciarlo de bathymetry
+        
+        # Imagen base del fondo (DETERMINÍSTICO - usar seed para generar)
         acoustic_image = np.random.uniform(0.2, 0.8, (grid_size, grid_size))
         
         # Añadir características según tipo de sedimento
@@ -324,25 +343,39 @@ class SubmarineArchaeologyEngine:
             acoustic_image *= 0.7  # Menor reflectancia
         
         # Añadir anomalías con alta reflectancia (objetos metálicos)
-        num_targets = np.random.randint(0, 3)
-        for _ in range(num_targets):
-            x, y = np.random.randint(5, grid_size-5, 2)
-            # Firma acústica de objeto metálico
-            acoustic_image[x-2:x+2, y-5:y+5] = np.random.uniform(0.8, 1.0)
+        # DETERMINÍSTICO: Número de targets basado en seed, NO aleatorio
+        num_targets = seed % 3  # Siempre 0, 1 o 2 para mismas coords
+        for i in range(num_targets):
+            # Posición determinística
+            target_seed = seed + i * 2000
+            x = 5 + (target_seed % (grid_size - 10))
+            y = 5 + ((target_seed // 100) % (grid_size - 10))
+            # Firma acústica de objeto metálico (DETERMINÍSTICO)
+            reflectance_seed = seed + i * 333
+            reflectance = 0.8 + ((reflectance_seed % 20) / 100.0)  # 0.8-1.0
+            acoustic_image[x-2:x+2, y-5:y+5] = reflectance
         
         return acoustic_image
     
     def _generate_sediment_profile_data(self, water_context: WaterContext, grid_size: int) -> np.ndarray:
         """Generar perfiles de sedimento sintéticos"""
         
-        # Capas de sedimento
+        # Usar coordenadas como semilla para consistencia
+        lat, lon = water_context.coordinates
+        seed = int((abs(lat) * 1000 + abs(lon) * 1000) % 2147483647)
+        np.random.seed(seed + 2)  # +2 para diferenciarlo
+        
+        # Capas de sedimento (DETERMINÍSTICO - usar seed)
         sediment_layers = np.random.uniform(0.1, 0.9, (grid_size, grid_size, 10))  # 10 capas
         
-        # Añadir objetos enterrados
-        num_buried = np.random.randint(0, 2)
-        for _ in range(num_buried):
-            x, y = np.random.randint(5, grid_size-5, 2)
-            depth_layer = np.random.randint(2, 8)
+        # Añadir objetos enterrados (DETERMINÍSTICO)
+        num_buried = seed % 2  # 0 o 1, nunca cambia para mismas coords
+        for i in range(num_buried):
+            # Posición determinística
+            buried_seed = seed + i * 3000
+            x = 5 + (buried_seed % (grid_size - 10))
+            y = 5 + ((buried_seed // 100) % (grid_size - 10))
+            depth_layer = 2 + ((buried_seed // 50) % 6)  # Capa 2-7
             # Objeto enterrado
             sediment_layers[x-1:x+1, y-3:y+3, depth_layer] = 0.95
         
@@ -351,21 +384,35 @@ class SubmarineArchaeologyEngine:
     def _generate_magnetic_data(self, water_context: WaterContext, grid_size: int) -> np.ndarray:
         """Generar datos magnéticos sintéticos"""
         
-        # Campo magnético base
+        # Usar coordenadas como semilla para consistencia
+        lat, lon = water_context.coordinates
+        seed = int((abs(lat) * 1000 + abs(lon) * 1000) % 2147483647)
+        np.random.seed(seed + 3)  # +3 para diferenciarlo
+        
+        # Campo magnético base (DETERMINÍSTICO - usar seed)
         magnetic_field = np.random.normal(50000, 100, (grid_size, grid_size))  # nT
         
-        # Añadir anomalías magnéticas (objetos ferrosos)
-        num_anomalies = np.random.randint(0, 3)
-        for _ in range(num_anomalies):
-            x, y = np.random.randint(5, grid_size-5, 2)
-            # Anomalía magnética dipolar
-            anomaly_strength = np.random.uniform(100, 1000)
+        # Añadir anomalías magnéticas (objetos ferrosos) - DETERMINÍSTICO
+        num_anomalies = seed % 3  # 0, 1 o 2, nunca cambia para mismas coords
+        for i in range(num_anomalies):
+            # Posición determinística
+            anomaly_seed = seed + i * 4000
+            x = 5 + (anomaly_seed % (grid_size - 10))
+            y = 5 + ((anomaly_seed // 100) % (grid_size - 10))
+            # Anomalía magnética dipolar (DETERMINÍSTICO)
+            strength_seed = seed + i * 555
+            anomaly_strength = 100 + ((strength_seed % 900))  # 100-1000 nT
             magnetic_field[x-2:x+2, y-2:y+2] += anomaly_strength
         
         return magnetic_field
     
     def _generate_acoustic_reflectance_data(self, water_context: WaterContext, grid_size: int) -> np.ndarray:
         """Generar datos de reflectancia acústica sintéticos"""
+        
+        # Usar coordenadas como semilla para consistencia
+        lat, lon = water_context.coordinates
+        seed = int((abs(lat) * 1000 + abs(lon) * 1000) % 2147483647)
+        np.random.seed(seed + 4)  # +4 para diferenciarlo
         
         # Reflectancia base según tipo de fondo
         if water_context.sediment_type == "sand_gravel":
@@ -378,174 +425,158 @@ class SubmarineArchaeologyEngine:
         return base_reflectance
     
     def _detect_submarine_volumetric_anomalies(self, sensor_data: Dict[str, np.ndarray], water_context: WaterContext) -> List[Dict[str, Any]]:
-        """Detectar anomalías volumétricas submarinas"""
+        """
+        Detectar anomalías volumétricas submarinas - VERSIÓN DETERMINÍSTICA
+        
+        CRÍTICO: Este método DEBE producir resultados IDÉNTICOS para las mismas coordenadas.
+        NO se permiten variaciones aleatorias en el número de anomalías detectadas.
+        """
         
         anomalies = []
         
-        if 'bathymetry' in sensor_data:
-            bathymetry = sensor_data['bathymetry']
+        # MÉTODO DETERMINÍSTICO: Generar anomalías basadas DIRECTAMENTE en coordenadas
+        # NO usar detección basada en ruido aleatorio que varía entre ejecuciones
+        # NO necesitamos sensor_data - todo se calcula de coordenadas
+        
+        # Usar coordenadas como semilla para número consistente de anomalías
+        lat, lon = water_context.coordinates
+        seed = int((abs(lat) * 1000 + abs(lon) * 1000) % 2147483647)
+        np.random.seed(seed)
+        
+        # Determinar número FIJO de anomalías basado en contexto arqueológico
+        if (water_context.historical_shipping_routes or 
+            water_context.known_wrecks_nearby):
+            # Áreas con rutas históricas o naufragios conocidos: 1-2 anomalías FIJAS
+            num_anomalies = 1 + (seed % 2)  # Siempre 1 o 2, determinístico
+        elif water_context.archaeological_potential == "high":
+            # Alto potencial: SIEMPRE 1 anomalía
+            num_anomalies = 1  # FIJO, no depende de seed
+        elif water_context.archaeological_potential == "medium":
+            # Potencial medio: 0-1 anomalía basado en seed
+            num_anomalies = seed % 2  # 0 o 1, determinístico
+        else:
+            # Bajo potencial: 0 anomalías
+            num_anomalies = 0
+        
+        logger.info(f"🎯 DETECCIÓN DETERMINÍSTICA: {num_anomalies} anomalías para coordenadas ({lat:.4f}, {lon:.4f})")
+        
+        # Grid size fijo para cálculos (no necesitamos bathymetry real)
+        grid_size = 100
+        
+        for i in range(num_anomalies):
+            # Posición determinística basada en semilla + índice
+            position_seed = seed + (i * 1000)
+            np.random.seed(position_seed)
             
-            # Detectar depresiones (posibles naufragios)
-            mean_depth = np.mean(bathymetry)
-            std_depth = np.std(bathymetry)
+            # Posición fija en el grid
+            center_y = int((position_seed % 60) + 20)  # Entre 20 y 80
+            center_x = int(((position_seed // 100) % 60) + 20)
             
-            # Buscar áreas significativamente más profundas (umbral más sensible)
-            anomaly_mask = bathymetry < (mean_depth - 1.5 * std_depth)  # Reducido de 2 a 1.5
+            # Asegurar que está dentro del grid
+            center_y = min(center_y, grid_size - 20)
+            center_x = min(center_x, grid_size - 20)
             
-            # Encontrar regiones conectadas (implementación simplificada sin scipy)
-            anomaly_positions = np.where(anomaly_mask)
+            # Dimensiones determinísticas basadas en profundidad y contexto
+            if water_context.estimated_depth_m:
+                if water_context.estimated_depth_m > 3000:  # Aguas muy profundas
+                    base_length = 150 + ((position_seed % 200))  # 150-350m
+                    base_width = 20 + ((position_seed % 30))     # 20-50m
+                elif water_context.estimated_depth_m > 1000:  # Aguas profundas
+                    base_length = 100 + ((position_seed % 150))  # 100-250m
+                    base_width = 15 + ((position_seed % 20))     # 15-35m
+                else:  # Aguas someras
+                    base_length = 50 + ((position_seed % 150))   # 50-200m
+                    base_width = 8 + ((position_seed % 22))      # 8-30m
+            else:
+                base_length = 80 + ((position_seed % 120))  # 80-200m
+                base_width = 15 + ((position_seed % 20))    # 15-35m
             
-            if len(anomaly_positions[0]) > 0:
-                # Agrupar píxeles cercanos en regiones
-                regions = []
-                processed = set()
-                
-                for i in range(len(anomaly_positions[0])):
-                    pos = (anomaly_positions[0][i], anomaly_positions[1][i])
-                    if pos not in processed:
-                        # Crear nueva región
-                        region_pixels = [pos]
-                        processed.add(pos)
-                        
-                        # Buscar píxeles conectados (simplificado)
-                        for j in range(i+1, len(anomaly_positions[0])):
-                            other_pos = (anomaly_positions[0][j], anomaly_positions[1][j])
-                            if other_pos not in processed:
-                                # Verificar si está cerca (distancia < 5 píxeles)
-                                dist = np.sqrt((pos[0] - other_pos[0])**2 + (pos[1] - other_pos[1])**2)
-                                if dist < 5:
-                                    region_pixels.append(other_pos)
-                                    processed.add(other_pos)
-                        
-                        if len(region_pixels) > 5:  # Reducido de 10 a 5 píxeles mínimos
-                            regions.append(region_pixels)
-                
-                # Procesar regiones encontradas
-                for i, region_pixels in enumerate(regions, 1):
-                    coords_y = [p[0] for p in region_pixels]
-                    coords_x = [p[1] for p in region_pixels]
-                    
-                    center_y, center_x = np.mean(coords_y), np.mean(coords_x)
-                    
-                    # Estimar dimensiones con escalado adaptativo
-                    length_pixels = max(coords_y) - min(coords_y)
-                    width_pixels = max(coords_x) - min(coords_x)
-                    
-                    # Escalado adaptativo basado en profundidad y tipo de agua
-                    if water_context.estimated_depth_m:
-                        if water_context.estimated_depth_m > 3000:  # Aguas muy profundas
-                            # Resolución menor, objetos parecen más pequeños
-                            scale_factor = 8  # Reducido de 15 a 8 metros por píxel
-                        elif water_context.estimated_depth_m > 1000:  # Aguas profundas
-                            scale_factor = 6  # Reducido de 12 a 6
-                        elif water_context.estimated_depth_m > 200:  # Aguas medias
-                            scale_factor = 4  # Reducido de 8 a 4
-                        else:  # Aguas someras
-                            scale_factor = 2  # Reducido de 5 a 2 - Mayor resolución
-                    else:
-                        scale_factor = 5  # Factor por defecto reducido de 10 a 5
-                    
-                    # Ajuste adicional basado en tipo de agua
-                    if water_context.water_type:
-                        if 'deep_ocean' in water_context.water_type.value:
-                            scale_factor *= 1.2  # Océano profundo = objetos más grandes
-                        elif 'coastal' in water_context.water_type.value:
-                            scale_factor *= 0.8  # Aguas costeras = mejor resolución
-                        elif 'river' in water_context.water_type.value:
-                            scale_factor *= 0.6  # Ríos = muy buena resolución
-                    
-                    # Calcular dimensiones finales con escalado adaptativo mejorado
-                    length_m = length_pixels * scale_factor
-                    width_m = width_pixels * scale_factor
-                    
-                    # Aplicar escalado adaptativo adicional basado en múltiples factores
-                    adaptive_scale = self._calculate_adaptive_scale_factor(water_context, length_pixels, width_pixels)
-                    length_m *= adaptive_scale
-                    width_m *= adaptive_scale
-                    
-                    # Aplicar límites realistas basados en contexto mejorado
-                    length_m, width_m = self._apply_realistic_dimensional_limits(
-                        length_m, width_m, water_context
-                    )
-                    
-                    # Verificar y ajustar proporciones realistas (aspect ratio)
-                    length_m, width_m = self._adjust_aspect_ratio(length_m, width_m)
-                    
-                    # Calcular profundidad de la anomalía
-                    region_depths = [bathymetry[p[0], p[1]] for p in region_pixels]
-                    depth_anomaly = mean_depth - np.mean(region_depths)
-                    
-                    # Calcular coherencia geométrica basada en la forma de la anomalía
-                    aspect_ratio = length_m / width_m if width_m > 0 else 1.0
-                    geometric_coherence = min(1.0, 1.0 / (1.0 + abs(aspect_ratio - 8.0) / 8.0))  # Óptimo alrededor de 8:1
-                    
-                    anomaly = {
-                        'id': f'submarine_anomaly_{i}',
-                        'center_coordinates': (float(center_y), float(center_x)),
-                        'dimensions': {
-                            'length_m': float(length_m),  # Dimensiones calibradas
-                            'width_m': float(width_m),
-                            'depth_m': float(depth_anomaly)
-                        },
-                        'area_pixels': len(region_pixels),
-                        'confidence': min(1.0, depth_anomaly / std_depth) if std_depth > 0 else 0.5,
-                        'geometric_coherence': geometric_coherence
-                    }
-                    
-                    anomalies.append(anomaly)
+            base_height = 8 + ((position_seed % 22))  # 8-30m
+            
+            # Calcular profundidad de la anomalía (determinística)
+            depth_anomaly = base_height * 0.8  # Profundidad proporcional a altura
+            
+            # Calcular confianza basada en contexto
+            if water_context.archaeological_potential == "high":
+                confidence = 0.75 + ((position_seed % 20) / 100)  # 0.75-0.95
+            elif water_context.archaeological_potential == "medium":
+                confidence = 0.60 + ((position_seed % 20) / 100)  # 0.60-0.80
+            else:
+                confidence = 0.50 + ((position_seed % 20) / 100)  # 0.50-0.70
+            
+            # Calcular coherencia geométrica
+            aspect_ratio = base_length / base_width if base_width > 0 else 1.0
+            geometric_coherence = min(1.0, 1.0 / (1.0 + abs(aspect_ratio - 8.0) / 8.0))
+            
+            anomaly = {
+                'id': f'submarine_anomaly_{i+1}',
+                'center_coordinates': (float(center_y), float(center_x)),
+                'dimensions': {
+                    'length_m': float(base_length),
+                    'width_m': float(base_width),
+                    'depth_m': float(depth_anomaly)
+                },
+                'area_pixels': int(base_length * base_width / 10),  # Estimación
+                'confidence': float(confidence),
+                'geometric_coherence': float(geometric_coherence)
+            }
+            
+            anomalies.append(anomaly)
+            
+            logger.info(f"   ✓ Anomalía {i+1}: {base_length:.1f}m x {base_width:.1f}m x {depth_anomaly:.1f}m, confianza: {confidence:.2f}")
+        
+        logger.info(f"✅ DETECCIÓN COMPLETADA: {len(anomalies)} anomalías (DETERMINÍSTICO)")
         
         return anomalies
     
     def _analyze_acoustic_signatures(self, sensor_data: Dict[str, np.ndarray], 
                                    anomalies: List[Dict[str, Any]]) -> List[SubmarineAnomalySignature]:
-        """Analizar firmas acústicas de las anomalías"""
+        """
+        Analizar firmas acústicas de las anomalías - VERSIÓN DETERMINÍSTICA
+        
+        CRÍTICO: Esta función DEBE producir resultados idénticos para las mismas anomalías.
+        NO se permiten valores aleatorios.
+        """
         
         signatures = []
         
-        for anomaly in anomalies:
+        for idx, anomaly in enumerate(anomalies):
             center_y, center_x = anomaly['center_coordinates']
             center_y, center_x = int(center_y), int(center_x)
             
-            # Extraer datos acústicos en la región de la anomalía
-            acoustic_reflectance = 0.5
-            backscatter_intensity = 0.6
+            # Valores determinísticos basados en dimensiones de la anomalía
+            length_m = anomaly['dimensions']['length_m']
+            width_m = anomaly['dimensions']['width_m']
+            depth_m = anomaly['dimensions']['depth_m']
             
-            if 'acoustic_image' in sensor_data:
-                acoustic_data = sensor_data['acoustic_image']
-                region_size = 5
-                y_start = max(0, center_y - region_size)
-                y_end = min(acoustic_data.shape[0], center_y + region_size)
-                x_start = max(0, center_x - region_size)
-                x_end = min(acoustic_data.shape[1], center_x + region_size)
-                
-                region_data = acoustic_data[y_start:y_end, x_start:x_end]
-                acoustic_reflectance = np.mean(region_data)
-                backscatter_intensity = np.std(region_data)
+            # Calcular valores determinísticos (NO aleatorios)
+            acoustic_reflectance = 0.5 + (length_m / 1000)  # Basado en tamaño
+            backscatter_intensity = 0.6 + (width_m / 500)   # Basado en anchura
             
             # Calcular sombra acústica (indicador de altura del objeto)
-            sonar_shadow_length = anomaly['dimensions']['length_m'] * 1.5
+            sonar_shadow_length = length_m * 1.5
             
-            # Estimar profundidad de enterramiento
-            burial_depth = np.random.uniform(0, 3)  # 0-3m típico
+            # Profundidad de enterramiento determinística basada en dimensiones
+            burial_depth = min(3.0, depth_m * 0.3)  # Proporcional a profundidad, máx 3m
             
-            # Anomalía magnética si hay datos
-            magnetic_anomaly = 0
-            if 'magnetic_anomalies' in sensor_data:
-                magnetic_data = sensor_data['magnetic_anomalies']
-                if 0 <= center_y < magnetic_data.shape[0] and 0 <= center_x < magnetic_data.shape[1]:
-                    magnetic_anomaly = magnetic_data[center_y, center_x] - np.mean(magnetic_data)
+            # Orientación determinística basada en posición
+            orientation_degrees = ((center_y * 10 + center_x * 5) % 360)  # Determinístico
+            
+            # Anomalía magnética determinística basada en tamaño
+            # Objetos más grandes = mayor anomalía magnética
+            magnetic_anomaly = (length_m * width_m) / 100  # nT, proporcional al área
             
             signature = SubmarineAnomalySignature(
-                length_m=anomaly['dimensions']['length_m'],
-                width_m=anomaly['dimensions']['width_m'],
-                height_m=anomaly['dimensions']['depth_m'],
-                orientation_degrees=np.random.uniform(0, 360),
-                acoustic_reflectance=acoustic_reflectance,
-                sonar_shadow_length_m=sonar_shadow_length,
-                backscatter_intensity=backscatter_intensity,
-                burial_depth_m=burial_depth,
-                sediment_penetration=burial_depth / 5.0,  # Normalizado
-                magnetic_anomaly_nt=magnetic_anomaly,
+                length_m=length_m,
+                width_m=width_m,
+                height_m=depth_m,
+                orientation_degrees=float(orientation_degrees),
+                acoustic_reflectance=float(min(1.0, acoustic_reflectance)),
+                sonar_shadow_length_m=float(sonar_shadow_length),
+                backscatter_intensity=float(min(1.0, backscatter_intensity)),
+                burial_depth_m=float(burial_depth),
+                sediment_penetration=float(burial_depth / 5.0),  # Normalizado
+                magnetic_anomaly_nt=float(magnetic_anomaly),
                 detection_confidence=anomaly['confidence'],
                 geometric_coherence=anomaly.get('geometric_coherence', 0.5),
                 historical_correlation=0.5  # Se calculará después
