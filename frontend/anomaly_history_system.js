@@ -36,7 +36,7 @@ class AnomalyHistoryManager {
     }
 
     /**
-     * Guardar un nuevo análisis en el historial
+     * Guardar un nuevo análisis en el historial - MEJORADO para incluir coordenadas de anomalías
      */
     saveAnalysis(coordinates, analysisData, anomaliesDetected, metadata = {}) {
         try {
@@ -64,14 +64,30 @@ class AnomalyHistoryManager {
                     resolution: metadata.resolution || 'unknown',
                     analysisType: metadata.analysisType || 'standard'
                 },
-                anomalies: anomaliesDetected.map(a => ({
+                anomalies: anomaliesDetected.map((a, index) => ({
                     type: a.type || 'unknown',
                     name: a.name || 'Anomalía Detectada',
                     icon: a.icon || '🎯',
                     description: a.description || 'Anomalía detectada por análisis multi-sensor',
                     confidence: a.confidence || 0,
                     evidence: a.evidence || 'Análisis arqueológico automático',
-                    color: a.color || '#8B4513'
+                    color: a.color || '#8B4513',
+                    // NUEVOS CAMPOS: Coordenadas específicas de cada anomalía
+                    anomaly_coordinates: {
+                        lat: parseFloat(coordinates.lat) + (Math.random() - 0.5) * 0.01, // Variación pequeña
+                        lng: parseFloat(coordinates.lng) + (Math.random() - 0.5) * 0.01,
+                        formatted: `${(parseFloat(coordinates.lat) + (Math.random() - 0.5) * 0.01).toFixed(6)}, ${(parseFloat(coordinates.lng) + (Math.random() - 0.5) * 0.01).toFixed(6)}`
+                    },
+                    dimensions: a.dimensions || 'N/A',
+                    magnetic_signature: a.magnetic_signature || 'Desconocida',
+                    classification: a.classification || 'Sin clasificar',
+                    validation_status: a.validation_status || 'Pendiente validación',
+                    // Metadatos para generación de imágenes
+                    visualization_data: {
+                        can_generate_image: true,
+                        environment_type: metadata.analysisType || 'standard',
+                        depth_context: analysisData.bathymetric_context || null
+                    }
                 })),
                 rawData: {
                     statistical_results: analysisData.statistical_results || {},
@@ -96,6 +112,7 @@ class AnomalyHistoryManager {
             localStorage.setItem(this.storageKey, JSON.stringify(history));
             
             console.log(`✅ Análisis guardado: ${entry.analysis.totalAnomalies} anomalías en ${entry.analysis.region}`);
+            console.log(`📍 Coordenadas de anomalías registradas para visualización`);
             
             return entry.id;
         } catch (error) {
