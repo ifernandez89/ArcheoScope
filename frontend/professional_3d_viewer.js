@@ -1627,7 +1627,7 @@ class Professional3DViewer {
                 faces: this.currentMesh.geometry.index?.count / 3 || this.currentMesh.geometry.attributes.position.count / 3,
                 materials: Array.isArray(this.currentMesh.material) ? this.currentMesh.material.length : 1
             }
-        };
+        }
         
         const blob = new Blob([JSON.stringify(analysisData, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);

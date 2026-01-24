@@ -160,7 +160,7 @@ system_components = {
     'water_detector': None,        # NUEVO: Detector de agua
     'submarine_archaeology': None, # NUEVO: Arqueología submarina
     'ice_detector': None,          # NUEVO: Detector de hielo
-    'cryoarchaeology': None        # NUEVO: Crioarqueología
+        'cryoarchaeology': None        # NUEVO: Crioarqueologia
 }
 
 def initialize_system():
@@ -754,29 +754,26 @@ def integrate_archaeological_analysis_with_temporal_validation(basic_analysis: D
             logger.info("🚫 EXCLUSIÓN MODERNA APLICADA")
         else:
             # VALIDACIÓN TEMPORAL: reafirmar o descartar anomalías
-            if temporal_score > 0.6 and integrated_score > 0.5:
-                final_classification = "archaeological_potential_temporally_validated"
-                temporal_validation = "REAFIRMADA por persistencia temporal"
-                logger.info("✅ ANOMALÍA REAFIRMADA por persistencia temporal")
-            elif temporal_score < 0.3:
-                integrated_score *= 0.5  # Penalización por baja persistencia
-                final_classification = "low_temporal_persistence"
-                temporal_validation = "DESCARTADA por baja persistencia temporal"
-                logger.info("❌ ANOMALÍA DESCARTADA por baja persistencia")
+            # Si no hay datos temporales suficientes, usar solo análisis espacial
+            if temporal_data.get('target_years') and len(temporal_data.get('target_years', [])) > 0:
+                if temporal_score > 0.6 and integrated_score > 0.5:
+                    final_classification = "high_archaeological_potential_temporally_validated"
+                elif integrated_score > 0.6 and temporal_score > 0.4:
+                    final_classification = "moderate_archaeological_potential_validated"
+                elif integrated_score > 0.4:
+                    final_classification = "low_archaeological_potential"
+                else:
+                    final_classification = "natural_process_or_modern"
             else:
-                final_classification = "moderate_archaeological_potential"
-                temporal_validation = "MODERADA persistencia temporal"
-                logger.info("🟡 PERSISTENCIA TEMPORAL MODERADA")
-        
-        # Clasificación final refinada
-        if integrated_score > 0.8 and temporal_score > 0.6:
-            final_classification = "high_archaeological_potential_validated"
-        elif integrated_score > 0.6 and temporal_score > 0.4:
-            final_classification = "moderate_archaeological_potential_validated"
-        elif integrated_score > 0.4:
-            final_classification = "low_archaeological_potential"
-        else:
-            final_classification = "natural_process_or_modern"
+                # Sin datos temporales - usar solo análisis espacial
+                if integrated_score > 0.6:
+                    final_classification = "high_archaeological_potential"
+                elif integrated_score > 0.4:
+                    final_classification = "moderate_archaeological_potential"
+                elif integrated_score > 0.2:
+                    final_classification = "low_archaeological_potential"
+                else:
+                    final_classification = "natural_process_or_modern"
         
         logger.info(f"🏛️ Clasificación final: {final_classification}")
         
@@ -817,7 +814,8 @@ def integrate_archaeological_analysis_with_temporal_validation(basic_analysis: D
                 'persistence_score': temporal_score,
                 'cv_stability': calculate_cv_from_temporal_data(temporal_data),
                 'validation_result': temporal_validation,
-                'exclusion_moderna_applied': modern_exclusion_score > 0.6
+                'exclusion_moderna_applied': modern_exclusion_score > 0.6,
+                'data_availability': 'insufficient_data_for_water_ice_environments' if not temporal_data.get('target_years') or len(temporal_data.get('target_years', [])) == 0 else 'temporal_data_available'
             },
             'evaluations': basic_analysis.get('evaluations', {}),
             'advanced_archaeological_analysis': advanced_analysis.get('advanced_archaeological_analysis', {}),
@@ -1056,7 +1054,7 @@ async def analyze_archaeological_region(request: RegionRequest):
                         "detection_method": "elevation_subsurface_temporal_integration"
                     }),
                     "ai_explanations": convert_numpy_types({
-                        "analysis_type": "Crioarqueología especializada",
+                        "analysis_type": "Crioarqueologia especializada",
                         "methodology": "Detección de sitios arqueológicos en ambientes de hielo con ICESat-2 y sísmica",
                         "confidence": "Basado en anomalías de elevación y datos de subsuperfie",
                         "ai_available": False
@@ -1196,7 +1194,7 @@ async def analyze_archaeological_region(request: RegionRequest):
                         "detection_method": "elevation_subsurface_temporal_integration"
                     }),
                     "ai_explanations": convert_numpy_types({
-                        "analysis_type": "Crioarqueología especializada",
+                        "analysis_type": "Crioarqueologia especializada",
                         "methodology": "Detección de sitios arqueológicos en ambientes de hielo con ICESat-2 y sísmica",
                         "confidence": "Basado en anomalías de elevación y confirmación sub-superficial",
                         "ai_available": False
