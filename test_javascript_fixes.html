@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test JavaScript Fixes</title>
+</head>
+<body>
+    <h1>Test JavaScript Fixes</h1>
+    <div id="results"></div>
+    
+    <script>
+        // Test 1: Check if archaeological_app.js loads without syntax errors
+        function testArchaeologicalAppLoad() {
+            const script = document.createElement('script');
+            script.src = 'frontend/archaeological_app.js';
+            script.onload = function() {
+                document.getElementById('results').innerHTML += '<p>✅ archaeological_app.js loaded successfully</p>';
+                
+                // Test 2: Check if updateStatusIndicator function is available
+                if (typeof updateStatusIndicator === 'function') {
+                    document.getElementById('results').innerHTML += '<p>✅ updateStatusIndicator function is available</p>';
+                    
+                    // Test 3: Try calling the function
+                    try {
+                        updateStatusIndicator('testStatus', 'online', 'Test tooltip');
+                        document.getElementById('results').innerHTML += '<p>✅ updateStatusIndicator function works</p>';
+                    } catch (error) {
+                        document.getElementById('results').innerHTML += '<p>❌ updateStatusIndicator function error: ' + error.message + '</p>';
+                    }
+                } else {
+                    document.getElementById('results').innerHTML += '<p>❌ updateStatusIndicator function not available</p>';
+                }
+            };
+            script.onerror = function() {
+                document.getElementById('results').innerHTML += '<p>❌ archaeological_app.js failed to load</p>';
+            };
+            document.head.appendChild(script);
+        }
+        
+        // Run test after page loads
+        window.onload = testArchaeologicalAppLoad;
+    </script>
+</body>
+</html>
+</text>
+</invoke>

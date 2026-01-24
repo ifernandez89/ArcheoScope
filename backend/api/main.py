@@ -63,22 +63,53 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configurar CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Añadir middleware CORS adicional como fallback
+# Añadir middleware CORS explícito primero (orden importante)
 @app.middleware("http")
 async def add_cors_headers(request, call_next):
+    # Procesar request
     response = await call_next(request)
-    response.headers["Access-Control-Allow-Origin"] = "*"
+    
+    # Añadir CORS headers a la respuesta
+    origin = request.headers.get("origin", "*")
+    response.headers["Access-Control-Allow-Origin"] = origin
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Max-Age"] = "86400"
+    
+    return response
+
+# Configurar CORS middleware de FastAPI como fallback
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8080", "http://127.0.0.1:8080", "*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin"],
+    expose_headers=["*"]
+)
+
+# Añadir exception handler global para asegurar CORS en errores
+from fastapi.responses import JSONResponse
+from fastapi import Request
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Manejar todas las excepciones y asegurar CORS headers"""
+    logger.error(f"Error no manejado: {exc}", exc_info=True)
+    
+    response = JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal server error: {str(exc)}"}
+    )
+    
+    # Añadir CORS headers
+    origin = request.headers.get("origin", "*")
+    response.headers["Access-Control-Allow-Origin"] = origin
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    
     return response
 
 # NUEVO: Incluir router volumétrico LIDAR
@@ -165,13 +196,15 @@ system_components = {
     'advanced_rules_engine': None,  # NUEVO: Motor de reglas avanzadas
     'ai_assistant': None,
     'validator': None,
+    'real_validator': None,         # NUEVO: Validador de sitios reales
+    'transparency': None,            # NUEVO: Transparencia de datos
     'explainer': None,
     'geometric_engine': None,
     'phi4_evaluator': None,
-    'water_detector': None,        # NUEVO: Detector de agua
-    'submarine_archaeology': None, # NUEVO: Arqueología submarina
-    'ice_detector': None,          # NUEVO: Detector de hielo
-        'cryoarchaeology': None        # NUEVO: Crioarqueologia
+    'water_detector': None,          # NUEVO: Detector de agua
+    'submarine_archaeology': None,   # NUEVO: Arqueología submarina
+    'ice_detector': None,            # NUEVO: Detector de hielo
+    'cryoarchaeology': None          # NUEVO: Crioarqueología
 }
 
 def initialize_system():
@@ -1210,7 +1243,7 @@ def calculate_cv_from_temporal_data(temporal_data: Dict[str, Any]) -> float:
             'advanced_analysis': advanced_analysis
         }
 
-@app.post("/analyze", response_model=AnalysisResponse)
+@app.post("/analyze")
 async def analyze_archaeological_region(request: RegionRequest):
     """
     INVESTIGAR: Analizar una región desde perspectiva arqueológica.
@@ -1220,7 +1253,14 @@ async def analyze_archaeological_region(request: RegionRequest):
     - Si están sobre tierra → análisis terrestre tradicional
     """
     
+    logger.info("=" * 80)
+    logger.info("🔍 ENDPOINT /analyze ALCANZADO")
+    logger.info(f"Request data: {request}")
+    logger.info("=" * 80)
+    
     if not all(system_components.values()):
+        logger.error("Sistema no completamente inicializado")
+        logger.error(f"Components: {system_components}")
         raise HTTPException(status_code=503, detail="Sistema no completamente inicializado")
     
     try:

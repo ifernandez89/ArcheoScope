@@ -2182,12 +2182,16 @@
                 cdnTooltip = 'Three.js no disponible - Visualización 3D deshabilitada';
             }
             
-            // Actualizar indicador
-            updateStatusIndicator('cdnStatus', cdnStatus, cdnTooltip);
+            // Actualizar indicador solo si la función está disponible
+            if (typeof updateStatusIndicator === 'function') {
+                updateStatusIndicator('cdnStatus', cdnStatus, cdnTooltip);
+            } else {
+                console.log('CDN Status:', cdnStatus, '-', cdnTooltip);
+            }
         }
         
-        // Verificar CDNs después de cargar
-        setTimeout(checkCDNStatus, 2000);
+        // Verificar CDNs después de cargar los scripts
+        setTimeout(checkCDNStatus, 3000);
         
         function initializeSimpleMap() {
             const mapContainer = document.getElementById('map');

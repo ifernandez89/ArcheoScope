@@ -448,13 +448,24 @@ async function investigateRegion() {
         // Mostrar mensaje de estado inicial
         showAnalysisStatusMessage('Iniciando análisis arqueológico...', 'Conectando con ArcheoScope Engine');
         
+        console.log('Enviando petición a:', CONFIG.API_BASE_URL);
+        console.log('Datos:', regionData);
+        
         const response = await fetch(`${CONFIG.API_BASE_URL}/analyze`, {
             method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            credentials: 'omit',  // Importante para CORS
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Origin': window.location.origin
             },
             body: JSON.stringify(regionData)
         });
+        
+        console.log('Respuesta recibida:', response);
+        console.log('Headers CORS:', response.headers.get('Access-Control-Allow-Origin'));
         
         if (!response.ok) {
             let errorMessage = `Error HTTP: ${response.status}`;
@@ -506,11 +517,13 @@ async function investigateRegion() {
         
         console.log('📍 Coordenadas capturadas para lupa:', selectedCoordinates);
         
-    } catch (error) {
-        console.error('❌ Error en análisis arqueológico:', error);
-        hideAnalysisStatusMessage();
-        showMessage(`Error en análisis: ${error.message}`, 'error');
-    } finally {
+        } catch (error) {
+            console.error('Error en análisis arqueológico:', error);
+            console.error('Error type:', error.name);
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
+            showAnalysisStatusMessage('Error en análisis', `Error: ${error.message}`);
+        } finally {
         button.disabled = false;
         loading.style.display = 'none';
     }
