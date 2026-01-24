@@ -66,18 +66,18 @@ def start_backend():
         
         return process
     except Exception as e:
-        print(f"❌ Error iniciando backend arqueologico: {e}")
+        print(f"ERROR: Error iniciando backend arqueologico: {e}")
         return None
 
 def wait_for_backend():
     """Esperar a que el backend esté listo"""
-    print("⏳ Esperando que ArcheoScope esté listo...")
+    print("Esperando que ArcheoScope esté listo...")
     
     for i in range(15):
         try:
             response = requests.get("http://localhost:8002/", timeout=3)
             if response.status_code == 200:
-                print("✅ ArcheoScope listo")
+                print("ArcheoScope listo")
                 return True
         except:
             pass
@@ -86,7 +86,7 @@ def wait_for_backend():
         if i < 14:
             print(f"   Intentando conectar... ({i+1}/15)")
     
-    print("⚠️  ArcheoScope tardando más de lo esperado, pero continuando...")
+    print("ArcheoScope tardando más de lo esperado, pero continuando...")
     return True
 
 def open_frontend():
@@ -94,13 +94,13 @@ def open_frontend():
     frontend_path = Path(__file__).parent / "frontend" / "index.html"
     frontend_url = f"file://{frontend_path.absolute()}"
     
-    print(f"🌐 Abriendo ArcheoScope: {frontend_url}")
+    print(f"Abriendo ArcheoScope: {frontend_url}")
     
     try:
         webbrowser.open(frontend_url)
         return True
     except Exception as e:
-        print(f"❌ Error abriendo navegador: {e}")
+        print(f"ERROR abriendo navegador: {e}")
         print(f"   Abre manualmente: {frontend_url}")
         return False
 
@@ -133,39 +133,39 @@ def main():
         open_frontend()
         
         print("\n" + "=" * 60)
-        print("✅ ARCHEOSCOPE COMPLETAMENTE OPERATIVO")
+        print("ARCHEOSCOPE COMPLETAMENTE OPERATIVO")
         print("=" * 60)
-        print("🌐 Frontend: Abierto en tu navegador")
-        print("🔧 Backend API: http://localhost:8002")
-        print("📚 Documentación API: http://localhost:8002/docs")
-        print("📊 Estado del sistema: http://localhost:8002/status")
+        print("Frontend: Abierto en tu navegador")
+        print("Backend API: http://localhost:8002")
+        print("Documentación API: http://localhost:8002/docs")
+        print("Estado del sistema: http://localhost:8002/status")
         
-        print("\n🏺 Cómo usar ArcheoScope:")
+        print("\nCómo usar ArcheoScope:")
         print("1. Selecciona una región arqueologica en el mapa (Ctrl+click y arrastra)")
         print("2. Configura las capas de análisis (NDVI, térmico, SAR, etc.)")
         print("3. Presiona 'INVESTIGAR REGIÓN'")
         print("4. Explora las firmas arqueologicas en el panel derecho")
         print("5. Usa las capas conmutables para análisis detallado")
         
-        print("\n🔬 Indicadores arqueologicos:")
-        print("• 🌱 Desacople vegetación-topografía (muros, caminos enterrados)")
-        print("• 🌡️ Patrones térmicos residuales (estructuras, fundaciones)")
-        print("• 📡 Texturas anómalas SAR (geometría no natural)")
-        print("• 🏔️ Rugosidad superficial (compactación, plazas)")
-        print("• 🧂 Salinidad del suelo (drenajes antiguos)")
-        print("• 🌊 Resonancia sísmica (cavidades, túneles)")
+        print("\nIndicadores arqueologicos:")
+        print("• Desacople vegetación-topografía (muros, caminos enterrados)")
+        print("• Patrones térmicos residuales (estructuras, fundaciones)")
+        print("• Texturas anómalas SAR (geometría no natural)")
+        print("• Rugosidad superficial (compactación, plazas)")
+        print("• Salinidad del suelo (drenajes antiguos)")
+        print("• Resonancia sísmica (cavidades, túneles)")
         
-        print("\n⚠️  Para detener el sistema: Presiona Ctrl+C")
+        print("\nPara detener el sistema: Presiona Ctrl+C")
         print("=" * 60)
         
         # Mantener el backend corriendo
         backend_process.wait()
         
     except KeyboardInterrupt:
-        print("\n🛑 Deteniendo ArcheoScope...")
+        print("\nDeteniendo ArcheoScope...")
         backend_process.terminate()
         backend_process.wait()
-        print("✅ ArcheoScope detenido correctamente")
+        print("ArcheoScope detenido correctamente")
         return 0
     
     except Exception as e:

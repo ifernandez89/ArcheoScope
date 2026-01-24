@@ -418,7 +418,7 @@ class ArcheoScopeInteractiveMap {
     }
     
     async callArcheoScopeAPI(lat, lon) {
-        const response = await fetch('http://localhost:8003/analyze', {
+        const response = await fetch('http://localhost:8002/analyze', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -440,7 +440,24 @@ class ArcheoScopeInteractiveMap {
         });
         
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            let errorMessage = `API Error: ${response.status}`;
+            switch (response.status) {
+                case 404:
+                    errorMessage = '🔍 Servicio no encontrado (404) - Verifica que el backend esté ejecutándose en puerto 8002';
+                    break;
+                case 500:
+                    errorMessage = '⚠️ Error interno del servidor (500) - Problema en el análisis arqueológico';
+                    break;
+                case 503:
+                    errorMessage = '🔧 Servicio no disponible (503) - Backend temporalmente inaccesible';
+                    break;
+                case 429:
+                    errorMessage = '⏳ Demasiadas solicitudes (429) - Espera un momento antes de intentar de nuevo';
+                    break;
+                default:
+                    errorMessage = `❌ Error de conexión (${response.status}) - Problema de comunicación con el servidor`;
+            }
+            throw new Error(errorMessage);
         }
         
         return await response.json();

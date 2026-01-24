@@ -1,37 +1,37 @@
-# 🧊 CryoScope - Subglacial Coherence Engine
+# 🔍 ArcheoScope - Archaeological Remote Sensing Engine
 
-> **"Un amplificador de hipótesis espaciales para la glaciología moderna"**
+> **"Scientific detection of spatial persistences not explainable by current natural processes"**
 
-[![Status](https://img.shields.io/badge/Status-Production-brightgreen)](https://github.com/ifernandez89/CryoScope)
-[![AI](https://img.shields.io/badge/AI-Ollama%20Integrated-blue)](https://ollama.ai/)
+[![Status](https://img.shields.io/badge/Status-Development-yellow)](https://github.com/ifernandez89/ArcheoScope)
+[![AI](https://img.shields.io/badge/AI-Ollama%20Optional-blue)](https://ollama.ai/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-red)](https://python.org)
 
-## 🎯 **¿Qué es CryoScope?**
+## 🎯 **What is ArcheoScope?**
 
-CryoScope es un **instrumento científico digital** diseñado para detectar anomalías glaciológicas y contradicciones en modelos físicos establecidos. No pretende ser un "detector de verdades", sino un **amplificador de hipótesis espaciales** que ayuda a los glaciólogos a identificar dónde las explicaciones actuales fallan.
+ArcheoScope is a **scientific archaeological remote sensing engine** designed to detect spatial persistences that cannot be explained by current natural processes. It serves as a **hypothesis amplifier** for archaeologists to identify regions where existing explanations fail.
 
-### ✨ **Características Principales**
+### ✨ **Core Features**
 
-🤖 **IA Real Integrada** - Ollama + qwen2.5:3b-instruct ejecutándose localmente  
-🎯 **Control Espacial Estricto** - Umbrales realistas basados en principios científicos  
-🔍 **Indicadores Específicos** - Métricas trazables vinculadas a datos visibles  
-⚖️ **Protección Epistemológica** - Rechazo automático de análisis inválidos  
-🧩 **Tiles Prioritarios** - Subdivisión automática en zonas candidatas para estudio detallado  
-📡 **Capas Alta Resolución** - Acceso a datos satelitales con coordenadas exactas  
-🌐 **Interfaz Científica** - Diseñada para glaciólogos, no para marketing  
+🤖 **Optional AI Integration** - Ollama with configurable models  
+🎯 **Strict Spatial Controls** - Realistic thresholds based on scientific principles  
+🔍 **Specific Indicators** - Traceable metrics linked to visible data  
+⚖️ **Epistemological Protection** - Automatic rejection of invalid analyses  
+🧩 **Priority Tiles** - Automatic subdivision into candidate zones  
+📡 **High-Resolution Layers** - Satellite data access with exact coordinates  
+🌐 **Scientific Interface** - Designed for archaeological research  
 
 ---
 
-## 🎯 **Posicionamiento Científico**
+## 🎯 **Scientific Positioning**
 
-> **"CryoScope no busca estructuras ocultas. Busca regiones donde los modelos físicos actuales dejan de explicar el comportamiento observado, y además indica cuándo esos resultados no son científicamente válidos por escala o contexto."**
+> **"ArcheoScope does not seek hidden structures. It identifies regions where current natural process models fail to explain observed patterns, and indicates when results are not scientifically valid due to scale or context."**
 
-Este es un **amplificador de hipótesis espaciales** que:
-- Identifica dónde fallan las explicaciones glaciológicas actuales
-- Proporciona tiles prioritarios para investigación detallada  
-- Ofrece capas de alta resolución con coordenadas exactas
-- Mantiene honestidad científica sobre sus limitaciones  
+This is a **spatial hypothesis amplifier** that:
+- Identifies where current archaeological explanations fail
+- Provides priority tiles for detailed investigation
+- Offers high-resolution layers with exact coordinates
+- Maintains scientific honesty about limitations
 
 ---
 

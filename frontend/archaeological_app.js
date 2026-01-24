@@ -1,6 +1,6 @@
 // Configuración
 const CONFIG = {
-    API_BASE_URL: 'http://localhost:8003',
+    API_BASE_URL: 'http://localhost:8002',
     DEFAULT_CENTER: [41.8550, 12.5150], // Roma, Italia (Via Appia)
     DEFAULT_ZOOM: 13
 };
@@ -360,10 +360,10 @@ async function checkSystemStatus() {
         
     } catch (error) {
         console.error('❌ Error verificando estado del sistema:', error);
-        updateStatusIndicator('backendStatus', 'offline', 'Backend no disponible - verificar puerto 8003');
+        updateStatusIndicator('backendStatus', 'offline', `Backend no disponible - verificar puerto ${new URL(CONFIG.API_BASE_URL).port}`);
         updateStatusIndicator('aiStatus', 'offline', 'IA no disponible');
         updateStatusIndicator('volumetricStatus', 'offline', 'Motor volumétrico no disponible');
-        showMessage('Error conectando con ArcheoScope. Verifica que el servidor esté corriendo en puerto 8003.', 'error');
+        showMessage(`Error conectando con ArcheoScope. Verifica que el servidor esté corriendo en puerto ${new URL(CONFIG.API_BASE_URL).port}.`, 'error');
     }
 }
 
@@ -462,7 +462,7 @@ async function investigateRegion() {
             // Mensajes específicos por código de error
             switch (response.status) {
                 case 404:
-                    errorMessage = `🔍 Servicio no encontrado (404) - Verifica que el backend esté ejecutándose en puerto 8003`;
+                    errorMessage = `🔍 Servicio no encontrado (404) - Verifica que el backend esté ejecutándose en puerto ${new URL(CONFIG.API_BASE_URL).port}`;
                     break;
                 case 500:
                     errorMessage = `⚠️ Error interno del servidor (500) - Problema en el análisis arqueológico`;

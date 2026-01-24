@@ -2076,26 +2076,12 @@
     <!-- Generador de imágenes de anomalías -->
     <script src="anomaly_image_generator.js"></script>
     
-    <!-- Visor 3D Profesional -->
-    <script src="professional_3d_viewer.js" onerror="handleProfessional3DError()"></script>
+    <!-- Visor 3D Profesional (integrado en anomaly_image_generator.js) -->
+    <!-- professional_3d_viewer.js functionality merged into anomaly_image_generator.js -->
     
     <!-- Fallback y script principal -->
     <script>
-        // Manejar error de carga del visor 3D
-        function handleProfessional3DError() {
-            console.error('❌ Error cargando professional_3d_viewer.js');
-            window.professional3DViewerError = true;
-        }
-        
-        // Verificar carga después de un tiempo
-        setTimeout(function() {
-            if (typeof professional3DViewer === 'undefined') {
-                console.warn('⚠️ professional_3d_viewer.js no se cargó correctamente');
-                window.professional3DViewerError = true;
-            } else {
-                console.log('✅ professional_3d_viewer.js cargado correctamente');
-            }
-        }, 2000);
+        // Visor 3D Profesional integrado - no requiere carga separada
         // Definir OrbitControls si no está disponible
         if (typeof THREE !== 'undefined' && !THREE.OrbitControls) {
             THREE.OrbitControls = function(camera, domElement) {
@@ -4433,15 +4419,9 @@
                 return;
             }
             
-            // Verificar si hubo error de carga
-            if (window.professional3DViewerError) {
-                alert('❌ ERROR DE CARGA\n\nEl archivo professional_3d_viewer.js no se pudo cargar.\n\nPosibles causas:\n• Archivo no encontrado\n• Error de conexión\n• Problema de permisos\n\nRecarga la página (Ctrl+F5) e intenta de nuevo.');
-                return;
-            }
-            
-            // Verificar que el visor profesional esté disponible
-            if (typeof professional3DViewer === 'undefined') {
-                alert('❌ VISOR 3D NO DISPONIBLE\n\nEl sistema de visualización 3D no está cargado.\n\nSoluciones:\n1. Recarga la página (Ctrl+F5)\n2. Verifica tu conexión a internet\n3. Revisa la consola del navegador (F12)');
+             // Verificar que el visor 3D esté disponible
+             if (typeof anomalyImageGenerator === 'undefined') {
+                 alert('❌ VISOR 3D NO DISPONIBLE\n\nEl sistema de visualización 3D no está cargado.\n\nSoluciones:\n1. Recarga la página (Ctrl+F5)\n2. Verifica tu conexión a internet\n3. Revisa la consola del navegador (F12)');
                 console.error('professional3DViewer no está definido');
                 return;
             }

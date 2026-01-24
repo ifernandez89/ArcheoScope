@@ -1622,7 +1622,7 @@ class Professional3DViewer {
                 viewer_version: '1.0',
                 archeoscope_version: 'v2.1'
             },
-            3d_model: {
+            '3d_model': {
                 vertices: this.currentMesh.geometry.attributes.position.count,
                 faces: this.currentMesh.geometry.index?.count / 3 || this.currentMesh.geometry.attributes.position.count / 3,
                 materials: Array.isArray(this.currentMesh.material) ? this.currentMesh.material.length : 1

@@ -299,12 +299,7 @@ class ArchaeologicalDataLoader:
         
         # Amazonía: ALTO (hipótesis antropogénica)
         if environment == "amazon_rainforest":
-            # Tapajós-Xingu específicamente
-            if (lat_center > -7 and lat_center < -6 and 
-                lon_center > -56 and lon_center < -54):
-                return "very_high"  # Zona de interés específica
-            else:
-                return "moderate"   # Amazonía general
+            return "moderate"   # Amazonía general
         
         # Manglares: bajo (ambientes dinámicos)
         if environment == "mangrove":
@@ -340,12 +335,6 @@ class ArchaeologicalDataLoader:
             base = np.random.normal(0.8, 0.08, (height, width)).clip(0.6, 0.95)
             
             if potential == "very_high":
-                # Añadir patrones sutiles de manejo (Tapajós-Xingu)
-                # Patrones lineales sutiles (manejo de bosque)
-                for i in range(0, height, 15):
-                    if i < height - 3:
-                        base[i:i+2, :] *= 0.95  # Líneas sutiles de manejo
-                
                 # Parches de diversidad manejada
                 patch_size = 8
                 for y in range(0, height-patch_size, 20):
