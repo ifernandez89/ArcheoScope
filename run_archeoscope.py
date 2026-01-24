@@ -11,6 +11,7 @@ import time
 import webbrowser
 from pathlib import Path
 import requests
+import os
 
 def check_dependencies():
     """Verificar que las dependencias estén instaladas"""
@@ -90,19 +91,12 @@ def wait_for_backend():
     return True
 
 def open_frontend():
-    """Abrir el frontend arqueologico en el navegador"""
-    frontend_path = Path(__file__).parent / "frontend" / "index.html"
-    frontend_url = f"file://{frontend_path.absolute()}"
-    
-    print(f"Abriendo ArcheoScope: {frontend_url}")
-    
-    try:
-        webbrowser.open(frontend_url)
-        return True
-    except Exception as e:
-        print(f"ERROR abriendo navegador: {e}")
-        print(f"   Abre manualmente: {frontend_url}")
-        return False
+    """Instrucciones para abrir el frontend arqueologico"""
+    print("Para iniciar el frontend:")
+    print("   python start_frontend.py")
+    print("Esto resolverá problemas CORS sirviendo desde localhost")
+    print("El backend debe estar corriendo en http://localhost:8002")
+    return True
 
 def main():
     """Función principal"""
