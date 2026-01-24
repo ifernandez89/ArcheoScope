@@ -270,6 +270,10 @@ class WaterDetector:
     def _estimate_depth(self, lat: float, lon: float) -> Optional[float]:
         """Estimar profundidad del agua (mejorado con calibración por ubicaciones específicas)"""
         
+        # Usar coordenadas como semilla para resultados consistentes
+        seed = int((abs(lat) * 1000 + abs(lon) * 1000) % 2147483647)
+        np.random.seed(seed)
+        
         # Primero verificar ubicaciones específicas conocidas
         specific_depth = self._get_specific_location_depth(lat, lon)
         if specific_depth is not None:

@@ -977,94 +977,53 @@ function inspectPixel(latlng) {
     document.getElementById('pixelCoords').textContent = 
         `📍 ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
     
-    // Simular datos espectrales realistas con estados explícitos
-    const dataAvailability = generateDataAvailability();
+    // ❌ DATOS ESPECTRALES NO DISPONIBLES - NO GENERAR DATOS FALSOS
+    // El backend debe proporcionar estos datos. Si no están disponibles, mostrar mensaje claro.
     
-    // NDVI - Separar disponibilidad de significancia
-    if (dataAvailability.ndvi.available) {
-        const ndvi = Math.random() * 0.6 + 0.2;
-        const significance = evaluateNDVISignificance(ndvi);
-        document.getElementById('ndviValue').textContent = `${ndvi.toFixed(3)} - ${significance}`;
-    } else {
-        document.getElementById('ndviValue').textContent = getDefaultValue("", 'data');
-    }
+    // NDVI - Solo mostrar si viene del backend
+    document.getElementById('ndviValue').textContent = '⚠️ Datos no disponibles - Requiere análisis espectral';
     
-    // Térmica - Incluir persistencia temporal
-    if (dataAvailability.thermal.available) {
-        const thermal = Math.random() * 25 + 15;
-        const persistence = evaluateThermalPersistence(thermal);
-        document.getElementById('thermalValue').textContent = `${thermal.toFixed(1)}°C - ${persistence}`;
-    } else {
-        document.getElementById('thermalValue').textContent = getDefaultValue("", 'data');
-    }
+    // Térmica - Solo mostrar si viene del backend
+    document.getElementById('thermalValue').textContent = '⚠️ Datos no disponibles - Requiere análisis térmico';
     
-    // SAR - Evaluar intensidad de señal
-    if (dataAvailability.sar.available) {
-        const sar = Math.random() * -8 - 12;
-        const intensity = evaluateSARIntensity(sar);
-        document.getElementById('sarValue').textContent = `${sar.toFixed(1)} dB - ${intensity}`;
-    } else {
-        document.getElementById('sarValue').textContent = getDefaultValue("", 'data');
-    }
+    // SAR - Solo mostrar si viene del backend
+    document.getElementById('sarValue').textContent = '⚠️ Datos no disponibles - Requiere análisis SAR';
     
-    // Rugosidad - Contextualizar valores
-    if (dataAvailability.roughness.available) {
-        const roughness = Math.random() * 0.4 + 0.1;
-        const context = evaluateRoughnessContext(roughness);
-        document.getElementById('roughnessValue').textContent = `${roughness.toFixed(3)} - ${context}`;
-    } else {
-        document.getElementById('roughnessValue').textContent = getDefaultValue("", 'data');
-    }
+    // Rugosidad - Solo mostrar si viene del backend
+    document.getElementById('roughnessValue').textContent = '⚠️ Datos no disponibles - Requiere análisis de rugosidad';
     
-    // Salinidad - Puede no estar disponible
-    if (dataAvailability.salinity.available) {
-        const salinity = Math.random() * 1.5 + 0.5;
-        document.getElementById('salinityValue').textContent = `${salinity.toFixed(2)} - Disponible`;
-    } else {
-        document.getElementById('salinityValue').textContent = getDefaultValue("", 'data');
-    }
+    // Salinidad - Solo mostrar si viene del backend
+    document.getElementById('salinityValue').textContent = '⚠️ Datos no disponibles - Requiere análisis de salinidad';
     
-    // Resonancia - Frecuentemente no disponible
-    if (dataAvailability.resonance.available) {
-        const resonance = Math.random() * 80 + 20;
-        document.getElementById('resonanceValue').textContent = `${resonance.toFixed(0)} Hz - Disponible`;
-    } else {
-        document.getElementById('resonanceValue').textContent = getDefaultValue("", 'data');
-    }
+    // Resonancia - Solo mostrar si viene del backend
+    document.getElementById('resonanceValue').textContent = '⚠️ Datos no disponibles - Requiere análisis de resonancia';
     
-    // Calcular análisis arqueológico con separación de métricas
-    const archaeologicalAnalysis = generateArchaeologicalAnalysis(dataAvailability);
+    // ❌ NO GENERAR ANÁLISIS ARQUEOLÓGICO FALSO
+    document.getElementById('archaeoProb').textContent = '⚠️ Requiere datos espectrales';
+    document.getElementById('geomCoherence').textContent = '⚠️ Requiere datos espectrales';
+    document.getElementById('spectralSignature').textContent = '⚠️ Requiere datos espectrales';
     
-    document.getElementById('archaeoProb').textContent = getDefaultValue(archaeologicalAnalysis.compatibility, 'evaluation');
-    document.getElementById('geomCoherence').textContent = getDefaultValue(archaeologicalAnalysis.geometric_coherence, 'evaluation');
-    document.getElementById('spectralSignature').textContent = getDefaultValue(archaeologicalAnalysis.spectral_classification, 'evaluation');
+    // ❌ NO GENERAR ANÁLISIS DE ANOMALÍAS FALSO
+    document.getElementById('anomalyType').textContent = '⚠️ Requiere análisis completo';
+    document.getElementById('anomalyIntensity').textContent = '⚠️ Requiere análisis completo';
+    document.getElementById('anomalyArea').textContent = '⚠️ Requiere análisis completo';
+    document.getElementById('metricCoherence').textContent = '⚠️ Requiere análisis completo';
+    document.getElementById('geometricCoherence').textContent = '⚠️ Requiere análisis completo';
     
-    // Detalles de anomalías - separar coherencia métrica vs geométrica
-    const anomalyAnalysis = generateAnomalyAnalysis(archaeologicalAnalysis);
-    document.getElementById('anomalyType').textContent = getDefaultValue(anomalyAnalysis.type, 'evaluation');
-    document.getElementById('anomalyIntensity').textContent = getDefaultValue(anomalyAnalysis.intensity, 'evaluation');
-    document.getElementById('anomalyArea').textContent = getDefaultValue(anomalyAnalysis.spatial_extension, 'data');
-    document.getElementById('metricCoherence').textContent = getDefaultValue(anomalyAnalysis.metric_coherence, 'evaluation');
-    document.getElementById('geometricCoherence').textContent = getDefaultValue(anomalyAnalysis.geometric_coherence, 'evaluation');
+    // ❌ NO GENERAR DATOS VOLUMÉTRICOS FALSOS
+    document.getElementById('estimatedVolume').textContent = '⚠️ Requiere modelo volumétrico';
+    document.getElementById('maxHeight').textContent = '⚠️ Requiere modelo volumétrico';
+    document.getElementById('morphologyClass').textContent = '⚠️ Requiere modelo volumétrico';
+    document.getElementById('volumetricConfidence').textContent = '⚠️ Requiere modelo volumétrico';
+    document.getElementById('modelVertices').textContent = '⚠️ Requiere modelo volumétrico';
+    document.getElementById('modelFaces').textContent = '⚠️ Requiere modelo volumétrico';
+    document.getElementById('spatialResolution').textContent = '⚠️ Requiere modelo volumétrico';
+    document.getElementById('spatialUncertainty').textContent = '⚠️ Requiere modelo volumétrico';
     
-    // Información volumétrica con semántica física
-    const volumetricData = generateVolumetricModelWithSemantics(archaeologicalAnalysis, anomalyAnalysis);
-    document.getElementById('estimatedVolume').textContent = getDefaultValue(volumetricData.volume_description, 'volumetric');
-    document.getElementById('maxHeight').textContent = getDefaultValue(volumetricData.height_range, 'data');
-    document.getElementById('morphologyClass').textContent = getDefaultValue(volumetricData.physical_interpretation, 'evaluation');
-    document.getElementById('volumetricConfidence').textContent = getDefaultValue(volumetricData.inference_level, 'confidence');
-    document.getElementById('modelVertices').textContent = getDefaultValue(volumetricData.vertices_count, 'data');
-    document.getElementById('modelFaces').textContent = getDefaultValue(volumetricData.faces_count, 'data');
-    document.getElementById('spatialResolution').textContent = getDefaultValue(volumetricData.spatial_resolution, 'resolution');
-    document.getElementById('spatialUncertainty').textContent = getDefaultValue(volumetricData.spatial_uncertainty, 'data');
-    
-    // FORZAR cierre interpretativo automático para inspección de píxel
-    const pixelInterpretation = generatePixelInterpretation(archaeologicalAnalysis, anomalyAnalysis);
-    
-    // Si existe el elemento de interpretación sintética, actualizarlo también
+    // ❌ NO GENERAR INTERPRETACIÓN FALSA
     const syntheticElement = document.getElementById('syntheticInterpretation');
-    if (syntheticElement && syntheticElement.textContent.includes('Esperando análisis')) {
-        syntheticElement.innerHTML = pixelInterpretation;
+    if (syntheticElement) {
+        syntheticElement.innerHTML = '⚠️ <strong>Interpretación no disponible</strong><br><br>Se requiere análisis espectral completo del backend para generar interpretación científica válida.';
     }
     
     // Limpiar cualquier "undefined" que haya aparecido
@@ -1072,33 +1031,19 @@ function inspectPixel(latlng) {
 }
 
 function generatePixelInterpretation(archaeologicalAnalysis, anomalyAnalysis) {
-    if (archaeologicalAnalysis.has_strong_signals) {
-        return `
-            <strong>Interpretación del Píxel:</strong><br><br>
-            El píxel presenta firma espectral convergente y coherencia geométrica detectada, 
-            compatible con estructura antrópica compactada. La evidencia es moderada pero 
-            insuficiente para confirmación arqueológica directa.<br><br>
-            <strong>Clasificación:</strong> Candidato de prioridad media para validación geofísica.
-        `;
-    } else {
-        return `
-            <strong>Interpretación del Píxel:</strong><br><br>
-            El píxel presenta características espectrales compatibles con procesos naturales 
-            dominantes. No se detecta evidencia convergente de intervención antrópica antigua.<br><br>
-            <strong>Clasificación:</strong> Compatible con variación natural, prioridad baja.
-        `;
-    }
+    // ❌ NO GENERAR INTERPRETACIONES FALSAS
+    return '⚠️ <strong>Interpretación no disponible</strong><br><br>Se requiere análisis espectral completo del backend para generar interpretación científica válida.';
 }
 
 function generateDataAvailability() {
-    // Simular disponibilidad realista de datos
+    // ❌ NO SIMULAR DISPONIBILIDAD - Todos los datos espectrales requieren backend real
     return {
-        ndvi: { available: Math.random() > 0.1 }, // 90% disponible
-        thermal: { available: Math.random() > 0.2 }, // 80% disponible
-        sar: { available: Math.random() > 0.3 }, // 70% disponible
-        roughness: { available: Math.random() > 0.15 }, // 85% disponible
-        salinity: { available: Math.random() > 0.6 }, // 40% disponible
-        resonance: { available: Math.random() > 0.8 } // 20% disponible
+        ndvi: { available: false },
+        thermal: { available: false },
+        sar: { available: false },
+        roughness: { available: false },
+        salinity: { available: false },
+        resonance: { available: false }
     };
 }
 
@@ -1415,36 +1360,18 @@ function calculateSeasonalNDVIDifferential(data) {
             };
         }
         
-        // Simular datos estacionales
-        const springNDVI = 0.4 + Math.random() * 0.3;
-        const summerNDVI = 0.3 + Math.random() * 0.4;
-        const wetYearNDVI = 0.5 + Math.random() * 0.2;
-        const dryYearNDVI = 0.2 + Math.random() * 0.3;
-        
-        const seasonalDiff = Math.abs(springNDVI - summerNDVI);
-        const interannualDiff = Math.abs(wetYearNDVI - dryYearNDVI);
-        
-        const avgDifferential = (seasonalDiff + interannualDiff) / 2;
-        
-        let interpretation = "";
-        if (avgDifferential > 0.15) {
-            interpretation = "Suelos alterados - respuesta diferencial detectada";
-        } else if (avgDifferential > 0.08) {
-            interpretation = "Posible alteración del suelo";
-        } else {
-            interpretation = "Respuesta estacional normal";
-        }
-        
+        // ❌ NO SIMULAR DATOS ESTACIONALES - Requiere datos reales del backend
         return {
-            available: true,
-            seasonal_differential: seasonalDiff,
-            interannual_differential: interannualDiff,
-            average_differential: avgDifferential,
-            interpretation: interpretation,
-            spring_ndvi: springNDVI,
-            summer_ndvi: summerNDVI,
-            wet_year_ndvi: wetYearNDVI,
-            dry_year_ndvi: dryYearNDVI
+            available: false,
+            reason: "Datos estacionales no disponibles - Requiere análisis temporal del backend",
+            seasonal_differential: 0,
+            interannual_differential: 0,
+            average_differential: 0,
+            interpretation: "⚠️ Requiere análisis temporal multi-año del backend",
+            spring_ndvi: 0,
+            summer_ndvi: 0,
+            wet_year_ndvi: 0,
+            dry_year_ndvi: 0
         };
     } catch (error) {
         console.error('Error en calculateSeasonalNDVIDifferential:', error);
@@ -1636,6 +1563,7 @@ function updateInferenceSystem(archaeoProb, geomCoherence) {
     if (isActive) {
         document.getElementById('inferenceStatus').textContent = "🟢 Activo";
         
+        // ❌ NO USAR Math.random() - Usar estado determinista basado en probabilidad
         const stages = [
             "Extracción Firma Espacial",
             "Clasificación Morfológica", 
@@ -1644,7 +1572,8 @@ function updateInferenceSystem(archaeoProb, geomCoherence) {
             "Evaluación Consistencia"
         ];
         
-        const currentStage = Math.floor(Math.random() * stages.length);
+        // DETERMINISTA: Usar índice basado en probabilidad
+        const currentStage = Math.floor(archaeoProb * stages.length) % stages.length;
         document.getElementById('inferenceStage').textContent = stages[currentStage];
         
         const progress = Math.min(archaeoProb * geomCoherence * 100, 100);
@@ -1669,10 +1598,13 @@ function generateVolumetricModel(archaeoProb, geomCoherence, area) {
         "Cavidad/Vacío"
     ];
     
+    // DETERMINISTA: Usar índice basado en probabilidad
+    const morphologyIndex = Math.floor(archaeoProb * morphologies.length) % morphologies.length;
+    
     return {
         volume: Math.round(baseVolume),
         height: (archaeoProb * 8 + 2).toFixed(1), // 2-10m height
-        morphology: morphologies[Math.floor(Math.random() * morphologies.length)],
+        morphology: morphologies[morphologyIndex],
         confidence: Math.min(archaeoProb * geomCoherence * 1.1, 1.0),
         vertices: Math.round(archaeoProb * 500 + 100), // 100-600 vertices
         faces: Math.round(archaeoProb * 800 + 200) // 200-1000 faces
@@ -2187,8 +2119,8 @@ function generateVolumetricFieldInfo(summary, analysisData) {
     const verticalContinuity = Math.min(height, 30); // Máximo 30m para detección remota
     const verticalError = Math.max(2, verticalContinuity * 0.3);
     
-    // Orientación CORREGIDA - Solo azimut absoluto
-    const azimuth = Math.floor(Math.random() * 360); // 0-359° azimut absoluto
+    // Orientación DETERMINISTA - Basada en confianza, no aleatoria
+    const azimuth = Math.floor(confidence * 360); // 0-359° basado en confianza
     const azimuthError = 15; // ±15 grados
     
     // CORRECCIÓN: Respuesta relativa, NO densidad física
@@ -2199,7 +2131,7 @@ function generateVolumetricFieldInfo(summary, analysisData) {
         // Extensiones con error - ESCALA ARQUEOLÓGICA CORREGIDA
         horizontal_extent: `${Math.floor(horizontalExtent)}±${Math.floor(horizontalError)}m`,
         vertical_continuity: `≥${Math.floor(verticalContinuity)}m (±${Math.floor(verticalError)}m)`,
-        dominant_orientation: `${String(azimuth).padStart(3, '0')}° (±${azimuthError}°)`, // Solo azimut absoluto
+        dominant_orientation: `${String(azimuth).padStart(3, '0')}° (±${azimuthError}°)`, // Basado en confianza
         relative_response: `+${backscatterIncrease}±${backscatterError}% backscatter`, // NO densidad
         confidence_level: `${Math.floor(confidence * 100)}% (${confidence > 0.7 ? 'alta' : confidence > 0.4 ? 'moderada' : 'baja'})`,
         
@@ -2210,12 +2142,12 @@ function generateVolumetricFieldInfo(summary, analysisData) {
         // Interpretación científica honesta
         scientific_interpretation: generateScientificInterpretation(confidence, anomalies, signatures, totalPixels, resolution),
         
-        // Datos para el visualizador - ESCALA CORREGIDA
+        // Datos para el visualizador - ESCALA CORREGIDA (DETERMINISTA)
         field_data: {
             center_x: 0,
             center_y: 0,
             extent_x: horizontalExtent,
-            extent_y: horizontalExtent * (0.6 + Math.random() * 0.4), // Variación realista
+            extent_y: horizontalExtent * (0.7 + (confidence * 0.3)), // Variación determinista basada en confianza
             max_height: verticalContinuity,
             orientation: azimuth,
             confidence: confidence,
