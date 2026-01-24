@@ -58,8 +58,17 @@ class Professional3DViewer {
                         </div>
                     </div>
                     <div class="header-actions">
-                        <button class="export-btn" onclick="professional3DViewer.exportModel()" title="Exportar modelo 3D">
-                            📥 Exportar
+                        <button class="export-btn" onclick="professional3DViewer.exportToGLTF()" title="Exportar a GLTF">
+                            📦 GLTF
+                        </button>
+                        <button class="export-btn" onclick="professional3DViewer.exportToOBJ()" title="Exportar a OBJ">
+                            📦 OBJ
+                        </button>
+                        <button class="export-btn" onclick="professional3DViewer.exportScreenshot()" title="Capturar pantalla">
+                            📸 Imagen
+                        </button>
+                        <button class="export-btn" onclick="professional3DViewer.exportCompleteAnalysis()" title="Exportar análisis completo">
+                            📊 JSON
                         </button>
                         <button class="close-viewer" onclick="professional3DViewer.closeViewer()">✕</button>
                     </div>
@@ -1488,6 +1497,147 @@ class Professional3DViewer {
         }
         
         this.renderer.render(this.scene, this.camera);
+    }
+    
+    /**
+     * Exportar modelo 3D a formato GLTF
+     */
+    exportToGLTF() {
+        if (!this.currentMesh) {
+            alert('❌ No hay modelo 3D para exportar');
+            return;
+        }
+        
+        console.log('📤 Exportando modelo 3D a GLTF...');
+        
+        try {
+            const exporter = new THREE.GLTFExporter();
+            const scene = new THREE.Scene();
+            scene.add(this.currentMesh);
+            
+            exporter.parse(
+                scene,
+                (gltf) => {
+                    const blob = new Blob([JSON.stringify(gltf)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `archeoscope_anomaly_${this.currentAnomalyIndex}.gltf`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    console.log('✅ Modelo GLTF exportado exitosamente');
+                },
+                (error) => {
+                    console.error('❌ Error exportando GLTF:', error);
+                    alert('Error exportando modelo GLTF');
+                }
+            );
+        } catch (error) {
+            console.error('❌ Error en exportación GLTF:', error);
+            alert('Error exportando modelo GLTF');
+        }
+    }
+    
+    /**
+     * Exportar modelo 3D a formato OBJ
+     */
+    exportToOBJ() {
+        if (!this.currentMesh) {
+            alert('❌ No hay modelo 3D para exportar');
+            return;
+        }
+        
+        console.log('📤 Exportando modelo 3D a OBJ...');
+        
+        try {
+            const exporter = new THREE.OBJExporter();
+            const scene = new THREE.Scene();
+            scene.add(this.currentMesh);
+            
+            const result = exporter.parse(scene);
+            const blob = new Blob([result.obj], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `archeoscope_anomaly_${this.currentAnomalyIndex}.obj`;
+            a.click();
+            URL.revokeObjectURL(url);
+            console.log('✅ Modelo OBJ exportado exitosamente');
+        } catch (error) {
+            console.error('❌ Error exportando OBJ:', error);
+            alert('Error exportando modelo OBJ');
+        }
+    }
+    
+    /**
+     * Exportar captura de pantalla del visor 3D
+     */
+    exportScreenshot() {
+        if (!this.renderer) {
+            alert('❌ Visor 3D no disponible para captura');
+            return;
+        }
+        
+        console.log('📸 Capturando pantalla del visor 3D...');
+        
+        try {
+            this.renderer.render(this.scene, this.camera);
+            const dataURL = this.renderer.domElement.toDataURL('image/png');
+            
+            const link = document.createElement('a');
+            link.download = `archeoscope_3d_viewer_${this.currentAnomalyIndex}.png`;
+            link.href = dataURL;
+            link.click();
+            
+            console.log('✅ Captura de pantalla guardada exitosamente');
+        } catch (error) {
+            console.error('❌ Error capturando pantalla:', error);
+            alert('Error capturando pantalla');
+        }
+    }
+    
+    /**
+     * Exportar análisis completo (modelo + metadatos)
+     */
+    exportCompleteAnalysis() {
+        if (!this.currentMesh || !this.anomalies[this.currentAnomalyIndex]) {
+            alert('❌ No hay análisis completo para exportar');
+            return;
+        }
+        
+        console.log('📊 Exportando análisis completo...');
+        
+        const anomaly = this.anomalies[this.currentAnomalyIndex];
+        const analysisData = {
+            anomaly_info: {
+                id: anomaly.id,
+                coordinates: anomaly.coordinates,
+                confidence: anomaly.signature?.detection_confidence || 0,
+                archaeological_probability: anomaly.archaeological_probability || 0,
+                site_type: anomaly.site_type_probability || {}
+            },
+            analysis_metadata: {
+                export_date: new Date().toISOString(),
+                pipeline_stage: this.pipelineStages[this.pipelineStage],
+                viewer_version: '1.0',
+                archeoscope_version: 'v2.1'
+            },
+            3d_model: {
+                vertices: this.currentMesh.geometry.attributes.position.count,
+                faces: this.currentMesh.geometry.index?.count / 3 || this.currentMesh.geometry.attributes.position.count / 3,
+                materials: Array.isArray(this.currentMesh.material) ? this.currentMesh.material.length : 1
+            }
+        };
+        
+        const blob = new Blob([JSON.stringify(analysisData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `archeoscope_complete_analysis_${anomaly.id}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        console.log('✅ Análisis completo exportado exitosamente');
     }
     
     /**

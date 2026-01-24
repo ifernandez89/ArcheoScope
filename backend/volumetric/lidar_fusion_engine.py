@@ -488,9 +488,17 @@ class LidarFusionEngine:
             base_elevation = max(0, 100 + lat * 10)  # Aproximación latitudinal
             terrain_roughness = 0.1
         
-        # Generar DTM con características realistas
+        # Generar DTM DETERMINÍSTICO sin valores aleatorios
         size = max(50, min(200, int(1000 / site.resolution_cm)))
-        dtm = np.random.random((size, size)) * terrain_roughness * 20 + base_elevation
+        
+        # Hash determinístico para terreno consistente
+        coord_hash = int((abs(site.coordinates[0]) * 10000 + abs(site.coordinates[1]) * 10000) % 1000000)
+        dtm = np.zeros((size, size))
+        for i in range(size):
+            for j in range(size):
+                # Terreno determinista basado en coordenadas
+                roughness_factor = ((coord_hash + i * 7 + j * 11) % int(terrain_roughness * 100)) / 100.0
+                dtm[i, j] = roughness_factor * 20 + base_elevation
         
         return dtm
     
@@ -499,16 +507,27 @@ class LidarFusionEngine:
         # En implementación real procesaría datos LIDAR reales
         dtm = self._generate_dtm(lidar_data, site)
         
-        # Añadir vegetación/estructuras basado en tipo de sitio
+        # Añadir vegetación/estructuras DETERMINÍSTICAS basado en tipo de sitio
+        coord_hash = int((abs(site.coordinates[0]) * 10000 + abs(site.coordinates[1]) * 10000) % 1000000)
+        
         if site.site_type == SiteType.ARCHAEOLOGICAL_CONFIRMED:
             # Sitios arqueológicos: estructuras más pronunciadas
-            vegetation_height = np.random.random(dtm.shape) * 3 + 1  # 1-4m
+            vegetation_height = np.zeros(dtm.shape)
+            for i in range(dtm.shape[0]):
+                for j in range(dtm.shape[1]):
+                    vegetation_height[i, j] = 1 + ((coord_hash + i + j) % 30) / 10.0  # 1-4m, DETERMINÍSTICO
         elif site.site_type == SiteType.MODERN_CONTROL:
             # Sitios modernos: estructuras altas y regulares
-            vegetation_height = np.random.random(dtm.shape) * 8 + 2  # 2-10m
+            vegetation_height = np.zeros(dtm.shape)
+            for i in range(dtm.shape[0]):
+                for j in range(dtm.shape[1]):
+                    vegetation_height[i, j] = 2 + ((coord_hash + i * 2 + j * 3) % 80) / 10.0  # 2-10m, DETERMINÍSTICO
         else:
             # Sitios naturales: vegetación variable
-            vegetation_height = np.random.random(dtm.shape) * 5  # 0-5m
+            vegetation_height = np.zeros(dtm.shape)
+            for i in range(dtm.shape[0]):
+                for j in range(dtm.shape[1]):
+                    vegetation_height[i, j] = ((coord_hash + i * 5 + j * 7) % 50) / 10.0  # 0-5m, DETERMINÍSTICO
         
         return dtm + vegetation_height
     
@@ -545,24 +564,50 @@ class LidarFusionEngine:
         return gxx + gyy  # Curvatura media
     
     def _simulate_ndvi_analysis(self, aoi_bounds: Dict[str, float]) -> np.ndarray:
-        """Simular análisis NDVI diferencial"""
-        return np.random.random((100, 100)) * 0.8 + 0.1
+        """Simular análisis NDVI DETERMINÍSTICO diferencial"""
+        # Hash determinístico basado en coordenadas del AOI
+        coord_hash = int((abs(aoi_bounds.get('center_lat', 0)) * 10000 + abs(aoi_bounds.get('center_lon', 0)) * 10000) % 1000000)
+        ndvi_data = np.zeros((100, 100))
+        for i in range(100):
+            for j in range(100):
+                ndvi_data[i, j] = 0.1 + ((coord_hash + i * 3 + j * 7) % 70) / 100.0  # 0.1-0.8, DETERMINÍSTICO
+        return ndvi_data
     
     def _simulate_temporal_persistence(self, aoi_bounds: Dict[str, float]) -> np.ndarray:
-        """Simular persistencia temporal"""
-        return np.random.random((100, 100)) * 0.9 + 0.1
+        """Simular persistencia temporal DETERMINÍSTICA"""
+        coord_hash = int((abs(aoi_bounds.get('center_lat', 0)) * 10000 + abs(aoi_bounds.get('center_lon', 0)) * 10000) % 1000000)
+        persistence_data = np.zeros((100, 100))
+        for i in range(100):
+            for j in range(100):
+                persistence_data[i, j] = 0.1 + ((coord_hash + i * 5 + j * 11) % 80) / 100.0  # 0.1-0.9, DETERMINÍSTICO
+        return persistence_data
     
     def _simulate_spatial_coherence(self, aoi_bounds: Dict[str, float]) -> np.ndarray:
-        """Simular coherencia espacial"""
-        return np.random.random((100, 100)) * 0.7 + 0.2
+        """Simular coherencia espacial DETERMINÍSTICA"""
+        coord_hash = int((abs(aoi_bounds.get('center_lat', 0)) * 10000 + abs(aoi_bounds.get('center_lon', 0)) * 10000) % 1000000)
+        coherence_data = np.zeros((100, 100))
+        for i in range(100):
+            for j in range(100):
+                coherence_data[i, j] = 0.2 + ((coord_hash + i * 7 + j * 13) % 50) / 100.0  # 0.2-0.7, DETERMINÍSTICO
+        return coherence_data
     
-    def _simulate_vegetation_decoupling(self, aoi_bounds: Dict[str, float]) -> np.ndarray:
-        """Simular desacople vegetación-topografía"""
-        return np.random.random((100, 100)) * 0.6 + 0.3
+    def _simulate_geometric_confidence(self, aoi_bounds: Dict[str, float]) -> np.ndarray:
+        """Simular confianza geométrica DETERMINÍSTICA"""
+        coord_hash = int((abs(aoi_bounds.get('center_lat', 0)) * 10000 + abs(aoi_bounds.get('center_lon', 0)) * 10000) % 1000000)
+        confidence_data = np.zeros((100, 100))
+        for i in range(100):
+            for j in range(100):
+                confidence_data[i, j] = 0.3 + ((coord_hash + i * 11 + j * 17) % 30) / 100.0  # 0.3-0.6, DETERMINÍSTICO
+        return confidence_data
     
-    def _simulate_modern_exclusion(self, aoi_bounds: Dict[str, float]) -> np.ndarray:
-        """Simular exclusión moderna"""
-        return np.random.random((100, 100)) * 0.3  # Baja probabilidad moderna
+    def _simulate_lidar_confidence(self, aoi_bounds: Dict[str, float]) -> np.ndarray:
+        """Simular confianza LIDAR DETERMINÍSTICA"""
+        coord_hash = int((abs(aoi_bounds.get('center_lat', 0)) * 10000 + abs(aoi_bounds.get('center_lon', 0)) * 10000) % 1000000)
+        confidence_data = np.zeros((100, 100))
+        for i in range(100):
+            for j in range(100):
+                confidence_data[i, j] = ((coord_hash + i * 13 + j * 19) % 30) / 100.0  # 0.0-0.3, DETERMINÍSTICO
+        return confidence_data
     
     def _generate_anthropic_probability_mask(self, archeoscope_results: Dict[str, Any]) -> np.ndarray:
         """Generar máscara probabilística de intervención antrópica"""

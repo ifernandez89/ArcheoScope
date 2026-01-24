@@ -297,12 +297,22 @@ class CryoArchaeologyEngine:
         return sensor_data
     
     def _generate_icesat2_elevation_data(self, ice_context: IceContext, grid_size: int) -> np.ndarray:
-        """Generar datos de elevación ICESat-2 sintéticos"""
+        """Generar datos de elevación sobre hielo 100% DETERMINÍSTICOS sin valores aleatorios"""
         
+        # Elevación base según tipo de hielo
         base_elevation = 1000 if ice_context.ice_type == IceEnvironmentType.ALPINE_ICE else 100
         
-        # Crear superficie base con variaciones naturales
-        elevation = np.random.normal(base_elevation, base_elevation * 0.05, (grid_size, grid_size))
+        # Hash determinístico de coordenadas SIN np.random
+        lat, lon = ice_context.coordinates
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
+        
+        # Crear superficie base DETERMINÍSTICA con variaciones naturales
+        elevation = np.zeros((grid_size, grid_size))
+        for i in range(grid_size):
+            for j in range(grid_size):
+                # Variación determinista basada en coordenadas y posición
+                variation = ((coord_hash + i * 3 + j * 7) % int(base_elevation * 0.1)) - int(base_elevation * 0.05)
+                elevation[i, j] = base_elevation + variation
         
         # Añadir características según tipo de hielo
         if ice_context.ice_type == IceEnvironmentType.GLACIER:
@@ -310,13 +320,20 @@ class CryoArchaeologyEngine:
             for i in range(grid_size):
                 elevation[i, :] += np.sin(i * 0.1) * 10
         
-        # Añadir anomalías arqueológicas (depresiones artificiales)
-        num_anomalies = np.random.randint(1, 4)
-        for _ in range(num_anomalies):
-            x, y = np.random.randint(10, grid_size-10, 2)
-            # Depresión circular (posible refugio o estructura)
-            radius = np.random.randint(5, 15)
-            depth = np.random.uniform(2, 10)
+        # Añadir anomalías arqueológicas DETERMINÍSTICAMENTE (depresiones artificiales)
+        num_anomalies = 1 + (coord_hash % 3)  # Siempre 1-3 para mismas coords
+        for i in range(num_anomalies):
+            # Posición DETERMINÍSTICA basada en hash
+            position_hash = coord_hash + i * 1000
+            x = 10 + (position_hash % (grid_size - 20))
+            y = 10 + ((position_hash // 100) % (grid_size - 20))
+            
+            # Depresión circular DETERMINÍSTICA (posible refugio o estructura)
+            radius_hash = coord_hash + i * 500
+            radius = 5 + (radius_hash % 10)  # 5-14, sin random
+            
+            depth_hash = coord_hash + i * 300
+            depth = 2 + (depth_hash % 8)  # 2-9, sin random
             
             for i in range(max(0, x-radius), min(grid_size, x+radius)):
                 for j in range(max(0, y-radius), min(grid_size, y+radius)):
@@ -327,24 +344,36 @@ class CryoArchaeologyEngine:
         return elevation
     
     def _generate_icesat2_density_data(self, ice_context: IceContext, grid_size: int) -> np.ndarray:
-        """Generar datos de densidad de hielo sintéticos"""
+        """Generar datos de densidad de hielo 100% DETERMINÍSTICOS sin valores aleatorios"""
         
         base_density = ice_context.ice_density_kg_m3 or 900.0
         
-        # Variaciones de densidad
-        density = np.random.normal(base_density, base_density * 0.02, (grid_size, grid_size))
+        # Hash determinístico SIN np.random
+        lat, lon = ice_context.coordinates
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
-        # Añadir anomalías de densidad (cavidades de aire, materiales orgánicos)
-        num_anomalies = np.random.randint(0, 3)
-        for _ in range(num_anomalies):
-            x, y = np.random.randint(5, grid_size-5, 2)
-            # Zona de menor densidad
+        # Variaciones de densidad DETERMINÍSTICAS
+        density = np.zeros((grid_size, grid_size))
+        for i in range(grid_size):
+            for j in range(grid_size):
+                # Variación determinista de densidad
+                variation = ((coord_hash + i * 5 + j * 11) % int(base_density * 0.04)) - int(base_density * 0.02)
+                density[i, j] = base_density + variation
+        
+        # Añadir anomalías de densidad DETERMINÍSTICAMENTE (cavidades de aire, materiales orgánicos)
+        num_anomalies = coord_hash % 3  # Siempre 0-2 para mismas coords
+        for i in range(num_anomalies):
+            # Posición DETERMINÍSTICA
+            position_hash = coord_hash + i * 700
+            x = 5 + (position_hash % (grid_size - 10))
+            y = 5 + ((position_hash // 100) % (grid_size - 10))
+            # Zona de menor densidad DETERMINÍSTICA
             density[x-3:x+3, y-3:y+3] *= 0.7  # 30% menos denso
         
         return density
     
     def _generate_seismic_data(self, ice_context: IceContext, grid_size: int) -> np.ndarray:
-        """Generar datos sísmicos sintéticos"""
+        """Generar datos sísmicos 100% DETERMINÍSTICOS sin valores aleatorios"""
         
         # Velocidad sísmica base según tipo de hielo
         if ice_context.ice_type == IceEnvironmentType.PERMAFROST:
@@ -352,19 +381,32 @@ class CryoArchaeologyEngine:
         else:
             base_velocity = 3800  # m/s en hielo glacial
         
-        seismic_velocity = np.random.normal(base_velocity, base_velocity * 0.05, (grid_size, grid_size))
+        # Hash determinístico SIN np.random
+        lat, lon = ice_context.coordinates
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
-        # Añadir anomalías sísmicas (cavidades, materiales diferentes)
-        num_cavities = np.random.randint(0, 2)
-        for _ in range(num_cavities):
-            x, y = np.random.randint(5, grid_size-5, 2)
-            # Cavidad (velocidad muy baja)
+        # Velocidad sísmica DETERMINÍSTICA
+        seismic_velocity = np.zeros((grid_size, grid_size))
+        for i in range(grid_size):
+            for j in range(grid_size):
+                # Variación determinista de velocidad sísmica
+                variation = ((coord_hash + i * 7 + j * 13) % int(base_velocity * 0.1)) - int(base_velocity * 0.05)
+                seismic_velocity[i, j] = base_velocity + variation
+        
+        # Añadir anomalías sísmicas DETERMINÍSTICAMENTE (cavidades, materiales diferentes)
+        num_cavities = coord_hash % 2  # Siempre 0-1 para mismas coords
+        for i in range(num_cavities):
+            # Posición DETERMINÍSTICA
+            position_hash = coord_hash + i * 900
+            x = 5 + (position_hash % (grid_size - 10))
+            y = 5 + ((position_hash // 100) % (grid_size - 10))
+            # Cavidad (velocidad muy baja) - DETERMINÍSTICA
             seismic_velocity[x-2:x+2, y-2:y+2] = 1500  # Velocidad del aire/agua
         
         return seismic_velocity
     
     def _generate_sar_coherence_data(self, ice_context: IceContext, grid_size: int) -> np.ndarray:
-        """Generar datos de coherencia SAR sintéticos"""
+        """Generar datos de coherencia SAR 100% DETERMINÍSTICOS sin valores aleatorios"""
         
         # Coherencia base según estabilidad del hielo
         if ice_context.seasonal_phase == SeasonalPhase.WINTER_ACCUMULATION:
@@ -372,14 +414,28 @@ class CryoArchaeologyEngine:
         else:
             base_coherence = 0.6  # Menor coherencia durante deshielo
         
-        coherence = np.random.uniform(base_coherence-0.1, base_coherence+0.1, (grid_size, grid_size))
+        # Hash determinístico SIN np.random
+        lat, lon = ice_context.coordinates
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
-        # Añadir fracturas y características estructurales
-        num_fractures = np.random.randint(1, 3)
-        for _ in range(num_fractures):
-            # Fractura lineal
-            start_x, start_y = np.random.randint(0, grid_size, 2)
-            end_x, end_y = np.random.randint(0, grid_size, 2)
+        # Coherencia DETERMINÍSTICA
+        coherence = np.zeros((grid_size, grid_size))
+        for i in range(grid_size):
+            for j in range(grid_size):
+                # Variación determinista de coherencia
+                variation = ((coord_hash + i * 9 + j * 17) % 20) / 100.0 - 0.1  # -0.1 a 0.1
+                coherence[i, j] = max(0.0, min(1.0, base_coherence + variation))
+        
+        # Añadir fracturas y características estructurales DETERMINÍSTICAMENTE
+        num_fractures = 1 + (coord_hash % 2)  # Siempre 1-2 para mismas coords
+        for i in range(num_fractures):
+            # Fractura lineal DETERMINÍSTICA
+            position_hash = coord_hash + i * 1100
+            start_x = (position_hash % grid_size)
+            start_y = ((position_hash // 100) % grid_size)
+            end_hash = position_hash + 500
+            end_x = (end_hash % grid_size)
+            end_y = ((end_hash // 100) % grid_size)
             
             # Crear línea de baja coherencia
             steps = max(abs(end_x - start_x), abs(end_y - start_y))
@@ -396,41 +452,68 @@ class CryoArchaeologyEngine:
         return coherence
     
     def _generate_palsar_penetration_data(self, ice_context: IceContext, grid_size: int) -> np.ndarray:
-        """Generar datos de penetración PALSAR sintéticos"""
+        """Generar datos de penetración PALSAR 100% DETERMINÍSTICOS sin valores aleatorios"""
         
         # Penetración base según espesor de hielo
         max_penetration = min(50, ice_context.estimated_thickness_m or 10)
         
-        penetration = np.random.uniform(0.5, 1.0, (grid_size, grid_size)) * max_penetration
+        # Hash determinístico SIN np.random
+        lat, lon = ice_context.coordinates
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
-        # Áreas con menor penetración (objetos enterrados)
-        num_objects = np.random.randint(0, 2)
-        for _ in range(num_objects):
-            x, y = np.random.randint(5, grid_size-5, 2)
-            # Objeto que bloquea penetración
+        # Penetración DETERMINÍSTICA
+        penetration = np.zeros((grid_size, grid_size))
+        for i in range(grid_size):
+            for j in range(grid_size):
+                # Factor de penetración determinista 0.5-1.0
+                factor = 0.5 + ((coord_hash + i * 11 + j * 19) % 50) / 100.0
+                penetration[i, j] = factor * max_penetration
+        
+        # Áreas con menor penetración DETERMINÍSTICAMENTE (objetos enterrados)
+        num_objects = coord_hash % 2  # Siempre 0-1 para mismas coords
+        for i in range(num_objects):
+            # Posición DETERMINÍSTICA
+            position_hash = coord_hash + i * 1300
+            x = 5 + (position_hash % (grid_size - 10))
+            y = 5 + ((position_hash // 100) % (grid_size - 10))
+            # Objeto que bloquea penetración - DETERMINÍSTICO
             penetration[x-2:x+2, y-2:y+2] *= 0.2
         
         return penetration
     
     def _generate_thermal_data(self, ice_context: IceContext, grid_size: int) -> np.ndarray:
-        """Generar datos térmicos sintéticos"""
+        """Generar datos térmicos 100% DETERMINÍSTICOS sin valores aleatorios"""
         
         base_temp = ice_context.surface_temperature_c or -10.0
         
-        # Variaciones térmicas naturales
-        thermal = np.random.normal(base_temp, 2.0, (grid_size, grid_size))
+        # Hash determinístico SIN np.random
+        lat, lon = ice_context.coordinates
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
-        # Anomalías térmicas (refugios, actividad geotérmica)
-        num_anomalies = np.random.randint(0, 2)
-        for _ in range(num_anomalies):
-            x, y = np.random.randint(5, grid_size-5, 2)
-            # Zona más cálida (posible refugio o actividad)
-            thermal[x-3:x+3, y-3:y+3] += np.random.uniform(2, 8)
+        # Variaciones térmicas naturales DETERMINÍSTICAS
+        thermal = np.zeros((grid_size, grid_size))
+        for i in range(grid_size):
+            for j in range(grid_size):
+                # Variación determinista de temperatura (±2.0°C)
+                variation = ((coord_hash + i * 13 + j * 23) % 40) / 10.0 - 2.0  # -2.0 a 2.0
+                thermal[i, j] = base_temp + variation
+        
+        # Anomalías térmicas DETERMINÍSTICAMENTE (refugios, actividad geotérmica)
+        num_anomalies = coord_hash % 2  # Siempre 0-1 para mismas coords
+        for i in range(num_anomalies):
+            # Posición DETERMINÍSTICA
+            position_hash = coord_hash + i * 1500
+            x = 5 + (position_hash % (grid_size - 10))
+            y = 5 + ((position_hash // 100) % (grid_size - 10))
+            # Anomalía cálida DETERMINÍSTICA
+            anomaly_hash = coord_hash + i * 700
+            thermal_increase = 2 + (anomaly_hash % 6)  # 2-7°C, sin random
+            thermal[x-3:x+3, y-3:y+3] += thermal_increase
         
         return thermal
     
     def _generate_soil_moisture_data(self, ice_context: IceContext, grid_size: int) -> np.ndarray:
-        """Generar datos de humedad del suelo sintéticos"""
+        """Generar datos de humedad del suelo 100% DETERMINÍSTICOS sin valores aleatorios"""
         
         # Humedad base según tipo de permafrost
         if ice_context.ice_type == IceEnvironmentType.PERMAFROST:
@@ -438,7 +521,17 @@ class CryoArchaeologyEngine:
         else:
             base_moisture = 0.1  # Baja humedad en hielo
         
-        moisture = np.random.uniform(base_moisture-0.05, base_moisture+0.05, (grid_size, grid_size))
+        # Hash determinístico SIN np.random
+        lat, lon = ice_context.coordinates
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
+        
+        # Humedad DETERMINÍSTICA
+        moisture = np.zeros((grid_size, grid_size))
+        for i in range(grid_size):
+            for j in range(grid_size):
+                # Variación determinista de humedad ±0.05
+                variation = ((coord_hash + i * 17 + j * 29) % 10) / 100.0 - 0.05  # -0.05 a 0.05
+                moisture[i, j] = max(0.0, min(1.0, base_moisture + variation))
         
         return moisture
     

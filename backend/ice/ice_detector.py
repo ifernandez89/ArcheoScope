@@ -283,24 +283,27 @@ class IceDetector:
         """Estimar espesor del hielo con calibración mejorada"""
         
         if glacier:
-            # Glaciares: espesor basado en ubicación y tipo
+            # Glaciares: espesor DETERMINÍSTICO basado en ubicación y tipo
+            # Hash determinístico SIN np.random
+            coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
+            
             if lat >= 75 or lat <= -75:  # Regiones polares extremas
                 # Groenlandia y Antártida - muy espesos
                 if 60 <= lat <= 84 and -73 <= lon <= -12:  # Groenlandia
-                    return np.random.uniform(800, 3200)  # 0.8-3.2km
+                    return 800 + (coord_hash % 2400)  # 800-3199m, DETERMINÍSTICO
                 elif lat <= -70:  # Antártida
-                    return np.random.uniform(1000, 4000)  # 1-4km
+                    return 1000 + (coord_hash % 3000)  # 1000-3999m, DETERMINÍSTICO
                 else:
-                    return np.random.uniform(500, 2000)  # Otros glaciares polares
+                    return 500 + (coord_hash % 1500)  # 500-1999m, DETERMINÍSTICO
             
             elif 60 <= lat < 75:  # Subártico
                 # Alaska, norte de Canadá, Siberia
                 if -170 <= lon <= -130:  # Alaska
-                    return np.random.uniform(200, 1200)
+                    return 200 + (coord_hash % 1000)  # 200-1199m, DETERMINÍSTICO
                 elif 60 <= lon <= 180:  # Siberia
-                    return np.random.uniform(100, 800)
+                    return 100 + (coord_hash % 700)  # 100-799m, DETERMINÍSTICO
                 else:
-                    return np.random.uniform(150, 1000)
+                    return 150 + (coord_hash % 850)  # 150-999m, DETERMINÍSTICO
             
             else:  # Glaciares alpinos (latitudes medias)
                 # Alpes, Andes, Himalaya, Montañas Rocosas
@@ -308,37 +311,43 @@ class IceDetector:
                 base_thickness = 50 + altitude_factor
                 
                 if 45 <= lat <= 48 and 6 <= lon <= 13:  # Alpes
-                    return np.random.uniform(base_thickness, base_thickness + 300)
+                    return base_thickness + (coord_hash % 300)  # DETERMINÍSTICO
                 elif 27 <= lat <= 37 and 70 <= lon <= 105:  # Himalaya
-                    return np.random.uniform(base_thickness + 100, base_thickness + 800)
+                    return (base_thickness + 100) + (coord_hash % 700)  # DETERMINÍSTICO
                 elif -55 <= lat <= -40 and -75 <= lon <= -65:  # Patagonia
-                    return np.random.uniform(base_thickness, base_thickness + 400)
+                    return base_thickness + (coord_hash % 400)  # DETERMINÍSTICO
                 else:  # Otros glaciares alpinos
-                    return np.random.uniform(base_thickness, base_thickness + 200)
+                    return base_thickness + (coord_hash % 200)  # DETERMINÍSTICO
         
         elif permafrost:
-            # Permafrost: espesor basado en latitud y continentalidad
+            # Permafrost: espesor DETERMINÍSTICO basado en latitud y continentalidad
+            # Hash determinístico SIN np.random
+            coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
+            
             if lat >= 70:  # Permafrost continuo profundo
-                # Ártico profundo
-                return np.random.uniform(300, 1500)
+                # Ártico profundo - DETERMINÍSTICO
+                return 300 + (coord_hash % 1200)  # 300-1499m, siempre igual
             elif 65 <= lat < 70:  # Permafrost continuo
                 # Distancia del océano afecta el espesor
                 ocean_distance = self._estimate_distance_to_ocean(lat, lon)
                 if ocean_distance > 500:  # Interior continental
-                    return np.random.uniform(200, 1200)
+                    return 200 + (coord_hash % 1000)  # 200-1199m, DETERMINÍSTICO
                 else:  # Cerca del océano
-                    return np.random.uniform(100, 800)
+                    return 100 + (coord_hash % 700)  # 100-799m, DETERMINÍSTICO
             elif 55 <= lat < 65:  # Permafrost discontinuo
-                return np.random.uniform(50, 400)
+                return 50 + (coord_hash % 350)  # 50-399m, DETERMINÍSTICO
             else:  # Permafrost alpino
-                return np.random.uniform(10, 200)
+                return 10 + (coord_hash % 190)  # 10-199m, DETERMINÍSTICO
         
         else:
-            # Nieve estacional: espesor basado en latitud y estación
+            # Nieve estacional: espesor DETERMINÍSTICO basado en latitud y estación
+            # Hash determinístico SIN np.random
+            coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
+            
             if lat >= 60 or lat <= -60:  # Latitudes altas
-                return np.random.uniform(2, 15)
+                return 2 + (coord_hash % 13)  # 2-14m, DETERMINÍSTICO
             else:  # Latitudes medias (montañas)
-                return np.random.uniform(1, 8)
+                return 1 + (coord_hash % 7)  # 1-7m, DETERMINÍSTICO
     
     def _estimate_distance_to_ocean(self, lat: float, lon: float) -> float:
         """Estimar distancia al océano más cercano (km)"""
@@ -573,12 +582,15 @@ class IceDetector:
         if not permafrost:
             return None
         
+        # Hash determinístico SIN np.random
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
+        
         if lat >= 70:  # Permafrost muy profundo
-            return np.random.uniform(200, 1500)
+            return 200 + (coord_hash % 1300)  # 200-1499m, DETERMINÍSTICO
         elif lat >= 60:  # Permafrost profundo
-            return np.random.uniform(50, 500)
+            return 50 + (coord_hash % 450)  # 50-499m, DETERMINÍSTICO
         else:  # Permafrost discontinuo
-            return np.random.uniform(10, 100)
+            return 10 + (coord_hash % 90)  # 10-99m, DETERMINÍSTICO
     
     def _estimate_bedrock_type(self, lat: float, lon: float) -> Optional[str]:
         """Estimar tipo de roca base"""

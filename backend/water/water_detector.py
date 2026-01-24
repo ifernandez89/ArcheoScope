@@ -70,6 +70,40 @@ class WaterDetector:
         try:
             logger.info(f"Detectando contexto de agua para coordenadas: {lat:.4f}, {lon:.4f}")
             
+            # 0. EXCLUSIÓN DE REGIONES POLARES (prioridad máxima)
+            # Las regiones polares son manejadas por el ice detector
+            if lat <= -60:  # Antártida
+                logger.info("Región antártica detectada - excluida de detección de agua")
+                return WaterContext(
+                    is_water=False,
+                    water_type=None,
+                    estimated_depth_m=None,
+                    salinity_type="none",
+                    coordinates=(lat, lon),
+                    confidence=0.0,
+                    archaeological_potential="none",
+                    historical_shipping_routes=False,
+                    known_wrecks_nearby=False,
+                    sediment_type=None,
+                    current_strength=None
+                )
+            
+            if 66.5 <= lat <= 70:  # Ártico
+                logger.info("Región ártica detectada - excluida de detección de agua")
+                return WaterContext(
+                    is_water=False,
+                    water_type=None,
+                    estimated_depth_m=None,
+                    salinity_type="none",
+                    coordinates=(lat, lon),
+                    confidence=0.0,
+                    archaeological_potential="none",
+                    historical_shipping_routes=False,
+                    known_wrecks_nearby=False,
+                    sediment_type=None,
+                    current_strength=None
+                )
+            
             # 1. Verificación básica de océanos
             ocean_check = self._check_ocean_boundaries(lat, lon)
             
@@ -158,8 +192,51 @@ class WaterDetector:
             if not self._is_land_mass(lat, lon):
                 return True
         
-        # Océano Ártico
-        if lat >= 66.5:
+        # Océano Ártico (excluyendo zonas antárticas)
+        if 66.5 <= lat <= 70 and -80 <= lon <= 20:
+            # Excluir masas de tierra principales
+            if not self._is_land_mass(lat, lon):
+                return True
+        
+        # Océano Pacífico
+        if (lon >= 120 or lon <= -60) and -60 <= lat <= 70:
+            if not self._is_land_mass(lat, lon):
+                return True
+        
+        # Océano Índico
+        if 20 <= lon <= 120 and -60 <= lat <= 30:
+            if not self._is_land_mass(lat, lon):
+                return True
+        
+        # Océano Ártico (sin modificar, agua que no es polar)
+        if -80 <= lon <= 20 and -60 <= lat <= 70:
+            # Excluir masas de tierra principales
+            if not self._is_land_mass(lat, lon):
+                return True
+        
+        # Océano Pacífico
+        if (lon >= 120 or lon <= -60) and -60 <= lat <= 70:
+            if not self._is_land_mass(lat, lon):
+                return True
+        
+        # Océano Índico
+        if 20 <= lon <= 120 and -60 <= lat <= 30:
+            if not self._is_land_mass(lat, lon):
+                return True
+        
+        # Océano Ártico (modificado para excluir Antártida)
+        if -80 <= lon <= 20 and -60 <= lat <= 70:
+            # Excluir masas de tierra principales
+            if not self._is_land_mass(lat, lon):
+                return True
+        
+        # Océano Pacífico (sin modificar)
+        if (lon >= 120 or lon <= -60) and -60 <= lat <= 70:
+            if not self._is_land_mass(lat, lon):
+                return True
+        
+        # Océano Índico (sin modificar)
+        if 20 <= lon <= 120 and -60 <= lat <= 30:
             if not self._is_land_mass(lat, lon):
                 return True
         
@@ -238,6 +315,16 @@ class WaterDetector:
     def _is_land_mass(self, lat: float, lon: float) -> bool:
         """Verificar si está sobre una masa de tierra principal (simplificado)"""
         
+        # Verificar si es zona antártica - NO es tierra, es hielo/océano
+        if lat <= -60:
+            return False # Antártida = hielo/océano, no agua
+        
+        # Verificar si es zona ártica - podría ser hielo
+        if 66.5 <= lat <= 70:
+            # Ártico = principalmente hielo/tierra glaciada, no agua pura
+            return False # Considerar como NO agua para análisis arqueológico
+        
+        # Resto de la lógica original
         # América del Norte (excluyendo Caribe y aguas costeras)
         if 30 <= lat <= 70 and -125 <= lon <= -60:
             # Excluir el Caribe y aguas del Atlántico Norte
@@ -268,11 +355,10 @@ class WaterDetector:
         return False
     
     def _estimate_depth(self, lat: float, lon: float) -> Optional[float]:
-        """Estimar profundidad del agua (mejorado con calibración por ubicaciones específicas)"""
+        """Estimar profundidad del agua 100% DETERMINÍSTICA sin valores aleatorios"""
         
-        # Usar coordenadas como semilla para resultados consistentes
-        seed = int((abs(lat) * 1000 + abs(lon) * 1000) % 2147483647)
-        np.random.seed(seed)
+        # Crear hash determinístico de coordenadas SIN np.random
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
         # Primero verificar ubicaciones específicas conocidas
         specific_depth = self._get_specific_location_depth(lat, lon)
@@ -285,59 +371,61 @@ class WaterDetector:
         river_check = self._check_major_rivers(lat, lon)
         
         if river_check:
-            # Ríos: profundidad basada en tamaño del río
+            # Ríos: profundidad DETERMINÍSTICA basada en coordenadas
             if abs(lat) < 10:  # Ríos tropicales (más profundos)
-                return np.random.uniform(5, 80)
+                # Profundidad determinista: 5-80m basada en hash
+                return 5 + (coord_hash % 75)  # Siempre 5-79m para mismas coords
             else:  # Ríos templados
-                return np.random.uniform(2, 50)
+                # Profundidad determinista: 2-50m basada en hash
+                return 2 + (coord_hash % 48)  # Siempre 2-49m para mismas coords
         
         elif water_body_check:
             # Mares y lagos específicos con profundidades calibradas
             
-            # Mar Mediterráneo (profundidad media ~1500m)
+            # Mar Mediterráneo (profundidad media ~1500m) - DETERMINÍSTICO
             if 30 <= lat <= 46 and -6 <= lon <= 36:
-                return np.random.uniform(800, 2500)
+                return 800 + (coord_hash % 1700)  # 800-2499m, siempre igual
             
-            # Mar Negro (profundidad media ~1200m)
+            # Mar Negro (profundidad media ~1200m) - DETERMINÍSTICO
             elif 40.5 <= lat <= 47 and 27 <= lon <= 42:
-                return np.random.uniform(600, 2000)
+                return 600 + (coord_hash % 1400)  # 600-1999m, siempre igual
             
-            # Mar Caspio (profundidad media ~200m)
+            # Mar Caspio (profundidad media ~200m) - DETERMINÍSTICO
             elif 36 <= lat <= 47 and 46 <= lon <= 55:
-                return np.random.uniform(50, 400)
+                return 50 + (coord_hash % 350)  # 50-399m, siempre igual
             
-            # Grandes Lagos (profundidad media ~150m)
+            # Grandes Lagos (profundidad media ~150m) - DETERMINÍSTICO
             elif 41 <= lat <= 49 and -93 <= lon <= -76:
-                return np.random.uniform(50, 300)
+                return 50 + (coord_hash % 250)  # 50-299m, siempre igual
             
-            # Mar Báltico (profundidad media ~55m)
+            # Mar Báltico (profundidad media ~55m) - DETERMINÍSTICO
             elif 53 <= lat <= 66 and 9 <= lon <= 31:
-                return np.random.uniform(20, 150)
+                return 20 + (coord_hash % 130)  # 20-149m, siempre igual
             
-            # Golfo de México (profundidad variable)
+            # Golfo de México (profundidad variable) - DETERMINÍSTICO
             elif 18 <= lat <= 31 and -98 <= lon <= -80:
-                # Más profundo hacia el centro
-                center_distance = np.sqrt((lat - 24.5)**2 + (lon + 89)**2)
+                # Más profundo hacia el centro - cálculo determinista
+                center_distance = int(np.sqrt((lat - 24.5)**2 + (lon + 89)**2) * 100) % 1000
                 if center_distance < 3:  # Centro profundo
-                    return np.random.uniform(2000, 4000)
+                    return 2000 + (coord_hash % 2000)  # 2000-3999m, siempre igual
                 else:  # Bordes más someros
-                    return np.random.uniform(50, 1500)
+                    return 50 + (coord_hash % 1450)  # 50-1499m, siempre igual
             
-            # Mar Rojo (profundidad media ~500m)
+            # Mar Rojo (profundidad media ~500m) - DETERMINÍSTICO
             elif 12 <= lat <= 30 and 32 <= lon <= 43:
-                return np.random.uniform(200, 1000)
+                return 200 + (coord_hash % 800)  # 200-999m, siempre igual
             
-            # Aguas costeras del Atlántico Norte
+            # Aguas costeras del Atlántico Norte - DETERMINÍSTICO
             elif 35 <= lat <= 50 and -80 <= lon <= -60:
-                return np.random.uniform(50, 200)  # Aguas costeras someras
+                return 50 + (coord_hash % 150)  # 50-199m, Aguas costeras someras, siempre igual
             
-            # Aguas costeras del Pacífico
+            # Aguas costeras del Pacífico - DETERMINÍSTICO
             elif 15 <= lat <= 35 and -170 <= lon <= -150:
-                return np.random.uniform(10, 100)  # Aguas costeras muy someras
+                return 10 + (coord_hash % 90)  # 10-99m, Aguas costeras muy someras, siempre igual
             
             else:
-                # Mar genérico
-                return np.random.uniform(100, 2000)
+                # Mar genérico - DETERMINÍSTICO
+                return 100 + (coord_hash % 1900)  # 100-1999m, siempre igual
         
         elif ocean_check:
             # Océanos: profundidad basada en distancia de costa y latitud
@@ -345,49 +433,52 @@ class WaterDetector:
             # Estimar distancia aproximada de costa
             coast_distance = self._estimate_distance_to_coast(lat, lon)
             
-            if coast_distance < 50:  # Aguas costeras (<50km de costa)
-                return np.random.uniform(10, 200)
-            elif coast_distance < 200:  # Plataforma continental
-                return np.random.uniform(100, 800)
-            elif coast_distance < 500:  # Talud continental
-                return np.random.uniform(500, 2500)
-            else:  # Océano profundo
-                # Profundidad basada en latitud y océano
+            if coast_distance < 50:  # Aguas costeras (<50km de costa) - DETERMINÍSTICO
+                return 10 + (coord_hash % 190)  # 10-199m, siempre igual
+            elif coast_distance < 200:  # Plataforma continental - DETERMINÍSTICO
+                return 100 + (coord_hash % 700)  # 100-799m, siempre igual
+            elif coast_distance < 500:  # Talud continental - DETERMINÍSTICO
+                return 500 + (coord_hash % 2000)  # 500-2499m, siempre igual
+            else:  # Océano profundo - DETERMINÍSTICO
+                # Profundidad basada en latitud - cálculo determinista
                 if abs(lat) < 30:  # Trópicos - más profundo
-                    return np.random.uniform(3000, 6000)
+                    return 3000 + (coord_hash % 3000)  # 3000-5999m, siempre igual
                 elif abs(lat) < 60:  # Templado
-                    return np.random.uniform(2000, 5000)
+                    return 2000 + (coord_hash % 3000)  # 2000-4999m, siempre igual
                 else:  # Polar - menos profundo por hielo
-                    return np.random.uniform(1000, 4000)
+                    return 1000 + (coord_hash % 3000)  # 1000-3999m, siempre igual
         
         return None
     
     def _get_specific_location_depth(self, lat: float, lon: float) -> Optional[float]:
-        """Obtener profundidad para ubicaciones específicas conocidas"""
+        """Obtener profundidad DETERMINÍSTICA para ubicaciones específicas conocidas"""
         
-        # Titanic
+        # Crear hash para variaciones menores pero consistentes
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
+        
+        # Titanic - Profundidad exacta DETERMINÍSTICA
         if 41.7 <= lat <= 41.8 and -50.0 <= lon <= -49.9:
-            return np.random.uniform(3700, 3900)  # ~3800m
+            return 3700 + (coord_hash % 200)  # 3700-3899m, siempre igual
         
-        # Bismarck
+        # Bismarck - Profundidad exacta DETERMINÍSTICA
         if 48.1 <= lat <= 48.2 and -16.3 <= lon <= -16.1:
-            return np.random.uniform(4600, 4800)  # ~4700m
+            return 4600 + (coord_hash % 200)  # 4600-4799m, siempre igual
         
-        # Andrea Doria (Atlántico Norte costero)
+        # Andrea Doria (Atlántico Norte costero) - DETERMINÍSTICO
         if 40.4 <= lat <= 40.5 and -70.0 <= lon <= -69.8:
-            return np.random.uniform(60, 80)  # ~70m
+            return 60 + (coord_hash % 20)  # 60-79m, siempre igual
         
-        # Costa Concordia (Mediterráneo costero)
+        # Costa Concordia (Mediterráneo costero) - DETERMINÍSTICO
         if 42.3 <= lat <= 42.5 and 10.8 <= lon <= 11.0:
-            return np.random.uniform(35, 45)  # ~40m
+            return 35 + (coord_hash % 10)  # 35-44m, siempre igual
         
-        # Anomalía del Báltico
+        # Anomalía del Báltico - DETERMINÍSTICO
         if 59.8 <= lat <= 60.0 and 19.7 <= lon <= 19.9:
-            return np.random.uniform(85, 95)  # ~90m
+            return 85 + (coord_hash % 10)  # 85-94m, siempre igual
         
-        # USS Arizona (Pearl Harbor)
+        # USS Arizona (Pearl Harbor) - DETERMINÍSTICO
         if 21.3 <= lat <= 21.4 and -158.0 <= lon <= -157.9:
-            return np.random.uniform(10, 15)  # ~12m
+            return 10 + (coord_hash % 5)  # 10-14m, siempre igual
         
         return None
     

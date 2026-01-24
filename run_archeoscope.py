@@ -20,10 +20,10 @@ def check_dependencies():
         import numpy
         import scipy
         # import cv2  # Comentado temporalmente
-        print("✅ Dependencias del backend arqueológico verificadas")
+        print("Dependencias del backend arqueologico verificadas")
         return True
     except ImportError as e:
-        print(f"❌ Dependencia faltante: {e}")
+        print(f"ERROR: Dependencia faltante: {e}")
         print("Ejecuta: pip install -r backend/requirements.txt")
         return False
 
@@ -36,24 +36,24 @@ def check_ollama():
             model_names = [model['name'] for model in models]
             
             if 'phi4-mini-reasoning' in model_names:
-                print(f"✅ Ollama disponible con phi4-mini-reasoning")
+                print(f"OK: Ollama disponible con phi4-mini-reasoning")
                 return True
             else:
-                print(f"⚠️  Ollama disponible pero falta phi4-mini-reasoning")
+                print(f"AVISO: Ollama disponible pero falta phi4-mini-reasoning")
                 print(f"   Modelos disponibles: {model_names}")
                 print("   Para instalar: ollama pull phi4-mini-reasoning")
                 return False
     except:
         pass
     
-    print("⚠️  Ollama no disponible - sistema funcionará con fallbacks deterministas")
-    print("   Para activar IA arqueológica: ejecuta 'ollama serve' en otra terminal")
+    print("AVISO: Ollama no disponible - sistema funcionara con fallbacks deterministas")
+    print("   Para activar IA arqueologica: ejecuta 'ollama serve' en otra terminal")
     print("   Luego: ollama pull phi4-mini-reasoning")
     return False
 
 def start_backend():
-    """Iniciar el servidor backend arqueológico"""
-    print("🏺 Iniciando servidor ArcheoScope...")
+    """Iniciar el servidor backend arqueologico"""
+    print("Iniciando servidor ArcheoScope...")
     
     backend_path = Path(__file__).parent / "backend"
     
@@ -66,7 +66,7 @@ def start_backend():
         
         return process
     except Exception as e:
-        print(f"❌ Error iniciando backend arqueológico: {e}")
+        print(f"❌ Error iniciando backend arqueologico: {e}")
         return None
 
 def wait_for_backend():
@@ -90,7 +90,7 @@ def wait_for_backend():
     return True
 
 def open_frontend():
-    """Abrir el frontend arqueológico en el navegador"""
+    """Abrir el frontend arqueologico en el navegador"""
     frontend_path = Path(__file__).parent / "frontend" / "index.html"
     frontend_url = f"file://{frontend_path.absolute()}"
     
@@ -106,7 +106,7 @@ def open_frontend():
 
 def main():
     """Función principal"""
-    print("🏺 ARCHEOSCOPE - ARCHAEOLOGICAL REMOTE SENSING ENGINE")
+    print("ARCHEOSCOPE - ARCHAEOLOGICAL REMOTE SENSING ENGINE")
     print("=" * 60)
     print("Plataforma de inferencia espacial científica para arqueología remota")
     print("Detecta persistencias espaciales no explicables por procesos naturales actuales")
@@ -141,13 +141,13 @@ def main():
         print("📊 Estado del sistema: http://localhost:8002/status")
         
         print("\n🏺 Cómo usar ArcheoScope:")
-        print("1. Selecciona una región arqueológica en el mapa (Ctrl+click y arrastra)")
+        print("1. Selecciona una región arqueologica en el mapa (Ctrl+click y arrastra)")
         print("2. Configura las capas de análisis (NDVI, térmico, SAR, etc.)")
         print("3. Presiona 'INVESTIGAR REGIÓN'")
-        print("4. Explora las firmas arqueológicas en el panel derecho")
+        print("4. Explora las firmas arqueologicas en el panel derecho")
         print("5. Usa las capas conmutables para análisis detallado")
         
-        print("\n🔬 Indicadores arqueológicos:")
+        print("\n🔬 Indicadores arqueologicos:")
         print("• 🌱 Desacople vegetación-topografía (muros, caminos enterrados)")
         print("• 🌡️ Patrones térmicos residuales (estructuras, fundaciones)")
         print("• 📡 Texturas anómalas SAR (geometría no natural)")
@@ -169,7 +169,7 @@ def main():
         return 0
     
     except Exception as e:
-        print(f"\n❌ Error inesperado: {e}")
+        print(f"\nERROR: Error inesperado: {e}")
         backend_process.terminate()
         return 1
 

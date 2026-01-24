@@ -264,26 +264,34 @@ class SubmarineArchaeologyEngine:
         return sensor_data
     
     def _generate_bathymetry_data(self, water_context: WaterContext, grid_size: int) -> np.ndarray:
-        """Generar datos batimétricos sintéticos"""
+        """Generar datos batimétricos DETERMINÍSTICOS sin valores aleatorios"""
         
-        # Usar coordenadas como semilla para consistencia
+        # CREAR DATOS DETERMINÍSTICOS 100% BASADOS EN COORDENADAS
         lat, lon = water_context.coordinates
-        seed = int((abs(lat) * 1000 + abs(lon) * 1000) % 2147483647)
-        np.random.seed(seed)
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
         base_depth = water_context.estimated_depth_m or 100
         
-        # Crear topografía del fondo marino
-        bathymetry = np.random.normal(base_depth, base_depth * 0.1, (grid_size, grid_size))
+        # Crear topografía del fondo marino DETERMINÍSTICA SIN RANDOM
+        # Usar funciones matemáticas puras, no aleatorias
         
-        # Añadir características del fondo según tipo de agua
+        # Inicializar bathymetry determinística SIN random
+        bathymetry = np.zeros((grid_size, grid_size))
+        for i in range(grid_size):
+            for j in range(grid_size):
+                # Variación determinista basada en coordenadas
+                depth_variation = np.sin(coord_hash + i * 0.1) * np.cos(coord_hash + j * 0.1) * (base_depth * 0.1)
+                bathymetry[i, j] = base_depth + depth_variation
+        
+        # Añadir características del fondo según tipo de agua DETERMINÍSTICAMENTE
         if water_context.water_type == WaterBodyType.RIVER:
-            # Canales de río
+            # Canales de río - variación determinista
             center = grid_size // 2
-            bathymetry[center-5:center+5, :] += np.random.uniform(2, 10)
+            depth_variation_river = 2 + (coord_hash % 8)  # 2-10, sin random
+            bathymetry[center-5:center+5, :] += depth_variation_river
             
         elif water_context.water_type == WaterBodyType.COASTAL:
-            # Pendiente costera
+            # Pendiente costera - gradiente determinista
             for i in range(grid_size):
                 bathymetry[i, :] += i * (base_depth * 0.02)
         
@@ -292,34 +300,34 @@ class SubmarineArchaeologyEngine:
         if (water_context.historical_shipping_routes or 
             water_context.known_wrecks_nearby or 
             water_context.archaeological_potential in ["high", "medium"]):
-            # Para rutas históricas: 1 o 2 anomalías (determinístico basado en seed)
-            num_anomalies = 1 + (seed % 2)  # Siempre 1 o 2, nunca cambia para mismas coords
+            # Para rutas históricas: 1 o 2 anomalías (determinístico basado en coord_hash)
+            num_anomalies = 1 + (coord_hash % 2)  # Siempre 1 o 2, nunca cambia para mismas coords
         else:
-            # Para otras áreas: 0 o 1 anomalía (determinístico basado en seed)
-            num_anomalies = seed % 2  # Siempre 0 o 1, nunca cambia para mismas coords
+            # Para otras áreas: 0 o 1 anomalía (determinístico basado en coord_hash)
+            num_anomalies = coord_hash % 2  # Siempre 0 o 1, nunca cambia para mismas coords
             
         for i in range(num_anomalies):
-            # Posición determinística basada en seed + índice
-            position_seed = seed + i * 1000
-            x = 10 + (position_seed % (grid_size - 20))
-            y = 10 + ((position_seed // 100) % (grid_size - 20))
+            # Posición determinística basada en coord_hash + índice (SIN random)
+            position_hash = coord_hash + i * 1000
+            x = 10 + (position_hash % (grid_size - 20))
+            y = 10 + ((position_hash // 100) % (grid_size - 20))
             
             # Anomalía tipo naufragio con dimensiones realistas basadas en profundidad
-            # DETERMINÍSTICO: Dimensiones basadas en seed, NO aleatorio
+            # DETERMINÍSTICO: Dimensiones basadas en coord_hash, SIN random
             
             # Ajustar tamaño según profundidad del agua
-            dimension_seed = seed + i * 500
+            dimension_hash = coord_hash + i * 500
             if base_depth > 3000:  # Aguas muy profundas - naufragios grandes
-                wreck_length = 150 + (dimension_seed % 200)  # 150-350m longitud
-                wreck_width = 20 + ((dimension_seed // 10) % 30)     # 20-50m anchura
+                wreck_length = 150 + (dimension_hash % 200)  # 150-350m longitud
+                wreck_width = 20 + ((dimension_hash // 10) % 30)     # 20-50m anchura
             elif base_depth > 1000:  # Aguas profundas - naufragios medianos
-                wreck_length = 100 + (dimension_seed % 150)  # 100-250m longitud
-                wreck_width = 15 + ((dimension_seed // 10) % 20)     # 15-35m anchura
+                wreck_length = 100 + (dimension_hash % 150)  # 100-250m longitud
+                wreck_width = 15 + ((dimension_hash // 10) % 20)     # 15-35m anchura
             else:  # Aguas someras - naufragios variados
-                wreck_length = 50 + (dimension_seed % 150)   # 50-200m longitud
-                wreck_width = 8 + ((dimension_seed // 10) % 22)      # 8-30m anchura
+                wreck_length = 50 + (dimension_hash % 150)   # 50-200m longitud
+                wreck_width = 8 + ((dimension_hash // 10) % 22)      # 8-30m anchura
             
-            wreck_height = 8 + ((dimension_seed // 100) % 22)    # 8-30m altura
+            wreck_height = 8 + ((dimension_hash // 100) % 22)    # 8-30m altura
             
             # Crear depresión con forma de barco
             length_pixels = max(3, int(wreck_length / 10))  # Conversión aproximada a píxeles
@@ -330,109 +338,140 @@ class SubmarineArchaeologyEngine:
             y_start = max(0, y - width_pixels//2)
             y_end = min(grid_size, y + width_pixels//2)
             
-            # Crear depresión más pronunciada (DETERMINÍSTICO)
-            depth_change_seed = seed + i * 777
-            depth_change = (wreck_height/2) + ((depth_change_seed % 100) / 100.0) * (wreck_height/2)
+            # Crear depresión más pronunciada (100% DETERMINÍSTICO)
+            depth_change_hash = coord_hash + i * 777
+            depth_change = (wreck_height/2) + ((depth_change_hash % 100) / 100.0) * (wreck_height/2)
             bathymetry[x_start:x_end, y_start:y_end] -= depth_change
         
         return bathymetry
     
     def _generate_acoustic_image_data(self, water_context: WaterContext, grid_size: int) -> np.ndarray:
-        """Generar imágenes acústicas sintéticas"""
+        """Generar imágenes acústicas 100% DETERMINÍSTICAS sin valores aleatorios"""
         
-        # Usar coordenadas como semilla para consistencia
+        # Datos DETERMINÍSTICOS 100% basados en coordenadas
         lat, lon = water_context.coordinates
-        seed = int((abs(lat) * 1000 + abs(lon) * 1000) % 2147483647)
-        np.random.seed(seed + 1)  # +1 para diferenciarlo de bathymetry
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
-        # Imagen base del fondo (DETERMINÍSTICO - usar seed para generar)
-        acoustic_image = np.random.uniform(0.2, 0.8, (grid_size, grid_size))
+        # Imagen base del fondo DETERMINÍSTICA sin np.random
+        acoustic_image = np.zeros((grid_size, grid_size))
+        for i in range(grid_size):
+            for j in range(grid_size):
+                # Reflectancia base determinista basada en coordenadas
+                base_reflectance = 0.2 + ((coord_hash + i + j) % 60) / 100.0  # 0.2-0.8
+                acoustic_image[i, j] = base_reflectance
         
-        # Añadir características según tipo de sedimento
+        # Añadir características según tipo de sedimento DETERMINÍSTICAMENTE
         if water_context.sediment_type == "sand_gravel":
-            acoustic_image += np.random.uniform(0, 0.3, (grid_size, grid_size))
+            # Arena/grava - mayor reflectancia determinista
+            for i in range(grid_size):
+                for j in range(grid_size):
+                    variation = ((coord_hash + i * 3 + j * 7) % 30) / 100.0  # 0-0.3
+                    acoustic_image[i, j] += variation
         elif water_context.sediment_type == "silt_clay":
+            # Limo/arcilla - menor reflectancia
             acoustic_image *= 0.7  # Menor reflectancia
         
-        # Añadir anomalías con alta reflectancia (objetos metálicos)
-        # DETERMINÍSTICO: Número de targets basado en seed, NO aleatorio
-        num_targets = seed % 3  # Siempre 0, 1 o 2 para mismas coords
+        # Añadir anomalías con alta reflectancia (objetos metálicos) DETERMINÍSTICAMENTE
+        num_targets = coord_hash % 3  # Siempre 0, 1 o 2 para mismas coords
         for i in range(num_targets):
-            # Posición determinística
-            target_seed = seed + i * 2000
-            x = 5 + (target_seed % (grid_size - 10))
-            y = 5 + ((target_seed // 100) % (grid_size - 10))
-            # Firma acústica de objeto metálico (DETERMINÍSTICO)
-            reflectance_seed = seed + i * 333
-            reflectance = 0.8 + ((reflectance_seed % 20) / 100.0)  # 0.8-1.0
+            # Posición determinística SIN random
+            position_hash = coord_hash + i * 2000
+            x = 5 + (position_hash % (grid_size - 10))
+            y = 5 + ((position_hash // 100) % (grid_size - 10))
+            # Firma acústica de objeto metálico 100% DETERMINÍSTICA
+            reflectance_hash = coord_hash + i * 333
+            reflectance = 0.8 + ((reflectance_hash % 20) / 100.0)  # 0.8-1.0
             acoustic_image[x-2:x+2, y-5:y+5] = reflectance
         
         return acoustic_image
     
     def _generate_sediment_profile_data(self, water_context: WaterContext, grid_size: int) -> np.ndarray:
-        """Generar perfiles de sedimento sintéticos"""
+        """Generar perfiles de sedimento 100% DETERMINÍSTICOS sin valores aleatorios"""
         
-        # Usar coordenadas como semilla para consistencia
+        # Datos DETERMINÍSTICOS 100% basados en coordenadas
         lat, lon = water_context.coordinates
-        seed = int((abs(lat) * 1000 + abs(lon) * 1000) % 2147483647)
-        np.random.seed(seed + 2)  # +2 para diferenciarlo
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
-        # Capas de sedimento (DETERMINÍSTICO - usar seed)
-        sediment_layers = np.random.uniform(0.1, 0.9, (grid_size, grid_size, 10))  # 10 capas
+        # Capas de sedimento DETERMINÍSTICAS sin np.random
+        sediment_layers = np.zeros((grid_size, grid_size, 10))  # 10 capas
+        for i in range(grid_size):
+            for j in range(grid_size):
+                for k in range(10):  # 10 capas
+                    # Valor determinista basado en coordenadas y capa
+                    layer_value = 0.1 + ((coord_hash + i + j * 2 + k * 3) % 80) / 100.0  # 0.1-0.9
+                    sediment_layers[i, j, k] = layer_value
         
-        # Añadir objetos enterrados (DETERMINÍSTICO)
-        num_buried = seed % 2  # 0 o 1, nunca cambia para mismas coords
+        # Añadir objetos enterrados 100% DETERMINÍSTICAMENTE
+        num_buried = coord_hash % 2  # 0 o 1, nunca cambia para mismas coords
         for i in range(num_buried):
-            # Posición determinística
-            buried_seed = seed + i * 3000
-            x = 5 + (buried_seed % (grid_size - 10))
-            y = 5 + ((buried_seed // 100) % (grid_size - 10))
-            depth_layer = 2 + ((buried_seed // 50) % 6)  # Capa 2-7
-            # Objeto enterrado
+            # Posición determinística SIN random
+            position_hash = coord_hash + i * 3000
+            x = 5 + (position_hash % (grid_size - 10))
+            y = 5 + ((position_hash // 100) % (grid_size - 10))
+            depth_layer = 2 + ((position_hash // 50) % 6)  # Capa 2-7
+            # Objeto enterrado con firma determinista
             sediment_layers[x-1:x+1, y-3:y+3, depth_layer] = 0.95
         
         return sediment_layers
     
     def _generate_magnetic_data(self, water_context: WaterContext, grid_size: int) -> np.ndarray:
-        """Generar datos magnéticos sintéticos"""
+        """Generar datos magnéticos 100% DETERMINÍSTICOS sin valores aleatorios"""
         
-        # Usar coordenadas como semilla para consistencia
+        # Datos DETERMINÍSTICOS 100% basados en coordenadas
         lat, lon = water_context.coordinates
-        seed = int((abs(lat) * 1000 + abs(lon) * 1000) % 2147483647)
-        np.random.seed(seed + 3)  # +3 para diferenciarlo
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
-        # Campo magnético base (DETERMINÍSTICO - usar seed)
-        magnetic_field = np.random.normal(50000, 100, (grid_size, grid_size))  # nT
+        # Campo magnético base DETERMINÍSTICO sin np.random
+        magnetic_field = np.zeros((grid_size, grid_size))
+        for i in range(grid_size):
+            for j in range(grid_size):
+                # Campo magnético base determinista
+                field_variation = ((coord_hash + i * 5 + j * 7) % 200) - 100  # -100 a 100
+                magnetic_field[i, j] = 50000 + field_variation  # 49900-50100 nT
         
-        # Añadir anomalías magnéticas (objetos ferrosos) - DETERMINÍSTICO
-        num_anomalies = seed % 3  # 0, 1 o 2, nunca cambia para mismas coords
+        # Añadir anomalías magnéticas (objetos ferrosos) 100% DETERMINÍSTICAMENTE
+        num_anomalies = coord_hash % 3  # 0, 1 o 2, nunca cambia para mismas coords
         for i in range(num_anomalies):
-            # Posición determinística
-            anomaly_seed = seed + i * 4000
-            x = 5 + (anomaly_seed % (grid_size - 10))
-            y = 5 + ((anomaly_seed // 100) % (grid_size - 10))
-            # Anomalía magnética dipolar (DETERMINÍSTICO)
-            strength_seed = seed + i * 555
-            anomaly_strength = 100 + ((strength_seed % 900))  # 100-1000 nT
+            # Posición determinística SIN random
+            position_hash = coord_hash + i * 4000
+            x = 5 + (position_hash % (grid_size - 10))
+            y = 5 + ((position_hash // 100) % (grid_size - 10))
+            # Anomalía magnética dipolar 100% DETERMINÍSTICA
+            strength_hash = coord_hash + i * 555
+            anomaly_strength = 100 + ((strength_hash % 900))  # 100-1000 nT
             magnetic_field[x-2:x+2, y-2:y+2] += anomaly_strength
         
         return magnetic_field
     
     def _generate_acoustic_reflectance_data(self, water_context: WaterContext, grid_size: int) -> np.ndarray:
-        """Generar datos de reflectancia acústica sintéticos"""
+        """Generar datos de reflectancia acústica 100% DETERMINÍSTICOS sin valores aleatorios"""
         
-        # Usar coordenadas como semilla para consistencia
+        # Datos DETERMINÍSTICOS 100% basados en coordenadas
         lat, lon = water_context.coordinates
-        seed = int((abs(lat) * 1000 + abs(lon) * 1000) % 2147483647)
-        np.random.seed(seed + 4)  # +4 para diferenciarlo
+        coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
-        # Reflectancia base según tipo de fondo
-        if water_context.sediment_type == "sand_gravel":
-            base_reflectance = np.random.uniform(0.4, 0.7, (grid_size, grid_size))
-        elif water_context.sediment_type == "silt_clay":
-            base_reflectance = np.random.uniform(0.1, 0.4, (grid_size, grid_size))
-        else:
-            base_reflectance = np.random.uniform(0.2, 0.6, (grid_size, grid_size))
+        # Reflectancia base según tipo de fondo DETERMINÍSTICA sin np.random
+        base_reflectance = np.zeros((grid_size, grid_size))
+        
+        for i in range(grid_size):
+            for j in range(grid_size):
+                # Reflectancia determinista basada en coordenadas
+                if water_context.sediment_type == "sand_gravel":
+                    # Arena/grava: mayor reflectancia 0.4-0.7
+                    reflectance_range = 0.3
+                    base_value = 0.4
+                elif water_context.sediment_type == "silt_clay":
+                    # Limo/arcilla: menor reflectancia 0.1-0.4
+                    reflectance_range = 0.3
+                    base_value = 0.1
+                else:
+                    # Otro: reflectancia media 0.2-0.6
+                    reflectance_range = 0.4
+                    base_value = 0.2
+                
+                # Valor determinista usando hash de coordenadas
+                variation = ((coord_hash + i * 7 + j * 11) % int(reflectance_range * 100)) / 100.0
+                base_reflectance[i, j] = base_value + variation
         
         return base_reflectance
     
