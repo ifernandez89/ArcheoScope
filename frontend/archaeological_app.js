@@ -443,7 +443,7 @@ async function investigateRegion() {
     loading.style.display = 'block';
     
     try {
-        console.log('🔍 Iniciando investigación arqueológica:', regionData);
+        console.log('Iniciando investigacion arqueologica:', regionData);
         
         // Mostrar mensaje de estado inicial
         showAnalysisStatusMessage('Iniciando análisis arqueológico...', 'Conectando con ArcheoScope Engine');

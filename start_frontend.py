@@ -46,18 +46,11 @@ def start_frontend_server():
         print(f"Sirviendo archivos desde: {frontend_dir.absolute()}")
         print(f"URL: http://localhost:{frontend_port}/index.html")
         
-        # Configurar handler sin mostrar archivos ocultos
+        # Configurar handler simple
         class QuietHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             def log_message(self, format, *args):
                 # Reducir logs del servidor
                 pass
-            
-            def end_headers(self):
-                # Añadir headers CORS
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-                self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-                super().end_headers()
         
         # Iniciar servidor
         with socketserver.TCPServer(("", frontend_port), QuietHTTPRequestHandler) as httpd:

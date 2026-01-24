@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcheoScope - Test CORS</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+        .result { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ArcheoScope - Test CORS</h1>
+        <p>Esta página prueba que el frontend pueda comunicarse con el backend correctamente.</p>
+        
+        <button onclick="testConnection()">Test Conexión Backend</button>
+        <button onclick="testAnalysis()">Test Análisis Completo</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8002';
+
+        function addResult(message, isSuccess) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${isSuccess ? 'success' : 'error'}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        async function testConnection() {
+            addResult('Iniciando test de conexión...', false);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`✅ Conexión exitosa. Backend status: ${data.backend_status}`, true);
+                    addResult(`CORS Headers: ${response.headers.get('Access-Control-Allow-Origin') || 'NO'}`, true);
+                } else {
+                    addResult(`❌ Error HTTP: ${response.status}`, false);
+                }
+            } catch (error) {
+                addResult(`❌ Error de conexión: ${error.message}`, false);
+            }
+        }
+
+        async function testAnalysis() {
+            addResult('Iniciando test de análisis...', false);
+            
+            const testData = {
+                lat_min: 13.4,
+                lat_max: 13.43,
+                lon_min: 103.86,
+                lon_max: 103.88,
+                region_name: "Angkor_Wat_CORS_Test",
+                resolution_m: 100,
+                layers_to_analyze: ["ndvi_anomaly", "thermal_anomaly"]
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`✅ Análisis exitoso. ID: ${data.analysis_id || 'N/A'}`, true);
+                    addResult(`Validación real: ${'real_archaeological_validation' in data ? 'SÍ' : 'NO'}`, true);
+                    addResult(`Transparencia datos: ${'data_source_transparency' in data ? 'SÍ' : 'NO'}`, true);
+                    addResult(`CORS Headers: ${response.headers.get('Access-Control-Allow-Origin') || 'NO'}`, true);
+                } else {
+                    addResult(`❌ Error análisis HTTP: ${response.status}`, false);
+                    const errorText = await response.text();
+                    addResult(`Error details: ${errorText}`, false);
+                }
+            } catch (error) {
+                addResult(`❌ Error análisis conexión: ${error.message}`, false);
+            }
+        }
+
+        // Auto-test al cargar página
+        window.onload = function() {
+            addResult('Página cargada. Listo para tests.', true);
+            addResult(`Origen actual: ${window.location.origin}`, true);
+            addResult(`API Base URL: ${API_BASE_URL}`, true);
+        };
+    </script>
+</body>
+</html>

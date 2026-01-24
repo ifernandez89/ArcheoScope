@@ -72,6 +72,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Añadir middleware CORS adicional como fallback
+@app.middleware("http")
+async def add_cors_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
+
 # NUEVO: Incluir router volumétrico LIDAR
 try:
     from api.volumetric_lidar_api import volumetric_router
