@@ -2901,16 +2901,26 @@
             if (!map) return;
             
             // Limpiar eventos anteriores
-            map.off('click');
-            map.off('mousedown');
-            map.off('mousemove');
-            map.off('mouseup');
+            if (map && typeof map.off === 'function') {
+                map.off('click');
+                map.off('mousedown');
+                map.off('mousemove');
+                map.off('mouseup');
+            }
             
             // Configurar eventos según el modo de selección
-            map.on('click', handleMapClick);
-            map.on('mousedown', handleMouseDown);
-            map.on('mousemove', handleMouseMove);
-            map.on('mouseup', handleMouseUp);
+            if (map && typeof map.on === 'function') {
+                try {
+                    map.on('click', handleMapClick);
+                    map.on('mousedown', handleMouseDown);
+                    map.on('mousemove', handleMouseMove);
+                    map.on('mouseup', handleMouseUp);
+                } catch (error) {
+                    console.error('Error configurando eventos del mapa:', error);
+                }
+            } else {
+                console.warn('Mapa no disponible para configurar eventos');
+            }
         }
 
         function handleMapClick(e) {
