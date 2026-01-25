@@ -3939,6 +3939,7 @@ function show3DVisualization() {
 // Función para actualizar datos del último análisis
 function updateLastAnalysisData(data) {
     lastAnalysisData = data;
+    window.currentAnalysisData = data;  // NUEVO: Hacer disponible globalmente para checkForKnownSites
     console.log('📊 Datos de análisis actualizados para exportación');
 }
 
@@ -5138,7 +5139,28 @@ function updateGeometricPersistenceDisplay(geometricPersistence) {
         }
         
         if (persistenceElement && geometricPersistence) {
-            if (geometricPersistence.detected) {
+            // NUEVO: Verificar si hay sitios conocidos en la región
+            const knownSiteInfo = checkForKnownSites();
+            
+            if (knownSiteInfo && knownSiteInfo.found) {
+                // Mostrar información del sitio conocido
+                persistenceElement.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #ffd700, #ffed4e); padding: 1rem; border-radius: 6px; margin-bottom: 0.5rem;">
+                        <strong style="font-size: 1.1em;">🏛️ SITIO ARQUEOLÓGICO RECONOCIDO</strong><br>
+                        <strong>Nombre:</strong> ${knownSiteInfo.name}<br>
+                        <strong>Período:</strong> ${knownSiteInfo.period}<br>
+                        <strong>Tipo:</strong> ${knownSiteInfo.site_type}<br>
+                        <strong>Área:</strong> ${knownSiteInfo.area_km2} km²<br>
+                        <strong>Fuente:</strong> ${knownSiteInfo.source}<br>
+                        ${knownSiteInfo.public_api_url ? `<a href="${knownSiteInfo.public_api_url}" target="_blank" style="color: #0066cc;">📚 Más información</a>` : ''}
+                    </div>
+                    <div style="background: #e8f5e9; padding: 0.75rem; border-radius: 4px; border-left: 3px solid #4caf50;">
+                        <strong>✅ Validación:</strong> Este sitio está documentado en bases de datos arqueológicas públicas.<br>
+                        <strong>Datos disponibles:</strong> ${knownSiteInfo.data_available?.join(', ') || 'No especificado'}<br>
+                        <strong>Nivel de confianza:</strong> ${knownSiteInfo.confidence_level}
+                    </div>
+                `;
+            } else if (geometricPersistence.detected) {
                 persistenceElement.innerHTML = `
                     <strong>Estado:</strong> ✅ Detectada (${geometricPersistence.score?.toFixed(2) || '0.00'})<br>
                     <strong>Patrones:</strong><br>
@@ -5154,6 +5176,56 @@ function updateGeometricPersistenceDisplay(geometricPersistence) {
         }
     } catch (error) {
         console.error('Error en updateGeometricPersistenceDisplay:', error);
+    }
+}
+
+// NUEVA FUNCIÓN: Verificar si hay sitios conocidos en la región actual
+function checkForKnownSites() {
+    try {
+        // Obtener datos del análisis actual
+        const currentData = window.currentAnalysisData;
+        if (!currentData || !currentData.real_archaeological_validation) {
+            return null;
+        }
+        
+        const validation = currentData.real_archaeological_validation;
+        
+        // Verificar sitios solapados (overlapping)
+        if (validation.overlapping_known_sites && validation.overlapping_known_sites.length > 0) {
+            const site = validation.overlapping_known_sites[0];
+            return {
+                found: true,
+                name: site.name,
+                period: site.site_type || 'No especificado',
+                site_type: site.site_type || 'No especificado',
+                area_km2: site.area_km2 || 'No especificado',
+                source: site.source || 'Base de datos arqueológica',
+                confidence_level: site.confidence_level || 'confirmed',
+                data_available: site.data_available || [],
+                public_api_url: site.public_api_url || null
+            };
+        }
+        
+        // Verificar sitios cercanos (nearby)
+        if (validation.nearby_known_sites && validation.nearby_known_sites.length > 0) {
+            const site = validation.nearby_known_sites[0];
+            return {
+                found: true,
+                name: `${site.name} (${site.distance_km?.toFixed(1)} km)`,
+                period: site.site_type || 'No especificado',
+                site_type: site.site_type || 'No especificado',
+                area_km2: 'Sitio cercano',
+                source: site.source || 'Base de datos arqueológica',
+                confidence_level: site.confidence_level || 'confirmed',
+                data_available: [],
+                public_api_url: null
+            };
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Error en checkForKnownSites:', error);
+        return null;
     }
 }
 

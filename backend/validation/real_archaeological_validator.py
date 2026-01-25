@@ -56,6 +56,47 @@ class RealArchaeologicalValidator:
         """Load verified archaeological sites from public databases"""
         sites = []
         
+        # ========== SITIOS EGIPCIOS ICÓNICOS ==========
+        # Giza Pyramids Complex - UNESCO World Heritage
+        sites.append(ArchaeologicalSite(
+            name="Giza Pyramids Complex (Great Pyramid of Khufu)",
+            coordinates=(29.9792, 31.1342),
+            site_type="monumental_complex",
+            period="Old Kingdom Egypt (2580-2560 BCE)",
+            area_km2=2.5,
+            confidence_level="confirmed",
+            source="UNESCO World Heritage Centre",
+            data_available=["LIDAR", "satellite", "multispectral", "thermal", "SAR", "photogrammetry", "excavation_reports"],
+            public_api_url="https://whc.unesco.org/en/list/86"
+        ))
+        
+        # Karnak Temple Complex
+        sites.append(ArchaeologicalSite(
+            name="Karnak Temple Complex",
+            coordinates=(25.7188, 32.6573),
+            site_type="temple_complex",
+            period="New Kingdom Egypt (1550-1070 BCE)",
+            area_km2=1.0,
+            confidence_level="confirmed",
+            source="UNESCO World Heritage Centre",
+            data_available=["LIDAR", "satellite", "multispectral", "thermal", "excavation_reports"],
+            public_api_url="https://whc.unesco.org/en/list/87"
+        ))
+        
+        # Valley of the Kings
+        sites.append(ArchaeologicalSite(
+            name="Valley of the Kings",
+            coordinates=(25.7402, 32.6014),
+            site_type="necropolis",
+            period="New Kingdom Egypt (1550-1070 BCE)",
+            area_km2=0.5,
+            confidence_level="confirmed",
+            source="UNESCO World Heritage Centre",
+            data_available=["LIDAR", "GPR", "thermal", "excavation_reports"],
+            public_api_url="https://whc.unesco.org/en/list/87"
+        ))
+        
+        # ========== OTROS SITIOS ICÓNICOS ==========
         # Angkor Wat, Cambodia - UNESCO World Heritage
         sites.append(ArchaeologicalSite(
             name="Angkor Wat Temple Complex",
