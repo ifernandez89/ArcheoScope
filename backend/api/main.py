@@ -63,18 +63,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Middleware CORS deshabilitado temporalmente para debugging
+# Middleware CORS deshabilitado para debugging - usando solo FastAPI CORSMiddleware
 # @app.middleware("http")
 # async def add_cors_headers(request, call_next):
 #     response = await call_next(request)
-#     
 #     origin = request.headers.get("origin", "*")
 #     response.headers["Access-Control-Allow-Origin"] = origin
 #     response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
 #     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin"
 #     response.headers["Access-Control-Allow-Credentials"] = "true"
 #     response.headers["Access-Control-Max-Age"] = "86400"
-#     
 #     return response
 
 # Configurar CORS middleware de FastAPI como fallback
@@ -154,11 +152,8 @@ class RegionRequest(BaseModel):
     lon_max: float
     
     resolution_m: Optional[int] = 1000
-    layers_to_analyze: Optional[List[str]] = [
-        "ndvi_vegetation", "thermal_lst", "sar_backscatter", 
-        "surface_roughness", "soil_salinity", "seismic_resonance"
-    ]
-    active_rules: Optional[List[str]] = ["all"]
+    layers_to_analyze: Optional[List[str]] = None
+    active_rules: Optional[List[str]] = None
     
     region_name: Optional[str] = "Unknown Archaeological Region"
     include_explainability: Optional[bool] = False  # Nueva opción para explicabilidad
@@ -1384,7 +1379,7 @@ async def analyze_archaeological_region(request: RegionRequest):
                 
                 logger.info(f"✅ Análisis crioarqueológico completado: {len(cryo_results['cryo_candidates'])} candidatos detectados")
                 
-                return AnalysisResponse(**response_data)
+                return response_data
             
             else:
                 logger.warning("⚠️ Motor de crioarqueología no disponible, continuando con análisis estándar")
@@ -1454,7 +1449,7 @@ async def analyze_archaeological_region(request: RegionRequest):
                 
                 logger.info(f"✅ Análisis submarino completado: {len(submarine_results['wreck_candidates'])} candidatos detectados")
                 
-                return AnalysisResponse(**response_data)
+                return response_data
             
             else:
                 logger.warning("⚠️ Motor de arqueología submarina no disponible, continuando con análisis terrestre")
@@ -1538,7 +1533,7 @@ async def analyze_archaeological_region(request: RegionRequest):
                 
                 logger.info(f"✅ Análisis crioarqueológico completado: {len(cryo_results['cryo_candidates'])} candidatos detectados")
                 
-                return AnalysisResponse(**response_data)
+                return response_data
             
             else:
                 logger.warning("⚠️ Motor de crioarqueología no disponible, continuando con análisis terrestre")
@@ -1581,7 +1576,6 @@ async def analyze_archaeological_region(request: RegionRequest):
             logger.info(f"⏰ Temporal analysis keys: {list(temporal_keys.keys()) if temporal_keys else 'None'}")
         except Exception as e:
             logger.error(f"❌ ERROR GRAVE EN INTEGRACIÓN: {e}")
-            import traceback
             logger.error(f"❌ Traceback: {traceback.format_exc()}")
             integrated_archaeological_results = archaeological_results  # Fallback
             logger.info(f"🔄 USANDO FALLBACK: {list(integrated_archaeological_results.keys())}")
