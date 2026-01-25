@@ -53,6 +53,7 @@ from ice.ice_detector import IceDetector
 from ice.cryoarchaeology import CryoArchaeologyEngine
 from environment_classifier import EnvironmentClassifier, EnvironmentType
 from core_anomaly_detector import CoreAnomalyDetector
+from database import db as database_connection
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -345,9 +346,30 @@ def initialize_system():
 @app.on_event("startup")
 async def startup_event():
     """Inicializar sistema al arrancar."""
+    # Inicializar componentes del sistema
     success = initialize_system()
     if not success:
         logger.warning("ArcheoScope iniciado con componentes limitados")
+    
+    # Inicializar conexión a base de datos PostgreSQL
+    try:
+        await database_connection.connect()
+        
+        # Verificar conexión
+        site_count = await database_connection.count_sites()
+        logger.info(f"✅ Base de datos PostgreSQL conectada - {site_count:,} sitios arqueológicos disponibles")
+    except Exception as e:
+        logger.error(f"❌ Error conectando a base de datos PostgreSQL: {e}")
+        logger.warning("El sistema continuará sin acceso a la base de datos")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cerrar conexiones al apagar."""
+    try:
+        await database_connection.close()
+        logger.info("✅ Conexión a base de datos PostgreSQL cerrada correctamente")
+    except Exception as e:
+        logger.error(f"❌ Error cerrando conexión a base de datos: {e}")
 
 @app.get("/", response_model=Dict[str, str])
 async def root():
@@ -1032,42 +1054,61 @@ async def get_all_known_archaeological_sites():
     - Publicaciones científicas revisadas por pares
     """
     try:
-        import json
-        import os
+        # Usar la conexión global de base de datos
+        if not database_connection.pool:
+            await database_connection.connect()
         
-        # Cargar base de datos de sitios arqueológicos
-        # Usar ruta relativa desde el directorio del script
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        db_path = os.path.join(current_dir, "..", "..", "data", "archaeological_sites_database.json")
-        db_path = os.path.normpath(db_path)
+        # Obtener estadísticas
+        total_sites = await database_connection.count_sites()
+        reference_sites = await database_connection.get_reference_sites()
         
-        logger.info(f"🔍 Buscando BD en: {db_path}")
+        # Obtener muestra de sitios por país (top 10)
+        countries_query = '''
+            SELECT country, COUNT(*) as count
+            FROM archaeological_sites
+            WHERE country IS NOT NULL AND country != ''
+            GROUP BY country
+            ORDER BY count DESC
+            LIMIT 10
+        '''
         
-        if not os.path.exists(db_path):
-            logger.error(f"❌ BD no encontrada en: {db_path}")
-            raise HTTPException(status_code=404, detail=f"Base de datos no encontrada en: {db_path}")
+        async with database_connection.pool.acquire() as conn:
+            top_countries = await conn.fetch(countries_query)
         
-        with open(db_path, 'r', encoding='utf-8') as f:
-            sites_db = json.load(f)
-        
-        # Preparar respuesta estructurada
         response = {
-            "metadata": sites_db.get("metadata", {}),
-            "reference_sites": sites_db.get("reference_sites", {}),
-            "control_sites": sites_db.get("control_sites", {}),
-            "total_sites": len(sites_db.get("reference_sites", {})) + len(sites_db.get("control_sites", {})),
-            "sources": sites_db.get("metadata", {}).get("sources", []),
-            "last_updated": sites_db.get("metadata", {}).get("last_updated", "unknown"),
-            "data_quality": sites_db.get("metadata", {}).get("data_quality", "unknown")
+            "metadata": {
+                "total_sites": total_sites,
+                "reference_sites": len(reference_sites),
+                "last_updated": "2026-01-25",
+                "data_quality": "High - Multiple verified sources",
+                "sources": ["UNESCO", "Wikidata", "OpenStreetMap"],
+                "database": "PostgreSQL"
+            },
+            "top_countries": [
+                {"country": row['country'], "count": row['count']} 
+                for row in top_countries
+            ],
+            "reference_sites_sample": [
+                {
+                    "id": site['id'],
+                    "name": site['name'],
+                    "country": site['country'],
+                    "latitude": site['latitude'],
+                    "longitude": site['longitude'],
+                    "environment_type": site['environmenttype'],
+                    "site_type": site['sitetype']
+                }
+                for site in reference_sites[:10]
+            ]
         }
         
-        logger.info(f"✅ Retornando {response['total_sites']} sitios arqueológicos conocidos")
+        logger.info(f"✅ Retornando info de {total_sites:,} sitios arqueológicos desde PostgreSQL")
         
         return response
         
     except Exception as e:
-        logger.error(f"❌ Error obteniendo sitios arqueológicos conocidos: {e}")
-        raise HTTPException(status_code=500, detail=f"Error obteniendo sitios conocidos: {str(e)}")
+        logger.error(f"❌ Error obteniendo sitios arqueológicos: {e}")
+        raise HTTPException(status_code=500, detail=f"Error obteniendo sitios: {str(e)}")
 
 @app.get("/archaeological-sites/candidates", tags=["Database"])
 async def get_archeoscope_candidate_sites():
@@ -1183,6 +1224,375 @@ async def get_archeoscope_candidate_sites():
     except Exception as e:
         logger.error(f"❌ Error obteniendo sitios candidatos: {e}")
         raise HTTPException(status_code=500, detail=f"Error obteniendo candidatos: {str(e)}")
+
+@app.get("/archaeological-sites/all", tags=["Database"])
+async def get_all_archaeological_sites(
+    limit: int = 100,
+    offset: int = 0,
+    environment_type: Optional[str] = None,
+    country: Optional[str] = None,
+    site_type: Optional[str] = None
+):
+    """
+    ## Obtener Todos los Sitios Arqueológicos con Filtros
+    
+    Retorna lista paginada de sitios arqueológicos con filtros opcionales.
+    
+    **Parámetros de consulta:**
+    - `limit` (opcional): Número de resultados por página (default: 100, max: 1000)
+    - `offset` (opcional): Desplazamiento para paginación (default: 0)
+    - `environment_type` (opcional): Filtrar por tipo de terreno/ambiente
+    - `country` (opcional): Filtrar por país (búsqueda parcial)
+    - `site_type` (opcional): Filtrar por tipo de sitio
+    
+    **Tipos de ambiente disponibles:**
+    - `desert` - Desiertos áridos (instrumentos: SAR, thermal, NDVI)
+    - `forest` - Bosques y selvas (instrumentos: LiDAR, L-band SAR)
+    - `glacier` - Glaciares de montaña (instrumentos: ICESat-2, SAR)
+    - `shallow_sea` - Aguas poco profundas (instrumentos: sonar, magnetometría)
+    - `polar_ice` - Capas de hielo polares (instrumentos: radar penetrante)
+    - `mountain` - Regiones montañosas (instrumentos: DEM, optical)
+    - `grassland` - Praderas y estepas (instrumentos: multispectral)
+    - `wetland` - Humedales (instrumentos: SAR, SMAP)
+    - `unknown` - Ambiente no clasificado
+    
+    **Retorna:**
+    - `sites`: Lista de sitios con todos los campos
+    - `total`: Número total de sitios (con filtros aplicados)
+    - `limit`: Límite de resultados por página
+    - `offset`: Desplazamiento actual
+    - `page`: Página actual
+    - `total_pages`: Total de páginas
+    - `filters_applied`: Filtros aplicados en la consulta
+    
+    **Ejemplos de uso:**
+    ```bash
+    # Todos los sitios (primera página)
+    curl "http://localhost:8002/archaeological-sites/all"
+    
+    # Sitios en desiertos (para instrumentos SAR/thermal)
+    curl "http://localhost:8002/archaeological-sites/all?environment_type=desert"
+    
+    # Sitios en bosques (para LiDAR)
+    curl "http://localhost:8002/archaeological-sites/all?environment_type=forest&limit=50"
+    
+    # Sitios en Italia
+    curl "http://localhost:8002/archaeological-sites/all?country=Italy&limit=200"
+    
+    # Paginación (página 2)
+    curl "http://localhost:8002/archaeological-sites/all?limit=100&offset=100"
+    ```
+    
+    **Uso para selección de instrumentos:**
+    
+    Este endpoint es ideal para seleccionar sitios según los instrumentos disponibles:
+    - **LiDAR disponible**: Filtrar por `environment_type=forest`
+    - **SAR disponible**: Filtrar por `environment_type=desert` o `environment_type=wetland`
+    - **ICESat-2 disponible**: Filtrar por `environment_type=glacier`
+    - **Sonar disponible**: Filtrar por `environment_type=shallow_sea`
+    """
+    try:
+        # Validar límite
+        if limit > 1000:
+            limit = 1000
+        if limit < 1:
+            limit = 100
+        
+        # Usar la conexión global de base de datos
+        if not database_connection.pool:
+            await database_connection.connect()
+        
+        # Obtener sitios con filtros
+        result = await database_connection.get_sites_paginated(
+            limit=limit,
+            offset=offset,
+            environment_type=environment_type,
+            country=country,
+            site_type=site_type
+        )
+        
+        # Agregar información de filtros aplicados
+        filters_applied = {}
+        if environment_type:
+            filters_applied['environment_type'] = environment_type
+        if country:
+            filters_applied['country'] = country
+        if site_type:
+            filters_applied['site_type'] = site_type
+        
+        result['filters_applied'] = filters_applied
+        
+        logger.info(f"✅ Retornando {len(result['sites'])} sitios (total: {result['total']:,}) con filtros: {filters_applied}")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo sitios: {e}")
+        raise HTTPException(status_code=500, detail=f"Error obteniendo sitios: {str(e)}")
+
+@app.get("/archaeological-sites/by-environment/{environment_type}", tags=["Database"])
+async def get_sites_by_environment_type(
+    environment_type: str,
+    limit: int = 100,
+    offset: int = 0
+):
+    """
+    ## Obtener Sitios por Tipo de Terreno/Ambiente
+    
+    Endpoint especializado para filtrar sitios por tipo de ambiente.
+    Útil para seleccionar sitios según instrumentos de medición disponibles.
+    
+    **Parámetros:**
+    - `environment_type` (requerido): Tipo de ambiente/terreno
+    - `limit` (opcional): Número de resultados (default: 100)
+    - `offset` (opcional): Desplazamiento para paginación (default: 0)
+    
+    **Tipos de ambiente y sus instrumentos:**
+    
+    - **desert** - Desiertos áridos
+      - Instrumentos: Sentinel-1 SAR, Landsat thermal, MODIS NDVI
+      - Características: Alta visibilidad, mínima vegetación
+      - Ejemplos: Giza, Petra, Nazca Lines
+    
+    - **forest** - Bosques y selvas densas
+      - Instrumentos: LiDAR aerotransportado, PALSAR L-band, GEDI
+      - Características: Requiere penetración de vegetación
+      - Ejemplos: Angkor Wat, Tikal, Amazonia
+    
+    - **glacier** - Glaciares de montaña
+      - Instrumentos: ICESat-2, SAR interferométrico, GPR
+      - Características: Hielo, alta altitud
+      - Ejemplos: Ötzi the Iceman, sitios alpinos
+    
+    - **shallow_sea** - Aguas poco profundas (<200m)
+      - Instrumentos: Sonar multihaz, magnetometría, sub-bottom profiler
+      - Características: Arqueología submarina
+      - Ejemplos: Port Royal, Alejandría, Pavlopetri
+    
+    - **mountain** - Regiones montañosas
+      - Instrumentos: DEM alta resolución, optical multispectral
+      - Características: Terrazas, pendientes pronunciadas
+      - Ejemplos: Machu Picchu, sitios andinos
+    
+    - **grassland** - Praderas y estepas
+      - Instrumentos: Multispectral, crop marks, geofísica
+      - Características: Vegetación baja, buena visibilidad
+      - Ejemplos: Stonehenge, sitios de las estepas
+    
+    **Retorna:**
+    - `sites`: Lista de sitios del ambiente especificado
+    - `total`: Total de sitios en este ambiente
+    - `environment_info`: Información sobre el ambiente
+    - `recommended_instruments`: Instrumentos recomendados
+    - `pagination`: Información de paginación
+    
+    **Ejemplos de uso:**
+    ```bash
+    # Sitios en desiertos
+    curl "http://localhost:8002/archaeological-sites/by-environment/desert"
+    
+    # Sitios en bosques (para LiDAR)
+    curl "http://localhost:8002/archaeological-sites/by-environment/forest?limit=50"
+    
+    # Sitios submarinos
+    curl "http://localhost:8002/archaeological-sites/by-environment/shallow_sea"
+    ```
+    """
+    try:
+        # Validar environment_type
+        valid_environments = [
+            'desert', 'forest', 'glacier', 'shallow_sea', 'polar_ice',
+            'mountain', 'grassland', 'wetland', 'urban', 'coastal', 'unknown'
+        ]
+        
+        if environment_type not in valid_environments:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Tipo de ambiente inválido. Válidos: {', '.join(valid_environments)}"
+            )
+        
+        # Usar la conexión global de base de datos
+        if not database_connection.pool:
+            await database_connection.connect()
+        
+        # Obtener sitios por ambiente
+        result = await database_connection.get_sites_by_environment(
+            environment_type=environment_type,
+            limit=limit,
+            offset=offset
+        )
+        
+        # Información sobre instrumentos recomendados por ambiente
+        instrument_recommendations = {
+            'desert': {
+                'primary': ['Sentinel-1 SAR', 'Landsat Thermal', 'MODIS NDVI'],
+                'secondary': ['OpenTopography DEM', 'SMOS Salinity'],
+                'characteristics': 'Alta visibilidad, mínima vegetación, excelente para detección térmica'
+            },
+            'forest': {
+                'primary': ['LiDAR Aerotransportado', 'PALSAR L-band', 'GEDI 3D'],
+                'secondary': ['Sentinel-1', 'ICESat-2'],
+                'characteristics': 'Requiere penetración de vegetación, LiDAR esencial'
+            },
+            'glacier': {
+                'primary': ['ICESat-2', 'SAR Interferométrico', 'GPR'],
+                'secondary': ['Sentinel-1', 'Landsat'],
+                'characteristics': 'Hielo, alta altitud, requiere radar penetrante'
+            },
+            'shallow_sea': {
+                'primary': ['Sonar Multihaz', 'Magnetometría', 'Sub-bottom Profiler'],
+                'secondary': ['Optical Satellite', 'Bathymetry'],
+                'characteristics': 'Arqueología submarina, <200m profundidad'
+            },
+            'mountain': {
+                'primary': ['OpenTopography DEM', 'Optical Multispectral', 'SAR'],
+                'secondary': ['ICESat-2', 'GEDI'],
+                'characteristics': 'Terrazas, pendientes, requiere DEM alta resolución'
+            },
+            'grassland': {
+                'primary': ['Multispectral', 'Crop Marks', 'Geofísica'],
+                'secondary': ['SAR', 'Thermal'],
+                'characteristics': 'Vegetación baja, excelente para crop marks'
+            },
+            'wetland': {
+                'primary': ['SAR', 'SMAP Soil Moisture', 'Optical'],
+                'secondary': ['Thermal', 'SMOS'],
+                'characteristics': 'Humedad variable, SAR penetra nubes'
+            }
+        }
+        
+        environment_info = instrument_recommendations.get(
+            environment_type,
+            {
+                'primary': ['Multispectral', 'SAR', 'DEM'],
+                'secondary': ['Thermal', 'Geofísica'],
+                'characteristics': 'Ambiente general, usar múltiples instrumentos'
+            }
+        )
+        
+        response = {
+            'sites': result['sites'],
+            'total': result['total'],
+            'environment_type': environment_type,
+            'environment_info': environment_info,
+            'recommended_instruments': {
+                'primary': environment_info['primary'],
+                'secondary': environment_info['secondary'],
+                'characteristics': environment_info['characteristics']
+            },
+            'pagination': {
+                'limit': result['limit'],
+                'offset': result['offset'],
+                'page': result['page'],
+                'total_pages': result['total_pages']
+            }
+        }
+        
+        logger.info(f"✅ Retornando {len(result['sites'])} sitios de ambiente '{environment_type}' (total: {result['total']:,})")
+        
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo sitios por ambiente: {e}")
+        raise HTTPException(status_code=500, detail=f"Error obteniendo sitios: {str(e)}")
+
+@app.get("/archaeological-sites/environments/stats", tags=["Database"])
+async def get_environment_statistics():
+    """
+    ## Estadísticas de Sitios por Tipo de Ambiente
+    
+    Retorna estadísticas de distribución de sitios por tipo de terreno/ambiente.
+    Útil para planificar campañas de medición según instrumentos disponibles.
+    
+    **Retorna:**
+    - `environment_stats`: Lista de ambientes con conteo de sitios
+    - `total_sites`: Total de sitios en la base de datos
+    - `total_environments`: Número de tipos de ambiente diferentes
+    - `instrument_coverage`: Cobertura de instrumentos por ambiente
+    
+    **Ejemplo de uso:**
+    ```bash
+    curl "http://localhost:8002/archaeological-sites/environments/stats"
+    ```
+    
+    **Uso práctico:**
+    
+    Use estas estadísticas para:
+    1. Identificar qué ambientes tienen más sitios
+    2. Planificar adquisición de datos según disponibilidad
+    3. Priorizar instrumentos según distribución de sitios
+    4. Evaluar cobertura de la base de datos
+    """
+    try:
+        # Usar la conexión global de base de datos
+        if not database_connection.pool:
+            await database_connection.connect()
+        
+        # Obtener estadísticas por ambiente
+        env_stats = await database_connection.get_environment_types_stats()
+        
+        # Total de sitios
+        total_sites = await database_connection.count_sites()
+        
+        # Calcular porcentajes
+        for stat in env_stats:
+            stat['percentage'] = (stat['count'] / total_sites * 100) if total_sites > 0 else 0
+        
+        # Mapeo de instrumentos por ambiente
+        instrument_coverage = {
+            'desert': {
+                'coverage': 'excellent',
+                'instruments': 5,
+                'primary': ['SAR', 'Thermal', 'Optical']
+            },
+            'forest': {
+                'coverage': 'good',
+                'instruments': 4,
+                'primary': ['LiDAR', 'L-band SAR']
+            },
+            'glacier': {
+                'coverage': 'good',
+                'instruments': 3,
+                'primary': ['ICESat-2', 'SAR']
+            },
+            'shallow_sea': {
+                'coverage': 'limited',
+                'instruments': 2,
+                'primary': ['Sonar', 'Magnetometry']
+            },
+            'mountain': {
+                'coverage': 'excellent',
+                'instruments': 4,
+                'primary': ['DEM', 'Optical']
+            },
+            'grassland': {
+                'coverage': 'excellent',
+                'instruments': 4,
+                'primary': ['Multispectral', 'Geophysics']
+            }
+        }
+        
+        response = {
+            'environment_stats': env_stats,
+            'total_sites': total_sites,
+            'total_environments': len(env_stats),
+            'instrument_coverage': instrument_coverage,
+            'summary': {
+                'most_common_environment': env_stats[0]['environment_type'] if env_stats else None,
+                'most_common_count': env_stats[0]['count'] if env_stats else 0,
+                'environments_with_sites': len(env_stats)
+            }
+        }
+        
+        logger.info(f"✅ Retornando estadísticas de {len(env_stats)} tipos de ambiente")
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo estadísticas de ambientes: {e}")
+        raise HTTPException(status_code=500, detail=f"Error obteniendo estadísticas: {str(e)}")
 
 @app.post("/academic/validation/blind-test")
 async def run_blind_test():

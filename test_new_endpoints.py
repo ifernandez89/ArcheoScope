@@ -1,36 +1,38 @@
 #!/usr/bin/env python3
 """
-Test de los nuevos endpoints de sitios arqueológicos
+Test de nuevos endpoints de sitios arqueológicos
 """
 
 import requests
 import json
 
-API_URL = "http://localhost:8002"
+BASE_URL = "http://localhost:8002"
 
-def test_known_sites():
-    """Probar endpoint de sitios conocidos"""
-    print("="*80)
-    print("🏛️  TEST: /archaeological-sites/known")
-    print("="*80)
+def test_all_sites():
+    """Test endpoint /archaeological-sites/all"""
     
-    response = requests.get(f"{API_URL}/archaeological-sites/known")
+    print("="*60)
+    print("TEST 1: Todos los sitios (sin filtros)")
+    print("="*60)
+    
+    url = f"{BASE_URL}/archaeological-sites/all"
+    response = requests.get(url, params={'limit': 10})
     
     if response.status_code == 200:
         data = response.json()
         print(f"✅ Status: {response.status_code}")
-        print(f"📊 Total sitios: {data['total_sites']}")
-        print(f"📅 Última actualización: {data['last_updated']}")
-        print(f"🏛️  Sitios de referencia: {len(data['reference_sites'])}")
-        print(f"🌍 Sitios de control: {len(data['control_sites'])}")
+        print(f"Total sitios: {data['total']:,}")
+        print(f"Sitios retornados: {len(data['sites'])}")
+        print(f"Página: {data['page']}/{data['total_pages']}")
+        print(f"Filtros aplicados: {data['filters_applied']}")
         
-        print(f"\n📋 Sitios de referencia:")
-        for site_id, site_data in data['reference_sites'].items():
-            print(f"   - {site_data['name']} ({site_data['environment_type']})")
-        
-        print(f"\n🌍 Sitios de control:")
-        for site_id, site_data in data['control_sites'].items():
-            print(f"   - {site_data['name']} ({site_data['environment_type']})")
+        if data['sites']:
+            print(f"\nPrimer sitio:")
+            site = data['sites'][0]
+            print(f"  - Nombre: {site['name']}")
+            print(f"  - País: {site['country']}")
+            print(f"  - Ambiente: {site['environment_type']}")
+            print(f"  - Coordenadas: ({site['latitude']}, {site['longitude']})")
         
         return True
     else:
@@ -38,51 +40,212 @@ def test_known_sites():
         print(response.text)
         return False
 
-def test_candidate_sites():
-    """Probar endpoint de sitios candidatos"""
-    print("\n" + "="*80)
-    print("🔍 TEST: /archaeological-sites/candidates")
-    print("="*80)
+def test_filter_by_environment():
+    """Test filtro por tipo de ambiente"""
     
-    response = requests.get(f"{API_URL}/archaeological-sites/candidates")
+    print("\n" + "="*60)
+    print("TEST 2: Filtrar por ambiente (desert)")
+    print("="*60)
+    
+    url = f"{BASE_URL}/archaeological-sites/all"
+    response = requests.get(url, params={
+        'environment_type': 'desert',
+        'limit': 10
+    })
     
     if response.status_code == 200:
         data = response.json()
         print(f"✅ Status: {response.status_code}")
-        print(f"📊 Total candidatos: {data['total_candidates']}")
+        print(f"Total sitios en desiertos: {data['total']:,}")
+        print(f"Sitios retornados: {len(data['sites'])}")
+        print(f"Filtros aplicados: {data['filters_applied']}")
         
-        print(f"\n📋 Criterios de detección:")
-        criteria = data['detection_criteria']
-        print(f"   - Probabilidad mínima: {criteria['minimum_probability']}")
-        print(f"   - Requiere convergencia: {criteria['requires_convergence']}")
-        print(f"   - Excluye sitios conocidos: {criteria['excludes_known_sites']}")
-        
-        if data['total_candidates'] > 0:
-            print(f"\n🎯 Top 3 candidatos:")
-            for i, candidate in enumerate(data['candidates'][:3], 1):
-                print(f"\n   {i}. {candidate['region_name']}")
-                print(f"      Ambiente: {candidate['environment_type']}")
-                print(f"      Probabilidad: {candidate['archaeological_probability']:.2%}")
-                print(f"      Instrumentos convergentes: {candidate['instruments_converging']}")
-        else:
-            print(f"\n   ℹ️  No hay candidatos detectados aún")
-            print(f"   💡 Ejecuta análisis con /analyze para generar candidatos")
+        if data['sites']:
+            print(f"\nPrimeros 3 sitios en desiertos:")
+            for i, site in enumerate(data['sites'][:3], 1):
+                print(f"  {i}. {site['name']} ({site['country']})")
         
         return True
     else:
         print(f"❌ Error: {response.status_code}")
         print(response.text)
         return False
+
+def test_by_environment_endpoint():
+    """Test endpoint especializado por ambiente"""
+    
+    print("\n" + "="*60)
+    print("TEST 3: Endpoint por ambiente (forest)")
+    print("="*60)
+    
+    url = f"{BASE_URL}/archaeological-sites/by-environment/forest"
+    response = requests.get(url, params={'limit': 10})
+    
+    if response.status_code == 200:
+        data = response.json()
+        print(f"✅ Status: {response.status_code}")
+        print(f"Ambiente: {data['environment_type']}")
+        print(f"Total sitios: {data['total']:,}")
+        print(f"Sitios retornados: {len(data['sites'])}")
+        
+        print(f"\nInstrumentos recomendados:")
+        print(f"  Primarios: {', '.join(data['recommended_instruments']['primary'])}")
+        print(f"  Secundarios: {', '.join(data['recommended_instruments']['secondary'])}")
+        print(f"  Características: {data['recommended_instruments']['characteristics']}")
+        
+        if data['sites']:
+            print(f"\nPrimeros 3 sitios en bosques:")
+            for i, site in enumerate(data['sites'][:3], 1):
+                print(f"  {i}. {site['name']} ({site['country']})")
+        
+        return True
+    else:
+        print(f"❌ Error: {response.status_code}")
+        print(response.text)
+        return False
+
+def test_environment_stats():
+    """Test estadísticas de ambientes"""
+    
+    print("\n" + "="*60)
+    print("TEST 4: Estadísticas de ambientes")
+    print("="*60)
+    
+    url = f"{BASE_URL}/archaeological-sites/environments/stats"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        data = response.json()
+        print(f"✅ Status: {response.status_code}")
+        print(f"Total sitios: {data['total_sites']:,}")
+        print(f"Tipos de ambiente: {data['total_environments']}")
+        
+        print(f"\nDistribución por ambiente:")
+        for stat in data['environment_stats'][:10]:
+            env = stat['environment_type'] or 'unknown'
+            count = stat['count']
+            pct = stat['percentage']
+            print(f"  - {env:15s}: {count:6,} sitios ({pct:5.2f}%)")
+        
+        print(f"\nAmbiente más común:")
+        summary = data['summary']
+        print(f"  - {summary['most_common_environment']}: {summary['most_common_count']:,} sitios")
+        
+        return True
+    else:
+        print(f"❌ Error: {response.status_code}")
+        print(response.text)
+        return False
+
+def test_filter_by_country():
+    """Test filtro por país"""
+    
+    print("\n" + "="*60)
+    print("TEST 5: Filtrar por país (Italy)")
+    print("="*60)
+    
+    url = f"{BASE_URL}/archaeological-sites/all"
+    response = requests.get(url, params={
+        'country': 'Italy',
+        'limit': 10
+    })
+    
+    if response.status_code == 200:
+        data = response.json()
+        print(f"✅ Status: {response.status_code}")
+        print(f"Total sitios en Italia: {data['total']:,}")
+        print(f"Sitios retornados: {len(data['sites'])}")
+        
+        if data['sites']:
+            print(f"\nPrimeros 5 sitios en Italia:")
+            for i, site in enumerate(data['sites'][:5], 1):
+                env = site['environment_type'] or 'unknown'
+                print(f"  {i}. {site['name']} - Ambiente: {env}")
+        
+        return True
+    else:
+        print(f"❌ Error: {response.status_code}")
+        print(response.text)
+        return False
+
+def test_combined_filters():
+    """Test filtros combinados"""
+    
+    print("\n" + "="*60)
+    print("TEST 6: Filtros combinados (forest + France)")
+    print("="*60)
+    
+    url = f"{BASE_URL}/archaeological-sites/all"
+    response = requests.get(url, params={
+        'environment_type': 'forest',
+        'country': 'France',
+        'limit': 10
+    })
+    
+    if response.status_code == 200:
+        data = response.json()
+        print(f"✅ Status: {response.status_code}")
+        print(f"Total sitios (bosques en Francia): {data['total']:,}")
+        print(f"Sitios retornados: {len(data['sites'])}")
+        print(f"Filtros aplicados: {data['filters_applied']}")
+        
+        if data['sites']:
+            print(f"\nSitios encontrados:")
+            for i, site in enumerate(data['sites'][:5], 1):
+                print(f"  {i}. {site['name']}")
+        
+        return True
+    else:
+        print(f"❌ Error: {response.status_code}")
+        print(response.text)
+        return False
+
+def main():
+    """Ejecutar todos los tests"""
+    
+    print("\n🧪 TESTING NUEVOS ENDPOINTS DE SITIOS ARQUEOLÓGICOS")
+    print("="*60)
+    
+    tests = [
+        ("Todos los sitios", test_all_sites),
+        ("Filtro por ambiente", test_filter_by_environment),
+        ("Endpoint por ambiente", test_by_environment_endpoint),
+        ("Estadísticas de ambientes", test_environment_stats),
+        ("Filtro por país", test_filter_by_country),
+        ("Filtros combinados", test_combined_filters)
+    ]
+    
+    results = []
+    
+    for name, test_func in tests:
+        try:
+            success = test_func()
+            results.append((name, success))
+        except Exception as e:
+            print(f"\n❌ Error en test '{name}': {e}")
+            results.append((name, False))
+    
+    # Resumen
+    print("\n" + "="*60)
+    print("📊 RESUMEN DE TESTS")
+    print("="*60)
+    
+    passed = sum(1 for _, success in results if success)
+    total = len(results)
+    
+    for name, success in results:
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} - {name}")
+    
+    print(f"\nResultado: {passed}/{total} tests pasados")
+    
+    if passed == total:
+        print("\n🎉 ¡TODOS LOS TESTS PASARON!")
+        return 0
+    else:
+        print(f"\n⚠️ {total - passed} tests fallaron")
+        return 1
 
 if __name__ == "__main__":
-    print("\n🧪 TESTING NUEVOS ENDPOINTS DE ARCHEOSCOPE\n")
-    
-    test1 = test_known_sites()
-    test2 = test_candidate_sites()
-    
-    print("\n" + "="*80)
-    print("📊 RESUMEN")
-    print("="*80)
-    print(f"✅ /archaeological-sites/known: {'PASS' if test1 else 'FAIL'}")
-    print(f"✅ /archaeological-sites/candidates: {'PASS' if test2 else 'FAIL'}")
-    print("="*80)
+    import sys
+    sys.exit(main())
