@@ -1456,32 +1456,25 @@ async def analyze_archaeological_region(request: RegionRequest):
     # ⚠️ VALIDACIÓN CRÍTICA: Verificar que la IA está disponible
     ai_assistant = system_components.get('ai_assistant')
     if not ai_assistant or not ai_assistant.is_available:
-        logger.error("=" * 80)
-        logger.error("❌ CRÍTICO: ASISTENTE DE IA NO DISPONIBLE")
-        logger.error("=" * 80)
-        logger.error("El análisis arqueológico requiere el asistente de IA para interpretaciones rigurosas.")
-        logger.error("")
-        logger.error("SOLUCIONES:")
-        logger.error("  1. Verifica OPENROUTER_API_KEY en .env.local")
-        logger.error("  2. Verifica que el modelo esté disponible")
-        logger.error("  3. Verifica conexión a internet")
-        logger.error("  4. O inicia Ollama: ollama run phi4-mini-reasoning")
-        logger.error("=" * 80)
+        logger.warning("=" * 80)
+        logger.warning("⚠️ ADVERTENCIA: ASISTENTE DE IA NO DISPONIBLE")
+        logger.warning("=" * 80)
+        logger.warning("El análisis continuará con explicaciones limitadas.")
+        logger.warning("Para habilitar IA completa:")
+        logger.warning("  1. Ve a https://openrouter.ai/keys")
+        logger.warning("  2. Genera una nueva API key")
+        logger.warning("  3. Actualiza OPENROUTER_API_KEY en .env.local")
+        logger.warning("  4. Reinicia el backend")
+        logger.warning("=" * 80)
         
-        raise HTTPException(
-            status_code=503,
-            detail={
-                "error": "AI_ASSISTANT_UNAVAILABLE",
-                "message": "El asistente de IA no está disponible. El análisis arqueológico requiere IA para interpretaciones científicas rigurosas.",
-                "solutions": [
-                    "Verifica OPENROUTER_API_KEY en .env.local",
-                    "Verifica que el modelo esté disponible en OpenRouter",
-                    "Verifica conexión a internet",
-                    "O inicia Ollama: ollama run phi4-mini-reasoning"
-                ],
-                "impact": "No se pueden generar explicaciones arqueológicas científicas sin IA"
-            }
-        )
+        # NO bloquear - permitir análisis sin IA
+        # raise HTTPException(
+        #     status_code=503,
+        #     detail={
+        #         "error": "AI_ASSISTANT_UNAVAILABLE",
+        #         "message": "El asistente de IA no está disponible...",
+        #     }
+        # )
     
     try:
         logger.info(f"🔍 Iniciando análisis arqueológico: {request.region_name}")
