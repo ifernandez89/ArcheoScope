@@ -63,21 +63,19 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Añadir middleware CORS explícito primero (orden importante)
-@app.middleware("http")
-async def add_cors_headers(request, call_next):
-    # Procesar request
-    response = await call_next(request)
-    
-    # Añadir CORS headers a la respuesta
-    origin = request.headers.get("origin", "*")
-    response.headers["Access-Control-Allow-Origin"] = origin
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Max-Age"] = "86400"
-    
-    return response
+# Middleware CORS deshabilitado temporalmente para debugging
+# @app.middleware("http")
+# async def add_cors_headers(request, call_next):
+#     response = await call_next(request)
+#     
+#     origin = request.headers.get("origin", "*")
+#     response.headers["Access-Control-Allow-Origin"] = origin
+#     response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+#     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin"
+#     response.headers["Access-Control-Allow-Credentials"] = "true"
+#     response.headers["Access-Control-Max-Age"] = "86400"
+#     
+#     return response
 
 # Configurar CORS middleware de FastAPI como fallback
 app.add_middleware(
@@ -1243,6 +1241,12 @@ def calculate_cv_from_temporal_data(temporal_data: Dict[str, Any]) -> float:
             'advanced_analysis': advanced_analysis
         }
 
+@app.post("/test-analyze")
+async def test_analyze(request: RegionRequest):
+    """Test endpoint to debug /analyze issues"""
+    logger.info("TEST ENDPOINT REACHED!")
+    return {"status": "ok", "region": request.region_name}
+
 @app.post("/analyze")
 async def analyze_archaeological_region(request: RegionRequest):
     """
@@ -1301,13 +1305,16 @@ async def analyze_archaeological_region(request: RegionRequest):
                     logger.info(f"   Tipo: {water_context.water_type.value if water_context.water_type else 'unknown'}")
                     logger.info(f"   Profundidad: {water_context.estimated_depth_m}m")
                     logger.info(f"   Potencial arqueológico: {water_context.archaeological_potential}")
-            # Verificar centro de la región para ambientes de hielo
-            ice_context = ice_detector.detect_ice_context(center_lat, center_lon)
             
-            logger.info(f"❄️ Detección de hielo: {'SÍ' if ice_context.is_ice_environment else 'NO'}")
-            if ice_context.is_ice_environment:
-                logger.info(f"   Tipo: {ice_context.ice_type.value if ice_context.ice_type else 'unknown'}")
-                logger.info(f"   Espesor: {ice_context.estimated_thickness_m}m")
+            # Verificar centro de la región para ambientes de hielo (si no es agua)
+            if not water_context or not water_context.is_water:
+                if ice_detector:
+                    ice_context = ice_detector.detect_ice_context(center_lat, center_lon)
+                    
+                    logger.info(f"❄️ Detección de hielo: {'SÍ' if ice_context.is_ice_environment else 'NO'}")
+                    if ice_context.is_ice_environment:
+                        logger.info(f"   Tipo: {ice_context.ice_type.value if ice_context.ice_type else 'unknown'}")
+                        logger.info(f"   Espesor: {ice_context.estimated_thickness_m}m")
                 logger.info(f"   Potencial arqueológico: {ice_context.archaeological_potential}")
                 logger.info(f"   Preservación: {ice_context.preservation_quality}")
         
@@ -1654,7 +1661,7 @@ async def analyze_archaeological_region(request: RegionRequest):
             "temporal_sensor_analysis": convert_numpy_types(
                 integrated_archaeological_results.get('temporal_sensor_analysis', {})
             ),
-"integrated_analysis": convert_numpy_types(
+            "integrated_analysis": convert_numpy_types(
                 integrated_archaeological_results.get('integrated_analysis', {})
             )
         }
@@ -1773,7 +1780,7 @@ async def analyze_archaeological_region(request: RegionRequest):
             "ground_truth_required": "La validación de campo con métodos arqueológicos estándar es obligatoria para cualquier hallazgo significativo"
         }
         
-        return AnalysisResponse(**response_data)
+        return response_data
         
     except Exception as e:
         logger.error(f"Error en análisis arqueológico: {e}")
