@@ -49,31 +49,31 @@
       "archaeological_indicators": {
         "lidar_elevation_anomalies": {
           "description": "Montículos artificiales detectables bajo dosel",
-          "threshold_height_m": 2.0,
+          "threshold_height_m": 1.2,
           "expected_pattern": "Elevaciones geométricas no explicables por topografía natural",
-          "confidence_high": "> 5m altura con geometría regular",
-          "confidence_moderate": "2-5m altura",
+          "confidence_high": "> 3m altura con geometría regular",
+          "confidence_moderate": "1.2-3m altura",
           "false_positive_risk": "Termiteros, formaciones naturales"
         },
         "ndvi_canopy_gaps": {
           "description": "Claros en vegetación sobre estructuras enterradas",
-          "threshold_ndvi_delta": 0.25,
+          "threshold_ndvi_delta": 0.12,
           "expected_pattern": "Vegetación suprimida o alterada en patrones no naturales",
-          "confidence_high": "NDVI delta > 0.4 con geometría",
-          "confidence_moderate": "NDVI delta 0.25-0.4",
+          "confidence_high": "NDVI delta > 0.25 con geometría",
+          "confidence_moderate": "NDVI delta 0.12-0.25",
           "false_positive_risk": "Claros naturales, agricultura"
         },
         "sar_l_band_penetration": {
           "description": "SAR L-band penetra vegetación, detecta estructuras",
-          "threshold_coherence": 0.6,
+          "threshold_coherence": 0.35,
           "expected_pattern": "Alta coherencia en patrones geométricos bajo dosel",
-          "confidence_high": "Coherencia > 0.8 con geometría",
-          "confidence_moderate": "Coherencia 0.6-0.8",
+          "confidence_high": "Coherencia > 0.6 con geometría",
+          "confidence_moderate": "Coherencia 0.35-0.6",
           "false_positive_risk": "Afloramientos rocosos"
         }
       },
       "minimum_convergence": 2,
-      "notes": "LiDAR es crítico - sin LiDAR, confianza baja"
+      "notes": "LiDAR es crítico - sin LiDAR, confianza baja. Umbrales ajustados para detectar sitios bajo vegetación densa."
     },
     
     "glacier": {
@@ -170,6 +170,40 @@
       "notes": "Arqueología polar es extremadamente rara - alta barra de evidencia"
     },
     
+    "mountain": {
+      "environment_type": "mountain",
+      "description": "Montañas y zonas de alta elevación - topografía compleja",
+      "primary_instruments": ["srtm_dem", "sentinel2", "sar", "lidar"],
+      "archaeological_indicators": {
+        "elevation_terracing": {
+          "description": "Terrazas artificiales en laderas montañosas",
+          "threshold_height_m": 1.5,
+          "expected_pattern": "Terrazas geométricas en pendientes",
+          "confidence_high": "> 3m altura con geometría regular",
+          "confidence_moderate": "1.5-3m altura",
+          "false_positive_risk": "Terrazas naturales, deslizamientos"
+        },
+        "slope_anomalies": {
+          "description": "Anomalías de pendiente indicando construcciones",
+          "threshold_slope_delta": 15.0,
+          "expected_pattern": "Cambios abruptos de pendiente en patrones geométricos",
+          "confidence_high": "> 30° cambio de pendiente",
+          "confidence_moderate": "15-30° cambio",
+          "false_positive_risk": "Afloramientos rocosos naturales"
+        },
+        "sar_structural_anomalies": {
+          "description": "Estructuras detectables por SAR en topografía montañosa",
+          "threshold_coherence": 0.4,
+          "expected_pattern": "Alta coherencia en estructuras artificiales",
+          "confidence_high": "Coherencia > 0.7 con geometría",
+          "confidence_moderate": "Coherencia 0.4-0.7",
+          "false_positive_risk": "Formaciones rocosas"
+        }
+      },
+      "minimum_convergence": 2,
+      "notes": "Topografía compleja requiere análisis cuidadoso. Terrazas y muros son indicadores clave."
+    },
+    
     "unknown": {
       "environment_type": "unknown",
       "description": "Ambiente no clasificado - usar análisis genérico",
@@ -230,6 +264,29 @@
         "bathymetric_height_m": 4.0,
         "acoustic_reflectance": 0.7,
         "magnetic_anomaly_nt": 150.0
+      }
+    },
+    "machu_picchu": {
+      "environment": "mountain",
+      "expected_signatures": {
+        "elevation_terracing_m": 8.0,
+        "slope_delta_degrees": 25.0,
+        "sar_coherence": 0.75
+      }
+    },
+    "stonehenge": {
+      "environment": "grassland",
+      "expected_signatures": {
+        "generic_anomalies": 0.9,
+        "sar_coherence": 0.7
+      }
+    },
+    "petra": {
+      "environment": "desert",
+      "expected_signatures": {
+        "thermal_delta_k": 8.0,
+        "sar_backscatter_db": -6.0,
+        "ndvi_delta": 0.2
       }
     }
   }

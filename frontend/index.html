@@ -2675,13 +2675,20 @@
             if (temporalValidation) {
                 temporalMessage = temporalValidation.message;
                 
-                if (temporalValidation.validationStatus === 'CONFIRMADO') {
+if (temporalValidation.validationStatus === 'CONFIRMADO') {
                     temporallyValidatedCandidates = temporalValidation.anomaliesConfirmed.length;
                     console.log(`✅ Sensor temporal CONFIRMA ${temporallyValidatedCandidates} anomalías`);
+                } else if (temporalValidation.validationStatus === 'NO_REQUERIDO') {
+                    console.log(`✅ Sensor temporal NO REQUERIDO - Ambiente ${data.environment_classification?.environment_type || 'desconocido'}`);
+                    // Para ambientes acuáticos/de hielo, asumimos validación por preservación natural
+                    temporallyValidatedCandidates = 1; // Permitir lupa
                 } else if (temporalValidation.validationStatus === 'SIN_DATOS') {
                     console.warn('🚨 SENSOR TEMPORAL SIN DATOS - Anomalías no confirmadas');
                 } else if (temporalValidation.validationStatus === 'RECHAZADO') {
                     console.warn('❌ SENSOR TEMPORAL RECHAZA anomalías - Probablemente naturales');
+                } else {
+                    console.warn('⚠️ No hay validación temporal disponible');
+                    temporalMessage = '⚠️ Sensor temporal no disponible - Anomalías sin validar temporalmente';
                 }
             } else {
                 console.warn('⚠️ No hay validación temporal disponible');

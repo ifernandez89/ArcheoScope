@@ -56,8 +56,8 @@ class ArchaeologicalAssistant:
         self.openrouter_api_key = os.getenv('OPENROUTER_API_KEY')
         self.openrouter_model = os.getenv('OPENROUTER_MODEL', 'qwen/qwen3-coder:free')
         
-        # Configuración Ollama (fallback)
-        self.ollama_model = os.getenv('OLLAMA_MODEL1', os.getenv('OLLAMA_MODEL', 'phi:latest'))
+        # Configuración Ollama (fallback) - USAR MODELO2 (qwen2.5)
+        self.ollama_model = os.getenv('OLLAMA_MODEL2', os.getenv('OLLAMA_MODEL1', os.getenv('OLLAMA_MODEL', 'qwen2.5:3b-instruct')))
         self.ollama_model2 = os.getenv('OLLAMA_MODEL2', 'qwen2.5:3b-instruct')
         self.ollama_url = os.getenv('OLLAMA_URL', 'http://localhost:11434')
         
@@ -232,59 +232,34 @@ FORMATO DE RESPUESTA:
                                    anomalies: List[Dict[str, Any]], 
                                    rule_evaluations: Dict[str, Any],
                                    context: Dict[str, Any]) -> str:
-        """Construir prompt arqueológico específico."""
+        """Construir prompt arqueológico específico (OPTIMIZADO - CORTO)."""
         
-        # Información del contexto
-        region_info = f"""
-CONTEXTO REGIONAL:
-- Región: {context.get('region_name', 'Desconocida')}
-- Área: {context.get('area_km2', 0):,.0f} km²
-- Coordenadas: {context.get('coordinates', 'No especificadas')}
-- Tipo de paisaje: {context.get('landscape_type', 'Mixto')}
-"""
+        # Resumen ultra-compacto
+        region = context.get('region_name', 'Unknown')
+        area = context.get('area_km2', 0)
         
-        # Resumen de anomalías
-        anomaly_summary = "ANOMALÍAS DETECTADAS:\n"
-        for i, anomaly in enumerate(anomalies, 1):
-            anomaly_summary += f"""
-{i}. Tipo: {anomaly.get('type', 'Desconocido')}
-   - Probabilidad arqueológica: {anomaly.get('archaeological_probability', 0):.2f}
-   - Coherencia geométrica: {anomaly.get('geometric_coherence', 0):.2f}
-   - Persistencia temporal: {anomaly.get('temporal_persistence', 0):.2f}
-   - Píxeles afectados: {anomaly.get('affected_pixels', 0):,}
-   - Características: {', '.join(anomaly.get('suspected_features', []))}
-"""
+        # Solo las anomalías más relevantes (top 3)
+        top_anomalies = sorted(anomalies, 
+                              key=lambda x: x.get('archaeological_probability', 0), 
+                              reverse=True)[:3]
         
-        # Evaluaciones de reglas
-        rules_summary = "EVALUACIONES DE REGLAS:\n"
-        for rule_name, evaluation in rule_evaluations.items():
-            if hasattr(evaluation, 'result'):
-                rules_summary += f"""
-- {rule_name}: {evaluation.result.value}
-  Probabilidad arqueológica: {evaluation.archaeological_probability:.2f}
-  Violaciones: {', '.join(evaluation.rule_violations) if evaluation.rule_violations else 'Ninguna'}
-"""
+        anomaly_summary = "\n".join([
+            f"- {a.get('type')}: prob={a.get('archaeological_probability', 0):.2f}"
+            for a in top_anomalies
+        ])
         
-        # Prompt completo
-        full_prompt = f"""{self.base_prompt}
+        # Prompt ultra-compacto
+        full_prompt = f"""Análisis arqueológico de {region} ({area:.0f} km²).
 
-{region_info}
-
+Anomalías detectadas:
 {anomaly_summary}
 
-{rules_summary}
+Proporciona en 2-3 frases:
+1. Qué patrones se detectaron
+2. Posible interpretación arqueológica (cauteloso)
+3. Recomendación principal
 
-TAREA:
-Analiza estos hallazgos desde una perspectiva arqueológica científica. Proporciona:
-
-1. EXPLICACIÓN CLARA: ¿Qué patrones espaciales se detectaron?
-2. INTERPRETACIÓN ARQUEOLÓGICA: ¿Qué podrían indicar estos patrones? (cauteloso)
-3. RAZONAMIENTO CIENTÍFICO: ¿Por qué estos patrones son significativos?
-4. EVALUACIÓN DE CONFIANZA: ¿Qué tan confiables son estas interpretaciones?
-5. LIMITACIONES: ¿Qué no podemos concluir con certeza?
-6. RECOMENDACIONES: ¿Qué investigación adicional se necesita?
-
-Recuerda: Nunca afirmes descubrimientos definitivos. Usa lenguaje científico cauteloso."""
+Sé breve y científico."""
         
         return full_prompt
     
@@ -342,16 +317,16 @@ Recuerda: Nunca afirmes descubrimientos definitivos. Usa lenguaje científico ca
                     "prompt": prompt,
                     "stream": False,
                     "options": {
-                        "temperature": 0.3,
-                        "top_p": 0.9,
-                        "num_predict": 500
+                        "temperature": 0.2,  # Más determinista
+                        "top_p": 0.8,        # Reducido
+                        "num_predict": 100   # Reducido a 100 tokens
                     }
                 }
                 
                 response = requests.post(
                     f"{self.ollama_url}/api/generate",
                     json=payload,
-                    timeout=120
+                    timeout=30  # Reducido de 120 a 30 segundos
                 )
                 
                 if response.status_code == 200:

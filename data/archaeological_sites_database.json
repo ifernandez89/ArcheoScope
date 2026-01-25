@@ -1,14 +1,16 @@
 {
   "metadata": {
-    "version": "2.0.0",
-    "last_updated": "2026-01-24",
-    "total_sites": 4,
-    "description": "Reference archaeological sites for ArcheoScope calibration - one per critical environment type",
+    "version": "2.1.0",
+    "last_updated": "2026-01-25",
+    "total_sites": 8,
+    "description": "Reference archaeological sites for ArcheoScope calibration - covering major environment types",
     "environment_coverage": {
-      "desert": "Giza Pyramids (Egypt)",
+      "desert": "Giza Pyramids (Egypt), Petra (Jordan)",
       "forest": "Angkor Wat (Cambodia)",
       "ice": "Ötzi the Iceman (Alps)",
-      "water": "Port Royal (Jamaica)"
+      "water": "Port Royal (Jamaica)",
+      "mountain": "Machu Picchu (Peru)",
+      "grassland": "Stonehenge (UK)"
     },
     "sources": [
       "UNESCO World Heritage Centre (whc.unesco.org)",
@@ -267,6 +269,181 @@
       "water_depth_m": 12,
       "last_verified": "2026-01-24",
       "calibration_notes": "Reference site for WATER/SUBMARINE environment - multibeam sonar, magnetometry, sub-bottom profiling"
+    },
+    "machu_picchu": {
+      "environment_type": "mountain",
+      "name": "Machu Picchu",
+      "alternate_names": ["Lost City of the Incas", "Machu Pikchu"],
+      "coordinates": {"lat": -13.1631, "lon": -72.5450},
+      "country": "Peru",
+      "region": "Cusco Region",
+      "site_type": "mountain_citadel",
+      "period": "Inca Empire",
+      "date_range": {"start": 1450, "end": 1572, "unit": "CE"},
+      "area_km2": 0.326,
+      "unesco_id": 274,
+      "unesco_status": "World Heritage Site",
+      "unesco_year": 1983,
+      "confidence_level": "confirmed",
+      "excavation_status": "ongoing_research",
+      "data_available": {
+        "lidar": true,
+        "satellite_multispectral": true,
+        "satellite_thermal": true,
+        "sar": true,
+        "photogrammetry": true,
+        "ground_penetrating_radar": false,
+        "excavation_reports": true,
+        "3d_models": true
+      },
+      "data_sources": {
+        "primary": "UNESCO World Heritage Centre",
+        "lidar_source": "Various archaeological surveys",
+        "satellite": "Sentinel-2, Landsat",
+        "academic": "Yale University, Peruvian Ministry of Culture"
+      },
+      "public_urls": {
+        "unesco": "https://whc.unesco.org/en/list/274",
+        "wikipedia": "https://en.wikipedia.org/wiki/Machu_Picchu"
+      },
+      "archaeological_features": [
+        "Agricultural terraces",
+        "Urban sector",
+        "Temple of the Sun",
+        "Intihuatana stone",
+        "Temple of the Three Windows",
+        "Water management system",
+        "Stone walls and buildings"
+      ],
+      "scientific_significance": "Iconic Inca citadel demonstrating advanced engineering and agricultural terracing in extreme mountain environment.",
+      "research_questions": [
+        "Purpose and function of the site",
+        "Construction techniques on steep slopes",
+        "Water management in mountains",
+        "Agricultural productivity of terraces",
+        "Astronomical alignments"
+      ],
+      "preservation_status": "good",
+      "threats": ["tourism pressure", "landslides", "earthquakes"],
+      "discovery_elevation_m": 2430,
+      "last_verified": "2026-01-25",
+      "calibration_notes": "Reference site for MOUNTAIN environment - terracing, slope analysis, SAR structural detection"
+    },
+    "petra": {
+      "environment_type": "desert",
+      "name": "Petra",
+      "alternate_names": ["Rose City", "Raqmu"],
+      "coordinates": {"lat": 30.3285, "lon": 35.4444},
+      "country": "Jordan",
+      "region": "Ma'an Governorate",
+      "site_type": "rock_cut_city",
+      "period": "Nabataean Kingdom",
+      "date_range": {"start": -300, "end": 106, "unit": "BCE/CE"},
+      "area_km2": 264.0,
+      "unesco_id": 326,
+      "unesco_status": "World Heritage Site",
+      "unesco_year": 1985,
+      "confidence_level": "confirmed",
+      "excavation_status": "ongoing_research",
+      "data_available": {
+        "lidar": true,
+        "satellite_multispectral": true,
+        "satellite_thermal": true,
+        "sar": true,
+        "photogrammetry": true,
+        "ground_penetrating_radar": true,
+        "excavation_reports": true,
+        "3d_models": true
+      },
+      "data_sources": {
+        "primary": "UNESCO World Heritage Centre",
+        "lidar_source": "Various archaeological surveys",
+        "satellite": "Sentinel-2, Landsat",
+        "academic": "Department of Antiquities of Jordan"
+      },
+      "public_urls": {
+        "unesco": "https://whc.unesco.org/en/list/326",
+        "wikipedia": "https://en.wikipedia.org/wiki/Petra"
+      },
+      "archaeological_features": [
+        "Al-Khazneh (Treasury)",
+        "Monastery (Ad Deir)",
+        "Royal tombs",
+        "Roman theater",
+        "Water conduit system",
+        "Rock-cut architecture",
+        "Nabataean temples"
+      ],
+      "scientific_significance": "Spectacular rock-cut architecture demonstrating Nabataean engineering and water management in desert environment.",
+      "research_questions": [
+        "Water management in arid environment",
+        "Trade routes and economic system",
+        "Rock-cutting techniques",
+        "Population and urban planning",
+        "Decline and abandonment"
+      ],
+      "preservation_status": "fair",
+      "threats": ["erosion", "tourism pressure", "flash floods"],
+      "last_verified": "2026-01-25",
+      "calibration_notes": "Reference site for DESERT environment - thermal anomalies, SAR backscatter, NDVI stress patterns"
+    },
+    "stonehenge": {
+      "environment_type": "grassland",
+      "name": "Stonehenge",
+      "alternate_names": ["Stonehenge Stone Circle"],
+      "coordinates": {"lat": 51.1789, "lon": -1.8262},
+      "country": "United Kingdom",
+      "region": "Wiltshire, England",
+      "site_type": "megalithic_monument",
+      "period": "Neolithic to Bronze Age",
+      "date_range": {"start": -3000, "end": -2000, "unit": "BCE"},
+      "area_km2": 0.011,
+      "unesco_id": 373,
+      "unesco_status": "World Heritage Site",
+      "unesco_year": 1986,
+      "confidence_level": "confirmed",
+      "excavation_status": "extensively_excavated",
+      "data_available": {
+        "lidar": true,
+        "satellite_multispectral": true,
+        "satellite_thermal": true,
+        "sar": true,
+        "photogrammetry": true,
+        "ground_penetrating_radar": true,
+        "excavation_reports": true,
+        "3d_models": true
+      },
+      "data_sources": {
+        "primary": "UNESCO World Heritage Centre",
+        "lidar_source": "English Heritage",
+        "satellite": "Sentinel-2, Landsat",
+        "academic": "University of Birmingham, English Heritage"
+      },
+      "public_urls": {
+        "unesco": "https://whc.unesco.org/en/list/373",
+        "wikipedia": "https://en.wikipedia.org/wiki/Stonehenge"
+      },
+      "archaeological_features": [
+        "Stone circle",
+        "Trilithons",
+        "Aubrey holes",
+        "Avenue",
+        "Cursus monuments",
+        "Barrows",
+        "Woodhenge nearby"
+      ],
+      "scientific_significance": "Iconic prehistoric monument with astronomical alignments. Recent discoveries show extensive surrounding landscape of monuments.",
+      "research_questions": [
+        "Purpose and function",
+        "Construction and transport of stones",
+        "Astronomical alignments",
+        "Ritual and ceremonial use",
+        "Relationship to surrounding monuments"
+      ],
+      "preservation_status": "good",
+      "threats": ["tourism pressure", "road vibrations", "weathering"],
+      "last_verified": "2026-01-25",
+      "calibration_notes": "Reference site for GRASSLAND environment - generic anomaly detection, SAR coherence"
     }
   },
   "control_sites": {

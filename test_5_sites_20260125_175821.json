@@ -1,0 +1,165 @@
+{
+  "test_date": "2026-01-25T17:58:21.722826",
+  "api_url": "http://localhost:8002",
+  "results": [
+    {
+      "site_id": "giza",
+      "status": "timeout",
+      "error": "Request timeout"
+    },
+    {
+      "site_id": "angkor",
+      "status": "timeout",
+      "error": "Request timeout"
+    },
+    {
+      "site_id": "machu_picchu",
+      "status": "timeout",
+      "error": "Request timeout"
+    },
+    {
+      "site_id": "petra",
+      "status": "timeout",
+      "error": "Request timeout"
+    },
+    {
+      "site_id": "stonehenge",
+      "site_name": "Stonehenge",
+      "status": "success",
+      "environment_detected": "unknown",
+      "environment_confidence": 0.0,
+      "archaeological_probability": 0.5721946202322651,
+      "confidence_level": "low",
+      "site_recognized": true,
+      "instruments_converging": 1,
+      "minimum_required": 3,
+      "measurements_count": 1,
+      "detected": true,
+      "expected": true,
+      "full_result": {
+        "region_info": {
+          "name": "Stonehenge",
+          "coordinates": {
+            "lat_range": [
+              51.1689,
+              51.1889
+            ],
+            "lon_range": [
+              -1.8362,
+              -1.8162
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.7739999999992526,
+          "analysis_type": "intelligent_integrated_archaeological_analysis"
+        },
+        "environment_classification": {
+          "environment_type": "unknown",
+          "confidence": 0.0,
+          "primary_sensors": [
+            "sentinel2",
+            "landsat",
+            "sar"
+          ],
+          "secondary_sensors": [
+            "modis",
+            "srtm_dem"
+          ],
+          "archaeological_visibility": "unknown",
+          "preservation_potential": "unknown"
+        },
+        "archaeological_results": {
+          "result_type": "archaeological",
+          "archaeological_probability": 0.5721946202322651,
+          "confidence": "low",
+          "modern_exclusion_score": 0.0,
+          "site_recognized": true,
+          "temporal_enhancement": 0.06219462023226508,
+          "ai_enhancement": 0.15,
+          "base_core_probability": 0.36
+        },
+        "instrumental_measurements": [
+          {
+            "instrument": "generic_anomalies",
+            "measurement_type": "Anomalías genéricas sin contexto ambiental",
+            "value": 0.8147406592973009,
+            "unit": "units",
+            "threshold": 0.45,
+            "exceeds_threshold": true,
+            "confidence": "high",
+            "notes": "Cualquier patrón anómalo | Sitio conocido: monumental"
+          }
+        ],
+        "convergence_analysis": {
+          "instruments_converging": 1,
+          "minimum_required": 3,
+          "convergence_met": false,
+          "temporal_support": false,
+          "ai_support": true,
+          "enhanced_confidence": true
+        },
+        "statistical_results": {
+          "spatial_anomaly_pixels": 100,
+          "archaeological_signature_pixels": 80,
+          "total_pixels": 1000,
+          "anomaly_distribution": {
+            "high_confidence": 1,
+            "moderate_confidence": 0,
+            "low_confidence": 0,
+            "total_instruments": 1
+          },
+          "detection_probability": 0.5721946202322651,
+          "environmental_confidence": 0.0,
+          "temporal_confidence": 0.24877848092906032,
+          "ai_confidence": 0.15
+        },
+        "anomaly_map": {
+          "statistics": {
+            "spatial_anomaly_pixels": 100,
+            "archaeological_signature_pixels": 80,
+            "total_pixels": 1000,
+            "anomaly_distribution": {
+              "high_confidence": 1,
+              "moderate_confidence": 0,
+              "low_confidence": 0,
+              "total_instruments": 1
+            },
+            "detection_probability": 0.36,
+            "environmental_confidence": 0.0
+          }
+        },
+        "validation_metrics": {
+          "site_recognized": true,
+          "site_name": "Stonehenge and Avebury",
+          "distance_km": 0.0,
+          "overlapping_sites": [
+            {
+              "name": "Stonehenge and Avebury"
+            }
+          ],
+          "nearby_sites": []
+        },
+        "scientific_explanation": {
+          "explanation": "Análisis en ambiente unknown (confianza 0%). 1 de 1 instrumentos detectaron anomalías. Convergencia NO alcanzada (1/3 requeridos). Sitio arqueológico conocido en la región: Stonehenge and Avebury. Baja probabilidad de anomalía arqueológica.",
+          "detection_reasoning": [
+            "generic_anomalies: 0.81 units (umbral: 0.45 units) - Confianza high"
+          ],
+          "false_positive_risks": [
+            "Alto - sin contexto ambiental"
+          ],
+          "recommended_validation": []
+        },
+        "ai_explanations": {
+          "ai_available": true,
+          "explanation": "Análisis en ambiente unknown (confianza 0%). 1 de 1 instrumentos detectaron anomalías. Convergencia NO alcanzada (1/3 requeridos). Sitio arqueológico conocido en la región: Stonehenge and Avebury. Baja probabilidad de anomalía arqueológica.",
+          "mode": "core_detector"
+        },
+        "system_status": {
+          "analysis_completed": true,
+          "detector_used": "core_anomaly_detector",
+          "scientific_method": "instrumental_convergence"
+        }
+      }
+    }
+  ]
+}

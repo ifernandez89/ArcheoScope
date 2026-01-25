@@ -58,11 +58,97 @@ from core_anomaly_detector import CoreAnomalyDetector
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Crear aplicación FastAPI
+# Crear aplicación FastAPI con documentación Swagger mejorada
 app = FastAPI(
-    title="ArcheoScope - Archaeological Remote Sensing Engine",
-    description="Plataforma de inferencia espacial científica para detectar persistencias espaciales no explicables por procesos naturales actuales",
-    version="1.0.0"
+    title="ArcheoScope API",
+    description="""
+# ArcheoScope - Archaeological Remote Sensing Engine
+
+Plataforma de inferencia espacial científica para detectar persistencias espaciales 
+no explicables por procesos naturales actuales.
+
+## Características principales
+
+* **Análisis multi-ambiente**: Desiertos, bosques, glaciares, aguas poco profundas, montañas
+* **Detección instrumental**: Convergencia de múltiples sensores remotos
+* **Validación científica**: Comparación con base de datos arqueológica verificada
+* **IA integrada**: Explicaciones contextuales usando modelos de lenguaje
+* **Transparencia de datos**: Trazabilidad completa de fuentes de datos
+
+## Flujo de análisis
+
+1. **Clasificación de ambiente**: Determina el tipo de terreno (desert, forest, glacier, etc.)
+2. **Mediciones instrumentales**: Aplica sensores apropiados según el ambiente
+3. **Detección de anomalías**: Compara mediciones vs umbrales calibrados
+4. **Validación arqueológica**: Verifica contra sitios conocidos
+5. **Explicación IA**: Genera interpretación contextual
+
+## Ambientes soportados
+
+* `desert` - Desiertos áridos (Sahara, Atacama, etc.)
+* `forest` - Bosques y selvas densas (requiere LiDAR)
+* `glacier` - Glaciares de montaña (ICESat-2, SAR)
+* `shallow_sea` - Aguas poco profundas <200m (sonar, magnetometría)
+* `polar_ice` - Capas de hielo polares
+* `mountain` - Regiones montañosas (terrazas, pendientes)
+* `grassland` - Praderas y estepas
+* `unknown` - Ambiente no clasificado (análisis genérico)
+
+## Base de datos arqueológica
+
+Incluye 8 sitios de referencia verificados:
+* Giza Pyramids (Egypt) - desert
+* Angkor Wat (Cambodia) - forest
+* Ötzi the Iceman (Alps) - glacier
+* Port Royal (Jamaica) - shallow_sea
+* Machu Picchu (Peru) - mountain
+* Petra (Jordan) - desert
+* Stonehenge (UK) - grassland
+* + 4 sitios de control (negativos)
+
+## Uso recomendado
+
+1. Usa `/status` para verificar que el sistema está operacional
+2. Usa `/archaeological-sites/known` para ver sitios de referencia
+3. Usa `/analyze` para analizar una región específica
+4. Usa `/archaeological-sites/candidates` para ver anomalías detectadas
+
+## Integridad científica
+
+El sistema NO hace trampa - detecta anomalías usando instrumentos calibrados,
+no simplemente verificando si las coordenadas están en la base de datos.
+    """,
+    version="1.1.0",
+    contact={
+        "name": "ArcheoScope Project",
+        "url": "https://github.com/archeoscope",
+    },
+    license_info={
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+    openapi_tags=[
+        {
+            "name": "Status",
+            "description": "Endpoints de estado del sistema"
+        },
+        {
+            "name": "Analysis",
+            "description": "Análisis arqueológico de regiones"
+        },
+        {
+            "name": "Database",
+            "description": "Acceso a base de datos arqueológica"
+        },
+        {
+            "name": "Validation",
+            "description": "Validación contra sitios conocidos"
+        },
+        {
+            "name": "Environment",
+            "description": "Clasificación de ambientes"
+        }
+    ]
 )
 
 # Middleware CORS deshabilitado para debugging - usando solo FastAPI CORSMiddleware
@@ -274,9 +360,24 @@ async def root():
         "paradigm": "spatial_persistence_detection"
     }
 
-@app.get("/status", response_model=SystemStatus)
+@app.get("/status", response_model=SystemStatus, tags=["Status"])
 async def get_system_status():
-    """Obtener estado del sistema arqueológico."""
+    """
+    ## Estado del Sistema
+    
+    Verifica el estado operacional de ArcheoScope.
+    
+    **Retorna:**
+    - `backend_status`: Estado del backend (operational/limited)
+    - `ai_status`: Estado del asistente IA (available/offline)
+    - `available_rules`: Reglas arqueológicas cargadas
+    - `supported_regions`: Regiones soportadas (global)
+    
+    **Ejemplo de uso:**
+    ```bash
+    curl http://localhost:8002/status
+    ```
+    """
     
     backend_status = "operational" if all(system_components.values()) else "limited"
     
@@ -892,21 +993,43 @@ async def get_archaeological_value_matrix():
         }
     }
 
-@app.get("/archaeological-sites/known")
+@app.get("/archaeological-sites/known", tags=["Database"])
 async def get_all_known_archaeological_sites():
     """
-    Obtener todos los sitios arqueológicos conocidos oficialmente documentados.
+    ## Obtener Sitios Arqueológicos Conocidos
     
-    Retorna la base de datos completa de sitios arqueológicos verificados,
-    incluyendo sitios de referencia y sitios de control (negativos).
+    Retorna la base de datos completa de sitios arqueológicos verificados.
     
-    Returns:
-        Dict con:
-        - metadata: Información sobre la base de datos
-        - reference_sites: Sitios arqueológicos confirmados (4 sitios de referencia)
-        - control_sites: Sitios de control sin arqueología (para calibración)
-        - total_sites: Número total de sitios
-        - sources: Fuentes de datos utilizadas
+    **Base de datos incluye:**
+    - **8 sitios de referencia** verificados por UNESCO y fuentes académicas
+    - **4 sitios de control** (negativos) para calibración de falsos positivos
+    
+    **Sitios de referencia:**
+    - Giza Pyramids (Egypt) - desert
+    - Angkor Wat (Cambodia) - forest
+    - Ötzi the Iceman (Alps) - glacier
+    - Port Royal (Jamaica) - shallow_sea
+    - Machu Picchu (Peru) - mountain
+    - Petra (Jordan) - desert
+    - Stonehenge (UK) - grassland
+    
+    **Retorna:**
+    - `metadata`: Información sobre la base de datos (versión, fuentes, calidad)
+    - `reference_sites`: Sitios arqueológicos confirmados con detalles completos
+    - `control_sites`: Sitios de control sin arqueología
+    - `total_sites`: Número total de sitios
+    - `sources`: Fuentes de datos (UNESCO, instituciones académicas)
+    
+    **Ejemplo de uso:**
+    ```bash
+    curl http://localhost:8002/archaeological-sites/known
+    ```
+    
+    **Fuentes de datos:**
+    - UNESCO World Heritage Centre
+    - Instituciones académicas (Harvard, Yale, etc.)
+    - Agencias arqueológicas nacionales
+    - Publicaciones científicas revisadas por pares
     """
     try:
         import json
@@ -946,24 +1069,41 @@ async def get_all_known_archaeological_sites():
         logger.error(f"❌ Error obteniendo sitios arqueológicos conocidos: {e}")
         raise HTTPException(status_code=500, detail=f"Error obteniendo sitios conocidos: {str(e)}")
 
-@app.get("/archaeological-sites/candidates")
+@app.get("/archaeological-sites/candidates", tags=["Database"])
 async def get_archeoscope_candidate_sites():
     """
-    Obtener sitios candidatos detectados por ArcheoScope para excavación/confirmación.
+    ## Obtener Sitios Candidatos Detectados por ArcheoScope
     
-    Retorna anomalías detectadas por el sistema que son candidatos potenciales
-    para investigación arqueológica adicional. Estos son sitios que:
-    - Tienen convergencia instrumental (múltiples sensores detectan anomalías)
-    - Probabilidad arqueológica > 0.5
-    - NO están en la base de datos de sitios conocidos
-    - Requieren validación en terreno
+    Retorna anomalías detectadas que son candidatos potenciales para investigación arqueológica.
     
-    Returns:
-        Dict con:
-        - candidates: Lista de sitios candidatos con detalles
-        - total_candidates: Número total de candidatos
-        - detection_criteria: Criterios usados para clasificar como candidato
-        - recommended_validation: Métodos recomendados para validación
+    **Criterios para ser candidato:**
+    1. Probabilidad arqueológica > 50%
+    2. Convergencia instrumental (2+ sensores detectan anomalías)
+    3. NO está en la base de datos de sitios conocidos
+    4. Requiere validación en terreno
+    
+    **Retorna:**
+    - `candidates`: Lista de sitios candidatos con:
+      - Coordenadas y nombre de región
+      - Tipo de ambiente detectado
+      - Probabilidad arqueológica
+      - Nivel de confianza
+      - Número de instrumentos convergentes
+      - Fecha de detección
+      - Mediciones instrumentales
+      - Explicación científica
+      - Métodos de validación recomendados
+      - Riesgos de falsos positivos
+    - `total_candidates`: Número total de candidatos
+    - `detection_criteria`: Criterios usados
+    
+    **Ejemplo de uso:**
+    ```bash
+    curl http://localhost:8002/archaeological-sites/candidates
+    ```
+    
+    **Nota:** Estos sitios requieren validación adicional antes de confirmar
+    su naturaleza arqueológica. Use los métodos de validación recomendados.
     """
     try:
         import json
@@ -1618,14 +1758,52 @@ async def test_analyze(request: RegionRequest):
     logger.info("TEST ENDPOINT REACHED!")
     return {"status": "ok", "region": request.region_name}
 
-@app.post("/analyze")
+@app.post("/analyze", tags=["Analysis"])
 async def analyze_archaeological_region(request: RegionRequest):
     """
-    INVESTIGAR: Analizar una región desde perspectiva arqueológica.
+    ## Analizar Región Arqueológica
     
-    🌊 NUEVO: Detección automática de agua y arqueología submarina
-    - Si las coordenadas están sobre agua → análisis submarino especializado
-    - Si están sobre tierra → análisis terrestre tradicional
+    Endpoint principal para detectar anomalías arqueológicas en una región específica.
+    
+    **Flujo de análisis:**
+    1. Clasificar ambiente (desert, forest, glacier, shallow_sea, mountain, etc.)
+    2. Medir con instrumentos apropiados para ese ambiente
+    3. Comparar mediciones vs umbrales de anomalía calibrados
+    4. Validar contra base de datos arqueológica
+    5. Generar explicación con IA
+    
+    **Parámetros:**
+    - `lat_min`, `lat_max`: Rango de latitud (grados decimales)
+    - `lon_min`, `lon_max`: Rango de longitud (grados decimales)
+    - `region_name`: Nombre descriptivo de la región
+    - `resolution_m`: Resolución de análisis en metros (opcional, default: 1000)
+    
+    **Retorna:**
+    - `environment_classification`: Tipo de ambiente detectado
+    - `archaeological_results`: Probabilidad y confianza de anomalía
+    - `instrumental_measurements`: Mediciones de cada instrumento
+    - `convergence_analysis`: Análisis de convergencia instrumental
+    - `site_validation`: Validación contra sitios conocidos
+    - `ai_explanations`: Explicación contextual generada por IA
+    
+    **Ejemplo de uso:**
+    ```bash
+    curl -X POST http://localhost:8002/analyze \\
+      -H "Content-Type: application/json" \\
+      -d '{
+        "lat_min": 29.97,
+        "lat_max": 29.99,
+        "lon_min": 31.12,
+        "lon_max": 31.14,
+        "region_name": "Giza Pyramids",
+        "resolution_m": 1000
+      }'
+    ```
+    
+    **Nota:** El sistema NO hace trampa - detecta anomalías usando instrumentos
+    calibrados, no simplemente verificando coordenadas en la base de datos.
+    
+    🌊 **Detección automática:** Si las coordenadas están sobre agua → análisis submarino especializado
     """
     
     logger.info("=" * 80)
