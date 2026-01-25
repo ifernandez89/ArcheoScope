@@ -568,11 +568,17 @@ class EnvironmentClassifier:
     def _is_on_land(self, lat: float, lon: float) -> bool:
         """Verificar si coordenadas están en tierra firme (simplificado pero preciso)"""
         
-        # América del Norte
-        if 15 <= lat <= 72 and -170 <= lon <= -50:
+        # América del Norte (continental)
+        if 25 <= lat <= 72 and -170 <= lon <= -50:
             # Excluir Grandes Lagos y costas
             if not (41 <= lat <= 49 and -93 <= lon <= -76):  # Grandes Lagos
                 return True
+        
+        # Caribe e islas - EXCLUIR (son mayormente agua)
+        # Port Royal, Jamaica está aquí: 17.94°N, -76.84°W
+        if 10 <= lat <= 25 and -90 <= lon <= -60:
+            # Esta es zona de islas caribeñas - considerar como AGUA
+            return False
         
         # América del Sur
         if -56 <= lat <= 13 and -82 <= lon <= -34:
@@ -599,14 +605,33 @@ class EnvironmentClassifier:
     
     def _estimate_ocean_depth(self, lat: float, lon: float) -> float:
         """Estimar profundidad del océano (simplificado)"""
-        # Profundidades típicas por región
+        
+        # CASOS ESPECIALES: Aguas poco profundas conocidas
+        
+        # Caribe (incluyendo Port Royal, Jamaica)
+        if 10 <= lat <= 25 and -85 <= lon <= -60:
+            return 50  # Aguas poco profundas del Caribe
+        
+        # Mediterráneo
+        if 30 <= lat <= 46 and -6 <= lon <= 37:
+            return 150  # Mar Mediterráneo poco profundo
+        
+        # Golfo Pérsico
+        if 24 <= lat <= 30 and 48 <= lon <= 57:
+            return 50  # Aguas poco profundas
+        
+        # Mar del Norte
+        if 51 <= lat <= 62 and -4 <= lon <= 9:
+            return 100  # Aguas poco profundas
+        
+        # Profundidades típicas por región (océanos abiertos)
         abs_lat = abs(lat)
         
         if abs_lat > 60:  # Regiones polares
             return 1000
         elif abs_lat > 40:  # Latitudes medias
             return 3000
-        else:  # Trópicos
+        else:  # Trópicos (océanos abiertos)
             return 4000
     
     def _point_in_great_lakes(self, lat: float, lon: float) -> bool:

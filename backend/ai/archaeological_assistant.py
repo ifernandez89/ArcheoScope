@@ -51,7 +51,8 @@ class ArchaeologicalAssistant:
         self.openrouter_model = os.getenv('OPENROUTER_MODEL', 'qwen/qwen3-coder:free')
         
         # Configuración Ollama (fallback)
-        self.ollama_model = os.getenv('OLLAMA_MODEL', 'phi4-mini-reasoning')
+        self.ollama_model = os.getenv('OLLAMA_MODEL1', os.getenv('OLLAMA_MODEL', 'phi4-mini-reasoning'))
+        self.ollama_model2 = os.getenv('OLLAMA_MODEL2', 'qwen2.5:3b-instruct')
         self.ollama_url = os.getenv('OLLAMA_URL', 'http://localhost:11434')
         
         # Timeouts
@@ -153,17 +154,20 @@ FORMATO DE RESPUESTA:
                     models = response.json().get('models', [])
                     available_models = [model['name'] for model in models]
                     
-                    # Buscar phi4-mini-reasoning con cualquier tag
-                    phi4_models = [m for m in available_models if 'phi4-mini-reasoning' in m]
+                    # Verificar si el modelo configurado está disponible
+                    model_available = any(self.ollama_model in m for m in available_models)
                     
-                    if phi4_models:
-                        # Usar el primer modelo phi4 encontrado
-                        self.ollama_model = phi4_models[0]
+                    if model_available:
                         logger.info(f"✅ Ollama disponible con {self.ollama_model}")
                         return True
                     else:
-                        logger.warning(f"⚠️ Modelo phi4-mini-reasoning no encontrado. "
+                        logger.warning(f"⚠️ Modelo {self.ollama_model} no encontrado. "
                                      f"Disponibles: {available_models}")
+                        # Intentar usar cualquier modelo disponible como fallback
+                        if available_models:
+                            self.ollama_model = available_models[0]
+                            logger.info(f"✅ Usando modelo alternativo: {self.ollama_model}")
+                            return True
                         return False
                 else:
                     logger.warning(f"⚠️ Ollama no responde: HTTP {response.status_code}")

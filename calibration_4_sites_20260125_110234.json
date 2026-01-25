@@ -1,0 +1,956 @@
+{
+  "test_date": "2026-01-25T11:02:34.988041",
+  "api_url": "http://localhost:8002",
+  "reference_sites": [
+    {
+      "site_id": "giza_pyramids",
+      "site_name": "Giza Pyramids Complex",
+      "status": "pass",
+      "environment_detected": "desert",
+      "environment_confidence": 0.95,
+      "archaeological_probability": 0.55,
+      "site_recognized": true,
+      "checks": {
+        "environment_correct": true,
+        "sensors_correct": true,
+        "detection_correct": true,
+        "recognition_correct": true
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Giza Pyramids Complex",
+          "coordinates": {
+            "lat_range": [
+              29.969199999999997,
+              29.9892
+            ],
+            "lon_range": [
+              31.1242,
+              31.1442
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.77400000000118,
+          "analysis_type": "core_anomaly_detection"
+        },
+        "environment_classification": {
+          "environment_type": "desert",
+          "confidence": 0.95,
+          "primary_sensors": [
+            "landsat_thermal",
+            "sentinel2",
+            "sar"
+          ],
+          "secondary_sensors": [
+            "modis",
+            "srtm_dem"
+          ],
+          "archaeological_visibility": "high",
+          "preservation_potential": "excellent"
+        },
+        "archaeological_results": {
+          "result_type": "archaeological",
+          "archaeological_probability": 0.55,
+          "confidence": "moderate",
+          "modern_exclusion_score": 0.0,
+          "site_recognized": true
+        },
+        "instrumental_measurements": [
+          {
+            "instrument": "thermal_anomalies",
+            "measurement_type": "Estructuras enterradas tienen diferente inercia térmica que arena",
+            "value": 6.018260867867071,
+            "unit": "K",
+            "threshold": 5.0,
+            "exceeds_threshold": true,
+            "confidence": "moderate",
+            "notes": "Anomalías térmicas persistentes en mismo lugar día/noche"
+          },
+          {
+            "instrument": "sar_backscatter",
+            "measurement_type": "Estructuras enterradas alteran rugosidad superficial",
+            "value": -3.6109565207202428,
+            "unit": "dB",
+            "threshold": -3.0,
+            "exceeds_threshold": false,
+            "confidence": "none",
+            "notes": "Patrones geométricos en backscatter"
+          },
+          {
+            "instrument": "ndvi_stress",
+            "measurement_type": "Vegetación escasa muestra estrés sobre estructuras",
+            "value": 0.18054782603601213,
+            "unit": "NDVI",
+            "threshold": 0.15,
+            "exceeds_threshold": true,
+            "confidence": "moderate",
+            "notes": "Vegetación suprimida en patrones geométricos"
+          }
+        ],
+        "convergence_analysis": {
+          "instruments_converging": 2,
+          "minimum_required": 2,
+          "convergence_met": true
+        },
+        "validation_metrics": {
+          "site_recognized": true,
+          "site_name": "Giza Pyramids Complex",
+          "distance_km": 0.0,
+          "overlapping_sites": [
+            {
+              "name": "Giza Pyramids Complex"
+            }
+          ],
+          "nearby_sites": []
+        },
+        "scientific_explanation": {
+          "explanation": "Análisis en ambiente desert (confianza 95%). 2 de 3 instrumentos detectaron anomalías. Convergencia instrumental alcanzada (2/2 requeridos). Sitio arqueológico conocido en la región: Giza Pyramids Complex. Probabilidad moderada de anomalía arqueológica.",
+          "detection_reasoning": [
+            "thermal_anomalies: 6.02 K (umbral: 5.00 K) - Confianza moderate",
+            "ndvi_stress: 0.18 NDVI (umbral: 0.15 NDVI) - Confianza moderate"
+          ],
+          "false_positive_risks": [
+            "Rocas naturales, dunas",
+            "Zonas naturalmente áridas"
+          ],
+          "recommended_validation": [
+            "Análisis adicional con más instrumentos recomendado",
+            "Validación en terreno si es factible"
+          ]
+        },
+        "ai_explanations": {
+          "ai_available": false,
+          "explanation": "Análisis en ambiente desert (confianza 95%). 2 de 3 instrumentos detectaron anomalías. Convergencia instrumental alcanzada (2/2 requeridos). Sitio arqueológico conocido en la región: Giza Pyramids Complex. Probabilidad moderada de anomalía arqueológica.",
+          "mode": "core_detector"
+        },
+        "system_status": {
+          "analysis_completed": true,
+          "detector_used": "core_anomaly_detector",
+          "scientific_method": "instrumental_convergence"
+        }
+      }
+    },
+    {
+      "site_id": "angkor_wat",
+      "site_name": "Angkor Wat Temple Complex",
+      "status": "pass",
+      "environment_detected": "forest",
+      "environment_confidence": 0.6,
+      "archaeological_probability": 0.795,
+      "site_recognized": true,
+      "checks": {
+        "environment_correct": true,
+        "sensors_correct": true,
+        "detection_correct": true,
+        "recognition_correct": true
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Angkor Wat Temple Complex",
+          "coordinates": {
+            "lat_range": [
+              13.4025,
+              13.4225
+            ],
+            "lon_range": [
+              103.857,
+              103.87700000000001
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.77400000000185,
+          "analysis_type": "core_anomaly_detection"
+        },
+        "environment_classification": {
+          "environment_type": "forest",
+          "confidence": 0.6,
+          "primary_sensors": [
+            "lidar",
+            "sentinel2",
+            "sar"
+          ],
+          "secondary_sensors": [
+            "landsat",
+            "modis"
+          ],
+          "archaeological_visibility": "low",
+          "preservation_potential": "poor"
+        },
+        "archaeological_results": {
+          "result_type": "archaeological",
+          "archaeological_probability": 0.795,
+          "confidence": "high",
+          "modern_exclusion_score": 0.0,
+          "site_recognized": true
+        },
+        "instrumental_measurements": [
+          {
+            "instrument": "lidar_elevation_anomalies",
+            "measurement_type": "Montículos artificiales detectables bajo dosel",
+            "value": 3.103514523538658,
+            "unit": "m",
+            "threshold": 2.0,
+            "exceeds_threshold": true,
+            "confidence": "high",
+            "notes": "Elevaciones geométricas no explicables por topografía natural"
+          },
+          {
+            "instrument": "ndvi_canopy_gaps",
+            "measurement_type": "Claros en vegetación sobre estructuras enterradas",
+            "value": 0.38793931544233223,
+            "unit": "NDVI",
+            "threshold": 0.25,
+            "exceeds_threshold": true,
+            "confidence": "high",
+            "notes": "Vegetación suprimida o alterada en patrones no naturales"
+          },
+          {
+            "instrument": "sar_l_band_penetration",
+            "measurement_type": "SAR L-band penetra vegetación, detecta estructuras",
+            "value": 0.9310543570615973,
+            "unit": "units",
+            "threshold": 0.6,
+            "exceeds_threshold": true,
+            "confidence": "high",
+            "notes": "Alta coherencia en patrones geométricos bajo dosel"
+          }
+        ],
+        "convergence_analysis": {
+          "instruments_converging": 3,
+          "minimum_required": 2,
+          "convergence_met": true
+        },
+        "validation_metrics": {
+          "site_recognized": true,
+          "site_name": "Angkor Wat Temple Complex",
+          "distance_km": 0.0,
+          "overlapping_sites": [
+            {
+              "name": "Angkor Wat Temple Complex"
+            }
+          ],
+          "nearby_sites": []
+        },
+        "scientific_explanation": {
+          "explanation": "Análisis en ambiente forest (confianza 60%). 3 de 3 instrumentos detectaron anomalías. Convergencia instrumental alcanzada (3/2 requeridos). Sitio arqueológico conocido en la región: Angkor Wat Temple Complex. Alta probabilidad de anomalía arqueológica.",
+          "detection_reasoning": [
+            "lidar_elevation_anomalies: 3.10 m (umbral: 2.00 m) - Confianza high",
+            "ndvi_canopy_gaps: 0.39 NDVI (umbral: 0.25 NDVI) - Confianza high",
+            "sar_l_band_penetration: 0.93 units (umbral: 0.60 units) - Confianza high"
+          ],
+          "false_positive_risks": [
+            "Termiteros, formaciones naturales",
+            "Claros naturales, agricultura",
+            "Afloramientos rocosos"
+          ],
+          "recommended_validation": [
+            "Validación en terreno recomendada",
+            "Solicitar datos LIDAR de alta resolución si disponibles",
+            "LiDAR aerotransportado crítico para confirmar"
+          ]
+        },
+        "ai_explanations": {
+          "ai_available": false,
+          "explanation": "Análisis en ambiente forest (confianza 60%). 3 de 3 instrumentos detectaron anomalías. Convergencia instrumental alcanzada (3/2 requeridos). Sitio arqueológico conocido en la región: Angkor Wat Temple Complex. Alta probabilidad de anomalía arqueológica.",
+          "mode": "core_detector"
+        },
+        "system_status": {
+          "analysis_completed": true,
+          "detector_used": "core_anomaly_detector",
+          "scientific_method": "instrumental_convergence"
+        }
+      }
+    },
+    {
+      "site_id": "otzi_iceman",
+      "site_name": "Ötzi the Iceman Discovery Site",
+      "status": "partial",
+      "environment_detected": "glacier",
+      "environment_confidence": 0.75,
+      "archaeological_probability": 0.16000000000000003,
+      "site_recognized": true,
+      "checks": {
+        "environment_correct": true,
+        "sensors_correct": true,
+        "detection_correct": false,
+        "recognition_correct": true
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Ötzi the Iceman Discovery Site",
+          "coordinates": {
+            "lat_range": [
+              46.7689,
+              46.7889
+            ],
+            "lon_range": [
+              10.8394,
+              10.859399999999999
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.7739999999991687,
+          "analysis_type": "core_anomaly_detection"
+        },
+        "environment_classification": {
+          "environment_type": "glacier",
+          "confidence": 0.75,
+          "primary_sensors": [
+            "icesat2",
+            "sentinel1_sar",
+            "landsat"
+          ],
+          "secondary_sensors": [
+            "modis",
+            "palsar"
+          ],
+          "archaeological_visibility": "low",
+          "preservation_potential": "excellent"
+        },
+        "archaeological_results": {
+          "result_type": "consistent",
+          "archaeological_probability": 0.16000000000000003,
+          "confidence": "none",
+          "modern_exclusion_score": 0.0,
+          "site_recognized": true
+        },
+        "instrumental_measurements": [
+          {
+            "instrument": "icesat2_elevation_anomalies",
+            "measurement_type": "Objetos enterrados en hielo crean anomalías de elevación",
+            "value": 0.44621142794152463,
+            "unit": "m",
+            "threshold": 0.5,
+            "exceeds_threshold": false,
+            "confidence": "none",
+            "notes": "Anomalías de elevación persistentes en hielo"
+          },
+          {
+            "instrument": "sar_polarimetric_anomalies",
+            "measurement_type": "Objetos en hielo alteran polarización SAR",
+            "value": 0.26772685676491476,
+            "unit": "units",
+            "threshold": 0.3,
+            "exceeds_threshold": false,
+            "confidence": "none",
+            "notes": "Anomalías de polarización no explicables por hielo puro"
+          },
+          {
+            "instrument": "thermal_ice_anomalies",
+            "measurement_type": "Objetos enterrados alteran temperatura superficial del hielo",
+            "value": 1.7848457117660985,
+            "unit": "K",
+            "threshold": 2.0,
+            "exceeds_threshold": false,
+            "confidence": "none",
+            "notes": "Anomalías térmicas persistentes en superficie de hielo"
+          }
+        ],
+        "convergence_analysis": {
+          "instruments_converging": 0,
+          "minimum_required": 2,
+          "convergence_met": false
+        },
+        "validation_metrics": {
+          "site_recognized": true,
+          "site_name": "Ötzi the Iceman Discovery Site",
+          "distance_km": 0.0,
+          "overlapping_sites": [
+            {
+              "name": "Ötzi the Iceman Discovery Site"
+            }
+          ],
+          "nearby_sites": []
+        },
+        "scientific_explanation": {
+          "explanation": "Análisis en ambiente glacier (confianza 75%). Ningún instrumento detectó anomalías significativas. Convergencia NO alcanzada (0/2 requeridos). Sitio arqueológico conocido en la región: Ötzi the Iceman Discovery Site. No se detectó anomalía arqueológica significativa.",
+          "detection_reasoning": [],
+          "false_positive_risks": [],
+          "recommended_validation": [
+            "GPR (Ground Penetrating Radar) recomendado"
+          ]
+        },
+        "ai_explanations": {
+          "ai_available": false,
+          "explanation": "Análisis en ambiente glacier (confianza 75%). Ningún instrumento detectó anomalías significativas. Convergencia NO alcanzada (0/2 requeridos). Sitio arqueológico conocido en la región: Ötzi the Iceman Discovery Site. No se detectó anomalía arqueológica significativa.",
+          "mode": "core_detector"
+        },
+        "system_status": {
+          "analysis_completed": true,
+          "detector_used": "core_anomaly_detector",
+          "scientific_method": "instrumental_convergence"
+        }
+      }
+    },
+    {
+      "site_id": "port_royal",
+      "site_name": "Port Royal Submerged City",
+      "status": "partial",
+      "environment_detected": "deep_ocean",
+      "environment_confidence": 0.9,
+      "archaeological_probability": 0.1,
+      "site_recognized": true,
+      "checks": {
+        "environment_correct": false,
+        "sensors_correct": true,
+        "detection_correct": false,
+        "recognition_correct": true
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Port Royal Submerged City",
+          "coordinates": {
+            "lat_range": [
+              17.926399999999997,
+              17.9464
+            ],
+            "lon_range": [
+              -76.8508,
+              -76.8308
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.7740000000025207,
+          "analysis_type": "core_anomaly_detection"
+        },
+        "environment_classification": {
+          "environment_type": "deep_ocean",
+          "confidence": 0.9,
+          "primary_sensors": [
+            "multibeam_sonar",
+            "magnetometer",
+            "sub_bottom_profiler"
+          ],
+          "secondary_sensors": [
+            "side_scan_sonar",
+            "rov_cameras"
+          ],
+          "archaeological_visibility": "low",
+          "preservation_potential": "excellent"
+        },
+        "archaeological_results": {
+          "result_type": "consistent",
+          "archaeological_probability": 0.1,
+          "confidence": "none",
+          "modern_exclusion_score": 0.0,
+          "site_recognized": true
+        },
+        "instrumental_measurements": [
+          {
+            "instrument": "generic_anomalies",
+            "measurement_type": "Anomalías genéricas sin contexto ambiental",
+            "value": 0.37370220304869994,
+            "unit": "units",
+            "threshold": 0.5,
+            "exceeds_threshold": false,
+            "confidence": "none",
+            "notes": "Cualquier patrón anómalo"
+          }
+        ],
+        "convergence_analysis": {
+          "instruments_converging": 0,
+          "minimum_required": 3,
+          "convergence_met": false
+        },
+        "validation_metrics": {
+          "site_recognized": true,
+          "site_name": "Port Royal Submerged City",
+          "distance_km": 0.0,
+          "overlapping_sites": [
+            {
+              "name": "Port Royal Submerged City"
+            }
+          ],
+          "nearby_sites": []
+        },
+        "scientific_explanation": {
+          "explanation": "Análisis en ambiente deep_ocean (confianza 90%). Ningún instrumento detectó anomalías significativas. Convergencia NO alcanzada (0/3 requeridos). Sitio arqueológico conocido en la región: Port Royal Submerged City. No se detectó anomalía arqueológica significativa.",
+          "detection_reasoning": [],
+          "false_positive_risks": [],
+          "recommended_validation": []
+        },
+        "ai_explanations": {
+          "ai_available": false,
+          "explanation": "Análisis en ambiente deep_ocean (confianza 90%). Ningún instrumento detectó anomalías significativas. Convergencia NO alcanzada (0/3 requeridos). Sitio arqueológico conocido en la región: Port Royal Submerged City. No se detectó anomalía arqueológica significativa.",
+          "mode": "core_detector"
+        },
+        "system_status": {
+          "analysis_completed": true,
+          "detector_used": "core_anomaly_detector",
+          "scientific_method": "instrumental_convergence"
+        }
+      }
+    }
+  ],
+  "control_sites": [
+    {
+      "site_id": "atacama_desert",
+      "site_name": "Atacama Desert Natural Control",
+      "status": "pass",
+      "environment_detected": "desert",
+      "environment_confidence": 0.95,
+      "archaeological_probability": 0.18000000000000002,
+      "site_recognized": false,
+      "checks": {
+        "environment_correct": true,
+        "sensors_correct": true,
+        "detection_correct": true,
+        "recognition_correct": true
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Atacama Desert Natural Control",
+          "coordinates": {
+            "lat_range": [
+              -24.01,
+              -23.99
+            ],
+            "lon_range": [
+              -69.01,
+              -68.99
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.7740000000025207,
+          "analysis_type": "core_anomaly_detection"
+        },
+        "environment_classification": {
+          "environment_type": "desert",
+          "confidence": 0.95,
+          "primary_sensors": [
+            "landsat_thermal",
+            "sentinel2",
+            "sar"
+          ],
+          "secondary_sensors": [
+            "modis",
+            "srtm_dem"
+          ],
+          "archaeological_visibility": "high",
+          "preservation_potential": "excellent"
+        },
+        "archaeological_results": {
+          "result_type": "consistent",
+          "archaeological_probability": 0.18000000000000002,
+          "confidence": "none",
+          "modern_exclusion_score": 0.0,
+          "site_recognized": false
+        },
+        "instrumental_measurements": [
+          {
+            "instrument": "thermal_anomalies",
+            "measurement_type": "Estructuras enterradas tienen diferente inercia térmica que arena",
+            "value": 3.5444266112520917,
+            "unit": "K",
+            "threshold": 5.0,
+            "exceeds_threshold": false,
+            "confidence": "none",
+            "notes": "Anomalías térmicas persistentes en mismo lugar día/noche"
+          },
+          {
+            "instrument": "sar_backscatter",
+            "measurement_type": "Estructuras enterradas alteran rugosidad superficial",
+            "value": -2.126655966751255,
+            "unit": "dB",
+            "threshold": -3.0,
+            "exceeds_threshold": true,
+            "confidence": "low",
+            "notes": "Patrones geométricos en backscatter"
+          },
+          {
+            "instrument": "ndvi_stress",
+            "measurement_type": "Vegetación escasa muestra estrés sobre estructuras",
+            "value": 0.10633279833756275,
+            "unit": "NDVI",
+            "threshold": 0.15,
+            "exceeds_threshold": false,
+            "confidence": "none",
+            "notes": "Vegetación suprimida en patrones geométricos"
+          }
+        ],
+        "convergence_analysis": {
+          "instruments_converging": 1,
+          "minimum_required": 2,
+          "convergence_met": false
+        },
+        "validation_metrics": {
+          "site_recognized": false,
+          "site_name": null,
+          "distance_km": null,
+          "overlapping_sites": [],
+          "nearby_sites": []
+        },
+        "scientific_explanation": {
+          "explanation": "Análisis en ambiente desert (confianza 95%). 1 de 3 instrumentos detectaron anomalías. Convergencia NO alcanzada (1/2 requeridos). No se detectó anomalía arqueológica significativa.",
+          "detection_reasoning": [
+            "sar_backscatter: -2.13 dB (umbral: -3.00 dB) - Confianza low"
+          ],
+          "false_positive_risks": [
+            "Afloramientos rocosos naturales"
+          ],
+          "recommended_validation": []
+        },
+        "ai_explanations": {
+          "ai_available": false,
+          "explanation": "Análisis en ambiente desert (confianza 95%). 1 de 3 instrumentos detectaron anomalías. Convergencia NO alcanzada (1/2 requeridos). No se detectó anomalía arqueológica significativa.",
+          "mode": "core_detector"
+        },
+        "system_status": {
+          "analysis_completed": true,
+          "detector_used": "core_anomaly_detector",
+          "scientific_method": "instrumental_convergence"
+        }
+      }
+    },
+    {
+      "site_id": "amazon_rainforest",
+      "site_name": "Amazon Rainforest Natural Control",
+      "status": "partial",
+      "environment_detected": "forest",
+      "environment_confidence": 0.6,
+      "archaeological_probability": 0.6749999999999999,
+      "site_recognized": false,
+      "checks": {
+        "environment_correct": true,
+        "sensors_correct": true,
+        "detection_correct": false,
+        "recognition_correct": true
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Amazon Rainforest Natural Control",
+          "coordinates": {
+            "lat_range": [
+              -3.4753,
+              -3.4553000000000003
+            ],
+            "lon_range": [
+              -62.225899999999996,
+              -62.2059
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.7739999999991687,
+          "analysis_type": "core_anomaly_detection"
+        },
+        "environment_classification": {
+          "environment_type": "forest",
+          "confidence": 0.6,
+          "primary_sensors": [
+            "lidar",
+            "sentinel2",
+            "sar"
+          ],
+          "secondary_sensors": [
+            "landsat",
+            "modis"
+          ],
+          "archaeological_visibility": "low",
+          "preservation_potential": "poor"
+        },
+        "archaeological_results": {
+          "result_type": "archaeological",
+          "archaeological_probability": 0.6749999999999999,
+          "confidence": "moderate",
+          "modern_exclusion_score": 0.0,
+          "site_recognized": false
+        },
+        "instrumental_measurements": [
+          {
+            "instrument": "lidar_elevation_anomalies",
+            "measurement_type": "Montículos artificiales detectables bajo dosel",
+            "value": 2.5153988694178224,
+            "unit": "m",
+            "threshold": 2.0,
+            "exceeds_threshold": true,
+            "confidence": "moderate",
+            "notes": "Elevaciones geométricas no explicables por topografía natural"
+          },
+          {
+            "instrument": "ndvi_canopy_gaps",
+            "measurement_type": "Claros en vegetación sobre estructuras enterradas",
+            "value": 0.3144248586772278,
+            "unit": "NDVI",
+            "threshold": 0.25,
+            "exceeds_threshold": true,
+            "confidence": "moderate",
+            "notes": "Vegetación suprimida o alterada en patrones no naturales"
+          },
+          {
+            "instrument": "sar_l_band_penetration",
+            "measurement_type": "SAR L-band penetra vegetación, detecta estructuras",
+            "value": 0.7546196608253467,
+            "unit": "units",
+            "threshold": 0.6,
+            "exceeds_threshold": true,
+            "confidence": "moderate",
+            "notes": "Alta coherencia en patrones geométricos bajo dosel"
+          }
+        ],
+        "convergence_analysis": {
+          "instruments_converging": 3,
+          "minimum_required": 2,
+          "convergence_met": true
+        },
+        "validation_metrics": {
+          "site_recognized": false,
+          "site_name": null,
+          "distance_km": null,
+          "overlapping_sites": [],
+          "nearby_sites": []
+        },
+        "scientific_explanation": {
+          "explanation": "Análisis en ambiente forest (confianza 60%). 3 de 3 instrumentos detectaron anomalías. Convergencia instrumental alcanzada (3/2 requeridos). Probabilidad moderada de anomalía arqueológica.",
+          "detection_reasoning": [
+            "lidar_elevation_anomalies: 2.52 m (umbral: 2.00 m) - Confianza moderate",
+            "ndvi_canopy_gaps: 0.31 NDVI (umbral: 0.25 NDVI) - Confianza moderate",
+            "sar_l_band_penetration: 0.75 units (umbral: 0.60 units) - Confianza moderate"
+          ],
+          "false_positive_risks": [
+            "Termiteros, formaciones naturales",
+            "Claros naturales, agricultura",
+            "Afloramientos rocosos"
+          ],
+          "recommended_validation": [
+            "Análisis adicional con más instrumentos recomendado",
+            "Validación en terreno si es factible",
+            "LiDAR aerotransportado crítico para confirmar"
+          ]
+        },
+        "ai_explanations": {
+          "ai_available": false,
+          "explanation": "Análisis en ambiente forest (confianza 60%). 3 de 3 instrumentos detectaron anomalías. Convergencia instrumental alcanzada (3/2 requeridos). Probabilidad moderada de anomalía arqueológica.",
+          "mode": "core_detector"
+        },
+        "system_status": {
+          "analysis_completed": true,
+          "detector_used": "core_anomaly_detector",
+          "scientific_method": "instrumental_convergence"
+        }
+      }
+    },
+    {
+      "site_id": "greenland_ice",
+      "site_name": "Greenland Ice Sheet Natural Control",
+      "status": "partial",
+      "environment_detected": "polar_ice",
+      "environment_confidence": 0.95,
+      "archaeological_probability": 0.65,
+      "site_recognized": false,
+      "checks": {
+        "environment_correct": true,
+        "sensors_correct": true,
+        "detection_correct": false,
+        "recognition_correct": true
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Greenland Ice Sheet Natural Control",
+          "coordinates": {
+            "lat_range": [
+              72.5696,
+              72.5896
+            ],
+            "lon_range": [
+              -38.4692,
+              -38.449200000000005
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.77400000000118,
+          "analysis_type": "core_anomaly_detection"
+        },
+        "environment_classification": {
+          "environment_type": "polar_ice",
+          "confidence": 0.95,
+          "primary_sensors": [
+            "icesat2",
+            "sentinel1_sar",
+            "palsar"
+          ],
+          "secondary_sensors": [
+            "modis_thermal"
+          ],
+          "archaeological_visibility": "low",
+          "preservation_potential": "excellent"
+        },
+        "archaeological_results": {
+          "result_type": "archaeological",
+          "archaeological_probability": 0.65,
+          "confidence": "moderate",
+          "modern_exclusion_score": 0.0,
+          "site_recognized": false
+        },
+        "instrumental_measurements": [
+          {
+            "instrument": "icesat2_subsurface",
+            "measurement_type": "ICESat-2 puede detectar anomalías bajo hielo superficial",
+            "value": 1.6814660781829451,
+            "unit": "m",
+            "threshold": 1.0,
+            "exceeds_threshold": true,
+            "confidence": "high",
+            "notes": "Anomalías de elevación persistentes"
+          },
+          {
+            "instrument": "sar_penetration_anomalies",
+            "measurement_type": "SAR penetra hielo seco, detecta objetos enterrados",
+            "value": 0.8407330390914726,
+            "unit": "units",
+            "threshold": 0.5,
+            "exceeds_threshold": true,
+            "confidence": "high",
+            "notes": "Anomalías de coherencia bajo superficie"
+          }
+        ],
+        "convergence_analysis": {
+          "instruments_converging": 2,
+          "minimum_required": 2,
+          "convergence_met": true
+        },
+        "validation_metrics": {
+          "site_recognized": false,
+          "site_name": null,
+          "distance_km": null,
+          "overlapping_sites": [],
+          "nearby_sites": []
+        },
+        "scientific_explanation": {
+          "explanation": "Análisis en ambiente polar_ice (confianza 95%). 2 de 2 instrumentos detectaron anomalías. Convergencia instrumental alcanzada (2/2 requeridos). Probabilidad moderada de anomalía arqueológica.",
+          "detection_reasoning": [
+            "icesat2_subsurface: 1.68 m (umbral: 1.00 m) - Confianza high",
+            "sar_penetration_anomalies: 0.84 units (umbral: 0.50 units) - Confianza high"
+          ],
+          "false_positive_risks": [
+            "Topografía subglacial natural",
+            "Rocas subglaciales"
+          ],
+          "recommended_validation": [
+            "Análisis adicional con más instrumentos recomendado",
+            "Validación en terreno si es factible"
+          ]
+        },
+        "ai_explanations": {
+          "ai_available": false,
+          "explanation": "Análisis en ambiente polar_ice (confianza 95%). 2 de 2 instrumentos detectaron anomalías. Convergencia instrumental alcanzada (2/2 requeridos). Probabilidad moderada de anomalía arqueológica.",
+          "mode": "core_detector"
+        },
+        "system_status": {
+          "analysis_completed": true,
+          "detector_used": "core_anomaly_detector",
+          "scientific_method": "instrumental_convergence"
+        }
+      }
+    },
+    {
+      "site_id": "pacific_ocean",
+      "site_name": "Pacific Ocean Natural Control",
+      "status": "pass",
+      "environment_detected": "deep_ocean",
+      "environment_confidence": 0.9,
+      "archaeological_probability": 0.1,
+      "site_recognized": false,
+      "checks": {
+        "environment_correct": true,
+        "sensors_correct": true,
+        "detection_correct": true,
+        "recognition_correct": true
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Pacific Ocean Natural Control",
+          "coordinates": {
+            "lat_range": [
+              -0.01,
+              0.01
+            ],
+            "lon_range": [
+              -140.01,
+              -139.99
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.773999999996568,
+          "analysis_type": "core_anomaly_detection"
+        },
+        "environment_classification": {
+          "environment_type": "deep_ocean",
+          "confidence": 0.9,
+          "primary_sensors": [
+            "multibeam_sonar",
+            "magnetometer",
+            "sub_bottom_profiler"
+          ],
+          "secondary_sensors": [
+            "side_scan_sonar",
+            "rov_cameras"
+          ],
+          "archaeological_visibility": "low",
+          "preservation_potential": "excellent"
+        },
+        "archaeological_results": {
+          "result_type": "consistent",
+          "archaeological_probability": 0.1,
+          "confidence": "none",
+          "modern_exclusion_score": 0.0,
+          "site_recognized": false
+        },
+        "instrumental_measurements": [
+          {
+            "instrument": "generic_anomalies",
+            "measurement_type": "Anomalías genéricas sin contexto ambiental",
+            "value": 0.5380529962013546,
+            "unit": "units",
+            "threshold": 0.5,
+            "exceeds_threshold": true,
+            "confidence": "low",
+            "notes": "Cualquier patrón anómalo"
+          }
+        ],
+        "convergence_analysis": {
+          "instruments_converging": 1,
+          "minimum_required": 3,
+          "convergence_met": false
+        },
+        "validation_metrics": {
+          "site_recognized": false,
+          "site_name": null,
+          "distance_km": null,
+          "overlapping_sites": [],
+          "nearby_sites": []
+        },
+        "scientific_explanation": {
+          "explanation": "Análisis en ambiente deep_ocean (confianza 90%). 1 de 1 instrumentos detectaron anomalías. Convergencia NO alcanzada (1/3 requeridos). No se detectó anomalía arqueológica significativa.",
+          "detection_reasoning": [
+            "generic_anomalies: 0.54 units (umbral: 0.50 units) - Confianza low"
+          ],
+          "false_positive_risks": [
+            "Alto - sin contexto ambiental"
+          ],
+          "recommended_validation": []
+        },
+        "ai_explanations": {
+          "ai_available": false,
+          "explanation": "Análisis en ambiente deep_ocean (confianza 90%). 1 de 1 instrumentos detectaron anomalías. Convergencia NO alcanzada (1/3 requeridos). No se detectó anomalía arqueológica significativa.",
+          "mode": "core_detector"
+        },
+        "system_status": {
+          "analysis_completed": true,
+          "detector_used": "core_anomaly_detector",
+          "scientific_method": "instrumental_convergence"
+        }
+      }
+    }
+  ],
+  "summary": {
+    "reference_passed": 2,
+    "reference_partial": 2,
+    "reference_failed": 0,
+    "control_passed": 2,
+    "control_partial": 2,
+    "control_failed": 0,
+    "total_passed": 4,
+    "total_tests": 8,
+    "pass_rate": 0.5
+  }
+}

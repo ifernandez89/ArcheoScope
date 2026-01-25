@@ -1,0 +1,1411 @@
+{
+  "test_date": "2026-01-24T23:07:52.011381",
+  "api_url": "http://localhost:8002",
+  "reference_sites": [
+    {
+      "site_id": "giza_pyramids",
+      "site_name": "Giza Pyramids Complex",
+      "status": "partial",
+      "environment_detected": "desert",
+      "environment_confidence": 0.95,
+      "archaeological_probability": 0.18000000000000002,
+      "site_recognized": false,
+      "checks": {
+        "environment_correct": true,
+        "sensors_correct": true,
+        "detection_correct": false,
+        "recognition_correct": false
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Giza Pyramids Complex",
+          "coordinates": {
+            "lat_range": [
+              29.969199999999997,
+              29.9892
+            ],
+            "lon_range": [
+              31.1242,
+              31.1442
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.77400000000118,
+          "analysis_type": "core_anomaly_detection"
+        },
+        "environment_classification": {
+          "environment_type": "desert",
+          "confidence": 0.95,
+          "primary_sensors": [
+            "landsat_thermal",
+            "sentinel2",
+            "sar"
+          ],
+          "secondary_sensors": [
+            "modis",
+            "srtm_dem"
+          ],
+          "archaeological_visibility": "high",
+          "preservation_potential": "excellent"
+        },
+        "archaeological_results": {
+          "result_type": "consistent",
+          "archaeological_probability": 0.18000000000000002,
+          "confidence": "none",
+          "modern_exclusion_score": 0.0,
+          "site_recognized": true
+        },
+        "instrumental_measurements": [
+          {
+            "instrument": "thermal_anomalies",
+            "measurement_type": "Estructuras enterradas tienen diferente inercia térmica que arena",
+            "value": 4.789328061697338,
+            "unit": "K",
+            "threshold": 5.0,
+            "exceeds_threshold": false,
+            "confidence": "none",
+            "notes": "Anomalías térmicas persistentes en mismo lugar día/noche"
+          },
+          {
+            "instrument": "sar_backscatter",
+            "measurement_type": "Estructuras enterradas alteran rugosidad superficial",
+            "value": -2.873596837018403,
+            "unit": "dB",
+            "threshold": -3.0,
+            "exceeds_threshold": true,
+            "confidence": "low",
+            "notes": "Patrones geométricos en backscatter"
+          },
+          {
+            "instrument": "ndvi_stress",
+            "measurement_type": "Vegetación escasa muestra estrés sobre estructuras",
+            "value": 0.14367984185092014,
+            "unit": "NDVI",
+            "threshold": 0.15,
+            "exceeds_threshold": false,
+            "confidence": "none",
+            "notes": "Vegetación suprimida en patrones geométricos"
+          }
+        ],
+        "convergence_analysis": {
+          "instruments_converging": 1,
+          "minimum_required": 2,
+          "convergence_met": false
+        },
+        "real_archaeological_validation": {
+          "site_recognized": true,
+          "site_name": "Giza Pyramids Complex",
+          "distance_km": 0.0
+        },
+        "scientific_explanation": {
+          "explanation": "Análisis en ambiente desert (confianza 95%). 1 de 3 instrumentos detectaron anomalías. Convergencia NO alcanzada (1/2 requeridos). Sitio arqueológico conocido en la región: Giza Pyramids Complex. No se detectó anomalía arqueológica significativa.",
+          "detection_reasoning": [
+            "sar_backscatter: -2.87 dB (umbral: -3.00 dB) - Confianza low"
+          ],
+          "false_positive_risks": [
+            "Afloramientos rocosos naturales"
+          ],
+          "recommended_validation": []
+        },
+        "ai_explanations": {
+          "ai_available": false,
+          "explanation": "Análisis en ambiente desert (confianza 95%). 1 de 3 instrumentos detectaron anomalías. Convergencia NO alcanzada (1/2 requeridos). Sitio arqueológico conocido en la región: Giza Pyramids Complex. No se detectó anomalía arqueológica significativa.",
+          "mode": "core_detector"
+        },
+        "system_status": {
+          "analysis_completed": true,
+          "detector_used": "core_anomaly_detector",
+          "scientific_method": "instrumental_convergence"
+        }
+      }
+    },
+    {
+      "site_id": "angkor_wat",
+      "site_name": "Angkor Wat Temple Complex",
+      "status": "partial",
+      "environment_detected": "forest",
+      "environment_confidence": 0.6,
+      "archaeological_probability": 0.6749999999999999,
+      "site_recognized": false,
+      "checks": {
+        "environment_correct": true,
+        "sensors_correct": true,
+        "detection_correct": true,
+        "recognition_correct": false
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Angkor Wat Temple Complex",
+          "coordinates": {
+            "lat_range": [
+              13.4025,
+              13.4225
+            ],
+            "lon_range": [
+              103.857,
+              103.87700000000001
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.77400000000185,
+          "analysis_type": "core_anomaly_detection"
+        },
+        "environment_classification": {
+          "environment_type": "forest",
+          "confidence": 0.6,
+          "primary_sensors": [
+            "lidar",
+            "sentinel2",
+            "sar"
+          ],
+          "secondary_sensors": [
+            "landsat",
+            "modis"
+          ],
+          "archaeological_visibility": "low",
+          "preservation_potential": "poor"
+        },
+        "archaeological_results": {
+          "result_type": "archaeological",
+          "archaeological_probability": 0.6749999999999999,
+          "confidence": "moderate",
+          "modern_exclusion_score": 0.0,
+          "site_recognized": true
+        },
+        "instrumental_measurements": [
+          {
+            "instrument": "lidar_elevation_anomalies",
+            "measurement_type": "Montículos artificiales detectables bajo dosel",
+            "value": 2.5486495668533253,
+            "unit": "m",
+            "threshold": 2.0,
+            "exceeds_threshold": true,
+            "confidence": "moderate",
+            "notes": "Elevaciones geométricas no explicables por topografía natural"
+          },
+          {
+            "instrument": "ndvi_canopy_gaps",
+            "measurement_type": "Claros en vegetación sobre estructuras enterradas",
+            "value": 0.31858119585666567,
+            "unit": "NDVI",
+            "threshold": 0.25,
+            "exceeds_threshold": true,
+            "confidence": "moderate",
+            "notes": "Vegetación suprimida o alterada en patrones no naturales"
+          },
+          {
+            "instrument": "sar_l_band_penetration",
+            "measurement_type": "SAR L-band penetra vegetación, detecta estructuras",
+            "value": 0.7645948700559976,
+            "unit": "units",
+            "threshold": 0.6,
+            "exceeds_threshold": true,
+            "confidence": "moderate",
+            "notes": "Alta coherencia en patrones geométricos bajo dosel"
+          }
+        ],
+        "convergence_analysis": {
+          "instruments_converging": 3,
+          "minimum_required": 2,
+          "convergence_met": true
+        },
+        "real_archaeological_validation": {
+          "site_recognized": true,
+          "site_name": "Angkor Wat Temple Complex",
+          "distance_km": 0.0
+        },
+        "scientific_explanation": {
+          "explanation": "Análisis en ambiente forest (confianza 60%). 3 de 3 instrumentos detectaron anomalías. Convergencia instrumental alcanzada (3/2 requeridos). Sitio arqueológico conocido en la región: Angkor Wat Temple Complex. Probabilidad moderada de anomalía arqueológica.",
+          "detection_reasoning": [
+            "lidar_elevation_anomalies: 2.55 m (umbral: 2.00 m) - Confianza moderate",
+            "ndvi_canopy_gaps: 0.32 NDVI (umbral: 0.25 NDVI) - Confianza moderate",
+            "sar_l_band_penetration: 0.76 units (umbral: 0.60 units) - Confianza moderate"
+          ],
+          "false_positive_risks": [
+            "Termiteros, formaciones naturales",
+            "Claros naturales, agricultura",
+            "Afloramientos rocosos"
+          ],
+          "recommended_validation": [
+            "Análisis adicional con más instrumentos recomendado",
+            "Validación en terreno si es factible",
+            "LiDAR aerotransportado crítico para confirmar"
+          ]
+        },
+        "ai_explanations": {
+          "ai_available": false,
+          "explanation": "Análisis en ambiente forest (confianza 60%). 3 de 3 instrumentos detectaron anomalías. Convergencia instrumental alcanzada (3/2 requeridos). Sitio arqueológico conocido en la región: Angkor Wat Temple Complex. Probabilidad moderada de anomalía arqueológica.",
+          "mode": "core_detector"
+        },
+        "system_status": {
+          "analysis_completed": true,
+          "detector_used": "core_anomaly_detector",
+          "scientific_method": "instrumental_convergence"
+        }
+      }
+    },
+    {
+      "site_id": "otzi_iceman",
+      "site_name": "Ötzi the Iceman Discovery Site",
+      "status": "partial",
+      "environment_detected": "unknown",
+      "environment_confidence": 0.0,
+      "archaeological_probability": 0.0,
+      "site_recognized": false,
+      "checks": {
+        "environment_correct": false,
+        "sensors_correct": false,
+        "detection_correct": false,
+        "recognition_correct": false
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Ötzi the Iceman Discovery Site",
+          "coordinates": {
+            "lat_range": [
+              46.7689,
+              46.7889
+            ],
+            "lon_range": [
+              10.8394,
+              10.859399999999999
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.7739999999991687,
+          "analysis_type": "cryoarchaeology",
+          "environment": {
+            "type": "glacier",
+            "confidence": 0.75,
+            "temperature_range_c": [
+              -15,
+              10
+            ],
+            "preservation_potential": "excellent",
+            "archaeological_visibility": "low"
+          },
+          "ice_context": {
+            "ice_type": "glacier",
+            "estimated_thickness_m": 350.789,
+            "surface_temperature_c": -23.067339999999998,
+            "seasonal_phase": "winter_accumulation",
+            "archaeological_potential": "high",
+            "preservation_quality": "excellent",
+            "accessibility": "difficult",
+            "historical_activity": true
+          }
+        },
+        "statistical_results": {
+          "total_anomalies": 1,
+          "cryo_candidates": 1,
+          "high_priority_targets": 1,
+          "analysis_method": "icesat2_seismic_sar_integration"
+        },
+        "physics_results": {
+          "cryoarchaeology_analysis": {
+            "analysis_type": "cryoarchaeology",
+            "ice_context": {
+              "ice_type": "glacier",
+              "estimated_thickness_m": 350.789,
+              "surface_temperature_c": -23.067339999999998,
+              "seasonal_phase": "winter_accumulation",
+              "archaeological_potential": "high",
+              "preservation_quality": "excellent",
+              "accessibility": "difficult",
+              "historical_activity": true
+            },
+            "instruments_used": [
+              "icesat2_atl06",
+              "iris_seismic",
+              "icesat2_atl08",
+              "sentinel1_sar",
+              "modis_thermal",
+              "thermal_imaging",
+              "gpr_ice_penetrating"
+            ],
+            "elevation_anomalies": 1,
+            "subsurface_confirmations": 0,
+            "cryo_candidates": [
+              {
+                "anomaly_id": "elevation_anomaly_1",
+                "coordinates": [
+                  111.65,
+                  11.25
+                ],
+                "signature": {
+                  "elevation_depression_m": 16.290631914578796,
+                  "thermal_anomaly_c": 6.899999999999999,
+                  "subsurface_cavity_volume_m3": 0,
+                  "seasonal_persistence": 0.8,
+                  "detection_confidence": 1.0
+                },
+                "site_type_probability": {},
+                "cultural_period": "historic_alpine",
+                "preservation_state": "frozen",
+                "archaeological_priority": "high",
+                "recommended_investigation": [
+                  "high_resolution_gpr_survey",
+                  "thermal_imaging_analysis",
+                  "ice_core_sampling",
+                  "photogrammetric_mapping",
+                  "systematic_archaeological_excavation",
+                  "remote_sensing_analysis_only"
+                ],
+                "seasonal_accessibility": {
+                  "winter": "extreme",
+                  "spring": "difficult",
+                  "summer": "difficult",
+                  "autumn": "difficult"
+                }
+              }
+            ],
+            "investigation_plan": {
+              "optimal_season": "winter",
+              "immediate_actions": [
+                "detailed_remote_sensing_analysis",
+                "seasonal_accessibility_assessment",
+                "specialized_equipment_procurement",
+                "cold_weather_team_preparation"
+              ],
+              "seasonal_phases": {
+                "winter": [
+                  "remote_sensing",
+                  "planning",
+                  "equipment_testing"
+                ],
+                "spring": [
+                  "site_monitoring",
+                  "access_route_planning"
+                ],
+                "summer": [
+                  "field_investigation",
+                  "excavation",
+                  "sampling"
+                ],
+                "autumn": [
+                  "data_analysis",
+                  "preservation_measures"
+                ]
+              },
+              "resource_requirements": {
+                "team_size": 5,
+                "duration_weeks": 2,
+                "specialized_equipment": [
+                  "cold_weather_gear",
+                  "ice_penetrating_radar",
+                  "thermal_imaging_camera",
+                  "permafrost_drilling_equipment"
+                ],
+                "logistical_support": [
+                  "helicopter_access",
+                  "base_camp",
+                  "emergency_equipment"
+                ]
+              },
+              "risk_mitigation": [
+                "weather_monitoring_system",
+                "emergency_evacuation_plan",
+                "specialized_cold_weather_training",
+                "redundant_communication_systems"
+              ]
+            },
+            "temporal_analysis": {
+              "current_season": "winter_accumulation",
+              "thermal_stability": "stable",
+              "seasonal_accessibility": {
+                "winter": "extreme",
+                "spring": "difficult",
+                "summer": "difficult",
+                "autumn": "difficult"
+              },
+              "melt_freeze_patterns": {
+                "thermal_range_c": 6.899999999999999,
+                "mean_temperature_c": -23.114639999999998,
+                "thermal_anomalies": 25
+              },
+              "multi_year_persistence": 0.8
+            },
+            "summary": {
+              "high_priority_targets": 1,
+              "total_anomalies": 1,
+              "optimal_investigation_season": "winter",
+              "recommended_next_steps": [
+                "detailed_remote_sensing_analysis",
+                "seasonal_accessibility_assessment",
+                "specialized_equipment_procurement",
+                "cold_weather_team_preparation"
+              ]
+            }
+          },
+          "instruments_used": [
+            "icesat2_atl06",
+            "iris_seismic",
+            "icesat2_atl08",
+            "sentinel1_sar",
+            "modis_thermal",
+            "thermal_imaging",
+            "gpr_ice_penetrating"
+          ],
+          "detection_method": "elevation_subsurface_temporal_integration"
+        },
+        "ai_explanations": {
+          "analysis_type": "Crioarqueologia especializada",
+          "methodology": "Detección de sitios arqueológicos en ambientes de hielo con ICESat-2 y sísmica",
+          "confidence": "Basado en anomalías de elevación y datos de subsuperfie",
+          "ai_available": false
+        },
+        "anomaly_map": {
+          "cryo_candidates": [
+            {
+              "anomaly_id": "elevation_anomaly_1",
+              "coordinates": [
+                111.65,
+                11.25
+              ],
+              "signature": {
+                "elevation_depression_m": 16.290631914578796,
+                "thermal_anomaly_c": 6.899999999999999,
+                "subsurface_cavity_volume_m3": 0,
+                "seasonal_persistence": 0.8,
+                "detection_confidence": 1.0
+              },
+              "site_type_probability": {},
+              "cultural_period": "historic_alpine",
+              "preservation_state": "frozen",
+              "archaeological_priority": "high",
+              "recommended_investigation": [
+                "high_resolution_gpr_survey",
+                "thermal_imaging_analysis",
+                "ice_core_sampling",
+                "photogrammetric_mapping",
+                "systematic_archaeological_excavation",
+                "remote_sensing_analysis_only"
+              ],
+              "seasonal_accessibility": {
+                "winter": "extreme",
+                "spring": "difficult",
+                "summer": "difficult",
+                "autumn": "difficult"
+              }
+            }
+          ],
+          "elevation_anomalies": 1
+        },
+        "layer_data": {
+          "icesat2_elevation": "Datos de elevación satelital sobre hielo",
+          "subsurface_seismic": "Datos sísmicos de subsuperfie",
+          "sar_coherence": "Coherencia SAR de superficie de hielo",
+          "thermal_analysis": "Análisis térmico del ambiente"
+        },
+        "validation_metrics": {
+          "cryo_validation": true,
+          "instrument_convergence": true,
+          "archaeological_confidence": "Basado en firmas crioarqueológicas específicas"
+        },
+        "integrated_analysis": {
+          "ice_specialized": true,
+          "ice_type": "glacier",
+          "thickness_m": 350.789
+        }
+      }
+    },
+    {
+      "site_id": "port_royal",
+      "site_name": "Port Royal Submerged City",
+      "status": "partial",
+      "environment_detected": "unknown",
+      "environment_confidence": 0.0,
+      "archaeological_probability": 0.0,
+      "site_recognized": false,
+      "checks": {
+        "environment_correct": false,
+        "sensors_correct": false,
+        "detection_correct": false,
+        "recognition_correct": false
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Port Royal Submerged City",
+          "coordinates": {
+            "lat_range": [
+              17.926399999999997,
+              17.9464
+            ],
+            "lon_range": [
+              -76.8508,
+              -76.8308
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.7740000000025207,
+          "analysis_type": "submarine_archaeology",
+          "environment": {
+            "type": "deep_ocean",
+            "confidence": 0.9,
+            "depth_m": -4000,
+            "preservation_potential": "excellent",
+            "archaeological_visibility": "low"
+          },
+          "water_context": {
+            "water_type": "deep_ocean",
+            "estimated_depth_m": 1672,
+            "salinity_type": "saltwater",
+            "archaeological_potential": "medium",
+            "historical_shipping_routes": false,
+            "known_wrecks_nearby": false
+          }
+        },
+        "statistical_results": {
+          "total_anomalies": 0,
+          "wreck_candidates": 0,
+          "high_priority_targets": 0,
+          "analysis_method": "submarine_sonar_magnetometry"
+        },
+        "physics_results": {
+          "submarine_analysis": {
+            "analysis_type": "submarine_archaeology",
+            "water_context": {
+              "water_type": "deep_ocean",
+              "estimated_depth_m": 1672,
+              "salinity_type": "saltwater",
+              "archaeological_potential": "medium",
+              "historical_shipping_routes": false,
+              "known_wrecks_nearby": false
+            },
+            "instruments_used": [
+              "acoustic_reflectance",
+              "multibeam_sonar",
+              "magnetometer",
+              "side_scan_sonar",
+              "sub_bottom_profiler"
+            ],
+            "volumetric_anomalies": 0,
+            "wreck_candidates": [],
+            "investigation_plan": {
+              "immediate_actions": [],
+              "phase_1_survey": [],
+              "phase_2_investigation": [],
+              "long_term_monitoring": [],
+              "resource_requirements": {
+                "vessel_type": "research_vessel_with_rov",
+                "estimated_duration_days": 0,
+                "specialized_equipment": [
+                  "multibeam_sonar",
+                  "rov",
+                  "magnetometer"
+                ],
+                "personnel": [
+                  "marine_archaeologist",
+                  "rov_pilot",
+                  "sonar_technician"
+                ]
+              }
+            },
+            "summary": {
+              "high_priority_targets": 0,
+              "total_anomalies": 0,
+              "recommended_next_steps": []
+            }
+          },
+          "instruments_used": [
+            "acoustic_reflectance",
+            "multibeam_sonar",
+            "magnetometer",
+            "side_scan_sonar",
+            "sub_bottom_profiler"
+          ],
+          "detection_method": "acoustic_volumetric_magnetic"
+        },
+        "ai_explanations": {
+          "analysis_type": "Arqueología submarina especializada",
+          "methodology": "Detección de naufragios con sonar multihaz y magnetometría marina",
+          "confidence": "Basado en firmas acústicas y anomalías volumétricas submarinas",
+          "ai_available": false
+        },
+        "anomaly_map": {
+          "wreck_candidates": [],
+          "bathymetric_anomalies": 0
+        },
+        "layer_data": {
+          "bathymetry": "Datos batimétricos procesados con sonar multihaz",
+          "acoustic_reflectance": "Reflectancia acústica del fondo marino",
+          "magnetic_anomalies": "Anomalías magnéticas detectadas",
+          "sediment_profile": "Perfil de sedimentos submarinos"
+        },
+        "validation_metrics": {
+          "submarine_validation": true,
+          "instrument_convergence": true,
+          "archaeological_confidence": "Basado en firmas submarinas específicas"
+        },
+        "integrated_analysis": {
+          "submarine_specialized": true,
+          "water_type": "deep_ocean",
+          "depth_m": 1672
+        }
+      }
+    }
+  ],
+  "control_sites": [
+    {
+      "site_id": "atacama_desert",
+      "site_name": "Atacama Desert Natural Control",
+      "status": "pass",
+      "environment_detected": "desert",
+      "environment_confidence": 0.95,
+      "archaeological_probability": 0.18000000000000002,
+      "site_recognized": false,
+      "checks": {
+        "environment_correct": true,
+        "sensors_correct": true,
+        "detection_correct": true,
+        "recognition_correct": true
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Atacama Desert Natural Control",
+          "coordinates": {
+            "lat_range": [
+              -24.01,
+              -23.99
+            ],
+            "lon_range": [
+              -69.01,
+              -68.99
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.7740000000025207,
+          "analysis_type": "core_anomaly_detection"
+        },
+        "environment_classification": {
+          "environment_type": "desert",
+          "confidence": 0.95,
+          "primary_sensors": [
+            "landsat_thermal",
+            "sentinel2",
+            "sar"
+          ],
+          "secondary_sensors": [
+            "modis",
+            "srtm_dem"
+          ],
+          "archaeological_visibility": "high",
+          "preservation_potential": "excellent"
+        },
+        "archaeological_results": {
+          "result_type": "consistent",
+          "archaeological_probability": 0.18000000000000002,
+          "confidence": "none",
+          "modern_exclusion_score": 0.0,
+          "site_recognized": false
+        },
+        "instrumental_measurements": [
+          {
+            "instrument": "thermal_anomalies",
+            "measurement_type": "Estructuras enterradas tienen diferente inercia térmica que arena",
+            "value": 2.5403878284109926,
+            "unit": "K",
+            "threshold": 5.0,
+            "exceeds_threshold": false,
+            "confidence": "none",
+            "notes": "Anomalías térmicas persistentes en mismo lugar día/noche"
+          },
+          {
+            "instrument": "sar_backscatter",
+            "measurement_type": "Estructuras enterradas alteran rugosidad superficial",
+            "value": -1.5242326970465956,
+            "unit": "dB",
+            "threshold": -3.0,
+            "exceeds_threshold": true,
+            "confidence": "low",
+            "notes": "Patrones geométricos en backscatter"
+          },
+          {
+            "instrument": "ndvi_stress",
+            "measurement_type": "Vegetación escasa muestra estrés sobre estructuras",
+            "value": 0.07621163485232978,
+            "unit": "NDVI",
+            "threshold": 0.15,
+            "exceeds_threshold": false,
+            "confidence": "none",
+            "notes": "Vegetación suprimida en patrones geométricos"
+          }
+        ],
+        "convergence_analysis": {
+          "instruments_converging": 1,
+          "minimum_required": 2,
+          "convergence_met": false
+        },
+        "real_archaeological_validation": {
+          "site_recognized": false,
+          "site_name": null,
+          "distance_km": null
+        },
+        "scientific_explanation": {
+          "explanation": "Análisis en ambiente desert (confianza 95%). 1 de 3 instrumentos detectaron anomalías. Convergencia NO alcanzada (1/2 requeridos). No se detectó anomalía arqueológica significativa.",
+          "detection_reasoning": [
+            "sar_backscatter: -1.52 dB (umbral: -3.00 dB) - Confianza low"
+          ],
+          "false_positive_risks": [
+            "Afloramientos rocosos naturales"
+          ],
+          "recommended_validation": []
+        },
+        "ai_explanations": {
+          "ai_available": false,
+          "explanation": "Análisis en ambiente desert (confianza 95%). 1 de 3 instrumentos detectaron anomalías. Convergencia NO alcanzada (1/2 requeridos). No se detectó anomalía arqueológica significativa.",
+          "mode": "core_detector"
+        },
+        "system_status": {
+          "analysis_completed": true,
+          "detector_used": "core_anomaly_detector",
+          "scientific_method": "instrumental_convergence"
+        }
+      }
+    },
+    {
+      "site_id": "amazon_rainforest",
+      "site_name": "Amazon Rainforest Natural Control",
+      "status": "pass",
+      "environment_detected": "forest",
+      "environment_confidence": 0.6,
+      "archaeological_probability": 0.495,
+      "site_recognized": false,
+      "checks": {
+        "environment_correct": true,
+        "sensors_correct": true,
+        "detection_correct": true,
+        "recognition_correct": true
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Amazon Rainforest Natural Control",
+          "coordinates": {
+            "lat_range": [
+              -3.4753,
+              -3.4553000000000003
+            ],
+            "lon_range": [
+              -62.225899999999996,
+              -62.2059
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.7739999999991687,
+          "analysis_type": "core_anomaly_detection"
+        },
+        "environment_classification": {
+          "environment_type": "forest",
+          "confidence": 0.6,
+          "primary_sensors": [
+            "lidar",
+            "sentinel2",
+            "sar"
+          ],
+          "secondary_sensors": [
+            "landsat",
+            "modis"
+          ],
+          "archaeological_visibility": "low",
+          "preservation_potential": "poor"
+        },
+        "archaeological_results": {
+          "result_type": "consistent",
+          "archaeological_probability": 0.495,
+          "confidence": "low",
+          "modern_exclusion_score": 0.0,
+          "site_recognized": false
+        },
+        "instrumental_measurements": [
+          {
+            "instrument": "lidar_elevation_anomalies",
+            "measurement_type": "Montículos artificiales detectables bajo dosel",
+            "value": 2.0139989721980203,
+            "unit": "m",
+            "threshold": 2.0,
+            "exceeds_threshold": true,
+            "confidence": "low",
+            "notes": "Elevaciones geométricas no explicables por topografía natural"
+          },
+          {
+            "instrument": "ndvi_canopy_gaps",
+            "measurement_type": "Claros en vegetación sobre estructuras enterradas",
+            "value": 0.25174987152475253,
+            "unit": "NDVI",
+            "threshold": 0.25,
+            "exceeds_threshold": true,
+            "confidence": "low",
+            "notes": "Vegetación suprimida o alterada en patrones no naturales"
+          },
+          {
+            "instrument": "sar_l_band_penetration",
+            "measurement_type": "SAR L-band penetra vegetación, detecta estructuras",
+            "value": 0.604199691659406,
+            "unit": "units",
+            "threshold": 0.6,
+            "exceeds_threshold": true,
+            "confidence": "low",
+            "notes": "Alta coherencia en patrones geométricos bajo dosel"
+          }
+        ],
+        "convergence_analysis": {
+          "instruments_converging": 3,
+          "minimum_required": 2,
+          "convergence_met": true
+        },
+        "real_archaeological_validation": {
+          "site_recognized": false,
+          "site_name": null,
+          "distance_km": null
+        },
+        "scientific_explanation": {
+          "explanation": "Análisis en ambiente forest (confianza 60%). 3 de 3 instrumentos detectaron anomalías. Convergencia instrumental alcanzada (3/2 requeridos). Baja probabilidad de anomalía arqueológica.",
+          "detection_reasoning": [
+            "lidar_elevation_anomalies: 2.01 m (umbral: 2.00 m) - Confianza low",
+            "ndvi_canopy_gaps: 0.25 NDVI (umbral: 0.25 NDVI) - Confianza low",
+            "sar_l_band_penetration: 0.60 units (umbral: 0.60 units) - Confianza low"
+          ],
+          "false_positive_risks": [
+            "Termiteros, formaciones naturales",
+            "Claros naturales, agricultura",
+            "Afloramientos rocosos"
+          ],
+          "recommended_validation": [
+            "LiDAR aerotransportado crítico para confirmar"
+          ]
+        },
+        "ai_explanations": {
+          "ai_available": false,
+          "explanation": "Análisis en ambiente forest (confianza 60%). 3 de 3 instrumentos detectaron anomalías. Convergencia instrumental alcanzada (3/2 requeridos). Baja probabilidad de anomalía arqueológica.",
+          "mode": "core_detector"
+        },
+        "system_status": {
+          "analysis_completed": true,
+          "detector_used": "core_anomaly_detector",
+          "scientific_method": "instrumental_convergence"
+        }
+      }
+    },
+    {
+      "site_id": "greenland_ice",
+      "site_name": "Greenland Ice Sheet Natural Control",
+      "status": "partial",
+      "environment_detected": "unknown",
+      "environment_confidence": 0.0,
+      "archaeological_probability": 0.0,
+      "site_recognized": false,
+      "checks": {
+        "environment_correct": false,
+        "sensors_correct": true,
+        "detection_correct": true,
+        "recognition_correct": true
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Greenland Ice Sheet Natural Control",
+          "coordinates": {
+            "lat_range": [
+              72.5696,
+              72.5896
+            ],
+            "lon_range": [
+              -38.4692,
+              -38.449200000000005
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.77400000000118,
+          "analysis_type": "cryoarchaeology",
+          "environment": {
+            "type": "polar_ice",
+            "confidence": 0.95,
+            "temperature_range_c": [
+              -40,
+              10
+            ],
+            "preservation_potential": "excellent",
+            "archaeological_visibility": "low"
+          },
+          "ice_context": {
+            "ice_type": "ice_sheet",
+            "estimated_thickness_m": 888,
+            "surface_temperature_c": -48.54776,
+            "seasonal_phase": "winter_accumulation",
+            "archaeological_potential": "low",
+            "preservation_quality": "excellent",
+            "accessibility": "difficult",
+            "historical_activity": false
+          }
+        },
+        "statistical_results": {
+          "total_anomalies": 3,
+          "cryo_candidates": 3,
+          "high_priority_targets": 3,
+          "analysis_method": "icesat2_seismic_sar_integration"
+        },
+        "physics_results": {
+          "cryoarchaeology_analysis": {
+            "analysis_type": "cryoarchaeology",
+            "ice_context": {
+              "ice_type": "ice_sheet",
+              "estimated_thickness_m": 888,
+              "surface_temperature_c": -48.54776,
+              "seasonal_phase": "winter_accumulation",
+              "archaeological_potential": "low",
+              "preservation_quality": "excellent",
+              "accessibility": "difficult",
+              "historical_activity": false
+            },
+            "instruments_used": [
+              "sentinel1_sar",
+              "icesat2_atl06",
+              "modis_thermal",
+              "iris_seismic"
+            ],
+            "elevation_anomalies": 3,
+            "subsurface_confirmations": 0,
+            "cryo_candidates": [
+              {
+                "anomaly_id": "elevation_anomaly_1",
+                "coordinates": [
+                  52.36842105263158,
+                  33.26315789473684
+                ],
+                "signature": {
+                  "elevation_depression_m": 6.855128009858632,
+                  "thermal_anomaly_c": 3.8999999999999986,
+                  "subsurface_cavity_volume_m3": 0,
+                  "seasonal_persistence": 0.8,
+                  "detection_confidence": 1.0
+                },
+                "site_type_probability": {},
+                "cultural_period": "recent",
+                "preservation_state": "frozen",
+                "archaeological_priority": "high",
+                "recommended_investigation": [
+                  "high_resolution_gpr_survey",
+                  "thermal_imaging_analysis",
+                  "systematic_archaeological_excavation",
+                  "remote_sensing_analysis_only"
+                ],
+                "seasonal_accessibility": {
+                  "winter": "extreme",
+                  "spring": "difficult",
+                  "summer": "difficult",
+                  "autumn": "difficult"
+                }
+              },
+              {
+                "anomaly_id": "elevation_anomaly_2",
+                "coordinates": [
+                  57.94444444444444,
+                  37.388888888888886
+                ],
+                "signature": {
+                  "elevation_depression_m": 7.455296137278552,
+                  "thermal_anomaly_c": 3.8999999999999986,
+                  "subsurface_cavity_volume_m3": 0,
+                  "seasonal_persistence": 0.8,
+                  "detection_confidence": 1.0
+                },
+                "site_type_probability": {},
+                "cultural_period": "recent",
+                "preservation_state": "frozen",
+                "archaeological_priority": "high",
+                "recommended_investigation": [
+                  "high_resolution_gpr_survey",
+                  "thermal_imaging_analysis",
+                  "systematic_archaeological_excavation",
+                  "remote_sensing_analysis_only"
+                ],
+                "seasonal_accessibility": {
+                  "winter": "extreme",
+                  "spring": "difficult",
+                  "summer": "difficult",
+                  "autumn": "difficult"
+                }
+              },
+              {
+                "anomaly_id": "elevation_anomaly_3",
+                "coordinates": [
+                  58.91304347826087,
+                  28.869565217391305
+                ],
+                "signature": {
+                  "elevation_depression_m": 7.057620254490828,
+                  "thermal_anomaly_c": 3.8999999999999986,
+                  "subsurface_cavity_volume_m3": 0,
+                  "seasonal_persistence": 0.8,
+                  "detection_confidence": 1.0
+                },
+                "site_type_probability": {},
+                "cultural_period": "recent",
+                "preservation_state": "frozen",
+                "archaeological_priority": "high",
+                "recommended_investigation": [
+                  "high_resolution_gpr_survey",
+                  "thermal_imaging_analysis",
+                  "systematic_archaeological_excavation",
+                  "remote_sensing_analysis_only"
+                ],
+                "seasonal_accessibility": {
+                  "winter": "extreme",
+                  "spring": "difficult",
+                  "summer": "difficult",
+                  "autumn": "difficult"
+                }
+              }
+            ],
+            "investigation_plan": {
+              "optimal_season": "winter",
+              "immediate_actions": [
+                "detailed_remote_sensing_analysis",
+                "seasonal_accessibility_assessment",
+                "specialized_equipment_procurement",
+                "cold_weather_team_preparation"
+              ],
+              "seasonal_phases": {
+                "winter": [
+                  "remote_sensing",
+                  "planning",
+                  "equipment_testing"
+                ],
+                "spring": [
+                  "site_monitoring",
+                  "access_route_planning"
+                ],
+                "summer": [
+                  "field_investigation",
+                  "excavation",
+                  "sampling"
+                ],
+                "autumn": [
+                  "data_analysis",
+                  "preservation_measures"
+                ]
+              },
+              "resource_requirements": {
+                "team_size": 9,
+                "duration_weeks": 6,
+                "specialized_equipment": [
+                  "cold_weather_gear",
+                  "ice_penetrating_radar",
+                  "thermal_imaging_camera",
+                  "permafrost_drilling_equipment"
+                ],
+                "logistical_support": [
+                  "helicopter_access",
+                  "base_camp",
+                  "emergency_equipment"
+                ]
+              },
+              "risk_mitigation": [
+                "weather_monitoring_system",
+                "emergency_evacuation_plan",
+                "specialized_cold_weather_training",
+                "redundant_communication_systems"
+              ]
+            },
+            "temporal_analysis": {
+              "current_season": "winter_accumulation",
+              "thermal_stability": "stable",
+              "seasonal_accessibility": {
+                "winter": "extreme",
+                "spring": "difficult",
+                "summer": "difficult",
+                "autumn": "difficult"
+              },
+              "melt_freeze_patterns": {
+                "thermal_range_c": 3.8999999999999986,
+                "mean_temperature_c": -48.59776,
+                "thermal_anomalies": 0
+              },
+              "multi_year_persistence": 0.8
+            },
+            "summary": {
+              "high_priority_targets": 3,
+              "total_anomalies": 3,
+              "optimal_investigation_season": "winter",
+              "recommended_next_steps": [
+                "detailed_remote_sensing_analysis",
+                "seasonal_accessibility_assessment",
+                "specialized_equipment_procurement",
+                "cold_weather_team_preparation"
+              ]
+            }
+          },
+          "instruments_used": [
+            "sentinel1_sar",
+            "icesat2_atl06",
+            "modis_thermal",
+            "iris_seismic"
+          ],
+          "detection_method": "elevation_subsurface_temporal_integration"
+        },
+        "ai_explanations": {
+          "analysis_type": "Crioarqueologia especializada",
+          "methodology": "Detección de sitios arqueológicos en ambientes de hielo con ICESat-2 y sísmica",
+          "confidence": "Basado en anomalías de elevación y datos de subsuperfie",
+          "ai_available": false
+        },
+        "anomaly_map": {
+          "cryo_candidates": [
+            {
+              "anomaly_id": "elevation_anomaly_1",
+              "coordinates": [
+                52.36842105263158,
+                33.26315789473684
+              ],
+              "signature": {
+                "elevation_depression_m": 6.855128009858632,
+                "thermal_anomaly_c": 3.8999999999999986,
+                "subsurface_cavity_volume_m3": 0,
+                "seasonal_persistence": 0.8,
+                "detection_confidence": 1.0
+              },
+              "site_type_probability": {},
+              "cultural_period": "recent",
+              "preservation_state": "frozen",
+              "archaeological_priority": "high",
+              "recommended_investigation": [
+                "high_resolution_gpr_survey",
+                "thermal_imaging_analysis",
+                "systematic_archaeological_excavation",
+                "remote_sensing_analysis_only"
+              ],
+              "seasonal_accessibility": {
+                "winter": "extreme",
+                "spring": "difficult",
+                "summer": "difficult",
+                "autumn": "difficult"
+              }
+            },
+            {
+              "anomaly_id": "elevation_anomaly_2",
+              "coordinates": [
+                57.94444444444444,
+                37.388888888888886
+              ],
+              "signature": {
+                "elevation_depression_m": 7.455296137278552,
+                "thermal_anomaly_c": 3.8999999999999986,
+                "subsurface_cavity_volume_m3": 0,
+                "seasonal_persistence": 0.8,
+                "detection_confidence": 1.0
+              },
+              "site_type_probability": {},
+              "cultural_period": "recent",
+              "preservation_state": "frozen",
+              "archaeological_priority": "high",
+              "recommended_investigation": [
+                "high_resolution_gpr_survey",
+                "thermal_imaging_analysis",
+                "systematic_archaeological_excavation",
+                "remote_sensing_analysis_only"
+              ],
+              "seasonal_accessibility": {
+                "winter": "extreme",
+                "spring": "difficult",
+                "summer": "difficult",
+                "autumn": "difficult"
+              }
+            },
+            {
+              "anomaly_id": "elevation_anomaly_3",
+              "coordinates": [
+                58.91304347826087,
+                28.869565217391305
+              ],
+              "signature": {
+                "elevation_depression_m": 7.057620254490828,
+                "thermal_anomaly_c": 3.8999999999999986,
+                "subsurface_cavity_volume_m3": 0,
+                "seasonal_persistence": 0.8,
+                "detection_confidence": 1.0
+              },
+              "site_type_probability": {},
+              "cultural_period": "recent",
+              "preservation_state": "frozen",
+              "archaeological_priority": "high",
+              "recommended_investigation": [
+                "high_resolution_gpr_survey",
+                "thermal_imaging_analysis",
+                "systematic_archaeological_excavation",
+                "remote_sensing_analysis_only"
+              ],
+              "seasonal_accessibility": {
+                "winter": "extreme",
+                "spring": "difficult",
+                "summer": "difficult",
+                "autumn": "difficult"
+              }
+            }
+          ],
+          "elevation_anomalies": 3
+        },
+        "layer_data": {
+          "icesat2_elevation": "Datos de elevación satelital sobre hielo",
+          "subsurface_seismic": "Datos sísmicos de subsuperfie",
+          "sar_coherence": "Coherencia SAR de superficie de hielo",
+          "thermal_analysis": "Análisis térmico del ambiente"
+        },
+        "validation_metrics": {
+          "cryo_validation": true,
+          "instrument_convergence": true,
+          "archaeological_confidence": "Basado en firmas crioarqueológicas específicas"
+        },
+        "integrated_analysis": {
+          "ice_specialized": true,
+          "ice_type": "ice_sheet",
+          "thickness_m": 888
+        }
+      }
+    },
+    {
+      "site_id": "pacific_ocean",
+      "site_name": "Pacific Ocean Natural Control",
+      "status": "partial",
+      "environment_detected": "unknown",
+      "environment_confidence": 0.0,
+      "archaeological_probability": 0.0,
+      "site_recognized": false,
+      "checks": {
+        "environment_correct": false,
+        "sensors_correct": true,
+        "detection_correct": true,
+        "recognition_correct": true
+      },
+      "full_result": {
+        "region_info": {
+          "name": "Pacific Ocean Natural Control",
+          "coordinates": {
+            "lat_range": [
+              -0.01,
+              0.01
+            ],
+            "lon_range": [
+              -140.01,
+              -139.99
+            ]
+          },
+          "resolution_m": 1000,
+          "area_km2": 3.773999999996568,
+          "analysis_type": "submarine_archaeology",
+          "environment": {
+            "type": "deep_ocean",
+            "confidence": 0.9,
+            "depth_m": -4000,
+            "preservation_potential": "excellent",
+            "archaeological_visibility": "low"
+          },
+          "water_context": {
+            "water_type": "deep_ocean",
+            "estimated_depth_m": 4000,
+            "salinity_type": "saltwater",
+            "archaeological_potential": "medium",
+            "historical_shipping_routes": false,
+            "known_wrecks_nearby": false
+          }
+        },
+        "statistical_results": {
+          "total_anomalies": 0,
+          "wreck_candidates": 0,
+          "high_priority_targets": 0,
+          "analysis_method": "submarine_sonar_magnetometry"
+        },
+        "physics_results": {
+          "submarine_analysis": {
+            "analysis_type": "submarine_archaeology",
+            "water_context": {
+              "water_type": "deep_ocean",
+              "estimated_depth_m": 4000,
+              "salinity_type": "saltwater",
+              "archaeological_potential": "medium",
+              "historical_shipping_routes": false,
+              "known_wrecks_nearby": false
+            },
+            "instruments_used": [
+              "acoustic_reflectance",
+              "multibeam_sonar",
+              "magnetometer",
+              "side_scan_sonar",
+              "sub_bottom_profiler"
+            ],
+            "volumetric_anomalies": 0,
+            "wreck_candidates": [],
+            "investigation_plan": {
+              "immediate_actions": [],
+              "phase_1_survey": [],
+              "phase_2_investigation": [],
+              "long_term_monitoring": [],
+              "resource_requirements": {
+                "vessel_type": "research_vessel_with_rov",
+                "estimated_duration_days": 0,
+                "specialized_equipment": [
+                  "multibeam_sonar",
+                  "rov",
+                  "magnetometer"
+                ],
+                "personnel": [
+                  "marine_archaeologist",
+                  "rov_pilot",
+                  "sonar_technician"
+                ]
+              }
+            },
+            "summary": {
+              "high_priority_targets": 0,
+              "total_anomalies": 0,
+              "recommended_next_steps": []
+            }
+          },
+          "instruments_used": [
+            "acoustic_reflectance",
+            "multibeam_sonar",
+            "magnetometer",
+            "side_scan_sonar",
+            "sub_bottom_profiler"
+          ],
+          "detection_method": "acoustic_volumetric_magnetic"
+        },
+        "ai_explanations": {
+          "analysis_type": "Arqueología submarina especializada",
+          "methodology": "Detección de naufragios con sonar multihaz y magnetometría marina",
+          "confidence": "Basado en firmas acústicas y anomalías volumétricas submarinas",
+          "ai_available": false
+        },
+        "anomaly_map": {
+          "wreck_candidates": [],
+          "bathymetric_anomalies": 0
+        },
+        "layer_data": {
+          "bathymetry": "Datos batimétricos procesados con sonar multihaz",
+          "acoustic_reflectance": "Reflectancia acústica del fondo marino",
+          "magnetic_anomalies": "Anomalías magnéticas detectadas",
+          "sediment_profile": "Perfil de sedimentos submarinos"
+        },
+        "validation_metrics": {
+          "submarine_validation": true,
+          "instrument_convergence": true,
+          "archaeological_confidence": "Basado en firmas submarinas específicas"
+        },
+        "integrated_analysis": {
+          "submarine_specialized": true,
+          "water_type": "deep_ocean",
+          "depth_m": 4000
+        }
+      }
+    }
+  ],
+  "summary": {
+    "reference_passed": 0,
+    "reference_partial": 4,
+    "reference_failed": 0,
+    "control_passed": 2,
+    "control_partial": 2,
+    "control_failed": 0,
+    "total_passed": 2,
+    "total_tests": 8,
+    "pass_rate": 0.25
+  }
+}

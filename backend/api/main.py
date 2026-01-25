@@ -52,6 +52,7 @@ from water.submarine_archaeology import SubmarineArchaeologyEngine
 from ice.ice_detector import IceDetector
 from ice.cryoarchaeology import CryoArchaeologyEngine
 from environment_classifier import EnvironmentClassifier, EnvironmentType
+from core_anomaly_detector import CoreAnomalyDetector
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -196,6 +197,7 @@ system_components = {
     'geometric_engine': None,
     'phi4_evaluator': None,
     'environment_classifier': None,  # NUEVO: Clasificador robusto de ambientes
+    'core_anomaly_detector': None,   # CRÍTICO: Detector CORE de anomalías
     'water_detector': None,          # DEPRECATED: Usar environment_classifier
     'submarine_archaeology': None,   # NUEVO: Arqueología submarina
     'ice_detector': None,            # DEPRECATED: Usar environment_classifier
@@ -235,6 +237,14 @@ def initialize_system():
         system_components['geometric_engine'] = GeometricInferenceEngine()
         system_components['phi4_evaluator'] = Phi4GeometricEvaluator()
         system_components['environment_classifier'] = EnvironmentClassifier()  # NUEVO: Clasificador robusto
+        
+        # CRÍTICO: Inicializar detector CORE de anomalías
+        system_components['core_anomaly_detector'] = CoreAnomalyDetector(
+            environment_classifier=system_components['environment_classifier'],
+            real_validator=system_components['real_validator'],
+            data_loader=system_components['loader']
+        )
+        
         system_components['water_detector'] = WaterDetector()              # DEPRECATED
         system_components['submarine_archaeology'] = SubmarineArchaeologyEngine()  # NUEVO
         system_components['ice_detector'] = IceDetector()                # DEPRECATED
@@ -882,6 +892,158 @@ async def get_archaeological_value_matrix():
         }
     }
 
+@app.get("/archaeological-sites/known")
+async def get_all_known_archaeological_sites():
+    """
+    Obtener todos los sitios arqueológicos conocidos oficialmente documentados.
+    
+    Retorna la base de datos completa de sitios arqueológicos verificados,
+    incluyendo sitios de referencia y sitios de control (negativos).
+    
+    Returns:
+        Dict con:
+        - metadata: Información sobre la base de datos
+        - reference_sites: Sitios arqueológicos confirmados (4 sitios de referencia)
+        - control_sites: Sitios de control sin arqueología (para calibración)
+        - total_sites: Número total de sitios
+        - sources: Fuentes de datos utilizadas
+    """
+    try:
+        import json
+        import os
+        
+        # Cargar base de datos de sitios arqueológicos
+        # Usar ruta relativa desde el directorio del script
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        db_path = os.path.join(current_dir, "..", "..", "data", "archaeological_sites_database.json")
+        db_path = os.path.normpath(db_path)
+        
+        logger.info(f"🔍 Buscando BD en: {db_path}")
+        
+        if not os.path.exists(db_path):
+            logger.error(f"❌ BD no encontrada en: {db_path}")
+            raise HTTPException(status_code=404, detail=f"Base de datos no encontrada en: {db_path}")
+        
+        with open(db_path, 'r', encoding='utf-8') as f:
+            sites_db = json.load(f)
+        
+        # Preparar respuesta estructurada
+        response = {
+            "metadata": sites_db.get("metadata", {}),
+            "reference_sites": sites_db.get("reference_sites", {}),
+            "control_sites": sites_db.get("control_sites", {}),
+            "total_sites": len(sites_db.get("reference_sites", {})) + len(sites_db.get("control_sites", {})),
+            "sources": sites_db.get("metadata", {}).get("sources", []),
+            "last_updated": sites_db.get("metadata", {}).get("last_updated", "unknown"),
+            "data_quality": sites_db.get("metadata", {}).get("data_quality", "unknown")
+        }
+        
+        logger.info(f"✅ Retornando {response['total_sites']} sitios arqueológicos conocidos")
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo sitios arqueológicos conocidos: {e}")
+        raise HTTPException(status_code=500, detail=f"Error obteniendo sitios conocidos: {str(e)}")
+
+@app.get("/archaeological-sites/candidates")
+async def get_archeoscope_candidate_sites():
+    """
+    Obtener sitios candidatos detectados por ArcheoScope para excavación/confirmación.
+    
+    Retorna anomalías detectadas por el sistema que son candidatos potenciales
+    para investigación arqueológica adicional. Estos son sitios que:
+    - Tienen convergencia instrumental (múltiples sensores detectan anomalías)
+    - Probabilidad arqueológica > 0.5
+    - NO están en la base de datos de sitios conocidos
+    - Requieren validación en terreno
+    
+    Returns:
+        Dict con:
+        - candidates: Lista de sitios candidatos con detalles
+        - total_candidates: Número total de candidatos
+        - detection_criteria: Criterios usados para clasificar como candidato
+        - recommended_validation: Métodos recomendados para validación
+    """
+    try:
+        import json
+        import os
+        from datetime import datetime
+        
+        # Buscar archivos de historial de análisis
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        history_path = os.path.join(current_dir, "..", "..", "archeoscope_permanent_history.json")
+        history_path = os.path.normpath(history_path)
+        
+        logger.info(f"🔍 Buscando historial en: {history_path}")
+        
+        candidates = []
+        
+        if os.path.exists(history_path):
+            with open(history_path, 'r', encoding='utf-8') as f:
+                history = json.load(f)
+            
+            # Filtrar análisis que son candidatos arqueológicos
+            for analysis in history.get("analyses", []):
+                # Criterios para ser candidato:
+                # 1. Probabilidad arqueológica > 0.5
+                # 2. NO es un sitio conocido
+                # 3. Tiene convergencia instrumental
+                
+                arch_results = analysis.get("archaeological_results", {})
+                prob = arch_results.get("archaeological_probability", 0.0)
+                site_recognized = arch_results.get("site_recognized", False)
+                
+                convergence = analysis.get("convergence_analysis", {})
+                convergence_met = convergence.get("convergence_met", False)
+                
+                if prob > 0.5 and not site_recognized and convergence_met:
+                    candidate = {
+                        "region_name": analysis.get("region_info", {}).get("name", "Unknown"),
+                        "coordinates": analysis.get("region_info", {}).get("coordinates", {}),
+                        "environment_type": analysis.get("environment_classification", {}).get("environment_type", "unknown"),
+                        "archaeological_probability": prob,
+                        "confidence_level": arch_results.get("confidence", "unknown"),
+                        "instruments_converging": convergence.get("instruments_converging", 0),
+                        "detection_date": analysis.get("timestamp", datetime.now().isoformat()),
+                        "measurements": analysis.get("instrumental_measurements", []),
+                        "explanation": analysis.get("scientific_explanation", {}).get("explanation", ""),
+                        "recommended_validation": analysis.get("scientific_explanation", {}).get("recommended_validation", []),
+                        "false_positive_risks": analysis.get("scientific_explanation", {}).get("false_positive_risks", [])
+                    }
+                    candidates.append(candidate)
+        
+        # Ordenar por probabilidad arqueológica (mayor a menor)
+        candidates.sort(key=lambda x: x["archaeological_probability"], reverse=True)
+        
+        response = {
+            "candidates": candidates,
+            "total_candidates": len(candidates),
+            "detection_criteria": {
+                "minimum_probability": 0.5,
+                "requires_convergence": True,
+                "excludes_known_sites": True,
+                "description": "Sitios con múltiples instrumentos convergentes y alta probabilidad arqueológica"
+            },
+            "recommended_validation": [
+                "Validación en terreno con arqueólogos profesionales",
+                "Análisis LIDAR de alta resolución si disponible",
+                "Excavación exploratoria en áreas de alta probabilidad",
+                "Consulta con autoridades arqueológicas locales",
+                "Documentación fotográfica y topográfica detallada"
+            ],
+            "disclaimer": "Estos son candidatos potenciales basados en análisis remoto. Se requiere validación profesional antes de cualquier excavación.",
+            "last_updated": datetime.now().isoformat()
+        }
+        
+        logger.info(f"✅ Retornando {len(candidates)} sitios candidatos de ArcheoScope")
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo sitios candidatos: {e}")
+        raise HTTPException(status_code=500, detail=f"Error obteniendo candidatos: {str(e)}")
+
 @app.post("/academic/validation/blind-test")
 async def run_blind_test():
     """
@@ -1218,11 +1380,13 @@ def integrate_archaeological_analysis_with_temporal_validation(basic_analysis: D
         logger.info(f"🎯 Score integrado: {integrated_score:.3f}")
         
         # APLICAR EXCLUSIÓN MODERNA (descarta si es muy probable que sea moderno)
-        if modern_exclusion_score > 0.6:  # Umbral de exclusión moderna
-            integrated_score *= 0.2  # Penalización severa por modernidad
+        # AJUSTE CRÍTICO: Aumentar umbral para evitar falsos positivos en sitios arqueológicos antiguos
+        # Solo descartar si hay EVIDENCIA CLARA de modernidad (>0.85)
+        if modern_exclusion_score > 0.85:  # Umbral MUY ALTO para evitar descartar sitios antiguos
+            integrated_score *= 0.3  # Penalización moderada (no severa)
             final_classification = "modern_anthropogenic_structure_excluded"
             temporal_validation = "DESCARTADA por exclusión moderna"
-            logger.info("🚫 EXCLUSIÓN MODERNA APLICADA")
+            logger.info(f"🚫 EXCLUSIÓN MODERNA APLICADA (score: {modern_exclusion_score:.3f})")
         else:
             # VALIDACIÓN TEMPORAL: reafirmar o descartar anomalías
             # Si no hay datos temporales suficientes, usar solo análisis espacial
@@ -1356,6 +1520,16 @@ def calculate_temporal_sensor_score(temporal_data: Dict[str, Any]) -> float:
 def calculate_modern_exclusion_score(advanced_analysis: Dict[str, Any]) -> float:
     """
     Calcula score de exclusión moderna automática
+    
+    CRÍTICO: Solo debe activarse para estructuras CLARAMENTE modernas
+    - Carreteras modernas con asfalto
+    - Líneas eléctricas
+    - Agricultura industrial reciente
+    
+    NO debe activarse para:
+    - Sitios arqueológicos antiguos (pirámides, templos, etc.)
+    - Estructuras históricas
+    - Modificaciones del paisaje antiguas
     """
     try:
         modern_filter = advanced_analysis.get('modern_filter_results', {})
@@ -1366,8 +1540,19 @@ def calculate_modern_exclusion_score(advanced_analysis: Dict[str, Any]) -> float
         modern_road_prob = modern_filter.get('modern_road_probability', 0)
         cadastral_alignment = modern_filter.get('cadastral_alignment', 0)
         
-        # Score de exclusión (máximo de las probabilidades modernas)
-        exclusion_score = max(agricultural_prob, power_line_prob, modern_road_prob, cadastral_alignment)
+        # AJUSTE CRÍTICO: Reducir peso de cadastral_alignment
+        # (muchos sitios arqueológicos tienen geometría regular)
+        cadastral_weight = 0.3  # Peso reducido
+        
+        # Score de exclusión ponderado
+        exclusion_score = max(
+            agricultural_prob * 0.8,  # Agricultura moderna es fuerte indicador
+            power_line_prob * 1.0,    # Líneas eléctricas son definitivas
+            modern_road_prob * 0.9,   # Carreteras modernas son fuertes
+            cadastral_alignment * cadastral_weight  # Geometría regular NO es definitiva
+        )
+        
+        logger.info(f"🔍 Exclusión moderna: agri={agricultural_prob:.2f}, power={power_line_prob:.2f}, road={modern_road_prob:.2f}, cadastral={cadastral_alignment:.2f} → score={exclusion_score:.2f}")
         
         return exclusion_score
         
@@ -1515,186 +1700,127 @@ async def analyze_archaeological_region(request: RegionRequest):
             EnvironmentType.RIVER
         ]
         
-        # ❄️ PASO 2: ANÁLISIS ESPECIALIZADO SEGÚN CONTEXTO
-        # PRIORIDAD: Ambientes polares (hielo) > Ambientes acuáticos > Ambientes terrestres
-        
-        if is_ice_environment:
-            # ANÁLISIS CRIOARQUEOLÓGICO ESPECIALIZADO (PRIORIDAD MÁXIMA)
-            logger.info(f"❄️ Ejecutando análisis crioarqueológico para {env_context.environment_type.value}...")
-            
-            cryoarchaeology_engine = system_components.get('cryoarchaeology')
-            ice_detector = system_components.get('ice_detector')
-            
-            if cryoarchaeology_engine and ice_detector:
-                # Obtener contexto de hielo detallado del detector legacy
-                ice_context = ice_detector.detect_ice_context(center_lat, center_lon)
-                
-                bounds = (request.lat_min, request.lat_max, request.lon_min, request.lon_max)
-                cryo_results = cryoarchaeology_engine.analyze_cryo_area(ice_context, bounds)
-                
-                # Adaptar respuesta al formato estándar AnalysisResponse
-                response_data = {
-                    "region_info": convert_numpy_types({
-                        "name": request.region_name,
-                        "coordinates": {
-                            "lat_range": [request.lat_min, request.lat_max],
-                            "lon_range": [request.lon_min, request.lon_max]
-                        },
-                        "resolution_m": request.resolution_m,
-                        "area_km2": calculate_area_km2(request),
-                        "analysis_type": "cryoarchaeology",
-                        "environment": {
-                            "type": env_context.environment_type.value,
-                            "confidence": env_context.confidence,
-                            "temperature_range_c": env_context.temperature_range_c,
-                            "preservation_potential": env_context.preservation_potential,
-                            "archaeological_visibility": env_context.archaeological_visibility
-                        },
-                        "ice_context": cryo_results["ice_context"]
-                    }),
-                    "statistical_results": convert_numpy_types({
-                        "total_anomalies": cryo_results["elevation_anomalies"],
-                        "cryo_candidates": len(cryo_results["cryo_candidates"]),
-                        "high_priority_targets": cryo_results["summary"]["high_priority_targets"],
-                        "analysis_method": "icesat2_seismic_sar_integration"
-                    }),
-                    "physics_results": convert_numpy_types({
-                        "cryoarchaeology_analysis": cryo_results,
-                        "instruments_used": cryo_results["instruments_used"],
-                        "detection_method": "elevation_subsurface_temporal_integration"
-                    }),
-                    "ai_explanations": convert_numpy_types({
-                        "analysis_type": "Crioarqueologia especializada",
-                        "methodology": "Detección de sitios arqueológicos en ambientes de hielo con ICESat-2 y sísmica",
-                        "confidence": "Basado en anomalías de elevación y datos de subsuperfie",
-                        "ai_available": False
-                    }),
-                    "anomaly_map": convert_numpy_types({
-                        "cryo_candidates": cryo_results["cryo_candidates"],
-                        "elevation_anomalies": cryo_results["elevation_anomalies"]
-                    }),
-                    "layer_data": convert_numpy_types({
-                        "icesat2_elevation": "Datos de elevación satelital sobre hielo",
-                        "subsurface_seismic": "Datos sísmicos de subsuperfie",
-                        "sar_coherence": "Coherencia SAR de superficie de hielo",
-                        "thermal_analysis": "Análisis térmico del ambiente"
-                    }),
-                    "validation_metrics": convert_numpy_types({
-                        "cryo_validation": True,
-                        "instrument_convergence": True,
-                        "archaeological_confidence": "Basado en firmas crioarqueológicas específicas"
-                    }),
-                    "integrated_analysis": convert_numpy_types({
-                        "ice_specialized": True,
-                        "ice_type": ice_context.ice_type.value if ice_context.ice_type else None,
-                        "thickness_m": ice_context.estimated_thickness_m
-                    })
-                }
-                
-                logger.info(f"✅ Análisis crioarqueológico completado: {len(cryo_results['cryo_candidates'])} candidatos detectados")
-                
-                return response_data
-            
-            else:
-                logger.warning("⚠️ Motor de crioarqueología no disponible, continuando con análisis estándar")
-        
-        elif is_water_environment:
-            # ANÁLISIS SUBMARINO ESPECIALIZADO
-            logger.info(f"🌊 Ejecutando análisis arqueológico submarino para {env_context.environment_type.value}...")
-            
-            submarine_engine = system_components.get('submarine_archaeology')
-            water_detector = system_components.get('water_detector')
-            
-            if submarine_engine and water_detector:
-                # Obtener contexto de agua detallado del detector legacy
-                water_context = water_detector.detect_water_context(center_lat, center_lon)
-                
-                bounds = (request.lat_min, request.lat_max, request.lon_min, request.lon_max)
-                submarine_results = submarine_engine.analyze_submarine_area(water_context, bounds)
-                
-                # Adaptar respuesta al formato estándar AnalysisResponse
-                response_data = {
-                    "region_info": convert_numpy_types({
-                        "name": request.region_name,
-                        "coordinates": {
-                            "lat_range": [request.lat_min, request.lat_max],
-                            "lon_range": [request.lon_min, request.lon_max]
-                        },
-                        "resolution_m": request.resolution_m,
-                        "area_km2": calculate_area_km2(request),
-                        "analysis_type": "submarine_archaeology",
-                        "environment": {
-                            "type": env_context.environment_type.value,
-                            "confidence": env_context.confidence,
-                            "depth_m": env_context.elevation_m,
-                            "preservation_potential": env_context.preservation_potential,
-                            "archaeological_visibility": env_context.archaeological_visibility
-                        },
-                        "water_context": submarine_results["water_context"]
-                    }),
-                    "statistical_results": convert_numpy_types({
-                        "total_anomalies": submarine_results["volumetric_anomalies"],
-                        "wreck_candidates": len(submarine_results["wreck_candidates"]),
-                        "high_priority_targets": submarine_results["summary"]["high_priority_targets"],
-                        "analysis_method": "submarine_sonar_magnetometry"
-                    }),
-                    "physics_results": convert_numpy_types({
-                        "submarine_analysis": submarine_results,
-                        "instruments_used": submarine_results["instruments_used"],
-                        "detection_method": "acoustic_volumetric_magnetic"
-                    }),
-                    "ai_explanations": convert_numpy_types({
-                        "analysis_type": "Arqueología submarina especializada",
-                        "methodology": "Detección de naufragios con sonar multihaz y magnetometría marina",
-                        "confidence": "Basado en firmas acústicas y anomalías volumétricas submarinas",
-                        "ai_available": False
-                    }),
-                    "anomaly_map": convert_numpy_types({
-                        "wreck_candidates": submarine_results["wreck_candidates"],
-                        "bathymetric_anomalies": submarine_results["volumetric_anomalies"]
-                    }),
-                    "layer_data": convert_numpy_types({
-                        "bathymetry": "Datos batimétricos procesados con sonar multihaz",
-                        "acoustic_reflectance": "Reflectancia acústica del fondo marino",
-                        "magnetic_anomalies": "Anomalías magnéticas detectadas",
-                        "sediment_profile": "Perfil de sedimentos submarinos"
-                    }),
-                    "validation_metrics": convert_numpy_types({
-                        "submarine_validation": True,
-                        "instrument_convergence": True,
-                        "archaeological_confidence": "Basado en firmas submarinas específicas"
-                    }),
-                    "integrated_analysis": convert_numpy_types({
-                        "submarine_specialized": True,
-                        "water_type": water_context.water_type.value if water_context.water_type else None,
-                        "depth_m": water_context.estimated_depth_m
-                    })
-                }
-                
-                logger.info(f"✅ Análisis submarino completado: {len(submarine_results['wreck_candidates'])} candidatos detectados")
-                
-                return response_data
-            
-            else:
-                logger.warning("⚠️ Motor de arqueología submarina no disponible, continuando con análisis terrestre")
-        
-        # ANÁLISIS TERRESTRE TRADICIONAL
-        logger.info(f"🏔️ Ejecutando análisis arqueológico terrestre para {env_context.environment_type.value}...")
+        # ❄️ PASO 2: USAR DETECTOR CORE PARA TODOS LOS AMBIENTES
+        # El CORE detector maneja correctamente todos los tipos de ambiente
+        logger.info(f"🎯 Ejecutando análisis con CORE ANOMALY DETECTOR para {env_context.environment_type.value}...")
         if env_context.primary_sensors:
             logger.info(f"   Sensores recomendados: {', '.join(env_context.primary_sensors)}")
         else:
             logger.warning(f"   ⚠️ No hay sensores recomendados para este ambiente")
+        
+        # USAR DETECTOR CORE - Flujo correcto
+        core_detector = system_components.get('core_anomaly_detector')
+        if core_detector:
+            logger.info("🎯 Usando CORE ANOMALY DETECTOR (flujo científico correcto)")
+            
+            center_lat = (request.lat_min + request.lat_max) / 2
+            center_lon = (request.lon_min + request.lon_max) / 2
+            
+            core_result = core_detector.detect_anomaly(
+                center_lat, center_lon,
+                request.lat_min, request.lat_max,
+                request.lon_min, request.lon_max,
+                request.region_name
+            )
+            
+            # Adaptar resultado del CORE detector al formato de respuesta
+            response_data = {
+                "region_info": convert_numpy_types({
+                    "name": request.region_name,
+                    "coordinates": {
+                        "lat_range": [request.lat_min, request.lat_max],
+                        "lon_range": [request.lon_min, request.lon_max]
+                    },
+                    "resolution_m": request.resolution_m,
+                    "area_km2": calculate_area_km2(request),
+                    "analysis_type": "core_anomaly_detection"
+                }),
+                # CRÍTICO: Clasificación de ambiente
+                "environment_classification": convert_numpy_types({
+                    "environment_type": core_result.environment_type,
+                    "confidence": core_result.environment_confidence,
+                    "primary_sensors": env_context.primary_sensors,
+                    "secondary_sensors": env_context.secondary_sensors,
+                    "archaeological_visibility": env_context.archaeological_visibility,
+                    "preservation_potential": env_context.preservation_potential
+                }),
+                # CRÍTICO: Resultados arqueológicos
+                "archaeological_results": convert_numpy_types({
+                    "result_type": "archaeological" if core_result.anomaly_detected else "consistent",
+                    "archaeological_probability": core_result.archaeological_probability,
+                    "confidence": core_result.confidence_level,
+                    "modern_exclusion_score": 0.0,  # No aplica en CORE detector
+                    "site_recognized": core_result.known_site_nearby
+                }),
+                # Mediciones instrumentales
+                "instrumental_measurements": convert_numpy_types([
+                    {
+                        "instrument": m.instrument_name,
+                        "measurement_type": m.measurement_type,
+                        "value": m.value,
+                        "unit": m.unit,
+                        "threshold": m.threshold,
+                        "exceeds_threshold": m.exceeds_threshold,
+                        "confidence": m.confidence,
+                        "notes": m.notes
+                    }
+                    for m in core_result.measurements
+                ]),
+                # Análisis de convergencia
+                "convergence_analysis": convert_numpy_types({
+                    "instruments_converging": core_result.instruments_converging,
+                    "minimum_required": core_result.minimum_required,
+                    "convergence_met": core_result.instruments_converging >= core_result.minimum_required
+                }),
+                # Validación contra BD
+                "validation_metrics": convert_numpy_types({
+                    "site_recognized": core_result.known_site_nearby,
+                    "site_name": core_result.known_site_name,
+                    "distance_km": core_result.known_site_distance_km,
+                    "overlapping_sites": [{"name": core_result.known_site_name}] if core_result.known_site_nearby and core_result.known_site_distance_km == 0.0 else [],
+                    "nearby_sites": [{"name": core_result.known_site_name, "distance_km": core_result.known_site_distance_km}] if core_result.known_site_nearby and core_result.known_site_distance_km > 0.0 else []
+                }),
+                # Explicación científica
+                "scientific_explanation": convert_numpy_types({
+                    "explanation": core_result.explanation,
+                    "detection_reasoning": core_result.detection_reasoning,
+                    "false_positive_risks": core_result.false_positive_risks,
+                    "recommended_validation": core_result.recommended_validation
+                }),
+                # AI explanations (placeholder)
+                "ai_explanations": convert_numpy_types({
+                    "ai_available": False,
+                    "explanation": core_result.explanation,
+                    "mode": "core_detector"
+                }),
+                # System status
+                "system_status": convert_numpy_types({
+                    "analysis_completed": True,
+                    "detector_used": "core_anomaly_detector",
+                    "scientific_method": "instrumental_convergence"
+                })
+            }
+            
+            logger.info(f"✅ Análisis CORE completado")
+            return response_data
+        
+        # FALLBACK: Análisis tradicional si CORE detector no disponible
+        logger.warning("⚠️ CORE detector no disponible, usando análisis tradicional")
         
         # Continuar con el análisis terrestre existente... 1. Crear/cargar datos arqueológicos para la región
         datasets = create_archaeological_region_data(request)
         
         # 2. Análisis de anomalías espaciales (equivalente a análisis estadístico)
         logger.info("Ejecutando análisis de anomalías espaciales...")
-        spatial_results = perform_spatial_anomaly_analysis(datasets, request.layers_to_analyze)
+        # FIX: Asegurar que layers_to_analyze no sea None
+        layers_to_analyze = request.layers_to_analyze if request.layers_to_analyze is not None else []
+        spatial_results = perform_spatial_anomaly_analysis(datasets, layers_to_analyze)
         
         # 3. Evaluación de reglas arqueológicas (equivalente a evaluación física)
         logger.info("Evaluando reglas arqueológicas...")
-        archaeological_results = perform_archaeological_evaluation(datasets, request.active_rules)
+        # FIX: Asegurar que active_rules no sea None
+        active_rules = request.active_rules if request.active_rules is not None else []
+        archaeological_results = perform_archaeological_evaluation(datasets, active_rules)
         
         # 3.5. NUEVO: Análisis arqueológico avanzado CON SENSOR TEMPORAL INTEGRADO
         logger.info("Ejecutando análisis arqueológico avanzado con sensor temporal...")
@@ -1782,8 +1908,30 @@ async def analyze_archaeological_region(request: RegionRequest):
                 "area_km2": calculate_area_km2(request),
                 "analysis_type": "archaeological_remote_sensing"
             }),
+            # CRÍTICO: Agregar clasificación de ambiente
+            "environment_classification": convert_numpy_types({
+                "environment_type": env_context.environment_type.value,
+                "confidence": env_context.confidence,
+                "temperature_range_c": env_context.temperature_range_c,
+                "precipitation_mm_year": env_context.precipitation_mm_year,
+                "elevation_m": env_context.elevation_m,
+                "primary_sensors": env_context.primary_sensors,
+                "secondary_sensors": env_context.secondary_sensors,
+                "archaeological_visibility": env_context.archaeological_visibility,
+                "preservation_potential": env_context.preservation_potential,
+                "access_difficulty": env_context.access_difficulty,
+                "notes": env_context.notes
+            }),
             "statistical_results": convert_numpy_types(spatial_results),
             "physics_results": convert_numpy_types(integrated_archaeological_results),
+            # CRÍTICO: Agregar archaeological_results para compatibilidad con tests
+            "archaeological_results": convert_numpy_types({
+                "result_type": integrated_archaeological_results.get('integrated_analysis', {}).get('classification', 'unknown'),
+                "archaeological_probability": integrated_archaeological_results.get('integrated_analysis', {}).get('integrated_score', 0.0),
+                "confidence": integrated_archaeological_results.get('integrated_analysis', {}).get('confidence_level', 0.0),
+                "modern_exclusion_score": integrated_archaeological_results.get('integrated_analysis', {}).get('modern_exclusion_score', 0.0),
+                "site_recognized": site_recognized if 'site_recognized' in locals() else False
+            }),
             "ai_explanations": convert_numpy_types(ai_explanations),
             "anomaly_map": convert_numpy_types(anomaly_map),
             "layer_data": convert_numpy_types(layer_data),
@@ -1807,8 +1955,11 @@ async def analyze_archaeological_region(request: RegionRequest):
         # NUEVO: Añadir validación real y transparencia de datos
         analysis_id = f"{request.region_name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
-        # Validación contra sitios reales conocidos
+        # Validación contra sitios reales conocidos (SOLO para validación, NO para forzar probabilidad)
         real_validator = system_components.get('real_validator')
+        site_recognized = False
+        overlapping_sites = []
+        
         if real_validator:
             try:
                 region_bounds = {
@@ -1821,9 +1972,18 @@ async def analyze_archaeological_region(request: RegionRequest):
                     request.lat_min, request.lat_max, request.lon_min, request.lon_max
                 )
                 
+                overlapping_sites = validation_results["overlapping_sites"]
+                site_recognized = len(overlapping_sites) > 0
+                
+                # SOLO INFORMAR, NO MODIFICAR SCORES
+                if site_recognized:
+                    logger.info(f"🏛️ SITIO ARQUEOLÓGICO CONOCIDO EN REGIÓN: {overlapping_sites[0].name}")
+                    logger.info(f"   Esto es para VALIDACIÓN - el sistema debe detectarlo por sí mismo")
+                
                 response_data["real_archaeological_validation"] = {
                     "analysis_id": analysis_id,
                     "validation_timestamp": datetime.now().isoformat(),
+                    "site_recognized": site_recognized,
                     "overlapping_known_sites": [
                         {
                             "name": site.name,
@@ -1834,7 +1994,7 @@ async def analyze_archaeological_region(request: RegionRequest):
                             "data_available": site.data_available,
                             "public_api_url": site.public_api_url
                         }
-                        for site in validation_results["overlapping_sites"]
+                        for site in overlapping_sites
                     ],
                     "nearby_known_sites": [
                         {
@@ -1950,9 +2110,21 @@ def create_archaeological_region_data(request: RegionRequest) -> Dict[str, Any]:
     
     datasets = {}
     
+    # FIX: Si no se especifican capas, usar todas las disponibles
+    layers_to_analyze = request.layers_to_analyze if request.layers_to_analyze is not None else []
+    
+    # Si no hay capas especificadas, obtener todas las disponibles
+    if not layers_to_analyze:
+        # get_available_datasets devuelve una LISTA, no un diccionario
+        available_datasets_list = loader.get_available_datasets(bounds)
+        layers_to_analyze = available_datasets_list if available_datasets_list else []
+        logger.info(f"No se especificaron capas, usando todas las disponibles: {layers_to_analyze}")
+    
     # Crear datasets arqueológicos según capas solicitadas
-    for layer in request.layers_to_analyze:
-        if layer in loader.get_available_datasets(bounds):
+    for layer in layers_to_analyze:
+        # get_available_datasets devuelve una LISTA
+        available_datasets_list = loader.get_available_datasets(bounds)
+        if layer in available_datasets_list:
             datasets[layer] = loader.create_synthetic_archaeological_data(
                 f'{request.region_name}_{layer}', layer, region_size, bounds
             )

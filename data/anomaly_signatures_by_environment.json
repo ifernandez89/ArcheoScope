@@ -1,0 +1,236 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Firmas instrumentales de anomalías arqueológicas por tipo de ambiente",
+    "purpose": "Definir umbrales científicos para detectar anomalías reales según instrumentos calibrados",
+    "last_updated": "2026-01-24",
+    "scientific_basis": "Basado en estudios de arqueología remota y firmas instrumentales documentadas"
+  },
+  
+  "environment_signatures": {
+    "desert": {
+      "environment_type": "desert",
+      "description": "Desiertos áridos - alta visibilidad, baja vegetación",
+      "primary_instruments": ["landsat_thermal", "sentinel2", "sar"],
+      "archaeological_indicators": {
+        "thermal_anomalies": {
+          "description": "Estructuras enterradas tienen diferente inercia térmica que arena",
+          "threshold_day_night_delta_k": 5.0,
+          "expected_pattern": "Anomalías térmicas persistentes en mismo lugar día/noche",
+          "confidence_high": "> 8K diferencia",
+          "confidence_moderate": "5-8K diferencia",
+          "false_positive_risk": "Rocas naturales, dunas"
+        },
+        "sar_backscatter": {
+          "description": "Estructuras enterradas alteran rugosidad superficial",
+          "threshold_db": -3.0,
+          "expected_pattern": "Patrones geométricos en backscatter",
+          "confidence_high": "Geometría regular + contraste > 5dB",
+          "confidence_moderate": "Contraste 3-5dB",
+          "false_positive_risk": "Afloramientos rocosos naturales"
+        },
+        "ndvi_stress": {
+          "description": "Vegetación escasa muestra estrés sobre estructuras",
+          "threshold_ndvi_delta": 0.15,
+          "expected_pattern": "Vegetación suprimida en patrones geométricos",
+          "confidence_high": "NDVI < 0.2 con geometría",
+          "confidence_moderate": "NDVI 0.2-0.3",
+          "false_positive_risk": "Zonas naturalmente áridas"
+        }
+      },
+      "minimum_convergence": 2,
+      "notes": "Requiere al menos 2 instrumentos convergentes para confirmar anomalía"
+    },
+    
+    "forest": {
+      "environment_type": "forest",
+      "description": "Bosques y selvas - vegetación densa, requiere penetración",
+      "primary_instruments": ["lidar", "sentinel2", "sar"],
+      "archaeological_indicators": {
+        "lidar_elevation_anomalies": {
+          "description": "Montículos artificiales detectables bajo dosel",
+          "threshold_height_m": 2.0,
+          "expected_pattern": "Elevaciones geométricas no explicables por topografía natural",
+          "confidence_high": "> 5m altura con geometría regular",
+          "confidence_moderate": "2-5m altura",
+          "false_positive_risk": "Termiteros, formaciones naturales"
+        },
+        "ndvi_canopy_gaps": {
+          "description": "Claros en vegetación sobre estructuras enterradas",
+          "threshold_ndvi_delta": 0.25,
+          "expected_pattern": "Vegetación suprimida o alterada en patrones no naturales",
+          "confidence_high": "NDVI delta > 0.4 con geometría",
+          "confidence_moderate": "NDVI delta 0.25-0.4",
+          "false_positive_risk": "Claros naturales, agricultura"
+        },
+        "sar_l_band_penetration": {
+          "description": "SAR L-band penetra vegetación, detecta estructuras",
+          "threshold_coherence": 0.6,
+          "expected_pattern": "Alta coherencia en patrones geométricos bajo dosel",
+          "confidence_high": "Coherencia > 0.8 con geometría",
+          "confidence_moderate": "Coherencia 0.6-0.8",
+          "false_positive_risk": "Afloramientos rocosos"
+        }
+      },
+      "minimum_convergence": 2,
+      "notes": "LiDAR es crítico - sin LiDAR, confianza baja"
+    },
+    
+    "glacier": {
+      "environment_type": "glacier",
+      "description": "Glaciares y hielo - preservación excepcional, difícil acceso",
+      "primary_instruments": ["icesat2", "sentinel1_sar", "palsar"],
+      "archaeological_indicators": {
+        "icesat2_elevation_anomalies": {
+          "description": "Objetos enterrados en hielo crean anomalías de elevación",
+          "threshold_elevation_delta_m": 0.5,
+          "expected_pattern": "Anomalías de elevación persistentes en hielo",
+          "confidence_high": "> 2m anomalía con forma definida",
+          "confidence_moderate": "0.5-2m anomalía",
+          "false_positive_risk": "Crevasses, seracs naturales"
+        },
+        "sar_polarimetric_anomalies": {
+          "description": "Objetos en hielo alteran polarización SAR",
+          "threshold_hh_hv_ratio": 0.3,
+          "expected_pattern": "Anomalías de polarización no explicables por hielo puro",
+          "confidence_high": "Ratio HH/HV anómalo + geometría",
+          "confidence_moderate": "Ratio anómalo sin geometría clara",
+          "false_positive_risk": "Rocas, detritos glaciares"
+        },
+        "thermal_ice_anomalies": {
+          "description": "Objetos enterrados alteran temperatura superficial del hielo",
+          "threshold_temp_delta_k": 2.0,
+          "expected_pattern": "Anomalías térmicas persistentes en superficie de hielo",
+          "confidence_high": "> 5K diferencia",
+          "confidence_moderate": "2-5K diferencia",
+          "false_positive_risk": "Grietas, agua subglacial"
+        }
+      },
+      "minimum_convergence": 2,
+      "notes": "ICESat-2 es crítico para detección precisa"
+    },
+    
+    "shallow_sea": {
+      "environment_type": "shallow_sea",
+      "description": "Aguas poco profundas (<200m) - arqueología submarina",
+      "primary_instruments": ["multibeam_sonar", "side_scan_sonar", "magnetometer"],
+      "archaeological_indicators": {
+        "bathymetric_anomalies": {
+          "description": "Estructuras en fondo marino crean anomalías batimétricas",
+          "threshold_height_m": 1.0,
+          "expected_pattern": "Elevaciones geométricas en fondo marino plano",
+          "confidence_high": "> 3m altura con geometría de naufragio/estructura",
+          "confidence_moderate": "1-3m altura",
+          "false_positive_risk": "Formaciones rocosas naturales"
+        },
+        "acoustic_reflectance": {
+          "description": "Materiales artificiales (madera, metal) tienen reflectancia distinta",
+          "threshold_reflectance_delta": 0.3,
+          "expected_pattern": "Alta reflectancia acústica en patrones geométricos",
+          "confidence_high": "Reflectancia anómala + geometría de casco",
+          "confidence_moderate": "Reflectancia anómala sin geometría clara",
+          "false_positive_risk": "Rocas, arrecifes"
+        },
+        "magnetic_anomalies": {
+          "description": "Metales ferrosos (anclas, cañones, cascos) crean anomalías magnéticas",
+          "threshold_nt": 50.0,
+          "expected_pattern": "Anomalías magnéticas puntuales o lineales",
+          "confidence_high": "> 200nT anomalía",
+          "confidence_moderate": "50-200nT anomalía",
+          "false_positive_risk": "Depósitos minerales naturales"
+        }
+      },
+      "minimum_convergence": 2,
+      "notes": "Magnetometría es definitiva para naufragios con metal"
+    },
+    
+    "polar_ice": {
+      "environment_type": "polar_ice",
+      "description": "Capas de hielo polares (Antártida, Groenlandia)",
+      "primary_instruments": ["icesat2", "sentinel1_sar", "palsar"],
+      "archaeological_indicators": {
+        "icesat2_subsurface": {
+          "description": "ICESat-2 puede detectar anomalías bajo hielo superficial",
+          "threshold_elevation_delta_m": 1.0,
+          "expected_pattern": "Anomalías de elevación persistentes",
+          "confidence_high": "> 5m anomalía",
+          "confidence_moderate": "1-5m anomalía",
+          "false_positive_risk": "Topografía subglacial natural"
+        },
+        "sar_penetration_anomalies": {
+          "description": "SAR penetra hielo seco, detecta objetos enterrados",
+          "threshold_coherence": 0.5,
+          "expected_pattern": "Anomalías de coherencia bajo superficie",
+          "confidence_high": "Coherencia > 0.7 con forma definida",
+          "confidence_moderate": "Coherencia 0.5-0.7",
+          "false_positive_risk": "Rocas subglaciales"
+        }
+      },
+      "minimum_convergence": 2,
+      "notes": "Arqueología polar es extremadamente rara - alta barra de evidencia"
+    },
+    
+    "unknown": {
+      "environment_type": "unknown",
+      "description": "Ambiente no clasificado - usar análisis genérico",
+      "primary_instruments": ["sentinel2", "landsat", "sar"],
+      "archaeological_indicators": {
+        "generic_anomalies": {
+          "description": "Anomalías genéricas sin contexto ambiental",
+          "threshold_generic": 0.5,
+          "expected_pattern": "Cualquier patrón anómalo",
+          "confidence_high": "Múltiples instrumentos convergentes",
+          "confidence_moderate": "Un instrumento con señal fuerte",
+          "false_positive_risk": "Alto - sin contexto ambiental"
+        }
+      },
+      "minimum_convergence": 3,
+      "notes": "Requiere más convergencia por falta de contexto"
+    }
+  },
+  
+  "convergence_rules": {
+    "description": "Reglas para determinar si múltiples instrumentos convergen en una anomalía",
+    "spatial_tolerance_m": 50,
+    "temporal_tolerance_days": 30,
+    "minimum_instruments_high_confidence": 3,
+    "minimum_instruments_moderate_confidence": 2,
+    "minimum_instruments_low_confidence": 1
+  },
+  
+  "calibration_sites": {
+    "description": "Sitios de referencia para calibrar umbrales",
+    "giza_pyramids": {
+      "environment": "desert",
+      "expected_signatures": {
+        "thermal_delta_k": 12.0,
+        "sar_backscatter_db": -8.0,
+        "geometric_regularity": 0.95
+      }
+    },
+    "angkor_wat": {
+      "environment": "forest",
+      "expected_signatures": {
+        "lidar_height_m": 15.0,
+        "ndvi_delta": 0.35,
+        "sar_coherence": 0.85
+      }
+    },
+    "otzi_iceman": {
+      "environment": "glacier",
+      "expected_signatures": {
+        "icesat2_anomaly_m": 0.3,
+        "sar_polarimetric_ratio": 0.4,
+        "thermal_delta_k": 3.0
+      }
+    },
+    "port_royal": {
+      "environment": "shallow_sea",
+      "expected_signatures": {
+        "bathymetric_height_m": 4.0,
+        "acoustic_reflectance": 0.7,
+        "magnetic_anomaly_nt": 150.0
+      }
+    }
+  }
+}

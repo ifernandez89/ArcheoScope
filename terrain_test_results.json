@@ -1,0 +1,70 @@
+[
+  {
+    "site_id": "giza_pyramids",
+    "site_name": "Giza Pyramids Complex",
+    "status": "success",
+    "environment_detected": "desert",
+    "environment_expected": "desert",
+    "environment_correct": true,
+    "environment_confidence": 0.95,
+    "primary_sensors": [
+      "landsat_thermal",
+      "sentinel2",
+      "sar"
+    ],
+    "site_recognized": true,
+    "archaeological_probability": 0.5900000000000001,
+    "archaeological_result": "archaeological"
+  },
+  {
+    "site_id": "angkor_wat",
+    "site_name": "Angkor Wat Temple Complex",
+    "status": "success",
+    "environment_detected": "forest",
+    "environment_expected": "forest",
+    "environment_correct": true,
+    "environment_confidence": 0.6,
+    "primary_sensors": [
+      "lidar",
+      "sentinel2",
+      "sar"
+    ],
+    "site_recognized": true,
+    "archaeological_probability": 0.655,
+    "archaeological_result": "archaeological"
+  },
+  {
+    "site_id": "otzi_iceman",
+    "site_name": "Otzi the Iceman Discovery Site",
+    "status": "success",
+    "environment_detected": "glacier",
+    "environment_expected": "glacier",
+    "environment_correct": true,
+    "environment_confidence": 0.75,
+    "primary_sensors": [
+      "icesat2",
+      "sentinel1_sar",
+      "landsat"
+    ],
+    "site_recognized": true,
+    "archaeological_probability": 0.41000000000000003,
+    "archaeological_result": "consistent"
+  },
+  {
+    "site_id": "port_royal",
+    "site_name": "Port Royal Submerged City",
+    "status": "success",
+    "environment_detected": "shallow_sea",
+    "environment_expected": "shallow_sea",
+    "environment_correct": true,
+    "environment_confidence": 0.85,
+    "primary_sensors": [
+      "multibeam_sonar",
+      "side_scan_sonar",
+      "magnetometer"
+    ],
+    "site_recognized": true,
+    "archaeological_probability": 0.575,
+    "archaeological_result": "archaeological"
+  }
+]
