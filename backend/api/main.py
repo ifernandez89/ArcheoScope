@@ -51,6 +51,7 @@ from water.water_detector import WaterDetector
 from water.submarine_archaeology import SubmarineArchaeologyEngine
 from ice.ice_detector import IceDetector
 from ice.cryoarchaeology import CryoArchaeologyEngine
+from environment_classifier import EnvironmentClassifier, EnvironmentType
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -194,9 +195,10 @@ system_components = {
     'explainer': None,
     'geometric_engine': None,
     'phi4_evaluator': None,
-    'water_detector': None,          # NUEVO: Detector de agua
+    'environment_classifier': None,  # NUEVO: Clasificador robusto de ambientes
+    'water_detector': None,          # DEPRECATED: Usar environment_classifier
     'submarine_archaeology': None,   # NUEVO: Arqueología submarina
-    'ice_detector': None,            # NUEVO: Detector de hielo
+    'ice_detector': None,            # DEPRECATED: Usar environment_classifier
     'cryoarchaeology': None          # NUEVO: Crioarqueología
 }
 
@@ -213,12 +215,13 @@ def initialize_system():
         system_components['explainer'] = ScientificExplainer()
         system_components['geometric_engine'] = GeometricInferenceEngine()
         system_components['phi4_evaluator'] = Phi4GeometricEvaluator()
-        system_components['water_detector'] = WaterDetector()              # NUEVO
+        system_components['environment_classifier'] = EnvironmentClassifier()  # NUEVO: Clasificador robusto
+        system_components['water_detector'] = WaterDetector()              # DEPRECATED
         system_components['submarine_archaeology'] = SubmarineArchaeologyEngine()  # NUEVO
-        system_components['ice_detector'] = IceDetector()                # NUEVO
+        system_components['ice_detector'] = IceDetector()                # DEPRECATED
         system_components['cryoarchaeology'] = CryoArchaeologyEngine()   # NUEVO
         
-        logger.info("Sistema arqueológico ArcheoScope inicializado correctamente con módulos académicos, volumétricos, submarinos, crioarqueológicos y validación de datos reales")
+        logger.info("Sistema arqueológico ArcheoScope inicializado correctamente con clasificador de ambientes robusto")
         return True
     except Exception as e:
         logger.error(f"Error inicializando ArcheoScope: {e}")
@@ -1266,62 +1269,54 @@ async def analyze_archaeological_region(request: RegionRequest):
         logger.info(f"🔍 Iniciando análisis arqueológico: {request.region_name}")
         logger.info(f"   Coordenadas: {request.lat_min:.4f}-{request.lat_max:.4f}, {request.lon_min:.4f}-{request.lon_max:.4f}")
         
-        # 🔍 PASO 1: DETECCIÓN AUTOMÁTICA DE AMBIENTES
-        # Priorizar ambientes polares y de hielo sobre todo
+        # 🔍 PASO 1: CLASIFICACIÓN ROBUSTA DE AMBIENTE
         center_lat = (request.lat_min + request.lat_max) / 2
         center_lon = (request.lon_min + request.lon_max) / 2
         
-        # Verificar si es región polar (prioridad máxima)
-        polar_region = (abs(center_lat) >= 66.5)  # Círculo polar ártico/antártico
+        # Usar el nuevo clasificador robusto de ambientes
+        environment_classifier = system_components.get('environment_classifier')
+        if not environment_classifier:
+            logger.error("❌ Clasificador de ambientes no disponible")
+            raise HTTPException(status_code=503, detail="Clasificador de ambientes no disponible")
         
-        ice_detector = system_components.get('ice_detector')
-        ice_context = None
-        water_context = None
+        # Clasificar el ambiente
+        env_context = environment_classifier.classify(center_lat, center_lon)
         
-        # PRIORIDAD 1: Verificar hielo en regiones polares
-        if ice_detector and polar_region:
-            ice_context = ice_detector.detect_ice_context(center_lat, center_lon)
-            logger.info(f"❄️ Detección de hielo (prioridad polar): {'SÍ' if ice_context.is_ice_environment else 'NO'}")
-            if ice_context.is_ice_environment:
-                logger.info(f"   Tipo: {ice_context.ice_type.value if ice_context.ice_type else 'unknown'}")
-                logger.info(f"   Espesor: {ice_context.estimated_thickness_m}m")
-                logger.info(f"   Potencial arqueológico: {ice_context.archaeological_potential}")
-                logger.info(f"🔥 DEBUG: Ice context detected - should trigger cryoarchaeology")
+        logger.info(f"🌍 Ambiente detectado: {env_context.environment_type.value}")
+        logger.info(f"   Confianza: {env_context.confidence:.2f}")
+        logger.info(f"   Sensores primarios: {', '.join(env_context.primary_sensors)}")
+        logger.info(f"   Visibilidad arqueológica: {env_context.archaeological_visibility}")
+        logger.info(f"   Potencial de preservación: {env_context.preservation_potential}")
         
-        # PRIORIDAD 2: Verificar agua (si no es región polar)
-        if not ice_context or not ice_context.is_ice_environment:
-            water_detector = system_components.get('water_detector')
-            
-            if water_detector:
-                water_context = water_detector.detect_water_context(center_lat, center_lon)
-                
-                logger.info(f"🌊 Detección de agua: {'SÍ' if water_context.is_water else 'NO'}")
-                if water_context.is_water:
-                    logger.info(f"   Tipo: {water_context.water_type.value if water_context.water_type else 'unknown'}")
-                    logger.info(f"   Profundidad: {water_context.estimated_depth_m}m")
-                    logger.info(f"   Potencial arqueológico: {water_context.archaeological_potential}")
-            
-            # Verificar centro de la región para ambientes de hielo (si no es agua)
-            if not water_context or not water_context.is_water:
-                if ice_detector:
-                    ice_context = ice_detector.detect_ice_context(center_lat, center_lon)
-                    
-                    logger.info(f"❄️ Detección de hielo: {'SÍ' if ice_context.is_ice_environment else 'NO'}")
-                    if ice_context.is_ice_environment:
-                        logger.info(f"   Tipo: {ice_context.ice_type.value if ice_context.ice_type else 'unknown'}")
-                        logger.info(f"   Espesor: {ice_context.estimated_thickness_m}m")
-                logger.info(f"   Potencial arqueológico: {ice_context.archaeological_potential}")
-                logger.info(f"   Preservación: {ice_context.preservation_quality}")
+        # Determinar si es ambiente de hielo, agua o terrestre
+        is_ice_environment = env_context.environment_type in [
+            EnvironmentType.POLAR_ICE, 
+            EnvironmentType.GLACIER, 
+            EnvironmentType.PERMAFROST
+        ]
+        
+        is_water_environment = env_context.environment_type in [
+            EnvironmentType.DEEP_OCEAN,
+            EnvironmentType.SHALLOW_SEA,
+            EnvironmentType.COASTAL,
+            EnvironmentType.LAKE,
+            EnvironmentType.RIVER
+        ]
         
         # ❄️ PASO 2: ANÁLISIS ESPECIALIZADO SEGÚN CONTEXTO
         # PRIORIDAD: Ambientes polares (hielo) > Ambientes acuáticos > Ambientes terrestres
         
-        if ice_context and ice_context.is_ice_environment:
+        if is_ice_environment:
             # ANÁLISIS CRIOARQUEOLÓGICO ESPECIALIZADO (PRIORIDAD MÁXIMA)
-            logger.info("❄️ Ejecutando análisis crioarqueológico (prioridad polar)...")
+            logger.info(f"❄️ Ejecutando análisis crioarqueológico para {env_context.environment_type.value}...")
             
             cryoarchaeology_engine = system_components.get('cryoarchaeology')
-            if cryoarchaeology_engine:
+            ice_detector = system_components.get('ice_detector')
+            
+            if cryoarchaeology_engine and ice_detector:
+                # Obtener contexto de hielo detallado del detector legacy
+                ice_context = ice_detector.detect_ice_context(center_lat, center_lon)
+                
                 bounds = (request.lat_min, request.lat_max, request.lon_min, request.lon_max)
                 cryo_results = cryoarchaeology_engine.analyze_cryo_area(ice_context, bounds)
                 
@@ -1336,6 +1331,13 @@ async def analyze_archaeological_region(request: RegionRequest):
                         "resolution_m": request.resolution_m,
                         "area_km2": calculate_area_km2(request),
                         "analysis_type": "cryoarchaeology",
+                        "environment": {
+                            "type": env_context.environment_type.value,
+                            "confidence": env_context.confidence,
+                            "temperature_range_c": env_context.temperature_range_c,
+                            "preservation_potential": env_context.preservation_potential,
+                            "archaeological_visibility": env_context.archaeological_visibility
+                        },
                         "ice_context": cryo_results["ice_context"]
                     }),
                     "statistical_results": convert_numpy_types({
@@ -1383,15 +1385,18 @@ async def analyze_archaeological_region(request: RegionRequest):
             
             else:
                 logger.warning("⚠️ Motor de crioarqueología no disponible, continuando con análisis estándar")
-                logger.info(f"🔥 DEBUG: Cryoarchaeology engine missing - falling back to standard analysis")
         
-        elif water_context and water_context.is_water and not polar_region:
-            # ANÁLISIS SUBMARINO ESPECIALIZADO (solo si NO es región polar)
-            logger.info("🌊 Ejecutando análisis arqueológico submarino...")
-            logger.info(f"🔥 DEBUG: Water context detected (non-polar) - should trigger submarine archaeology")
+        elif is_water_environment:
+            # ANÁLISIS SUBMARINO ESPECIALIZADO
+            logger.info(f"🌊 Ejecutando análisis arqueológico submarino para {env_context.environment_type.value}...")
             
             submarine_engine = system_components.get('submarine_archaeology')
-            if submarine_engine:
+            water_detector = system_components.get('water_detector')
+            
+            if submarine_engine and water_detector:
+                # Obtener contexto de agua detallado del detector legacy
+                water_context = water_detector.detect_water_context(center_lat, center_lon)
+                
                 bounds = (request.lat_min, request.lat_max, request.lon_min, request.lon_max)
                 submarine_results = submarine_engine.analyze_submarine_area(water_context, bounds)
                 
@@ -1406,6 +1411,13 @@ async def analyze_archaeological_region(request: RegionRequest):
                         "resolution_m": request.resolution_m,
                         "area_km2": calculate_area_km2(request),
                         "analysis_type": "submarine_archaeology",
+                        "environment": {
+                            "type": env_context.environment_type.value,
+                            "confidence": env_context.confidence,
+                            "depth_m": env_context.elevation_m,
+                            "preservation_potential": env_context.preservation_potential,
+                            "archaeological_visibility": env_context.archaeological_visibility
+                        },
                         "water_context": submarine_results["water_context"]
                     }),
                     "statistical_results": convert_numpy_types({
@@ -1453,93 +1465,13 @@ async def analyze_archaeological_region(request: RegionRequest):
             
             else:
                 logger.warning("⚠️ Motor de arqueología submarina no disponible, continuando con análisis terrestre")
-                logger.info(f"🔥 DEBUG: Submarine archaeology engine missing - falling back to standard analysis")
-        
-        # Análisis estándar para ambientes terrestres (si no hay hielo ni agua)
-        else:
-            logger.info("🔥 DEBUG: No ice or water detected - executing standard archaeological analysis")
-            logger.info("❄️ Ejecutando análisis crioarqueológico...")
-            
-            cryoarchaeology_engine = system_components.get('cryoarchaeology')
-            if cryoarchaeology_engine:
-                bounds = (request.lat_min, request.lat_max, request.lon_min, request.lon_max)
-                cryo_results = cryoarchaeology_engine.analyze_cryo_area(ice_context, bounds)
-                
-                # Adaptar respuesta al formato estándar AnalysisResponse
-                response_data = {
-                    "region_info": convert_numpy_types({
-                        "name": request.region_name,
-                        "coordinates": {
-                            "lat_range": [request.lat_min, request.lat_max],
-                            "lon_range": [request.lon_min, request.lon_max]
-                        },
-                        "resolution_m": request.resolution_m,
-                        "area_km2": calculate_area_km2(request),
-                        "analysis_type": "cryoarchaeology",
-                        "ice_context": cryo_results["ice_context"]
-                    }),
-                    "statistical_results": convert_numpy_types({
-                        "total_anomalies": cryo_results["elevation_anomalies"],
-                        "cryo_candidates": len(cryo_results["cryo_candidates"]),
-                        "high_priority_targets": cryo_results["summary"]["high_priority_targets"],
-                        "analysis_method": "icesat2_seismic_sar_integration"
-                    }),
-                    "physics_results": convert_numpy_types({
-                        "cryoarchaeology_analysis": cryo_results,
-                        "instruments_used": cryo_results["instruments_used"],
-                        "detection_method": "elevation_subsurface_temporal_integration"
-                    }),
-                    "ai_explanations": convert_numpy_types({
-                        "analysis_type": "Crioarqueologia especializada",
-                        "methodology": "Detección de sitios arqueológicos en ambientes de hielo con ICESat-2 y sísmica",
-                        "confidence": "Basado en anomalías de elevación y confirmación sub-superficial",
-                        "ai_available": False
-                    }),
-                    "anomaly_map": convert_numpy_types({
-                        "cryo_candidates": cryo_results["cryo_candidates"],
-                        "elevation_anomalies": cryo_results["elevation_anomalies"]
-                    }),
-                    "layer_data": convert_numpy_types({
-                        "elevation_profiles": "Perfiles de elevación ICESat-2 procesados",
-                        "seismic_data": "Datos sísmicos IRIS analizados para cavidades",
-                        "sar_coherence": "Coherencia SAR Sentinel-1 procesada",
-                        "thermal_patterns": "Patrones térmicos MODIS analizados"
-                    }),
-                    "scientific_report": convert_numpy_types({
-                        "investigation_plan": cryo_results["investigation_plan"],
-                        "temporal_analysis": cryo_results["temporal_analysis"],
-                        "optimal_season": cryo_results["summary"]["optimal_investigation_season"],
-                        "archaeological_significance": "Análisis crioarqueológico especializado completado"
-                    }),
-                    "system_status": convert_numpy_types({
-                        "analysis_completed": True,
-                        "ice_detection": "active",
-                        "cryoarchaeology": "active",
-                        "instruments": len(cryo_results["instruments_used"]),
-                        "processing_time_seconds": "<25",
-                        "analysis_type": "cryoarchaeology"
-                    }),
-                    "explainability_analysis": None,
-                    "validation_metrics": None,
-                    "temporal_sensor_analysis": cryo_results["temporal_analysis"],
-                    "integrated_analysis": convert_numpy_types({
-                        "cryoarchaeology_specialized": True,
-                        "ice_type": ice_context.ice_type.value if ice_context.ice_type else None,
-                        "thickness_m": ice_context.estimated_thickness_m,
-                        "preservation_quality": ice_context.preservation_quality,
-                        "seasonal_phase": ice_context.seasonal_phase.value if ice_context.seasonal_phase else None
-                    })
-                }
-                
-                logger.info(f"✅ Análisis crioarqueológico completado: {len(cryo_results['cryo_candidates'])} candidatos detectados")
-                
-                return response_data
-            
-            else:
-                logger.warning("⚠️ Motor de crioarqueología no disponible, continuando con análisis terrestre")
         
         # ANÁLISIS TERRESTRE TRADICIONAL
-        logger.info("🏔️ Ejecutando análisis arqueológico terrestre...")
+        logger.info(f"🏔️ Ejecutando análisis arqueológico terrestre para {env_context.environment_type.value}...")
+        if env_context.primary_sensors:
+            logger.info(f"   Sensores recomendados: {', '.join(env_context.primary_sensors)}")
+        else:
+            logger.warning(f"   ⚠️ No hay sensores recomendados para este ambiente")
         
         # Continuar con el análisis terrestre existente... 1. Crear/cargar datos arqueológicos para la región
         datasets = create_archaeological_region_data(request)
