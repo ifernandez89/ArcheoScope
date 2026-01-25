@@ -16,7 +16,9 @@ import os
 from dotenv import load_dotenv
 
 # Cargar variables de entorno
-load_dotenv('.env.local')
+from pathlib import Path
+env_path = Path(__file__).parent.parent.parent / '.env.local'
+load_dotenv(env_path)
 
 logger = logging.getLogger(__name__)
 
@@ -42,16 +44,20 @@ class ArchaeologicalAssistant:
     def __init__(self):
         """Inicializar asistente arqueológico con configuración desde .env.local"""
         
+        # Leer configuración desde .env.local - asegurar carga explícita
+        dotenv_path = Path(__file__).parent.parent.parent / '.env.local'
+        load_dotenv(dotenv_path)
+        
         # Leer configuración desde .env.local
         self.ollama_enabled = os.getenv('OLLAMA_ENABLED', 'false').lower() == 'true'
-        self.openrouter_enabled = os.getenv('OPENROUTER_ENABLED', 'true').lower() == 'true'
+        self.openrouter_enabled = os.getenv('OPENROUTER_ENABLED', 'false').lower() == 'true'
         
         # Configuración OpenRouter
         self.openrouter_api_key = os.getenv('OPENROUTER_API_KEY')
         self.openrouter_model = os.getenv('OPENROUTER_MODEL', 'qwen/qwen3-coder:free')
         
         # Configuración Ollama (fallback)
-        self.ollama_model = os.getenv('OLLAMA_MODEL1', os.getenv('OLLAMA_MODEL', 'phi4-mini-reasoning'))
+        self.ollama_model = os.getenv('OLLAMA_MODEL1', os.getenv('OLLAMA_MODEL', 'phi:latest'))
         self.ollama_model2 = os.getenv('OLLAMA_MODEL2', 'qwen2.5:3b-instruct')
         self.ollama_url = os.getenv('OLLAMA_URL', 'http://localhost:11434')
         
@@ -338,14 +344,14 @@ Recuerda: Nunca afirmes descubrimientos definitivos. Usa lenguaje científico ca
                     "options": {
                         "temperature": 0.3,
                         "top_p": 0.9,
-                        "num_predict": 1000
+                        "num_predict": 500
                     }
                 }
                 
                 response = requests.post(
                     f"{self.ollama_url}/api/generate",
                     json=payload,
-                    timeout=60
+                    timeout=120
                 )
                 
                 if response.status_code == 200:
