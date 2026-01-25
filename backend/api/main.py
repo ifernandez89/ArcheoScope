@@ -278,6 +278,10 @@ async def get_system_status():
     
     return SystemStatus(
         backend_status=backend_status,
+        ai_status=ai_status,
+        available_rules=available_rules,
+        supported_regions=["global"]
+    )
 
 @app.get("/test-ai")
 async def test_ai_assistant():
@@ -450,13 +454,6 @@ async def test_ai_assistant():
         }
     
     return result
-        ai_status=ai_status,
-        available_rules=available_rules,
-        supported_regions=[
-            "archaeological_sites", "buried_structures", "ancient_settlements",
-            "ceremonial_complexes", "road_networks", "agricultural_terraces"
-        ]
-    )
 
 @app.get("/status/detailed")
 async def get_detailed_system_status():

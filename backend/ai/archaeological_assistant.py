@@ -48,7 +48,7 @@ class ArchaeologicalAssistant:
         
         # Configuración OpenRouter
         self.openrouter_api_key = os.getenv('OPENROUTER_API_KEY')
-        self.openrouter_model = os.getenv('OPENROUTER_MODEL', 'google/gemini-2.0-flash-exp:free')
+        self.openrouter_model = os.getenv('OPENROUTER_MODEL', 'qwen/qwen3-coder:free')
         
         # Configuración Ollama (fallback)
         self.ollama_model = os.getenv('OLLAMA_MODEL', 'phi4-mini-reasoning')
