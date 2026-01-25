@@ -48,7 +48,7 @@ class ArchaeologicalAssistant:
         
         # Configuración OpenRouter
         self.openrouter_api_key = os.getenv('OPENROUTER_API_KEY')
-        self.openrouter_model = os.getenv('OPENROUTER_MODEL', 'google/gemini-3.0-flash-preview-01-2025')
+        self.openrouter_model = os.getenv('OPENROUTER_MODEL', 'google/gemini-2.0-flash-exp:free')
         
         # Configuración Ollama (fallback)
         self.ollama_model = os.getenv('OLLAMA_MODEL', 'phi4-mini-reasoning')
@@ -94,15 +94,24 @@ FORMATO DE RESPUESTA:
                    f"disponible={self.is_available}")
     
     def _check_availability(self) -> bool:
-        """Verificar disponibilidad de IA (OpenRouter primero, luego Ollama)."""
+        """
+        Verificar disponibilidad de IA (OpenRouter primero, luego Ollama).
+        
+        IMPORTANTE: Si falla, el sistema sigue funcionando sin IA.
+        La IA es OPCIONAL para explicaciones, no crítica para detección.
+        """
         
         # Prioridad 1: OpenRouter
         if self.openrouter_enabled and self.openrouter_api_key:
             try:
+                logger.info(f"🔍 Verificando OpenRouter con modelo {self.openrouter_model}...")
+                
                 # Test simple con OpenRouter
                 headers = {
                     "Authorization": f"Bearer {self.openrouter_api_key}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://archeoscope.app",
+                    "X-Title": "ArcheoScope"
                 }
                 
                 test_payload = {
@@ -121,15 +130,24 @@ FORMATO DE RESPUESTA:
                 if response.status_code == 200:
                     logger.info(f"✅ OpenRouter disponible con {self.openrouter_model}")
                     return True
+                elif response.status_code == 401:
+                    logger.warning(f"⚠️ OpenRouter: API key inválida o expirada")
+                elif response.status_code == 404:
+                    logger.warning(f"⚠️ OpenRouter: Modelo {self.openrouter_model} no encontrado")
                 else:
-                    logger.warning(f"OpenRouter error: {response.status_code}")
+                    logger.warning(f"⚠️ OpenRouter error: HTTP {response.status_code} - {response.text[:200]}")
                     
+            except requests.exceptions.Timeout:
+                logger.warning(f"⚠️ OpenRouter: Timeout (red lenta o servicio no responde)")
+            except requests.exceptions.ConnectionError:
+                logger.warning(f"⚠️ OpenRouter: Error de conexión (sin internet?)")
             except Exception as e:
-                logger.warning(f"Error conectando con OpenRouter: {e}")
+                logger.warning(f"⚠️ Error conectando con OpenRouter: {e}")
         
         # Prioridad 2: Ollama (fallback)
         if self.ollama_enabled:
             try:
+                logger.info(f"🔍 Verificando Ollama en {self.ollama_url}...")
                 response = requests.get(f"{self.ollama_url}/api/tags", timeout=5)
                 if response.status_code == 200:
                     models = response.json().get('models', [])
@@ -144,17 +162,27 @@ FORMATO DE RESPUESTA:
                         logger.info(f"✅ Ollama disponible con {self.ollama_model}")
                         return True
                     else:
-                        logger.warning(f"Modelo phi4-mini-reasoning no encontrado. "
+                        logger.warning(f"⚠️ Modelo phi4-mini-reasoning no encontrado. "
                                      f"Disponibles: {available_models}")
                         return False
                 else:
-                    logger.warning(f"Ollama no responde: {response.status_code}")
+                    logger.warning(f"⚠️ Ollama no responde: HTTP {response.status_code}")
                     return False
                     
+            except requests.exceptions.Timeout:
+                logger.warning(f"⚠️ Ollama: Timeout (servicio no responde)")
+            except requests.exceptions.ConnectionError:
+                logger.warning(f"⚠️ Ollama: No está corriendo en {self.ollama_url}")
             except Exception as e:
-                logger.warning(f"Error conectando con Ollama: {e}")
+                logger.warning(f"⚠️ Error conectando con Ollama: {e}")
         
-        logger.warning("❌ Ningún proveedor de IA disponible")
+        logger.error("❌ CRÍTICO: Ningún proveedor de IA disponible")
+        logger.error("❌ El asistente de IA es NECESARIO para análisis arqueológico riguroso")
+        logger.error("❌ Por favor verifica:")
+        logger.error("   1. OPENROUTER_API_KEY está configurada en .env.local")
+        logger.error("   2. El modelo está disponible en OpenRouter")
+        logger.error("   3. Tienes conexión a internet")
+        logger.error("   4. O inicia Ollama con: ollama run phi4-mini-reasoning")
         return False
     
     def explain_archaeological_anomalies(self, 

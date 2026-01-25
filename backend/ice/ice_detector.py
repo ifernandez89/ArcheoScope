@@ -230,16 +230,19 @@ class IceDetector:
             if -170 <= lon <= -60:
                 return True
         
-        # Permafrost alpino (alta montaña)
+        # Permafrost alpino (alta montaña) - SOLO en montañas específicas
         if 35 <= lat <= 55:
             # Montañas Rocosas
-            if -125 <= lon <= -105:
+            if 40 <= lat <= 50 and -125 <= lon <= -105:
                 return True
-            # Alpes y montañas europeas
-            if -10 <= lon <= 30:
+            # Alpes (Europa Central) - rango más específico
+            if 45 <= lat <= 48 and 6 <= lon <= 13:
+                return True
+            # Cáucaso
+            if 42 <= lat <= 44 and 40 <= lon <= 48:
                 return True
             # Himalaya y montañas asiáticas
-            if 70 <= lon <= 105:
+            if 27 <= lat <= 36 and 70 <= lon <= 95:
                 return True
         
         return False
@@ -268,13 +271,31 @@ class IceDetector:
     def _check_seasonal_snow(self, lat: float, lon: float) -> bool:
         """Verificar si está en zona de nieve estacional/compacta"""
         
-        # Zonas de nieve estacional en latitudes medias
-        if 35 <= lat <= 60:
-            # Montañas con nieve persistente
+        # Zonas de nieve estacional SOLO en montañas altas
+        # NO aplicar a zonas desérticas o de baja altitud
+        
+        # Alpes (Europa Central)
+        if 45 <= lat <= 48 and 6 <= lon <= 13:
+            return True
+        
+        # Pirineos
+        if 42 <= lat <= 43 and -2 <= lon <= 3:
+            return True
+        
+        # Montañas Rocosas (América del Norte)
+        if 37 <= lat <= 50 and -115 <= lon <= -105:
+            return True
+        
+        # Himalaya
+        if 27 <= lat <= 36 and 70 <= lon <= 95:
+            return True
+        
+        # Andes (América del Sur)
+        if -40 <= lat <= -20 and -75 <= lon <= -65:
             return True
         
         # Zonas de nieve en latitudes altas (fuera de glaciares permanentes)
-        if 60 <= lat <= 70:
+        if 60 <= lat <= 66:  # Entre círculo polar y zona de glaciares
             return True
         
         return False

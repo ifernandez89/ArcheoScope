@@ -53,13 +53,20 @@ class RealArchaeologicalValidator:
         logger.info(f"RealArchaeologicalValidator inicializado con {len(self.known_sites)} sitios verificados")
     
     def _load_known_sites(self) -> List[ArchaeologicalSite]:
-        """Load verified archaeological sites from public databases"""
+        """
+        Load 4 REFERENCE archaeological sites - one per critical environment type
+        
+        PHILOSOPHY: Keep it simple and focused
+        - 1 DESERT site (Giza)
+        - 1 FOREST site (Angkor Wat)
+        - 1 ICE site (Ötzi)
+        - 1 WATER site (Port Royal)
+        """
         sites = []
         
-        # ========== SITIOS EGIPCIOS ICÓNICOS ==========
-        # Giza Pyramids Complex - UNESCO World Heritage
+        # ========== REFERENCE SITE 1: DESERT ==========
         sites.append(ArchaeologicalSite(
-            name="Giza Pyramids Complex (Great Pyramid of Khufu)",
+            name="Giza Pyramids Complex",
             coordinates=(29.9792, 31.1342),
             site_type="monumental_complex",
             period="Old Kingdom Egypt (2580-2560 BCE)",
@@ -70,161 +77,43 @@ class RealArchaeologicalValidator:
             public_api_url="https://whc.unesco.org/en/list/86"
         ))
         
-        # Karnak Temple Complex
-        sites.append(ArchaeologicalSite(
-            name="Karnak Temple Complex",
-            coordinates=(25.7188, 32.6573),
-            site_type="temple_complex",
-            period="New Kingdom Egypt (1550-1070 BCE)",
-            area_km2=1.0,
-            confidence_level="confirmed",
-            source="UNESCO World Heritage Centre",
-            data_available=["LIDAR", "satellite", "multispectral", "thermal", "excavation_reports"],
-            public_api_url="https://whc.unesco.org/en/list/87"
-        ))
-        
-        # Valley of the Kings
-        sites.append(ArchaeologicalSite(
-            name="Valley of the Kings",
-            coordinates=(25.7402, 32.6014),
-            site_type="necropolis",
-            period="New Kingdom Egypt (1550-1070 BCE)",
-            area_km2=0.5,
-            confidence_level="confirmed",
-            source="UNESCO World Heritage Centre",
-            data_available=["LIDAR", "GPR", "thermal", "excavation_reports"],
-            public_api_url="https://whc.unesco.org/en/list/87"
-        ))
-        
-        # ========== OTROS SITIOS ICÓNICOS ==========
-        # Angkor Wat, Cambodia - UNESCO World Heritage
+        # ========== REFERENCE SITE 2: FOREST ==========
         sites.append(ArchaeologicalSite(
             name="Angkor Wat Temple Complex",
             coordinates=(13.4125, 103.8670),
             site_type="temple_complex",
-            period="Khmer Empire (12th century)",
+            period="Khmer Empire (12th century CE)",
             area_km2=162.6,
             confidence_level="confirmed",
             source="UNESCO World Heritage Centre",
-            data_available=["LIDAR", "satellite", "excavation_reports"],
+            data_available=["LIDAR", "satellite", "SAR", "excavation_reports"],
             public_api_url="https://whc.unesco.org/en/list/668"
         ))
         
-        # Great Zimbabwe, Zimbabwe - UNESCO World Heritage
+        # ========== REFERENCE SITE 3: ICE ==========
         sites.append(ArchaeologicalSite(
-            name="Great Zimbabwe Monument",
-            coordinates=(-20.2674, 30.9336),
-            site_type="stone_city",
-            period="Iron Age (11th-15th century)",
-            area_km2=7.22,
-            confidence_level="confirmed", 
-            source="UNESCO World Heritage Centre",
-            data_available=["satellite", "excavation_reports"],
-            public_api_url="https://whc.unesco.org/en/list/364"
-        ))
-        
-        # Machu Picchu, Peru - UNESCO World Heritage
-        sites.append(ArchaeologicalSite(
-            name="Machu Picchu Historic Sanctuary",
-            coordinates=(-13.1631, -72.5450),
-            site_type="urban_complex",
-            period="Inca Empire (15th century)",
-            area_km2=32.59,
+            name="Ötzi the Iceman Discovery Site",
+            coordinates=(46.7789, 10.8494),
+            site_type="glacier_mummy",
+            period="Copper Age (3350-3105 BCE)",
+            area_km2=0.001,
             confidence_level="confirmed",
-            source="UNESCO World Heritage Centre", 
-            data_available=["satellite", "excavation_reports"],
-            public_api_url="https://whc.unesco.org/en/list/274"
+            source="South Tyrol Museum of Archaeology",
+            data_available=["ICESat-2", "satellite", "SAR", "thermal", "photogrammetry"],
+            public_api_url="https://www.iceman.it/en/"
         ))
         
-        # Stonehenge, UK - UNESCO World Heritage
+        # ========== REFERENCE SITE 4: WATER ==========
         sites.append(ArchaeologicalSite(
-            name="Stonehenge and Avebury",
-            coordinates=(51.1789, -1.8262),
-            site_type="monument_complex",
-            period="Neolithic/Bronze Age (3100-1600 BCE)",
-            area_km2=26.0,
+            name="Port Royal Submerged City",
+            coordinates=(17.9364, -76.8408),
+            site_type="submerged_city",
+            period="Colonial Era (1518-1692 CE)",
+            area_km2=0.13,
             confidence_level="confirmed",
-            source="UNESCO World Heritage Centre",
-            data_available=["LIDAR", "satellite", "excavation_reports"],
-            public_api_url="https://whc.unesco.org/en/list/373"
-        ))
-        
-        # Chichen Itza, Mexico - UNESCO World Heritage
-        sites.append(ArchaeologicalSite(
-            name="Pre-Hispanic City of Chichen Itza",
-            coordinates=(20.6843, -88.5678),
-            site_type="ceremonial_center",
-            period="Maya Classic-Postclassic (600-1200 CE)",
-            area_km2=15.0,
-            confidence_level="confirmed",
-            source="UNESCO World Heritage Centre",
-            data_available=["satellite", "excavation_reports"],
-            public_api_url="https://whc.unesco.org/en/list/483"
-        ))
-        
-        # Teotihuacan, Mexico - UNESCO World Heritage
-        sites.append(ArchaeologicalSite(
-            name="Ancient City of Teotihuacan",
-            coordinates=(19.6925, -98.8442),
-            site_type="urban_complex",
-            period="Classic Period (100-650 CE)",
-            area_km2=83.0,
-            confidence_level="confirmed",
-            source="UNESCO World Heritage Centre",
-            data_available=["satellite", "excavation_reports"],
-            public_api_url="https://whc.unesco.org/en/list/414"
-        ))
-        
-        # Easter Island Statues - UNESCO World Heritage
-        sites.append(ArchaeologicalSite(
-            name="Rapa Nui National Park (Easter Island)",
-            coordinates=(-27.1127, -109.3497),
-            site_type="ceremonial_site",
-            period="Polynesian (1250-1500 CE)",
-            area_km2=66.6,
-            confidence_level="confirmed",
-            source="UNESCO World Heritage Centre",
-            data_available=["satellite", "excavation_reports"],
-            public_api_url="https://whc.unesco.org/en/list/715"
-        ))
-        
-        # Mesa Verde, USA - UNESCO World Heritage
-        sites.append(ArchaeologicalSite(
-            name="Mesa Verde National Park",
-            coordinates=(37.1822, -108.4889),
-            site_type="cliff_dwellings",
-            period="Ancestral Pueblo (600-1300 CE)",
-            area_km2=210.9,
-            confidence_level="confirmed",
-            source="UNESCO World Heritage Centre",
-            data_available=["satellite", "excavation_reports"],
-            public_api_url="https://whc.unesco.org/en/list/784"
-        ))
-        
-        # Control site: Urban modern area (should NOT have archaeological signatures)
-        sites.append(ArchaeologicalSite(
-            name="Downtown Denver Urban Control",
-            coordinates=(39.7392, -104.9903),
-            site_type="modern_urban_control",
-            period="Modern (21st century)",
-            area_km2=25.0,
-            confidence_level="negative_control",
-            source="USGS Urban Areas Database",
-            data_available=["satellite"],
-            public_api_url="https://www.census.gov/geographies/reference-files/time-series/geo/urban-rural.html"
-        ))
-        
-        # Control site: Natural desert area
-        sites.append(ArchaeologicalSite(
-            name="Atacama Desert Natural Control",
-            coordinates=(-24.0000, -69.0000),
-            site_type="natural_desert_control",
-            period="Natural",
-            area_km2=100.0,
-            confidence_level="negative_control", 
-            source="NASA Earth Observatory",
-            data_available=["satellite"],
-            public_api_url="https://earthobservatory.nasa.gov/images/147940/atacama-desert-chile"
+            source="Texas A&M Nautical Archaeology Program",
+            data_available=["multibeam_sonar", "side_scan_sonar", "magnetometry", "sub_bottom_profiler", "satellite"],
+            public_api_url="https://nautarch.tamu.edu/portroyal/"
         ))
         
         return sites

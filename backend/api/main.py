@@ -209,6 +209,25 @@ def initialize_system():
         system_components['rules_engine'] = ArchaeologicalRulesEngine()
         system_components['advanced_rules_engine'] = AdvancedArchaeologicalRulesEngine()  # NUEVO
         system_components['ai_assistant'] = ArchaeologicalAssistant()
+        
+        # VALIDACIÓN CRÍTICA: Verificar que la IA está disponible
+        if not system_components['ai_assistant'].is_available:
+            logger.error("="*80)
+            logger.error("❌ CRÍTICO: ASISTENTE DE IA NO DISPONIBLE")
+            logger.error("="*80)
+            logger.error("El asistente de IA es NECESARIO para análisis arqueológico riguroso.")
+            logger.error("")
+            logger.error("SOLUCIONES:")
+            logger.error("  1. Verifica OPENROUTER_API_KEY en .env.local")
+            logger.error("  2. Verifica que el modelo esté disponible en OpenRouter")
+            logger.error("  3. Verifica conexión a internet")
+            logger.error("  4. O inicia Ollama: ollama run phi4-mini-reasoning")
+            logger.error("")
+            logger.error("El sistema continuará pero las explicaciones arqueológicas serán limitadas.")
+            logger.error("="*80)
+        else:
+            logger.info("✅ Asistente de IA disponible y funcionando correctamente")
+        
         system_components['validator'] = KnownSitesValidator()
         system_components['real_validator'] = RealArchaeologicalValidator()  # NUEVO
         system_components['transparency'] = DataSourceTransparency()  # NUEVO
@@ -1265,9 +1284,40 @@ async def analyze_archaeological_region(request: RegionRequest):
         logger.error(f"Components: {system_components}")
         raise HTTPException(status_code=503, detail="Sistema no completamente inicializado")
     
+    # ⚠️ VALIDACIÓN CRÍTICA: Verificar que la IA está disponible
+    ai_assistant = system_components.get('ai_assistant')
+    if not ai_assistant or not ai_assistant.is_available:
+        logger.error("=" * 80)
+        logger.error("❌ CRÍTICO: ASISTENTE DE IA NO DISPONIBLE")
+        logger.error("=" * 80)
+        logger.error("El análisis arqueológico requiere el asistente de IA para interpretaciones rigurosas.")
+        logger.error("")
+        logger.error("SOLUCIONES:")
+        logger.error("  1. Verifica OPENROUTER_API_KEY en .env.local")
+        logger.error("  2. Verifica que el modelo esté disponible")
+        logger.error("  3. Verifica conexión a internet")
+        logger.error("  4. O inicia Ollama: ollama run phi4-mini-reasoning")
+        logger.error("=" * 80)
+        
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "error": "AI_ASSISTANT_UNAVAILABLE",
+                "message": "El asistente de IA no está disponible. El análisis arqueológico requiere IA para interpretaciones científicas rigurosas.",
+                "solutions": [
+                    "Verifica OPENROUTER_API_KEY en .env.local",
+                    "Verifica que el modelo esté disponible en OpenRouter",
+                    "Verifica conexión a internet",
+                    "O inicia Ollama: ollama run phi4-mini-reasoning"
+                ],
+                "impact": "No se pueden generar explicaciones arqueológicas científicas sin IA"
+            }
+        )
+    
     try:
         logger.info(f"🔍 Iniciando análisis arqueológico: {request.region_name}")
         logger.info(f"   Coordenadas: {request.lat_min:.4f}-{request.lat_max:.4f}, {request.lon_min:.4f}-{request.lon_max:.4f}")
+        logger.info(f"✅ Asistente de IA disponible y listo")
         
         # 🔍 PASO 1: CLASIFICACIÓN ROBUSTA DE AMBIENTE
         center_lat = (request.lat_min + request.lat_max) / 2

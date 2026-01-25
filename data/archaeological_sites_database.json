@@ -1,15 +1,19 @@
 {
   "metadata": {
-    "version": "1.0.0",
+    "version": "2.0.0",
     "last_updated": "2026-01-24",
-    "total_sites": 50,
+    "total_sites": 4,
+    "description": "Reference archaeological sites for ArcheoScope calibration - one per critical environment type",
+    "environment_coverage": {
+      "desert": "Giza Pyramids (Egypt)",
+      "forest": "Angkor Wat (Cambodia)",
+      "ice": "Ötzi the Iceman (Alps)",
+      "water": "Port Royal (Jamaica)"
+    },
     "sources": [
       "UNESCO World Heritage Centre (whc.unesco.org)",
-      "Open Context (opencontext.org)",
-      "ARIADNE Infrastructure (ariadne-infrastructure.eu)",
-      "Archaeological Data Service UK (archaeologydataservice.ac.uk)",
-      "Digital Archaeological Record (tdar.org)",
-      "National Park Service USA (nps.gov)",
+      "South Tyrol Museum of Archaeology (iceman.it)",
+      "Woods Hole Oceanographic Institution (whoi.edu)",
       "Scientific publications (peer-reviewed)",
       "National archaeological agencies"
     ],
@@ -17,10 +21,11 @@
     "attribution": "ArcheoScope Project - Compiled from public archaeological databases",
     "data_quality": "All sites verified against multiple authoritative sources",
     "coordinate_precision": "±100m (based on public data)",
-    "notes": "Coordinates represent approximate site centers. Actual archaeological areas may be larger."
+    "notes": "These 4 sites serve as reference calibration points for different environment types"
   },
-  "sites": {
+  "reference_sites": {
     "giza_pyramids": {
+      "environment_type": "desert",
       "name": "Giza Pyramids Complex",
       "alternate_names": ["Great Pyramid of Khufu", "Pyramid of Cheops", "Giza Necropolis"],
       "coordinates": {"lat": 29.9792, "lon": 31.1342},
@@ -76,9 +81,11 @@
       ],
       "preservation_status": "good",
       "threats": ["urban encroachment", "air pollution", "tourism pressure", "groundwater"],
-      "last_verified": "2026-01-24"
+      "last_verified": "2026-01-24",
+      "calibration_notes": "Reference site for DESERT environment detection and thermal/SAR analysis"
     },
     "angkor_wat": {
+      "environment_type": "forest",
       "name": "Angkor Wat Temple Complex",
       "alternate_names": ["Angkor Archaeological Park", "Angkor Thom"],
       "coordinates": {"lat": 13.4125, "lon": 103.8670},
@@ -133,148 +140,171 @@
       ],
       "preservation_status": "fair",
       "threats": ["vegetation damage", "tourism pressure", "groundwater", "climate change"],
-      "last_verified": "2026-01-24"
+      "last_verified": "2026-01-24",
+      "calibration_notes": "Reference site for FOREST/VEGETATION environment - LiDAR penetration through canopy"
     },
-    "machu_picchu": {
-      "name": "Machu Picchu Historic Sanctuary",
-      "alternate_names": ["Lost City of the Incas"],
-      "coordinates": {"lat": -13.1631, "lon": -72.5450},
-      "country": "Peru",
-      "region": "Cusco Region",
-      "site_type": "urban_complex",
-      "period": "Inca Empire",
-      "date_range": {"start": 1450, "end": 1572, "unit": "CE"},
-      "area_km2": 32.5,
-      "unesco_id": 274,
-      "unesco_status": "World Heritage Site",
-      "unesco_year": 1983,
+    "otzi_iceman": {
+      "environment_type": "ice",
+      "name": "Ötzi the Iceman Discovery Site",
+      "alternate_names": ["Similaun Man", "Hauslabjoch", "Tisenjoch Iceman"],
+      "coordinates": {"lat": 46.7789, "lon": 10.8494},
+      "country": "Italy/Austria border",
+      "region": "Ötztal Alps, South Tyrol",
+      "site_type": "glacier_mummy",
+      "period": "Copper Age (Chalcolithic)",
+      "date_range": {"start": -3350, "end": -3105, "unit": "BCE"},
+      "area_km2": 0.001,
+      "unesco_id": null,
+      "unesco_status": "Not listed (individual find)",
+      "unesco_year": null,
       "confidence_level": "confirmed",
-      "excavation_status": "extensively_excavated",
+      "excavation_status": "fully_excavated",
       "data_available": {
-        "lidar": true,
+        "lidar": false,
         "satellite_multispectral": true,
         "satellite_thermal": true,
         "sar": true,
         "photogrammetry": true,
-        "ground_penetrating_radar": true,
+        "ground_penetrating_radar": false,
         "excavation_reports": true,
-        "3d_models": true
+        "3d_models": true,
+        "icesat2": true
       },
       "data_sources": {
-        "primary": "Peruvian Ministry of Culture",
-        "lidar_source": "National Geographic - Peruvian Government",
-        "satellite": "Sentinel-2, Landsat, WorldView",
-        "academic": "Yale University, Universidad Nacional de San Antonio Abad del Cusco"
+        "primary": "South Tyrol Museum of Archaeology",
+        "lidar_source": "N/A (glacier site)",
+        "satellite": "Sentinel-2, Landsat, ICESat-2",
+        "academic": "University of Innsbruck, EURAC Research Bolzano"
       },
       "public_urls": {
-        "unesco": "https://whc.unesco.org/en/list/274",
-        "wikipedia": "https://en.wikipedia.org/wiki/Machu_Picchu"
+        "museum": "https://www.iceman.it/en/",
+        "wikipedia": "https://en.wikipedia.org/wiki/Ötzi"
       },
       "archaeological_features": [
-        "Urban sector",
-        "Agricultural terraces",
-        "Temple of the Sun",
-        "Intihuatana stone",
-        "Room of the Three Windows",
-        "Water distribution system",
-        "Inca Trail network"
+        "Natural mummy preserved in glacier ice",
+        "Copper axe",
+        "Bow and arrows",
+        "Clothing and equipment",
+        "Tattoos (therapeutic)",
+        "Last meal remains",
+        "Arrow wound (cause of death)"
       ],
-      "scientific_significance": "Best-preserved Inca city. Demonstrates advanced engineering, astronomy, and agricultural techniques at high altitude.",
+      "scientific_significance": "Europe's oldest known natural human mummy. Provides unprecedented insight into Copper Age life, technology, health, and diet. Discovered due to glacier retreat from climate change.",
       "research_questions": [
-        "Purpose of the site (royal estate vs religious center)",
-        "Population and social organization",
-        "Agricultural productivity of terraces",
-        "Water management in mountain environment",
-        "Abandonment circumstances"
+        "Climate change impact on glacier archaeology",
+        "Copper Age technology and trade networks",
+        "Ancient medicine and health practices",
+        "High-altitude travel routes in prehistory",
+        "Preservation mechanisms in ice"
+      ],
+      "preservation_status": "excellent",
+      "threats": ["glacier melting", "climate change"],
+      "discovery_date": "1991-09-19",
+      "discovery_elevation_m": 3210,
+      "last_verified": "2026-01-24",
+      "calibration_notes": "Reference site for ICE/GLACIER environment - ICESat-2, SAR polarimetry, thermal anomalies in ice"
+    },
+    "port_royal": {
+      "environment_type": "water",
+      "name": "Port Royal Submerged City",
+      "alternate_names": ["Sunken Pirate City", "Wickedest City on Earth"],
+      "coordinates": {"lat": 17.9364, "lon": -76.8408},
+      "country": "Jamaica",
+      "region": "Kingston Harbour",
+      "site_type": "submerged_city",
+      "period": "Colonial Era",
+      "date_range": {"start": 1518, "end": 1692, "unit": "CE"},
+      "area_km2": 0.13,
+      "unesco_id": null,
+      "unesco_status": "Not listed (under consideration)",
+      "unesco_year": null,
+      "confidence_level": "confirmed",
+      "excavation_status": "ongoing_underwater_excavation",
+      "data_available": {
+        "lidar": false,
+        "satellite_multispectral": true,
+        "satellite_thermal": false,
+        "sar": false,
+        "photogrammetry": true,
+        "ground_penetrating_radar": false,
+        "excavation_reports": true,
+        "3d_models": true,
+        "multibeam_sonar": true,
+        "side_scan_sonar": true,
+        "magnetometry": true,
+        "sub_bottom_profiler": true
+      },
+      "data_sources": {
+        "primary": "Texas A&M University Nautical Archaeology Program",
+        "sonar_source": "Institute of Nautical Archaeology",
+        "satellite": "Sentinel-2, WorldView",
+        "academic": "Jamaica National Heritage Trust"
+      },
+      "public_urls": {
+        "wikipedia": "https://en.wikipedia.org/wiki/Port_Royal",
+        "nautical_archaeology": "https://nautarch.tamu.edu/portroyal/"
+      },
+      "archaeological_features": [
+        "Submerged 17th century buildings",
+        "Streets and foundations underwater",
+        "Shipwrecks in harbor",
+        "Artifacts preserved in anaerobic sediment",
+        "Fort structures",
+        "Warehouses and taverns",
+        "Complete time capsule of 1692"
+      ],
+      "scientific_significance": "One of the best-preserved underwater archaeological sites. City sank during earthquake on June 7, 1692, creating a time capsule of colonial Caribbean life. Exceptional preservation due to rapid burial in sediment.",
+      "research_questions": [
+        "Colonial trade networks and piracy",
+        "17th century urban planning",
+        "Preservation in marine environments",
+        "Earthquake and tsunami impacts",
+        "Daily life in colonial Caribbean"
       ],
       "preservation_status": "good",
-      "threats": ["landslides", "tourism pressure", "climate change", "vegetation"],
-      "last_verified": "2026-01-24"
+      "threats": ["marine erosion", "looting", "development pressure", "hurricanes"],
+      "submersion_date": "1692-06-07",
+      "water_depth_m": 12,
+      "last_verified": "2026-01-24",
+      "calibration_notes": "Reference site for WATER/SUBMARINE environment - multibeam sonar, magnetometry, sub-bottom profiling"
+    }
+  },
+  "control_sites": {
+    "atacama_desert_control": {
+      "environment_type": "desert",
+      "name": "Atacama Desert Natural Control",
+      "coordinates": {"lat": -24.0000, "lon": -69.0000},
+      "site_type": "natural_desert_control",
+      "period": "Natural",
+      "confidence_level": "negative_control",
+      "notes": "Natural desert with NO archaeological features - used to calibrate false positive rates"
     },
-    "stonehenge": {
-      "name": "Stonehenge",
-      "coordinates": {"lat": 51.1789, "lon": -1.8262},
-      "country": "United Kingdom",
-      "site_type": "monument_complex",
-      "period": "Neolithic/Bronze Age",
-      "date_range": {"start": -3100, "end": -1600, "unit": "BCE"},
-      "area_km2": 26.0,
-      "unesco_id": 373,
-      "unesco_status": "World Heritage Site",
-      "unesco_year": 1986,
-      "confidence_level": "confirmed",
-      "data_available": {"lidar": true, "satellite_multispectral": true, "sar": true, "excavation_reports": true},
-      "public_urls": {"unesco": "https://whc.unesco.org/en/list/373"},
-      "scientific_significance": "Prehistoric monument with astronomical alignments. Part of larger ceremonial landscape.",
-      "last_verified": "2026-01-24"
+    "amazon_rainforest_control": {
+      "environment_type": "forest",
+      "name": "Amazon Rainforest Natural Control",
+      "coordinates": {"lat": -3.4653, "lon": -62.2159},
+      "site_type": "natural_forest_control",
+      "period": "Natural",
+      "confidence_level": "negative_control",
+      "notes": "Pristine rainforest with NO known archaeological features - used to calibrate false positive rates"
     },
-    "petra": {
-      "name": "Petra Archaeological City",
-      "coordinates": {"lat": 30.3285, "lon": 35.4444},
-      "country": "Jordan",
-      "site_type": "urban_complex",
-      "period": "Nabataean Kingdom",
-      "date_range": {"start": -312, "end": 106, "unit": "BCE/CE"},
-      "area_km2": 264.0,
-      "unesco_id": 326,
-      "unesco_status": "World Heritage Site",
-      "unesco_year": 1985,
-      "confidence_level": "confirmed",
-      "data_available": {"lidar": false, "satellite_multispectral": true, "sar": true, "photogrammetry": true},
-      "public_urls": {"unesco": "https://whc.unesco.org/en/list/326"},
-      "scientific_significance": "Rock-cut architecture and water management in desert environment.",
-      "last_verified": "2026-01-24"
+    "greenland_ice_control": {
+      "environment_type": "ice",
+      "name": "Greenland Ice Sheet Natural Control",
+      "coordinates": {"lat": 72.5796, "lon": -38.4592},
+      "site_type": "natural_ice_control",
+      "period": "Natural",
+      "confidence_level": "negative_control",
+      "notes": "Pristine ice sheet with NO archaeological features - used to calibrate false positive rates"
     },
-    "pompeii": {
-      "name": "Pompeii Archaeological Park",
-      "coordinates": {"lat": 40.7489, "lon": 14.4918},
-      "country": "Italy",
-      "site_type": "urban_complex",
-      "period": "Roman Empire",
-      "date_range": {"start": -600, "end": 79, "unit": "BCE/CE"},
-      "area_km2": 0.66,
-      "unesco_id": 829,
-      "unesco_status": "World Heritage Site",
-      "unesco_year": 1997,
-      "confidence_level": "confirmed",
-      "data_available": {"lidar": true, "satellite_multispectral": true, "photogrammetry": true, "excavation_reports": true},
-      "public_urls": {"unesco": "https://whc.unesco.org/en/list/829"},
-      "scientific_significance": "Complete Roman city preserved by volcanic ash. Unique snapshot of daily life in 79 CE.",
-      "last_verified": "2026-01-24"
-    },
-    "chichen_itza": {
-      "name": "Pre-Hispanic City of Chichen Itza",
-      "coordinates": {"lat": 20.6843, "lon": -88.5678},
-      "country": "Mexico",
-      "site_type": "ceremonial_center",
-      "period": "Maya Classic-Postclassic",
-      "date_range": {"start": 600, "end": 1200, "unit": "CE"},
-      "area_km2": 15.0,
-      "unesco_id": 483,
-      "unesco_status": "World Heritage Site",
-      "unesco_year": 1988,
-      "confidence_level": "confirmed",
-      "data_available": {"lidar": true, "satellite_multispectral": true, "excavation_reports": true},
-      "public_urls": {"unesco": "https://whc.unesco.org/en/list/483"},
-      "scientific_significance": "Major Maya city with astronomical observatory and sacred cenote.",
-      "last_verified": "2026-01-24"
-    },
-    "teotihuacan": {
-      "name": "Ancient City of Teotihuacan",
-      "coordinates": {"lat": 19.6925, "lon": -98.8442},
-      "country": "Mexico",
-      "site_type": "urban_complex",
-      "period": "Classic Period",
-      "date_range": {"start": 100, "end": 650, "unit": "CE"},
-      "area_km2": 83.0,
-      "unesco_id": 414,
-      "unesco_status": "World Heritage Site",
-      "unesco_year": 1987,
-      "confidence_level": "confirmed",
-      "data_available": {"lidar": true, "satellite_multispectral": true, "sar": true},
-      "public_urls": {"unesco": "https://whc.unesco.org/en/list/414"},
-      "scientific_significance": "Largest pre-Columbian city in the Americas. Urban planning and monumental architecture.",
-      "last_verified": "2026-01-24"
+    "pacific_ocean_control": {
+      "environment_type": "water",
+      "name": "Pacific Ocean Natural Control",
+      "coordinates": {"lat": 0.0000, "lon": -140.0000},
+      "site_type": "natural_ocean_control",
+      "period": "Natural",
+      "confidence_level": "negative_control",
+      "notes": "Deep ocean with NO known archaeological features - used to calibrate false positive rates"
     }
   }
 }

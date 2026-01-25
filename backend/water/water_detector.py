@@ -292,23 +292,39 @@ class WaterDetector:
         return False
     
     def _check_major_rivers(self, lat: float, lon: float) -> bool:
-        """Verificar ríos principales (simplificado)"""
+        """Verificar ríos principales (simplificado con buffers realistas)"""
         
-        # Río Amazonas
+        # Río Amazonas (buffer de ~50km alrededor del cauce principal)
         if -5 <= lat <= 2 and -70 <= lon <= -48:
-            return True
+            # Verificar proximidad al cauce principal (simplificado)
+            # El Amazonas fluye aproximadamente a lo largo de lat=-3
+            if abs(lat - (-3)) < 0.5:  # ~55km de buffer
+                return True
         
-        # Río Nilo
-        if 4 <= lat <= 31 and 24 <= lon <= 35:
-            return True
+        # Río Nilo (buffer de ~5-8km alrededor del cauce principal)
+        # El Nilo fluye aproximadamente a lo largo de lon=31-32 en Egipto
+        if 4 <= lat <= 31 and 29 <= lon <= 33:
+            # Verificar proximidad al cauce principal
+            # En el norte de Egipto (Cairo/Giza), el Nilo está en lon~31.2-31.3
+            if lat > 24:  # Norte de Egipto
+                if abs(lon - 31.25) < 0.05:  # ~5.5km de buffer (solo el cauce y ribera inmediata)
+                    return True
+            else:  # Sur de Egipto/Sudán
+                if abs(lon - 32.5) < 0.08:  # ~9km de buffer
+                    return True
         
-        # Río Mississippi
+        # Río Mississippi (buffer de ~30km)
         if 29 <= lat <= 48 and -95 <= lon <= -89:
-            return True
+            # El Mississippi fluye aproximadamente a lo largo de lon=-90 a -91
+            if abs(lon - (-90.5)) < 0.3:  # ~33km de buffer
+                return True
         
-        # Río Yangtsé
+        # Río Yangtsé (buffer de ~40km)
         if 25 <= lat <= 35 and 90 <= lon <= 122:
-            return True
+            # Simplificado: verificar proximidad general
+            # El Yangtsé tiene un curso complejo
+            if 29 <= lat <= 32 and 110 <= lon <= 122:  # Curso bajo
+                return True
         
         return False
     
