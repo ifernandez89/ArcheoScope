@@ -10,7 +10,9 @@
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:reset": "prisma migrate reset",
     "db:setup": "npm run prisma:generate && npm run prisma:migrate && npm run prisma:seed",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:migrate-json": "python scripts/migrate_json_to_postgres.py",
+    "db:full-setup": "npm run db:setup && npm run db:migrate-json"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
