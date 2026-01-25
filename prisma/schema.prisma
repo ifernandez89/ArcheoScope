@@ -1,0 +1,417 @@
+// ArcheoScope - Archaeological Sites Database Schema
+// Prisma ORM with PostgreSQL
+// https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS - Tipos de datos categóricos
+// ============================================================================
+
+enum EnvironmentType {
+  DESERT           // Desiertos áridos (Sahara, Atacama)
+  SEMI_ARID        // Zonas semiáridas
+  FOREST           // Bosques y selvas densas
+  GRASSLAND        // Praderas y estepas
+  MOUNTAIN         // Regiones montañosas
+  GLACIER          // Glaciares de montaña
+  POLAR_ICE        // Capas de hielo polares
+  PERMAFROST       // Tundra y permafrost
+  SHALLOW_SEA      // Mar poco profundo (<200m)
+  DEEP_OCEAN       // Océano profundo (>200m)
+  COASTAL          // Zona costera
+  LAKE             // Lagos
+  RIVER            // Ríos
+  AGRICULTURAL     // Zonas agrícolas
+  URBAN            // Zonas urbanas
+  UNKNOWN          // Ambiente no clasificado
+}
+
+enum SiteType {
+  MONUMENTAL_COMPLEX    // Complejos monumentales (pirámides, templos)
+  TEMPLE_COMPLEX        // Complejos de templos
+  MOUNTAIN_CITADEL      // Ciudadelas en montañas
+  ROCK_CUT_CITY         // Ciudades talladas en roca
+  MEGALITHIC_MONUMENT   // Monumentos megalíticos
+  SUBMERGED_CITY        // Ciudades sumergidas
+  GLACIER_MUMMY         // Momias en glaciares
+  URBAN_SETTLEMENT      // Asentamientos urbanos
+  AGRICULTURAL_SITE     // Sitios agrícolas (terrazas, etc.)
+  BURIAL_SITE           // Sitios funerarios
+  CEREMONIAL_CENTER     // Centros ceremoniales
+  FORTIFICATION         // Fortificaciones
+  NATURAL_CONTROL       // Sitio de control (sin arqueología)
+  UNKNOWN               // Tipo desconocido
+}
+
+enum ConfidenceLevel {
+  CONFIRMED             // Confirmado por múltiples fuentes
+  HIGH                  // Alta confianza
+  MODERATE              // Confianza moderada
+  LOW                   // Baja confianza
+  NEGATIVE_CONTROL      // Sitio de control negativo
+  CANDIDATE             // Candidato detectado por ArcheoScope
+}
+
+enum ExcavationStatus {
+  EXTENSIVELY_EXCAVATED // Extensivamente excavado
+  ONGOING_RESEARCH      // Investigación en curso
+  PARTIALLY_EXCAVATED   // Parcialmente excavado
+  UNEXCAVATED           // No excavado
+  FULLY_EXCAVATED       // Completamente excavado
+  ONGOING_UNDERWATER    // Excavación submarina en curso
+  NOT_APPLICABLE        // No aplica (sitios de control)
+}
+
+enum PreservationStatus {
+  EXCELLENT             // Excelente preservación
+  GOOD                  // Buena preservación
+  FAIR                  // Preservación regular
+  POOR                  // Mala preservación
+  DETERIORATING         // En deterioro
+  UNKNOWN               // Estado desconocido
+}
+
+enum DataAvailability {
+  LIDAR
+  SATELLITE_MULTISPECTRAL
+  SATELLITE_THERMAL
+  SAR
+  PHOTOGRAMMETRY
+  GROUND_PENETRATING_RADAR
+  EXCAVATION_REPORTS
+  MODELS_3D
+  ICESAT2
+  MULTIBEAM_SONAR
+  SIDE_SCAN_SONAR
+  MAGNETOMETRY
+  SUB_BOTTOM_PROFILER
+}
+
+// ============================================================================
+// MAIN MODELS - Modelos principales
+// ============================================================================
+
+model ArchaeologicalSite {
+  id                    String              @id @default(uuid())
+  
+  // Identificación básica
+  name                  String              @db.VarChar(255)
+  alternateNames        String[]            // Array de nombres alternativos
+  slug                  String              @unique @db.VarChar(255) // URL-friendly name
+  
+  // Clasificación
+  environmentType       EnvironmentType
+  siteType              SiteType
+  confidenceLevel       ConfidenceLevel     @default(MODERATE)
+  excavationStatus      ExcavationStatus    @default(UNEXCAVATED)
+  preservationStatus    PreservationStatus  @default(UNKNOWN)
+  
+  // Ubicación geográfica
+  latitude              Float               // Grados decimales
+  longitude             Float               // Grados decimales
+  elevation             Float?              // Metros sobre nivel del mar
+  areaKm2               Float?              // Área en km²
+  country               String              @db.VarChar(100)
+  region                String?             @db.VarChar(255)
+  
+  // Información temporal
+  period                String?             @db.VarChar(255) // Ej: "Old Kingdom Egypt"
+  dateRangeStart        Int?                // Año (negativo = BCE)
+  dateRangeEnd          Int?                // Año (negativo = BCE)
+  dateUnit              String?             @default("CE") // "BCE" o "CE"
+  
+  // UNESCO y reconocimiento oficial
+  unescoId              Int?                @unique
+  unescoStatus          String?             @db.VarChar(100)
+  unescoYear            Int?
+  
+  // Descripción y contexto
+  description           String?             @db.Text
+  scientificSignificance String?            @db.Text
+  
+  // Relaciones
+  features              ArchaeologicalFeature[]
+  dataSources           DataSource[]
+  dataAvailability      SiteDataAvailability[]
+  threats               SiteThreat[]
+  researchQuestions     ResearchQuestion[]
+  calibrationData       CalibrationData?
+  detectionHistory      DetectionHistory[]
+  
+  // Metadatos
+  isReferencesite       Boolean             @default(false) // Sitio de referencia para calibración
+  isControlSite         Boolean             @default(false) // Sitio de control (negativo)
+  lastVerified          DateTime?
+  discoveryDate         DateTime?
+  
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  
+  @@index([environmentType])
+  @@index([siteType])
+  @@index([confidenceLevel])
+  @@index([country])
+  @@index([latitude, longitude])
+  @@index([isReferencesite])
+  @@index([isControlSite])
+  @@map("archaeological_sites")
+}
+
+// ============================================================================
+// RELATED MODELS - Modelos relacionados
+// ============================================================================
+
+model ArchaeologicalFeature {
+  id          String              @id @default(uuid())
+  siteId      String
+  site        ArchaeologicalSite  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  name        String              @db.VarChar(255)
+  description String?             @db.Text
+  featureType String?             @db.VarChar(100) // "pyramid", "temple", "terrace", etc.
+  
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  
+  @@index([siteId])
+  @@map("archaeological_features")
+}
+
+model DataSource {
+  id              String              @id @default(uuid())
+  siteId          String
+  site            ArchaeologicalSite  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  sourceType      String              @db.VarChar(100) // "primary", "lidar_source", "satellite", "academic"
+  sourceName      String              @db.VarChar(255)
+  sourceUrl       String?             @db.Text
+  description     String?             @db.Text
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  @@index([siteId])
+  @@map("data_sources")
+}
+
+model SiteDataAvailability {
+  id              String              @id @default(uuid())
+  siteId          String
+  site            ArchaeologicalSite  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  dataType        DataAvailability
+  available       Boolean             @default(false)
+  quality         String?             @db.VarChar(50) // "high", "medium", "low"
+  notes           String?             @db.Text
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  @@unique([siteId, dataType])
+  @@index([siteId])
+  @@map("site_data_availability")
+}
+
+model SiteThreat {
+  id              String              @id @default(uuid())
+  siteId          String
+  site            ArchaeologicalSite  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  threatType      String              @db.VarChar(100) // "urban_encroachment", "climate_change", etc.
+  severity        String              @db.VarChar(50)  // "critical", "high", "medium", "low"
+  description     String?             @db.Text
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  @@index([siteId])
+  @@map("site_threats")
+}
+
+model ResearchQuestion {
+  id              String              @id @default(uuid())
+  siteId          String
+  site            ArchaeologicalSite  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  question        String              @db.Text
+  priority        String?             @db.VarChar(50) // "high", "medium", "low"
+  status          String?             @db.VarChar(50) // "open", "in_progress", "resolved"
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  @@index([siteId])
+  @@map("research_questions")
+}
+
+// ============================================================================
+// CALIBRATION & DETECTION - Calibración y detección
+// ============================================================================
+
+model CalibrationData {
+  id                      String              @id @default(uuid())
+  siteId                  String              @unique
+  site                    ArchaeologicalSite  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  // Firmas instrumentales esperadas
+  thermalDeltaK           Float?              // Anomalía térmica esperada (Kelvin)
+  sarBackscatterDb        Float?              // Backscatter SAR esperado (dB)
+  ndviDelta               Float?              // Delta NDVI esperado
+  lidarHeightM            Float?              // Altura LiDAR esperada (metros)
+  elevationTerracingM     Float?              // Altura de terrazas (metros)
+  slopeDeltaDegrees       Float?              // Cambio de pendiente (grados)
+  sarCoherence            Float?              // Coherencia SAR esperada
+  bathymetricHeightM      Float?              // Altura batimétrica (metros)
+  acousticReflectance     Float?              // Reflectancia acústica
+  magneticAnomalyNt       Float?              // Anomalía magnética (nanoTeslas)
+  
+  // Metadatos de calibración
+  calibrationNotes        String?             @db.Text
+  lastCalibrated          DateTime?
+  calibrationConfidence   Float?              // 0.0 - 1.0
+  
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  
+  @@map("calibration_data")
+}
+
+model DetectionHistory {
+  id                      String              @id @default(uuid())
+  siteId                  String?
+  site                    ArchaeologicalSite? @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  
+  // Información de detección
+  regionName              String              @db.VarChar(255)
+  latMin                  Float
+  latMax                  Float
+  lonMin                  Float
+  lonMax                  Float
+  
+  // Resultados
+  environmentDetected     EnvironmentType
+  environmentConfidence   Float               // 0.0 - 1.0
+  archaeologicalProbability Float             // 0.0 - 1.0
+  confidenceLevel         String              @db.VarChar(50) // "high", "moderate", "low", "none"
+  
+  // Convergencia instrumental
+  instrumentsConverging   Int
+  minimumRequired         Int
+  convergenceMet          Boolean
+  
+  // Reconocimiento
+  siteRecognized          Boolean             @default(false)
+  knownSiteName           String?             @db.VarChar(255)
+  
+  // Mediciones (JSON para flexibilidad)
+  measurements            Json?               // Array de mediciones instrumentales
+  
+  // IA
+  aiExplanation           String?             @db.Text
+  aiConfidence            Float?              // 0.0 - 1.0
+  
+  // Metadatos
+  detectionDate           DateTime            @default(now())
+  analysisVersion         String?             @db.VarChar(50)
+  
+  createdAt               DateTime            @default(now())
+  
+  @@index([siteId])
+  @@index([environmentDetected])
+  @@index([archaeologicalProbability])
+  @@index([detectionDate])
+  @@index([siteRecognized])
+  @@map("detection_history")
+}
+
+// ============================================================================
+// ANOMALY SIGNATURES - Firmas de anomalías por ambiente
+// ============================================================================
+
+model AnomalySignature {
+  id                      String              @id @default(uuid())
+  
+  // Clasificación
+  environmentType         EnvironmentType     @unique
+  description             String?             @db.Text
+  
+  // Instrumentos primarios
+  primaryInstruments      String[]            // Array de instrumentos
+  secondaryInstruments    String[]            // Array de instrumentos
+  
+  // Convergencia requerida
+  minimumConvergence      Int                 @default(2)
+  
+  // Indicadores arqueológicos (JSON para flexibilidad)
+  indicators              Json                // Objeto con indicadores y umbrales
+  
+  // Metadatos
+  notes                   String?             @db.Text
+  lastUpdated             DateTime            @updatedAt
+  
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  
+  @@map("anomaly_signatures")
+}
+
+// ============================================================================
+// USER & ANALYSIS TRACKING - Seguimiento de usuarios y análisis
+// ============================================================================
+
+model AnalysisSession {
+  id                      String              @id @default(uuid())
+  
+  // Información de sesión
+  sessionId               String              @unique @db.VarChar(255)
+  userId                  String?             @db.VarChar(255) // Opcional para usuarios anónimos
+  
+  // Análisis realizados
+  totalAnalyses           Int                 @default(0)
+  successfulDetections    Int                 @default(0)
+  falsePositives          Int                 @default(0)
+  falseNegatives          Int                 @default(0)
+  
+  // Metadatos
+  startedAt               DateTime            @default(now())
+  lastActivityAt          DateTime            @updatedAt
+  
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  
+  @@index([userId])
+  @@index([startedAt])
+  @@map("analysis_sessions")
+}
+
+// ============================================================================
+// SYSTEM CONFIGURATION - Configuración del sistema
+// ============================================================================
+
+model SystemConfiguration {
+  id                      String              @id @default(uuid())
+  
+  // Configuración
+  key                     String              @unique @db.VarChar(255)
+  value                   String              @db.Text
+  valueType               String              @db.VarChar(50) // "string", "number", "boolean", "json"
+  
+  // Metadatos
+  description             String?             @db.Text
+  category                String?             @db.VarChar(100) // "thresholds", "ai", "instruments", etc.
+  
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  
+  @@index([category])
+  @@map("system_configuration")
+}

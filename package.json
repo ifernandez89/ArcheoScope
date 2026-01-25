@@ -1,0 +1,36 @@
+{
+  "name": "archeoscope-database",
+  "version": "1.0.0",
+  "description": "ArcheoScope Archaeological Sites Database with Prisma ORM",
+  "main": "index.js",
+  "scripts": {
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:reset": "prisma migrate reset",
+    "db:setup": "npm run prisma:generate && npm run prisma:migrate && npm run prisma:seed",
+    "db:studio": "prisma studio"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "keywords": [
+    "archeoscope",
+    "archaeology",
+    "prisma",
+    "postgresql",
+    "database"
+  ],
+  "author": "ArcheoScope Project",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "prisma": "^5.8.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.8.0"
+  }
+}
