@@ -278,6 +278,178 @@ async def get_system_status():
     
     return SystemStatus(
         backend_status=backend_status,
+
+@app.get("/test-ai")
+async def test_ai_assistant():
+    """
+    🧪 ENDPOINT DE TEST: Verificar que el asistente de IA funciona correctamente.
+    
+    Este endpoint es CRÍTICO para diagnosticar problemas con el asistente de IA.
+    
+    Returns:
+        - status: "available" o "unavailable"
+        - provider: "openrouter", "ollama", o "none"
+        - model: nombre del modelo en uso
+        - test_result: resultado de una llamada de prueba
+        - diagnostics: información detallada de diagnóstico
+    """
+    
+    logger.info("="*80)
+    logger.info("🧪 TEST DE ASISTENTE DE IA INICIADO")
+    logger.info("="*80)
+    
+    ai_assistant = system_components.get('ai_assistant')
+    
+    if not ai_assistant:
+        logger.error("❌ Asistente de IA no inicializado")
+        return {
+            "status": "error",
+            "error": "AI assistant not initialized",
+            "message": "El asistente de IA no se inicializó correctamente",
+            "solutions": [
+                "Reinicia el backend",
+                "Verifica los logs de inicialización"
+            ]
+        }
+    
+    # Información básica
+    result = {
+        "status": "available" if ai_assistant.is_available else "unavailable",
+        "configuration": {
+            "openrouter_enabled": ai_assistant.openrouter_enabled,
+            "ollama_enabled": ai_assistant.ollama_enabled,
+            "openrouter_model": ai_assistant.openrouter_model,
+            "ollama_model": ai_assistant.ollama_model,
+            "ollama_url": ai_assistant.ollama_url,
+            "timeout_seconds": ai_assistant.ai_timeout,
+            "max_tokens": ai_assistant.max_tokens
+        },
+        "diagnostics": {
+            "openrouter_api_key_configured": bool(ai_assistant.openrouter_api_key),
+            "openrouter_api_key_length": len(ai_assistant.openrouter_api_key) if ai_assistant.openrouter_api_key else 0
+        }
+    }
+    
+    # Si no está disponible, proporcionar diagnóstico detallado
+    if not ai_assistant.is_available:
+        logger.error("❌ Asistente de IA NO DISPONIBLE")
+        
+        diagnostics = []
+        
+        # Diagnóstico OpenRouter
+        if ai_assistant.openrouter_enabled:
+            if not ai_assistant.openrouter_api_key:
+                diagnostics.append({
+                    "issue": "OpenRouter API key no configurada",
+                    "solution": "Agrega OPENROUTER_API_KEY en .env.local",
+                    "severity": "critical"
+                })
+            else:
+                diagnostics.append({
+                    "issue": "OpenRouter configurado pero no responde",
+                    "possible_causes": [
+                        "API key inválida o expirada",
+                        f"Modelo '{ai_assistant.openrouter_model}' no disponible",
+                        "Sin conexión a internet",
+                        "Servicio de OpenRouter caído"
+                    ],
+                    "solution": "Verifica API key en https://openrouter.ai/keys y modelo disponible",
+                    "severity": "critical"
+                })
+        
+        # Diagnóstico Ollama
+        if ai_assistant.ollama_enabled:
+            diagnostics.append({
+                "issue": "Ollama habilitado pero no disponible",
+                "possible_causes": [
+                    f"Ollama no está corriendo en {ai_assistant.ollama_url}",
+                    f"Modelo '{ai_assistant.ollama_model}' no instalado"
+                ],
+                "solution": f"Inicia Ollama: ollama run {ai_assistant.ollama_model}",
+                "severity": "high"
+            })
+        
+        if not ai_assistant.openrouter_enabled and not ai_assistant.ollama_enabled:
+            diagnostics.append({
+                "issue": "Ningún proveedor de IA habilitado",
+                "solution": "Habilita OPENROUTER_ENABLED=true o OLLAMA_ENABLED=true en .env.local",
+                "severity": "critical"
+            })
+        
+        result["diagnostics"]["issues"] = diagnostics
+        result["message"] = "❌ ASISTENTE DE IA NO DISPONIBLE - Ver diagnostics para soluciones"
+        
+        logger.error("="*80)
+        logger.error("DIAGNÓSTICO:")
+        for diag in diagnostics:
+            logger.error(f"  - {diag['issue']}")
+            logger.error(f"    Solución: {diag['solution']}")
+        logger.error("="*80)
+        
+        return result
+    
+    # Si está disponible, hacer una llamada de prueba
+    logger.info("✅ Asistente de IA disponible - Ejecutando test de llamada...")
+    
+    try:
+        # Determinar qué proveedor está activo
+        if ai_assistant.openrouter_enabled and ai_assistant.openrouter_api_key:
+            provider = "openrouter"
+            model = ai_assistant.openrouter_model
+        elif ai_assistant.ollama_enabled:
+            provider = "ollama"
+            model = ai_assistant.ollama_model
+        else:
+            provider = "unknown"
+            model = "unknown"
+        
+        result["provider"] = provider
+        result["model"] = model
+        
+        # Hacer llamada de prueba simple
+        test_prompt = """Eres un asistente arqueológico. Responde en UNA SOLA FRASE corta:
+¿Qué es una anomalía espacial en arqueología remota?"""
+        
+        logger.info(f"📡 Llamando a {provider} con modelo {model}...")
+        
+        test_response = ai_assistant._call_ai_model(test_prompt)
+        
+        logger.info(f"✅ Respuesta recibida: {test_response[:100]}...")
+        
+        result["test_call"] = {
+            "success": True,
+            "prompt": test_prompt,
+            "response": test_response,
+            "response_length": len(test_response),
+            "provider_used": provider,
+            "model_used": model
+        }
+        
+        result["message"] = f"✅ ASISTENTE DE IA FUNCIONANDO CORRECTAMENTE ({provider}/{model})"
+        
+        logger.info("="*80)
+        logger.info("✅ TEST DE IA EXITOSO")
+        logger.info(f"   Provider: {provider}")
+        logger.info(f"   Model: {model}")
+        logger.info(f"   Response length: {len(test_response)} chars")
+        logger.info("="*80)
+        
+    except Exception as e:
+        logger.error(f"❌ Error en llamada de prueba: {e}")
+        
+        result["test_call"] = {
+            "success": False,
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
+        
+        result["message"] = f"⚠️ IA marcada como disponible pero falló llamada de prueba: {e}"
+        result["diagnostics"]["test_error"] = {
+            "error": str(e),
+            "suggestion": "Verifica logs del backend para más detalles"
+        }
+    
+    return result
         ai_status=ai_status,
         available_rules=available_rules,
         supported_regions=[
