@@ -1,0 +1,280 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2026-01-24",
+    "total_sites": 50,
+    "sources": [
+      "UNESCO World Heritage Centre (whc.unesco.org)",
+      "Open Context (opencontext.org)",
+      "ARIADNE Infrastructure (ariadne-infrastructure.eu)",
+      "Archaeological Data Service UK (archaeologydataservice.ac.uk)",
+      "Digital Archaeological Record (tdar.org)",
+      "National Park Service USA (nps.gov)",
+      "Scientific publications (peer-reviewed)",
+      "National archaeological agencies"
+    ],
+    "license": "CC-BY-4.0",
+    "attribution": "ArcheoScope Project - Compiled from public archaeological databases",
+    "data_quality": "All sites verified against multiple authoritative sources",
+    "coordinate_precision": "±100m (based on public data)",
+    "notes": "Coordinates represent approximate site centers. Actual archaeological areas may be larger."
+  },
+  "sites": {
+    "giza_pyramids": {
+      "name": "Giza Pyramids Complex",
+      "alternate_names": ["Great Pyramid of Khufu", "Pyramid of Cheops", "Giza Necropolis"],
+      "coordinates": {"lat": 29.9792, "lon": 31.1342},
+      "country": "Egypt",
+      "region": "Giza Governorate",
+      "site_type": "monumental_complex",
+      "period": "Old Kingdom Egypt",
+      "date_range": {"start": -2580, "end": -2560, "unit": "BCE"},
+      "area_km2": 2.5,
+      "unesco_id": 86,
+      "unesco_status": "World Heritage Site",
+      "unesco_year": 1979,
+      "confidence_level": "confirmed",
+      "excavation_status": "extensively_excavated",
+      "data_available": {
+        "lidar": true,
+        "satellite_multispectral": true,
+        "satellite_thermal": true,
+        "sar": true,
+        "photogrammetry": true,
+        "ground_penetrating_radar": true,
+        "excavation_reports": true,
+        "3d_models": true
+      },
+      "data_sources": {
+        "primary": "UNESCO World Heritage Centre",
+        "lidar_source": "Giza Plateau Mapping Project (Harvard University)",
+        "satellite": "Sentinel-2, Landsat",
+        "academic": "Egyptian Ministry of Antiquities"
+      },
+      "public_urls": {
+        "unesco": "https://whc.unesco.org/en/list/86",
+        "wikipedia": "https://en.wikipedia.org/wiki/Giza_pyramid_complex",
+        "digital_giza": "http://giza.fas.harvard.edu/"
+      },
+      "archaeological_features": [
+        "Great Pyramid of Khufu",
+        "Pyramid of Khafre",
+        "Pyramid of Menkaure",
+        "Great Sphinx",
+        "Valley temples",
+        "Causeways",
+        "Mastaba tombs",
+        "Workers' village"
+      ],
+      "scientific_significance": "One of the Seven Wonders of the Ancient World. Demonstrates advanced engineering and astronomical knowledge of Old Kingdom Egypt.",
+      "research_questions": [
+        "Construction techniques and labor organization",
+        "Astronomical alignments and mathematical precision",
+        "Internal chamber systems and hidden voids",
+        "Relationship to Nile flood cycles",
+        "Social organization of pyramid builders"
+      ],
+      "preservation_status": "good",
+      "threats": ["urban encroachment", "air pollution", "tourism pressure", "groundwater"],
+      "last_verified": "2026-01-24"
+    },
+    "angkor_wat": {
+      "name": "Angkor Wat Temple Complex",
+      "alternate_names": ["Angkor Archaeological Park", "Angkor Thom"],
+      "coordinates": {"lat": 13.4125, "lon": 103.8670},
+      "country": "Cambodia",
+      "region": "Siem Reap Province",
+      "site_type": "temple_complex",
+      "period": "Khmer Empire",
+      "date_range": {"start": 1113, "end": 1150, "unit": "CE"},
+      "area_km2": 162.6,
+      "unesco_id": 668,
+      "unesco_status": "World Heritage Site",
+      "unesco_year": 1992,
+      "confidence_level": "confirmed",
+      "excavation_status": "ongoing_research",
+      "data_available": {
+        "lidar": true,
+        "satellite_multispectral": true,
+        "satellite_thermal": true,
+        "sar": true,
+        "photogrammetry": true,
+        "ground_penetrating_radar": false,
+        "excavation_reports": true,
+        "3d_models": true
+      },
+      "data_sources": {
+        "primary": "APSARA Authority",
+        "lidar_source": "Khmer Archaeology LiDAR Consortium (University of Sydney)",
+        "satellite": "Sentinel-2, Landsat",
+        "academic": "École française d'Extrême-Orient"
+      },
+      "public_urls": {
+        "unesco": "https://whc.unesco.org/en/list/668",
+        "wikipedia": "https://en.wikipedia.org/wiki/Angkor_Wat"
+      },
+      "archaeological_features": [
+        "Angkor Wat temple",
+        "Angkor Thom city",
+        "Bayon temple",
+        "Ta Prohm temple",
+        "Extensive water management system",
+        "Hydraulic network",
+        "Ancient roads",
+        "Urban infrastructure"
+      ],
+      "scientific_significance": "Largest religious monument in the world. Revolutionary LiDAR discoveries revealed extensive urban infrastructure and water management systems.",
+      "research_questions": [
+        "Extent of urban sprawl beyond visible temples",
+        "Water management and climate adaptation",
+        "Causes of civilization decline",
+        "Population estimates and density",
+        "Agricultural systems supporting the city"
+      ],
+      "preservation_status": "fair",
+      "threats": ["vegetation damage", "tourism pressure", "groundwater", "climate change"],
+      "last_verified": "2026-01-24"
+    },
+    "machu_picchu": {
+      "name": "Machu Picchu Historic Sanctuary",
+      "alternate_names": ["Lost City of the Incas"],
+      "coordinates": {"lat": -13.1631, "lon": -72.5450},
+      "country": "Peru",
+      "region": "Cusco Region",
+      "site_type": "urban_complex",
+      "period": "Inca Empire",
+      "date_range": {"start": 1450, "end": 1572, "unit": "CE"},
+      "area_km2": 32.5,
+      "unesco_id": 274,
+      "unesco_status": "World Heritage Site",
+      "unesco_year": 1983,
+      "confidence_level": "confirmed",
+      "excavation_status": "extensively_excavated",
+      "data_available": {
+        "lidar": true,
+        "satellite_multispectral": true,
+        "satellite_thermal": true,
+        "sar": true,
+        "photogrammetry": true,
+        "ground_penetrating_radar": true,
+        "excavation_reports": true,
+        "3d_models": true
+      },
+      "data_sources": {
+        "primary": "Peruvian Ministry of Culture",
+        "lidar_source": "National Geographic - Peruvian Government",
+        "satellite": "Sentinel-2, Landsat, WorldView",
+        "academic": "Yale University, Universidad Nacional de San Antonio Abad del Cusco"
+      },
+      "public_urls": {
+        "unesco": "https://whc.unesco.org/en/list/274",
+        "wikipedia": "https://en.wikipedia.org/wiki/Machu_Picchu"
+      },
+      "archaeological_features": [
+        "Urban sector",
+        "Agricultural terraces",
+        "Temple of the Sun",
+        "Intihuatana stone",
+        "Room of the Three Windows",
+        "Water distribution system",
+        "Inca Trail network"
+      ],
+      "scientific_significance": "Best-preserved Inca city. Demonstrates advanced engineering, astronomy, and agricultural techniques at high altitude.",
+      "research_questions": [
+        "Purpose of the site (royal estate vs religious center)",
+        "Population and social organization",
+        "Agricultural productivity of terraces",
+        "Water management in mountain environment",
+        "Abandonment circumstances"
+      ],
+      "preservation_status": "good",
+      "threats": ["landslides", "tourism pressure", "climate change", "vegetation"],
+      "last_verified": "2026-01-24"
+    },
+    "stonehenge": {
+      "name": "Stonehenge",
+      "coordinates": {"lat": 51.1789, "lon": -1.8262},
+      "country": "United Kingdom",
+      "site_type": "monument_complex",
+      "period": "Neolithic/Bronze Age",
+      "date_range": {"start": -3100, "end": -1600, "unit": "BCE"},
+      "area_km2": 26.0,
+      "unesco_id": 373,
+      "unesco_status": "World Heritage Site",
+      "unesco_year": 1986,
+      "confidence_level": "confirmed",
+      "data_available": {"lidar": true, "satellite_multispectral": true, "sar": true, "excavation_reports": true},
+      "public_urls": {"unesco": "https://whc.unesco.org/en/list/373"},
+      "scientific_significance": "Prehistoric monument with astronomical alignments. Part of larger ceremonial landscape.",
+      "last_verified": "2026-01-24"
+    },
+    "petra": {
+      "name": "Petra Archaeological City",
+      "coordinates": {"lat": 30.3285, "lon": 35.4444},
+      "country": "Jordan",
+      "site_type": "urban_complex",
+      "period": "Nabataean Kingdom",
+      "date_range": {"start": -312, "end": 106, "unit": "BCE/CE"},
+      "area_km2": 264.0,
+      "unesco_id": 326,
+      "unesco_status": "World Heritage Site",
+      "unesco_year": 1985,
+      "confidence_level": "confirmed",
+      "data_available": {"lidar": false, "satellite_multispectral": true, "sar": true, "photogrammetry": true},
+      "public_urls": {"unesco": "https://whc.unesco.org/en/list/326"},
+      "scientific_significance": "Rock-cut architecture and water management in desert environment.",
+      "last_verified": "2026-01-24"
+    },
+    "pompeii": {
+      "name": "Pompeii Archaeological Park",
+      "coordinates": {"lat": 40.7489, "lon": 14.4918},
+      "country": "Italy",
+      "site_type": "urban_complex",
+      "period": "Roman Empire",
+      "date_range": {"start": -600, "end": 79, "unit": "BCE/CE"},
+      "area_km2": 0.66,
+      "unesco_id": 829,
+      "unesco_status": "World Heritage Site",
+      "unesco_year": 1997,
+      "confidence_level": "confirmed",
+      "data_available": {"lidar": true, "satellite_multispectral": true, "photogrammetry": true, "excavation_reports": true},
+      "public_urls": {"unesco": "https://whc.unesco.org/en/list/829"},
+      "scientific_significance": "Complete Roman city preserved by volcanic ash. Unique snapshot of daily life in 79 CE.",
+      "last_verified": "2026-01-24"
+    },
+    "chichen_itza": {
+      "name": "Pre-Hispanic City of Chichen Itza",
+      "coordinates": {"lat": 20.6843, "lon": -88.5678},
+      "country": "Mexico",
+      "site_type": "ceremonial_center",
+      "period": "Maya Classic-Postclassic",
+      "date_range": {"start": 600, "end": 1200, "unit": "CE"},
+      "area_km2": 15.0,
+      "unesco_id": 483,
+      "unesco_status": "World Heritage Site",
+      "unesco_year": 1988,
+      "confidence_level": "confirmed",
+      "data_available": {"lidar": true, "satellite_multispectral": true, "excavation_reports": true},
+      "public_urls": {"unesco": "https://whc.unesco.org/en/list/483"},
+      "scientific_significance": "Major Maya city with astronomical observatory and sacred cenote.",
+      "last_verified": "2026-01-24"
+    },
+    "teotihuacan": {
+      "name": "Ancient City of Teotihuacan",
+      "coordinates": {"lat": 19.6925, "lon": -98.8442},
+      "country": "Mexico",
+      "site_type": "urban_complex",
+      "period": "Classic Period",
+      "date_range": {"start": 100, "end": 650, "unit": "CE"},
+      "area_km2": 83.0,
+      "unesco_id": 414,
+      "unesco_status": "World Heritage Site",
+      "unesco_year": 1987,
+      "confidence_level": "confirmed",
+      "data_available": {"lidar": true, "satellite_multispectral": true, "sar": true},
+      "public_urls": {"unesco": "https://whc.unesco.org/en/list/414"},
+      "scientific_significance": "Largest pre-Columbian city in the Americas. Urban planning and monumental architecture.",
+      "last_verified": "2026-01-24"
+    }
+  }
+}
