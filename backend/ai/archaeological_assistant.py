@@ -15,9 +15,9 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 
-# Cargar variables de entorno
+# Cargar variables de entorno desde .env
 from pathlib import Path
-env_path = Path(__file__).parent.parent.parent / '.env.local'
+env_path = Path(__file__).parent.parent.parent / '.env'
 load_dotenv(env_path)
 
 logger = logging.getLogger(__name__)
@@ -42,13 +42,13 @@ class ArchaeologicalAssistant:
     """
     
     def __init__(self):
-        """Inicializar asistente arqueológico con configuración desde .env.local"""
+        """Inicializar asistente arqueológico con configuración desde .env"""
         
-        # Leer configuración desde .env.local - asegurar carga explícita
-        dotenv_path = Path(__file__).parent.parent.parent / '.env.local'
+        # Leer configuración desde .env - asegurar carga explícita
+        dotenv_path = Path(__file__).parent.parent.parent / '.env'
         load_dotenv(dotenv_path)
         
-        # Leer configuración desde .env.local
+        # Leer configuración desde .env
         self.ollama_enabled = os.getenv('OLLAMA_ENABLED', 'false').lower() == 'true'
         self.openrouter_enabled = os.getenv('OPENROUTER_ENABLED', 'false').lower() == 'true'
         
