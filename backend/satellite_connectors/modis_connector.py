@@ -33,12 +33,10 @@ class MODISConnector(SatelliteConnector):
         self.username = os.getenv("EARTHDATA_USERNAME")
         self.password = os.getenv("EARTHDATA_PASSWORD")
         
-        if not self.username or not self.password:
-            logger.warning("MODIS requires EARTHDATA_USERNAME and EARTHDATA_PASSWORD")
-            self.available = False
-        else:
-            self.available = True
-            logger.info("✅ MODIS connector initialized")
+        # DESHABILITADO: Usar simulación en core detector
+        # Requiere implementación compleja de AppEEARS API
+        self.available = False
+        logger.info("⚠️ MODIS deshabilitado - usar simulación en core detector")
     
     async def get_lst_data(
         self,

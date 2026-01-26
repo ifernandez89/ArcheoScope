@@ -31,12 +31,10 @@ class SMAPConnector(SatelliteConnector):
         super().__init__(cache_enabled)
         self.name = "SMAP"
         
-        if not SMAP_AVAILABLE:
-            logger.warning("SMAP requires: pip install earthaccess")
-            self.available = False
-        else:
-            self.available = True
-            logger.info("✅ SMAP connector initialized")
+        # DESHABILITADO: Usar simulación en core detector
+        # Requiere procesamiento complejo de archivos HDF5
+        self.available = False
+        logger.info("⚠️ SMAP deshabilitado - usar simulación en core detector")
     
     async def get_soil_moisture(
         self,
