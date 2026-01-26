@@ -261,7 +261,15 @@ class CoreAnomalyDetector:
         
         indicators = env_signatures.get('archaeological_indicators', {})
         
-        for indicator_name, indicator_config in indicators.items():
+        logger.info(f"🔬 INICIANDO MEDICIONES INSTRUMENTALES")
+        logger.info(f"   Ambiente: {env_context.environment_type}")
+        logger.info(f"   Indicadores a medir: {len(indicators)}")
+        logger.info(f"   Región: [{lat_min:.4f}, {lat_max:.4f}] x [{lon_min:.4f}, {lon_max:.4f}]")
+        
+        for idx, (indicator_name, indicator_config) in enumerate(indicators.items(), 1):
+            logger.info(f"")
+            logger.info(f"📡 [{idx}/{len(indicators)}] Midiendo: {indicator_name}")
+            
             # SOLO intentar medición REAL - NO SIMULACIONES
             measurement = await self._get_real_instrument_measurement(
                 indicator_name, indicator_config, env_context,
@@ -271,9 +279,18 @@ class CoreAnomalyDetector:
             # Si falla, NO agregar medición (NO SIMULAR JAMÁS)
             if measurement:
                 measurements.append(measurement)
-                logger.info(f"   ✅ Medición real obtenida: {indicator_name}")
+                logger.info(f"   ✅ Medición EXITOSA: {indicator_name}")
+                logger.info(f"      Valor: {measurement.value:.3f} {measurement.unit}")
+                logger.info(f"      Umbral: {measurement.threshold:.3f}")
+                logger.info(f"      Excede: {'SÍ' if measurement.exceeds_threshold else 'NO'}")
             else:
-                logger.warning(f"   ⚠️ No hay datos reales para {indicator_name} - OMITIDO (NO SE SIMULA)")
+                logger.warning(f"   ❌ SIN DATOS para {indicator_name} - OMITIDO (NO SE SIMULA)")
+        
+        logger.info(f"")
+        logger.info(f"📊 RESUMEN DE MEDICIONES:")
+        logger.info(f"   Total intentadas: {len(indicators)}")
+        logger.info(f"   Exitosas: {len(measurements)}")
+        logger.info(f"   Fallidas: {len(indicators) - len(measurements)}")
         
         return measurements
     
@@ -328,10 +345,15 @@ class CoreAnomalyDetector:
             api_instrument = instrument_mapping.get(indicator_name)
             
             if not api_instrument:
-                logger.debug(f"   No hay API disponible para {indicator_name}")
+                logger.debug(f"      ⚠️ No hay mapeo de API para {indicator_name}")
                 return None
             
+            logger.info(f"      🔌 API a llamar: {api_instrument}")
+            
             # Obtener medición real de la API
+            import time
+            start_time = time.time()
+            
             real_data = await self.real_data_integrator.get_instrument_measurement(
                 instrument_name=api_instrument,
                 lat_min=lat_min,
@@ -340,12 +362,18 @@ class CoreAnomalyDetector:
                 lon_max=lon_max
             )
             
+            elapsed = time.time() - start_time
+            
             if not real_data:
+                logger.warning(f"      ❌ API {api_instrument} no devolvió datos (tiempo: {elapsed:.2f}s)")
                 return None
+            
+            logger.info(f"      ✅ API respondió en {elapsed:.2f}s")
             
             # Extraer umbral del indicador
             threshold_key = [k for k in indicator_config.keys() if 'threshold' in k]
             if not threshold_key:
+                logger.warning(f"      ⚠️ No se encontró umbral en configuración")
                 return None
             
             threshold = indicator_config[threshold_key[0]]

@@ -35,10 +35,13 @@ try:
     import planetary_computer
     import rasterio
     from rasterio.warp import transform_bounds
-    import stackstac
+    # import stackstac  # DESHABILITADO - requiere pyproj que tiene problemas de DLL
     PLANETARY_COMPUTER_AVAILABLE = True
-except ImportError:
+    STACKSTAC_AVAILABLE = False  # Deshabilitado temporalmente
+except ImportError as e:
     PLANETARY_COMPUTER_AVAILABLE = False
+    STACKSTAC_AVAILABLE = False
+    logger.warning(f"Import error: {e}")
 
 from .base_connector import SatelliteConnector, SatelliteData
 
