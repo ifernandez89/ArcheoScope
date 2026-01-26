@@ -1640,7 +1640,10 @@ async def generate_cultural_prior_map(
     ```
     """
     try:
-        from backend.site_confidence_system import site_confidence_system
+        from site_confidence_system import SiteConfidenceSystem
+        
+        # Inicializar sistema de confianza
+        site_confidence_system = SiteConfidenceSystem()
         
         # Conectar a BD si no está conectada
         if not database_connection.pool:
@@ -1837,7 +1840,10 @@ async def get_recommended_analysis_zones(
     - Método reproducible y auditable
     """
     try:
-        from backend.site_confidence_system import site_confidence_system
+        from site_confidence_system import SiteConfidenceSystem
+        
+        # Inicializar sistema de confianza
+        site_confidence_system = SiteConfidenceSystem()
         
         # Validar estrategia
         valid_strategies = ['buffer', 'gradient', 'gaps']
@@ -2061,8 +2067,11 @@ async def get_recommended_analysis_zones(
     - Europa oriental
     """
     try:
-        from backend.site_confidence_system import site_confidence_system
-        from backend.environment_classifier import EnvironmentClassifier
+        from site_confidence_system import SiteConfidenceSystem
+        from environment_classifier import EnvironmentClassifier
+        
+        # Inicializar sistema de confianza
+        site_confidence_system = SiteConfidenceSystem()
         
         # Validar estrategia
         valid_strategies = ['buffer', 'gradient', 'gaps']

@@ -90,8 +90,8 @@ class CoreAnomalyDetector:
         self.anomaly_signatures = self._load_anomaly_signatures()
         
         # Inicializar sistema de confianza de sitios
-        from backend.site_confidence_system import site_confidence_system
-        self.site_confidence_system = site_confidence_system
+        from site_confidence_system import SiteConfidenceSystem
+        self.site_confidence_system = SiteConfidenceSystem()
         
         logger.info("CoreAnomalyDetector inicializado correctamente")
     
