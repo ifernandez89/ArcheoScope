@@ -2414,7 +2414,8 @@ async def get_enriched_candidates(
     strategy: str = "buffer",
     max_zones: int = 50,
     lidar_priority: bool = True,
-    min_convergence: float = 0.4
+    min_convergence: float = 0.4,
+    save_to_database: bool = True
 ):
     """
     ## Candidatas Arqueológicas Enriquecidas Multi-Instrumentalmente
@@ -2568,6 +2569,36 @@ async def get_enriched_candidates(
         logger.info(f"   Field validation priority: {field_validation_count}")
         logger.info(f"   Detailed analysis: {detailed_analysis_count}")
         
+        # Guardar en base de datos si se solicita
+        saved_count = 0
+        if save_to_database and enriched_candidates:
+            try:
+                logger.info(f"💾 Guardando {len(candidates_data)} candidatas en base de datos...")
+                
+                region_bounds = {
+                    'lat_min': lat_min,
+                    'lat_max': lat_max,
+                    'lon_min': lon_min,
+                    'lon_max': lon_max
+                }
+                
+                # Agregar strategy y region_bounds a cada candidata
+                for candidate_data in candidates_data:
+                    candidate_data['strategy'] = strategy
+                    candidate_data['region_bounds'] = region_bounds
+                
+                saved_count = await database_connection.save_candidates_batch(
+                    candidates_data,
+                    strategy,
+                    region_bounds
+                )
+                
+                logger.info(f"✅ {saved_count} candidatas guardadas en base de datos")
+                
+            except Exception as e:
+                logger.error(f"⚠️ Error guardando candidatas en BD: {e}")
+                # No fallar el request si falla el guardado
+        
         return {
             'total_candidates': len(enriched_candidates),
             'candidates': candidates_data,
@@ -2601,7 +2632,9 @@ async def get_enriched_candidates(
                     'lon_min': lon_min,
                     'lon_max': lon_max
                 },
-                'generated_at': datetime.now().isoformat()
+                'generated_at': datetime.now().isoformat(),
+                'saved_to_database': saved_count > 0,
+                'candidates_saved': saved_count
             }
         }
         
@@ -2610,6 +2643,199 @@ async def get_enriched_candidates(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/archaeological-sites/candidates/priority", tags=["Database", "Candidates"])
+async def get_priority_candidates_from_db(limit: int = 50):
+    """
+    ## Obtener Candidatas Prioritarias desde Base de Datos
+    
+    Retorna candidatas con estado 'pending' y acción recomendada 'field_validation' o 'detailed_analysis',
+    ordenadas por score multi-instrumental.
+    
+    **Parámetros**:
+    - `limit`: Máximo número de candidatas (default: 50)
+    
+    **Respuesta**:
+    - Lista de candidatas prioritarias con todos sus datos
+    """
+    try:
+        candidates = await database_connection.get_priority_candidates(limit)
+        
+        return {
+            'total': len(candidates),
+            'candidates': candidates,
+            'note': 'Candidatas pendientes con alta prioridad de validación'
+        }
+    except Exception as e:
+        logger.error(f"Error obteniendo candidatas prioritarias: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/archaeological-sites/candidates/statistics", tags=["Database", "Candidates"])
+async def get_candidates_statistics_from_db():
+    """
+    ## Estadísticas de Candidatas en Base de Datos
+    
+    Retorna estadísticas agregadas de todas las candidatas almacenadas:
+    - Total de candidatas
+    - Por estado (pending, analyzing, analyzed, field_validated, rejected)
+    - Por acción recomendada
+    - Promedios de scores y convergencia
+    - Persistencia temporal
+    """
+    try:
+        stats = await database_connection.get_candidates_statistics()
+        
+        return {
+            'statistics': stats,
+            'generated_at': datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error obteniendo estadísticas: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/archaeological-sites/candidates/search", tags=["Database", "Candidates"])
+async def search_candidates_from_db(
+    lat: float,
+    lon: float,
+    radius_km: float = 50,
+    min_score: float = 0.0,
+    status: Optional[str] = None,
+    limit: int = 100
+):
+    """
+    ## Buscar Candidatas Cerca de una Ubicación
+    
+    Busca candidatas almacenadas en la base de datos cerca de coordenadas específicas.
+    
+    **Parámetros**:
+    - `lat`, `lon`: Coordenadas del centro de búsqueda
+    - `radius_km`: Radio de búsqueda en kilómetros (default: 50)
+    - `min_score`: Score multi-instrumental mínimo (default: 0.0)
+    - `status`: Filtrar por estado (pending, analyzing, analyzed, etc.)
+    - `limit`: Máximo número de resultados (default: 100)
+    
+    **Respuesta**:
+    - Lista de candidatas ordenadas por score y distancia
+    """
+    try:
+        candidates = await database_connection.search_candidates(
+            lat, lon, radius_km, min_score, status, limit
+        )
+        
+        return {
+            'total': len(candidates),
+            'search_center': {'lat': lat, 'lon': lon},
+            'radius_km': radius_km,
+            'candidates': candidates
+        }
+    except Exception as e:
+        logger.error(f"Error buscando candidatas: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/archaeological-sites/candidates/{candidate_id}", tags=["Database", "Candidates"])
+async def get_candidate_by_id_from_db(candidate_id: str):
+    """
+    ## Obtener Candidata por ID
+    
+    Retorna los detalles completos de una candidata específica.
+    
+    **Parámetros**:
+    - `candidate_id`: ID de la candidata (ej: CND_HZ_000001)
+    """
+    try:
+        candidate = await database_connection.get_candidate_by_id(candidate_id)
+        
+        if not candidate:
+            raise HTTPException(status_code=404, detail=f"Candidata {candidate_id} no encontrada")
+        
+        return candidate
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error obteniendo candidata: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/archaeological-sites/candidates/{candidate_id}/status", tags=["Database", "Candidates"])
+async def update_candidate_status_in_db(
+    candidate_id: str,
+    status: str,
+    notes: Optional[str] = None
+):
+    """
+    ## Actualizar Estado de Candidata
+    
+    Actualiza el estado de una candidata en la base de datos.
+    
+    **Parámetros**:
+    - `candidate_id`: ID de la candidata
+    - `status`: Nuevo estado (pending, analyzing, analyzed, field_validated, rejected, archived)
+    - `notes`: Notas opcionales sobre el cambio de estado
+    
+    **Estados válidos**:
+    - `pending`: Pendiente de análisis
+    - `analyzing`: En proceso de análisis
+    - `analyzed`: Análisis completado
+    - `field_validated`: Validada en campo
+    - `rejected`: Rechazada
+    - `archived`: Archivada
+    """
+    try:
+        updated = await database_connection.update_candidate_status(
+            candidate_id, status, notes
+        )
+        
+        if not updated:
+            raise HTTPException(status_code=404, detail=f"Candidata {candidate_id} no encontrada")
+        
+        return {
+            'success': True,
+            'candidate_id': candidate_id,
+            'new_status': status,
+            'updated_at': datetime.now().isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error actualizando estado: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/archaeological-sites/candidates/{candidate_id}/analysis", tags=["Database", "Candidates"])
+async def save_candidate_analysis_results(
+    candidate_id: str,
+    analysis_results: Dict[str, Any]
+):
+    """
+    ## Guardar Resultados de Análisis
+    
+    Guarda los resultados del análisis instrumental completo de una candidata.
+    
+    **Parámetros**:
+    - `candidate_id`: ID de la candidata
+    - `analysis_results`: Resultados del análisis (JSON)
+    
+    **Actualiza automáticamente**:
+    - `analysis_date` a NOW()
+    - `status` a 'analyzed'
+    """
+    try:
+        saved = await database_connection.save_analysis_results(
+            candidate_id, analysis_results
+        )
+        
+        if not saved:
+            raise HTTPException(status_code=404, detail=f"Candidata {candidate_id} no encontrada")
+        
+        return {
+            'success': True,
+            'candidate_id': candidate_id,
+            'analysis_saved': True,
+            'analyzed_at': datetime.now().isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error guardando análisis: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/academic/validation/blind-test")
 async def run_blind_test():

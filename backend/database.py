@@ -289,6 +289,303 @@ class ArcheoScopeDB:
             offset=offset,
             environment_type=environment_type
         )
+    
+    # ========================================================================
+    # MÉTODOS PARA CANDIDATAS ARQUEOLÓGICAS ENRIQUECIDAS
+    # ========================================================================
+    
+    async def save_candidate(self, candidate_data: Dict[str, Any]) -> str:
+        """
+        Guardar una candidata arqueológica enriquecida en la base de datos
+        
+        Args:
+            candidate_data: Datos de la candidata (del sistema multi-instrumental)
+        
+        Returns:
+            ID de la candidata guardada
+        """
+        async with self.pool.acquire() as conn:
+            # Preparar datos
+            import json
+            
+            query = '''
+                INSERT INTO archaeological_candidates (
+                    candidate_id,
+                    zone_id,
+                    center_lat,
+                    center_lon,
+                    area_km2,
+                    multi_instrumental_score,
+                    convergence_count,
+                    convergence_ratio,
+                    recommended_action,
+                    temporal_persistence,
+                    temporal_years,
+                    signals,
+                    strategy,
+                    region_bounds
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                RETURNING id
+            '''
+            
+            # Convertir signals a JSONB
+            signals_json = json.dumps(candidate_data.get('signals', {}))
+            region_bounds_json = json.dumps(candidate_data.get('region_bounds', {}))
+            
+            candidate_id = await conn.fetchval(
+                query,
+                candidate_data['candidate_id'],
+                candidate_data['zone_id'],
+                candidate_data['location']['lat'],
+                candidate_data['location']['lon'],
+                candidate_data['location']['area_km2'],
+                candidate_data['multi_instrumental_score'],
+                candidate_data['convergence']['count'],
+                candidate_data['convergence']['ratio'],
+                candidate_data['recommended_action'],
+                candidate_data['temporal_persistence']['detected'],
+                candidate_data['temporal_persistence']['years'],
+                signals_json,
+                candidate_data.get('strategy'),
+                region_bounds_json
+            )
+            
+            return str(candidate_id)
+    
+    async def save_candidates_batch(self, candidates: List[Dict[str, Any]], strategy: str, region_bounds: Dict[str, float]) -> int:
+        """
+        Guardar múltiples candidatas en batch
+        
+        Args:
+            candidates: Lista de candidatas
+            strategy: Estrategia usada (buffer, gradient, gaps)
+            region_bounds: Bounds de la región
+        
+        Returns:
+            Número de candidatas guardadas
+        """
+        import json
+        
+        async with self.pool.acquire() as conn:
+            # Preparar datos para batch insert
+            values = []
+            for candidate in candidates:
+                signals_json = json.dumps(candidate.get('signals', {}))
+                region_bounds_json = json.dumps(region_bounds)
+                
+                values.append((
+                    candidate['candidate_id'],
+                    candidate['zone_id'],
+                    candidate['location']['lat'],
+                    candidate['location']['lon'],
+                    candidate['location']['area_km2'],
+                    candidate['multi_instrumental_score'],
+                    candidate['convergence']['count'],
+                    candidate['convergence']['ratio'],
+                    candidate['recommended_action'],
+                    candidate['temporal_persistence']['detected'],
+                    candidate['temporal_persistence']['years'],
+                    signals_json,
+                    strategy,
+                    region_bounds_json
+                ))
+            
+            # Batch insert
+            query = '''
+                INSERT INTO archaeological_candidates (
+                    candidate_id,
+                    zone_id,
+                    center_lat,
+                    center_lon,
+                    area_km2,
+                    multi_instrumental_score,
+                    convergence_count,
+                    convergence_ratio,
+                    recommended_action,
+                    temporal_persistence,
+                    temporal_years,
+                    signals,
+                    strategy,
+                    region_bounds
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                ON CONFLICT (candidate_id) DO NOTHING
+            '''
+            
+            await conn.executemany(query, values)
+            
+            return len(values)
+    
+    async def get_priority_candidates(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Obtener candidatas prioritarias (vista priority_candidates)"""
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(
+                '''
+                SELECT * FROM priority_candidates
+                LIMIT $1
+                ''',
+                limit
+            )
+            return [dict(row) for row in rows]
+    
+    async def get_candidates_statistics(self) -> Dict[str, Any]:
+        """Obtener estadísticas de candidatas (vista candidates_statistics)"""
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow('SELECT * FROM candidates_statistics')
+            return dict(row) if row else {}
+    
+    async def search_candidates(
+        self,
+        lat: float,
+        lon: float,
+        radius_km: float = 50,
+        min_score: float = 0.0,
+        status: Optional[str] = None,
+        limit: int = 100
+    ) -> List[Dict[str, Any]]:
+        """
+        Buscar candidatas cerca de una ubicación
+        
+        Args:
+            lat: Latitud
+            lon: Longitud
+            radius_km: Radio de búsqueda en km
+            min_score: Score mínimo
+            status: Filtrar por estado
+            limit: Máximo resultados
+        
+        Returns:
+            Lista de candidatas
+        """
+        async with self.pool.acquire() as conn:
+            lat_delta = radius_km / 111.32
+            lon_delta = radius_km / (111.32 * abs(math.cos(math.radians(lat))))
+            
+            where_clauses = [
+                'center_lat BETWEEN $1 - $3 AND $1 + $3',
+                'center_lon BETWEEN $2 - $4 AND $2 + $4',
+                'multi_instrumental_score >= $5'
+            ]
+            params = [lat, lon, lat_delta, lon_delta, min_score]
+            param_count = 6
+            
+            if status:
+                where_clauses.append(f'status = ${param_count}')
+                params.append(status)
+                param_count += 1
+            
+            params.append(limit)
+            
+            query = f'''
+                SELECT 
+                    id,
+                    candidate_id,
+                    zone_id,
+                    center_lat,
+                    center_lon,
+                    area_km2,
+                    multi_instrumental_score,
+                    convergence_count,
+                    convergence_ratio,
+                    recommended_action,
+                    status,
+                    temporal_persistence,
+                    temporal_years,
+                    signals,
+                    generation_date,
+                    (
+                        6371 * acos(
+                            cos(radians($1)) * cos(radians(center_lat)) *
+                            cos(radians(center_lon) - radians($2)) +
+                            sin(radians($1)) * sin(radians(center_lat))
+                        )
+                    ) as distance_km
+                FROM archaeological_candidates
+                WHERE {' AND '.join(where_clauses)}
+                ORDER BY multi_instrumental_score DESC, distance_km
+                LIMIT ${param_count}
+            '''
+            
+            rows = await conn.fetch(query, *params)
+            return [dict(row) for row in rows]
+    
+    async def update_candidate_status(
+        self,
+        candidate_id: str,
+        status: str,
+        notes: Optional[str] = None
+    ) -> bool:
+        """
+        Actualizar estado de una candidata
+        
+        Args:
+            candidate_id: ID de la candidata
+            status: Nuevo estado
+            notes: Notas opcionales
+        
+        Returns:
+            True si se actualizó
+        """
+        async with self.pool.acquire() as conn:
+            if notes:
+                query = '''
+                    UPDATE archaeological_candidates
+                    SET status = $1, notes = $2
+                    WHERE candidate_id = $3
+                '''
+                result = await conn.execute(query, status, notes, candidate_id)
+            else:
+                query = '''
+                    UPDATE archaeological_candidates
+                    SET status = $1
+                    WHERE candidate_id = $3
+                '''
+                result = await conn.execute(query, status, candidate_id)
+            
+            return result != 'UPDATE 0'
+    
+    async def save_analysis_results(
+        self,
+        candidate_id: str,
+        analysis_results: Dict[str, Any]
+    ) -> bool:
+        """
+        Guardar resultados de análisis de una candidata
+        
+        Args:
+            candidate_id: ID de la candidata
+            analysis_results: Resultados del análisis
+        
+        Returns:
+            True si se guardó
+        """
+        import json
+        
+        async with self.pool.acquire() as conn:
+            query = '''
+                UPDATE archaeological_candidates
+                SET 
+                    analysis_results = $1,
+                    analysis_date = NOW(),
+                    status = 'analyzed'
+                WHERE candidate_id = $2
+            '''
+            
+            result = await conn.execute(
+                query,
+                json.dumps(analysis_results),
+                candidate_id
+            )
+            
+            return result != 'UPDATE 0'
+    
+    async def get_candidate_by_id(self, candidate_id: str) -> Optional[Dict[str, Any]]:
+        """Obtener una candidata por ID"""
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow(
+                'SELECT * FROM archaeological_candidates WHERE candidate_id = $1',
+                candidate_id
+            )
+            return dict(row) if row else None
 
 # Instancia global
 db = ArcheoScopeDB()
