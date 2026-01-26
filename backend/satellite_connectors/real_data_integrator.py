@@ -4,7 +4,7 @@ Integra TODAS las APIs reales y reemplaza simulaciones
 
 ACTUALIZADO: 2026-01-26
 - Agregado NSIDC (hielo, criosfera)
-- Agregado MODIS LST (térmico regional)
+- Agregado MODIS LST (termico regional)
 - Agregado Copernicus Marine (hielo marino, SST)
 
 COBERTURA ACTUAL: 7/11 APIs (63.6%)
@@ -31,14 +31,14 @@ class RealDataIntegrator:
     Reemplaza TODAS las simulaciones por APIs reales
     
     APIs FUNCIONANDO (8/11 = 72.7%):
-    1. Sentinel-2 (NDVI, multispectral) ✅
-    2. Sentinel-1 (SAR) ✅
-    3. Landsat (térmico) ✅
-    4. ICESat-2 (elevación) ✅
-    5. NSIDC (hielo, criosfera) ✅
-    6. MODIS LST (térmico regional) ✅
-    7. Copernicus Marine (hielo marino) ✅
-    8. OpenTopography (DEM, LiDAR) ✅ NUEVO
+    1. Sentinel-2 (NDVI, multispectral) [OK]
+    2. Sentinel-1 (SAR) [OK]
+    3. Landsat (termico) [OK]
+    4. ICESat-2 (elevacion) [OK]
+    5. NSIDC (hielo, criosfera) [OK]
+    6. MODIS LST (termico regional) [OK]
+    7. Copernicus Marine (hielo marino) [OK]
+    8. OpenTopography (DEM, LiDAR) [OK] NUEVO
     """
     
     def __init__(self):
@@ -50,10 +50,10 @@ class RealDataIntegrator:
         self.copernicus_marine = CopernicusMarineConnector()
         self.opentopography = OpenTopographyConnector()
         
-        logger.info("✅ RealDataIntegrator initialized - 8/11 APIs (72.7%)")
-        logger.info("   ✅ Sentinel-2, Sentinel-1, Landsat, ICESat-2")
-        logger.info("   ✅ NSIDC, MODIS LST, Copernicus Marine")
-        logger.info("   ✅ OpenTopography (DEM/LiDAR) - NUEVO")
+        print("[OK] RealDataIntegrator initialized - 8/11 APIs (72.7%)", flush=True)
+        print("   [OK] Sentinel-2, Sentinel-1, Landsat, ICESat-2", flush=True)
+        print("   [OK] NSIDC, MODIS LST, Copernicus Marine", flush=True)
+        print("   [OK] OpenTopography (DEM/LiDAR) - NUEVO", flush=True)
     
     async def get_instrument_measurement(
         self,
@@ -65,22 +65,32 @@ class RealDataIntegrator:
         **kwargs
     ) -> Optional[Dict[str, Any]]:
         """
-        Obtener medición REAL de un instrumento
+        Obtener medicion REAL de un instrumento
         
         REGLA NRO 1: NO MÁS SIMULACIONES - Solo datos reales
         """
         
-        logger.info(f"         🎯 RealDataIntegrator: Llamando a {instrument_name}")
+        # Log to file for diagnostics
+        import sys
+        log_file = open('instrument_diagnostics.log', 'a', encoding='utf-8')
+        
+        def log(msg):
+            print(msg, flush=True)
+            log_file.write(msg + '\n')
+            log_file.flush()
+        
+        log(f"         >> RealDataIntegrator: Llamando a {instrument_name}")
         
         try:
             # SENTINEL-2 (NDVI, Multispectral)
             if instrument_name in ["sentinel_2_ndvi", "ndvi", "vegetation"]:
-                logger.info(f"         📡 Llamando a Planetary Computer (Sentinel-2)...")
+                log(f"         >> Llamando a Planetary Computer (Sentinel-2)...")
                 data = await self.planetary_computer.get_multispectral_data(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
-                    logger.info(f"         ✅ Sentinel-2 respondió: NDVI={data.indices.get('ndvi', 0.0):.3f}")
+                    log(f"         [OK] Sentinel-2 respondio: NDVI={data.indices.get('ndvi', 0.0):.3f}")
+                    log_file.close()
                     return {
                         'value': data.indices.get('ndvi', 0.0),
                         'source': 'Sentinel-2 (Copernicus)',
@@ -88,16 +98,17 @@ class RealDataIntegrator:
                         'acquisition_date': data.acquisition_date.isoformat()
                     }
                 else:
-                    logger.warning(f"         ❌ Sentinel-2 no devolvió datos")
+                    log(f"         [FAIL] Sentinel-2 no devolvio datos")
             
             # SENTINEL-1 (SAR)
             elif instrument_name in ["sentinel_1_sar", "sar", "backscatter", "sar_penetration_anomalies", "sar_polarimetric_anomalies", "sentinel1_sar"]:
-                logger.info(f"         📡 Llamando a Planetary Computer (Sentinel-1 SAR)...")
+                log(f"         >> Llamando a Planetary Computer (Sentinel-1 SAR)...")
                 data = await self.planetary_computer.get_sar_data(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
-                    logger.info(f"         ✅ Sentinel-1 SAR respondió: VV={data.indices.get('vv_mean', 0.0):.3f} dB")
+                    log(f"         [OK] Sentinel-1 SAR respondio: VV={data.indices.get('vv_mean', 0.0):.3f} dB")
+                    log_file.close()
                     return {
                         'value': data.indices.get('vv_mean', 0.0),
                         'source': 'Sentinel-1 SAR (Copernicus)',
@@ -105,16 +116,16 @@ class RealDataIntegrator:
                         'acquisition_date': data.acquisition_date.isoformat()
                     }
                 else:
-                    logger.warning(f"         ❌ Sentinel-1 SAR no devolvió datos")
+                    log(f"         [FAIL] Sentinel-1 SAR no devolvio datos")
             
-            # LANDSAT (Térmico)
+            # LANDSAT (Termico)
             elif instrument_name in ["landsat_thermal", "thermal", "lst"]:
-                logger.info(f"         📡 Llamando a Planetary Computer (Landsat Thermal)...")
+                print(f"         >> Llamando a Planetary Computer (Landsat Thermal)...", flush=True)
                 data = await self.planetary_computer.get_thermal_data(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
-                    logger.info(f"         ✅ Landsat Thermal respondió: LST={data.indices.get('lst_mean', 0.0):.1f}K")
+                    print(f"         [OK] Landsat Thermal respondio: LST={data.indices.get('lst_mean', 0.0):.1f}K", flush=True)
                     return {
                         'value': data.indices.get('lst_mean', 0.0),
                         'source': 'Landsat Thermal (NASA/USGS)',
@@ -122,33 +133,43 @@ class RealDataIntegrator:
                         'acquisition_date': data.acquisition_date.isoformat()
                     }
                 else:
-                    logger.warning(f"         ❌ Landsat Thermal no devolvió datos")
+                    print(f"         [FAIL] Landsat Thermal no devolvio datos", flush=True)
             
-            # ICESAT-2 (Elevación)
+            # ICESAT-2 (Elevacion)
             elif instrument_name in ["icesat2", "elevation", "ice_height", "icesat2_subsurface", "icesat2_elevation_anomalies"]:
-                logger.info(f"         📡 Llamando a ICESat-2 (NASA Earthdata)...")
+                log(f"         >> Llamando a ICESat-2 (NASA Earthdata)...")
                 data = await self.icesat2.get_elevation_data(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
-                    logger.info(f"         ✅ ICESat-2 respondió: Elevación={data['elevation_mean']:.2f}m")
+                    import math
+                    elev_mean = data.indices['elevation_mean']
+                    # Check for inf/nan values
+                    if math.isnan(elev_mean) or math.isinf(elev_mean):
+                        log(f"         [FAIL] ICESat-2 devolvio valores invalidos (inf/nan)")
+                        log_file.close()
+                        return None
+                    
+                    log(f"         [OK] ICESat-2 respondio: Elevacion={elev_mean:.2f}m")
+                    log_file.close()
                     return {
-                        'value': data['elevation_mean'],
+                        'value': elev_mean,
                         'source': 'ICESat-2 (NASA)',
-                        'confidence': data['confidence'],
-                        'acquisition_date': data['acquisition_date']
+                        'confidence': data.confidence,
+                        'acquisition_date': data.acquisition_date.isoformat()
                     }
                 else:
-                    logger.warning(f"         ❌ ICESat-2 no devolvió datos")
+                    log(f"         [FAIL] ICESat-2 no devolvio datos")
             
             # NSIDC (Hielo marino, criosfera) - NUEVO
             elif instrument_name in ["nsidc_sea_ice", "sea_ice_concentration", "nsidc_polar_ice", "nsidc_ice_concentration"]:
-                logger.info(f"         📡 Llamando a NSIDC (Sea Ice)...")
+                log(f"         >> Llamando a NSIDC (Sea Ice)...")
                 data = await self.nsidc.get_sea_ice_concentration(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
-                    logger.info(f"         ✅ NSIDC respondió: Concentración={data['value']:.2f}")
+                    log(f"         [OK] NSIDC respondio: Concentracion={data['value']:.2f}")
+                    log_file.close()
                     return {
                         'value': data['value'],
                         'source': data['source'],
@@ -156,16 +177,16 @@ class RealDataIntegrator:
                         'acquisition_date': data['acquisition_date']
                     }
                 else:
-                    logger.warning(f"         ❌ NSIDC no devolvió datos")
+                    log(f"         [FAIL] NSIDC no devolvio datos")
             
             # NSIDC (Cobertura de nieve) - NUEVO
             elif instrument_name in ["nsidc_snow_cover", "snow_cover"]:
-                logger.info(f"         📡 Llamando a NSIDC (Snow Cover)...")
+                print(f"         >> Llamando a NSIDC (Snow Cover)...", flush=True)
                 data = await self.nsidc.get_snow_cover(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
-                    logger.info(f"         ✅ NSIDC Snow respondió: Cobertura={data['value']:.2f}")
+                    print(f"         [OK] NSIDC Snow respondio: Cobertura={data['value']:.2f}", flush=True)
                     return {
                         'value': data['value'],
                         'source': data['source'],
@@ -173,16 +194,17 @@ class RealDataIntegrator:
                         'acquisition_date': data['acquisition_date']
                     }
                 else:
-                    logger.warning(f"         ❌ NSIDC Snow no devolvió datos")
+                    print(f"         [FAIL] NSIDC Snow no devolvio datos", flush=True)
             
-            # MODIS LST (Térmico regional) - NUEVO
+            # MODIS LST (Termico regional) - NUEVO
             elif instrument_name in ["modis_lst", "modis_thermal", "thermal_inertia", "modis_polar_thermal", "modis_thermal_ice"]:
-                logger.info(f"         📡 Llamando a MODIS LST...")
+                log(f"         >> Llamando a MODIS LST...")
                 data = await self.modis_lst.get_land_surface_temperature(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
-                    logger.info(f"         ✅ MODIS LST respondió: Inercia térmica={data['thermal_inertia']:.2f}")
+                    log(f"         [OK] MODIS LST respondio: Inercia termica={data['thermal_inertia']:.2f}")
+                    log_file.close()
                     return {
                         'value': data['thermal_inertia'],
                         'lst_day': data['lst_day_celsius'],
@@ -192,16 +214,16 @@ class RealDataIntegrator:
                         'acquisition_date': data['acquisition_date']
                     }
                 else:
-                    logger.warning(f"         ❌ MODIS LST no devolvió datos")
+                    log(f"         [FAIL] MODIS LST no devolvio datos")
             
             # COPERNICUS MARINE (Hielo marino) - NUEVO
             elif instrument_name in ["copernicus_sea_ice", "marine_ice"]:
-                logger.info(f"         📡 Llamando a Copernicus Marine (Sea Ice)...")
+                print(f"         >> Llamando a Copernicus Marine (Sea Ice)...", flush=True)
                 data = await self.copernicus_marine.get_sea_ice_concentration(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
-                    logger.info(f"         ✅ Copernicus Marine respondió: Hielo={data['sea_ice_concentration']:.2f}")
+                    print(f"         [OK] Copernicus Marine respondio: Hielo={data['sea_ice_concentration']:.2f}", flush=True)
                     return {
                         'value': data['sea_ice_concentration'],
                         'source': data['source'],
@@ -209,16 +231,16 @@ class RealDataIntegrator:
                         'acquisition_date': data['acquisition_date']
                     }
                 else:
-                    logger.warning(f"         ❌ Copernicus Marine no devolvió datos")
+                    print(f"         [FAIL] Copernicus Marine no devolvio datos", flush=True)
             
             # COPERNICUS MARINE (SST) - NUEVO
             elif instrument_name in ["copernicus_sst", "sea_surface_temperature"]:
-                logger.info(f"         📡 Llamando a Copernicus Marine (SST)...")
+                print(f"         >> Llamando a Copernicus Marine (SST)...", flush=True)
                 data = await self.copernicus_marine.get_sea_surface_temperature(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
-                    logger.info(f"         ✅ Copernicus SST respondió: Temp={data['sea_surface_temperature_celsius']:.1f}°C")
+                    print(f"         [OK] Copernicus SST respondio: Temp={data['sea_surface_temperature_celsius']:.1f}C", flush=True)
                     return {
                         'value': data['sea_surface_temperature_celsius'],
                         'source': data['source'],
@@ -226,19 +248,19 @@ class RealDataIntegrator:
                         'acquisition_date': data['acquisition_date']
                     }
                 else:
-                    logger.warning(f"         ❌ Copernicus SST no devolvió datos")
+                    print(f"         [FAIL] Copernicus SST no devolvio datos", flush=True)
             
-            # OPENTOPOGRAPHY (DEM, elevación, arqueología) - NUEVO
+            # OPENTOPOGRAPHY (DEM, elevacion, arqueología) - NUEVO
             elif instrument_name in ["opentopography", "dem", "elevation_dem", "lidar_elevation"]:
-                logger.info(f"         📡 Llamando a OpenTopography...")
+                print(f"         >> Llamando a OpenTopography...", flush=True)
                 data = await self.opentopography.get_elevation_data(
                     lat_min, lat_max, lon_min, lon_max,
                     dem_type="SRTMGL1"  # 30m resolution - mejor para arqueología
                 )
                 if data:
-                    logger.info(f"         ✅ OpenTopography respondió: Rugosidad={data['roughness']:.3f}")
+                    print(f"         [OK] OpenTopography respondio: Rugosidad={data['roughness']:.3f}", flush=True)
                     return {
-                        'value': data['roughness'],  # Rugosidad como indicador arqueológico
+                        'value': data['roughness'],  # Rugosidad como indicador arqueologico
                         'elevation_mean': data['elevation_mean'],
                         'archaeological_score': data.get('archaeological_score', 0.0),
                         'platforms_detected': data.get('platforms_detected', 0),
@@ -248,16 +270,18 @@ class RealDataIntegrator:
                         'acquisition_date': data['acquisition_date']
                     }
                 else:
-                    logger.warning(f"         ❌ OpenTopography no devolvió datos")
+                    print(f"         [FAIL] OpenTopography no devolvio datos", flush=True)
             
             else:
-                logger.warning(f"         ⚠️ Instrumento no reconocido: {instrument_name}")
+                log(f"         [WARN] Instrumento no reconocido: {instrument_name}")
+                log_file.close()
                 return None
         
         except Exception as e:
-            logger.error(f"         ❌ Error obteniendo medición de {instrument_name}: {e}")
+            log(f"         [ERROR] Error obteniendo medicion de {instrument_name}: {e}")
             import traceback
-            logger.error(f"         Traceback: {traceback.format_exc()}")
+            log(f"         Traceback: {traceback.format_exc()}")
+            log_file.close()
             return None
     
     def get_available_instruments(self) -> Dict[str, bool]:

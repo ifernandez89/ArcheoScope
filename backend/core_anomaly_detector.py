@@ -6,13 +6,13 @@ ArcheoScope Core Anomaly Detector
 FLUJO CORRECTO:
 1. Recibir coordenadas del usuario
 2. Clasificar terreno (desert, forest, glacier, shallow_sea, etc.)
-3. Cargar firmas de anomalías definidas para ese terreno
+3. Cargar firmas de anomalias definidas para ese terreno
 4. Medir con instrumentos apropiados para ese terreno (DATOS REALES)
 5. Comparar mediciones contra umbrales de anomalía
-6. Validar contra BD arqueológica + datos LIDAR reales
+6. Validar contra BD arqueologica + datos LIDAR reales
 7. Reportar: terreno + sitio (si existe) + resultado del análisis
 
-NO hacer trampa - el sistema debe DETECTAR anomalías realmente.
+NO hacer trampa - el sistema debe DETECTAR anomalias realmente.
 ACTUALIZADO: Usa APIs reales satelitales (NO simulaciones)
 """
 
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class InstrumentMeasurement:
-    """Medición de un instrumento específico"""
+    """Medicion de un instrumento específico"""
     instrument_name: str
     measurement_type: str
     value: float
@@ -72,7 +72,7 @@ class AnomalyDetectionResult:
 
 class CoreAnomalyDetector:
     """
-    Detector CORE de anomalías arqueológicas
+    Detector CORE de anomalias arqueologicas
     
     Implementa el flujo científico correcto sin hacer trampa.
     """
@@ -83,14 +83,14 @@ class CoreAnomalyDetector:
         
         Args:
             environment_classifier: Clasificador de ambientes
-            real_validator: Validador de sitios arqueológicos reales
+            real_validator: Validador de sitios arqueologicos reales
             data_loader: Cargador de datos instrumentales
         """
         self.environment_classifier = environment_classifier
         self.real_validator = real_validator
         self.data_loader = data_loader
         
-        # Cargar firmas de anomalías por ambiente
+        # Cargar firmas de anomalias por ambiente
         self.anomaly_signatures = self._load_anomaly_signatures()
         
         # Inicializar sistema de confianza de sitios
@@ -100,26 +100,26 @@ class CoreAnomalyDetector:
         # Inicializar integrador de datos reales
         self.real_data_integrator = RealDataIntegrator()
         
-        logger.info("CoreAnomalyDetector inicializado correctamente")
-        logger.info("✅ RealDataIntegrator activado - NO MÁS SIMULACIONES")
+        print("CoreAnomalyDetector inicializado correctamente", flush=True)
+        print("[OK] RealDataIntegrator activado - NO MAS SIMULACIONES", flush=True)
     
     def _load_anomaly_signatures(self) -> Dict[str, Any]:
-        """Cargar firmas de anomalías desde JSON"""
+        """Cargar firmas de anomalias desde JSON"""
         try:
             signatures_path = Path(__file__).parent.parent / "data" / "anomaly_signatures_by_environment.json"
             
             if not signatures_path.exists():
-                logger.error(f"Archivo de firmas no encontrado: {signatures_path}")
+                print(f"Archivo de firmas no encontrado: {signatures_path}", flush=True)
                 return {}
             
             with open(signatures_path, 'r', encoding='utf-8') as f:
                 signatures = json.load(f)
             
-            logger.info(f"✅ Firmas de anomalías cargadas: {len(signatures.get('environment_signatures', {}))} ambientes")
+            print(f"[OK] Firmas de anomalias cargadas: {len(signatures.get('environment_signatures', {}))} ambientes", flush=True)
             return signatures
         
         except Exception as e:
-            logger.error(f"Error cargando firmas de anomalías: {e}")
+            print(f"Error cargando firmas de anomalias: {e}", flush=True)
             return {}
     
     async def detect_anomaly(self, lat: float, lon: float, 
@@ -127,30 +127,30 @@ class CoreAnomalyDetector:
                       lon_min: float, lon_max: float,
                       region_name: str = "Unknown Region") -> AnomalyDetectionResult:
         """
-        FLUJO PRINCIPAL: Detectar anomalía arqueológica en coordenadas
+        FLUJO PRINCIPAL: Detectar anomalía arqueologica en coordenadas
         
         Args:
             lat, lon: Coordenadas centrales
             lat_min, lat_max, lon_min, lon_max: Bounding box de análisis
-            region_name: Nombre de la región
+            region_name: Nombre de la region
         
         Returns:
             AnomalyDetectionResult con todos los detalles
         """
         
-        logger.info("="*80)
-        logger.info("🔍 CORE ANOMALY DETECTOR - INICIO")
-        logger.info(f"   Región: {region_name}")
-        logger.info(f"   Coordenadas: {lat:.4f}, {lon:.4f}")
-        logger.info("="*80)
+        print("="*80, flush=True)
+        print("=== CORE ANOMALY DETECTOR - INICIO ===", flush=True)
+        print(f"   Region: {region_name}", flush=True)
+        print(f"   Coordenadas: {lat:.4f}, {lon:.4f}", flush=True)
+        print("="*80, flush=True)
         
         # PASO 1: Clasificar terreno
-        logger.info("📍 PASO 1: Clasificando terreno...")
+        print("[STEP1] PASO 1: Clasificando terreno...", flush=True)
         env_context = self.environment_classifier.classify(lat, lon)
         
         # BERMUDA FIX: Early exit para shallow_sea
         if env_context.environment_type.value == 'shallow_sea':
-            logger.info("BERMUDA FIX: Análisis rápido para shallow_sea")
+            print("BERMUDA FIX: Análisis rápido para shallow_sea", flush=True)
             # Devolver resultado rápido sin procesamiento complejo
             from dataclasses import dataclass
             from environment_classifier import EnvironmentType
@@ -167,82 +167,82 @@ class CoreAnomalyDetector:
                 known_site_nearby = False
                 known_site_name = None
                 known_site_distance_km = None
-                explanation = "Análisis rápido de ambiente marino. Sin anomalías significativas detectadas."
+                explanation = "Análisis rápido de ambiente marino. Sin anomalias significativas detectadas."
                 detection_reasoning = ["Análisis optimizado para shallow_sea"]
                 false_positive_risks = ["Formaciones naturales marinas"]
                 recommended_validation = ["Sonar de alta resolución si se requiere"]
             
             return QuickResult()
         
-        logger.info(f"   ✅ Terreno: {env_context.environment_type.value}")
-        logger.info(f"   ✅ Confianza: {env_context.confidence:.2f}")
-        logger.info(f"   ✅ Sensores: {', '.join(env_context.primary_sensors)}")
+        print(f"   [OK] Terreno: {env_context.environment_type.value}", flush=True)
+        print(f"   [OK] Confianza: {env_context.confidence:.2f}", flush=True)
+        print(f"   [OK] Sensores: {', '.join(env_context.primary_sensors)}", flush=True)
         
-        # PASO 2: Cargar firmas de anomalías para este terreno
-        logger.info("📋 PASO 2: Cargando firmas de anomalías para terreno...")
+        # PASO 2: Cargar firmas de anomalias para este terreno
+        print("[STEP2] PASO 2: Cargando firmas de anomalias para terreno...", flush=True)
         env_signatures = self._get_signatures_for_environment(env_context.environment_type.value)
         
         if not env_signatures:
-            logger.warning(f"   ⚠️ No hay firmas definidas para {env_context.environment_type.value}")
-            return self._create_inconclusive_result(env_context, "No hay firmas de anomalías definidas para este terreno")
+            print(f"   [WARN] No hay firmas definidas para {env_context.environment_type.value}", flush=True)
+            return self._create_inconclusive_result(env_context, "No hay firmas de anomalias definidas para este terreno")
         
-        logger.info(f"   ✅ Firmas cargadas: {len(env_signatures.get('archaeological_indicators', {}))} indicadores")
+        print(f"   [OK] Firmas cargadas: {len(env_signatures.get('archaeological_indicators', {}))} indicadores", flush=True)
         
         # PASO 3: Medir con instrumentos apropiados (DATOS REALES)
-        logger.info("🔬 PASO 3: Midiendo con instrumentos apropiados (DATOS REALES)...")
+        print("=== PASO 3: Midiendo con instrumentos apropiados (DATOS REALES) ===", flush=True)
         measurements = await self._measure_with_instruments(
             env_context, env_signatures, 
             lat_min, lat_max, lon_min, lon_max
         )
         
-        logger.info(f"   ✅ Mediciones completadas: {len(measurements)} instrumentos")
+        print(f"   [OK] Mediciones completadas: {len(measurements)} instrumentos", flush=True)
         
         # PASO 4: Comparar mediciones vs umbrales de anomalía
-        logger.info("📊 PASO 4: Comparando mediciones vs umbrales...")
+        print("[STATS] PASO 4: Comparando mediciones vs umbrales...", flush=True)
         anomaly_analysis = self._analyze_measurements_vs_thresholds(
             measurements, env_signatures
         )
         
-        logger.info(f"   ✅ Instrumentos que exceden umbral: {anomaly_analysis['instruments_exceeding']}/{len(measurements)}")
-        logger.info(f"   ✅ Convergencia: {anomaly_analysis['convergence_met']}")
+        print(f"   [OK] Instrumentos que exceden umbral: {anomaly_analysis['instruments_exceeding']}/{len(measurements)}", flush=True)
+        print(f"   [OK] Convergencia: {anomaly_analysis['convergence_met']}", flush=True)
         
-        # PASO 5: Validar contra BD arqueológica
-        logger.info("🏛️ PASO 5: Validando contra BD arqueológica...")
+        # PASO 5: Validar contra BD arqueologica
+        print("[DB] PASO 5: Validando contra BD arqueologica...", flush=True)
         validation = self._validate_against_known_sites(lat_min, lat_max, lon_min, lon_max)
         
         # Obtener sitios cercanos para ajuste probabilístico
         nearby_sites = self._get_nearby_sites_for_adjustment(lat_min, lat_max, lon_min, lon_max)
         
         if validation['known_site_nearby']:
-            logger.info(f"   ✅ Sitio conocido cercano: {validation['site_name']} ({validation['distance_km']:.2f} km)")
+            print(f"   [OK] Sitio conocido cercano: {validation['site_name']} ({validation['distance_km']:.2f} km)", flush=True)
         else:
-            logger.info(f"   ℹ️ No hay sitios conocidos en la región")
+            print(f"   [INFO] No hay sitios conocidos en la region", flush=True)
         
-        # PASO 6: Calcular probabilidad arqueológica (con ajuste probabilístico)
-        logger.info("🎯 PASO 6: Calculando probabilidad arqueológica...")
+        # PASO 6: Calcular probabilidad arqueologica (con ajuste probabilístico)
+        print("[STEP6] PASO 6: Calculando probabilidad arqueologica...", flush=True)
         archaeological_probability = self._calculate_archaeological_probability(
             anomaly_analysis, env_context, validation, nearby_sites
         )
         
-        logger.info(f"   ✅ Probabilidad arqueológica: {archaeological_probability:.2%}")
+        print(f"   [OK] Probabilidad arqueologica: {archaeological_probability:.2%}", flush=True)
         
         # PASO 7: Generar resultado final
-        logger.info("📝 PASO 7: Generando resultado final...")
+        print("[WRITE] PASO 7: Generando resultado final...", flush=True)
         result = self._generate_final_result(
             env_context, env_signatures, measurements, 
             anomaly_analysis, validation, archaeological_probability
         )
         
-        logger.info("="*80)
-        logger.info(f"🎯 RESULTADO: {'ANOMALÍA DETECTADA' if result.anomaly_detected else 'NO HAY ANOMALÍA'}")
-        logger.info(f"   Confianza: {result.confidence_level}")
-        logger.info(f"   Probabilidad: {result.archaeological_probability:.2%}")
-        logger.info("="*80)
+        print("="*80, flush=True)
+        print(f"[STEP6] RESULTADO: {'ANOMALÍA DETECTADA' if result.anomaly_detected else 'NO HAY ANOMALÍA'}", flush=True)
+        print(f"   Confianza: {result.confidence_level}", flush=True)
+        print(f"   Probabilidad: {result.archaeological_probability:.2%}", flush=True)
+        print("="*80, flush=True)
         
         return result
     
     def _get_signatures_for_environment(self, environment_type: str) -> Dict[str, Any]:
-        """Obtener firmas de anomalías para un ambiente específico"""
+        """Obtener firmas de anomalias para un ambiente específico"""
         env_signatures = self.anomaly_signatures.get('environment_signatures', {})
         return env_signatures.get(environment_type, env_signatures.get('unknown', {}))
     
@@ -261,36 +261,47 @@ class CoreAnomalyDetector:
         
         indicators = env_signatures.get('archaeological_indicators', {})
         
-        logger.info(f"🔬 INICIANDO MEDICIONES INSTRUMENTALES")
-        logger.info(f"   Ambiente: {env_context.environment_type}")
-        logger.info(f"   Indicadores a medir: {len(indicators)}")
-        logger.info(f"   Región: [{lat_min:.4f}, {lat_max:.4f}] x [{lon_min:.4f}, {lon_max:.4f}]")
+        # Log to file for diagnostics
+        import sys
+        log_file = open('instrument_diagnostics.log', 'a', encoding='utf-8')
+        
+        def log(msg):
+            print(msg, flush=True)
+            log_file.write(msg + '\n')
+            log_file.flush()
+        
+        log(f"\n{'='*80}")
+        log(f"=== INICIANDO MEDICIONES INSTRUMENTALES ===")
+        log(f"   Ambiente: {env_context.environment_type}")
+        log(f"   Indicadores a medir: {len(indicators)}")
+        log(f"   Region: [{lat_min:.4f}, {lat_max:.4f}] x [{lon_min:.4f}, {lon_max:.4f}]")
         
         for idx, (indicator_name, indicator_config) in enumerate(indicators.items(), 1):
-            logger.info(f"")
-            logger.info(f"📡 [{idx}/{len(indicators)}] Midiendo: {indicator_name}")
+            log(f"\n[{idx}/{len(indicators)}] Midiendo: {indicator_name}")
             
-            # SOLO intentar medición REAL - NO SIMULACIONES
+            # SOLO intentar medicion REAL - NO SIMULACIONES
             measurement = await self._get_real_instrument_measurement(
                 indicator_name, indicator_config, env_context,
                 lat_min, lat_max, lon_min, lon_max
             )
             
-            # Si falla, NO agregar medición (NO SIMULAR JAMÁS)
+            # Si falla, NO agregar medicion (NO SIMULAR JAMÁS)
             if measurement:
                 measurements.append(measurement)
-                logger.info(f"   ✅ Medición EXITOSA: {indicator_name}")
-                logger.info(f"      Valor: {measurement.value:.3f} {measurement.unit}")
-                logger.info(f"      Umbral: {measurement.threshold:.3f}")
-                logger.info(f"      Excede: {'SÍ' if measurement.exceeds_threshold else 'NO'}")
+                log(f"   [OK] Medicion EXITOSA: {indicator_name}")
+                log(f"      Valor: {measurement.value:.3f} {measurement.unit}")
+                log(f"      Umbral: {measurement.threshold:.3f}")
+                log(f"      Excede: {'SI' if measurement.exceeds_threshold else 'NO'}")
             else:
-                logger.warning(f"   ❌ SIN DATOS para {indicator_name} - OMITIDO (NO SE SIMULA)")
+                log(f"   [FAIL] SIN DATOS para {indicator_name} - OMITIDO (NO SE SIMULA)")
         
-        logger.info(f"")
-        logger.info(f"📊 RESUMEN DE MEDICIONES:")
-        logger.info(f"   Total intentadas: {len(indicators)}")
-        logger.info(f"   Exitosas: {len(measurements)}")
-        logger.info(f"   Fallidas: {len(indicators) - len(measurements)}")
+        log(f"\n=== RESUMEN DE MEDICIONES ===")
+        log(f"   Total intentadas: {len(indicators)}")
+        log(f"   Exitosas: {len(measurements)}")
+        log(f"   Fallidas: {len(indicators) - len(measurements)}")
+        log(f"{'='*80}\n")
+        
+        log_file.close()
         
         return measurements
     
@@ -306,12 +317,20 @@ class CoreAnomalyDetector:
         Reemplaza simulaciones por datos reales de:
         - Sentinel-2 (NDVI, multispectral)
         - Sentinel-1 (SAR)
-        - Landsat (térmico)
-        - ICESat-2 (elevación)
+        - Landsat (termico)
+        - ICESat-2 (elevacion)
         - OpenTopography (DEM)
         - Copernicus Marine (hielo marino)
         - Y más...
         """
+        
+        # Log to file for diagnostics
+        log_file = open('instrument_diagnostics.log', 'a', encoding='utf-8')
+        
+        def log(msg):
+            print(msg, flush=True)
+            log_file.write(msg + '\n')
+            log_file.flush()
         
         try:
             # Mapear nombres de indicadores a nombres de instrumentos de API
@@ -345,12 +364,13 @@ class CoreAnomalyDetector:
             api_instrument = instrument_mapping.get(indicator_name)
             
             if not api_instrument:
-                logger.debug(f"      ⚠️ No hay mapeo de API para {indicator_name}")
+                log(f"      [WARN] No hay mapeo de API para {indicator_name}")
+                log_file.close()
                 return None
             
-            logger.info(f"      🔌 API a llamar: {api_instrument}")
+            log(f"      API a llamar: {api_instrument}")
             
-            # Obtener medición real de la API
+            # Obtener medicion real de la API
             import time
             start_time = time.time()
             
@@ -365,15 +385,17 @@ class CoreAnomalyDetector:
             elapsed = time.time() - start_time
             
             if not real_data:
-                logger.warning(f"      ❌ API {api_instrument} no devolvió datos (tiempo: {elapsed:.2f}s)")
+                log(f"      [FAIL] API {api_instrument} no devolvio datos (tiempo: {elapsed:.2f}s)")
+                log_file.close()
                 return None
             
-            logger.info(f"      ✅ API respondió en {elapsed:.2f}s")
+            log(f"      [OK] API respondio en {elapsed:.2f}s")
             
             # Extraer umbral del indicador
             threshold_key = [k for k in indicator_config.keys() if 'threshold' in k]
             if not threshold_key:
-                logger.warning(f"      ⚠️ No se encontró umbral en configuración")
+                log(f"      [WARN] No se encontro umbral en configuracion")
+                log_file.close()
                 return None
             
             threshold = indicator_config[threshold_key[0]]
@@ -401,7 +423,8 @@ class CoreAnomalyDetector:
             notes = indicator_config.get('expected_pattern', '')
             notes += f" | Fuente: {real_data['source']} | Fecha: {real_data.get('acquisition_date', 'N/A')}"
             
-            logger.info(f"   ✅ DATO REAL: {indicator_name} = {value:.2f} (fuente: {real_data['source']})")
+            log(f"   [OK] DATO REAL: {indicator_name} = {value:.2f} (fuente: {real_data['source']})")
+            log_file.close()
             
             return InstrumentMeasurement(
                 instrument_name=indicator_name,
@@ -415,7 +438,11 @@ class CoreAnomalyDetector:
             )
         
         except Exception as e:
-            logger.error(f"   ❌ Error obteniendo dato real para {indicator_name}: {e}")
+            log(f"   [FAIL] Error obteniendo dato real para {indicator_name}: {e}")
+            try:
+                log_file.close()
+            except:
+                pass
             return None
     
     # MÉTODO ELIMINADO: _simulate_instrument_measurement()
@@ -437,7 +464,7 @@ class CoreAnomalyDetector:
     # Fecha de eliminación: 2026-01-26
     
     def _extract_unit(self, threshold_key: str) -> str:
-        """Extraer unidad de medición del nombre del umbral"""
+        """Extraer unidad de medicion del nombre del umbral"""
         if 'delta_k' in threshold_key or 'temp' in threshold_key:
             return "K"
         elif '_m' in threshold_key or 'height' in threshold_key:
@@ -473,7 +500,7 @@ class CoreAnomalyDetector:
     
     def _validate_against_known_sites(self, lat_min: float, lat_max: float,
                                      lon_min: float, lon_max: float) -> Dict[str, Any]:
-        """Validar contra base de datos de sitios arqueológicos conocidos"""
+        """Validar contra base de datos de sitios arqueologicos conocidos"""
         
         # Si no hay validador, retornar resultado vacío
         if not self.real_validator:
@@ -593,7 +620,7 @@ class CoreAnomalyDetector:
                                              env_context, validation: Dict[str, Any],
                                              nearby_sites: List[Dict[str, Any]] = None) -> float:
         """
-        Calcular probabilidad arqueológica basada en:
+        Calcular probabilidad arqueologica basada en:
         1. Convergencia instrumental
         2. Confianza de mediciones
         3. Contexto ambiental
@@ -615,7 +642,7 @@ class CoreAnomalyDetector:
             confidence_factor = (high_weight + moderate_weight) / total
         
         # Factor 3: Contexto ambiental (peso 20%)
-        # Algunos ambientes tienen mejor visibilidad arqueológica
+        # Algunos ambientes tienen mejor visibilidad arqueologica
         env_factor = {
             'desert': 0.9,  # Excelente visibilidad
             'glacier': 0.8,  # Buena preservación
@@ -642,8 +669,8 @@ class CoreAnomalyDetector:
                 validation.get('distance_km', 999.0)
             )
             
-            logger.info(f"   📊 Ajuste por sitios conocidos: {adjustment_details['adjustment']:.3f}")
-            logger.info(f"   📊 Probabilidad ajustada: {base_probability:.3f} → {adjusted_prob:.3f}")
+            print(f"   [STATS] Ajuste por sitios conocidos: {adjustment_details['adjustment']:.3f}", flush=True)
+            print(f"   [STATS] Probabilidad ajustada: {base_probability:.3f} → {adjusted_prob:.3f}", flush=True)
             
             return min(adjusted_prob, 1.0)
         
@@ -720,9 +747,9 @@ class CoreAnomalyDetector:
         # Mediciones instrumentales
         exceeding = [m for m in measurements if m.exceeds_threshold]
         if exceeding:
-            parts.append(f"{len(exceeding)} de {len(measurements)} instrumentos detectaron anomalías.")
+            parts.append(f"{len(exceeding)} de {len(measurements)} instrumentos detectaron anomalias.")
         else:
-            parts.append(f"Ningún instrumento detectó anomalías significativas.")
+            parts.append(f"Ningún instrumento detectó anomalias significativas.")
         
         # Convergencia
         if anomaly_analysis['convergence_met']:
@@ -733,19 +760,19 @@ class CoreAnomalyDetector:
         # Validación
         if validation['known_site_nearby']:
             if validation['distance_km'] == 0.0:
-                parts.append(f"Sitio arqueológico conocido en la región: {validation['site_name']}.")
+                parts.append(f"Sitio arqueologico conocido en la region: {validation['site_name']}.")
             else:
-                parts.append(f"Sitio arqueológico conocido cercano: {validation['site_name']} ({validation['distance_km']:.1f} km).")
+                parts.append(f"Sitio arqueologico conocido cercano: {validation['site_name']} ({validation['distance_km']:.1f} km).")
         
         # Conclusión
         if archaeological_probability > 0.7:
-            parts.append("Alta probabilidad de anomalía arqueológica.")
+            parts.append("Alta probabilidad de anomalía arqueologica.")
         elif archaeological_probability > 0.5:
-            parts.append("Probabilidad moderada de anomalía arqueológica.")
+            parts.append("Probabilidad moderada de anomalía arqueologica.")
         elif archaeological_probability > 0.3:
-            parts.append("Baja probabilidad de anomalía arqueológica.")
+            parts.append("Baja probabilidad de anomalía arqueologica.")
         else:
-            parts.append("No se detectó anomalía arqueológica significativa.")
+            parts.append("No se detectó anomalía arqueologica significativa.")
         
         return " ".join(parts)
     
