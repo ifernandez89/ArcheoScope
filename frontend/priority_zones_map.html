@@ -877,7 +877,124 @@
         // Inicializar al cargar
         window.onload = () => {
             initMap();
+            loadRealCandidates();
         };
+        
+        // CARGAR CANDIDATAS REALES
+        let realCandidatesLayer = null;
+        
+        async function loadRealCandidates() {
+            try {
+                console.log('Cargando candidatas REALES...');
+                
+                const response = await fetch('real_candidates.geojson');
+                const geojson = await response.json();
+                
+                console.log(`Candidatas REALES cargadas: ${geojson.features.length}`);
+                
+                // Remover capa anterior si existe
+                if (realCandidatesLayer) {
+                    map.removeLayer(realCandidatesLayer);
+                }
+                
+                // Crear capa de candidatas REALES
+                realCandidatesLayer = L.geoJSON(geojson, {
+                    pointToLayer: function(feature, latlng) {
+                        const props = feature.properties;
+                        
+                        return L.circleMarker(latlng, {
+                            radius: 12,
+                            fillColor: props.color,
+                            color: '#fff',
+                            weight: 3,
+                            opacity: 1,
+                            fillOpacity: 0.9
+                        });
+                    },
+                    onEachFeature: function(feature, layer) {
+                        const props = feature.properties;
+                        
+                        // Popup con información REAL
+                        const popupContent = `
+                            <div style="min-width: 250px;">
+                                <h3 style="margin: 0 0 10px 0; color: ${props.color};">
+                                    🛰️ CANDIDATA REAL
+                                </h3>
+                                <p style="margin: 5px 0;"><strong>ID:</strong> ${props.candidate_id}</p>
+                                <p style="margin: 5px 0;"><strong>Zona:</strong> ${props.zone_id.replace(/_/g, ' ')}</p>
+                                <p style="margin: 5px 0;"><strong>Score:</strong> ${props.score}</p>
+                                <p style="margin: 5px 0;"><strong>Prioridad:</strong> <span style="color: ${props.color};">${props.priority}</span></p>
+                                <p style="margin: 5px 0;"><strong>Convergencia:</strong> ${props.convergence_count}/3 (${(props.convergence_ratio * 100).toFixed(0)}%)</p>
+                                <p style="margin: 5px 0;"><strong>Acción:</strong> ${props.recommended_action}</p>
+                                <hr style="margin: 10px 0;">
+                                <p style="margin: 5px 0; font-size: 0.9em; color: #00ff00;">
+                                    ✅ DATOS REALES: NASA POWER + Open-Elevation
+                                </p>
+                                <p style="margin: 5px 0; font-size: 0.85em; color: #888;">
+                                    Generado: ${props.generation_date || 'N/A'}
+                                </p>
+                            </div>
+                        `;
+                        
+                        layer.bindPopup(popupContent);
+                    }
+                }).addTo(map);
+                
+                // Actualizar estadísticas en sidebar
+                updateRealCandidatesStats(geojson);
+                
+                console.log('✅ Candidatas REALES visualizadas en el mapa');
+                
+            } catch (error) {
+                console.error('Error cargando candidatas REALES:', error);
+            }
+        }
+        
+        function updateRealCandidatesStats(geojson) {
+            const stats = geojson.metadata;
+            const features = geojson.features;
+            
+            // Contar por prioridad
+            const priorities = {
+                'CRITICAL': 0,
+                'HIGH': 0,
+                'MEDIUM': 0,
+                'LOW': 0
+            };
+            
+            features.forEach(f => {
+                const priority = f.properties.priority;
+                if (priorities.hasOwnProperty(priority)) {
+                    priorities[priority]++;
+                }
+            });
+            
+            // Actualizar UI
+            const statsHTML = `
+                <div class="control-group" style="background: #0a2540; border-left-color: #00ff00;">
+                    <h3 style="color: #00ff00;">🛰️ CANDIDATAS REALES</h3>
+                    <p style="margin: 10px 0; font-size: 0.95em;">
+                        <strong>Total:</strong> ${stats.total_candidates}<br>
+                        <strong>Fuentes:</strong> ${stats.sources.join(', ')}<br>
+                        <strong>Fecha:</strong> ${stats.generation_date}
+                    </p>
+                    <hr style="border-color: #00ff00; margin: 10px 0;">
+                    <p style="margin: 5px 0;">
+                        🔴 CRITICAL: ${priorities.CRITICAL}<br>
+                        🟠 HIGH: ${priorities.HIGH}<br>
+                        🟡 MEDIUM: ${priorities.MEDIUM}<br>
+                        🟢 LOW: ${priorities.LOW}
+                    </p>
+                    <button onclick="map.fitBounds(realCandidatesLayer.getBounds())" style="margin-top: 10px;">
+                        Ver Todas las Candidatas
+                    </button>
+                </div>
+            `;
+            
+            // Insertar al inicio del sidebar
+            const sidebar = document.getElementById('sidebar');
+            sidebar.insertAdjacentHTML('afterbegin', statsHTML);
+        }
     </script>
 </body>
 </html>
