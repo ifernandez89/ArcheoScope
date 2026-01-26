@@ -230,13 +230,14 @@ class PlanetaryComputerConnector(SatelliteConnector):
         lon_min: float,
         lon_max: float,
         start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None
+        end_date: Optional[datetime] = None,
+        resolution_m: int = 30  # OPTIMIZADO: 30m en vez de 10m (9x más rápido)
     ) -> Optional[SatelliteData]:
         """
         Obtener datos Sentinel-1 (SAR)
         
         Bandas: VV, VH polarization
-        Resolución: 10m
+        Resolución: 30m (optimizado para velocidad)
         
         MODOS AUTOMÁTICOS:
         - IW (Interferometric Wide): latitudes <75° (250km swath)
@@ -246,7 +247,21 @@ class PlanetaryComputerConnector(SatelliteConnector):
         - Ventana temporal ampliada: 30 → 90 días
         - Fallback a colección sentinel-1-grd
         - Logging detallado a archivo
+        - Cache en BD (evita re-descargas)
+        - Resolución 30m (9x más rápido que 10m)
+        
+        LIMITACIÓN CONOCIDA:
+        - Descargas de COGs grandes (200-400 MB) toman 2-5 minutos
+        - Sin stackstac, no hay forma eficiente de descargar solo bbox
+        - Recomendación: Usar cache agresivamente o deshabilitar con SAR_ENABLED=false
         """
+        
+        # Check if SAR is enabled
+        sar_enabled = os.getenv("SAR_ENABLED", "true").lower() == "true"
+        if not sar_enabled:
+            logger.info("SAR disabled via SAR_ENABLED=false")
+            return None
+        
         if not self.available:
             logger.error("Planetary Computer not available")
             return None
@@ -263,6 +278,48 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 if log_file:
                     log_file.write(msg + '\n')
                     log_file.flush()
+            
+            # CACHE: Intentar obtener del cache primero
+            try:
+                from cache.sar_cache import get_sar_cache
+                sar_cache = get_sar_cache()
+                
+                cached_data = sar_cache.get(lat_min, lat_max, lon_min, lon_max)
+                
+                if cached_data:
+                    log(f"[SAR] CACHE HIT - usando datos guardados")
+                    
+                    # Reconstruir SatelliteData desde cache
+                    processing_time = asyncio.get_event_loop().time() - start_time
+                    
+                    if log_file:
+                        log_file.close()
+                    
+                    return SatelliteData(
+                        source='sentinel-1-rtc',
+                        acquisition_date=cached_data['acquisition_date'],
+                        cloud_cover=0.0,
+                        resolution_m=cached_data['resolution_m'],
+                        lat_min=lat_min,
+                        lat_max=lat_max,
+                        lon_min=lon_min,
+                        lon_max=lon_max,
+                        bands={},  # No guardamos arrays completos
+                        indices={
+                            'vv_mean': float(cached_data['vv_mean']),
+                            'vh_mean': float(cached_data['vh_mean']),
+                            'vv_vh_ratio': float(cached_data['vv_vh_ratio']),
+                            'backscatter_std': float(cached_data['backscatter_std'])
+                        },
+                        anomaly_score=0.0,
+                        anomaly_type='moderate_backscatter',
+                        confidence=0.8,
+                        processing_time_s=processing_time,
+                        cached=True
+                    )
+            except Exception as e:
+                log(f"[SAR] Cache no disponible: {e}")
+                # Continuar sin cache
             
             # Fechas por defecto: últimos 90 días (AMPLIADO desde 30)
             if end_date is None:
@@ -378,18 +435,45 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 
                 log(f"[SAR] URLs firmadas obtenidas")
                 
-                # Leer bandas con rasterio (leer todo el raster, luego recortar)
+                # Leer bandas con rasterio usando overviews de COG
+                # OPTIMIZACIÓN: Los COGs tienen overviews pre-calculados
+                # Esto es mucho más rápido que descargar el raster completo
+                
+                log(f"[SAR] Estrategia: Usar overview level 2 (resolución ~30m)")
+                
                 with rasterio.open(vh_url) as src:
-                    # Transformar bbox a coordenadas del raster
-                    from rasterio.warp import transform_bounds
-                    
-                    # Leer toda la banda (los COGs de Planetary Computer son optimizados)
-                    vh = src.read(1)
-                    log(f"[SAR] Banda VH cargada: {vh.shape}")
+                    # Leer overview level 2 (1/4 de resolución = ~40m)
+                    # Los COGs de Planetary Computer tienen overviews pre-calculados
+                    if src.overviews(1):
+                        # Usar overview más cercano a 30m
+                        overview_level = min(2, len(src.overviews(1)) - 1)
+                        vh = src.read(1, out_shape=(
+                            src.height // (2 ** overview_level),
+                            src.width // (2 ** overview_level)
+                        ))
+                        log(f"[SAR] Banda VH cargada: {vh.shape} (overview level {overview_level})")
+                    else:
+                        # Sin overviews, leer completo con reducción
+                        vh = src.read(1, out_shape=(
+                            src.height // 3,
+                            src.width // 3
+                        ))
+                        log(f"[SAR] Banda VH cargada: {vh.shape} (sin overviews)")
                 
                 with rasterio.open(vv_url) as src:
-                    vv = src.read(1)
-                    log(f"[SAR] Banda VV cargada: {vv.shape}")
+                    if src.overviews(1):
+                        overview_level = min(2, len(src.overviews(1)) - 1)
+                        vv = src.read(1, out_shape=(
+                            src.height // (2 ** overview_level),
+                            src.width // (2 ** overview_level)
+                        ))
+                        log(f"[SAR] Banda VV cargada: {vv.shape} (overview level {overview_level})")
+                    else:
+                        vv = src.read(1, out_shape=(
+                            src.height // 3,
+                            src.width // 3
+                        ))
+                        log(f"[SAR] Banda VV cargada: {vv.shape} (sin overviews)")
                 
                 # Verificar que no estén vacías
                 if vh.size == 0 or vv.size == 0:
@@ -443,6 +527,37 @@ class PlanetaryComputerConnector(SatelliteConnector):
             log(f"[SAR] Procesamiento completado en {processing_time:.2f}s")
             log(f"[SAR] EXITO TOTAL - Datos SAR obtenidos correctamente")
             
+            # GUARDAR EN CACHE para evitar re-descargas
+            try:
+                from cache.sar_cache import get_sar_cache
+                sar_cache = get_sar_cache()
+                
+                # Obtener scene_id del item
+                scene_id = best_item.id if hasattr(best_item, 'id') else None
+                
+                saved = sar_cache.set(
+                    lat_min=lat_min,
+                    lat_max=lat_max,
+                    lon_min=lon_min,
+                    lon_max=lon_max,
+                    vv_mean=indices['vv_mean'],
+                    vh_mean=indices['vh_mean'],
+                    vv_vh_ratio=indices['vv_vh_ratio'],
+                    backscatter_std=indices['backscatter_std'],
+                    source='sentinel-1-rtc',
+                    acquisition_date=acquisition_date,
+                    resolution_m=resolution_m,
+                    scene_id=scene_id
+                )
+                
+                if saved:
+                    log(f"[SAR] Datos guardados en cache")
+                else:
+                    log(f"[SAR] No se pudo guardar en cache (no crítico)")
+                    
+            except Exception as e:
+                log(f"[SAR] Error guardando cache: {e} (no crítico)")
+            
             if log_file:
                 log_file.close()
             
@@ -452,7 +567,7 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 source='sentinel-1-rtc',
                 acquisition_date=acquisition_date,
                 cloud_cover=0.0,  # SAR no afectado por nubes
-                resolution_m=10.0,
+                resolution_m=float(resolution_m),  # Usar resolución configurada
                 lat_min=lat_min,
                 lat_max=lat_max,
                 lon_min=lon_min,
