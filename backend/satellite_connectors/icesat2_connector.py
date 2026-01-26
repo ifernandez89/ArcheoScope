@@ -167,7 +167,7 @@ class ICESat2Connector(SatelliteConnector):
             depressions = elevations < (mean_elev - 2 * std_elev)
             
             anomaly_score = float(np.sum(depressions) / len(elevations))
-            confidence = "high" if len(elevations) > 100 else "moderate"
+            confidence = 0.9 if len(elevations) > 100 else 0.7  # Confianza como float
             
             # Tipo de anomalía
             if indices['elevation_range'] > 50:
