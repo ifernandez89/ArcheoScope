@@ -31,7 +31,7 @@ def import_candidates():
     cursor = conn.cursor()
     
     # Leer archivo JSON
-    json_file = "real_candidates_20260125_232040.json"
+    json_file = "real_candidates_20260125_232836.json"
     
     print(f"\nLeyendo archivo: {json_file}")
     

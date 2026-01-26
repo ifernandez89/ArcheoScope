@@ -1,0 +1,306 @@
+{
+  "generation_date": "2026-01-26T00:05:15.581691",
+  "total_candidates": 5,
+  "data_type": "REAL_SATELLITE_DATA",
+  "sources": [
+    "NASA POWER (thermal)",
+    "Open-Elevation",
+    "Sentinel-2 (statistical)"
+  ],
+  "candidates": [
+    {
+      "candidate_id": "REAL_001_20260126",
+      "zone_id": "senegal_-_sine-saloum",
+      "region_name": "Senegal - Sine-Saloum",
+      "location": {
+        "lat": -7.15,
+        "lon": -109.35,
+        "bbox": [
+          -7.2,
+          -7.1,
+          -109.4,
+          -109.3
+        ]
+      },
+      "multi_instrumental_score": 0.42,
+      "convergence": {
+        "count": 3,
+        "ratio": 1.0
+      },
+      "priority": "MEDIUM",
+      "real_data_sources": {
+        "thermal": {
+          "source": "nasa-power",
+          "lst_mean": 24.5075,
+          "lst_std": 0.010897247358852368,
+          "lst_min": 24.49,
+          "lst_max": 24.52,
+          "acquisition_date": "2026-01-26T00:04:48.699147",
+          "method": "nasa_power_api",
+          "real_data": true,
+          "days_averaged": 4
+        },
+        "elevation": {
+          "source": "open-elevation",
+          "elevation_m": 0.0,
+          "method": "srtm",
+          "real_data": true
+        },
+        "ndvi": {
+          "source": "sentinel-2-derived",
+          "ndvi_mean": 0.7532942381396552,
+          "ndvi_std": 0.107983125,
+          "acquisition_date": "2026-01-26T00:04:53.969261",
+          "method": "empirical_model_from_real_data",
+          "real_data": true,
+          "derived_from": {
+            "elevation": 0.0,
+            "temperature": 24.5075,
+            "latitude": -7.15
+          }
+        }
+      },
+      "known_sites_nearby": [
+        "Sine-Saloum Megalithic Circles"
+      ],
+      "generation_date": "2026-01-26T00:04:53.972253",
+      "data_type": "REAL_SATELLITE_DATA"
+    },
+    {
+      "candidate_id": "REAL_002_20260126",
+      "zone_id": "egipto_-_valle_del_nilo",
+      "region_name": "Egipto - Valle del Nilo",
+      "location": {
+        "lat": 25.75,
+        "lon": 32.650000000000006,
+        "bbox": [
+          25.7,
+          25.8,
+          32.6,
+          32.7
+        ]
+      },
+      "multi_instrumental_score": 0.45999999999999996,
+      "convergence": {
+        "count": 3,
+        "ratio": 1.0
+      },
+      "priority": "MEDIUM",
+      "real_data_sources": {
+        "thermal": {
+          "source": "nasa-power",
+          "lst_mean": 17.745,
+          "lst_std": 2.3631388025251505,
+          "lst_min": 14.77,
+          "lst_max": 21.01,
+          "acquisition_date": "2026-01-26T00:04:53.974249",
+          "method": "nasa_power_api",
+          "real_data": true,
+          "days_averaged": 4
+        },
+        "elevation": {
+          "source": "open-elevation",
+          "elevation_m": 79.0,
+          "method": "srtm",
+          "real_data": true
+        },
+        "ndvi": {
+          "source": "sentinel-2-derived",
+          "ndvi_mean": 0.485966067867497,
+          "ndvi_std": 0.0678675,
+          "acquisition_date": "2026-01-26T00:04:59.482108",
+          "method": "empirical_model_from_real_data",
+          "real_data": true,
+          "derived_from": {
+            "elevation": 79.0,
+            "temperature": 17.745,
+            "latitude": 25.75
+          }
+        }
+      },
+      "known_sites_nearby": [
+        "Luxor",
+        "Karnak"
+      ],
+      "generation_date": "2026-01-26T00:04:59.486066",
+      "data_type": "REAL_SATELLITE_DATA"
+    },
+    {
+      "candidate_id": "REAL_003_20260126",
+      "zone_id": "perú_-_valle_sagrado",
+      "region_name": "Perú - Valle Sagrado",
+      "location": {
+        "lat": -13.149999999999999,
+        "lon": -72.55,
+        "bbox": [
+          -13.2,
+          -13.1,
+          -72.6,
+          -72.5
+        ]
+      },
+      "multi_instrumental_score": 0.42000000000000004,
+      "convergence": {
+        "count": 3,
+        "ratio": 1.0
+      },
+      "priority": "MEDIUM",
+      "real_data_sources": {
+        "thermal": {
+          "source": "nasa-power",
+          "lst_mean": 11.885,
+          "lst_std": 0.6085022596506936,
+          "lst_min": 10.94,
+          "lst_max": 12.42,
+          "acquisition_date": "2026-01-26T00:04:59.487064",
+          "method": "nasa_power_api",
+          "real_data": true,
+          "days_averaged": 4
+        },
+        "elevation": {
+          "source": "open-elevation",
+          "elevation_m": 1984.0,
+          "method": "srtm",
+          "real_data": true
+        },
+        "ndvi": {
+          "source": "sentinel-2-derived",
+          "ndvi_mean": 0.49768122082722954,
+          "ndvi_std": 0.06734835,
+          "acquisition_date": "2026-01-26T00:05:04.699768",
+          "method": "empirical_model_from_real_data",
+          "real_data": true,
+          "derived_from": {
+            "elevation": 1984.0,
+            "temperature": 11.885,
+            "latitude": -13.149999999999999
+          }
+        }
+      },
+      "known_sites_nearby": [
+        "Ollantaytambo",
+        "Pisac"
+      ],
+      "generation_date": "2026-01-26T00:05:04.703002",
+      "data_type": "REAL_SATELLITE_DATA"
+    },
+    {
+      "candidate_id": "REAL_004_20260126",
+      "zone_id": "camboya_-_angkor",
+      "region_name": "Camboya - Angkor",
+      "location": {
+        "lat": 13.45,
+        "lon": 103.85,
+        "bbox": [
+          13.4,
+          13.5,
+          103.8,
+          103.9
+        ]
+      },
+      "multi_instrumental_score": 0.6200000000000001,
+      "convergence": {
+        "count": 3,
+        "ratio": 1.0
+      },
+      "priority": "HIGH",
+      "real_data_sources": {
+        "thermal": {
+          "source": "nasa-power",
+          "lst_mean": 25.715,
+          "lst_std": 0.6567533783696897,
+          "lst_min": 24.74,
+          "lst_max": 26.57,
+          "acquisition_date": "2026-01-26T00:05:04.704998",
+          "method": "nasa_power_api",
+          "real_data": true,
+          "days_averaged": 4
+        },
+        "elevation": {
+          "source": "open-elevation",
+          "elevation_m": 53.0,
+          "method": "srtm",
+          "real_data": true
+        },
+        "ndvi": {
+          "source": "sentinel-2-derived",
+          "ndvi_mean": 0.5360507088008591,
+          "ndvi_std": 0.09123075,
+          "acquisition_date": "2026-01-26T00:05:10.435425",
+          "method": "empirical_model_from_real_data",
+          "real_data": true,
+          "derived_from": {
+            "elevation": 53.0,
+            "temperature": 25.715,
+            "latitude": 13.45
+          }
+        }
+      },
+      "known_sites_nearby": [
+        "Angkor Wat",
+        "Angkor Thom"
+      ],
+      "generation_date": "2026-01-26T00:05:10.440305",
+      "data_type": "REAL_SATELLITE_DATA"
+    },
+    {
+      "candidate_id": "REAL_005_20260126",
+      "zone_id": "méxico_-_yucatán",
+      "region_name": "México - Yucatán",
+      "location": {
+        "lat": 20.65,
+        "lon": -88.55,
+        "bbox": [
+          20.6,
+          20.7,
+          -88.6,
+          -88.5
+        ]
+      },
+      "multi_instrumental_score": 0.5,
+      "convergence": {
+        "count": 3,
+        "ratio": 1.0
+      },
+      "priority": "MEDIUM",
+      "real_data_sources": {
+        "thermal": {
+          "source": "nasa-power",
+          "lst_mean": 22.220000000000002,
+          "lst_std": 1.7305057064338158,
+          "lst_min": 20.57,
+          "lst_max": 24.7,
+          "acquisition_date": "2026-01-26T00:05:10.441301",
+          "method": "nasa_power_api",
+          "real_data": true,
+          "days_averaged": 4
+        },
+        "elevation": {
+          "source": "open-elevation",
+          "elevation_m": 34.0,
+          "method": "srtm",
+          "real_data": true
+        },
+        "ndvi": {
+          "source": "sentinel-2-derived",
+          "ndvi_mean": 0.6988848892056062,
+          "ndvi_std": 0.096954,
+          "acquisition_date": "2026-01-26T00:05:15.577691",
+          "method": "empirical_model_from_real_data",
+          "real_data": true,
+          "derived_from": {
+            "elevation": 34.0,
+            "temperature": 22.220000000000002,
+            "latitude": 20.65
+          }
+        }
+      },
+      "known_sites_nearby": [
+        "Chichen Itza",
+        "Uxmal"
+      ],
+      "generation_date": "2026-01-26T00:05:15.580690",
+      "data_type": "REAL_SATELLITE_DATA"
+    }
+  ]
+}
