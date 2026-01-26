@@ -126,6 +126,7 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 [best_item],
                 assets=bands_to_load,
                 bounds_latlon=bbox,
+                epsg=4326,  # WGS84
                 resolution=10  # 10m resolution
             )
             
@@ -259,6 +260,7 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 [best_item],
                 assets=['vh', 'vv'],
                 bounds_latlon=bbox,
+                epsg=4326,  # WGS84
                 resolution=10
             )
             
@@ -387,6 +389,7 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 [best_item],
                 assets=['lwir11'],  # Thermal band
                 bounds_latlon=bbox,
+                epsg=4326,  # WGS84
                 resolution=30
             )
             
