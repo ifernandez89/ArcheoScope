@@ -72,17 +72,20 @@ class CopernicusMarineConnector:
                 import copernicusmarine
                 self.copernicusmarine = copernicusmarine
                 
-                # Login automático
+                # Login automático (API 2.x - sin parámetros)
+                # Las credenciales se pasan via environment o se solicitan interactivamente
                 try:
-                    copernicusmarine.login(
-                        username=self.username,
-                        password=self.password,
-                        overwrite_configuration_file=True
-                    )
+                    # Configurar credenciales via environment
+                    os.environ['COPERNICUSMARINE_SERVICE_USERNAME'] = self.username
+                    os.environ['COPERNICUSMARINE_SERVICE_PASSWORD'] = self.password
+                    
+                    # Login sin parámetros (API correcta)
+                    copernicusmarine.login()
                     logger.info("   ✅ Login exitoso en Copernicus Marine")
                 except Exception as e:
                     logger.warning(f"   ⚠️ Login fallido: {e}")
-                    self.available = False
+                    # No marcar como no disponible - puede funcionar con credenciales en comandos
+                    logger.info("   ℹ️ Se usarán credenciales en cada comando")
             
             except ImportError:
                 logger.warning("⚠️ Librería copernicusmarine no instalada")
@@ -137,7 +140,7 @@ class CopernicusMarineConnector:
             end_date = datetime.now() - timedelta(days=2)
             start_date = end_date - timedelta(days=1)
             
-            # Subset de datos
+            # Subset de datos (con credenciales explícitas)
             data = self.copernicusmarine.subset(
                 dataset_id=dataset_id,
                 variables=variables,
@@ -146,7 +149,9 @@ class CopernicusMarineConnector:
                 minimum_latitude=lat_min,
                 maximum_latitude=lat_max,
                 start_datetime=start_date.strftime("%Y-%m-%d"),
-                end_datetime=end_date.strftime("%Y-%m-%d")
+                end_datetime=end_date.strftime("%Y-%m-%d"),
+                username=self.username,
+                password=self.password
             )
             
             if data:
@@ -224,7 +229,7 @@ class CopernicusMarineConnector:
             end_date = datetime.now() - timedelta(days=1)
             start_date = end_date - timedelta(days=1)
             
-            # Subset de datos
+            # Subset de datos (con credenciales explícitas)
             data = self.copernicusmarine.subset(
                 dataset_id=dataset_id,
                 variables=["analysed_sst"],
@@ -233,7 +238,9 @@ class CopernicusMarineConnector:
                 minimum_latitude=lat_min,
                 maximum_latitude=lat_max,
                 start_datetime=start_date.strftime("%Y-%m-%d"),
-                end_datetime=end_date.strftime("%Y-%m-%d")
+                end_datetime=end_date.strftime("%Y-%m-%d"),
+                username=self.username,
+                password=self.password
             )
             
             if data:
