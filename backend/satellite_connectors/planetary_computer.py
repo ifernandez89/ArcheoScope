@@ -358,22 +358,55 @@ class PlanetaryComputerConnector(SatelliteConnector):
             
             log(f"[SAR] Usando escena de {acquisition_date.date()}")
             
-            # Cargar bandas VV y VH
-            log(f"[SAR] Cargando bandas VV y VH...")
-            stack = stackstac.stack(
-                [best_item],
-                assets=['vh', 'vv'],
-                bounds_latlon=bbox,
-                epsg=4326,  # WGS84
-                resolution=10
-            )
+            # Cargar bandas VV y VH usando rasterio (sin stackstac)
+            log(f"[SAR] Cargando bandas VV y VH con rasterio...")
             
-            data = stack.compute()
-            log(f"[SAR] Bandas cargadas correctamente")
-            
-            # Extraer bandas
-            vh = data[0, 0, :, :].values
-            vv = data[0, 1, :, :].values
+            try:
+                # Obtener URLs firmadas de los assets
+                vh_asset = best_item.assets.get('vh')
+                vv_asset = best_item.assets.get('vv')
+                
+                if not vh_asset or not vv_asset:
+                    log(f"[SAR] ERROR: Assets VH o VV no encontrados")
+                    if log_file:
+                        log_file.close()
+                    return None
+                
+                # Firmar URLs con Planetary Computer
+                vh_url = planetary_computer.sign(vh_asset.href)
+                vv_url = planetary_computer.sign(vv_asset.href)
+                
+                log(f"[SAR] URLs firmadas obtenidas")
+                
+                # Leer bandas con rasterio (leer todo el raster, luego recortar)
+                with rasterio.open(vh_url) as src:
+                    # Transformar bbox a coordenadas del raster
+                    from rasterio.warp import transform_bounds
+                    
+                    # Leer toda la banda (los COGs de Planetary Computer son optimizados)
+                    vh = src.read(1)
+                    log(f"[SAR] Banda VH cargada: {vh.shape}")
+                
+                with rasterio.open(vv_url) as src:
+                    vv = src.read(1)
+                    log(f"[SAR] Banda VV cargada: {vv.shape}")
+                
+                # Verificar que no estén vacías
+                if vh.size == 0 or vv.size == 0:
+                    log(f"[SAR] ERROR: Bandas vacías (VH: {vh.shape}, VV: {vv.shape})")
+                    if log_file:
+                        log_file.close()
+                    return None
+                
+                log(f"[SAR] Bandas cargadas correctamente")
+                
+            except Exception as e:
+                log(f"[SAR] ERROR cargando bandas: {e}")
+                import traceback
+                log(f"[SAR] Traceback: {traceback.format_exc()}")
+                if log_file:
+                    log_file.close()
+                return None
             
             bands = {
                 'vh': vh,

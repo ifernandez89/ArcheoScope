@@ -80,8 +80,9 @@ class CopernicusMarineConnector:
                     os.environ['COPERNICUSMARINE_SERVICE_PASSWORD'] = self.password
                     
                     # Login sin parámetros (API correcta)
-                    copernicusmarine.login()
-                    logger.info("   ✅ Login exitoso en Copernicus Marine")
+                    # DESHABILITADO: Pide credenciales interactivamente
+                    # copernicusmarine.login()
+                    logger.info("   ℹ️ Login Copernicus Marine omitido (credenciales via comandos)")
                 except Exception as e:
                     logger.warning(f"   ⚠️ Login fallido: {e}")
                     # No marcar como no disponible - puede funcionar con credenciales en comandos
