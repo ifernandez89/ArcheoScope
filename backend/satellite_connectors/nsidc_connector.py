@@ -95,9 +95,16 @@ class NSIDCConnector:
             Dict con concentración de hielo o None si falla
         """
         
+        print(f"[NSIDC DEBUG] get_sea_ice_concentration LLAMADO", flush=True)
+        print(f"[NSIDC DEBUG] self.available = {self.available}", flush=True)
+        
         if not self.available:
-            logger.warning("⚠️ NSIDC no disponible (credenciales faltantes)")
-            return None
+            logger.warning("⚠️ NSIDC no disponible (credenciales faltantes) - usando fallback derivado")
+            print(f"[NSIDC DEBUG] self.available = False, ejecutando fallback", flush=True)
+            # FALLBACK: estimación basada en ubicación (contexto físico válido)
+            result = self._fallback_sea_ice_estimation(lat_min, lat_max, lon_min, lon_max)
+            print(f"[NSIDC DEBUG] Fallback devolvio: {result}", flush=True)
+            return result
         
         try:
             # Determinar hemisferio
@@ -107,6 +114,7 @@ class NSIDCConnector:
             date = (datetime.now() - timedelta(days=7)).strftime("%Y%m%d")
             
             logger.info(f"🧊 NSIDC: Obteniendo concentración de hielo marino ({hemisphere})")
+            print(f"[NSIDC DEBUG] Intentando obtener datos reales...", flush=True)
             
             # Construir URL del dataset
             # Nota: NSIDC usa estructura de directorios por fecha
@@ -150,48 +158,21 @@ class NSIDCConnector:
                     )
                 
                 elif response.status_code == 401:
-                    logger.error("❌ NSIDC: Autenticación fallida - verificar credenciales")
-                    return None
+                    logger.error("❌ NSIDC: Autenticación fallida - usando fallback")
+                    return self._fallback_sea_ice_estimation(lat_min, lat_max, lon_min, lon_max)
                 
                 else:
-                    logger.warning(f"⚠️ NSIDC: HTTP {response.status_code}")
-                    return None
+                    logger.warning(f"⚠️ NSIDC: HTTP {response.status_code} - usando fallback")
+                    return self._fallback_sea_ice_estimation(lat_min, lat_max, lon_min, lon_max)
         
         except Exception as e:
             logger.error(f"❌ NSIDC: Error obteniendo hielo marino: {e}")
-            
-            # Fallback: estimación basada en ubicación
-            avg_lat = (lat_min + lat_max) / 2
-            month = datetime.now().month
-            
-            # Hemisferio norte
-            if avg_lat > 0:
-                if month in [3, 4, 5]:  # Primavera (máximo hielo)
-                    concentration = 0.85 if avg_lat > 75 else 0.60
-                elif month in [9, 10, 11]:  # Otoño (mínimo hielo)
-                    concentration = 0.70 if avg_lat > 80 else 0.10
-                else:
-                    concentration = 0.70 if avg_lat > 75 else 0.40
-            else:
-                # Hemisferio sur (invertir estaciones)
-                if month in [9, 10, 11]:
-                    concentration = 0.85 if abs(avg_lat) > 75 else 0.60
-                elif month in [3, 4, 5]:
-                    concentration = 0.70 if abs(avg_lat) > 80 else 0.10
-                else:
-                    concentration = 0.70 if abs(avg_lat) > 75 else 0.40
-            
-            logger.info(f"   ℹ️ Estimación de hielo: {concentration:.2%}")
-            
-            # DERIVED data (estimación por ubicación)
-            return create_derived_data_response(
-                value=concentration,
-                source="NSIDC",
-                confidence=0.7,
-                estimation_method="Location-based seasonal model (latitude + month)",
-                hemisphere="north" if avg_lat > 0 else "south",
-                unit="fraction"
-            )
+            print(f"[NSIDC DEBUG] Exception capturada: {e}", flush=True)
+            print(f"[NSIDC DEBUG] Ejecutando fallback...", flush=True)
+            # Fallback SIEMPRE se ejecuta
+            result = self._fallback_sea_ice_estimation(lat_min, lat_max, lon_min, lon_max)
+            print(f"[NSIDC DEBUG] Fallback devolvio: {result}", flush=True)
+            return result
     
     async def get_snow_cover(
         self,
@@ -349,6 +330,53 @@ class NSIDCConnector:
         except Exception as e:
             logger.error(f"❌ NSIDC: Error detectando glaciares: {e}")
             return None
+    
+    def _fallback_sea_ice_estimation(
+        self,
+        lat_min: float,
+        lat_max: float,
+        lon_min: float,
+        lon_max: float
+    ) -> Dict[str, Any]:
+        """
+        Fallback: estimación de concentración de hielo basada en ubicación y estación.
+        
+        CONTEXTO FÍSICO VÁLIDO - No es una anomalía, es estado ambiental base.
+        Etiquetado como DERIVED para transparencia científica.
+        """
+        
+        avg_lat = (lat_min + lat_max) / 2
+        month = datetime.now().month
+        
+        # Hemisferio norte
+        if avg_lat > 0:
+            if month in [3, 4, 5]:  # Primavera (máximo hielo)
+                concentration = 0.85 if avg_lat > 75 else 0.60
+            elif month in [9, 10, 11]:  # Otoño (mínimo hielo)
+                concentration = 0.70 if avg_lat > 80 else 0.10
+            else:
+                concentration = 0.70 if avg_lat > 75 else 0.40
+        else:
+            # Hemisferio sur (invertir estaciones)
+            if month in [9, 10, 11]:  # Primavera sur
+                concentration = 0.85 if abs(avg_lat) > 75 else 0.60
+            elif month in [3, 4, 5]:  # Otoño sur
+                concentration = 0.70 if abs(avg_lat) > 80 else 0.10
+            else:
+                concentration = 0.70 if abs(avg_lat) > 75 else 0.40
+        
+        logger.info(f"   ℹ️ Estimación de hielo (fallback): {concentration:.2%}")
+        
+        # DERIVED data (estimación por ubicación)
+        return create_derived_data_response(
+            value=concentration,
+            source="NSIDC (estimated)",
+            confidence=0.7,
+            estimation_method="Location-based seasonal model (latitude + month)",
+            hemisphere="north" if avg_lat > 0 else "south",
+            unit="fraction",
+            acquisition_date=datetime.now().strftime("%Y%m%d")
+        )
 
 
 # ============================================================================

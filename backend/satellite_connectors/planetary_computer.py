@@ -237,6 +237,10 @@ class PlanetaryComputerConnector(SatelliteConnector):
         
         Bandas: VV, VH polarization
         Resolución: 10m
+        
+        MODOS AUTOMÁTICOS:
+        - IW (Interferometric Wide): latitudes <75° (250km swath)
+        - EW (Extra Wide): latitudes ≥75° (400km swath, diseñado para polos)
         """
         if not self.available:
             logger.error("Planetary Computer not available")
@@ -253,20 +257,54 @@ class PlanetaryComputerConnector(SatelliteConnector):
             
             bbox = [lon_min, lat_min, lon_max, lat_max]
             
-            logger.info(f"🛰️ Buscando Sentinel-1 en bbox {bbox}")
+            # DETECCIÓN AUTOMÁTICA DE MODO SEGÚN LATITUD
+            avg_lat = (lat_min + lat_max) / 2
+            if abs(avg_lat) >= 75:
+                instrument_mode = "EW"  # Extra Wide para regiones polares
+                logger.info(f"🛰️ Región polar detectada ({avg_lat:.1f}°) - usando modo EW")
+            else:
+                instrument_mode = "IW"  # Interferometric Wide para resto
+                logger.info(f"🛰️ Región no-polar ({avg_lat:.1f}°) - usando modo IW")
             
+            logger.info(f"🛰️ Buscando Sentinel-1 {instrument_mode} en bbox {bbox}")
+            
+            # Query con modo apropiado
             search = self.catalog.search(
                 collections=["sentinel-1-rtc"],
                 bbox=bbox,
                 datetime=f"{start_date.isoformat()}/{end_date.isoformat()}",
+                query={
+                    "sar:instrument_mode": {"eq": instrument_mode}
+                },
                 limit=5
             )
             
             items = list(search.items())
             
             if not items:
-                logger.warning(f"No Sentinel-1 scenes found for bbox {bbox}")
-                return None
+                logger.warning(f"No Sentinel-1 {instrument_mode} scenes found for bbox {bbox}")
+                
+                # FALLBACK: intentar con el otro modo
+                fallback_mode = "IW" if instrument_mode == "EW" else "EW"
+                logger.info(f"   Intentando fallback con modo {fallback_mode}...")
+                
+                search = self.catalog.search(
+                    collections=["sentinel-1-rtc"],
+                    bbox=bbox,
+                    datetime=f"{start_date.isoformat()}/{end_date.isoformat()}",
+                    query={
+                        "sar:instrument_mode": {"eq": fallback_mode}
+                    },
+                    limit=5
+                )
+                
+                items = list(search.items())
+                
+                if not items:
+                    logger.warning(f"   No Sentinel-1 data found (tried {instrument_mode} and {fallback_mode})")
+                    return None
+                else:
+                    logger.info(f"   ✅ Encontrado con modo {fallback_mode}")
             
             logger.info(f"✅ Found {len(items)} Sentinel-1 scenes")
             

@@ -164,9 +164,12 @@ class RealDataIntegrator:
             # NSIDC (Hielo marino, criosfera) - NUEVO
             elif instrument_name in ["nsidc_sea_ice", "sea_ice_concentration", "nsidc_polar_ice", "nsidc_ice_concentration"]:
                 log(f"         >> Llamando a NSIDC (Sea Ice)...")
+                log(f"         >> self.nsidc = {self.nsidc}")
+                log(f"         >> self.nsidc.available = {self.nsidc.available if self.nsidc else 'N/A'}")
                 data = await self.nsidc.get_sea_ice_concentration(
                     lat_min, lat_max, lon_min, lon_max
                 )
+                log(f"         >> NSIDC devolvio: {data}")
                 if data:
                     log(f"         [OK] NSIDC respondio: Concentracion={data['value']:.2f}")
                     log_file.close()
