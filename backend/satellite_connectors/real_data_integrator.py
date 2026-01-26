@@ -85,7 +85,7 @@ class RealDataIntegrator:
                     }
             
             # SENTINEL-1 (SAR)
-            elif instrument_name in ["sentinel_1_sar", "sar", "backscatter"]:
+            elif instrument_name in ["sentinel_1_sar", "sar", "backscatter", "sar_penetration_anomalies", "sar_polarimetric_anomalies", "sentinel1_sar"]:
                 data = await self.planetary_computer.get_sar_data(
                     lat_min, lat_max, lon_min, lon_max
                 )
@@ -111,7 +111,7 @@ class RealDataIntegrator:
                     }
             
             # ICESAT-2 (Elevación)
-            elif instrument_name in ["icesat2", "elevation", "ice_height"]:
+            elif instrument_name in ["icesat2", "elevation", "ice_height", "icesat2_subsurface", "icesat2_elevation_anomalies"]:
                 data = await self.icesat2.get_elevation_data(
                     lat_min, lat_max, lon_min, lon_max
                 )
@@ -124,7 +124,7 @@ class RealDataIntegrator:
                     }
             
             # NSIDC (Hielo marino, criosfera) - NUEVO
-            elif instrument_name in ["nsidc_sea_ice", "sea_ice_concentration"]:
+            elif instrument_name in ["nsidc_sea_ice", "sea_ice_concentration", "nsidc_polar_ice", "nsidc_ice_concentration"]:
                 data = await self.nsidc.get_sea_ice_concentration(
                     lat_min, lat_max, lon_min, lon_max
                 )
@@ -150,7 +150,7 @@ class RealDataIntegrator:
                     }
             
             # MODIS LST (Térmico regional) - NUEVO
-            elif instrument_name in ["modis_lst", "modis_thermal", "thermal_inertia"]:
+            elif instrument_name in ["modis_lst", "modis_thermal", "thermal_inertia", "modis_polar_thermal", "modis_thermal_ice"]:
                 data = await self.modis_lst.get_land_surface_temperature(
                     lat_min, lat_max, lon_min, lon_max
                 )
