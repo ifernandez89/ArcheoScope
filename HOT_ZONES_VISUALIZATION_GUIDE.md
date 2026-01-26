@@ -20,7 +20,7 @@ Sistema de visualización interactiva de **zonas calientes** (hot zones) para an
 ## 🚀 Acceso Rápido
 
 ### URLs:
-- **Mapa de Zonas Calientes:** http://localhost:8080/hot_zones_map.html
+- **Mapa de Zonas Prioritarias:** http://localhost:8080/priority_zones_map.html
 - **API Backend:** http://localhost:8002
 - **Swagger Docs:** http://localhost:8002/docs
 
@@ -259,7 +259,7 @@ score = (density * 0.4) + (lidar * 0.3) + (terrain * 0.2) + (area * 0.1)
 - **Framework:** Leaflet.js 1.9.4
 - **Tiles:** OpenStreetMap
 - **Puerto:** 8080
-- **Archivo:** `frontend/hot_zones_map.html`
+- **Archivo:** `frontend/priority_zones_map.html`
 
 ### Backend:
 - **Framework:** FastAPI

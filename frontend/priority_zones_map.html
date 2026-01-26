@@ -317,6 +317,16 @@
                 <label>Longitud Max:</label>
                 <input type="number" id="lon-max" step="0.1" value="-89.0">
                 
+                <label>Tipo de Terreno:</label>
+                <select id="environment-filter">
+                    <option value="">Todos los terrenos</option>
+                    <option value="FOREST">🌳 Bosque/Selva</option>
+                    <option value="DESERT">🏜️ Desierto</option>
+                    <option value="MOUNTAIN">⛰️ Montaña</option>
+                    <option value="COASTAL">🏖️ Costero</option>
+                    <option value="SEMI_ARID">🌾 Semi-árido</option>
+                </select>
+                
                 <label>Estrategia:</label>
                 <select id="strategy">
                     <option value="buffer">Buffer (Recomendado)</option>
@@ -483,6 +493,7 @@
             const strategy = document.getElementById('strategy').value;
             const maxZones = parseInt(document.getElementById('max-zones').value);
             const lidarPriority = document.getElementById('lidar-priority').checked;
+            const environmentFilter = document.getElementById('environment-filter').value;
             
             document.getElementById('loading').classList.add('show');
             document.getElementById('load-zones').disabled = true;
@@ -499,10 +510,21 @@
                 
                 console.log('Candidatas recibidas:', data.total_candidates);
                 
+                // Filtrar por terreno si está seleccionado
+                let filteredCandidates = data.candidates;
+                if (environmentFilter) {
+                    filteredCandidates = data.candidates.filter(c => {
+                        // Buscar environment_type en los signals o metadata
+                        const envType = c.environment_type || c.zone_classification?.environment_type || '';
+                        return envType.toUpperCase() === environmentFilter;
+                    });
+                    console.log(`🔍 Filtrado por ${environmentFilter}: ${filteredCandidates.length} candidatas`);
+                }
+                
                 // Convertir candidatas enriquecidas a GeoJSON
                 const geojson = {
                     type: 'FeatureCollection',
-                    features: data.candidates.map(c => {
+                    features: filteredCandidates.map(c => {
                         // Calcular bounds aproximados (0.05 grados ~ 5km)
                         const halfSize = 0.05;
                         const centerLat = c.location.lat;
