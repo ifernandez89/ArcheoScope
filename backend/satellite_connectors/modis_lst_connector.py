@@ -58,6 +58,10 @@ class MODISLSTConnector:
         self.username = os.getenv("EARTHDATA_USERNAME")
         self.password = os.getenv("EARTHDATA_PASSWORD")
         
+        # Timeouts optimizados para velocidad
+        self.timeout = float(os.getenv("SATELLITE_API_TIMEOUT", "5"))
+        self.connect_timeout = float(os.getenv("SATELLITE_API_CONNECT_TIMEOUT", "3"))
+        
         if not self.username or not self.password:
             logger.warning("⚠️ MODIS LST: Credenciales Earthdata no configuradas")
             self.available = False

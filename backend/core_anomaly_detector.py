@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 # Importar integrador de datos reales
-from backend.satellite_connectors.real_data_integrator import RealDataIntegrator
+from satellite_connectors.real_data_integrator import RealDataIntegrator
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ class CoreAnomalyDetector:
         self.anomaly_signatures = self._load_anomaly_signatures()
         
         # Inicializar sistema de confianza de sitios
-        from backend.site_confidence_system import SiteConfidenceSystem
+        from site_confidence_system import SiteConfidenceSystem
         self.site_confidence_system = SiteConfidenceSystem()
         
         # Inicializar integrador de datos reales
@@ -447,6 +447,15 @@ class CoreAnomalyDetector:
                                      lon_min: float, lon_max: float) -> Dict[str, Any]:
         """Validar contra base de datos de sitios arqueológicos conocidos"""
         
+        # Si no hay validador, retornar resultado vacío
+        if not self.real_validator:
+            return {
+                'known_site_nearby': False,
+                'site_name': None,
+                'distance_km': None,
+                'note': 'Validador no disponible'
+            }
+        
         validation_results = self.real_validator.validate_region(
             lat_min, lat_max, lon_min, lon_max
         )
@@ -487,6 +496,10 @@ class CoreAnomalyDetector:
         
         Convierte objetos ArchaeologicalSite a diccionarios para el sistema de confianza
         """
+        
+        # Si no hay validador, retornar lista vacía
+        if not self.real_validator:
+            return []
         
         validation_results = self.real_validator.validate_region(
             lat_min, lat_max, lon_min, lon_max

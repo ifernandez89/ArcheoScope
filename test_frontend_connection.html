@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Frontend Connection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test de Conexión Frontend → Backend</h1>
+    
+    <button onclick="testConnection()">Probar Análisis</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        async function testConnection() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>⏳ Enviando petición al backend...</p>';
+            
+            const testData = {
+                lat_min: 16.0,
+                lat_max: 16.05,
+                lon_min: -90.0,
+                lon_max: -89.95,
+                region_name: "Test Frontend"
+            };
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch('http://localhost:8002/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <h3 class="success">✅ Conexión Exitosa</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Tiempo:</strong> ${elapsed} segundos</p>
+                        <p><strong>Ambiente:</strong> ${data.spatial_context?.environment_type || 'N/A'}</p>
+                        <p><strong>Resultado:</strong> ${data.archaeological_results?.result_type || 'N/A'}</p>
+                        <p><strong>Probabilidad:</strong> ${(data.archaeological_results?.archaeological_probability * 100 || 0).toFixed(2)}%</p>
+                        <p><strong>Mediciones:</strong> ${data.archaeological_results?.measurements_count || 0}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3 class="error">❌ Error</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Tiempo:</strong> ${elapsed} segundos</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3 class="error">❌ Error de Conexión</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

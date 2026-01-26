@@ -366,6 +366,15 @@ class OptimizedCoreAnomalyDetector:
                         lon_min: float, lon_max: float) -> Dict[str, Any]:
         """Fast validation with caching"""
         
+        # Si no hay validador, retornar resultado vacío
+        if not self.real_validator:
+            return {
+                'known_site_nearby': False,
+                'site_name': None,
+                'distance_km': None,
+                'note': 'Validador no disponible'
+            }
+        
         validation_results = self.real_validator.validate_region(
             lat_min, lat_max, lon_min, lon_max
         )

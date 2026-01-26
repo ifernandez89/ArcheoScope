@@ -13,6 +13,18 @@ from pathlib import Path
 import requests
 import os
 
+# FIX CRÍTICO: Configurar PROJ_LIB antes de importar rasterio
+# PostgreSQL conflictúa con rasterio - forzar uso de PROJ de rasterio
+try:
+    import rasterio
+    proj_path = Path(rasterio.__file__).parent / 'proj_data'
+    if proj_path.exists():
+        os.environ['PROJ_LIB'] = str(proj_path)
+        os.environ['PROJ_DATA'] = str(proj_path)
+        print(f"✅ PROJ configurado: {proj_path}")
+except Exception as e:
+    print(f"⚠️ No se pudo configurar PROJ: {e}")
+
 def check_dependencies():
     """Verificar que las dependencias estén instaladas"""
     try:

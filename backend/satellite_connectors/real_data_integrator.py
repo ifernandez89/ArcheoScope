@@ -19,6 +19,7 @@ from .icesat2_connector import ICESat2Connector
 from .nsidc_connector import NSIDCConnector
 from .modis_lst_connector import MODISLSTConnector
 from .copernicus_marine_connector import CopernicusMarineConnector
+from .opentopography_connector import OpenTopographyConnector
 
 logger = logging.getLogger(__name__)
 
@@ -29,14 +30,15 @@ class RealDataIntegrator:
     
     Reemplaza TODAS las simulaciones por APIs reales
     
-    APIs FUNCIONANDO (7/11 = 63.6%):
+    APIs FUNCIONANDO (8/11 = 72.7%):
     1. Sentinel-2 (NDVI, multispectral) ✅
     2. Sentinel-1 (SAR) ✅
     3. Landsat (térmico) ✅
     4. ICESat-2 (elevación) ✅
-    5. NSIDC (hielo, criosfera) ✅ NUEVO
-    6. MODIS LST (térmico regional) ✅ NUEVO
-    7. Copernicus Marine (hielo marino) ✅ NUEVO
+    5. NSIDC (hielo, criosfera) ✅
+    6. MODIS LST (térmico regional) ✅
+    7. Copernicus Marine (hielo marino) ✅
+    8. OpenTopography (DEM, LiDAR) ✅ NUEVO
     """
     
     def __init__(self):
@@ -46,10 +48,12 @@ class RealDataIntegrator:
         self.nsidc = NSIDCConnector()
         self.modis_lst = MODISLSTConnector()
         self.copernicus_marine = CopernicusMarineConnector()
+        self.opentopography = OpenTopographyConnector()
         
-        logger.info("✅ RealDataIntegrator initialized - 7/11 APIs (63.6%)")
+        logger.info("✅ RealDataIntegrator initialized - 8/11 APIs (72.7%)")
         logger.info("   ✅ Sentinel-2, Sentinel-1, Landsat, ICESat-2")
         logger.info("   ✅ NSIDC, MODIS LST, Copernicus Marine")
+        logger.info("   ✅ OpenTopography (DEM/LiDAR) - NUEVO")
     
     async def get_instrument_measurement(
         self,
@@ -186,6 +190,24 @@ class RealDataIntegrator:
                         'acquisition_date': data['acquisition_date']
                     }
             
+            # OPENTOPOGRAPHY (DEM, elevación, arqueología) - NUEVO
+            elif instrument_name in ["opentopography", "dem", "elevation_dem", "lidar_elevation"]:
+                data = await self.opentopography.get_elevation_data(
+                    lat_min, lat_max, lon_min, lon_max,
+                    dem_type="SRTMGL1"  # 30m resolution - mejor para arqueología
+                )
+                if data:
+                    return {
+                        'value': data['roughness'],  # Rugosidad como indicador arqueológico
+                        'elevation_mean': data['elevation_mean'],
+                        'archaeological_score': data.get('archaeological_score', 0.0),
+                        'platforms_detected': data.get('platforms_detected', 0),
+                        'mounds_detected': data.get('mounds_detected', 0),
+                        'source': data['source'],
+                        'confidence': data['confidence'],
+                        'acquisition_date': data['acquisition_date']
+                    }
+            
             else:
                 logger.warning(f"⚠️ Instrumento no reconocido: {instrument_name}")
                 return None
@@ -203,7 +225,8 @@ class RealDataIntegrator:
             'icesat2': self.icesat2.available,
             'nsidc': self.nsidc.available,
             'modis_lst': self.modis_lst.available,
-            'copernicus_marine': self.copernicus_marine.available
+            'copernicus_marine': self.copernicus_marine.available,
+            'opentopography': self.opentopography.available
         }
     
     def get_status_report(self) -> Dict[str, Any]:

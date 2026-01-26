@@ -8,6 +8,27 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
 import numpy as np
+import os
+from pathlib import Path
+
+# FIX CRÍTICO: Configurar PROJ_LIB ANTES de importar rasterio
+# PostgreSQL conflictúa con rasterio - forzar uso de PROJ de rasterio
+def _configure_proj():
+    """Configurar PROJ para evitar conflicto con PostgreSQL"""
+    try:
+        import rasterio
+        proj_path = Path(rasterio.__file__).parent / 'proj_data'
+        if proj_path.exists():
+            os.environ['PROJ_LIB'] = str(proj_path)
+            os.environ['PROJ_DATA'] = str(proj_path)
+            print(f"PROJ configurado: {proj_path}")
+            return True
+    except Exception as e:
+        print(f"No se pudo configurar PROJ: {e}")
+    return False
+
+# Configurar PROJ antes de cualquier import de rasterio
+_configure_proj()
 
 try:
     import pystac_client

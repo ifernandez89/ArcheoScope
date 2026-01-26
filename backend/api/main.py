@@ -37,7 +37,7 @@ def convert_numpy_types(obj):
     else:
         return obj
 
-from data.archaeological_loader import ArchaeologicalDataLoader
+# from data.archaeological_loader import ArchaeologicalDataLoader  # DESHABILITADO - usa np.random
 from rules.archaeological_rules import ArchaeologicalRulesEngine, ArchaeologicalResult
 from rules.advanced_archaeological_rules import AdvancedArchaeologicalRulesEngine
 from ai.archaeological_assistant import ArchaeologicalAssistant
@@ -203,7 +203,7 @@ try:
     from api.volumetric_lidar_api import volumetric_router
     app.include_router(volumetric_router)
     logger.info("✅ Router volumétrico LIDAR incluido")
-except ImportError as e:
+except (ImportError, NotImplementedError) as e:
     logger.warning(f"⚠️ No se pudo cargar router volumétrico: {e}")
     # Crear endpoints básicos como fallback
     @app.get("/volumetric/sites/catalog")
@@ -303,7 +303,8 @@ system_components = {
 def initialize_system():
     """Inicializar componentes del sistema arqueológico."""
     try:
-        system_components['loader'] = ArchaeologicalDataLoader()
+        # system_components['loader'] = ArchaeologicalDataLoader()  # DESHABILITADO - usa np.random
+        system_components['loader'] = None  # Placeholder
         system_components['rules_engine'] = ArchaeologicalRulesEngine()
         system_components['advanced_rules_engine'] = AdvancedArchaeologicalRulesEngine()  # NUEVO
         system_components['ai_assistant'] = ArchaeologicalAssistant()
@@ -326,19 +327,26 @@ def initialize_system():
         else:
             logger.info("✅ Asistente de IA disponible y funcionando correctamente")
         
-        system_components['validator'] = KnownSitesValidator()
-        system_components['real_validator'] = RealArchaeologicalValidator()  # NUEVO
+        # Inicializar validadores con db_connection
+        try:
+            system_components['validator'] = KnownSitesValidator(database_connection)
+            system_components['real_validator'] = RealArchaeologicalValidator(database_connection)
+        except Exception as e:
+            logger.warning(f"⚠️ No se pudieron inicializar validadores: {e}")
+            system_components['validator'] = None
+            system_components['real_validator'] = None
+        
         system_components['transparency'] = DataSourceTransparency()  # NUEVO
         system_components['explainer'] = ScientificExplainer()
         system_components['geometric_engine'] = GeometricInferenceEngine()
         system_components['phi4_evaluator'] = Phi4GeometricEvaluator()
         system_components['environment_classifier'] = EnvironmentClassifier()  # NUEVO: Clasificador robusto
         
-        # CRÍTICO: Inicializar detector CORE de anomalías
+        # CRÍTICO: Inicializar detector CORE de anomalías (con componentes opcionales)
         system_components['core_anomaly_detector'] = CoreAnomalyDetector(
-            environment_classifier=system_components['environment_classifier'],
-            real_validator=system_components['real_validator'],
-            data_loader=system_components['loader']
+            environment_classifier=system_components.get('environment_classifier'),
+            real_validator=system_components.get('real_validator'),
+            data_loader=system_components.get('loader')
         )
         
         system_components['water_detector'] = WaterDetector()              # DEPRECATED
@@ -346,10 +354,12 @@ def initialize_system():
         system_components['ice_detector'] = IceDetector()                # DEPRECATED
         system_components['cryoarchaeology'] = CryoArchaeologyEngine()   # NUEVO
         
-        logger.info("Sistema arqueológico ArcheoScope inicializado correctamente con clasificador de ambientes robusto")
+        logger.info("✅ Sistema arqueológico ArcheoScope inicializado correctamente")
         return True
     except Exception as e:
-        logger.error(f"Error inicializando ArcheoScope: {e}")
+        logger.error(f"❌ Error inicializando ArcheoScope: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 @app.on_event("startup")
@@ -840,52 +850,6 @@ async def get_lidar_benchmark_data():
     except Exception as e:
         logger.error(f"Error obteniendo datos LIDAR benchmark: {e}")
         raise HTTPException(status_code=500, detail=f"Error LIDAR benchmark: {str(e)}")
-    """Obtener estado detallado del sistema incluyendo instrumentos mejorados."""
-    
-    ai_assistant = system_components.get('ai_assistant')
-    geometric_engine = system_components.get('geometric_engine')
-    phi4_evaluator = system_components.get('phi4_evaluator')
-    loader = system_components.get('loader')
-    
-    # Estado de APIs mejoradas
-    enhanced_status = {}
-    if loader and hasattr(loader, 'enhanced_apis'):
-        enhanced_status = loader.enhanced_apis.get_api_status()
-    
-    return {
-        "backend_status": "operational" if all(system_components.values()) else "limited",
-        "ai_status": "available" if ai_assistant and ai_assistant.is_available else "offline",
-        "ai_model": (ai_assistant.openrouter_model if ai_assistant.openrouter_enabled 
-                    else ai_assistant.ollama_model) if ai_assistant else "none",
-        "ollama_available": bool(ai_assistant.is_available) if ai_assistant else False,
-        "volumetric_engine": "operational" if geometric_engine else "offline",
-        "phi4_evaluator": "available" if phi4_evaluator and phi4_evaluator.is_available else "deterministic_fallback",
-        "system_components": {
-            "data_loader": "operational" if system_components.get('loader') else "offline",
-            "rules_engine": "operational" if system_components.get('rules_engine') else "offline", 
-            "ai_assistant": "operational" if system_components.get('ai_assistant') else "offline",
-            "validator": "operational" if system_components.get('validator') else "offline",
-            "explainer": "operational" if system_components.get('explainer') else "offline",
-            "geometric_engine": "operational" if system_components.get('geometric_engine') else "offline",
-            "phi4_evaluator": "operational" if system_components.get('phi4_evaluator') else "offline"
-        },
-        "capabilities": {
-            "volumetric_inference": bool(geometric_engine is not None),
-            "phi4_consistency_evaluation": bool(phi4_evaluator and phi4_evaluator.is_available) if phi4_evaluator else False,
-            "academic_validation": bool(system_components.get('validator') is not None),
-            "scientific_explainability": bool(system_components.get('explainer') is not None)
-        },
-        "enhanced_apis": enhanced_status,
-        "total_instruments": enhanced_status.get('total_apis', 5) if enhanced_status else 5,
-        "archaeological_instruments": {
-            "base_apis": 5,
-            "enhanced_apis": 5,
-            "total": 10,
-            "critical_instruments": 3,  # OpenTopography, ASF DAAC, ICESat-2
-            "high_value_instruments": 1,  # GEDI
-            "complementary_instruments": 1  # SMAP
-        }
-    }
 
 @app.get("/instruments/status")
 async def get_instruments_status():
@@ -2646,21 +2610,11 @@ async def get_enriched_candidates(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    """
 
 @app.get("/archaeological-sites/candidates/priority", tags=["Database", "Candidates"])
 async def get_priority_candidates_from_db(limit: int = 50):
-    """
-    Obtener Candidatas Prioritarias desde Base de Datos
-    
-    Retorna candidatas con estado pending y acción recomendada field_validation 
-    o detailed_analysis, ordenadas por score multi-instrumental.
-    
-    Parameters:
-        limit: Máximo número de candidatas (default: 50)
-    
-    Returns:
-        Lista de candidatas prioritarias con todos sus datos
-    """
+    """Get priority candidates from database."""
     try:
         candidates = await database_connection.get_priority_candidates(limit)
         
@@ -3467,10 +3421,14 @@ async def analyze_archaeological_region(request: RegionRequest):
     logger.info(f"Request data: {request}")
     logger.info("=" * 80)
     
-    if not all(system_components.values()):
-        logger.error("Sistema no completamente inicializado")
+    # Verificar componentes CRÍTICOS (no todos son obligatorios)
+    critical_components = ['core_anomaly_detector', 'environment_classifier', 'rules_engine']
+    missing_critical = [comp for comp in critical_components if not system_components.get(comp)]
+    
+    if missing_critical:
+        logger.error(f"Componentes críticos faltantes: {missing_critical}")
         logger.error(f"Components: {system_components}")
-        raise HTTPException(status_code=503, detail="Sistema no completamente inicializado")
+        raise HTTPException(status_code=503, detail=f"Componentes críticos faltantes: {missing_critical}")
     
     # ⚠️ VALIDACIÓN CRÍTICA: Verificar que la IA está disponible
     ai_assistant = system_components.get('ai_assistant')

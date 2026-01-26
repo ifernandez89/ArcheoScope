@@ -1,0 +1,40 @@
+﻿python : Traceback (most recent call last):
+En línea: 1 Carácter: 212
++ ... kages\rasterio\proj_data"; python 
+test_opentopography.py 2>&1 | Out-F ...
++                                
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (mos 
+   t recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Python\ArcheoScope\test_opentopography.py", line 
+230, in <module>
+PROJ configurado: C:\Users\xiphos-pc1\AppData\Roaming\Python\Python311\site-packages\rasterio\proj_data
+======================================================================
+    success = asyncio.run(test_opentopography())
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python311\Lib\asyncio\runners.py", line 190, in 
+run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Python311\Lib\asyncio\runners.py", line 118, in 
+run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python311\Lib\asyncio\base_events.py", line 653, 
+in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Python\ArcheoScope\test_opentopography.py", line 
+29, in test_opentopography
+    print("\U0001f3d4\ufe0f  TEST OPENTOPOGRAPHY - DEM Y 
+DETECCIËN ARQUEOLËGICA")
+  File "C:\Python311\Lib\encodings\cp1252.py", line 19, in 
+encode
+    return 
+codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters 
+in position 0-1: character maps to <undefined>

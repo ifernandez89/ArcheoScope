@@ -57,6 +57,10 @@ class NSIDCConnector:
         self.username = os.getenv("EARTHDATA_USERNAME")
         self.password = os.getenv("EARTHDATA_PASSWORD")
         
+        # Timeouts optimizados para velocidad
+        self.timeout = float(os.getenv("SATELLITE_API_TIMEOUT", "5"))
+        self.connect_timeout = float(os.getenv("SATELLITE_API_CONNECT_TIMEOUT", "3"))
+        
         if not self.username or not self.password:
             logger.warning("⚠️ NSIDC: Credenciales Earthdata no configuradas")
             self.available = False
@@ -108,7 +112,9 @@ class NSIDCConnector:
             # Nota: NSIDC usa estructura de directorios por fecha
             url = f"{self.base_url}/MEASURES/NSIDC-0051.002/{date[:4]}.{date[4:6]}.{date[6:8]}/"
             
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(
+                timeout=httpx.Timeout(self.timeout, connect=self.connect_timeout)
+            ) as client:
                 # Autenticación HTTP Basic
                 auth = httpx.BasicAuth(self.username, self.password)
                 
