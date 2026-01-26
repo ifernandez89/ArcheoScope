@@ -1599,6 +1599,17 @@
                 </div>
             </div>
 
+            <!-- NUEVO: Estado de Instrumentos -->
+            <div class="controls-section">
+                <h3>🛰️ Instrumentos Disponibles</h3>
+                <div id="instrumentStatusContainer">
+                    <!-- Se llena dinámicamente con instrument_status_ui.js -->
+                    <div style="text-align: center; padding: 1rem; color: #6c757d; font-size: 0.75rem;">
+                        Cargando estado de instrumentos...
+                    </div>
+                </div>
+            </div>
+
             <div class="controls-section">
                 <h3>📦 Exportación</h3>
                 
@@ -1768,6 +1779,14 @@
                 <div class="metric-item">
                     <span class="metric-label">Clasificación Espectral:</span>
                     <span class="metric-value" id="spectralSignature">No aplicable</span>
+                </div>
+            </div>
+
+            <!-- NUEVO: Resultados de Instrumentos -->
+            <div class="controls-section" id="instrumentResultsSection" style="display: none;">
+                <h3>🛰️ Instrumentos Utilizados</h3>
+                <div id="instrumentResultsContainer">
+                    <!-- Se llena dinámicamente después del análisis -->
                 </div>
             </div>
 
@@ -2221,6 +2240,7 @@
     </script>
     
     <script src="archaeological_app.js"></script>
+    <script src="instrument_status_ui.js"></script>
     
     <!-- TIMESTAMP: 2026-01-23 15:30:00 - VISOR 3D PROFESIONAL INTEGRADO -->
     

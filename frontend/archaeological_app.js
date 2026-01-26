@@ -504,6 +504,19 @@ async function investigateRegion() {
         // Mostrar resultados
         safeDisplayResults(data);
         
+        // NUEVO: Actualizar display de instrumentos según ambiente detectado
+        const environment = data.environment_classification?.environment_type || 'desert';
+        if (typeof updateInstrumentDisplay === 'function') {
+            updateInstrumentDisplay(environment);
+        }
+        
+        // NUEVO: Mostrar resultados de instrumentos
+        if (typeof displayInstrumentResults === 'function') {
+            displayInstrumentResults(data);
+            const section = document.getElementById('instrumentResultsSection');
+            if (section) section.style.display = 'block';
+        }
+        
         // Visualizar en el mapa
         visualizeArchaeologicalData(data);
         
@@ -516,6 +529,7 @@ async function investigateRegion() {
         };
         
         console.log('📍 Coordenadas capturadas para lupa:', selectedCoordinates);
+        console.log('🌍 Ambiente detectado:', environment);
         
         } catch (error) {
             console.error('Error en análisis arqueológico:', error);
