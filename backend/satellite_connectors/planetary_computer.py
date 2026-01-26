@@ -241,6 +241,11 @@ class PlanetaryComputerConnector(SatelliteConnector):
         MODOS AUTOMÁTICOS:
         - IW (Interferometric Wide): latitudes <75° (250km swath)
         - EW (Extra Wide): latitudes ≥75° (400km swath, diseñado para polos)
+        
+        MEJORAS 2026-01-26:
+        - Ventana temporal ampliada: 30 → 90 días
+        - Fallback a colección sentinel-1-grd
+        - Logging detallado a archivo
         """
         if not self.available:
             logger.error("Planetary Computer not available")
@@ -248,27 +253,41 @@ class PlanetaryComputerConnector(SatelliteConnector):
         
         start_time = asyncio.get_event_loop().time()
         
+        # Logging a archivo para diagnóstico
+        log_file = None
         try:
-            # Fechas por defecto: últimos 30 días
+            log_file = open('instrument_diagnostics.log', 'a', encoding='utf-8')
+            
+            def log(msg):
+                print(msg, flush=True)
+                if log_file:
+                    log_file.write(msg + '\n')
+                    log_file.flush()
+            
+            # Fechas por defecto: últimos 90 días (AMPLIADO desde 30)
             if end_date is None:
                 end_date = datetime.now()
             if start_date is None:
-                start_date = end_date - timedelta(days=30)
+                start_date = end_date - timedelta(days=90)  # MEJORA: 90 días para mejor cobertura
             
             bbox = [lon_min, lat_min, lon_max, lat_max]
             
             # DETECCIÓN AUTOMÁTICA DE MODO SEGÚN LATITUD
             avg_lat = (lat_min + lat_max) / 2
-            if abs(avg_lat) >= 75:
+            is_polar = abs(avg_lat) >= 75
+            
+            if is_polar:
                 instrument_mode = "EW"  # Extra Wide para regiones polares
-                logger.info(f"🛰️ Región polar detectada ({avg_lat:.1f}°) - usando modo EW")
+                log(f"[SAR] Region polar detectada ({avg_lat:.1f}) - usando modo EW")
             else:
                 instrument_mode = "IW"  # Interferometric Wide para resto
-                logger.info(f"🛰️ Región no-polar ({avg_lat:.1f}°) - usando modo IW")
+                log(f"[SAR] Region no-polar ({avg_lat:.1f}) - usando modo IW")
             
-            logger.info(f"🛰️ Buscando Sentinel-1 {instrument_mode} en bbox {bbox}")
+            log(f"[SAR] Buscando Sentinel-1 en bbox {bbox}")
+            log(f"[SAR] Ventana temporal: {start_date.date()} a {end_date.date()} (90 dias)")
             
-            # Query con modo apropiado
+            # INTENTO 1: sentinel-1-rtc con modo apropiado
+            log(f"[SAR] Intento 1: sentinel-1-rtc modo {instrument_mode}")
             search = self.catalog.search(
                 collections=["sentinel-1-rtc"],
                 bbox=bbox,
@@ -280,13 +299,12 @@ class PlanetaryComputerConnector(SatelliteConnector):
             )
             
             items = list(search.items())
+            log(f"[SAR] Resultado: {len(items)} escenas encontradas")
             
             if not items:
-                logger.warning(f"No Sentinel-1 {instrument_mode} scenes found for bbox {bbox}")
-                
-                # FALLBACK: intentar con el otro modo
+                # FALLBACK 1: intentar con el otro modo
                 fallback_mode = "IW" if instrument_mode == "EW" else "EW"
-                logger.info(f"   Intentando fallback con modo {fallback_mode}...")
+                log(f"[SAR] Intento 2: sentinel-1-rtc modo {fallback_mode}")
                 
                 search = self.catalog.search(
                     collections=["sentinel-1-rtc"],
@@ -299,14 +317,37 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 )
                 
                 items = list(search.items())
+                log(f"[SAR] Resultado: {len(items)} escenas encontradas")
                 
                 if not items:
-                    logger.warning(f"   No Sentinel-1 data found (tried {instrument_mode} and {fallback_mode})")
-                    return None
+                    # FALLBACK 2: intentar colección sentinel-1-grd (Ground Range Detected)
+                    log(f"[SAR] Intento 3: sentinel-1-grd (sin filtro de modo)")
+                    
+                    search = self.catalog.search(
+                        collections=["sentinel-1-grd"],
+                        bbox=bbox,
+                        datetime=f"{start_date.isoformat()}/{end_date.isoformat()}",
+                        limit=5
+                    )
+                    
+                    items = list(search.items())
+                    log(f"[SAR] Resultado: {len(items)} escenas encontradas")
+                    
+                    if not items:
+                        log(f"[SAR] FALLO TOTAL: No se encontraron imagenes SAR")
+                        log(f"[SAR] Intentos: rtc-{instrument_mode}, rtc-{fallback_mode}, grd")
+                        log(f"[SAR] Conclusion: Planetary Computer no tiene cobertura en esta region")
+                        if log_file:
+                            log_file.close()
+                        return None
+                    else:
+                        log(f"[SAR] EXITO con sentinel-1-grd")
                 else:
-                    logger.info(f"   ✅ Encontrado con modo {fallback_mode}")
+                    log(f"[SAR] EXITO con sentinel-1-rtc modo {fallback_mode}")
+            else:
+                log(f"[SAR] EXITO con sentinel-1-rtc modo {instrument_mode}")
             
-            logger.info(f"✅ Found {len(items)} Sentinel-1 scenes")
+            log(f"[SAR] Total escenas encontradas: {len(items)}")
             
             # Usar la escena más reciente
             best_item = items[0]
@@ -315,9 +356,10 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 best_item.properties['datetime'].replace('Z', '+00:00')
             )
             
-            logger.info(f"📅 Using SAR scene from {acquisition_date}")
+            log(f"[SAR] Usando escena de {acquisition_date.date()}")
             
             # Cargar bandas VV y VH
+            log(f"[SAR] Cargando bandas VV y VH...")
             stack = stackstac.stack(
                 [best_item],
                 assets=['vh', 'vv'],
@@ -327,6 +369,7 @@ class PlanetaryComputerConnector(SatelliteConnector):
             )
             
             data = stack.compute()
+            log(f"[SAR] Bandas cargadas correctamente")
             
             # Extraer bandas
             vh = data[0, 0, :, :].values
@@ -349,6 +392,8 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 'backscatter_std': float(np.nanstd(vv))
             }
             
+            log(f"[SAR] Indices calculados: VV={indices['vv_mean']:.2f} dB")
+            
             # Detectar anomalías en backscatter
             anomaly_score, confidence = self.detect_anomaly(vv)
             
@@ -361,6 +406,12 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 anomaly_type = 'moderate_backscatter'
             
             processing_time = asyncio.get_event_loop().time() - start_time
+            
+            log(f"[SAR] Procesamiento completado en {processing_time:.2f}s")
+            log(f"[SAR] EXITO TOTAL - Datos SAR obtenidos correctamente")
+            
+            if log_file:
+                log_file.close()
             
             logger.info(f"✅ Sentinel-1 processed in {processing_time:.2f}s")
             
@@ -383,6 +434,9 @@ class PlanetaryComputerConnector(SatelliteConnector):
             )
             
         except Exception as e:
+            if log_file:
+                log_file.write(f"[SAR] ERROR: {e}\n")
+                log_file.close()
             logger.error(f"Error fetching Sentinel-1 data: {e}", exc_info=True)
             return None
     
