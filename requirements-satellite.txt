@@ -1,0 +1,20 @@
+# Dependencias para Datos Satelitales Reales
+# Microsoft Planetary Computer + STAC
+
+# STAC (SpatioTemporal Asset Catalog)
+pystac-client>=0.7.5
+
+# Microsoft Planetary Computer
+planetary-computer>=1.0.0
+
+# Procesamiento de datos raster
+rasterio>=1.3.9
+stackstac>=0.5.0
+
+# Procesamiento de arrays
+numpy>=1.24.0
+xarray>=2023.1.0
+dask[complete]>=2023.1.0
+
+# Opcional: Visualización
+matplotlib>=3.7.0
