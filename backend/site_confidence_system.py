@@ -647,6 +647,414 @@ class SiteConfidenceSystem:
         # Mínimo 5 minutos, máximo 120 minutos
         return int(max(5, min(120, base_time)))
     
+    def calculate_zone_priority_score(
+        self,
+        zone: Dict[str, Any],
+        lidar_available: bool = False,
+        excavation_status: str = 'unknown',
+        terrain_type: str = 'unknown',
+        ai_coherence: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Calcular score de prioridad bayesiano para una zona
+        
+        OPTIMIZACIÓN MULTI-CRITERIO + COHERENCIA IA:
+        P(discovery | zone) ∝ P(cultural_prior) × P(terrain) × P(lidar) × P(excavation) × P(ai_coherence)
+        
+        Args:
+            zone: Zona con metadata
+            lidar_available: Si hay datos LiDAR disponibles
+            excavation_status: Estado de excavación
+            terrain_type: Tipo de terreno
+            ai_coherence: Evaluación de coherencia por IA (NUEVO)
+        
+        Returns:
+            Dict con score y detalles de scoring
+        """
+        
+        score = 0.0
+        scoring_details = {}
+        
+        # FACTOR 1: Prior Cultural (peso 25%) - reducido para dar espacio a IA
+        cultural_density = zone.get('cultural_density', 0.0)
+        cultural_score = cultural_density * 0.25
+        score += cultural_score
+        scoring_details['cultural_prior'] = {
+            'density': cultural_density,
+            'score': cultural_score,
+            'weight': 0.25
+        }
+        
+        # FACTOR 2: Terreno Favorable (peso 15%) - reducido
+        terrain_scores = {
+            'desert': 0.9,
+            'grassland': 0.8,
+            'mountain': 0.7,
+            'forest': 0.6,
+            'shallow_sea': 0.5,
+            'unknown': 0.5
+        }
+        terrain_factor = terrain_scores.get(terrain_type, 0.5)
+        terrain_score = terrain_factor * 0.15
+        score += terrain_score
+        scoring_details['terrain_favorable'] = {
+            'type': terrain_type,
+            'factor': terrain_factor,
+            'score': terrain_score,
+            'weight': 0.15
+        }
+        
+        # FACTOR 3: Complemento LiDAR (peso 20%) - reducido
+        lidar_complement_score = 0.0
+        lidar_details = {}
+        
+        if lidar_available:
+            if excavation_status == 'unexcavated':
+                lidar_complement_score = 0.20
+                lidar_details['reason'] = 'LiDAR detected, unexcavated - HIGH PRIORITY'
+                lidar_details['class'] = 'lidar_gold'
+            elif excavation_status == 'partial':
+                lidar_complement_score = 0.16
+                lidar_details['reason'] = 'LiDAR detected, partially excavated'
+                lidar_details['class'] = 'lidar_silver'
+            elif excavation_status == 'unknown':
+                lidar_complement_score = 0.12
+                lidar_details['reason'] = 'LiDAR available, status unknown'
+                lidar_details['class'] = 'lidar_bronze'
+            else:
+                lidar_complement_score = 0.04
+                lidar_details['reason'] = 'LiDAR available, excavated'
+                lidar_details['class'] = 'lidar_low'
+        else:
+            if terrain_type == 'forest':
+                lidar_complement_score = 0.04
+                lidar_details['reason'] = 'Forest without LiDAR - limited visibility'
+            else:
+                lidar_complement_score = 0.10
+                lidar_details['reason'] = 'No LiDAR, but terrain allows other instruments'
+        
+        score += lidar_complement_score
+        scoring_details['lidar_complement'] = {
+            'available': lidar_available,
+            'excavation_status': excavation_status,
+            'score': lidar_complement_score,
+            'weight': 0.20,
+            'details': lidar_details
+        }
+        
+        # FACTOR 4: Gap de Excavación (peso 10%) - reducido
+        excavation_gap_score = 0.0
+        excavation_details = {}
+        
+        if excavation_status == 'unexcavated':
+            excavation_gap_score = 0.10
+            excavation_details['reason'] = 'Completely unexcavated'
+        elif excavation_status == 'partial':
+            excavation_gap_score = 0.07
+            excavation_details['reason'] = 'Partially excavated'
+        elif excavation_status == 'unknown':
+            excavation_gap_score = 0.05
+            excavation_details['reason'] = 'Unknown status'
+        else:
+            excavation_gap_score = 0.02
+            excavation_details['reason'] = 'Excavated'
+        
+        score += excavation_gap_score
+        scoring_details['excavation_gap'] = {
+            'status': excavation_status,
+            'score': excavation_gap_score,
+            'weight': 0.10,
+            'details': excavation_details
+        }
+        
+        # FACTOR 5: Coherencia Arqueológica IA (peso 25%) - NUEVO Y CRÍTICO
+        ai_coherence_score = 0.0
+        ai_details = {}
+        
+        if ai_coherence and 'coherence_score' in ai_coherence:
+            # Score de coherencia de IA (0-1)
+            coherence = ai_coherence['coherence_score']
+            ai_coherence_score = coherence * 0.25
+            
+            ai_details = {
+                'coherence_score': coherence,
+                'coherence_class': ai_coherence.get('coherence_class', 'unknown'),
+                'cultural_context': ai_coherence.get('cultural_context'),
+                'settlement_pattern': ai_coherence.get('settlement_pattern'),
+                'historical_logic': ai_coherence.get('historical_logic'),
+                'reasoning': ai_coherence.get('reasoning')
+            }
+        else:
+            # Sin evaluación IA, usar score neutral
+            ai_coherence_score = 0.125  # 50% del peso máximo
+            ai_details = {
+                'coherence_score': 0.5,
+                'coherence_class': 'unknown',
+                'reasoning': 'AI evaluation not performed'
+            }
+        
+        score += ai_coherence_score
+        scoring_details['ai_coherence'] = {
+            'score': ai_coherence_score,
+            'weight': 0.25,
+            'details': ai_details
+        }
+        
+        # FACTOR 6: Documentación Actual (peso 5%) - reducido
+        documentation_density = zone.get('cultural_density', 0.5)
+        documentation_gap = 1.0 - documentation_density
+        documentation_score = documentation_gap * 0.05
+        score += documentation_score
+        scoring_details['documentation_gap'] = {
+            'current_density': documentation_density,
+            'gap': documentation_gap,
+            'score': documentation_score,
+            'weight': 0.05
+        }
+        
+        # Score final (0-1)
+        final_score = min(score, 1.0)
+        
+        # Clasificación de prioridad
+        if final_score > 0.75:
+            priority_class = 'CRITICAL'
+            priority_color = '🔴'
+        elif final_score > 0.55:
+            priority_class = 'HIGH'
+            priority_color = '🟠'
+        elif final_score > 0.35:
+            priority_class = 'MEDIUM'
+            priority_color = '🟡'
+        else:
+            priority_class = 'LOW'
+            priority_color = '🟢'
+        
+        return {
+            'final_score': final_score,
+            'priority_class': priority_class,
+            'priority_color': priority_color,
+            'scoring_details': scoring_details,
+            'recommendation': self._generate_priority_recommendation(
+                final_score, lidar_available, excavation_status, terrain_type, ai_coherence
+            )
+        }
+    
+    def _generate_priority_recommendation(
+        self,
+        score: float,
+        lidar_available: bool,
+        excavation_status: str,
+        terrain_type: str,
+        ai_coherence: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Generar recomendación específica basada en scoring"""
+        
+        recommendations = []
+        lidar_classes = []
+        
+        # Recomendaciones por coherencia IA
+        if ai_coherence and 'coherence_class' in ai_coherence:
+            coherence_class = ai_coherence['coherence_class']
+            
+            if coherence_class == 'high':
+                recommendations.append("🧠 AI: Alta coherencia arqueológica")
+                recommendations.append(f"   Contexto: {ai_coherence.get('cultural_context', 'N/A')}")
+                recommendations.append(f"   Lógica: {ai_coherence.get('historical_logic', 'N/A')}")
+            elif coherence_class == 'medium':
+                recommendations.append("🧠 AI: Coherencia moderada")
+            elif coherence_class == 'low':
+                recommendations.append("⚠️ AI: Baja coherencia - revisar contexto")
+        
+        # Recomendaciones por LiDAR
+        if lidar_available:
+            if excavation_status == 'unexcavated':
+                recommendations.append("🔥 GOLD CLASS: LiDAR detected, unexcavated")
+                recommendations.append("Priority: Thermal + SAR + NDVI persistence analysis")
+                recommendations.append("Expected: Structures with thermal inertia, compaction, vegetation stress")
+                lidar_classes.append('structures_linear_weak')
+                lidar_classes.append('platforms_ambiguous')
+                lidar_classes.append('high_density_geometric')
+            elif excavation_status == 'partial':
+                recommendations.append("🥈 SILVER CLASS: LiDAR + partial excavation")
+                recommendations.append("Priority: Detect unexcavated features in same cluster")
+                recommendations.append("Expected: Outliers within known system")
+                lidar_classes.append('zones_unexcavated_coherent')
+            else:
+                recommendations.append("📊 BRONZE CLASS: LiDAR available")
+                recommendations.append("Priority: Multi-temporal analysis (2015-2025)")
+                recommendations.append("Expected: Persistence validation")
+                lidar_classes.append('lidar_old_datasets')
+        
+        # Recomendaciones por terreno
+        if terrain_type == 'forest' and not lidar_available:
+            recommendations.append("⚠️ Forest without LiDAR - limited analysis capability")
+        elif terrain_type in ['shallow_sea', 'lake', 'river']:
+            recommendations.append("💧 Water zone: NDWI + LST nocturnal + SAR humidity")
+            recommendations.append("Expected: Causeways, raised fields, canals")
+            lidar_classes.append('lidar_over_water')
+        
+        # Instrumentos recomendados
+        instruments = []
+        if lidar_available:
+            instruments.extend(['Thermal (LST)', 'SAR (compaction)', 'NDVI (stress)', 'Multi-temporal'])
+        else:
+            if terrain_type == 'desert':
+                instruments.extend(['Multispectral', 'Thermal', 'SAR'])
+            elif terrain_type == 'forest':
+                instruments.extend(['L-band SAR', 'Thermal'])
+            else:
+                instruments.extend(['Multispectral', 'SAR', 'Thermal'])
+        
+        return {
+            'recommendations': recommendations,
+            'lidar_candidate_classes': lidar_classes,
+            'recommended_instruments': instruments,
+            'analysis_strategy': self._get_analysis_strategy(lidar_available, excavation_status),
+            'ai_coherence_summary': ai_coherence.get('reasoning') if ai_coherence else None
+        }
+    
+    def _get_analysis_strategy(self, lidar_available: bool, excavation_status: str) -> str:
+        """Obtener estrategia de análisis específica"""
+        
+        if lidar_available and excavation_status == 'unexcavated':
+            return "lidar_complemented_pipeline"
+        elif lidar_available:
+            return "lidar_validation_pipeline"
+        else:
+            return "standard_detection_pipeline"
+    
+    async def evaluate_archaeological_coherence(
+        self,
+        zone: Dict[str, Any],
+        nearby_sites: List[Dict[str, Any]],
+        ai_assistant = None
+    ) -> Dict[str, Any]:
+        """
+        Evaluar coherencia arqueológica de una zona usando IA
+        
+        NUEVO ROL DE LA IA: Evaluador de coherencia ANTES del análisis instrumental
+        
+        La IA evalúa:
+        - Contexto cultural (¿tiene sentido un sitio aquí?)
+        - Patrón de asentamiento (¿coherente con sitios cercanos?)
+        - Lógica histórica (¿período, cultura, función plausible?)
+        - Coherencia geográfica (¿ubicación estratégica?)
+        
+        Esto NO es "descubrimiento" - es PRIORIZACIÓN INTELIGENTE
+        
+        Args:
+            zone: Zona a evaluar
+            nearby_sites: Sitios conocidos cercanos
+            ai_assistant: Instancia de ArchaeologicalAssistant
+        
+        Returns:
+            Dict con coherence_score (0-1) y reasoning
+        """
+        
+        if ai_assistant is None:
+            # Sin IA, retornar score neutral
+            return {
+                'coherence_score': 0.5,
+                'coherence_class': 'unknown',
+                'reasoning': 'AI evaluation not available',
+                'cultural_context': None,
+                'settlement_pattern': None,
+                'historical_logic': None
+            }
+        
+        # Preparar contexto para IA
+        zone_context = {
+            'center': zone['center'],
+            'area_km2': zone['area_km2'],
+            'cultural_density': zone.get('cultural_density', 0),
+            'terrain_type': zone.get('terrain_type', 'unknown'),
+            'priority': zone.get('priority', 'unknown')
+        }
+        
+        # Sitios cercanos (top 5 más cercanos)
+        nearby_context = []
+        for site in nearby_sites[:5]:
+            nearby_context.append({
+                'name': site.get('name'),
+                'distance_km': site.get('distance_km', 999),
+                'period': site.get('period'),
+                'site_type': site.get('site_type')
+            })
+        
+        # Prompt para IA
+        prompt = f"""Evalúa la coherencia arqueológica de esta zona prioritaria:
+
+ZONA:
+- Ubicación: {zone_context['center']['lat']:.4f}, {zone_context['center']['lon']:.4f}
+- Área: {zone_context['area_km2']:.2f} km²
+- Densidad cultural: {zone_context['cultural_density']:.3f}
+- Terreno: {zone_context['terrain_type']}
+- Prioridad: {zone_context['priority']}
+
+SITIOS CONOCIDOS CERCANOS:
+{self._format_nearby_sites(nearby_context)}
+
+EVALÚA:
+1. Contexto cultural: ¿Tiene sentido un sitio arqueológico aquí dado los sitios cercanos?
+2. Patrón de asentamiento: ¿Es coherente con patrones conocidos de esta cultura/región?
+3. Lógica histórica: ¿Qué función podría tener? (satélite, ruta, recurso, frontera)
+4. Coherencia geográfica: ¿La ubicación es estratégica? (agua, elevación, rutas)
+
+IMPORTANTE:
+- NO afirmes "hay un sitio aquí"
+- SÍ evalúa "es razonable priorizar esta zona"
+- Usa lenguaje probabilístico
+- Considera contexto cultural e histórico
+
+Responde en formato JSON:
+{{
+    "coherence_score": 0.0-1.0,
+    "coherence_class": "high|medium|low",
+    "cultural_context": "breve explicación",
+    "settlement_pattern": "coherente|incoherente|desconocido",
+    "historical_logic": "función plausible",
+    "geographic_coherence": "estratégica|neutral|improbable",
+    "reasoning": "justificación breve"
+}}"""
+        
+        try:
+            # Llamar a IA
+            ai_response = await ai_assistant.evaluate_coherence(prompt)
+            
+            # Parsear respuesta
+            import json
+            coherence_eval = json.loads(ai_response)
+            
+            return coherence_eval
+        
+        except Exception as e:
+            logger.error(f"Error en evaluación de coherencia IA: {e}")
+            return {
+                'coherence_score': 0.5,
+                'coherence_class': 'unknown',
+                'reasoning': f'AI evaluation failed: {str(e)}',
+                'cultural_context': None,
+                'settlement_pattern': None,
+                'historical_logic': None
+            }
+    
+    def _format_nearby_sites(self, nearby_sites: List[Dict[str, Any]]) -> str:
+        """Formatear sitios cercanos para prompt de IA"""
+        
+        if not nearby_sites:
+            return "No hay sitios conocidos cercanos"
+        
+        formatted = []
+        for site in nearby_sites:
+            name = site.get('name', 'Unknown')
+            distance = site.get('distance_km', 999)
+            period = site.get('period', 'unknown')
+            site_type = site.get('site_type', 'unknown')
+            
+            formatted.append(f"- {name} ({distance:.1f} km): {period}, {site_type}")
+        
+        return "\n".join(formatted)
+    
     def get_site_signature(
         self,
         site_data: Dict[str, Any]

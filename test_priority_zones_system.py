@@ -15,24 +15,26 @@ def test_recommended_zones_buffer():
     """Test de zonas recomendadas con estrategia buffer"""
     
     print("="*80)
-    print("🎯 TEST: Zonas Recomendadas - Estrategia BUFFER")
+    print("🎯 TEST: Zonas Recomendadas - Estrategia BUFFER + Scoring LiDAR")
     print("="*80)
     print()
     
-    # Región de Egipto (Valle del Nilo)
-    # Debería tener muchos hot zones conocidos
+    # Región de Petén, Guatemala (alta probabilidad de LiDAR)
     test_data = {
-        "lat_min": 25.0,
-        "lat_max": 30.0,
-        "lon_min": 30.0,
-        "lon_max": 35.0,
+        "lat_min": 16.0,
+        "lat_max": 18.0,
+        "lon_min": -91.0,
+        "lon_max": -89.0,
         "strategy": "buffer",
-        "max_zones": 20
+        "max_zones": 20,
+        "lidar_priority": True,
+        "include_scoring": True
     }
     
-    print(f"📍 Región: Valle del Nilo, Egipto")
-    print(f"   Área: ~{(30-25) * (35-30) * 111.32**2:.0f} km²")
-    print(f"   Estrategia: buffer (anillos alrededor de hot zones)")
+    print(f"📍 Región: Petén, Guatemala (Maya Lowlands)")
+    print(f"   Área: ~{(18-16) * (91-89) * 111.32**2:.0f} km²")
+    print(f"   Estrategia: buffer + scoring LiDAR")
+    print(f"   Prioridad LiDAR: Activada")
     print()
     
     try:
@@ -52,12 +54,12 @@ def test_recommended_zones_buffer():
             metadata = result['metadata']
             print(f"📊 Metadata:")
             print(f"   Sitios analizados: {metadata['sites_analyzed']:,}")
-            print(f"   Zonas alta prioridad: {metadata['high_priority_zones']}")
-            print(f"   Zonas media prioridad: {metadata['medium_priority_zones']}")
-            print(f"   Área total zonas: {metadata['total_area_km2']:.1f} km²")
-            print(f"   Área región: {metadata['region_area_km2']:.1f} km²")
+            print(f"   Zonas CRITICAL: {metadata['critical_priority_zones']}")
+            print(f"   Zonas HIGH: {metadata['high_priority_zones']}")
+            print(f"   Zonas MEDIUM: {metadata['medium_priority_zones']}")
+            print(f"   🔥 LiDAR GOLD CLASS: {metadata['lidar_gold_class']}")
+            print(f"   📡 LiDAR disponible: {metadata['lidar_available_zones']}")
             print(f"   Cobertura: {metadata['coverage_percentage']:.1f}%")
-            print(f"   Tiempo estimado: {metadata['estimated_total_time_hours']:.1f} horas")
             print()
             
             # Interpretación
@@ -65,24 +67,49 @@ def test_recommended_zones_buffer():
             print(f"🔍 Interpretación:")
             print(f"   {interpretation['message']}")
             print(f"   {interpretation['efficiency']}")
-            print(f"   {interpretation['time_estimate']}")
+            print(f"   🔥 {interpretation['lidar_opportunity']}")
             print()
             
-            # Mostrar primeras 5 zonas
-            zones = result['zones'][:5]
-            print(f"🗺️ Top 5 Zonas Prioritarias:")
+            # Mostrar zonas GOLD CLASS
+            gold_zones = [z for z in result['zones'] 
+                         if z.get('lidar_available') and z.get('excavation_status') == 'unexcavated']
+            
+            if len(gold_zones) > 0:
+                print(f"🔥 GOLD CLASS ZONES (LiDAR + Unexcavated):")
+                print()
+                
+                for i, zone in enumerate(gold_zones[:3], 1):
+                    print(f"{i}. {zone['zone_id']} - {zone['priority_class']} {zone.get('priority_color', '')}")
+                    print(f"   Score: {zone.get('priority_score', 0):.3f}")
+                    print(f"   Área: {zone['area_km2']:.2f} km²")
+                    print(f"   Terreno: {zone.get('terrain_type', 'unknown')}")
+                    print(f"   Centro: {zone['center']['lat']:.4f}, {zone['center']['lon']:.4f}")
+                    
+                    if 'recommendation' in zone:
+                        rec = zone['recommendation']
+                        print(f"   Recomendaciones:")
+                        for r in rec.get('recommendations', [])[:2]:
+                            print(f"     • {r}")
+                        print(f"   Clases LiDAR: {', '.join(rec.get('lidar_candidate_classes', []))}")
+                    print()
+            
+            # Mostrar top 3 zonas por score
+            print(f"🎯 Top 3 Zonas por Score:")
             print()
             
-            for i, zone in enumerate(zones, 1):
-                print(f"{i}. {zone['zone_id']} - {zone['priority']}")
-                print(f"   Área: {zone['area_km2']:.2f} km²")
-                print(f"   Densidad cultural: {zone['cultural_density']:.3f}")
-                print(f"   Centro: {zone['center']['lat']:.4f}, {zone['center']['lon']:.4f}")
-                print(f"   Razones:")
-                for reason in zone['reason']:
-                    print(f"     • {reason}")
-                print(f"   Instrumentos: {', '.join(zone['recommended_instruments'])}")
-                print(f"   Tiempo estimado: {zone['estimated_analysis_time_minutes']} min")
+            for i, zone in enumerate(result['zones'][:3], 1):
+                print(f"{i}. {zone['zone_id']} - {zone.get('priority_class', 'N/A')} {zone.get('priority_color', '')}")
+                print(f"   Score: {zone.get('priority_score', 0):.3f}")
+                print(f"   LiDAR: {'✅' if zone.get('lidar_available') else '❌'}")
+                print(f"   Excavación: {zone.get('excavation_status', 'unknown')}")
+                
+                if 'scoring_details' in zone:
+                    scoring = zone['scoring_details']
+                    print(f"   Scoring breakdown:")
+                    print(f"     Cultural prior: {scoring['cultural_prior']['score']:.3f}")
+                    print(f"     Terrain: {scoring['terrain_favorable']['score']:.3f}")
+                    print(f"     LiDAR complement: {scoring['lidar_complement']['score']:.3f}")
+                    print(f"     Excavation gap: {scoring['excavation_gap']['score']:.3f}")
                 print()
             
             return True
@@ -368,6 +395,134 @@ def test_optimization_metrics():
     return False
 
 
+def test_lidar_gold_class():
+    """Test específico para zonas GOLD CLASS (LiDAR + unexcavated)"""
+    
+    print("\n" + "="*80)
+    print("🔥 TEST: LiDAR GOLD CLASS - Máxima Prioridad")
+    print("="*80)
+    print()
+    
+    # Regiones con alta probabilidad de LiDAR
+    test_regions = [
+        {
+            "name": "Petén, Guatemala (Maya)",
+            "lat_min": 16.0,
+            "lat_max": 18.0,
+            "lon_min": -91.0,
+            "lon_max": -89.0
+        },
+        {
+            "name": "Amazonia, Brasil",
+            "lat_min": -5.0,
+            "lat_max": -3.0,
+            "lon_min": -62.0,
+            "lon_max": -60.0
+        },
+        {
+            "name": "Angkor, Camboya",
+            "lat_min": 13.0,
+            "lat_max": 14.0,
+            "lon_min": 103.0,
+            "lon_max": 104.0
+        }
+    ]
+    
+    gold_class_summary = []
+    
+    for region in test_regions:
+        print(f"📍 Región: {region['name']}")
+        
+        test_data = {
+            "lat_min": region['lat_min'],
+            "lat_max": region['lat_max'],
+            "lon_min": region['lon_min'],
+            "lon_max": region['lon_max'],
+            "strategy": "buffer",
+            "max_zones": 15,
+            "lidar_priority": True,
+            "include_scoring": True
+        }
+        
+        try:
+            response = requests.post(
+                f"{API_BASE}/archaeological-sites/recommended-zones",
+                json=test_data,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                metadata = result['metadata']
+                
+                gold_count = metadata.get('lidar_gold_class', 0)
+                lidar_count = metadata.get('lidar_available_zones', 0)
+                
+                print(f"   🔥 GOLD CLASS: {gold_count} zonas")
+                print(f"   📡 LiDAR disponible: {lidar_count} zonas")
+                print(f"   ✅ Total zonas: {len(result['zones'])}")
+                
+                if gold_count > 0:
+                    # Mostrar primera zona GOLD
+                    gold_zones = [z for z in result['zones'] 
+                                 if z.get('lidar_available') and z.get('excavation_status') == 'unexcavated']
+                    
+                    if len(gold_zones) > 0:
+                        zone = gold_zones[0]
+                        print(f"\n   🎯 Ejemplo GOLD CLASS:")
+                        print(f"      ID: {zone['zone_id']}")
+                        print(f"      Score: {zone.get('priority_score', 0):.3f}")
+                        print(f"      Clase: {zone.get('priority_class', 'N/A')}")
+                        
+                        if 'recommendation' in zone:
+                            rec = zone['recommendation']
+                            if 'recommendations' in rec and len(rec['recommendations']) > 0:
+                                print(f"      Recomendación: {rec['recommendations'][0]}")
+                
+                gold_class_summary.append({
+                    'region': region['name'],
+                    'gold_count': gold_count,
+                    'lidar_count': lidar_count,
+                    'total_zones': len(result['zones'])
+                })
+                
+                print()
+            else:
+                print(f"   ❌ Error: {response.status_code}")
+                print()
+        
+        except Exception as e:
+            print(f"   ❌ Excepción: {e}")
+            print()
+    
+    # Resumen
+    if len(gold_class_summary) > 0:
+        print("="*80)
+        print("📊 RESUMEN GOLD CLASS")
+        print("="*80)
+        print()
+        
+        total_gold = sum(r['gold_count'] for r in gold_class_summary)
+        total_lidar = sum(r['lidar_count'] for r in gold_class_summary)
+        
+        print(f"Total GOLD CLASS detectadas: {total_gold}")
+        print(f"Total zonas con LiDAR: {total_lidar}")
+        print()
+        
+        for r in gold_class_summary:
+            print(f"  {r['region']:<30} GOLD: {r['gold_count']:>3}  LiDAR: {r['lidar_count']:>3}")
+        
+        print()
+        print("🔥 GOLD CLASS = LiDAR detectado + NO excavado")
+        print("   → Máxima prioridad para análisis complementario")
+        print("   → Thermal + SAR + NDVI + Multi-temporal")
+        print()
+        
+        return True
+    
+    return False
+
+
 def main():
     """Función principal"""
     
@@ -377,17 +532,18 @@ def main():
     print("="*80)
     print()
     print("Tests a ejecutar:")
-    print("  1. Zonas recomendadas - Estrategia BUFFER")
+    print("  1. Zonas recomendadas - Estrategia BUFFER + Scoring LiDAR")
     print("  2. Zonas recomendadas - Estrategia GRADIENT")
     print("  3. Zonas recomendadas - Estrategia GAPS")
     print("  4. Workflow completo (zonas → análisis)")
     print("  5. Métricas de optimización")
+    print("  6. LiDAR GOLD CLASS (máxima prioridad)")
     print()
     
     results = []
     
-    # Test 1: Buffer
-    results.append(("Estrategia BUFFER", test_recommended_zones_buffer()))
+    # Test 1: Buffer + Scoring
+    results.append(("Estrategia BUFFER + Scoring LiDAR", test_recommended_zones_buffer()))
     
     # Test 2: Gradient
     results.append(("Estrategia GRADIENT", test_recommended_zones_gradient()))
@@ -400,6 +556,9 @@ def main():
     
     # Test 5: Métricas
     results.append(("Métricas de optimización", test_optimization_metrics()))
+    
+    # Test 6: LiDAR GOLD CLASS
+    results.append(("LiDAR GOLD CLASS", test_lidar_gold_class()))
     
     # Resumen
     print("\n" + "="*80)
