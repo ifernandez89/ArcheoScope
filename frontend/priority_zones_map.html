@@ -322,7 +322,7 @@
             </div>
             
             <div class="control-group" id="gold-zones-container" style="display: none;">
-                <h3>🔥 Zonas GOLD CLASS</h3>
+                <h3>🔥 Candidatas CRITICAL (Field Validation)</h3>
                 <div id="gold-zones"></div>
             </div>
         </div>
@@ -389,12 +389,59 @@
             document.getElementById('load-zones').disabled = true;
             
             try {
-                const url = `${API_BASE}/archaeological-sites/recommended-zones-geojson?` +
+                // USAR ENDPOINT ENRIQUECIDO CON MULTI-INSTRUMENTAL
+                const url = `${API_BASE}/archaeological-sites/enriched-candidates?` +
                     `lat_min=${latMin}&lat_max=${latMax}&lon_min=${lonMin}&lon_max=${lonMax}&` +
-                    `strategy=${strategy}&max_zones=${maxZones}&lidar_priority=${lidarPriority}`;
+                    `strategy=${strategy}&max_zones=${maxZones}&lidar_priority=${lidarPriority}&` +
+                    `min_convergence=0.4&save_to_database=false`;
                 
                 const response = await fetch(url);
-                const geojson = await response.json();
+                const data = await response.json();
+                
+                console.log('Candidatas recibidas:', data.total_candidates);
+                
+                // Convertir candidatas enriquecidas a GeoJSON
+                const geojson = {
+                    type: 'FeatureCollection',
+                    features: data.candidates.map(c => {
+                        // Calcular bounds aproximados (0.05 grados ~ 5km)
+                        const halfSize = 0.05;
+                        const centerLat = c.location.lat;
+                        const centerLon = c.location.lon;
+                        
+                        return {
+                            type: 'Feature',
+                            geometry: {
+                                type: 'Polygon',
+                                coordinates: [[
+                                    [centerLon - halfSize, centerLat - halfSize],
+                                    [centerLon + halfSize, centerLat - halfSize],
+                                    [centerLon + halfSize, centerLat + halfSize],
+                                    [centerLon - halfSize, centerLat + halfSize],
+                                    [centerLon - halfSize, centerLat - halfSize]
+                                ]]
+                            },
+                            properties: {
+                                candidate_id: c.candidate_id,
+                                zone_id: c.zone_id,
+                                multi_instrumental_score: c.multi_instrumental_score,
+                                recommended_action: c.recommended_action,
+                                convergence_count: c.convergence.count,
+                                convergence_ratio: c.convergence.ratio,
+                                temporal_persistence: c.temporal_persistence.detected,
+                                temporal_years: c.temporal_persistence.years,
+                                center_lat: centerLat,
+                                center_lon: centerLon,
+                                area_km2: c.location.area_km2,
+                                // Mapear acción a prioridad visual
+                                priority_class: c.recommended_action === 'field_validation' ? 'CRITICAL' :
+                                              c.recommended_action === 'detailed_analysis' ? 'HIGH' :
+                                              c.recommended_action === 'monitor' ? 'MEDIUM' : 'LOW',
+                                signals: c.signals
+                            }
+                        };
+                    })
+                };
                 
                 // Limpiar capa anterior
                 zonesLayer.clearLayers();
@@ -417,17 +464,29 @@
                     },
                     onEachFeature: (feature, layer) => {
                         const props = feature.properties;
-                        const lidarBadge = props.lidar_available ? '📡 LiDAR' : '❌ Sin LiDAR';
-                        const goldBadge = props.lidar_class === 'lidar_gold' ? '<br><strong style="color: #ff6b6b;">🔥 GOLD CLASS</strong>' : '';
+                        
+                        // Contar instrumentos que detectan
+                        const signals = props.signals || {};
+                        const detectedInstruments = Object.entries(signals)
+                            .filter(([key, val]) => val && val.detected)
+                            .map(([key]) => key.toUpperCase())
+                            .join(', ');
+                        
+                        const convergenceBadge = props.convergence_ratio >= 0.8 ? '🔥' : 
+                                                props.convergence_ratio >= 0.6 ? '⚡' : '📊';
+                        
+                        const persistenceBadge = props.temporal_persistence ? 
+                            `<br><strong>⏱️ Persistencia:</strong> ${props.temporal_years} años` : '';
                         
                         layer.bindPopup(`
-                            <h3>${props.zone_id}</h3>
-                            <p><strong>Score:</strong> ${props.priority_score}</p>
-                            <p><strong>Prioridad:</strong> ${props.priority_class} ${props.priority_color}</p>
-                            <p><strong>LiDAR:</strong> ${lidarBadge}</p>
-                            <p><strong>Terreno:</strong> ${props.terrain_type}</p>
-                            <p><strong>Área:</strong> ${props.area_km2} km²</p>
-                            ${goldBadge}
+                            <h3>${props.candidate_id}</h3>
+                            <p><strong>Score Multi-Instrumental:</strong> ${props.multi_instrumental_score.toFixed(3)}</p>
+                            <p><strong>Acción:</strong> ${props.recommended_action}</p>
+                            <p><strong>Prioridad Visual:</strong> ${props.priority_class}</p>
+                            <p><strong>${convergenceBadge} Convergencia:</strong> ${props.convergence_count}/${Math.round(props.convergence_count/props.convergence_ratio)} instrumentos (${(props.convergence_ratio*100).toFixed(0)}%)</p>
+                            ${persistenceBadge}
+                            <p><strong>🛰️ Instrumentos:</strong> ${detectedInstruments || 'N/A'}</p>
+                            <p><strong>Área:</strong> ${props.area_km2.toFixed(2)} km²</p>
                             <button onclick="analyzeZone('${props.zone_id}', ${props.center_lat}, ${props.center_lon})">
                                 🔬 Analizar Zona
                             </button>
@@ -457,22 +516,27 @@
             const zones = geojson.features;
             const critical = zones.filter(z => z.properties.priority_class === 'CRITICAL').length;
             const high = zones.filter(z => z.properties.priority_class === 'HIGH').length;
-            const gold = zones.filter(z => z.properties.lidar_class === 'lidar_gold').length;
-            const coverage = geojson.metadata.summary.coverage_percentage || 0;
             
-            document.getElementById('stat-total').textContent = `Total zonas: ${zones.length}`;
-            document.getElementById('stat-critical').textContent = `CRITICAL: ${critical}`;
-            document.getElementById('stat-high').textContent = `HIGH: ${high}`;
-            document.getElementById('stat-gold').textContent = `🔥 GOLD CLASS: ${gold}`;
-            document.getElementById('stat-coverage').textContent = `Cobertura: ${coverage.toFixed(1)}%`;
+            // Calcular convergencia promedio
+            const avgConvergence = zones.reduce((sum, z) => sum + (z.properties.convergence_ratio || 0), 0) / zones.length;
+            
+            // Contar zonas con persistencia temporal
+            const withPersistence = zones.filter(z => z.properties.temporal_persistence).length;
+            
+            document.getElementById('stat-total').textContent = `Total candidatas: ${zones.length}`;
+            document.getElementById('stat-critical').textContent = `CRITICAL (field_validation): ${critical}`;
+            document.getElementById('stat-high').textContent = `HIGH (detailed_analysis): ${high}`;
+            document.getElementById('stat-gold').textContent = `⚡ Convergencia promedio: ${(avgConvergence*100).toFixed(0)}%`;
+            document.getElementById('stat-coverage').textContent = `⏱️ Con persistencia temporal: ${withPersistence}`;
             
             document.getElementById('stats').style.display = 'block';
         }
         
         function showGoldZones(geojson) {
-            const goldZones = geojson.features.filter(z => z.properties.lidar_class === 'lidar_gold');
+            // Mostrar candidatas CRITICAL (field_validation)
+            const criticalZones = geojson.features.filter(z => z.properties.priority_class === 'CRITICAL');
             
-            if (goldZones.length === 0) {
+            if (criticalZones.length === 0) {
                 document.getElementById('gold-zones-container').style.display = 'none';
                 return;
             }
@@ -480,15 +544,17 @@
             const container = document.getElementById('gold-zones');
             container.innerHTML = '';
             
-            goldZones.forEach(zone => {
+            criticalZones.forEach(zone => {
                 const props = zone.properties;
                 const div = document.createElement('div');
                 div.className = 'zone-item';
                 div.innerHTML = `
-                    <strong>${props.zone_id}</strong>
-                    <span class="lidar">🔥 GOLD</span>
+                    <strong>${props.candidate_id}</strong>
+                    <span class="lidar">🔥 CRITICAL</span>
                     <br>
-                    <span class="score">Score: ${props.priority_score}</span>
+                    <span class="score">Score: ${props.multi_instrumental_score.toFixed(3)}</span>
+                    <br>
+                    <small>Convergencia: ${props.convergence_count} instrumentos</small>
                     <br>
                     <small>${props.center_lat.toFixed(4)}, ${props.center_lon.toFixed(4)}</small>
                 `;
