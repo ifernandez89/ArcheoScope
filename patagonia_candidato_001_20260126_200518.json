@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-01-26T20:05:18.197948",
+  "region_name": "Patagonia Proglaciar - Candidato #001",
+  "coordinates": {
+    "center": {
+      "lat": -50.476,
+      "lon": -73.045
+    },
+    "bbox": {
+      "lat_min": -50.55,
+      "lat_max": -50.4,
+      "lon_min": -73.15,
+      "lon_max": -72.9
+    }
+  },
+  "result": {
+    "anomaly_detected": false,
+    "confidence_level": "none",
+    "archaeological_probability": 0.1,
+    "environment_type": "mountain",
+    "environment_confidence": 0.85,
+    "instruments_converging": 0,
+    "minimum_required": 2,
+    "convergence_met": false
+  },
+  "measurements": [],
+  "known_site": {
+    "nearby": false,
+    "name": null,
+    "distance_km": null
+  },
+  "explanation": "Análisis en ambiente mountain (confianza 85%). Ningún instrumento detectó anomalias significativas. Convergencia NO alcanzada (0/2 requeridos). No se detectó anomalía arqueologica significativa.",
+  "elapsed_seconds": 5.256134
+}
