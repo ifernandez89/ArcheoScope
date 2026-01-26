@@ -2264,6 +2264,137 @@ def _estimate_lidar_availability(lat: float, lon: float) -> bool:
     # Por defecto, asumimos no disponible
     return False
 
+@app.get("/archaeological-sites/recommended-zones-geojson", tags=["Analysis", "Visualization"])
+async def get_recommended_zones_geojson(
+    lat_min: float,
+    lat_max: float,
+    lon_min: float,
+    lon_max: float,
+    strategy: str = "buffer",
+    max_zones: int = 100,
+    lidar_priority: bool = True
+):
+    """
+    ## Zonas Prioritarias en Formato GeoJSON
+    
+    **Para visualización en mapas interactivos (Leaflet, Mapbox, etc.)**
+    
+    Retorna zonas prioritarias como FeatureCollection GeoJSON con:
+    - Geometría: Polígonos (bounding boxes)
+    - Propiedades: Score, prioridad, LiDAR, metadata
+    
+    ### Uso en Frontend
+    
+    ```javascript
+    // Cargar zonas
+    const response = await fetch('/archaeological-sites/recommended-zones-geojson?...');
+    const geojson = await response.json();
+    
+    // Agregar a mapa Leaflet
+    L.geoJSON(geojson, {
+        style: (feature) => ({
+            fillColor: getColorByPriority(feature.properties.priority_class),
+            fillOpacity: 0.4
+        })
+    }).addTo(map);
+    ```
+    
+    ### Colores Sugeridos
+    
+    - CRITICAL: #ff0000 (rojo)
+    - HIGH: #ff8800 (naranja)
+    - MEDIUM: #ffff00 (amarillo)
+    - LOW: #00ff00 (verde)
+    
+    ### Parámetros
+    
+    - `lat_min`, `lat_max`, `lon_min`, `lon_max`: Bounding box
+    - `strategy`: buffer, gradient, gaps
+    - `max_zones`: Máximo número de zonas
+    - `lidar_priority`: Priorizar zonas con LiDAR
+    """
+    try:
+        # Obtener zonas (reutilizar endpoint existente)
+        zones_response = await get_recommended_analysis_zones(
+            lat_min, lat_max, lon_min, lon_max,
+            strategy, max_zones, lidar_priority, include_scoring=True
+        )
+        
+        # Convertir a GeoJSON
+        features = []
+        
+        for zone in zones_response['zones']:
+            bbox = zone['bbox']
+            
+            # Crear polígono del bounding box
+            coordinates = [[
+                [bbox['lon_min'], bbox['lat_min']],
+                [bbox['lon_max'], bbox['lat_min']],
+                [bbox['lon_max'], bbox['lat_max']],
+                [bbox['lon_min'], bbox['lat_max']],
+                [bbox['lon_min'], bbox['lat_min']]
+            ]]
+            
+            # Propiedades para el mapa
+            properties = {
+                'zone_id': zone['zone_id'],
+                'priority_score': round(zone.get('priority_score', 0), 3),
+                'priority_class': zone.get('priority_class', 'UNKNOWN'),
+                'priority_color': zone.get('priority_color', '🟢'),
+                'lidar_available': zone.get('lidar_available', False),
+                'lidar_class': zone.get('scoring_details', {}).get('lidar_complement', {}).get('details', {}).get('class', 'none'),
+                'excavation_status': zone.get('excavation_status', 'unknown'),
+                'terrain_type': zone.get('terrain_type', 'unknown'),
+                'area_km2': round(zone['area_km2'], 2),
+                'cultural_density': round(zone.get('cultural_density', 0), 3),
+                'estimated_time_minutes': zone['estimated_analysis_time_minutes'],
+                'center_lat': round(zone['center']['lat'], 4),
+                'center_lon': round(zone['center']['lon'], 4)
+            }
+            
+            # Agregar recomendaciones si existen
+            if 'recommendation' in zone:
+                rec = zone['recommendation']
+                properties['recommendations'] = rec.get('recommendations', [])[:2]  # Top 2
+                properties['instruments'] = rec.get('recommended_instruments', [])
+                properties['analysis_strategy'] = rec.get('analysis_strategy', 'standard')
+            
+            features.append({
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": coordinates
+                },
+                "properties": properties
+            })
+        
+        geojson = {
+            "type": "FeatureCollection",
+            "features": features,
+            "metadata": {
+                "total_zones": len(features),
+                "strategy": strategy,
+                "bounds": {
+                    "lat_min": lat_min,
+                    "lat_max": lat_max,
+                    "lon_min": lon_min,
+                    "lon_max": lon_max
+                },
+                "summary": zones_response.get('metadata', {}),
+                "generated_at": datetime.now().isoformat()
+            }
+        }
+        
+        logger.info(f"✅ GeoJSON generado: {len(features)} zonas")
+        
+        return geojson
+        
+    except Exception as e:
+        logger.error(f"❌ Error generando GeoJSON: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generando GeoJSON: {str(e)}")
+
 @app.post("/academic/validation/blind-test")
 async def run_blind_test():
     """
