@@ -14,7 +14,7 @@ def test_openrouter_direct():
     print("=" * 50)
     
     # Configuración desde .env.local
-    api_key = "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"
+    api_key = os.getenv('OPENROUTER_API_KEY', 'sk-or-v1-CONFIGURE_YOUR_KEY_IN_ENV_LOCAL')
     model = "google/gemini-2.5-flash-preview-09-2025"
     
     print(f"🔑 API Key: {api_key[:20]}...{api_key[-10:]}")
@@ -132,7 +132,7 @@ def test_alternative_models():
     
     print("\n3. 🔄 Probando modelos alternativos...")
     
-    api_key = "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"
+    api_key = os.getenv('OPENROUTER_API_KEY', 'sk-or-v1-CONFIGURE_YOUR_KEY_IN_ENV_LOCAL')
     
     # Modelos alternativos a probar
     alternative_models = [

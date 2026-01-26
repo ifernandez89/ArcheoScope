@@ -235,10 +235,11 @@ python test_calibration_4_reference_sites.py
 # ArcheoScope - Configuración de APIs
 # NUNCA commitear este archivo - está en .gitignore
 
+```bash
 # OpenRouter API Configuration
-OPENROUTER_API_KEY=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
+OPENROUTER_API_KEY=sk-or-v1-TU_API_KEY_AQUI
 
-# Modelo preferido - Gemini 2.0 Flash Experimental (GRATUITO)
+# Modelo recomendado - Gemini 2.0 Flash Experimental (GRATUITO)
 OPENROUTER_MODEL=google/gemini-2.0-flash-exp:free
 
 # Configuración de providers (cambiar a true para activar OpenRouter)

@@ -1,0 +1,39 @@
+{
+  "test_info": {
+    "title": "Verificación Final del Flujo Corregido",
+    "date": "2026-01-23T10:14:38.340966",
+    "coordinates": {
+      "lat": 25.55,
+      "lng": -70.25,
+      "name": "Centro del Triángulo - Test Final"
+    }
+  },
+  "backend_results": {
+    "wreck_candidates": 6,
+    "total_anomalies": 6,
+    "high_priority_targets": 6
+  },
+  "expected_frontend_behavior": {
+    "should_activate_lupa": true,
+    "activation_reason": "6 candidatos a naufragios detectados",
+    "expected_anomalies_in_lupa": 5,
+    "should_show_visualization_section": true
+  },
+  "test_instructions": [
+    "1. Abrir http://localhost:8080",
+    "2. Introducir coordenadas: 25.55, -70.25",
+    "3. Hacer clic en INVESTIGAR",
+    "4. VERIFICAR: Aparece mensaje de análisis completado",
+    "5. VERIFICAR: Aparece botón '🔍 Lupa Arqueológica (6 candidatos)'",
+    "6. Hacer clic en la lupa",
+    "7. VERIFICAR: Sección '🎨 Visualización de Anomalías Detectadas' visible",
+    "8. VERIFICAR: Muestra 5 anomalías para seleccionar",
+    "9. VERIFICAR: Botones '🖼️ Vista 2D' y '🎲 Modelo 3D' funcionan"
+  ],
+  "success_criteria": {
+    "lupa_button_appears": true,
+    "visualization_section_active": true,
+    "anomalies_generated": 5,
+    "image_generation_available": true
+  }
+}

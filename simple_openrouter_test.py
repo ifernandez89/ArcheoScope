@@ -1,8 +1,13 @@
 import requests
 import json
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv('.env.local')
+
 # Test simple de OpenRouter
-api_key = "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"
+api_key = os.getenv('OPENROUTER_API_KEY', 'sk-or-v1-CONFIGURE_YOUR_KEY_IN_ENV_LOCAL')
 
 print("Testing OpenRouter API...")
 

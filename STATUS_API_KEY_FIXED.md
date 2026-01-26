@@ -13,9 +13,9 @@ Causa: Cuenta eliminada o key revocada
 Estado: DESCARTADA
 ```
 
-### API KEY 2 (Nueva) - ✅ FUNCIONAL
+### API KEY - ✅ CONFIGURADA CORRECTAMENTE
 ```
-API Key: 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
+API Key: sk-or-v1-[CONFIGURADA_EN_ENV_LOCAL]
 Modelo: qwen/qwen3-coder:free
 Estado: ✅ VÁLIDA Y FUNCIONAL
 Tier: Free (gratuito)
@@ -43,8 +43,8 @@ Según la información de tu cuenta:
 
 ### 1. Actualizado `.env.local`
 ```bash
-# API Key funcional (KEY 2)
-OPENROUTER_API_KEY=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
+# API Key funcional
+OPENROUTER_API_KEY=sk-or-v1-TU_API_KEY_AQUI
 
 # Modelo gratuito y funcional
 OPENROUTER_MODEL=qwen/qwen3-coder:free

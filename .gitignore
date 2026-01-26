@@ -8,6 +8,15 @@ yarn.lock
 .env.local
 .env.*.local
 
+# MCP Configuration (puede contener API keys)
+mcp.json.local
+
+# API Keys y configuración sensible
+*api_key*
+*API_KEY*
+*.key
+*.pem
+
 # Prisma
 prisma/migrations/
 .prisma/

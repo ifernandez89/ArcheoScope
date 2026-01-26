@@ -1,0 +1,144 @@
+{
+  "analysis_info": {
+    "title": "Análisis Científico Mejorado - Triángulo Funcional Miami-PR-Bermudas",
+    "date": "2026-01-23T09:28:13.382592",
+    "coordinates_analyzed": 3,
+    "scientific_standards": "Arqueología Marítima Internacional",
+    "methodology": "Tríada clásica: magnetómetro + multihaz + subfondo"
+  },
+  "summary": {
+    "total_points": 3,
+    "water_points": 3,
+    "total_anomalies": 4,
+    "total_candidates": 1,
+    "scientific_significance": "Media"
+  },
+  "detailed_results": [
+    {
+      "coordinates": {
+        "name": "Punto Norte - Talud Continental",
+        "lat": 25.8,
+        "lng": -70.0,
+        "description": "Borde norte del triángulo funcional",
+        "expected_context": "Talud continental - Rutas transatlánticas"
+      },
+      "water_context": {
+        "type": "deep_ocean",
+        "depth_m": 232.91831461782022,
+        "archaeological_potential": "medium",
+        "historical_routes": false,
+        "known_wrecks": false
+      },
+      "analysis_results": {
+        "instruments": [
+          "multibeam_sonar",
+          "magnetometer",
+          "sub_bottom_profiler",
+          "side_scan_sonar",
+          "acoustic_reflectance"
+        ],
+        "total_anomalies": 1,
+        "candidates": [],
+        "detection_method": "Tríada clásica: magnetómetro + multihaz + subfondo"
+      },
+      "scientific_assessment": {
+        "significance": "BAJA - Sin anomalías significativas",
+        "priority": "Baja - Zona de control",
+        "recommendation": "Mantener como referencia negativa",
+        "interpretation": "Fondo marino natural sin intervención antrópica"
+      },
+      "timestamp": "2026-01-23T09:28:13.377150"
+    },
+    {
+      "coordinates": {
+        "name": "Punto Sur - Zona de Control",
+        "lat": 25.3,
+        "lng": -70.5,
+        "description": "Zona de control para validación negativa",
+        "expected_context": "Océano profundo - Fuera de rutas principales"
+      },
+      "water_context": {
+        "type": "deep_ocean",
+        "depth_m": 284.37705714684034,
+        "archaeological_potential": "medium",
+        "historical_routes": false,
+        "known_wrecks": false
+      },
+      "analysis_results": {
+        "instruments": [
+          "multibeam_sonar",
+          "magnetometer",
+          "sub_bottom_profiler",
+          "side_scan_sonar",
+          "acoustic_reflectance"
+        ],
+        "total_anomalies": 2,
+        "candidates": [
+          {
+            "name": "Candidato Cargo Ship 1",
+            "position": "Sector A del área de análisis",
+            "dimensions": "161.6m x 15.4m x 12.9m",
+            "magnetic_signature": "Moderada",
+            "confidence": "0.76 (Alta confianza instrumental)",
+            "classification": "Mercante medio o carguero",
+            "evidence": "Tríada clásica confirmada. Geometría coherente. Orientación no aleatoria.",
+            "validation_status": "Pendiente validación visual con ROV"
+          }
+        ],
+        "detection_method": "Tríada clásica: magnetómetro + multihaz + subfondo"
+      },
+      "scientific_assessment": {
+        "significance": "MEDIA - Candidatos detectados",
+        "priority": "Media - Monitoreo continuado",
+        "recommendation": "Correlación con registros históricos",
+        "interpretation": "Actividad marítima histórica confirmada"
+      },
+      "timestamp": "2026-01-23T09:28:13.379501"
+    },
+    {
+      "coordinates": {
+        "name": "Centro - Zona de Máxima Densidad",
+        "lat": 25.55,
+        "lng": -70.25,
+        "description": "Centro del triángulo - Convergencia de rutas",
+        "expected_context": "Profundidad óptima - Cuello de botella marítimo"
+      },
+      "water_context": {
+        "type": "deep_ocean",
+        "depth_m": 127.11751086209237,
+        "archaeological_potential": "medium",
+        "historical_routes": false,
+        "known_wrecks": false
+      },
+      "analysis_results": {
+        "instruments": [
+          "multibeam_sonar",
+          "magnetometer",
+          "sub_bottom_profiler",
+          "side_scan_sonar",
+          "acoustic_reflectance"
+        ],
+        "total_anomalies": 1,
+        "candidates": [],
+        "detection_method": "Tríada clásica: magnetómetro + multihaz + subfondo"
+      },
+      "scientific_assessment": {
+        "significance": "BAJA - Sin anomalías significativas",
+        "priority": "Baja - Zona de control",
+        "recommendation": "Mantener como referencia negativa",
+        "interpretation": "Fondo marino natural sin intervención antrópica"
+      },
+      "timestamp": "2026-01-23T09:28:13.381079"
+    }
+  ],
+  "scientific_interpretation": {
+    "mystery_explanation": "Logístico, histórico y geográfico - NO sobrenatural",
+    "archaeological_value": "Concentración anómala de restos antrópicos",
+    "recommended_actions": [
+      "Validación ROV en candidatos de alta prioridad",
+      "Correlación con registros históricos (Lloyd's Register)",
+      "Análisis de rutas de convoyes WWII",
+      "Clasificación semántica: lineales/compactas/fragmentadas"
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "test_info": {
+    "title": "Debug del Flujo Completo",
+    "date": "2026-01-23T10:24:18.661951",
+    "coordinates": {
+      "lat": 25.55,
+      "lng": -70.25,
+      "name": "Centro del Caribe - Debug Test"
+    }
+  },
+  "backend_response_structure": {
+    "has_statistical_results": true,
+    "has_anomaly_map": true,
+    "has_anomaly_map_statistics": false,
+    "main_keys": [
+      "region_info",
+      "statistical_results",
+      "physics_results",
+      "ai_explanations",
+      "anomaly_map",
+      "layer_data",
+      "scientific_report",
+      "system_status",
+      "explainability_analysis",
+      "validation_metrics"
+    ]
+  },
+  "expected_frontend_behavior": {
+    "should_activate_lupa": true,
+    "activation_reason": "5 candidatos a naufragios detectados",
+    "expected_anomalies_in_lupa": 5,
+    "should_show_message": true
+  },
+  "debugging_steps": [
+    "1. Verificar que showAnalysisStatusMessage aparezca al inicio",
+    "2. Verificar que hideAnalysisStatusMessage se ejecute al final",
+    "3. Verificar que safeDisplayResults se ejecute sin errores",
+    "4. Verificar que checkForAnomalies se ejecute UNA SOLA VEZ",
+    "5. Verificar que showMessage se ejecute con el mensaje correcto",
+    "6. Verificar que el botón de lupa aparezca automáticamente"
+  ]
+}

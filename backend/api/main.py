@@ -233,6 +233,14 @@ except ImportError as e:
             }
         }
 
+# NUEVO: Incluir router de validación IA
+try:
+    from api.ai_validation_endpoints import ai_validation_router
+    app.include_router(ai_validation_router)
+    logger.info("✅ Router de validación IA incluido")
+except ImportError as e:
+    logger.warning(f"⚠️ No se pudo cargar router de validación IA: {e}")
+
 # Modelos de datos (idénticos a CryoScope para mantener UI/UX)
 class RegionRequest(BaseModel):
     """Solicitud de análisis arqueológico de región"""
