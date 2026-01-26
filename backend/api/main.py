@@ -2345,6 +2345,30 @@ async def get_recommended_zones_geojson(
                 [bbox['lon_min'], bbox['lat_min']]
             ]]
             
+            # Obtener tipo de ambiente de los sitios en la zona
+            zone_center_lat = zone['center']['lat']
+            zone_center_lon = zone['center']['lon']
+            
+            # Buscar sitios cercanos para determinar ambiente predominante
+            nearby_sites = await database_connection.get_sites_in_bounds(
+                zone['bbox']['lat_min'],
+                zone['bbox']['lat_max'],
+                zone['bbox']['lon_min'],
+                zone['bbox']['lon_max']
+            )
+            
+            # Determinar ambiente predominante
+            environment_type = 'UNKNOWN'
+            if nearby_sites:
+                env_counts = {}
+                for site in nearby_sites:
+                    env = site.get('environmentType', 'UNKNOWN')
+                    env_counts[env] = env_counts.get(env, 0) + 1
+                environment_type = max(env_counts, key=env_counts.get)
+            
+            # Contar sitios cercanos
+            nearby_sites_count = len(nearby_sites) if nearby_sites else 0
+            
             # Propiedades para el mapa
             properties = {
                 'zone_id': zone['zone_id'],
@@ -2355,6 +2379,8 @@ async def get_recommended_zones_geojson(
                 'lidar_class': zone.get('scoring_details', {}).get('lidar_complement', {}).get('details', {}).get('class', 'none'),
                 'excavation_status': zone.get('excavation_status', 'unknown'),
                 'terrain_type': zone.get('terrain_type', 'unknown'),
+                'environment_type': environment_type,
+                'nearby_sites_count': nearby_sites_count,
                 'area_km2': round(zone['area_km2'], 2),
                 'cultural_density': round(zone.get('cultural_density', 0), 3),
                 'estimated_time_minutes': zone['estimated_analysis_time_minutes'],

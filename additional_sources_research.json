@@ -1,0 +1,49 @@
+{
+  "research_date": "2026-01-26",
+  "total_sources": 6,
+  "estimated_total_sites": 2365000,
+  "sources": [
+    {
+      "name": "Pleiades",
+      "url": "https://atlantides.org/downloads/pleiades/json/",
+      "coverage": "Mediterranean, Middle East",
+      "estimated_sites": 35000,
+      "available": true
+    },
+    {
+      "name": "EAMENA",
+      "url": "https://database.eamena.org/",
+      "coverage": "Middle East, North Africa",
+      "estimated_sites": 200000,
+      "available": true
+    },
+    {
+      "name": "ARIADNE",
+      "url": "https://portal.ariadne-infrastructure.eu/",
+      "coverage": "Europe",
+      "estimated_sites": 2000000,
+      "available": true
+    },
+    {
+      "name": "DARE",
+      "url": "https://dh.gu.se/dare/",
+      "coverage": "Roman Empire",
+      "estimated_sites": 10000,
+      "available": true
+    },
+    {
+      "name": "Pelagios",
+      "url": "https://pelagios.org/",
+      "coverage": "Global historical",
+      "estimated_sites": 100000,
+      "available": true
+    },
+    {
+      "name": "GeoNames",
+      "url": "https://www.geonames.org/",
+      "coverage": "Global",
+      "estimated_sites": 20000,
+      "available": true
+    }
+  ]
+}

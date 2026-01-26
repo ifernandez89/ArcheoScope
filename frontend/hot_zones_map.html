@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcheoScope - Zonas Calientes</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            color: #eee;
+            overflow: hidden;
+        }
+        
+        #header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #header h1 {
+            font-size: 1.8em;
+            margin: 0;
+        }
+        
+        #header .subtitle {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        #container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+        
+        #sidebar {
+            width: 380px;
+            background: #16213e;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 2px solid #667eea;
+        }
+        
+        #map {
+            flex: 1;
+            height: 100%;
+        }
+        
+        .control-group {
+            background: #1a2332;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .control-group h3 {
+            margin: 0 0 10px 0;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+        
+        label {
+            display: block;
+            margin: 10px 0 5px 0;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px;
+            background: #0a0e27;
+            border: 1px solid #667eea;
+            border-radius: 4px;
+            color: #eee;
+            font-size: 0.9em;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .stats {
+            background: #0a0e27;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .stats p {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        
+        .legend {
+            background: #1a2332;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 0.85em;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 8px;
+            border: 1px solid #fff;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        
+        .zone-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .zone-item {
+            background: #0a0e27;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 3px solid;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .zone-item:hover {
+            background: #1a2332;
+        }
+        
+        .zone-item.critical { border-left-color: #ff0000; }
+        .zone-item.high { border-left-color: #ff8800; }
+        .zone-item.medium { border-left-color: #ffff00; }
+        .zone-item.low { border-left-color: #00ff00; }
+        
+        .zone-item h4 {
+            margin: 0 0 5px 0;
+            font-size: 0.9em;
+        }
+        
+        .zone-item p {
+            margin: 2px 0;
+            font-size: 0.8em;
+            color: #aaa;
+        }
+        
+        #status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1a2332;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1000;
+        }
+        
+        #status.show {
+            display: block;
+        }
+        
+        .filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .chip {
+            background: #667eea;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .chip:hover {
+            background: #764ba2;
+        }
+        
+        .chip.active {
+            background: #00ff00;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div>
+            <h1>🔥 ArcheoScope - Zonas Calientes</h1>
+            <div class="subtitle">Visualización de zonas prioritarias para análisis arqueológico</div>
+        </div>
+    </div>
+    
+    <div id="container">
+        <div id="sidebar">
+            <div class="control-group">
+                <h3>🗺️ Región de Análisis</h3>
+                
+                <label>Latitud Mínima</label>
+                <input type="number" id="lat-min" value="16" step="0.1">
+                
+                <label>Latitud Máxima</label>
+                <input type="number" id="lat-max" value="18" step="0.1">
+                
+                <label>Longitud Mínima</label>
+                <input type="number" id="lon-min" value="-91" step="0.1">
+                
+                <label>Longitud Máxima</label>
+                <input type="number" id="lon-max" value="-89" step="0.1">
+                
+                <button onclick="loadPreset('peten')">📍 Petén, Guatemala</button>
+                <button onclick="loadPreset('egypt')">📍 Valle del Nilo, Egipto</button>
+                <button onclick="loadPreset('peru')">📍 Valle Sagrado, Perú</button>
+            </div>
+            
+            <div class="control-group">
+                <h3>🎯 Filtros</h3>
+                
+                <label>Tipo de Terreno</label>
+                <select id="environment-filter">
+                    <option value="">Todos los terrenos</option>
+                    <option value="FOREST">🌳 Bosque/Selva</option>
+                    <option value="DESERT">🏜️ Desierto</option>
+                    <option value="MOUNTAIN">⛰️ Montaña</option>
+                    <option value="COASTAL">🏖️ Costero</option>
+                    <option value="SEMI_ARID">🌾 Semi-árido</option>
+                </select>
+                
+                <label>Estrategia</label>
+                <select id="strategy">
+                    <option value="buffer">Buffer (Anillos alrededor)</option>
+                    <option value="grid">Grid (Cuadrícula)</option>
+                    <option value="density">Density (Por densidad)</option>
+                </select>
+                
+                <label>Máximo de Zonas</label>
+                <input type="number" id="max-zones" value="50" min="10" max="200">
+                
+                <label>
+                    <input type="checkbox" id="lidar-priority">
+                    Priorizar zonas con LiDAR
+                </label>
+                
+                <button onclick="generateZones()" id="generate-btn">
+                    🔍 Generar Zonas Calientes
+                </button>
+            </div>
+            
+            <div class="control-group" id="stats-panel" style="display: none;">
+                <h3>📊 Estadísticas</h3>
+                <div class="stats" id="stats-content"></div>
+                
+                <div class="legend">
+                    <h4 style="margin: 0 0 10px 0;">Leyenda</h4>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff0000;"></div>
+                        <span>CRITICAL - Máxima prioridad</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff8800;"></div>
+                        <span>HIGH - Alta prioridad</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffff00;"></div>
+                        <span>MEDIUM - Media prioridad</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #00ff00;"></div>
+                        <span>LOW - Baja prioridad</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group" id="zones-panel" style="display: none;">
+                <h3>🎯 Zonas Generadas (<span id="zones-count">0</span>)</h3>
+                <div class="zone-list" id="zones-list"></div>
+            </div>
+        </div>
+        
+        <div id="map"></div>
+    </div>
+    
+    <div id="status">
+        <p id="status-text"></p>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        const API_BASE = 'http://localhost:8002';
+        let map;
+        let zonesLayer;
+        let currentZones = [];
+        
+        // Inicializar mapa
+        function initMap() {
+            map = L.map('map').setView([17, -90], 8);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            console.log('✅ Mapa inicializado');
+        }
+        
+        // Presets de regiones
+        function loadPreset(region) {
+            const presets = {
+                'peten': {
+                    lat_min: 16,
+                    lat_max: 18,
+                    lon_min: -91,
+                    lon_max: -89,
+                    zoom: 8,
+                    center: [17, -90]
+                },
+                'egypt': {
+                    lat_min: 25,
+                    lat_max: 27,
+                    lon_min: 31,
+                    lon_max: 33,
+                    zoom: 8,
+                    center: [26, 32]
+                },
+                'peru': {
+                    lat_min: -14,
+                    lat_max: -12,
+                    lon_min: -73,
+                    lon_max: -71,
+                    zoom: 8,
+                    center: [-13, -72]
+                }
+            };
+            
+            const preset = presets[region];
+            if (preset) {
+                document.getElementById('lat-min').value = preset.lat_min;
+                document.getElementById('lat-max').value = preset.lat_max;
+                document.getElementById('lon-min').value = preset.lon_min;
+                document.getElementById('lon-max').value = preset.lon_max;
+                
+                map.setView(preset.center, preset.zoom);
+                
+                showStatus(`📍 Región cargada: ${region.toUpperCase()}`);
+            }
+        }
+        
+        // Generar zonas calientes
+        async function generateZones() {
+            const btn = document.getElementById('generate-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Generando...';
+            
+            showStatus('🔍 Generando zonas calientes...');
+            
+            try {
+                const lat_min = parseFloat(document.getElementById('lat-min').value);
+                const lat_max = parseFloat(document.getElementById('lat-max').value);
+                const lon_min = parseFloat(document.getElementById('lon-min').value);
+                const lon_max = parseFloat(document.getElementById('lon-max').value);
+                const strategy = document.getElementById('strategy').value;
+                const max_zones = parseInt(document.getElementById('max-zones').value);
+                const lidar_priority = document.getElementById('lidar-priority').checked;
+                const environment_filter = document.getElementById('environment-filter').value;
+                
+                // Construir URL
+                let url = `${API_BASE}/archaeological-sites/recommended-zones-geojson?`;
+                url += `lat_min=${lat_min}&lat_max=${lat_max}`;
+                url += `&lon_min=${lon_min}&lon_max=${lon_max}`;
+                url += `&strategy=${strategy}&max_zones=${max_zones}`;
+                url += `&lidar_priority=${lidar_priority}`;
+                
+                console.log('📡 Solicitando zonas:', url);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const geojson = await response.json();
+                
+                console.log('✅ Zonas recibidas:', geojson);
+                
+                // Filtrar por terreno si está seleccionado
+                let filteredFeatures = geojson.features;
+                if (environment_filter) {
+                    filteredFeatures = geojson.features.filter(f => 
+                        f.properties.environment_type === environment_filter
+                    );
+                    
+                    console.log(`🔍 Filtrado por ${environment_filter}: ${filteredFeatures.length} zonas`);
+                }
+                
+                // Actualizar GeoJSON con features filtrados
+                const filteredGeoJSON = {
+                    ...geojson,
+                    features: filteredFeatures
+                };
+                
+                // Visualizar en mapa
+                visualizeZones(filteredGeoJSON);
+                
+                // Actualizar estadísticas
+                updateStats(filteredGeoJSON);
+                
+                // Listar zonas
+                listZones(filteredGeoJSON);
+                
+                showStatus(`✅ ${filteredFeatures.length} zonas generadas`);
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showStatus(`❌ Error: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔍 Generar Zonas Calientes';
+            }
+        }
+        
+        // Visualizar zonas en el mapa
+        function visualizeZones(geojson) {
+            // Remover capa anterior
+            if (zonesLayer) {
+                map.removeLayer(zonesLayer);
+            }
+            
+            // Crear nueva capa
+            zonesLayer = L.geoJSON(geojson, {
+                style: function(feature) {
+                    const props = feature.properties;
+                    const colors = {
+                        'CRITICAL': '#ff0000',
+                        'HIGH': '#ff8800',
+                        'MEDIUM': '#ffff00',
+                        'LOW': '#00ff00'
+                    };
+                    
+                    return {
+                        fillColor: colors[props.priority_class] || '#888',
+                        fillOpacity: 0.4,
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 0.8
+                    };
+                },
+                onEachFeature: function(feature, layer) {
+                    const props = feature.properties;
+                    
+                    const popupContent = `
+                        <div style="min-width: 250px;">
+                            <h3 style="margin: 0 0 10px 0; color: ${getColorForPriority(props.priority_class)};">
+                                ${props.zone_id}
+                            </h3>
+                            <p><strong>Prioridad:</strong> ${props.priority_class}</p>
+                            <p><strong>Score:</strong> ${props.priority_score.toFixed(3)}</p>
+                            <p><strong>Terreno:</strong> ${props.environment_type || 'N/A'}</p>
+                            <p><strong>Área:</strong> ${props.area_km2.toFixed(2)} km²</p>
+                            <p><strong>LiDAR:</strong> ${props.lidar_available ? '✅ Disponible' : '❌ No disponible'}</p>
+                            <p><strong>Sitios cercanos:</strong> ${props.nearby_sites_count || 0}</p>
+                            <hr style="margin: 10px 0;">
+                            <button onclick="analyzeZone('${props.zone_id}')" style="width: 100%; padding: 8px; background: #667eea; border: none; color: white; border-radius: 4px; cursor: pointer;">
+                                🔍 Analizar Zona
+                            </button>
+                        </div>
+                    `;
+                    
+                    layer.bindPopup(popupContent);
+                }
+            }).addTo(map);
+            
+            // Ajustar vista al bounds
+            if (geojson.features.length > 0) {
+                map.fitBounds(zonesLayer.getBounds());
+            }
+            
+            currentZones = geojson.features;
+        }
+        
+        // Actualizar estadísticas
+        function updateStats(geojson) {
+            const stats = geojson.metadata || {};
+            const features = geojson.features;
+            
+            // Contar por prioridad
+            const priorities = {
+                'CRITICAL': 0,
+                'HIGH': 0,
+                'MEDIUM': 0,
+                'LOW': 0
+            };
+            
+            features.forEach(f => {
+                const priority = f.properties.priority_class;
+                if (priorities.hasOwnProperty(priority)) {
+                    priorities[priority]++;
+                }
+            });
+            
+            // Contar por terreno
+            const environments = {};
+            features.forEach(f => {
+                const env = f.properties.environment_type || 'UNKNOWN';
+                environments[env] = (environments[env] || 0) + 1;
+            });
+            
+            const statsHTML = `
+                <p><strong>Total zonas:</strong> ${features.length}</p>
+                <p><strong>Sitios analizados:</strong> ${stats.sites_analyzed || 0}</p>
+                <hr style="margin: 10px 0; border-color: #667eea;">
+                <p><strong>Por prioridad:</strong></p>
+                <p>🔴 CRITICAL: ${priorities.CRITICAL}</p>
+                <p>🟠 HIGH: ${priorities.HIGH}</p>
+                <p>🟡 MEDIUM: ${priorities.MEDIUM}</p>
+                <p>🟢 LOW: ${priorities.LOW}</p>
+                <hr style="margin: 10px 0; border-color: #667eea;">
+                <p><strong>Por terreno:</strong></p>
+                ${Object.entries(environments).map(([env, count]) => 
+                    `<p>${getEnvironmentIcon(env)} ${env}: ${count}</p>`
+                ).join('')}
+            `;
+            
+            document.getElementById('stats-content').innerHTML = statsHTML;
+            document.getElementById('stats-panel').style.display = 'block';
+        }
+        
+        // Listar zonas
+        function listZones(geojson) {
+            const features = geojson.features;
+            const list = document.getElementById('zones-list');
+            
+            list.innerHTML = '';
+            
+            // Ordenar por score
+            const sorted = features.sort((a, b) => 
+                b.properties.priority_score - a.properties.priority_score
+            );
+            
+            sorted.forEach((feature, index) => {
+                const props = feature.properties;
+                
+                const item = document.createElement('div');
+                item.className = `zone-item ${props.priority_class.toLowerCase()}`;
+                item.onclick = () => zoomToZone(feature);
+                
+                item.innerHTML = `
+                    <h4>${index + 1}. ${props.zone_id}</h4>
+                    <p>Score: ${props.priority_score.toFixed(3)} | ${props.priority_class}</p>
+                    <p>${getEnvironmentIcon(props.environment_type)} ${props.environment_type || 'N/A'} | ${props.area_km2.toFixed(1)} km²</p>
+                `;
+                
+                list.appendChild(item);
+            });
+            
+            document.getElementById('zones-count').textContent = features.length;
+            document.getElementById('zones-panel').style.display = 'block';
+        }
+        
+        // Zoom a zona
+        function zoomToZone(feature) {
+            const layer = zonesLayer.getLayers().find(l => 
+                l.feature.properties.zone_id === feature.properties.zone_id
+            );
+            
+            if (layer) {
+                map.fitBounds(layer.getBounds());
+                layer.openPopup();
+            }
+        }
+        
+        // Analizar zona (placeholder)
+        function analyzeZone(zoneId) {
+            showStatus(`🔍 Analizando zona: ${zoneId}`);
+            console.log('Analizar zona:', zoneId);
+            // TODO: Implementar análisis detallado
+        }
+        
+        // Helpers
+        function getColorForPriority(priority) {
+            const colors = {
+                'CRITICAL': '#ff0000',
+                'HIGH': '#ff8800',
+                'MEDIUM': '#ffff00',
+                'LOW': '#00ff00'
+            };
+            return colors[priority] || '#888';
+        }
+        
+        function getEnvironmentIcon(env) {
+            const icons = {
+                'FOREST': '🌳',
+                'DESERT': '🏜️',
+                'MOUNTAIN': '⛰️',
+                'COASTAL': '🏖️',
+                'SEMI_ARID': '🌾',
+                'UNKNOWN': '❓'
+            };
+            return icons[env] || '❓';
+        }
+        
+        function showStatus(message) {
+            const status = document.getElementById('status');
+            const text = document.getElementById('status-text');
+            
+            text.textContent = message;
+            status.classList.add('show');
+            
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Inicializar al cargar
+        window.onload = () => {
+            initMap();
+            console.log('✅ Aplicación inicializada');
+        };
+    </script>
+</body>
+</html>
