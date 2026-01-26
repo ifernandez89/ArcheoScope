@@ -252,12 +252,57 @@
                 <label>Región Predefinida:</label>
                 <select id="region-select">
                     <option value="">-- Seleccionar región --</option>
-                    <option value="peten">Petén, Guatemala (Maya)</option>
-                    <option value="amazonia">Amazonia, Brasil</option>
-                    <option value="angkor">Angkor, Camboya</option>
-                    <option value="egypt">Valle del Nilo, Egipto</option>
-                    <option value="peru">Andes, Perú</option>
-                    <option value="custom">Personalizado...</option>
+                    
+                    <!-- AMÉRICA -->
+                    <optgroup label="🌎 AMÉRICA">
+                        <option value="peten">Petén, Guatemala (Maya)</option>
+                        <option value="peru-cusco">Cusco, Perú (Inca)</option>
+                        <option value="peru-lima">Lima, Perú (Caral/Lima)</option>
+                        <option value="peru-nazca">Nazca, Perú (Líneas)</option>
+                        <option value="mexico">Mesoamérica, México</option>
+                        <option value="colombia">San Agustín, Colombia</option>
+                        <option value="bolivia">Tiwanaku, Bolivia</option>
+                        <option value="amazonia-acre">Acre, Brasil (Geoglifos)</option>
+                        <option value="amazonia-occidental">Amazonía Occidental, Brasil</option>
+                        <option value="usa-southwest">Suroeste USA (Anasazi)</option>
+                        <option value="easter-island">Isla de Pascua, Chile (Moai)</option>
+                    </optgroup>
+                    
+                    <!-- MEDIO ORIENTE -->
+                    <optgroup label="🏛️ MEDIO ORIENTE">
+                        <option value="egypt">Valle del Nilo, Egipto</option>
+                        <option value="egypt-giza">Giza/Saqqara, Egipto</option>
+                        <option value="mesopotamia">Mesopotamia, Irak</option>
+                        <option value="petra">Petra, Jordania</option>
+                        <option value="turkey">Anatolia, Turquía</option>
+                    </optgroup>
+                    
+                    <!-- ASIA -->
+                    <optgroup label="🏯 ASIA">
+                        <option value="angkor">Angkor, Camboya</option>
+                        <option value="india">Valle del Indo, India</option>
+                        <option value="china">Valle Río Amarillo, China</option>
+                        <option value="myanmar">Bagan, Myanmar</option>
+                        <option value="japan">Nara/Kyoto, Japón</option>
+                        <option value="indonesia">Borobudur, Indonesia</option>
+                    </optgroup>
+                    
+                    <!-- EUROPA -->
+                    <optgroup label="🏰 EUROPA">
+                        <option value="greece">Atenas/Peloponeso, Grecia</option>
+                        <option value="rome">Roma/Lacio, Italia</option>
+                        <option value="pompeii">Pompeya, Italia</option>
+                        <option value="stonehenge">Stonehenge, Reino Unido</option>
+                    </optgroup>
+                    
+                    <!-- ÁFRICA -->
+                    <optgroup label="🦁 ÁFRICA">
+                        <option value="nubia">Nubia/Meroe, Sudán</option>
+                        <option value="aksum">Aksum, Etiopía</option>
+                        <option value="zimbabwe">Gran Zimbabwe, Zimbabwe</option>
+                    </optgroup>
+                    
+                    <option value="custom">🌍 Personalizado...</option>
                 </select>
                 
                 <label>Latitud Min:</label>
@@ -377,11 +422,44 @@
         
         // Regiones predefinidas
         const regions = {
+            // AMÉRICA
             peten: { lat_min: 16.0, lat_max: 18.0, lon_min: -91.0, lon_max: -89.0, zoom: 8 },
-            amazonia: { lat_min: -5.0, lat_max: -3.0, lon_min: -62.0, lon_max: -60.0, zoom: 8 },
-            angkor: { lat_min: 13.0, lat_max: 14.0, lon_min: 103.0, lon_max: 104.0, zoom: 9 },
+            'peru-cusco': { lat_min: -14.0, lat_max: -13.0, lon_min: -73.0, lon_max: -71.0, zoom: 9 },
+            'peru-lima': { lat_min: -13.0, lat_max: -11.0, lon_min: -78.0, lon_max: -76.0, zoom: 8 },
+            'peru-nazca': { lat_min: -15.5, lat_max: -14.0, lon_min: -76.0, lon_max: -74.0, zoom: 9 },
+            mexico: { lat_min: 14.0, lat_max: 22.0, lon_min: -106.0, lon_max: -86.0, zoom: 6 },
+            colombia: { lat_min: 1.0, lat_max: 3.0, lon_min: -77.0, lon_max: -75.0, zoom: 9 },
+            bolivia: { lat_min: -18.0, lat_max: -15.0, lon_min: -70.0, lon_max: -66.0, zoom: 8 },
+            'amazonia-acre': { lat_min: -11.0, lat_max: -9.0, lon_min: -70.0, lon_max: -68.0, zoom: 8 },
+            'amazonia-occidental': { lat_min: -5.0, lat_max: -3.0, lon_min: -62.0, lon_max: -60.0, zoom: 8 },
+            'usa-southwest': { lat_min: 35.0, lat_max: 38.0, lon_min: -112.0, lon_max: -107.0, zoom: 7 },
+            'easter-island': { lat_min: -28.0, lat_max: -27.0, lon_min: -110.0, lon_max: -109.0, zoom: 11 },
+            
+            // MEDIO ORIENTE
             egypt: { lat_min: 25.0, lat_max: 30.0, lon_min: 30.0, lon_max: 35.0, zoom: 7 },
-            peru: { lat_min: -15.0, lat_max: -10.0, lon_min: -77.0, lon_max: -72.0, zoom: 7 }
+            'egypt-giza': { lat_min: 29.0, lat_max: 30.0, lon_min: 31.0, lon_max: 32.0, zoom: 10 },
+            mesopotamia: { lat_min: 31.0, lat_max: 37.0, lon_min: 42.0, lon_max: 46.0, zoom: 7 },
+            petra: { lat_min: 29.0, lat_max: 33.0, lon_min: 35.0, lon_max: 39.0, zoom: 8 },
+            turkey: { lat_min: 37.0, lat_max: 42.0, lon_min: 26.0, lon_max: 45.0, zoom: 6 },
+            
+            // ASIA
+            angkor: { lat_min: 13.0, lat_max: 14.0, lon_min: 103.0, lon_max: 104.0, zoom: 10 },
+            india: { lat_min: 24.0, lat_max: 32.0, lon_min: 68.0, lon_max: 78.0, zoom: 6 },
+            china: { lat_min: 34.0, lat_max: 38.0, lon_min: 108.0, lon_max: 116.0, zoom: 7 },
+            myanmar: { lat_min: 21.0, lat_max: 22.0, lon_min: 94.0, lon_max: 95.0, zoom: 10 },
+            japan: { lat_min: 34.0, lat_max: 36.0, lon_min: 135.0, lon_max: 136.0, zoom: 8 },
+            indonesia: { lat_min: -8.0, lat_max: -7.0, lon_min: 110.0, lon_max: 111.0, zoom: 10 },
+            
+            // EUROPA
+            greece: { lat_min: 37.0, lat_max: 39.0, lon_min: 21.0, lon_max: 24.0, zoom: 8 },
+            rome: { lat_min: 41.0, lat_max: 42.0, lon_min: 12.0, lon_max: 13.0, zoom: 10 },
+            pompeii: { lat_min: 40.0, lat_max: 41.0, lon_min: 14.0, lon_max: 15.0, zoom: 10 },
+            stonehenge: { lat_min: 51.0, lat_max: 52.0, lon_min: -2.0, lon_max: -1.0, zoom: 10 },
+            
+            // ÁFRICA
+            nubia: { lat_min: 16.0, lat_max: 18.0, lon_min: 33.0, lon_max: 34.0, zoom: 9 },
+            aksum: { lat_min: 14.0, lat_max: 15.0, lon_min: 38.0, lon_max: 39.0, zoom: 10 },
+            zimbabwe: { lat_min: -21.0, lat_max: -20.0, lon_min: 30.0, lon_max: 31.0, zoom: 11 }
         };
         
         document.getElementById('region-select').addEventListener('change', function() {
