@@ -1,5 +1,32 @@
 #!/usr/bin/env python3
 """
+❌ ARCHIVO DESHABILITADO - USA np.random PARA SIMULAR DATOS
+
+REGLA NRO 1 DE ARCHEOSCOPE: JAMÁS FALSEAR DATOS - SOLO APIS REALES
+
+Este archivo simula datos arqueológicos con np.random en múltiples funciones.
+Deshabilitado el 2026-01-26 hasta implementar con APIs reales.
+
+Archivo original: backend/data/archaeological_loader.py
+Estado: Requiere integración completa con APIs satelitales reales
+Alternativa: Usar RealDataIntegrator en backend/satellite_connectors/
+
+============================================================================
+CÓDIGO ORIGINAL DESHABILITADO
+============================================================================
+"""
+
+raise NotImplementedError(
+    "❌ MÓDULO DESHABILITADO - USA np.random PARA SIMULAR DATOS\n\n"
+    "REGLA NRO 1: JAMÁS FALSEAR DATOS - SOLO APIS REALES\n\n"
+    "Este módulo será rehabilitado cuando se implemente completamente con APIs reales.\n"
+    "Usar RealDataIntegrator en backend/satellite_connectors/ para datos reales.\n\n"
+    "Fecha de deshabilitación: 2026-01-26"
+)
+
+"""
+CÓDIGO DESHABILITADO A CONTINUACIÓN:
+
 Cargador de datos arqueológicos para ArcheoScope.
 
 Integra múltiples fuentes de datos satelitales y geofísicos

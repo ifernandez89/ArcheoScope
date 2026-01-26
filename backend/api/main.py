@@ -2452,68 +2452,37 @@ async def get_enriched_candidates(
     save_to_database: bool = True
 ):
     """
-    ## Candidatas Arqueológicas Enriquecidas Multi-Instrumentalmente
+    ## ❌ ENDPOINT DESHABILITADO
     
-    **Sistema de enriquecimiento con múltiples instrumentos complementarios**
+    **Razón:** Este endpoint usa np.random para simular datos instrumentales.
     
-    ### 🧠 Regla de Oro
+    **REGLA NRO 1 DE ARCHEOSCOPE:** JAMÁS FALSEAR DATOS - SOLO APIS REALES
     
-    - **LiDAR** responde a: FORMA
-    - **Otros sistemas** responden a: MATERIAL, HUMEDAD, TEMPERATURA, COMPACTACIÓN, QUÍMICA, DINÁMICA TEMPORAL
+    Este endpoint será rehabilitado cuando se implemente con APIs satelitales reales.
     
-    👉 La magia está en SUPERPOSICIÓN, no en reemplazo
-    
-    ### 🔥 Instrumentos Complementarios
-    
-    1. **SAR / InSAR** (Sentinel-1, ALOS, TerraSAR-X)
-       - Compactación del suelo
-       - Textura, humedad
-       - Microdeformaciones
-       - 📌 Caminos antiguos aparecen mejor en SAR que en LiDAR
-    
-    2. **Multiespectral** (Sentinel-2 / Landsat)
-       - Estrés vegetal (NDVI, Red-Edge)
-       - Química del suelo (indirecta)
-       - Drenaje, agricultura antigua
-       - 📌 Ciudades antiguas afectan vegetación siglos después
-    
-    3. **Térmico** (LST día/noche)
-       - Inercia térmica
-       - Materiales distintivos
-       - Rellenos artificiales, cámaras subterráneas
-       - 📌 Muros enterrados: más calientes de noche, más fríos de día
-    
-    4. **Multitemporal** (Archivo Landsat/Sentinel)
-       - Persistencia temporal
-       - Estacionalidad
-       - Resistencia al cambio
-       - 📌 Lo humano persiste, lo natural fluctúa
-    
-    ### 🧩 Combo Ganador
-    
-    **Stack mínimo pero potente:**
-    LiDAR + SAR + Multiespectral + Térmico + Multitemporal
-    
-    Esto proporciona: FORMA + MATERIAL + USO + PERSISTENCIA
-    
-    ### 📊 Respuesta
-    
-    Retorna candidatas con:
-    - **multi_instrumental_score**: Score combinado (0-1)
-    - **convergence_count**: Cuántos instrumentos detectan anomalía
-    - **convergence_ratio**: Ratio de convergencia (0-1)
-    - **recommended_action**: field_validation, detailed_analysis, monitor, discard
-    - **signals**: Señales de cada instrumento con interpretación
-    - **temporal_persistence**: Si la anomalía persiste temporalmente
-    
-    ### Parámetros
-    
-    - `lat_min`, `lat_max`, `lon_min`, `lon_max`: Bounding box
-    - `strategy`: buffer (recomendado), gradient, gaps
-    - `max_zones`: Máximo número de zonas
-    - `lidar_priority`: Priorizar zonas con LiDAR
-    - `min_convergence`: Convergencia mínima para incluir (0-1)
+    **Fecha de deshabilitación:** 2026-01-26
+    **Estado:** Requiere integración con RealDataIntegrator
+    **Alternativa:** Usar /api/analyze para análisis con datos reales
     """
+    raise HTTPException(
+        status_code=501,
+        detail={
+            "error": "Endpoint deshabilitado",
+            "reason": "Este endpoint usa simulación de datos (np.random)",
+            "rule": "REGLA NRO 1: JAMÁS FALSEAR DATOS - SOLO APIS REALES",
+            "status": "Deshabilitado hasta implementar con APIs reales",
+            "date": "2026-01-26",
+            "file": "backend/multi_instrumental_enrichment.py usa np.random",
+            "alternative": "Usar /api/analyze para análisis con datos reales"
+        }
+    )
+    
+    # ============================================================================
+    # CÓDIGO ORIGINAL DESHABILITADO - USA np.random PARA SIMULAR DATOS
+    # ============================================================================
+    """
+    CÓDIGO DESHABILITADO:
+    
     try:
         logger.info(f"🔬 Generando candidatas enriquecidas multi-instrumentalmente")
         
@@ -2681,16 +2650,16 @@ async def get_enriched_candidates(
 @app.get("/archaeological-sites/candidates/priority", tags=["Database", "Candidates"])
 async def get_priority_candidates_from_db(limit: int = 50):
     """
-    ## Obtener Candidatas Prioritarias desde Base de Datos
+    Obtener Candidatas Prioritarias desde Base de Datos
     
-    Retorna candidatas con estado 'pending' y acción recomendada 'field_validation' o 'detailed_analysis',
-    ordenadas por score multi-instrumental.
+    Retorna candidatas con estado pending y acción recomendada field_validation 
+    o detailed_analysis, ordenadas por score multi-instrumental.
     
-    **Parámetros**:
-    - `limit`: Máximo número de candidatas (default: 50)
+    Parameters:
+        limit: Máximo número de candidatas (default: 50)
     
-    **Respuesta**:
-    - Lista de candidatas prioritarias con todos sus datos
+    Returns:
+        Lista de candidatas prioritarias con todos sus datos
     """
     try:
         candidates = await database_connection.get_priority_candidates(limit)
@@ -4413,7 +4382,24 @@ def perform_archaeological_ai_explanation(spatial_results: Dict[str, Any],
 def prepare_archaeological_visualization_data(datasets: Dict[str, Any], 
                                             spatial_results: Dict[str, Any], 
                                             archaeological_results: Dict[str, Any]) -> tuple:
-    """Preparar datos para visualización arqueológica."""
+    """
+    ❌ FUNCIÓN DESHABILITADA - USA np.random
+    
+    REGLA NRO 1: JAMÁS FALSEAR DATOS - SOLO APIS REALES
+    
+    Esta función simulaba distribución de anomalías con np.random.
+    Deshabilitada el 2026-01-26.
+    """
+    raise NotImplementedError(
+        "Función deshabilitada - usa np.random para simular datos. "
+        "REGLA NRO 1: JAMÁS FALSEAR DATOS - SOLO APIS REALES"
+    )
+    
+    # ============================================================================
+    # CÓDIGO ORIGINAL DESHABILITADO - USA np.random
+    # ============================================================================
+    """
+    CÓDIGO DESHABILITADO:
     
     # Obtener dimensiones
     first_dataset = next(iter(datasets.values()))
@@ -4428,8 +4414,8 @@ def prepare_archaeological_visualization_data(datasets: Dict[str, Any],
         if result.get('archaeological_probability', 0) > 0.3:
             # Simular distribución de anomalías
             anomaly_ratio = min(result.get('archaeological_probability', 0) * 0.2, 0.15)
-            np.random.seed(hash(name) % 2**32)
-            anomaly_pixels = np.random.random((height, width)) < anomaly_ratio
+            np.random.seed(hash(name) % 2**32)  # ❌ USA np.random
+            anomaly_pixels = np.random.random((height, width)) < anomaly_ratio  # ❌ USA np.random
             anomaly_mask[anomaly_pixels & (anomaly_mask == 0)] = 1
     
     # Marcar firmas arqueológicas (alta probabilidad)
@@ -4438,9 +4424,12 @@ def prepare_archaeological_visualization_data(datasets: Dict[str, Any],
             # Simular firmas arqueológicas
             signature_ratio = min(contradiction.get('archaeological_probability', 0) * 0.1, 0.08)
             rule_name = contradiction['rule']
-            np.random.seed(hash(rule_name) % 2**32)
-            signature_pixels = np.random.random((height, width)) < signature_ratio
+            np.random.seed(hash(rule_name) % 2**32)  # ❌ USA np.random
+            signature_pixels = np.random.random((height, width)) < signature_ratio  # ❌ USA np.random
             anomaly_mask[signature_pixels] = 2
+    
+    # ... resto del código deshabilitado ...
+    """
     
     # Estadísticas
     statistics = {

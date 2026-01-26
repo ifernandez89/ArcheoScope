@@ -1,475 +1,591 @@
 #!/usr/bin/env python3
 """
-Validador de sitios conocidos para ArcheoScope.
+Validador de Sitios Conocidos - SOLO DATOS REALES
 
-Implementa "known-site blind test" - el sistema analiza regiones con sitios
-arqueológicos conocidos sin saber dónde están, midiendo precisión de detección.
+REGLA ABSOLUTA: JAMÁS INVENTAR DATOS
 
-Esto es oro académico para legitimidad científica.
+Este módulo:
+1. Recibe análisis REAL de CoreAnomalyDetector (con APIs satelitales reales)
+2. Consulta BD de sitios arqueológicos documentados (PostgreSQL)
+3. Contrasta mediciones REALES vs sitios conocidos
+4. Usa OpenCode para validación lógica (NO para detección)
+5. Crea registros de candidatos en BD
+
+FLUJO CORRECTO:
+┌─────────────────────────────────────────────────────────────┐
+│ 1. Usuario analiza zona → CoreAnomalyDetector              │
+│ 2. Mediciones REALES → Sentinel-2, Sentinel-1, Landsat...  │
+│ 3. Detección con datos reales → Score base determinista    │
+│ 4. Contraste con BD de sitios documentados                 │
+│ 5. OpenCode valida coherencia lógica (DESPUÉS, no antes)   │
+│ 6. Crear registro de candidato en BD                       │
+└─────────────────────────────────────────────────────────────┘
+
+Fecha de reescritura: 2026-01-26
+Razón: Eliminar simulaciones, usar solo datos reales
 """
 
-import numpy as np
-from typing import Dict, List, Any, Tuple
 import logging
-from dataclasses import dataclass
-from pathlib import Path
+from typing import Dict, List, Any, Optional, Tuple
+from dataclasses import dataclass, asdict
+from datetime import datetime
 import json
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 @dataclass
-class KnownSite:
-    """Sitio arqueológico conocido para validación."""
+class DocumentedSite:
+    """Sitio arqueológico documentado en BD."""
+    id: str
     name: str
-    lat: float
-    lon: float
-    site_type: str  # "roman_road", "tell", "geoglyph", "foundation", etc.
-    period: str     # "roman", "mesopotamian", "pre_columbian", etc.
-    area_km2: float
-    confidence_level: str  # "confirmed", "probable", "possible"
-    source: str     # "archaeological_survey", "lidar", "excavation"
-    
+    latitude: float
+    longitude: float
+    site_type: str
+    period: Optional[str]
+    confidence_level: str  # CONFIRMED, HIGH, MODERATE, LOW
+    source: str  # excavated, national, wikidata, osm
+    distance_km: float = 0.0  # Distancia al punto de análisis
+
 @dataclass
 class ValidationResult:
-    """Resultado de validación de sitio conocido."""
-    site: KnownSite
-    detected: bool
+    """Resultado de validación con datos REALES."""
+    
+    # Identificación
+    validation_id: str
+    analysis_date: datetime
+    
+    # Ubicación analizada
+    center_lat: float
+    center_lon: float
+    area_analyzed_km2: float
+    
+    # Mediciones REALES de instrumentos
+    real_measurements: List[Dict[str, Any]]  # De CoreAnomalyDetector
+    
+    # Resultado de detección REAL
+    anomaly_detected: bool
     archaeological_probability: float
-    distance_to_detection_km: float
-    detection_confidence: float
-    false_positive_rate: float
-    consistency_score: float
-    cross_layer_agreement: float
-    temporal_persistence_index: float
+    confidence_level: str
+    
+    # Contraste con sitios documentados
+    documented_sites_nearby: List[DocumentedSite]
+    closest_site: Optional[DocumentedSite]
+    distance_to_closest_km: Optional[float]
+    
+    # Validación lógica (OpenCode - DESPUÉS del análisis)
+    logical_validation: Optional[Dict[str, Any]]
+    
+    # Registro de candidato creado
+    candidate_id: Optional[str]
+    candidate_status: str  # validated, candidate, false_positive, needs_review
+    
+    # Metadata
+    validation_notes: str
+    created_by: str = "archeoscope_validator"
 
 class KnownSitesValidator:
     """
-    Validador de sitios conocidos para ArcheoScope.
+    Validador que CONTRASTA mediciones REALES contra sitios documentados.
     
-    Implementa metodología de "blind test" donde el sistema
-    analiza regiones sin saber dónde están los sitios conocidos.
+    IMPORTANTE:
+    - NO inventa datos
+    - NO simula mediciones
+    - NO usa np.random
+    - Solo trabaja con datos REALES de APIs satelitales
+    - OpenCode se usa DESPUÉS del análisis, para validación lógica
     """
     
-    def __init__(self):
-        """Inicializar validador de sitios conocidos."""
-        self.known_sites_db = self._load_known_sites_database()
-        logger.info(f"KnownSitesValidator inicializado con {len(self.known_sites_db)} sitios")
-    
-    def _load_known_sites_database(self) -> List[KnownSite]:
-        """Cargar base de datos de sitios arqueológicos conocidos."""
-        
-        # Base de datos de sitios conocidos para validación
-        known_sites = [
-            # Sitios romanos
-            KnownSite(
-                name="Via Appia - Tramo Roma-Capua",
-                lat=41.8, lon=12.5,
-                site_type="roman_road",
-                period="roman",
-                area_km2=150.0,
-                confidence_level="confirmed",
-                source="archaeological_survey"
-            ),
-            KnownSite(
-                name="Hadrian's Wall - Sector Central",
-                lat=55.0, lon=-2.3,
-                site_type="roman_fortification",
-                period="roman",
-                area_km2=25.0,
-                confidence_level="confirmed",
-                source="excavation"
-            ),
-            
-            # Sitios mesopotámicos
-            KnownSite(
-                name="Tell es-Sawwan",
-                lat=34.2, lon=43.8,
-                site_type="tell",
-                period="mesopotamian",
-                area_km2=0.5,
-                confidence_level="confirmed",
-                source="excavation"
-            ),
-            
-            # Sitios precolombinos
-            KnownSite(
-                name="Nazca Lines - Sector Pampa",
-                lat=-14.7, lon=-75.1,
-                site_type="geoglyph",
-                period="pre_columbian",
-                area_km2=50.0,
-                confidence_level="confirmed",
-                source="aerial_survey"
-            ),
-            KnownSite(
-                name="Caral - Pirámides",
-                lat=-10.9, lon=-77.5,
-                site_type="urban_complex",
-                period="pre_columbian",
-                area_km2=5.0,
-                confidence_level="confirmed",
-                source="excavation"
-            ),
-            
-            # Sitios coloniales
-            KnownSite(
-                name="Jamestown - Fundación Original",
-                lat=37.2, lon=-76.8,
-                site_type="colonial_foundation",
-                period="colonial",
-                area_km2=1.0,
-                confidence_level="confirmed",
-                source="excavation"
-            ),
-            
-            # Sitios de caminos antiguos
-            KnownSite(
-                name="Inca Trail - Sector Cusco-Machu Picchu",
-                lat=-13.5, lon=-72.0,
-                site_type="ancient_road",
-                period="inca",
-                area_km2=20.0,
-                confidence_level="confirmed",
-                source="archaeological_survey"
-            ),
-            
-            # Sitios de agricultura antigua
-            KnownSite(
-                name="Nazca Aqueducts - Cantalloc",
-                lat=-14.8, lon=-75.1,
-                site_type="hydraulic_system",
-                period="pre_columbian",
-                area_km2=10.0,
-                confidence_level="confirmed",
-                source="archaeological_survey"
-            )
-        ]
-        
-        return known_sites
-    
-    def run_blind_test(self, archeoscope_analyzer, buffer_km: float = 5.0) -> Dict[str, Any]:
+    def __init__(self, db_connection, opencode_client=None):
         """
-        Ejecutar test ciego en sitios conocidos.
+        Inicializar validador.
         
         Args:
-            archeoscope_analyzer: Instancia del analizador ArcheoScope
-            buffer_km: Buffer alrededor del sitio para análisis
-            
+            db_connection: Conexión a PostgreSQL con sitios documentados
+            opencode_client: Cliente OpenCode para validación lógica (opcional)
+        """
+        self.db = db_connection
+        self.opencode = opencode_client
+        
+        logger.info("✅ KnownSitesValidator inicializado - SOLO DATOS REALES")
+        if self.opencode:
+            logger.info("✅ OpenCode disponible para validación lógica")
+    
+    async def validate_analysis(
+        self,
+        analysis_result,  # AnomalyDetectionResult de CoreAnomalyDetector
+        lat_min: float,
+        lat_max: float,
+        lon_min: float,
+        lon_max: float,
+        region_name: str = "Unknown Region"
+    ) -> ValidationResult:
+        """
+        Validar análisis REAL contra sitios documentados.
+        
+        FLUJO:
+        1. Recibir análisis REAL (con mediciones de APIs satelitales)
+        2. Buscar sitios documentados en la zona (BD PostgreSQL)
+        3. Contrastar mediciones REALES vs sitios conocidos
+        4. Validar coherencia lógica con OpenCode (DESPUÉS)
+        5. Crear registro de candidato en BD
+        
+        Args:
+            analysis_result: Resultado REAL de CoreAnomalyDetector
+            lat_min, lat_max, lon_min, lon_max: Área analizada
+            region_name: Nombre de la región
+        
         Returns:
-            Resultados completos de validación
+            ValidationResult con contraste de datos REALES
         """
         
-        logger.info("Iniciando blind test con sitios arqueológicos conocidos")
+        logger.info("="*80)
+        logger.info("🔍 VALIDACIÓN CON DATOS REALES")
+        logger.info(f"   Región: {region_name}")
+        logger.info(f"   Probabilidad arqueológica (REAL): {analysis_result.archaeological_probability:.2%}")
+        logger.info("="*80)
         
-        validation_results = []
+        # Calcular centro y área
+        center_lat = (lat_min + lat_max) / 2
+        center_lon = (lon_min + lon_max) / 2
+        area_km2 = self._calculate_area_km2(lat_min, lat_max, lon_min, lon_max)
         
-        for site in self.known_sites_db:
-            logger.info(f"Validando sitio: {site.name} ({site.site_type})")
-            
-            # Crear región de análisis alrededor del sitio (sin revelar ubicación exacta)
-            region_bounds = self._create_analysis_region(site, buffer_km)
-            
-            # Ejecutar análisis ArcheoScope
-            try:
-                analysis_result = self._run_archeoscope_analysis(
-                    archeoscope_analyzer, region_bounds, site.name
-                )
-                
-                # Evaluar si el sitio fue detectado
-                validation_result = self._evaluate_detection(site, analysis_result, buffer_km)
-                validation_results.append(validation_result)
-                
-                logger.info(f"Sitio {site.name}: {'DETECTADO' if validation_result.detected else 'NO DETECTADO'} "
-                           f"(prob={validation_result.archaeological_probability:.3f})")
-                
-            except Exception as e:
-                logger.error(f"Error analizando sitio {site.name}: {e}")
-                continue
-        
-        # Generar métricas de validación
-        validation_metrics = self._calculate_validation_metrics(validation_results)
-        
-        return {
-            'validation_results': validation_results,
-            'metrics': validation_metrics,
-            'summary': self._generate_validation_summary(validation_results, validation_metrics)
-        }
-    
-    def _create_analysis_region(self, site: KnownSite, buffer_km: float) -> Dict[str, float]:
-        """Crear región de análisis alrededor del sitio conocido."""
-        
-        # Convertir buffer de km a grados (aproximado)
-        buffer_deg = buffer_km / 111.0  # ~111 km por grado
-        
-        return {
-            'lat_min': site.lat - buffer_deg,
-            'lat_max': site.lat + buffer_deg,
-            'lon_min': site.lon - buffer_deg,
-            'lon_max': site.lon + buffer_deg
-        }
-    
-    def _run_archeoscope_analysis(self, analyzer, bounds: Dict[str, float], site_name: str) -> Dict[str, Any]:
-        """Ejecutar análisis ArcheoScope en la región."""
-        
-        # Simular análisis ArcheoScope (en implementación real, llamaría al analyzer)
-        # Por ahora, generar resultados sintéticos realistas
-        
-        np.random.seed(hash(site_name) % 2**32)  # Reproducible
-        
-        return {
-            'anomaly_map': {
-                'statistics': {
-                    'spatial_anomaly_percentage': float(np.random.uniform(20, 80)),
-                    'archaeological_signature_percentage': float(np.random.uniform(0, 15)),
-                    'natural_percentage': float(np.random.uniform(20, 80))
-                }
-            },
-            'physics_results': {
-                'evaluations': {
-                    'vegetation_topography_decoupling': {
-                        'archaeological_probability': float(np.random.uniform(0.2, 0.9)),
-                        'confidence': float(np.random.uniform(0.3, 0.8)),
-                        'geometric_coherence': float(np.random.uniform(0.1, 0.7))
-                    },
-                    'thermal_residual_patterns': {
-                        'archaeological_probability': float(np.random.uniform(0.1, 0.8)),
-                        'confidence': float(np.random.uniform(0.2, 0.7)),
-                        'geometric_coherence': float(np.random.uniform(0.0, 0.6))
-                    }
-                }
-            },
-            'region_bounds': bounds
-        }
-    
-    def _evaluate_detection(self, site: KnownSite, analysis_result: Dict[str, Any], 
-                          buffer_km: float) -> ValidationResult:
-        """Evaluar si el sitio conocido fue detectado correctamente."""
-        
-        # Extraer métricas del análisis
-        stats = analysis_result['anomaly_map']['statistics']
-        evaluations = analysis_result['physics_results']['evaluations']
-        
-        # Calcular probabilidad arqueológica integrada
-        probs = [eval_data.get('archaeological_probability', 0) 
-                for eval_data in evaluations.values()]
-        integrated_prob = float(np.mean(probs)) if probs else 0.0
-        
-        # Criterios de detección
-        detection_threshold = 0.4  # Umbral conservador
-        detected = integrated_prob > detection_threshold
-        
-        # Calcular métricas de validación
-        consistency_score = self._calculate_consistency_score(evaluations)
-        cross_layer_agreement = self._calculate_cross_layer_agreement(evaluations)
-        temporal_persistence = self._calculate_temporal_persistence_index(site, analysis_result)
-        false_positive_rate = self._estimate_false_positive_rate(stats, site.site_type)
-        
-        return ValidationResult(
-            site=site,
-            detected=detected,
-            archaeological_probability=integrated_prob,
-            distance_to_detection_km=0.0,  # Simplificado por ahora
-            detection_confidence=float(np.mean([eval_data.get('confidence', 0) for eval_data in evaluations.values()])),
-            false_positive_rate=false_positive_rate,
-            consistency_score=consistency_score,
-            cross_layer_agreement=cross_layer_agreement,
-            temporal_persistence_index=temporal_persistence
+        # PASO 1: Buscar sitios documentados en la zona (BD REAL)
+        logger.info("📚 PASO 1: Consultando BD de sitios documentados...")
+        documented_sites = await self._find_documented_sites(
+            lat_min, lat_max, lon_min, lon_max, center_lat, center_lon
         )
-    
-    def _calculate_consistency_score(self, evaluations: Dict[str, Any]) -> float:
-        """Calcular score de consistencia entre reglas."""
         
-        probs = [eval_data.get('archaeological_probability', 0) 
-                for eval_data in evaluations.values()]
-        
-        if len(probs) < 2:
-            return 0.0
-        
-        # Consistencia = 1 - varianza normalizada
-        variance = float(np.var(probs))
-        max_variance = 0.25  # Máxima varianza esperada
-        consistency = max(0, 1 - (variance / max_variance))
-        
-        return float(consistency)
-    
-    def _calculate_cross_layer_agreement(self, evaluations: Dict[str, Any]) -> float:
-        """Calcular acuerdo entre capas de análisis."""
-        
-        # Simular acuerdo entre capas basado en coherencia geométrica
-        coherences = [eval_data.get('geometric_coherence', 0) 
-                     for eval_data in evaluations.values()]
-        
-        return float(np.mean(coherences)) if coherences else 0.0
-    
-    def _calculate_temporal_persistence_index(self, site: KnownSite, 
-                                           analysis_result: Dict[str, Any]) -> float:
-        """Calcular índice de persistencia temporal."""
-        
-        # Simular persistencia temporal basada en tipo de sitio
-        persistence_by_type = {
-            'roman_road': 0.9,
-            'roman_fortification': 0.8,
-            'tell': 0.95,
-            'geoglyph': 0.7,
-            'urban_complex': 0.85,
-            'colonial_foundation': 0.6,
-            'ancient_road': 0.8,
-            'hydraulic_system': 0.75
-        }
-        
-        base_persistence = persistence_by_type.get(site.site_type, 0.5)
-        
-        # Añadir variabilidad realista
-        noise = float(np.random.normal(0, 0.1))
-        return float(np.clip(base_persistence + noise, 0.0, 1.0))
-    
-    def _estimate_false_positive_rate(self, stats: Dict[str, Any], site_type: str) -> float:
-        """Estimar tasa de falsos positivos por bioma/tipo."""
-        
-        # Estimar falsos positivos basado en porcentaje de procesos naturales
-        natural_percentage = stats.get('natural_percentage', 50)
-        
-        # Más procesos naturales = menos falsos positivos
-        false_positive_rate = max(0.05, (100 - natural_percentage) / 200)
-        
-        return false_positive_rate
-    
-    def _calculate_validation_metrics(self, results: List[ValidationResult]) -> Dict[str, Any]:
-        """Calcular métricas agregadas de validación."""
-        
-        if not results:
-            return {}
-        
-        # Métricas básicas
-        total_sites = len(results)
-        detected_sites = sum(1 for r in results if r.detected)
-        detection_rate = detected_sites / total_sites
-        
-        # Métricas por tipo de sitio
-        by_type = {}
-        for result in results:
-            site_type = result.site.site_type
-            if site_type not in by_type:
-                by_type[site_type] = {'total': 0, 'detected': 0, 'probs': []}
-            
-            by_type[site_type]['total'] += 1
-            if result.detected:
-                by_type[site_type]['detected'] += 1
-            by_type[site_type]['probs'].append(result.archaeological_probability)
-        
-        # Calcular tasas por tipo
-        type_metrics = {}
-        for site_type, data in by_type.items():
-            type_metrics[site_type] = {
-                'detection_rate': data['detected'] / data['total'],
-                'mean_probability': float(np.mean(data['probs'])),
-                'total_sites': data['total']
-            }
-        
-        # Métricas de calidad
-        mean_consistency = float(np.mean([r.consistency_score for r in results]))
-        mean_cross_layer = float(np.mean([r.cross_layer_agreement for r in results]))
-        mean_temporal_persistence = float(np.mean([r.temporal_persistence_index for r in results]))
-        mean_false_positive_rate = float(np.mean([r.false_positive_rate for r in results]))
-        
-        return {
-            'overall_detection_rate': detection_rate,
-            'total_sites_tested': total_sites,
-            'sites_detected': detected_sites,
-            'by_site_type': type_metrics,
-            'quality_metrics': {
-                'mean_consistency_score': mean_consistency,
-                'mean_cross_layer_agreement': mean_cross_layer,
-                'mean_temporal_persistence_index': mean_temporal_persistence,
-                'mean_false_positive_rate': mean_false_positive_rate
-            }
-        }
-    
-    def _generate_validation_summary(self, results: List[ValidationResult], 
-                                   metrics: Dict[str, Any]) -> Dict[str, Any]:
-        """Generar resumen ejecutivo de validación."""
-        
-        return {
-            'validation_status': 'PASSED' if metrics.get('overall_detection_rate', 0) > 0.6 else 'NEEDS_IMPROVEMENT',
-            'key_findings': [
-                f"Tasa de detección general: {metrics.get('overall_detection_rate', 0):.1%}",
-                f"Sitios analizados: {metrics.get('total_sites_tested', 0)}",
-                f"Consistencia promedio: {metrics.get('quality_metrics', {}).get('mean_consistency_score', 0):.2f}",
-                f"Acuerdo entre capas: {metrics.get('quality_metrics', {}).get('mean_cross_layer_agreement', 0):.2f}",
-                f"Persistencia temporal: {metrics.get('quality_metrics', {}).get('mean_temporal_persistence_index', 0):.2f}"
-            ],
-            'best_performing_types': self._identify_best_performing_types(metrics),
-            'recommendations': self._generate_recommendations(metrics),
-            'academic_significance': self._assess_academic_significance(metrics)
-        }
-    
-    def _identify_best_performing_types(self, metrics: Dict[str, Any]) -> List[str]:
-        """Identificar tipos de sitios mejor detectados."""
-        
-        type_metrics = metrics.get('by_site_type', {})
-        
-        # Ordenar por tasa de detección
-        sorted_types = sorted(type_metrics.items(), 
-                            key=lambda x: x[1]['detection_rate'], 
-                            reverse=True)
-        
-        return [site_type for site_type, _ in sorted_types[:3]]
-    
-    def _generate_recommendations(self, metrics: Dict[str, Any]) -> List[str]:
-        """Generar recomendaciones basadas en resultados."""
-        
-        recommendations = []
-        
-        detection_rate = metrics.get('overall_detection_rate', 0)
-        if detection_rate < 0.5:
-            recommendations.append("Ajustar umbrales de detección para mejorar sensibilidad")
-        elif detection_rate > 0.9:
-            recommendations.append("Verificar posibles falsos positivos - tasa muy alta")
-        
-        consistency = metrics.get('quality_metrics', {}).get('mean_consistency_score', 0)
-        if consistency < 0.6:
-            recommendations.append("Mejorar consistencia entre reglas arqueológicas")
-        
-        cross_layer = metrics.get('quality_metrics', {}).get('mean_cross_layer_agreement', 0)
-        if cross_layer < 0.5:
-            recommendations.append("Optimizar acuerdo entre capas de análisis")
-        
-        return recommendations
-    
-    def _assess_academic_significance(self, metrics: Dict[str, Any]) -> str:
-        """Evaluar significancia académica de los resultados."""
-        
-        detection_rate = metrics.get('overall_detection_rate', 0)
-        consistency = metrics.get('quality_metrics', {}).get('mean_consistency_score', 0)
-        
-        if detection_rate > 0.7 and consistency > 0.6:
-            return "ALTA - Resultados publicables con validación robusta"
-        elif detection_rate > 0.5 and consistency > 0.4:
-            return "MEDIA - Resultados prometedores, requiere refinamiento"
+        if documented_sites:
+            logger.info(f"   ✅ Encontrados {len(documented_sites)} sitios documentados")
+            for site in documented_sites[:3]:  # Mostrar top 3
+                logger.info(f"      - {site.name} ({site.distance_km:.2f} km)")
         else:
-            return "BAJA - Requiere mejoras metodológicas significativas"
+            logger.info("   ℹ️ No hay sitios documentados en esta zona")
+        
+        # PASO 2: Determinar sitio más cercano
+        closest_site = documented_sites[0] if documented_sites else None
+        distance_to_closest = closest_site.distance_km if closest_site else None
+        
+        # PASO 3: Determinar status del candidato
+        candidate_status = self._determine_candidate_status(
+            analysis_result, documented_sites
+        )
+        
+        logger.info(f"📊 Status del candidato: {candidate_status}")
+        
+        # PASO 4: Validación lógica con OpenCode (DESPUÉS del análisis)
+        logical_validation = None
+        if self.opencode and analysis_result.archaeological_probability > 0.7:
+            logger.info("🧠 PASO 4: Validación lógica con OpenCode...")
+            logical_validation = await self._validate_with_opencode(
+                analysis_result, documented_sites
+            )
+            
+            if logical_validation:
+                logger.info(f"   ✅ Coherencia lógica: {logical_validation.get('coherence_score', 0):.2f}")
+        
+        # PASO 5: Crear registro de candidato en BD
+        logger.info("💾 PASO 5: Creando registro de candidato en BD...")
+        candidate_id = await self._create_candidate_record(
+            analysis_result=analysis_result,
+            center_lat=center_lat,
+            center_lon=center_lon,
+            area_km2=area_km2,
+            documented_sites=documented_sites,
+            candidate_status=candidate_status,
+            logical_validation=logical_validation
+        )
+        
+        logger.info(f"   ✅ Candidato creado: {candidate_id}")
+        
+        # PASO 6: Generar resultado de validación
+        validation_result = ValidationResult(
+            validation_id=self._generate_validation_id(),
+            analysis_date=datetime.now(),
+            center_lat=center_lat,
+            center_lon=center_lon,
+            area_analyzed_km2=area_km2,
+            real_measurements=[asdict(m) for m in analysis_result.measurements],
+            anomaly_detected=analysis_result.anomaly_detected,
+            archaeological_probability=analysis_result.archaeological_probability,
+            confidence_level=analysis_result.confidence_level,
+            documented_sites_nearby=documented_sites,
+            closest_site=closest_site,
+            distance_to_closest_km=distance_to_closest,
+            logical_validation=logical_validation,
+            candidate_id=candidate_id,
+            candidate_status=candidate_status,
+            validation_notes=self._generate_validation_notes(
+                analysis_result, documented_sites, candidate_status
+            )
+        )
+        
+        logger.info("="*80)
+        logger.info("✅ VALIDACIÓN COMPLETADA")
+        logger.info(f"   Candidato: {candidate_id}")
+        logger.info(f"   Status: {candidate_status}")
+        logger.info("="*80)
+        
+        return validation_result
     
-    def export_validation_report(self, validation_results: Dict[str, Any], 
-                               output_path: str) -> None:
-        """Exportar reporte de validación para publicación."""
+    async def _find_documented_sites(
+        self,
+        lat_min: float,
+        lat_max: float,
+        lon_min: float,
+        lon_max: float,
+        center_lat: float,
+        center_lon: float
+    ) -> List[DocumentedSite]:
+        """
+        Buscar sitios documentados en BD PostgreSQL.
         
-        report = {
-            'methodology': {
-                'approach': 'known_site_blind_test',
-                'description': 'Análisis de sitios arqueológicos conocidos sin revelar ubicaciones',
-                'sites_database_size': len(self.known_sites_db),
-                'validation_date': '2024-01-20'
-            },
-            'results': validation_results,
-            'academic_validation': {
-                'reproducible': True,
-                'peer_reviewable': True,
-                'methodology_transparent': True,
-                'baseline_established': True
+        IMPORTANTE: Consulta BD REAL, NO inventa datos.
+        """
+        
+        try:
+            # Query a BD PostgreSQL
+            query = """
+                SELECT 
+                    id,
+                    name,
+                    latitude,
+                    longitude,
+                    site_type,
+                    period,
+                    confidence_level,
+                    source,
+                    ST_Distance(
+                        ST_MakePoint(longitude, latitude)::geography,
+                        ST_MakePoint($5, $6)::geography
+                    ) / 1000.0 as distance_km
+                FROM archaeological_sites
+                WHERE 
+                    latitude BETWEEN $1 AND $2
+                    AND longitude BETWEEN $3 AND $4
+                    AND confidence_level IN ('CONFIRMED', 'HIGH', 'MODERATE')
+                ORDER BY distance_km ASC
+                LIMIT 10
+            """
+            
+            rows = await self.db.fetch(
+                query,
+                lat_min, lat_max, lon_min, lon_max,
+                center_lon, center_lat
+            )
+            
+            documented_sites = []
+            for row in rows:
+                site = DocumentedSite(
+                    id=str(row['id']),
+                    name=row['name'],
+                    latitude=float(row['latitude']),
+                    longitude=float(row['longitude']),
+                    site_type=row['site_type'] or 'unknown',
+                    period=row['period'],
+                    confidence_level=row['confidence_level'],
+                    source=row['source'] or 'unknown',
+                    distance_km=float(row['distance_km'])
+                )
+                documented_sites.append(site)
+            
+            return documented_sites
+        
+        except Exception as e:
+            logger.error(f"❌ Error consultando BD de sitios documentados: {e}")
+            return []
+    
+    def _determine_candidate_status(
+        self,
+        analysis_result,
+        documented_sites: List[DocumentedSite]
+    ) -> str:
+        """
+        Determinar status del candidato basado en datos REALES.
+        
+        Lógica:
+        - validated: Alta probabilidad + sitio documentado cercano
+        - candidate: Alta probabilidad + NO hay sitio documentado
+        - false_positive: Baja probabilidad + sitio documentado (falló detección)
+        - needs_review: Casos ambiguos
+        """
+        
+        prob = analysis_result.archaeological_probability
+        has_nearby_site = len(documented_sites) > 0
+        closest_distance = documented_sites[0].distance_km if has_nearby_site else 999
+        
+        # Validated: Detección exitosa de sitio conocido
+        if prob > 0.7 and has_nearby_site and closest_distance < 1.0:
+            return "validated"
+        
+        # Candidate: Detección en zona sin sitios documentados
+        if prob > 0.7 and not has_nearby_site:
+            return "candidate"
+        
+        # False positive: No detectó sitio conocido cercano
+        if prob < 0.5 and has_nearby_site and closest_distance < 0.5:
+            return "false_positive"
+        
+        # Needs review: Casos ambiguos
+        return "needs_review"
+    
+    async def _validate_with_opencode(
+        self,
+        analysis_result,
+        documented_sites: List[DocumentedSite]
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Validar coherencia lógica con OpenCode.
+        
+        IMPORTANTE:
+        - Se llama DESPUÉS del análisis, NO antes
+        - Solo para candidatos de alta probabilidad (> 0.7)
+        - NO se usa para detección, solo para validación
+        - Asíncrono, no bloquea el flujo principal
+        
+        OpenCode valida:
+        - Coherencia entre instrumentos
+        - Consistencia lógica de mediciones
+        - Explicación científica estructurada
+        """
+        
+        if not self.opencode:
+            return None
+        
+        try:
+            # Preparar contexto para OpenCode
+            context = {
+                "task": "validate_archaeological_detection",
+                "measurements": [
+                    {
+                        "instrument": m.instrument_name,
+                        "value": m.value,
+                        "threshold": m.threshold,
+                        "exceeds": m.exceeds_threshold,
+                        "confidence": m.confidence
+                    }
+                    for m in analysis_result.measurements
+                ],
+                "archaeological_probability": analysis_result.archaeological_probability,
+                "environment_type": analysis_result.environment_type,
+                "documented_sites_nearby": [
+                    {
+                        "name": s.name,
+                        "distance_km": s.distance_km,
+                        "confidence": s.confidence_level
+                    }
+                    for s in documented_sites[:3]
+                ]
             }
-        }
+            
+            # Llamar OpenCode (asíncrono)
+            validation = await self.opencode.validate(context)
+            
+            return {
+                "coherence_score": validation.get("coherence_score", 0.0),
+                "logical_consistency": validation.get("logical_consistency", "unknown"),
+                "explanation": validation.get("explanation", ""),
+                "flags": validation.get("flags", []),
+                "recommendations": validation.get("recommendations", [])
+            }
         
-        with open(output_path, 'w') as f:
-            json.dump(report, f, indent=2, default=str)
+        except Exception as e:
+            logger.warning(f"⚠️ OpenCode validation failed: {e}")
+            return None
+    
+    async def _create_candidate_record(
+        self,
+        analysis_result,
+        center_lat: float,
+        center_lon: float,
+        area_km2: float,
+        documented_sites: List[DocumentedSite],
+        candidate_status: str,
+        logical_validation: Optional[Dict[str, Any]]
+    ) -> str:
+        """
+        Crear registro de candidato en BD PostgreSQL.
         
-        logger.info(f"Reporte de validación exportado: {output_path}")
+        IMPORTANTE: Guarda mediciones REALES, NO inventadas.
+        """
+        
+        try:
+            # Preparar datos de mediciones REALES
+            measurements_json = json.dumps([
+                {
+                    "instrument": m.instrument_name,
+                    "type": m.measurement_type,
+                    "value": m.value,
+                    "unit": m.unit,
+                    "threshold": m.threshold,
+                    "exceeds_threshold": m.exceeds_threshold,
+                    "confidence": m.confidence,
+                    "notes": m.notes
+                }
+                for m in analysis_result.measurements
+            ])
+            
+            # Preparar datos de sitios documentados cercanos
+            nearby_sites_json = json.dumps([
+                {
+                    "id": s.id,
+                    "name": s.name,
+                    "distance_km": s.distance_km,
+                    "confidence_level": s.confidence_level
+                }
+                for s in documented_sites
+            ]) if documented_sites else None
+            
+            # Preparar validación lógica
+            logical_validation_json = json.dumps(logical_validation) if logical_validation else None
+            
+            # Insert en BD
+            query = """
+                INSERT INTO archaeological_candidates (
+                    latitude,
+                    longitude,
+                    area_km2,
+                    archaeological_probability,
+                    confidence_level,
+                    environment_type,
+                    real_measurements,
+                    documented_sites_nearby,
+                    logical_validation,
+                    status,
+                    created_by,
+                    created_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                RETURNING id
+            """
+            
+            result = await self.db.fetchrow(
+                query,
+                center_lat,
+                center_lon,
+                area_km2,
+                analysis_result.archaeological_probability,
+                analysis_result.confidence_level,
+                analysis_result.environment_type,
+                measurements_json,
+                nearby_sites_json,
+                logical_validation_json,
+                candidate_status,
+                "archeoscope_validator",
+                datetime.now()
+            )
+            
+            return str(result['id'])
+        
+        except Exception as e:
+            logger.error(f"❌ Error creando registro de candidato: {e}")
+            return "error_creating_record"
+    
+    def _calculate_area_km2(
+        self,
+        lat_min: float,
+        lat_max: float,
+        lon_min: float,
+        lon_max: float
+    ) -> float:
+        """Calcular área aproximada en km²."""
+        
+        # Aproximación simple (suficiente para este propósito)
+        lat_diff = lat_max - lat_min
+        lon_diff = lon_max - lon_min
+        
+        # ~111 km por grado de latitud
+        # ~111 km * cos(lat) por grado de longitud
+        avg_lat = (lat_min + lat_max) / 2
+        import math
+        
+        height_km = lat_diff * 111.0
+        width_km = lon_diff * 111.0 * math.cos(math.radians(avg_lat))
+        
+        return height_km * width_km
+    
+    def _generate_validation_id(self) -> str:
+        """Generar ID único para validación."""
+        import uuid
+        return f"val_{uuid.uuid4().hex[:12]}"
+    
+    def _generate_validation_notes(
+        self,
+        analysis_result,
+        documented_sites: List[DocumentedSite],
+        candidate_status: str
+    ) -> str:
+        """Generar notas de validación."""
+        
+        notes = []
+        
+        # Resultado de detección
+        if analysis_result.anomaly_detected:
+            notes.append(f"Anomalía detectada con probabilidad {analysis_result.archaeological_probability:.2%}")
+        else:
+            notes.append("No se detectó anomalía significativa")
+        
+        # Instrumentos convergentes
+        converging = analysis_result.instruments_converging
+        required = analysis_result.minimum_required
+        notes.append(f"Convergencia instrumental: {converging}/{required}")
+        
+        # Sitios documentados
+        if documented_sites:
+            closest = documented_sites[0]
+            notes.append(f"Sitio documentado más cercano: {closest.name} ({closest.distance_km:.2f} km)")
+        else:
+            notes.append("No hay sitios documentados en la zona")
+        
+        # Status
+        notes.append(f"Status: {candidate_status}")
+        
+        return " | ".join(notes)
+
+
+# ============================================================================
+# DOCUMENTACIÓN DE USO
+# ============================================================================
+
+"""
+EJEMPLO DE USO CORRECTO:
+
+from backend.core_anomaly_detector import CoreAnomalyDetector
+from backend.validation.known_sites_validator import KnownSitesValidator
+from backend.database import db
+
+# 1. Inicializar componentes
+core_detector = CoreAnomalyDetector(...)
+validator = KnownSitesValidator(db_connection=db, opencode_client=opencode)
+
+# 2. Analizar zona con DATOS REALES
+analysis_result = await core_detector.detect_anomaly(
+    lat=13.1631,
+    lon=-72.5450,
+    lat_min=13.1531,
+    lat_max=13.1731,
+    lon_min=-72.5550,
+    lon_max=-72.5350,
+    region_name="Machu Picchu Area"
+)
+
+# 3. Validar contra sitios documentados
+validation_result = await validator.validate_analysis(
+    analysis_result=analysis_result,  # ← DATOS REALES de APIs satelitales
+    lat_min=13.1531,
+    lat_max=13.1731,
+    lon_min=-72.5550,
+    lon_max=-72.5350,
+    region_name="Machu Picchu Area"
+)
+
+# 4. Resultado contiene:
+# - Mediciones REALES de instrumentos
+# - Sitios documentados cercanos (de BD)
+# - Validación lógica (OpenCode)
+# - Registro de candidato creado en BD
+
+print(f"Candidato creado: {validation_result.candidate_id}")
+print(f"Status: {validation_result.candidate_status}")
+print(f"Sitio más cercano: {validation_result.closest_site.name if validation_result.closest_site else 'Ninguno'}")
+"""

@@ -1,4 +1,31 @@
 """
+❌ ARCHIVO DESHABILITADO - USA np.random PARA SIMULAR DATOS LIDAR
+
+REGLA NRO 1 DE ARCHEOSCOPE: JAMÁS FALSEAR DATOS - SOLO APIS REALES
+
+Este archivo simula datos LIDAR con np.random en múltiples funciones.
+Deshabilitado el 2026-01-26 hasta implementar con APIs reales.
+
+Archivo original: backend/api/volumetric_lidar_api.py
+Estado: Requiere integración con OpenTopography u otras APIs LIDAR reales
+Alternativa: Usar /api/analyze para análisis con datos reales
+
+============================================================================
+CÓDIGO ORIGINAL DESHABILITADO
+============================================================================
+"""
+
+raise NotImplementedError(
+    "❌ MÓDULO DESHABILITADO - USA np.random PARA SIMULAR DATOS LIDAR\n\n"
+    "REGLA NRO 1: JAMÁS FALSEAR DATOS - SOLO APIS REALES\n\n"
+    "Este módulo será rehabilitado cuando se implemente con APIs LIDAR reales "
+    "(OpenTopography, etc.)\n\n"
+    "Fecha de deshabilitación: 2026-01-26"
+)
+
+"""
+CÓDIGO DESHABILITADO A CONTINUACIÓN:
+
 ArcheoScope - API del Módulo Volumétrico LIDAR
 Endpoints para el Modelado Volumétrico Arqueológico (LIDAR + ArcheoScope)
 """

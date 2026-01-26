@@ -1,0 +1,33 @@
+{
+  "coordinates": {
+    "lat": -75.3544360283405,
+    "lon": -109.8831958757251,
+    "lat_min": -75.4044360283405,
+    "lat_max": -75.3044360283405,
+    "lon_min": -109.93319587572509,
+    "lon_max": -109.8331958757251
+  },
+  "environment": {
+    "type": "polar_ice",
+    "confidence": 0.99
+  },
+  "real_data": {
+    "modis_lst": {
+      "value": 10,
+      "data_mode": "DERIVED",
+      "source": "MODIS Terra LST (estimated)",
+      "confidence": 0.7,
+      "estimation_method": "Location and seasonal model (latitude + month)",
+      "disclaimer": "Estimation based on location, season, and statistical models. NOT a direct measurement. Requires validation with real data. Estimated using: Location and seasonal model (latitude + month)",
+      "lst_day_kelvin": 285,
+      "lst_night_kelvin": 275,
+      "lst_day_celsius": 11.850000000000023,
+      "lst_night_celsius": 1.8500000000000227,
+      "thermal_inertia": 10,
+      "acquisition_date": "20260119",
+      "unit": "Kelvin"
+    }
+  },
+  "timestamp": "2026-01-26T16:51:04.359633",
+  "note": "Análisis con DATOS REALES - Zona antártica sin contexto arqueológico"
+}

@@ -69,7 +69,7 @@ async function loadSitesCatalog() {
         const catalogData = await response.json();
         
         // Actualizar estadísticas
-        document.getElementById('archaeologicalCount').textContent = catalogData.archaeological_confirmed;
+        document.getElementById('archaeologicalCount').textContent = catalogData.archaeological_compatible with;
         document.getElementById('controlCount').textContent = catalogData.control_sites;
         
         // Mostrar estadísticas
@@ -102,9 +102,9 @@ function renderSitesGrid(sites) {
         siteCard.className = 'site-card';
         siteCard.dataset.siteId = siteId;
         
-        const siteTypeClass = site.site_type === 'archaeological_confirmed' ? 'archaeological' : 'control';
-        const siteTypeIcon = site.site_type === 'archaeological_confirmed' ? '✔️' : '❌';
-        const siteTypeText = site.site_type === 'archaeological_confirmed' ? 'Arqueológico Confirmado' : 'Control Negativo';
+        const siteTypeClass = site.site_type === 'archaeological_compatible with' ? 'archaeological' : 'control';
+        const siteTypeIcon = site.site_type === 'archaeological_compatible with' ? '✔️' : '❌';
+        const siteTypeText = site.site_type === 'archaeological_compatible with' ? 'Arqueológico Confirmado' : 'Control Negativo';
         
         siteCard.innerHTML = `
             <div class="site-name">${site.name}</div>
@@ -149,8 +149,8 @@ function selectSite(siteId, siteData) {
 function showSiteInfo(siteData) {
     const viewerPlaceholder = document.getElementById('viewerPlaceholder');
     
-    const siteTypeIcon = siteData.site_type === 'archaeological_confirmed' ? '🏛️' : '🏗️';
-    const siteTypeText = siteData.site_type === 'archaeological_confirmed' ? 'Sitio Arqueológico Confirmado' : 'Sitio de Control';
+    const siteTypeIcon = siteData.site_type === 'archaeological_compatible with' ? '🏛️' : '🏗️';
+    const siteTypeText = siteData.site_type === 'archaeological_compatible with' ? 'Sitio Arqueológico Confirmado' : 'Sitio de Control';
     
     viewerPlaceholder.innerHTML = `
         <div style="text-align: center; max-width: 600px;">
@@ -292,12 +292,12 @@ function renderMetrics(results) {
         {
             label: 'Volumen Positivo',
             value: `${volumetric.positive_volume_m3.toFixed(2)} m³`,
-            description: 'Rellenos detectados'
+            description: 'Rellenos observados'
         },
         {
             label: 'Volumen Negativo',
             value: `${volumetric.negative_volume_m3.toFixed(2)} m³`,
-            description: 'Excavaciones detectadas'
+            description: 'Excavaciones observadas'
         },
         {
             label: 'Resolución LIDAR',
@@ -322,7 +322,7 @@ function renderMetrics(results) {
             {
                 label: 'Probabilidad Antrópica',
                 value: `${(fusion.anthropic_probability_final.mean * 100).toFixed(1)}%`,
-                description: 'Intervención humana detectada'
+                description: 'Intervención humana observada'
             }
         );
     }
@@ -446,7 +446,7 @@ function create3DModel(model3D) {
     // Adaptar color según tipo de sitio si está disponible
     if (model3D.metadata && model3D.metadata.site_type) {
         switch (model3D.metadata.site_type) {
-            case 'archaeological_confirmed':
+            case 'archaeological_compatible with':
                 materialColor = 0x8B4513; // Marrón arqueológico
                 break;
             case 'modern_control':
@@ -589,7 +589,7 @@ function showScientificInterpretation(results) {
     interpretation += `
         <div style="margin-bottom: 15px;">
             <strong>Sitio:</strong> ${siteInfo.name}<br>
-            <strong>Tipo:</strong> ${siteInfo.site_type === 'archaeological_confirmed' ? '✔️ Arqueológico Confirmado' : '❌ Control Negativo'}<br>
+            <strong>Tipo:</strong> ${siteInfo.site_type === 'archaeological_compatible with' ? '✔️ Arqueológico Confirmado' : '❌ Control Negativo'}<br>
             <strong>Datos LIDAR:</strong> ${siteInfo.lidar_type}, ${siteInfo.resolution_cm}cm, ${siteInfo.acquisition_year}
         </div>
     `;
@@ -681,7 +681,7 @@ function showPreviewModal(previewData) {
         </h3>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-            <div><strong>Tipo:</strong> ${siteInfo.site_type === 'archaeological_confirmed' ? '✔️ Arqueológico' : '❌ Control'}</div>
+            <div><strong>Tipo:</strong> ${siteInfo.site_type === 'archaeological_compatible with' ? '✔️ Arqueológico' : '❌ Control'}</div>
             <div><strong>LIDAR:</strong> ${siteInfo.lidar_type}</div>
             <div><strong>Resolución:</strong> ${siteInfo.resolution_cm}cm</div>
             <div><strong>Volumen Total:</strong> ${volumetric.total_volume_m3.toFixed(2)} m³</div>

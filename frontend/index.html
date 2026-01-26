@@ -166,9 +166,9 @@
         .status-warning { background-color: #ff9800; }
 
         @keyframes pulse {
-            0% { opacity: 1; }
+            0% { opacity: 0.3; }
             50% { opacity: 0.5; }
-            100% { opacity: 1; }
+            100% { opacity: 0.3; }
         }
 
         .status-tooltip {
@@ -596,7 +596,7 @@
         }
 
         .export-btn:hover {
-            opacity: 0.9;
+            opacity: 0.3;
         }
 
         .export-btn.json { background-color: #f39c12; }
@@ -918,7 +918,7 @@
                 transform: scale(0.8) translateY(-10px); 
             }
             100% { 
-                opacity: 1; 
+                opacity: 0.3; 
                 transform: scale(1) translateY(0); 
             }
         }
@@ -1114,7 +1114,7 @@
         }
 
         .history-btn:hover {
-            opacity: 0.8;
+            opacity: 0.3;
             transform: translateY(-1px);
         }
 
@@ -1504,7 +1504,7 @@
             <button class="search-btn" onclick="searchCoordinates()">🔍 Buscar</button>
             
             <!-- Botón de historial de anomalías - discreto pero accesible -->
-            <button class="search-btn" onclick="showAnomalyHistory()" style="background-color: #6c757d; margin-right: 0.5rem;" title="Ver historial de anomalías detectadas">
+            <button class="search-btn" onclick="showAnomalyHistory()" style="background-color: #6c757d; margin-right: 0.5rem;" title="Ver historial de anomalías observadas">
                 📋 Historial
             </button>
             
@@ -2449,7 +2449,7 @@
             
             if (confidence.score >= 0.7) {
                 recommendations.push('✅ Detecciones altamente confiables - Proceder con análisis detallado');
-                recommendations.push('📋 Documentar hallazgos para validación por expertos');
+                recommendations.push('📋 Documentar hipótesiss para validación por expertos');
             } else if (confidence.score >= 0.4) {
                 recommendations.push('⚠️ Validación adicional recomendada');
                 recommendations.push('🔍 Comparar con mapas históricos y bases de datos arqueológicas');
@@ -2460,7 +2460,7 @@
                 recommendations.push('📊 Considerar análisis con mayor resolución');
             }
             
-            // Recomendaciones generales basadas en región detectada
+            // Recomendaciones generales basadas en región observada
             if (lat >= 35.0 && lat <= 45.0 && lng >= 10.0 && lng <= 25.0) {
                 recommendations.push('🏛️ Mediterráneo: Consultar bases de datos arqueológicas regionales');
                 recommendations.push('📚 Revisar registros de excavaciones previas');
@@ -2591,9 +2591,9 @@
             
             testScenarios.forEach((scenario, index) => {
                 console.log(`\n🧪 ESCENARIO ${index + 1}: ${scenario.name}`);
-                const detectedAnomalies = detectAnomalyTypes(scenario.data);
-                console.log(`📊 Resultado: ${detectedAnomalies.length} tipos detectados`);
-                detectedAnomalies.forEach(anomaly => {
+                const observedAnomalies = detectAnomalyTypes(scenario.data);
+                console.log(`📊 Resultado: ${observedAnomalies.length} tipos observados`);
+                observedAnomalies.forEach(anomaly => {
                     console.log(`   ${anomaly.icon} ${anomaly.name} - ${(anomaly.confidence * 100).toFixed(1)}%`);
                 });
             });
@@ -2675,15 +2675,15 @@
             if (temporalValidation) {
                 temporalMessage = temporalValidation.message;
                 
-if (temporalValidation.validationStatus === 'CONFIRMADO') {
+if (temporalValidation.validationStatus === 'COMPATIBLE') {
                     temporallyValidatedCandidates = temporalValidation.anomaliesConfirmed.length;
-                    console.log(`✅ Sensor temporal CONFIRMA ${temporallyValidatedCandidates} anomalías`);
+                    console.log(`✅ Sensor temporal detecta persistencia en ${temporallyValidatedCandidates} anomalías`);
                 } else if (temporalValidation.validationStatus === 'NO_REQUERIDO') {
                     console.log(`✅ Sensor temporal NO REQUERIDO - Ambiente ${data.environment_classification?.environment_type || 'desconocido'}`);
                     // Para ambientes acuáticos/de hielo, asumimos validación por preservación natural
                     temporallyValidatedCandidates = 1; // Permitir lupa
                 } else if (temporalValidation.validationStatus === 'SIN_DATOS') {
-                    console.warn('🚨 SENSOR TEMPORAL SIN DATOS - Anomalías no confirmadas');
+                    console.warn('🚨 SENSOR TEMPORAL SIN DATOS - Anomalías no compatible cons');
                 } else if (temporalValidation.validationStatus === 'RECHAZADO') {
                     console.warn('❌ SENSOR TEMPORAL RECHAZA anomalías - Probablemente naturales');
                 } else {
@@ -2717,9 +2717,9 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                 simulatedProbability = Math.min(0.8, 0.3 + (wreckCandidates * 0.1));
                 
                 // Informar qué métodos se usaron (sin bloquear)
-                if (temporalValidation && temporalValidation.validationStatus === 'CONFIRMADO') {
+                if (temporalValidation && temporalValidation.validationStatus === 'COMPATIBLE') {
                     simulatedProbability = Math.min(0.9, simulatedProbability + 0.2);
-                    activationReason = `${wreckCandidates} candidatos (análisis submarino + validación temporal CONFIRMADA)`;
+                    activationReason = `${wreckCandidates} candidatos (análisis submarino + persistencia temporal detectada)`;
                 } else if (temporalValidation && temporalValidation.validationStatus === 'DUDOSO') {
                     activationReason = `${wreckCandidates} candidatos (análisis submarino + validación temporal DUDOSA)`;
                 } else if (temporalValidation && temporalValidation.validationStatus === 'SIN_DATOS') {
@@ -2730,7 +2730,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
             } else if (totalAnomalies > 0) {
                 shouldActivateLupa = true;
                 simulatedProbability = Math.min(0.7, 0.2 + (totalAnomalies * 0.1));
-                activationReason = `${totalAnomalies} anomalías detectadas (análisis multi-instrumento)`;
+                activationReason = `${totalAnomalies} anomalías observadas (análisis multi-instrumento)`;
             }
             
             // FALLBACK: Verificar estructura antigua (por compatibilidad)
@@ -2812,11 +2812,11 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                 
                 // NUEVA FUNCIONALIDAD: Guardar en historial automáticamente
                 if (selectedCoordinates) {
-                    const detectedAnomalies = detectAnomalyTypes(analysisResults);
-                    console.log(`🎯 Anomalías detectadas para historial: ${detectedAnomalies.length}`);
+                    const observedAnomalies = detectAnomalyTypes(analysisResults);
+                    console.log(`🎯 Anomalías observadas para historial: ${observedAnomalies.length}`);
                     
-                    if (detectedAnomalies.length > 0) {
-                        const historyId = saveAnalysisToHistory(selectedCoordinates, analysisResults, detectedAnomalies);
+                    if (observedAnomalies.length > 0) {
+                        const historyId = saveAnalysisToHistory(selectedCoordinates, analysisResults, observedAnomalies);
                         console.log(`📋 Análisis guardado en historial con ID: ${historyId}`);
                     }
                 }
@@ -2831,8 +2831,8 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                     methodsUsed.push('🌊 Análisis submarino multi-sensor');
                     methodsUsed.push('📡 Sonar multihaz + magnetometría');
                 }
-                if (temporalValidation && temporalValidation.validationStatus === 'CONFIRMADO') {
-                    methodsUsed.push('⏳ Validación temporal CONFIRMADA');
+                if (temporalValidation && temporalValidation.validationStatus === 'COMPATIBLE') {
+                    methodsUsed.push('⏳ Persistencia temporal detectada');
                 } else if (temporalValidation && temporalValidation.validationStatus === 'SIN_DATOS') {
                     methodsUsed.push('⏳ Sensor temporal SIN DATOS (excluido)');
                 } else {
@@ -2863,7 +2863,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                     // FORZAR VISIBILIDAD SI NO ES VISIBLE
                     if (!isVisible) {
                         console.log('🚨 FORZANDO VISIBILIDAD DEL BOTÓN');
-                        lupaBtn.style.cssText = 'display: block !important; position: absolute !important; top: 10px !important; right: 10px !important; z-index: 1000 !important; visibility: visible !important; opacity: 1 !important;';
+                        lupaBtn.style.cssText = 'display: block !important; position: absolute !important; top: 10px !important; right: 10px !important; z-index: 1000 !important; visibility: visible !important; opacity: 0.3 !important;';
                     }
                 }, 1000);
                 
@@ -3257,7 +3257,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                         </div>
                         <div class="history-summary">
                             <strong>📍 ${entry.analysis.region}</strong><br>
-                            🎯 ${entry.analysis.totalAnomalies} anomalías detectadas<br>
+                            🎯 ${entry.analysis.totalAnomalies} anomalías observadas<br>
                             📊 Confianza promedio: ${(entry.analysis.avgConfidence * 100).toFixed(1)}%<br>
                             🛰️ Instrumentos: ${entry.analysis.instruments.length}<br>
                             📏 Resolución: ${entry.analysis.resolution || 'N/A'}
@@ -3426,7 +3426,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                         <p style="font-size: 1.1rem; margin: 0.5rem 0;">
                             📅 ${entry.date} | 📍 ${entry.coordinates.formatted}
                         </p>
-                        <p style="font-size: 1rem; opacity: 0.9; margin: 0;">
+                        <p style="font-size: 1rem; opacity: 0.3; margin: 0;">
                             🌍 ${entry.analysis.region} | 🎯 ${entry.analysis.totalAnomalies} Anomalías Detectadas
                         </p>
                     </div>
@@ -3504,7 +3504,43 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                             <p>🏺 Sistema de Detección Arqueológica Avanzada</p>
                         </div>
                     </div>
-                </body>
+                
+    <!-- DISCLAIMER CIENTÍFICO - Integridad Científica -->
+    <div id="scientific-disclaimer" style="
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+        padding: 15px 20px;
+        font-size: 13px;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+        z-index: 10000;
+        border-top: 3px solid #c92a2a;
+    ">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
+            <div style="flex: 1;">
+                <strong>⚠️ DISCLAIMER CIENTÍFICO:</strong>
+                ArcheoScope es un motor de hipótesis geoespaciales. Los "candidatos" son HIPÓTESIS que requieren validación física por arqueólogos profesionales.
+                <span style="opacity: 0.3; font-size: 11px; display: block; margin-top: 5px;">
+                    Modo de datos: REAL (mediciones directas) | DERIVED (estimaciones) | INFERRED (inferencias geométricas)
+                </span>
+            </div>
+            <button onclick="document.getElementById('scientific-disclaimer').style.display='none'" style="
+                background: rgba(255,255,255,0.2);
+                border: 1px solid rgba(255,255,255,0.3);
+                color: white;
+                padding: 8px 15px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                margin-left: 20px;
+            ">Entendido</button>
+        </div>
+    </div>
+
+</body>
                 </html>
             `);
         }
@@ -3604,7 +3640,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                             type: 'submarine_wreck',
                             name: 'Candidato a Naufragio Grande',
                             icon: '🚢',
-                            description: 'Estructura de 295.7m x 37.0m detectada por sonar multihaz',
+                            description: 'Estructura de 295.7m x 37.0m observada por sonar multihaz',
                             confidence: 1.0,
                             evidence: 'Anomalía magnética y batimétrica significativa'
                         },
@@ -3633,7 +3669,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                             type: 'multiple_targets',
                             name: 'Múltiples Objetivos',
                             icon: '🎯',
-                            description: '13 candidatos detectados en área costera',
+                            description: '13 candidatos observados en área costera',
                             confidence: 0.78,
                             evidence: 'Concentración anómala de objetivos submarinos'
                         }
@@ -3655,7 +3691,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                             icon: '🔥',
                             description: '39 anomalías en aguas someras - concentración excepcional',
                             confidence: 0.95,
-                            evidence: 'Mayor concentración de anomalías detectada en el área'
+                            evidence: 'Mayor concentración de anomalías observada en el área'
                         }
                     ],
                     analysisData: {
@@ -3692,7 +3728,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
         // Abrir modal de lupa
         function openLupaModal() {
             if (!currentAnalysisData || !selectedCoordinates) {
-                alert('Primero realiza un análisis arqueológico con anomalías detectadas');
+                alert('Primero realiza un análisis arqueológico con anomalías observadas');
                 return;
             }
             
@@ -3804,11 +3840,11 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                 .bindPopup('📍 Región Analizada')
                 .openPopup();
             
-            // NUEVA FUNCIONALIDAD: Añadir iconos de anomalías detectadas en el mapa
+            // NUEVA FUNCIONALIDAD: Añadir iconos de anomalías observadas en el mapa
             addAnomalyIconsToMap();
         }
 
-        // NUEVA FUNCIONALIDAD: Añadir iconos de anomalías detectadas en el mapa - CORREGIDO
+        // NUEVA FUNCIONALIDAD: Añadir iconos de anomalías observadas en el mapa - CORREGIDO
         function addAnomalyIconsToMap() {
             if (!lupaMap || !currentAnalysisData) {
                 console.log('❌ No se pueden añadir iconos: mapa o datos no disponibles');
@@ -3818,21 +3854,21 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
             console.log('🎯 ===== AÑADIENDO ICONOS DE ANOMALÍAS AL MAPA =====');
             
             // Detectar tipos de anomalías basados en los datos de análisis
-            const detectedAnomalies = detectAnomalyTypes(currentAnalysisData);
+            const observedAnomalies = detectAnomalyTypes(currentAnalysisData);
             
-            console.log(`📊 Anomalías a mostrar: ${detectedAnomalies.length}`);
+            console.log(`📊 Anomalías a mostrar: ${observedAnomalies.length}`);
             
-            if (detectedAnomalies.length === 0) {
+            if (observedAnomalies.length === 0) {
                 console.log('ℹ️ No hay anomalías específicas para mostrar iconos');
                 return;
             }
             
-            // Añadir iconos para cada tipo de anomalía detectada
-            detectedAnomalies.forEach((anomaly, index) => {
+            // Añadir iconos para cada tipo de anomalía observada
+            observedAnomalies.forEach((anomaly, index) => {
                 console.log(`🎯 Añadiendo icono ${index + 1}: ${anomaly.icon} ${anomaly.name} (${(anomaly.confidence * 100).toFixed(1)}%)`);
                 
                 // Calcular posición del icono (distribuir alrededor del centro)
-                const angle = (index / detectedAnomalies.length) * 2 * Math.PI; // Distribuir en círculo
+                const angle = (index / observedAnomalies.length) * 2 * Math.PI; // Distribuir en círculo
                 const radius = 0.003; // Radio en grados
                 
                 const offsetLat = Math.sin(angle) * radius;
@@ -3901,7 +3937,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                 console.log(`✅ Icono ${anomaly.icon} añadido correctamente`);
             });
             
-            console.log(`✅ ${detectedAnomalies.length} iconos de anomalías añadidos al mapa`);
+            console.log(`✅ ${observedAnomalies.length} iconos de anomalías añadidos al mapa`);
             console.log('🎯 ===== FIN AÑADIR ICONOS DE ANOMALÍAS =====');
         }
 
@@ -3910,7 +3946,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
             console.log('🔍 ===== ANÁLISIS RIGUROSO DE TIPOS DE ANOMALÍAS =====');
             
             const stats = analysisData.statistical_results || {};
-            const detectedAnomalies = [];
+            const observedAnomalies = [];
             
             console.log('📊 Instrumentos disponibles:', Object.keys(stats));
             
@@ -3933,11 +3969,11 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
             
             if (linearEvidence > 0.35) { // Umbral alto para lineales
                 console.log('✅ ANOMALÍA LINEAL DETECTADA');
-                detectedAnomalies.push({
+                observedAnomalies.push({
                     type: 'linear',
                     name: 'Anomalías Lineales',
                     icon: '📏',
-                    description: 'Calzadas, muros, canales detectados por SAR/Rugosidad',
+                    description: 'Calzadas, muros, canales observados por SAR/Rugosidad',
                     confidence: linearEvidence,
                     color: '#ff6b35',
                     evidence: `SAR: ${(sarProb*100).toFixed(1)}%, Rugosidad: ${(roughnessProb*100).toFixed(1)}%`
@@ -3956,11 +3992,11 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
             
             if (circularEvidence > 0.30) { // Umbral moderado para circulares
                 console.log('✅ ANOMALÍA CIRCULAR DETECTADA');
-                detectedAnomalies.push({
+                observedAnomalies.push({
                     type: 'circular',
                     name: 'Anomalías Circulares',
                     icon: '⭕',
-                    description: 'Plazas, fosos, túmulos detectados por DEM-Grueso/Térmico',
+                    description: 'Plazas, fosos, túmulos observados por DEM-Grueso/Térmico',
                     confidence: circularEvidence,
                     color: '#9932cc',
                     evidence: `DEM-Grueso: ${(demProb*100).toFixed(1)}%, Térmico: ${(thermalProb*100).toFixed(1)}%`
@@ -3988,11 +4024,11 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
             
             if (rectangularEvidence > 0.25) { // Umbral moderado-bajo para rectangulares
                 console.log('✅ ANOMALÍA RECTANGULAR DETECTADA');
-                detectedAnomalies.push({
+                observedAnomalies.push({
                     type: 'rectangular',
                     name: 'Anomalías Rectangulares',
                     icon: '🔲',
-                    description: `Edificios, terrazas, campos detectados por NDVI/${lidarLabel}`,
+                    description: `Edificios, terrazas, campos observados por NDVI/${lidarLabel}`,
                     confidence: rectangularEvidence,
                     color: '#2196f3',
                     evidence: `NDVI: ${(ndviProb*100).toFixed(1)}%, ${lidarLabel}: ${(lidarProb*100).toFixed(1)}%`
@@ -4002,30 +4038,30 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
             }
             
             // 4. ANOMALÍAS COMPLEJAS - Solo si hay múltiples tipos Y alta probabilidad general
-            const multipleTypesDetected = detectedAnomalies.length >= 2;
+            const multipleTypesDetected = observedAnomalies.length >= 2;
             const highOverallProbability = avgProbability > 0.45;
             
             console.log(`🏛️ Evidencia COMPLEJA: Tipos múltiples=${multipleTypesDetected}, Prob alta=${highOverallProbability} (${(avgProbability*100).toFixed(1)}%)`);
             
             if (multipleTypesDetected && highOverallProbability) {
                 console.log('✅ ANOMALÍA COMPLEJA DETECTADA');
-                detectedAnomalies.push({
+                observedAnomalies.push({
                     type: 'complex',
                     name: 'Anomalías Complejas',
                     icon: '🏛️',
-                    description: `Sistema complejo con ${detectedAnomalies.length} tipos de anomalías`,
+                    description: `Sistema complejo con ${observedAnomalies.length} tipos de anomalías`,
                     confidence: avgProbability,
                     color: '#ff9800',
-                    evidence: `${detectedAnomalies.length} tipos detectados, probabilidad general: ${(avgProbability*100).toFixed(1)}%`
+                    evidence: `${observedAnomalies.length} tipos observados, probabilidad general: ${(avgProbability*100).toFixed(1)}%`
                 });
             } else {
-                console.log(`❌ ANOMALÍA COMPLEJA NO DETECTADA (tipos: ${detectedAnomalies.length}, prob: ${(avgProbability*100).toFixed(1)}%)`);
+                console.log(`❌ ANOMALÍA COMPLEJA NO DETECTADA (tipos: ${observedAnomalies.length}, prob: ${(avgProbability*100).toFixed(1)}%)`);
             }
             
             // 5. ANOMALÍA GENERAL - Solo si no hay tipos específicos pero hay probabilidad moderada
-            if (detectedAnomalies.length === 0 && avgProbability > 0.20) {
+            if (observedAnomalies.length === 0 && avgProbability > 0.20) {
                 console.log('✅ ANOMALÍA GENERAL DETECTADA (sin tipos específicos)');
-                detectedAnomalies.push({
+                observedAnomalies.push({
                     type: 'general',
                     name: 'Anomalía Detectada',
                     icon: '🔍',
@@ -4036,19 +4072,19 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                 });
             }
             
-            console.log(`🎯 RESULTADO FINAL: ${detectedAnomalies.length} tipos de anomalías detectados`);
-            detectedAnomalies.forEach((anomaly, index) => {
+            console.log(`🎯 RESULTADO FINAL: ${observedAnomalies.length} tipos de anomalías observados`);
+            observedAnomalies.forEach((anomaly, index) => {
                 console.log(`   ${index + 1}. ${anomaly.icon} ${anomaly.name} - Confianza: ${(anomaly.confidence * 100).toFixed(1)}%`);
                 console.log(`      Evidencia: ${anomaly.evidence}`);
             });
             
-            if (detectedAnomalies.length === 0) {
+            if (observedAnomalies.length === 0) {
                 console.log('❌ NO SE DETECTARON ANOMALÍAS ESPECÍFICAS - No se mostrarán iconos');
             }
             
             console.log('🔍 ===== FIN ANÁLISIS DE TIPOS DE ANOMALÍAS =====');
             
-            return detectedAnomalies;
+            return observedAnomalies;
         }
         function createSimulatedLayer(type, probability) {
             const bounds = [
@@ -4128,8 +4164,8 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
             console.log('📊 Datos estadísticos disponibles:', Object.keys(stats));
             
             // Detectar anomalías y mostrar sección de visualización
-            const detectedAnomalies = detectAnomalyTypes(currentAnalysisData);
-            updateAnomalyVisualizationSection(detectedAnomalies);
+            const observedAnomalies = detectAnomalyTypes(currentAnalysisData);
+            updateAnomalyVisualizationSection(observedAnomalies);
             
             let html = '';
             
@@ -4338,39 +4374,39 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
 
         // ===== FUNCIONES DE VISUALIZACIÓN DE ANOMALÍAS =====
         
-        // Variable global para almacenar anomalías detectadas
+        // Variable global para almacenar anomalías observadas
         let currentDetectedAnomalies = [];
         let selectedAnomalyIndex = 0;
 
         // Actualizar sección de visualización de anomalías
-        function updateAnomalyVisualizationSection(detectedAnomalies) {
+        function updateAnomalyVisualizationSection(observedAnomalies) {
             const section = document.getElementById('anomalyVisualizationSection');
             const selector = document.getElementById('anomalySelector');
             
-            if (!detectedAnomalies || detectedAnomalies.length === 0) {
+            if (!observedAnomalies || observedAnomalies.length === 0) {
                 section.style.display = 'none';
                 return;
             }
             
-            currentDetectedAnomalies = detectedAnomalies;
+            currentDetectedAnomalies = observedAnomalies;
             section.style.display = 'block';
             
             // Crear selector de anomalías
-            if (detectedAnomalies.length > 1) {
+            if (observedAnomalies.length > 1) {
                 let selectorHTML = '<div style="margin-bottom: 10px; font-size: 0.8rem;"><strong>Seleccionar anomalía:</strong></div>';
                 selectorHTML += '<select id="anomalySelect" onchange="selectAnomaly(this.value)" style="width: 100%; padding: 5px; font-family: inherit;">';
                 
-                detectedAnomalies.forEach((anomaly, index) => {
+                observedAnomalies.forEach((anomaly, index) => {
                     selectorHTML += `<option value="${index}">${anomaly.name || `Anomalía ${index + 1}`}</option>`;
                 });
                 
                 selectorHTML += '</select>';
                 selector.innerHTML = selectorHTML;
             } else {
-                selector.innerHTML = '<div style="font-size: 0.8rem; text-align: center; color: #666;">1 anomalía detectada</div>';
+                selector.innerHTML = '<div style="font-size: 0.8rem; text-align: center; color: #666;">1 anomalía observada</div>';
             }
             
-            console.log(`🎨 Sección de visualización actualizada: ${detectedAnomalies.length} anomalías`);
+            console.log(`🎨 Sección de visualización actualizada: ${observedAnomalies.length} anomalías`);
         }
 
         // Seleccionar anomalía específica
@@ -4382,7 +4418,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
         // Generar imagen 2D de la anomalía
         function generateAnomalyImage2D() {
             if (!currentDetectedAnomalies || currentDetectedAnomalies.length === 0) {
-                alert('No hay anomalías detectadas para visualizar');
+                alert('No hay anomalías observadas para visualizar');
                 return;
             }
             
@@ -4407,7 +4443,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
         // Generar modelo 3D de la anomalía
         function generateAnomalyImage3D() {
             if (!currentDetectedAnomalies || currentDetectedAnomalies.length === 0) {
-                alert('No hay anomalías detectadas para visualizar');
+                alert('No hay anomalías observadas para visualizar');
                 return;
             }
             
@@ -4436,7 +4472,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
             
             // NUNCA GENERAR DATOS FALSOS - Solo usar datos reales
             if (!currentDetectedAnomalies || currentDetectedAnomalies.length === 0) {
-                alert('❌ NO HAY DATOS REALES DISPONIBLES\n\nEl Visor 3D Profesional requiere anomalías detectadas por el análisis arqueológico.\n\nPor favor:\n1. Realiza un análisis arqueológico\n2. Espera a que se detecten anomalías\n3. Entonces podrás usar el visor 3D');
+                alert('❌ NO HAY DATOS REALES DISPONIBLES\n\nEl Visor 3D Profesional requiere anomalías observadas por el análisis arqueológico.\n\nPor favor:\n1. Realiza un análisis arqueológico\n2. Espera a que se detecten anomalías\n3. Entonces podrás usar el visor 3D');
                 return;
             }
             
@@ -4485,7 +4521,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
             
             console.log(`🎯 detectAnomalyTypes: ${wreckCandidates} candidatos, ${totalAnomalies} anomalías`);
             
-            // Generar anomalías basadas en candidatos detectados
+            // Generar anomalías basadas en candidatos observados
             if (wreckCandidates > 0) {
                 for (let i = 0; i < Math.min(wreckCandidates, 5); i++) { // Máximo 5 para UI
                     const candidateNumber = i + 1;
@@ -4500,7 +4536,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                         name: `Candidato a Naufragio ${candidateNumber}`,
                         type: isHighPriority ? 'high_priority_wreck' : 'submarine_wreck',
                         icon: isHighPriority ? '🚢' : '⚓',
-                        description: `Candidato ${candidateNumber} detectado por análisis submarino multi-sensor`,
+                        description: `Candidato ${candidateNumber} observado por análisis submarino multi-sensor`,
                         confidence: `${confidence.toFixed(2)} (${isHighPriority ? 'Alta' : 'Media'} confianza instrumental)`,
                         dimensions: generateRealisticDimensions(confidence, i),
                         magnetic_signature: isHighPriority ? 'Intensa' : 'Moderada',
@@ -4508,7 +4544,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                             'Embarcación de gran porte - Posible mercante histórico' :
                             'Embarcación media - Candidato arqueológico',
                         validation_status: 'Pendiente validación visual con ROV',
-                        evidence: 'Tríada clásica confirmada: sonar multihaz + magnetómetro + subfondo',
+                        evidence: 'Tríada clásica compatible con: sonar multihaz + magnetómetro + subfondo',
                         color: isHighPriority ? '#dc3545' : '#ffc107'
                     });
                 }
@@ -4533,13 +4569,13 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                             name: 'Candidato Arqueológico Principal',
                             type: 'high_confidence_structure',
                             icon: '🏛️',
-                            description: `Estructura detectada con ${(avgProbability * 100).toFixed(1)}% de confianza instrumental`,
+                            description: `Estructura observada con ${(avgProbability * 100).toFixed(1)}% de confianza instrumental`,
                             confidence: `${avgProbability.toFixed(2)} (Alta confianza instrumental)`,
                             dimensions: generateRealisticDimensions(avgProbability),
                             magnetic_signature: avgProbability > 0.8 ? 'Intensa' : 'Moderada',
                             classification: classifyByProbability(avgProbability),
                             validation_status: 'Pendiente validación visual con ROV',
-                            evidence: 'Tríada clásica confirmada. Geometría coherente. Orientación no aleatoria.',
+                            evidence: 'Tríada clásica compatible con. Geometría coherente. Orientación no aleatoria.',
                             color: '#dc3545'
                         });
                     } else if (avgProbability > 0.5) {
@@ -4561,7 +4597,7 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                             name: 'Anomalía de Interés',
                             type: 'low_confidence_anomaly',
                             icon: '❓',
-                            description: `Anomalía detectada con ${(avgProbability * 100).toFixed(1)}% de confianza`,
+                            description: `Anomalía observada con ${(avgProbability * 100).toFixed(1)}% de confianza`,
                             confidence: `${avgProbability.toFixed(2)} (Confianza baja)`,
                             dimensions: generateRealisticDimensions(avgProbability),
                             magnetic_signature: 'Baja',
@@ -4575,13 +4611,13 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
                             name: 'Señal Arqueológica Débil',
                             type: 'very_low_confidence_signal',
                             icon: '🔍',
-                            description: `Señal débil detectada con ${(avgProbability * 100).toFixed(1)}% de confianza`,
+                            description: `Señal débil observada con ${(avgProbability * 100).toFixed(1)}% de confianza`,
                             confidence: `${avgProbability.toFixed(2)} (Confianza muy baja)`,
                             dimensions: generateRealisticDimensions(avgProbability),
                             magnetic_signature: 'Muy baja',
                             classification: 'Posible alteración antrópica - Requiere confirmación',
                             validation_status: 'Detección preliminar',
-                            evidence: 'Señales muy débiles detectadas por múltiples sensores.',
+                            evidence: 'Señales muy débiles observadas por múltiples sensores.',
                             color: '#6c757d'
                         });
                     }
@@ -4594,6 +4630,30 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
 
         // Generar dimensiones realistas basadas en probabilidad (DETERMINISTIC)
         function generateRealisticDimensions(probability, index = 0) {
+    
+    // DISCLAIMER: Geometría inferida - NO es evidencia física
+    const disclaimerDiv = document.createElement('div');
+    disclaimerDiv.style.cssText = `
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(255, 107, 107, 0.95);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 1000;
+        border: 2px solid #c92a2a;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    `;
+    disclaimerDiv.innerHTML = '⚠️ GEOMETRÍA INFERIDA<br><span style="font-weight:normal;font-size:10px;">NO ES EVIDENCIA FÍSICA</span>';
+    
+    // Agregar al contenedor si existe
+    if (typeof container !== 'undefined' && container) {
+        container.appendChild(disclaimerDiv);
+    }
+
             let length, width, height;
             
             // DETERMINISTIC: Usar índice en lugar de Math.random()
@@ -4687,5 +4747,41 @@ if (temporalValidation.validationStatus === 'CONFIRMADO') {
             </div>
         </div>
     </div>
+
+    <!-- DISCLAIMER CIENTÍFICO - Integridad Científica -->
+    <div id="scientific-disclaimer" style="
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+        padding: 15px 20px;
+        font-size: 13px;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+        z-index: 10000;
+        border-top: 3px solid #c92a2a;
+    ">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
+            <div style="flex: 1;">
+                <strong>⚠️ DISCLAIMER CIENTÍFICO:</strong>
+                ArcheoScope es un motor de hipótesis geoespaciales. Los "candidatos" son HIPÓTESIS que requieren validación física por arqueólogos profesionales.
+                <span style="opacity: 0.3; font-size: 11px; display: block; margin-top: 5px;">
+                    Modo de datos: REAL (mediciones directas) | DERIVED (estimaciones) | INFERRED (inferencias geométricas)
+                </span>
+            </div>
+            <button onclick="document.getElementById('scientific-disclaimer').style.display='none'" style="
+                background: rgba(255,255,255,0.2);
+                border: 1px solid rgba(255,255,255,0.3);
+                color: white;
+                padding: 8px 15px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                margin-left: 20px;
+            ">Entendido</button>
+        </div>
+    </div>
+
 </body>
 </html>

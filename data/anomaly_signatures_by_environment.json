@@ -11,7 +11,7 @@
     "desert": {
       "environment_type": "desert",
       "description": "Desiertos áridos - alta visibilidad, baja vegetación",
-      "primary_instruments": ["landsat_thermal", "sentinel2", "sar"],
+      "primary_instruments": ["landsat_thermal", "modis_lst", "sentinel2", "sar"],
       "archaeological_indicators": {
         "thermal_anomalies": {
           "description": "Estructuras enterradas tienen diferente inercia térmica que arena",
@@ -20,6 +20,14 @@
           "confidence_high": "> 8K diferencia",
           "confidence_moderate": "5-8K diferencia",
           "false_positive_risk": "Rocas naturales, dunas"
+        },
+        "modis_thermal_inertia": {
+          "description": "MODIS LST proporciona inercia térmica de alta resolución",
+          "threshold_thermal_inertia_k": 8.0,
+          "expected_pattern": "Alta inercia térmica indica materiales compactos (piedra, mampostería)",
+          "confidence_high": "> 12K inercia térmica",
+          "confidence_moderate": "8-12K inercia térmica",
+          "false_positive_risk": "Afloramientos rocosos naturales"
         },
         "sar_backscatter": {
           "description": "Estructuras enterradas alteran rugosidad superficial",
@@ -39,7 +47,7 @@
         }
       },
       "minimum_convergence": 2,
-      "notes": "Requiere al menos 2 instrumentos convergentes para confirmar anomalía"
+      "notes": "Landsat + MODIS LST proporcionan cobertura térmica completa. Requiere al menos 2 instrumentos convergentes."
     },
     
     "forest": {
@@ -79,7 +87,7 @@
     "glacier": {
       "environment_type": "glacier",
       "description": "Glaciares y hielo - preservación excepcional, difícil acceso",
-      "primary_instruments": ["icesat2", "sentinel1_sar", "palsar"],
+      "primary_instruments": ["icesat2", "sentinel1_sar", "nsidc_sea_ice", "nsidc_snow_cover", "modis_lst"],
       "archaeological_indicators": {
         "icesat2_elevation_anomalies": {
           "description": "Objetos enterrados en hielo crean anomalías de elevación",
@@ -97,57 +105,73 @@
           "confidence_moderate": "Ratio anómalo sin geometría clara",
           "false_positive_risk": "Rocas, detritos glaciares"
         },
-        "thermal_ice_anomalies": {
-          "description": "Objetos enterrados alteran temperatura superficial del hielo",
-          "threshold_temp_delta_k": 2.0,
-          "expected_pattern": "Anomalías térmicas persistentes en superficie de hielo",
-          "confidence_high": "> 5K diferencia",
-          "confidence_moderate": "2-5K diferencia",
-          "false_positive_risk": "Grietas, agua subglacial"
+        "nsidc_ice_concentration": {
+          "description": "Concentración de hielo marino - contexto ambiental",
+          "threshold_concentration": 0.7,
+          "expected_pattern": "Alta concentración de hielo en zona de interés",
+          "confidence_high": "> 0.9 concentración",
+          "confidence_moderate": "0.7-0.9 concentración",
+          "false_positive_risk": "Variabilidad estacional natural"
+        },
+        "nsidc_snow_cover": {
+          "description": "Cobertura de nieve - accesibilidad y preservación",
+          "threshold_snow_cover": 0.5,
+          "expected_pattern": "Cobertura de nieve persistente",
+          "confidence_high": "> 0.8 cobertura",
+          "confidence_moderate": "0.5-0.8 cobertura",
+          "false_positive_risk": "Variabilidad estacional"
+        },
+        "modis_thermal_ice": {
+          "description": "Inercia térmica en hielo - objetos enterrados",
+          "threshold_thermal_inertia_k": 3.0,
+          "expected_pattern": "Anomalías térmicas persistentes en hielo",
+          "confidence_high": "> 6K diferencia día-noche",
+          "confidence_moderate": "3-6K diferencia",
+          "false_positive_risk": "Grietas, agua subglacial, rocas"
         }
       },
       "minimum_convergence": 2,
-      "notes": "ICESat-2 es crítico para detección precisa"
+      "notes": "ICESat-2 + NSIDC + MODIS LST proporcionan cobertura completa para criosfera"
     },
     
     "shallow_sea": {
       "environment_type": "shallow_sea",
       "description": "Aguas poco profundas (<200m) - arqueología submarina",
-      "primary_instruments": ["multibeam_sonar", "side_scan_sonar", "magnetometer"],
+      "primary_instruments": ["copernicus_sst", "copernicus_sea_ice", "sentinel1_sar"],
       "archaeological_indicators": {
-        "bathymetric_anomalies": {
-          "description": "Estructuras en fondo marino crean anomalías batimétricas",
-          "threshold_height_m": 1.0,
-          "expected_pattern": "Elevaciones geométricas en fondo marino plano",
-          "confidence_high": "> 3m altura con geometría de naufragio/estructura",
-          "confidence_moderate": "1-3m altura",
-          "false_positive_risk": "Formaciones rocosas naturales"
+        "copernicus_sst_anomaly": {
+          "description": "Temperatura superficial del mar - contexto ambiental",
+          "threshold_sst_celsius": 15.0,
+          "expected_pattern": "SST dentro de rango esperado para la región",
+          "confidence_high": "SST consistente con datos históricos",
+          "confidence_moderate": "SST con variabilidad moderada",
+          "false_positive_risk": "Corrientes oceánicas, surgencias"
         },
-        "acoustic_reflectance": {
-          "description": "Materiales artificiales (madera, metal) tienen reflectancia distinta",
-          "threshold_reflectance_delta": 0.3,
-          "expected_pattern": "Alta reflectancia acústica en patrones geométricos",
-          "confidence_high": "Reflectancia anómala + geometría de casco",
-          "confidence_moderate": "Reflectancia anómala sin geometría clara",
-          "false_positive_risk": "Rocas, arrecifes"
+        "copernicus_ice_marine": {
+          "description": "Hielo marino en aguas polares - accesibilidad",
+          "threshold_ice_concentration": 0.3,
+          "expected_pattern": "Concentración de hielo marino",
+          "confidence_high": "> 0.7 concentración",
+          "confidence_moderate": "0.3-0.7 concentración",
+          "false_positive_risk": "Variabilidad estacional"
         },
-        "magnetic_anomalies": {
-          "description": "Metales ferrosos (anclas, cañones, cascos) crean anomalías magnéticas",
-          "threshold_nt": 50.0,
-          "expected_pattern": "Anomalías magnéticas puntuales o lineales",
-          "confidence_high": "> 200nT anomalía",
-          "confidence_moderate": "50-200nT anomalía",
-          "false_positive_risk": "Depósitos minerales naturales"
+        "sar_ocean_surface": {
+          "description": "SAR detecta estructuras submarinas someras",
+          "threshold_backscatter_db": -15.0,
+          "expected_pattern": "Anomalías de backscatter sobre estructuras",
+          "confidence_high": "Backscatter anómalo + geometría",
+          "confidence_moderate": "Backscatter anómalo",
+          "false_positive_risk": "Olas, corrientes, arrecifes naturales"
         }
       },
       "minimum_convergence": 2,
-      "notes": "Magnetometría es definitiva para naufragios con metal"
+      "notes": "Copernicus Marine proporciona datos oceánicos de alta calidad. SAR complementa para detección de estructuras."
     },
     
     "polar_ice": {
       "environment_type": "polar_ice",
       "description": "Capas de hielo polares (Antártida, Groenlandia)",
-      "primary_instruments": ["icesat2", "sentinel1_sar", "palsar"],
+      "primary_instruments": ["icesat2", "sentinel1_sar", "nsidc_sea_ice", "modis_lst"],
       "archaeological_indicators": {
         "icesat2_subsurface": {
           "description": "ICESat-2 puede detectar anomalías bajo hielo superficial",
@@ -164,10 +188,26 @@
           "confidence_high": "Coherencia > 0.7 con forma definida",
           "confidence_moderate": "Coherencia 0.5-0.7",
           "false_positive_risk": "Rocas subglaciales"
+        },
+        "nsidc_polar_ice": {
+          "description": "NSIDC proporciona datos especializados de hielo polar",
+          "threshold_ice_concentration": 0.9,
+          "expected_pattern": "Alta concentración de hielo permanente",
+          "confidence_high": "> 0.95 concentración",
+          "confidence_moderate": "0.9-0.95 concentración",
+          "false_positive_risk": "Variabilidad estacional mínima en polos"
+        },
+        "modis_polar_thermal": {
+          "description": "Inercia térmica en hielo polar",
+          "threshold_thermal_inertia_k": 2.0,
+          "expected_pattern": "Anomalías térmicas bajo hielo",
+          "confidence_high": "> 4K diferencia",
+          "confidence_moderate": "2-4K diferencia",
+          "false_positive_risk": "Topografía subglacial, agua subglacial"
         }
       },
       "minimum_convergence": 2,
-      "notes": "Arqueología polar es extremadamente rara - alta barra de evidencia"
+      "notes": "Arqueología polar es extremadamente rara - alta barra de evidencia. NSIDC + ICESat-2 + MODIS proporcionan cobertura completa."
     },
     
     "mountain": {

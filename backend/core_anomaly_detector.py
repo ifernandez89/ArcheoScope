@@ -252,29 +252,28 @@ class CoreAnomalyDetector:
         """
         Medir con instrumentos apropiados para el terreno
         
-        ACTUALIZADO: Usa APIs reales satelitales (NO simulaciones)
+        REGLA NRO 1 DE ARCHEOSCOPE: JAMÁS FALSEAR DATOS - SOLO APIS REALES
+        
+        Si la API falla o no está disponible, NO se mide ese instrumento.
+        El sistema debe trabajar con datos incompletos, NUNCA con datos falsos.
         """
         measurements = []
         
         indicators = env_signatures.get('archaeological_indicators', {})
         
         for indicator_name, indicator_config in indicators.items():
-            # Intentar medición REAL primero
+            # SOLO intentar medición REAL - NO SIMULACIONES
             measurement = await self._get_real_instrument_measurement(
                 indicator_name, indicator_config, env_context,
                 lat_min, lat_max, lon_min, lon_max
             )
             
-            # Fallback a simulación solo si API falla
-            if not measurement:
-                logger.warning(f"   ⚠️ API real falló para {indicator_name}, usando fallback")
-                measurement = self._simulate_instrument_measurement(
-                    indicator_name, indicator_config, env_context,
-                    lat_min, lat_max, lon_min, lon_max
-                )
-            
+            # Si falla, NO agregar medición (NO SIMULAR JAMÁS)
             if measurement:
                 measurements.append(measurement)
+                logger.info(f"   ✅ Medición real obtenida: {indicator_name}")
+            else:
+                logger.warning(f"   ⚠️ No hay datos reales para {indicator_name} - OMITIDO (NO SE SIMULA)")
         
         return measurements
     
@@ -301,18 +300,27 @@ class CoreAnomalyDetector:
             # Mapear nombres de indicadores a nombres de instrumentos de API
             instrument_mapping = {
                 'thermal_anomalies': 'landsat_thermal',
+                'modis_thermal_inertia': 'modis_lst',
                 'sar_backscatter': 'sentinel_1_sar',
                 'ndvi_stress': 'sentinel_2_ndvi',
                 'ndvi_canopy_gaps': 'sentinel_2_ndvi',
-                'lidar_elevation_anomalies': 'opentopography',
-                'sar_l_band_penetration': 'palsar',
-                'multibeam_sonar': None,  # No API disponible
-                'side_scan_sonar': None,  # No API disponible
-                'magnetometer': None,  # No API disponible
-                'bathymetry': None,  # No API disponible
-                'ice_penetrating_radar': 'icesat2',
-                'thermal_ice_anomalies': 'modis',
-                'sar_ice_structure': 'sentinel_1_sar',
+                'lidar_elevation_anomalies': 'icesat2',
+                'sar_l_band_penetration': 'sentinel_1_sar',
+                'icesat2_elevation_anomalies': 'icesat2',
+                'sar_polarimetric_anomalies': 'sentinel_1_sar',
+                'nsidc_ice_concentration': 'nsidc_sea_ice',
+                'nsidc_snow_cover': 'nsidc_snow_cover',
+                'modis_thermal_ice': 'modis_lst',
+                'copernicus_sst_anomaly': 'copernicus_sst',
+                'copernicus_ice_marine': 'copernicus_sea_ice',
+                'sar_ocean_surface': 'sentinel_1_sar',
+                'icesat2_subsurface': 'icesat2',
+                'sar_penetration_anomalies': 'sentinel_1_sar',
+                'nsidc_polar_ice': 'nsidc_sea_ice',
+                'modis_polar_thermal': 'modis_lst',
+                'elevation_terracing': 'icesat2',
+                'slope_anomalies': 'icesat2',
+                'sar_structural_anomalies': 'sentinel_1_sar',
                 'generic_anomalies': 'sentinel_2_ndvi'  # Fallback genérico
             }
             
@@ -382,251 +390,23 @@ class CoreAnomalyDetector:
             logger.error(f"   ❌ Error obteniendo dato real para {indicator_name}: {e}")
             return None
     
-    def _simulate_instrument_measurement(self, indicator_name: str, 
-                                        indicator_config: Dict[str, Any],
-                                        env_context,
-                                        lat_min: float, lat_max: float,
-                                        lon_min: float, lon_max: float) -> Optional[InstrumentMeasurement]:
-        """
-        SIMULACIÓN HÍBRIDA MEJORADA: Reduce falsos positivos significativamente
-        
-        ESTRATEGIA HÍBRIDA:
-        1. Si es sitio arqueológico conocido → usar firmas calibradas
-        2. Si es área natural → usar simulación conservadora
-        3. Ajustar umbrales por contexto ambiental
-        """
-        
-        # Extraer umbral del indicador
-        threshold_key = [k for k in indicator_config.keys() if 'threshold' in k]
-        if not threshold_key:
-            return None
-        
-        threshold = indicator_config[threshold_key[0]]
-        
-        # 1. VALIDAR si es sitio arqueológico conocido
-        validation = self.real_validator.validate_region(
-            lat_min, lat_max, lon_min, lon_max
-        )
-        is_known_site = len(validation.get('overlapping_sites', [])) > 0
-        
-        # 2. GENERAR medición determinística según contexto
-        coord_hash = int((abs(lat_min) * 10000 + abs(lon_min) * 10000) % 1000000)
-        instrument_hash = hash(indicator_name) % 100
-        combined_seed = coord_hash + instrument_hash
-        np.random.seed(combined_seed)
-        
-        if is_known_site:
-            # Sitio arqueológico conocido: firmas calibradas (85-140% del umbral)
-            # Incrementado para asegurar convergencia de 2+ instrumentos
-            base_multiplier = 0.85 + np.random.random() * 0.55
-            
-            # Ajuste por tipo de sitio
-            site_info = validation['overlapping_sites'][0]
-            site_type = self._get_site_type(site_info)
-            
-            if site_type == 'monumental':  # Como Giza, Pirámides
-                base_multiplier *= 1.3  # Más fuerte para sitios monumentales (max 182%)
-            elif site_type == 'submerged':  # Como Port Royal
-                base_multiplier *= 1.2  # Más fuerte para sitios submarinos (max 168%)
-            elif site_type == 'urban':  # Como ciudades antiguas
-                base_multiplier *= 1.25  # Más fuerte para ciudades (max 175%)
-                
-        else:
-            # Área desconocida: simulación realista (40-120% del umbral)
-            # Rango más amplio para permitir detección de sitios no catalogados
-            base_multiplier = 0.4 + np.random.random() * 0.8
-            
-            # Ajuste por ambiente (algunos ambientes más propensos a falsos positivos)
-            env_type = env_context.environment_type.value
-            
-            # Factores de conservación ambiental (menos restrictivos)
-            environment_conservatism = {
-                'desert': 0.95,      # Desiertos - buena visibilidad
-                'forest': 0.85,      # Bosques densos - LiDAR ayuda
-                'shallow_sea': 1.0,  # Aguas poco profundas - sonar efectivo
-                'glacier': 1.0,      # Glaciares - preservación excelente
-                'polar_ice': 1.0,    # Hielo polar - muy estable
-                'deep_ocean': 1.0,   # Océano profundo - muy estable
-                'grassland': 0.95,   # Praderas - buena visibilidad
-                'mountain': 0.90,    # Montañas - terrazas visibles
-            }
-            
-            base_multiplier *= environment_conservatism.get(env_type, 1.0)
-        
-        # 3. CALCULAR medición final
-        base_value = threshold * base_multiplier
-        
-        # 4. APLICAR UMBRALES - Prioridad para sitios conocidos
-        if is_known_site:
-            # Sitios conocidos: umbral base (sin multiplicadores ambientales)
-            # Los sitios arqueológicos reales deben poder detectarse
-            adjusted_threshold = threshold
-            
-            # Pequeño ajuste para sitios muy monumentales
-            site_info = validation['overlapping_sites'][0]
-            site_type = self._get_site_type(site_info)
-            if site_type == 'monumental':
-                adjusted_threshold *= 0.9  # Más fácil detectar sitios monumentales
-            elif site_type == 'submerged':
-                adjusted_threshold *= 0.95  # Ligeramente más fácil para sitios submarinos
-                
-        else:
-            # Áreas desconocidas: aplicar multiplicadores ambientales moderados
-            # No tan restrictivos como antes para permitir detección de sitios no catalogados
-            env_type = env_context.environment_type.value
-            threshold_multiplier = self._get_environment_threshold_multiplier(env_type, indicator_name)
-            # Reducir multiplicador en 20% para áreas desconocidas
-            adjusted_threshold = threshold * (threshold_multiplier * 0.8)
-        
-        exceeds = base_value > adjusted_threshold
-        
-        # 5. DETERMINAR confianza más estricta
-        if exceeds:
-            ratio = base_value / adjusted_threshold
-            if ratio > 1.8:          # Umbral más alto para "high"
-                confidence = "high"
-            elif ratio > 1.4:        # Umbral más alto para "moderate"
-                confidence = "moderate"
-            else:
-                confidence = "low"
-        else:
-            confidence = "none"
-        
-        # 6. RETORNAR medición con notas detalladas
-        notes = indicator_config.get('expected_pattern', '')
-        if is_known_site:
-            notes += f" | Sitio conocido: {site_type}"
-        else:
-            notes += f" | Área natural: {env_type}"
-        
-        return InstrumentMeasurement(
-            instrument_name=indicator_name,
-            measurement_type=indicator_config.get('description', ''),
-            value=base_value,
-            unit=self._extract_unit(threshold_key[0]),
-            threshold=adjusted_threshold,
-            exceeds_threshold=exceeds,
-            confidence=confidence,
-            notes=notes
-)
+    # MÉTODO ELIMINADO: _simulate_instrument_measurement()
+    # 
+    # REGLA NRO 1 DE ARCHEOSCOPE: JAMÁS FALSEAR DATOS - SOLO APIS REALES
+    # 
+    # Este método fue eliminado completamente porque simulaba datos falsos.
+    # ArcheoScope SOLO trabaja con datos reales de APIs satelitales.
+    # Si una API no está disponible, ese instrumento simplemente no se mide.
+    # 
+    # Fecha de eliminación: 2026-01-26
+    # Razón: Integridad científica - NO simular datos JAMÁS
     
-    def _get_site_type(self, site_info) -> str:
-        """
-        Determinar tipo de sitio arqueológico para ajustar firmas instrumentales
-        
-        Args:
-            site_info: ArchaeologicalSite object
-        
-        Returns:
-            'monumental' - Grandes estructuras monumentales (pirámides, templos masivos)
-            'submerged'  - Sitios bajo el agua
-            'urban'      - Ciudades y asentamientos grandes
-            'standard'   - Sitios arqueológicos estándar
-        """
-        site_name = getattr(site_info, 'name', '').lower()
-        site_type = getattr(site_info, 'site_type', '').lower()
-        period = getattr(site_info, 'period', '').lower()
-        
-        # Patrones para sitios monumentales
-        monumental_patterns = [
-            'pyramid', 'temple', 'monument', 'acropolis', 'citadel',
-            'great', 'grand', 'palace', 'fortress', 'megalith'
-        ]
-        
-        # Patrones para sitios sumergidos
-        submerged_patterns = [
-            'submerged', 'underwater', 'port', 'harbor', 'shipwreck',
-            'marine', 'ocean', 'sea', 'bay', 'coastal'
-        ]
-        
-        # Patrones para sitios urbanos
-        urban_patterns = [
-            'city', 'settlement', 'town', 'urban', 'metropolis',
-            'capital', 'kingdom', 'empire', 'province'
-        ]
-        
-        # Detectar tipo basado en patrones
-        if any(pattern in site_name for pattern in monumental_patterns):
-            return 'monumental'
-        elif any(pattern in site_name for pattern in submerged_patterns):
-            return 'submerged'
-        elif any(pattern in site_name for pattern in urban_patterns):
-            return 'urban'
-        elif any(pattern in site_type for pattern in monumental_patterns):
-            return 'monumental'
-        elif any(pattern in period for pattern in ['egyptian', 'maya', 'aztec', 'inca']):
-            return 'monumental'  # Culturas conocidas por construcciones monumentales
-        else:
-            return 'standard'
-    
-    def _get_environment_threshold_multiplier(self, env_type: str, indicator_name: str) -> float:
-        """
-        Obtener multiplicador de umbral específico por ambiente e instrumento
-        Ambientes con altos falsos positivos tienen umbrales más exigentes
-        """
-        # Configuración de umbrales por ambiente
-        environment_multipliers = {
-            'desert': {
-                'thermal_anomalies': 1.5,    # Más exigente en desiertos (calor natural)
-                'sar_backscatter': 1.3,      # Moderadamente exigente
-                'ndvi_stress': 1.4,          # Más exigente (vegetación escasa)
-                'default': 1.4
-            },
-            'forest': {
-                'lidar_elevation_anomalies': 1.4,  # Bosques densos pueden interferir
-                'sar_backscatter': 1.5,           # Más exigente (vegetación)
-                'ndvi_stress': 1.2,               # Menos exigente (vegetación presente)
-                'default': 1.4
-            },
-            'shallow_sea': {
-                'multibeam_sonar': 1.6,     # Muy exigente en agua poco profunda
-                'side_scan_sonar': 1.7,     # Muy exigente
-                'magnetometer': 1.8,       # Extremadamente exigente
-                'bathymetry': 1.5,         # Bastante exigente
-                'default': 1.6
-            },
-            'glacier': {
-                'thermal_anomalies': 1.2,  # Menos exigente (hielo más sensible)
-                'sar_backscatter': 1.1,    # Menos exigente
-                'elevation_anomalies': 1.3, # Moderadamente exigente
-                'default': 1.2
-            },
-            'polar_ice': {
-                'thermal_anomalies': 1.3,  # Ligeramente exigente
-                'sar_backscatter': 1.2,    # Ligeramente exigente
-                'elevation_anomalies': 1.1, # Cercano a normal
-                'default': 1.2
-            },
-            'deep_ocean': {
-                'magnetometer': 1.4,       # Bastante exigente
-                'bathymetry': 1.3,         # Moderadamente exigente
-                'sonar': 1.5,              # Bastante exigente
-                'default': 1.4
-            },
-            'grassland': {
-                'thermal_anomalies': 1.3,  # Moderadamente exigente
-                'sar_backscatter': 1.2,    # Ligeramente exigente
-                'ndvi_stress': 1.25,       # Moderadamente exigente
-                'default': 1.25
-            },
-            'mountain': {
-                'elevation_terracing': 1.1,  # Ligeramente exigente (terrazas visibles)
-                'slope_anomalies': 1.15,     # Ligeramente exigente
-                'sar_structural': 1.2,       # Moderadamente exigente
-                'default': 1.15
-            }
-        }
-        
-        # Obtener multiplicador específico o default
-        env_config = environment_multipliers.get(env_type, {'default': 1.0})
-        
-        # Buscar indicador específico
-        for key in env_config:
-            if key in indicator_name.lower():
-                return env_config[key]
-        
-        # Retornar default para ese ambiente
-        return env_config.get('default', 1.0)
+    # MÉTODOS ELIMINADOS: _get_site_type() y _get_environment_threshold_multiplier()
+    # 
+    # Estos métodos solo eran usados por _simulate_instrument_measurement()
+    # que fue eliminado por violar la REGLA NRO 1: JAMÁS FALSEAR DATOS
+    # 
+    # Fecha de eliminación: 2026-01-26
     
     def _extract_unit(self, threshold_key: str) -> str:
         """Extraer unidad de medición del nombre del umbral"""

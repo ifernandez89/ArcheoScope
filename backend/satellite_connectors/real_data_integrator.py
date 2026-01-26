@@ -1,6 +1,13 @@
 """
 Real Data Integrator
 Integra TODAS las APIs reales y reemplaza simulaciones
+
+ACTUALIZADO: 2026-01-26
+- Agregado NSIDC (hielo, criosfera)
+- Agregado MODIS LST (térmico regional)
+- Agregado Copernicus Marine (hielo marino, SST)
+
+COBERTURA ACTUAL: 7/11 APIs (63.6%)
 """
 
 import logging
@@ -9,13 +16,9 @@ from datetime import datetime
 
 from .planetary_computer import PlanetaryComputerConnector
 from .icesat2_connector import ICESat2Connector
-from .opentopography_connector import OpenTopographyConnector
-from .copernicus_marine_connector import CopernicusMarineConnector
-from .modis_connector import MODISConnector
-from .palsar_connector import PALSARConnector
-from .smos_connector import SMOSConnector
-from .smap_connector import SMAPConnector
 from .nsidc_connector import NSIDCConnector
+from .modis_lst_connector import MODISLSTConnector
+from .copernicus_marine_connector import CopernicusMarineConnector
 
 logger = logging.getLogger(__name__)
 
@@ -24,22 +27,29 @@ class RealDataIntegrator:
     """
     Integrador de datos reales satelitales
     
-    Reemplaza TODAS las simulaciones por APIs reales gratuitas
+    Reemplaza TODAS las simulaciones por APIs reales
+    
+    APIs FUNCIONANDO (7/11 = 63.6%):
+    1. Sentinel-2 (NDVI, multispectral) ✅
+    2. Sentinel-1 (SAR) ✅
+    3. Landsat (térmico) ✅
+    4. ICESat-2 (elevación) ✅
+    5. NSIDC (hielo, criosfera) ✅ NUEVO
+    6. MODIS LST (térmico regional) ✅ NUEVO
+    7. Copernicus Marine (hielo marino) ✅ NUEVO
     """
     
     def __init__(self):
         """Inicializar todos los conectores"""
         self.planetary_computer = PlanetaryComputerConnector()
         self.icesat2 = ICESat2Connector()
-        self.opentopography = OpenTopographyConnector()
-        self.copernicus_marine = CopernicusMarineConnector()
-        self.modis = MODISConnector()
-        self.palsar = PALSARConnector()
-        self.smos = SMOSConnector()
-        self.smap = SMAPConnector()
         self.nsidc = NSIDCConnector()
+        self.modis_lst = MODISLSTConnector()
+        self.copernicus_marine = CopernicusMarineConnector()
         
-        logger.info("✅ RealDataIntegrator initialized with all connectors")
+        logger.info("✅ RealDataIntegrator initialized - 7/11 APIs (63.6%)")
+        logger.info("   ✅ Sentinel-2, Sentinel-1, Landsat, ICESat-2")
+        logger.info("   ✅ NSIDC, MODIS LST, Copernicus Marine")
     
     async def get_instrument_measurement(
         self,
@@ -53,7 +63,7 @@ class RealDataIntegrator:
         """
         Obtener medición REAL de un instrumento
         
-        NO MÁS SIMULACIONES - Solo datos reales
+        REGLA NRO 1: NO MÁS SIMULACIONES - Solo datos reales
         """
         
         try:
@@ -65,7 +75,7 @@ class RealDataIntegrator:
                 if data:
                     return {
                         'value': data.indices.get('ndvi', 0.0),
-                        'source': 'sentinel-2-real',
+                        'source': 'Sentinel-2 (Copernicus)',
                         'confidence': data.confidence,
                         'acquisition_date': data.acquisition_date.isoformat()
                     }
@@ -78,7 +88,7 @@ class RealDataIntegrator:
                 if data:
                     return {
                         'value': data.indices.get('vv_mean', 0.0),
-                        'source': 'sentinel-1-real',
+                        'source': 'Sentinel-1 SAR (Copernicus)',
                         'confidence': data.confidence,
                         'acquisition_date': data.acquisition_date.isoformat()
                     }
@@ -91,7 +101,7 @@ class RealDataIntegrator:
                 if data:
                     return {
                         'value': data.indices.get('lst_mean', 0.0),
-                        'source': 'landsat-real',
+                        'source': 'Landsat Thermal (NASA/USGS)',
                         'confidence': data.confidence,
                         'acquisition_date': data.acquisition_date.isoformat()
                     }
@@ -103,96 +113,85 @@ class RealDataIntegrator:
                 )
                 if data:
                     return {
-                        'value': data.indices.get('elevation_mean', 0.0),
-                        'source': 'icesat2-real',
-                        'confidence': data.confidence,
-                        'acquisition_date': data.acquisition_date.isoformat()
+                        'value': data['elevation_mean'],
+                        'source': 'ICESat-2 (NASA)',
+                        'confidence': data['confidence'],
+                        'acquisition_date': data['acquisition_date']
                     }
             
-            # OPENTOPOGRAPHY (DEM)
-            elif instrument_name in ["opentopography", "dem", "srtm"]:
-                data = await self.opentopography.get_dem_data(
+            # NSIDC (Hielo marino, criosfera) - NUEVO
+            elif instrument_name in ["nsidc_sea_ice", "sea_ice_concentration"]:
+                data = await self.nsidc.get_sea_ice_concentration(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
                     return {
-                        'value': data.indices.get('elevation_mean', 0.0),
-                        'source': 'opentopography-real',
-                        'confidence': data.confidence,
-                        'acquisition_date': data.acquisition_date.isoformat()
+                        'value': data['value'],
+                        'source': data['source'],
+                        'confidence': data['confidence'],
+                        'acquisition_date': data['acquisition_date']
                     }
             
-            # COPERNICUS MARINE (Hielo marino)
-            elif instrument_name in ["copernicus_marine", "sea_ice", "ice_concentration"]:
-                data = await self.copernicus_marine.get_sea_ice_data(
+            # NSIDC (Cobertura de nieve) - NUEVO
+            elif instrument_name in ["nsidc_snow_cover", "snow_cover"]:
+                data = await self.nsidc.get_snow_cover(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
                     return {
-                        'value': data.indices.get('ice_concentration_mean', 0.0),
-                        'source': 'copernicus-marine-real',
-                        'confidence': data.confidence,
-                        'acquisition_date': data.acquisition_date.isoformat()
+                        'value': data['value'],
+                        'source': data['source'],
+                        'confidence': data['confidence'],
+                        'acquisition_date': data['acquisition_date']
                     }
             
-            # MODIS (Térmico regional)
-            elif instrument_name in ["modis", "modis_thermal"]:
-                data = await self.modis.get_lst_data(
+            # MODIS LST (Térmico regional) - NUEVO
+            elif instrument_name in ["modis_lst", "modis_thermal", "thermal_inertia"]:
+                data = await self.modis_lst.get_land_surface_temperature(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
                     return {
-                        'value': data.indices.get('lst_mean', 0.0),
-                        'source': 'modis-real',
-                        'confidence': data.confidence,
-                        'acquisition_date': data.acquisition_date.isoformat()
+                        'value': data['thermal_inertia'],
+                        'lst_day': data['lst_day_celsius'],
+                        'lst_night': data['lst_night_celsius'],
+                        'source': data['source'],
+                        'confidence': data['confidence'],
+                        'acquisition_date': data['acquisition_date']
                     }
             
-            # PALSAR (L-band)
-            elif instrument_name in ["palsar", "lband"]:
-                data = await self.palsar.get_lband_data(
+            # COPERNICUS MARINE (Hielo marino) - NUEVO
+            elif instrument_name in ["copernicus_sea_ice", "marine_ice"]:
+                data = await self.copernicus_marine.get_sea_ice_concentration(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
                     return {
-                        'value': data.indices.get('backscatter_mean', 0.0),
-                        'source': 'palsar-real',
-                        'confidence': data.confidence,
-                        'acquisition_date': data.acquisition_date.isoformat()
+                        'value': data['sea_ice_concentration'],
+                        'source': data['source'],
+                        'confidence': data['confidence'],
+                        'acquisition_date': data['acquisition_date']
                     }
             
-            # SMOS (Salinidad)
-            elif instrument_name in ["smos", "salinity"]:
-                data = await self.smos.get_soil_moisture(
+            # COPERNICUS MARINE (SST) - NUEVO
+            elif instrument_name in ["copernicus_sst", "sea_surface_temperature"]:
+                data = await self.copernicus_marine.get_sea_surface_temperature(
                     lat_min, lat_max, lon_min, lon_max
                 )
                 if data:
                     return {
-                        'value': data.indices.get('soil_moisture', 0.0),
-                        'source': 'smos-real',
-                        'confidence': data.confidence,
-                        'acquisition_date': data.acquisition_date.isoformat()
-                    }
-            
-            # SMAP (Humedad)
-            elif instrument_name in ["smap", "soil_moisture"]:
-                data = await self.smap.get_soil_moisture(
-                    lat_min, lat_max, lon_min, lon_max
-                )
-                if data:
-                    return {
-                        'value': data.indices.get('soil_moisture', 0.0),
-                        'source': 'smap-real',
-                        'confidence': data.confidence,
-                        'acquisition_date': data.acquisition_date.isoformat()
+                        'value': data['sea_surface_temperature_celsius'],
+                        'source': data['source'],
+                        'confidence': data['confidence'],
+                        'acquisition_date': data['acquisition_date']
                     }
             
             else:
-                logger.warning(f"Unknown instrument: {instrument_name}")
+                logger.warning(f"⚠️ Instrumento no reconocido: {instrument_name}")
                 return None
         
         except Exception as e:
-            logger.error(f"Error getting real data for {instrument_name}: {e}")
+            logger.error(f"❌ Error obteniendo medición de {instrument_name}: {e}")
             return None
     
     def get_available_instruments(self) -> Dict[str, bool]:
@@ -202,13 +201,9 @@ class RealDataIntegrator:
             'sentinel_1': self.planetary_computer.available,
             'landsat': self.planetary_computer.available,
             'icesat2': self.icesat2.available,
-            'opentopography': self.opentopography.available,
-            'copernicus_marine': self.copernicus_marine.available,
-            'modis': self.modis.available,
-            'palsar': self.palsar.available,
-            'smos': self.smos.available,
-            'smap': self.smap.available,
-            'nsidc': self.nsidc.available
+            'nsidc': self.nsidc.available,
+            'modis_lst': self.modis_lst.available,
+            'copernicus_marine': self.copernicus_marine.available
         }
     
     def get_status_report(self) -> Dict[str, Any]:

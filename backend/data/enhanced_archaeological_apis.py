@@ -1,5 +1,37 @@
 #!/usr/bin/env python3
 """
+❌ ARCHIVO DESHABILITADO - USA np.random PARA SIMULAR DATOS
+
+REGLA NRO 1 DE ARCHEOSCOPE: JAMÁS FALSEAR DATOS - SOLO APIS REALES
+
+Este archivo simula datos de APIs arqueológicas con np.random.
+Deshabilitado el 2026-01-26 hasta implementar con APIs reales.
+
+Archivo original: backend/data/enhanced_archaeological_apis.py
+Estado: Requiere implementación real de OpenTopography, ASF DAAC, ICESat-2, GEDI, SMAP
+Alternativa: Usar RealDataIntegrator en backend/satellite_connectors/
+
+============================================================================
+CÓDIGO ORIGINAL DESHABILITADO
+============================================================================
+"""
+
+raise NotImplementedError(
+    "❌ MÓDULO DESHABILITADO - USA np.random PARA SIMULAR DATOS\n\n"
+    "REGLA NRO 1: JAMÁS FALSEAR DATOS - SOLO APIS REALES\n\n"
+    "Este módulo será rehabilitado cuando se implementen las APIs reales:\n"
+    "- OpenTopography (DEM)\n"
+    "- ASF DAAC (ALOS PALSAR)\n"
+    "- ICESat-2 (perfiles láser)\n"
+    "- GEDI (altura vegetación)\n"
+    "- SMAP (humedad suelo)\n\n"
+    "Usar RealDataIntegrator en backend/satellite_connectors/ para datos reales.\n\n"
+    "Fecha de deshabilitación: 2026-01-26"
+)
+
+"""
+CÓDIGO DESHABILITADO A CONTINUACIÓN:
+
 APIs arqueológicas mejoradas - Solo instrumentos de alto valor agregado.
 
 Implementa conexiones a instrumentos satelitales que aportan capacidades

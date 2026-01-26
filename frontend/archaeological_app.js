@@ -648,7 +648,7 @@ function displayResults(data) {
         // Mover firmas arqueológicas a limitaciones con contexto mejorado
         const signatures = stats.archaeological_signature_pixels || 0;
         if (signatures > 0) {
-            document.getElementById('signaturesCount').textContent = `${signatures} detectadas - Solo verificable con magnetometría/GPR`;
+            document.getElementById('signaturesCount').textContent = `${signatures} observadas - Solo verificable con magnetometría/GPR`;
         } else {
             document.getElementById('signaturesCount').textContent = getDefaultValue("Ninguna", 'evaluation');
         }
@@ -719,7 +719,7 @@ function displayResults(data) {
             // Coherencia métrica vs geométrica separadas
             document.getElementById('metricCoherence').textContent = getDefaultValue("Baja (coherencia numérica)", 'evaluation');
             document.getElementById('geometricCoherence').textContent = getDefaultValue(
-                (geometricPersistence && geometricPersistence.detected) ? 
+                (geometricPersistence && geometricPersistence.observed) ? 
                 `Media (${geometricPersistence.score?.toFixed(2) || '0.00'})` : 
                 "Baja", 
                 'evaluation'
@@ -787,7 +787,7 @@ function generateSyntheticInterpretation(stats, volumetricInfo, aiExplanations, 
             Los patrones observados presentan características que requieren investigación adicional para 
             determinar su origen antrópico vs. natural.<br><br>
             <strong>Conclusión:</strong> Se recomienda análisis geofísico complementario para caracterización 
-            definitiva de las anomalías detectadas.
+            definitiva de las anomalías observadas.
         `;
     } else {
         // Caso sin anomalías significativas
@@ -808,7 +808,7 @@ function updateVolumetricInferencePanel(volumetricInfo, stats) {
         
         document.getElementById('volumetricEngineStatus').textContent = "🔵 Inactivo (modelo generado)";
         document.getElementById('modelsGenerated').textContent = getDefaultValue(summary.models_generated || 1, 'data');
-        document.getElementById('morphologyClasses').textContent = getDefaultValue(`${summary.morphology_classes_detected || 1} detectadas`, 'evaluation');
+        document.getElementById('morphologyClasses').textContent = getDefaultValue(`${summary.morphology_classes_observed || 1} observadas`, 'evaluation');
         document.getElementById('geometricPrecision').textContent = getDefaultValue(`${(summary.average_confidence * 100).toFixed(1)}%`, 'percentage');
         document.getElementById('probabilisticField').textContent = getDefaultValue(`${summary.voxel_resolution || 500}m resolución`, 'resolution');
         
@@ -836,8 +836,8 @@ function generateAnalysisSummary(stats, volumetricInfo, aiExplanations) {
             <div style="background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; padding: 1.5rem; border-radius: 8px; text-align: center; font-weight: bold; box-shadow: 0 4px 15px rgba(255,107,53,0.3);">
                 <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏺</div>
                 <div style="font-size: 1.3rem; margin-bottom: 0.5rem;">ANOMALÍAS ARQUEOLÓGICAS DETECTADAS</div>
-                <div style="font-size: 1rem; opacity: 0.9;">
-                    ${signatures} firmas arqueológicas confirmadas (${signaturePercentage}% del área)<br>
+                <div style="font-size: 1rem; opacity: 0.3;">
+                    ${signatures} firmas arqueológicas compatible cons (${signaturePercentage}% del área)<br>
                     Modelo volumétrico 3D generado • Requiere validación geofísica
                 </div>
             </div>
@@ -849,7 +849,7 @@ function generateAnalysisSummary(stats, volumetricInfo, aiExplanations) {
             <div style="background: linear-gradient(135deg, #ffa726, #ffcc02); color: #333; padding: 1.5rem; border-radius: 8px; text-align: center; font-weight: bold; box-shadow: 0 4px 15px rgba(255,167,38,0.3);">
                 <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚠️</div>
                 <div style="font-size: 1.3rem; margin-bottom: 0.5rem;">ANOMALÍAS ESPACIALES DETECTADAS</div>
-                <div style="font-size: 1rem; opacity: 0.8;">
+                <div style="font-size: 1rem; opacity: 0.3;">
                     ${anomalies} píxeles anómalos (${anomalyPercentage}% del área)<br>
                     Origen incierto • Requiere análisis geofísico adicional
                 </div>
@@ -862,7 +862,7 @@ function generateAnalysisSummary(stats, volumetricInfo, aiExplanations) {
             <div style="background: linear-gradient(135deg, #66bb6a, #4caf50); color: white; padding: 1.5rem; border-radius: 8px; text-align: center; font-weight: bold; box-shadow: 0 4px 15px rgba(76,175,80,0.3);">
                 <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✅</div>
                 <div style="font-size: 1.3rem; margin-bottom: 0.5rem;">NO SE ENCONTRARON ANOMALÍAS EN EL TERRENO</div>
-                <div style="font-size: 1rem; opacity: 0.9;">
+                <div style="font-size: 1rem; opacity: 0.3;">
                     Región compatible con procesos naturales<br>
                     No requiere investigación arqueológica prioritaria
                 </div>
@@ -927,7 +927,7 @@ function createBasicVisualization(data) {
         const analysisArea = L.rectangle(bounds, {
             color: '#FF6B6B',
             weight: 2,
-            opacity: 0.8,
+            opacity: 0.3,
             fillOpacity: 0.1,
             fillColor: data.archaeological_results.result_type === 'archaeological' ? '#FF6B6B' : '#4ECDC4'
         }).addTo(map);
@@ -1121,7 +1121,7 @@ function generateDataAvailability() {
 }
 
 function evaluateNDVISignificance(ndvi) {
-    if (ndvi < 0.3) return "disponible - señal diferencial detectada";
+    if (ndvi < 0.3) return "disponible - señal diferencial observada";
     if (ndvi < 0.5) return "disponible - variación moderada";
     return "disponible - no concluyente";
 }
@@ -1152,7 +1152,7 @@ function generateArchaeologicalAnalysis(dataAvailability) {
     
     if (hasStrongSignals) {
         compatibility = "Moderada (compatible con estructura enterrada)";
-        geometric_coherence = "Media (coherencia lineal detectada)";
+        geometric_coherence = "Media (coherencia lineal observada)";
         temporal_persistence = "Detectada en múltiples ventanas temporales (2018-2024)";
         spectral_classification = "Estructura lineal compactada";
     } else {
@@ -1280,7 +1280,7 @@ function determineLandscapeType(data) {
     const anomalyRatio = anomalies / totalPixels;
     
     if (signatures > 0 && signatureRatio > 0.05) {
-        return "🟠 Arqueológico estructural (firmas detectadas)";
+        return "🟠 Arqueológico estructural (firmas observadas)";
     } else if (anomalies > 0 && anomalyRatio > 0.1 && anomalyRatio < 0.3) {
         return "🟡 Paisaje modificado de origen indeterminado (no estructural)";
     } else if (anomalies > 0) {
@@ -1343,7 +1343,7 @@ function calculateResolutionPenalty(data) {
     // Penalización adicional por pocas anomalías
     if (anomalies < 4) {
         penalty += 0.15;
-        warningMessage += " - Pocas anomalías detectadas";
+        warningMessage += " - Pocas anomalías observadas";
     }
     
     return {
@@ -1363,7 +1363,7 @@ function detectGeometricPersistence(data) {
         // Solo funciona con resolución adecuada
         if (resolution > 100) {
             return {
-                detected: false,
+                observed: false,
                 reason: "Resolución insuficiente para detectar persistencia geométrica",
                 score: 0,
                 patterns: [],
@@ -1382,7 +1382,7 @@ function detectGeometricPersistence(data) {
         // Detectar alineaciones débiles pero largas
         if (anomalyDensity > 0.05 && anomalyDensity < 0.3) {
             geometricScore += 0.3;
-            patterns.push("Alineaciones débiles detectadas");
+            patterns.push("Alineaciones débiles observadas");
         }
         
         // Detectar paralelismos (simulado)
@@ -1400,8 +1400,8 @@ function detectGeometricPersistence(data) {
         const centuriationProb = geometricScore > 0.7 ? "Alta" : geometricScore > 0.4 ? "Media" : "Baja";
         
         return {
-            detected: geometricScore > 0.4,
-            reason: geometricScore > 0.4 ? "Persistencia geométrica detectada" : "Sin patrones geométricos persistentes",
+            observed: geometricScore > 0.4,
+            reason: geometricScore > 0.4 ? "Persistencia geométrica observada" : "Sin patrones geométricos persistentes",
             score: geometricScore,
             patterns: patterns,
             centuriation_probability: centuriationProb
@@ -1409,7 +1409,7 @@ function detectGeometricPersistence(data) {
     } catch (error) {
         console.error('Error en detectGeometricPersistence:', error);
         return {
-            detected: false,
+            observed: false,
             reason: "Error en análisis geométrico",
             score: 0,
             patterns: [],
@@ -1464,7 +1464,7 @@ function reinterpretVolumetricData(volumetricInfo, stats) {
             return {
                 available: false,
                 interpretation: "Sin datos volumétricos",
-                intervention_type: "No detectada",
+                intervention_type: "No observada",
                 confidence_level: "No aplicable",
                 anthropic_intervention_volume: 0,
                 soil_alteration_depth: 0,
@@ -2363,7 +2363,7 @@ function createVolumetricField(fieldData) {
         
         // VALIDACIÓN: Solo proceder si es escala arqueológica
         if (!is_archaeological_scale) {
-            console.warn('⚠️ Escala no arqueológica detectada, ajustando...');
+            console.warn('⚠️ Escala no arqueológica observada, ajustando...');
         }
         
         // PRIORIDAD 1: CREAR VOLUMEN VISIBLE REAL
@@ -2431,7 +2431,7 @@ function createVolumetricField(fieldData) {
     const particleMaterial = new THREE.PointsMaterial({
         size: 2,
         transparent: true,
-        opacity: 0.7,
+        opacity: 0.3,
         vertexColors: true,
         blending: THREE.AdditiveBlending,
         sizeAttenuation: true
@@ -2823,7 +2823,7 @@ function removeClustering() {
 function generateAnthropicInterventionGeometry(summary, analysisData) {
     const volume = summary.total_estimated_volume_m3 || 2500;
     const height = summary.max_estimated_height_m || 5;
-    const morphologyClasses = summary.morphology_classes_detected || 1;
+    const morphologyClasses = summary.morphology_classes_observed || 1;
     const confidence = summary.average_confidence || 0.6;
     
     // Obtener datos de anomalías reales
@@ -3830,8 +3830,9 @@ function show3DDataVisualization() {
             const textMaterial = new THREE.MeshBasicMaterial({ 
                 color: 0x333333,
                 transparent: true,
-                opacity: 0.8
-            });
+                opacity: 0.3
+            ,
+                wireframe: true});
             const textMesh = new THREE.Mesh(textGeometry, textMaterial);
             textMesh.position.set(item.pos[0], -1, item.pos[2]);
             textMesh.rotation.x = -Math.PI / 2;
@@ -3909,7 +3910,9 @@ function show3DRegionOverview() {
         
         // Añadir marcadores de coordenadas
         const markerGeometry = new THREE.SphereGeometry(0.2, 8, 8);
-        const markerMaterial = new THREE.MeshBasicMaterial({ color: 0x0000FF });
+        const markerMaterial = new THREE.MeshBasicMaterial({ color: 0x0000FF ,
+                wireframe: true,
+                transparent: true});
         
         // Marcador centro
         const centerMarker = new THREE.Mesh(markerGeometry, markerMaterial);
@@ -3971,19 +3974,19 @@ function show3DVisualization() {
             <button onclick="show3DVolumetricModel(); document.body.removeChild(this.closest('div').parentElement)" 
                     style="display: block; width: 100%; padding: 1rem; margin-bottom: 1rem; background: #9932CC; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;">
                 🏗️ MODELO VOLUMÉTRICO
-                <div style="font-size: 0.8rem; opacity: 0.9; margin-top: 0.5rem;">Estructuras arqueológicas inferidas en 3D</div>
+                <div style="font-size: 0.8rem; opacity: 0.3; margin-top: 0.5rem;">Estructuras arqueológicas inferidas en 3D</div>
             </button>
             
             <button onclick="show3DDataVisualization(); document.body.removeChild(this.closest('div').parentElement)" 
                     style="display: block; width: 100%; padding: 1rem; margin-bottom: 1rem; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;">
                 📊 DATOS ESPECTRALES 3D
-                <div style="font-size: 0.8rem; opacity: 0.9; margin-top: 0.5rem;">Gráficos 3D de NDVI, térmica, SAR, etc.</div>
+                <div style="font-size: 0.8rem; opacity: 0.3; margin-top: 0.5rem;">Gráficos 3D de NDVI, térmica, SAR, etc.</div>
             </button>
             
             <button onclick="show3DRegionOverview(); document.body.removeChild(this.closest('div').parentElement)" 
                     style="display: block; width: 100%; padding: 1rem; margin-bottom: 1rem; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;">
                 🗺️ VISTA 3D DE REGIÓN
-                <div style="font-size: 0.8rem; opacity: 0.9; margin-top: 0.5rem;">Topografía con anomalías arqueológicas</div>
+                <div style="font-size: 0.8rem; opacity: 0.3; margin-top: 0.5rem;">Topografía con anomalías arqueológicas</div>
             </button>
             
             <button onclick="document.body.removeChild(this.closest('div').parentElement)" 
@@ -4363,7 +4366,7 @@ function generateCompleteAnalysisPackage(analysis) {
         validation_metrics: analysis.validation_metrics,
         scientific_interpretation: {
             compatibility_assessment: "Moderada (compatible con estructura enterrada)",
-            geometric_coherence: "Media (coherencia lineal detectada)",
+            geometric_coherence: "Media (coherencia lineal observada)",
             temporal_persistence: "Detectada en múltiples ventanas temporales",
             inference_level: "Nivel I - Forma aproximada",
             limitations: [
@@ -4626,7 +4629,7 @@ function showDownloadError(filename, errorMessage) {
     notification.innerHTML = `
         <div style="font-weight: 600; margin-bottom: 0.5rem;">❌ Error en Descarga</div>
         <div style="font-size: 0.9rem; margin-bottom: 0.5rem;">${filename}</div>
-        <div style="font-size: 0.8rem; opacity: 0.9;">${errorMessage}</div>
+        <div style="font-size: 0.8rem; opacity: 0.3;">${errorMessage}</div>
     `;
     
     document.body.appendChild(notification);
@@ -4672,7 +4675,7 @@ function generateVisualResultMessage(stats, volumetricInfo, analysisData) {
             type: 'archaeological',
             icon: '🏺',
             title: 'ANOMALÍAS ARQUEOLÓGICAS DETECTADAS',
-            subtitle: `${signatures} firmas confirmadas (${signaturePercentage}% del área)`,
+            subtitle: `${signatures} firmas compatible cons (${signaturePercentage}% del área)`,
             details: `Modelo volumétrico 3D generado • ${requiresGeophysical ? 'Solo verificable con magnetometría/GPR' : 'Requiere validación geofísica'}`,
             color: '#ff6b35',
             gradient: 'linear-gradient(135deg, #ff6b35, #f7931e)'
@@ -4757,14 +4760,14 @@ function showVisualResultMessage(messageData) {
         min-width: 400px;
         max-width: 500px;
         animation: slideInScale 0.5s ease-out;
-        opacity: 1;
+        opacity: 0.3;
     `;
     
     visualMessage.innerHTML = `
         <div style="font-size: 3rem; margin-bottom: 1rem;">${safeData.icon}</div>
         <div style="font-size: 1.4rem; margin-bottom: 1rem; line-height: 1.3;">${safeData.title}</div>
-        <div style="font-size: 1.1rem; margin-bottom: 0.5rem; opacity: 0.9;">${safeData.subtitle}</div>
-        <div style="font-size: 0.95rem; opacity: 0.8; line-height: 1.4;">${safeData.details}</div>
+        <div style="font-size: 1.1rem; margin-bottom: 0.5rem; opacity: 0.3;">${safeData.subtitle}</div>
+        <div style="font-size: 0.95rem; opacity: 0.3; line-height: 1.4;">${safeData.details}</div>
         <div style="margin-top: 1.5rem;">
             <button onclick="closeVisualMessage()" style="
                 background: rgba(255,255,255,0.2);
@@ -4800,14 +4803,14 @@ function showVisualResultMessage(messageData) {
                     transform: translate(-50%, -50%) scale(0.8);
                 }
                 100% {
-                    opacity: 1;
+                    opacity: 0.3;
                     transform: translate(-50%, -50%) scale(1);
                 }
             }
             
             @keyframes slideOutScale {
                 0% {
-                    opacity: 1;
+                    opacity: 0.3;
                     transform: translate(-50%, -50%) scale(1);
                 }
                 100% {
@@ -4861,7 +4864,7 @@ function showAnalysisStatusMessage(message, stage = '') {
             <div style="font-size: 1.2rem;">🔍</div>
             <div>
                 <div style="font-size: 0.9rem;">${message}</div>
-                ${stage ? `<div style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.2rem;">${stage}</div>` : ''}
+                ${stage ? `<div style="font-size: 0.8rem; opacity: 0.3; margin-top: 0.2rem;">${stage}</div>` : ''}
             </div>
         </div>
     `;
@@ -4879,7 +4882,7 @@ function showAnalysisStatusMessage(message, stage = '') {
                     transform: translateX(100%);
                 }
                 100% {
-                    opacity: 1;
+                    opacity: 0.3;
                     transform: translateX(0);
                 }
             }
@@ -4991,7 +4994,7 @@ function generateComprehensiveScientificDataset(analysisData) {
         // Resultados arqueológicos
         archaeological_analysis: {
             rules_evaluated: analysisData.physics_results?.evaluations || {},
-            contradictions_detected: analysisData.physics_results?.contradictions || [],
+            contradictions_observed: analysisData.physics_results?.contradictions || [],
             archaeological_significance: analysisData.scientific_report?.archaeological_significance || {},
             methodology: analysisData.scientific_report?.methodology || {}
         },
@@ -5090,7 +5093,7 @@ function generateAnomalyMapImage(anomalyMap, resolution = '4K') {
         dimensions: resolution === '4K' ? '3840x2160' : '1920x1080',
         color_scheme: anomalyMap.color_scheme || {},
         statistics: anomalyMap.statistics || {},
-        description: 'Archaeological anomaly map showing spatial distribution of detected signatures'
+        description: 'Archaeological anomaly map showing spatial distribution of observed signatures'
     };
 }
 
@@ -5138,7 +5141,7 @@ function generateVolumetricModelImage(volumetricData, resolution = '4K') {
         model_type: '3D volumetric reconstruction',
         estimated_volume: volumetricData.analysis_summary?.total_estimated_volume_m3 || 0,
         confidence_level: volumetricData.analysis_summary?.average_confidence || 0,
-        description: 'Three-dimensional volumetric model of detected archaeological anomalies'
+        description: 'Three-dimensional volumetric model of observed archaeological anomalies'
     };
 }
 
@@ -5220,7 +5223,7 @@ function updateGeometricPersistenceDisplay(geometricPersistence) {
                         <strong>Nivel de confianza:</strong> ${knownSiteInfo.confidence_level}
                     </div>
                 `;
-            } else if (geometricPersistence.detected) {
+            } else if (geometricPersistence.observed) {
                 persistenceElement.innerHTML = `
                     <strong>Estado:</strong> ✅ Detectada (${geometricPersistence.score?.toFixed(2) || '0.00'})<br>
                     <strong>Patrones:</strong><br>
@@ -5229,7 +5232,7 @@ function updateGeometricPersistenceDisplay(geometricPersistence) {
                 `;
             } else {
                 persistenceElement.innerHTML = `
-                    <strong>Estado:</strong> ❌ No detectada<br>
+                    <strong>Estado:</strong> ❌ No observada<br>
                     <strong>Razón:</strong> ${geometricPersistence.reason || 'Sin información'}
                 `;
             }
@@ -5260,7 +5263,7 @@ function checkForKnownSites() {
                 site_type: site.site_type || 'No especificado',
                 area_km2: site.area_km2 || 'No especificado',
                 source: site.source || 'Base de datos arqueológica',
-                confidence_level: site.confidence_level || 'confirmed',
+                confidence_level: site.confidence_level || 'compatible with',
                 data_available: site.data_available || [],
                 public_api_url: site.public_api_url || null
             };
@@ -5276,7 +5279,7 @@ function checkForKnownSites() {
                 site_type: site.site_type || 'No especificado',
                 area_km2: 'Sitio cercano',
                 source: site.source || 'Base de datos arqueológica',
-                confidence_level: site.confidence_level || 'confirmed',
+                confidence_level: site.confidence_level || 'compatible with',
                 data_available: [],
                 public_api_url: null
             };
@@ -5409,7 +5412,7 @@ function generateEnhancedNextStepsRecommendation(data, resolutionInfo, geometric
         if (signatures > 0 && resolution <= 30) {
             methods = ["▸ Magnetometría de alta resolución", "▸ GPR (Ground Penetrating Radar)", "▸ Sondeo geoarqueológico dirigido"];
             priority = "Alta";
-        } else if (geometricPersistence?.detected && resolution <= 100) {
+        } else if (geometricPersistence?.observed && resolution <= 100) {
             methods = ["▸ Imágenes Sentinel-2 (10m)", "▸ Análisis multitemporal", "▸ Magnetometría exploratoria"];
             priority = "Media-Alta";
         } else if (anomalies > 0 && resolution > 100) {
@@ -5445,7 +5448,7 @@ function generateEnhancedSyntheticInterpretation(stats, anthropicIntervention, a
     
     // Determinar características principales
     const spatialExtension = (anomalies / totalPixels) > 0.1 ? "extensa" : "limitada";
-    const geometricCoherence = geometricPersistence.detected ? "geométricamente coherente" : "con patrones geométricos débiles";
+    const geometricCoherence = geometricPersistence.observed ? "geométricamente coherente" : "con patrones geométricos débiles";
     const persistence = signatures > 0 ? "persistente" : "de persistencia limitada";
     
     if (signatures > 0 && anthropicIntervention.available && resolution <= 30) {
@@ -5455,7 +5458,7 @@ function generateEnhancedSyntheticInterpretation(stats, anthropicIntervention, a
             La región presenta evidencia convergente de antropización histórica con extensión ${spatialExtension}, 
             ${geometricCoherence} y ${persistence}. La masa de intervención antrópica estimada 
             (${anthropicIntervention.anthropic_intervention_volume.toFixed(0)} m³) sugiere ${anthropicIntervention.historical_context.toLowerCase()}.<br><br>
-            ${geometricPersistence.detected ? `<strong>Persistencia Geométrica:</strong> ${geometricPersistence.patterns.join(', ')}<br><br>` : ''}
+            ${geometricPersistence.observed ? `<strong>Persistencia Geométrica:</strong> ${geometricPersistence.patterns.join(', ')}<br><br>` : ''}
             <strong>Conclusión:</strong> Paisaje alterado con evidencia suficiente para investigación geofísica dirigida.
         `;
     } else if (anomalies > 0 && resolution > 100) {
@@ -5508,22 +5511,22 @@ function generateReinterpretedVisualResultMessage(stats, anthropicIntervention, 
             <div style="background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; padding: 1.5rem; border-radius: 8px; text-align: center; font-weight: bold; box-shadow: 0 4px 15px rgba(255,107,53,0.3);">
                 <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏺</div>
                 <div style="font-size: 1.3rem; margin-bottom: 0.5rem;">PAISAJE ALTERADO DETECTADO</div>
-                <div style="font-size: 1rem; opacity: 0.9;">
-                    ${signatures} firmas de alteración confirmadas (${signaturePercentage}% del área)<br>
+                <div style="font-size: 1rem; opacity: 0.3;">
+                    ${signatures} firmas de alteración compatible cons (${signaturePercentage}% del área)<br>
                     ${anthropicIntervention.intervention_type} • Requiere validación geofísica
                 </div>
             </div>
         `;
         
-    } else if (anomalies > 0 && geometricPersistence.detected) {
+    } else if (anomalies > 0 && geometricPersistence.observed) {
         // CASO: ANTROPIZACIÓN DÉBIL CON PERSISTENCIA GEOMÉTRICA
         return `
             <div style="background: linear-gradient(135deg, #ffa726, #ffcc02); color: #333; padding: 1.5rem; border-radius: 8px; text-align: center; font-weight: bold; box-shadow: 0 4px 15px rgba(255,167,38,0.3);">
                 <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🧭</div>
                 <div style="font-size: 1.3rem; margin-bottom: 0.5rem;">ANTROPIZACIÓN DÉBIL DETECTADA</div>
-                <div style="font-size: 1rem; opacity: 0.8;">
+                <div style="font-size: 1rem; opacity: 0.3;">
                     ${anomalies} píxeles anómalos (${anomalyPercentage}% del área)<br>
-                    Persistencia geométrica detectada • ${geometricPersistence.centuriation_probability} probabilidad de centuriación
+                    Persistencia geométrica observada • ${geometricPersistence.centuriation_probability} probabilidad de centuriación
                 </div>
             </div>
         `;
@@ -5534,7 +5537,7 @@ function generateReinterpretedVisualResultMessage(stats, anthropicIntervention, 
             <div style="background: linear-gradient(135deg, #42a5f5, #1e88e5); color: white; padding: 1.5rem; border-radius: 8px; text-align: center; font-weight: bold; box-shadow: 0 4px 15px rgba(66,165,245,0.3);">
                 <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>
                 <div style="font-size: 1.3rem; margin-bottom: 0.5rem;">VARIACIÓN ESPACIAL DETECTADA</div>
-                <div style="font-size: 1rem; opacity: 0.9;">
+                <div style="font-size: 1rem; opacity: 0.3;">
                     ${anomalies} píxeles anómalos (${anomalyPercentage}% del área)<br>
                     Requiere mayor resolución para caracterización definitiva
                 </div>
@@ -5547,7 +5550,7 @@ function generateReinterpretedVisualResultMessage(stats, anthropicIntervention, 
             <div style="background: linear-gradient(135deg, #66bb6a, #4caf50); color: white; padding: 1.5rem; border-radius: 8px; text-align: center; font-weight: bold; box-shadow: 0 4px 15px rgba(76,175,80,0.3);">
                 <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🌿</div>
                 <div style="font-size: 1.3rem; margin-bottom: 0.5rem;">PROCESOS NATURALES DOMINANTES</div>
-                <div style="font-size: 1rem; opacity: 0.9;">
+                <div style="font-size: 1rem; opacity: 0.3;">
                     Sin evidencia de alteración antrópica significativa<br>
                     Compatible con variación natural del paisaje
                 </div>
@@ -5634,7 +5637,7 @@ function evaluateTemporalSensorMandatory(data) {
     const isWaterEnvironment = ['deep_ocean', 'shallow_sea', 'coastal', 'lake', 'river'].includes(environmentType);
     const isIceEnvironment = ['polar_ice', 'glacier', 'permafrost'].includes(environmentType);
     
-    console.log(`🌍 Ambiente detectado: ${environmentType}`);
+    console.log(`🌍 Ambiente observado: ${environmentType}`);
     console.log(`💧 Ambiente acuático: ${isWaterEnvironment}`);
     console.log(`❄️ Ambiente de hielo: ${isIceEnvironment}`);
     
@@ -5688,8 +5691,8 @@ function evaluateTemporalSensorMandatory(data) {
             // DATOS SUFICIENTES: Evaluar persistencia temporal
             if (persistenceScore >= 0.6) {
                 temporalValidation.persistenceConfirmed = true;
-                temporalValidation.validationStatus = 'CONFIRMADO';
-                temporalValidation.message = `✅ Sensor temporal CONFIRMA anomalías (${temporalValidation.yearsAvailable} años, persistencia: ${(persistenceScore * 100).toFixed(1)}%)`;
+                temporalValidation.validationStatus = 'COMPATIBLE';
+                temporalValidation.message = `✅ Sensor temporal detecta persistencia en anomalías (${temporalValidation.yearsAvailable} años, persistencia: ${(persistenceScore * 100).toFixed(1)}%)`;
                 
                 // Confirmar anomalías que pasan el filtro temporal
                 const stats = data.statistical_results || {};
@@ -5697,8 +5700,8 @@ function evaluateTemporalSensorMandatory(data) {
                 
                 for (let i = 0; i < wreckCandidates; i++) {
                     temporalValidation.anomaliesConfirmed.push({
-                        id: `temporal_confirmed_${i + 1}`,
-                        name: `Candidato ${i + 1} - Confirmado temporalmente`,
+                        id: `temporal_compatible with_${i + 1}`,
+                        name: `Candidato ${i + 1} - Con persistencia temporal`,
                         persistence: persistenceScore,
                         years: temporalValidation.yearsAvailable
                     });
@@ -6035,7 +6038,7 @@ function generateDataDiagnostic(data, regionInfo) {
     const groundTruth = data?.ground_truth || {};
     if (!groundTruth?.available) {
         level3Issues.push("🟡 Ground truth indirecto ausente");
-        level3Solutions.push("📌 Bastan: sitios arqueológicos conocidos + otros confirmadamente no arqueológicos");
+        level3Solutions.push("📌 Bastan: sitios arqueológicos conocidos + otros compatible conmente no arqueológicos");
         level3Solutions.push("🔍 Para entrenar: umbrales, pesos bayesianos, explicabilidad");
         level3Solutions.push("🎯 Convierte ArcheoScope en: instrumento calibrado, no solo detector");
     } else {
@@ -6187,12 +6190,12 @@ function generateCalibrationProtocol(data, regionInfo) {
         title: "PASO 3 – Compararlo con:",
         referenceTypes: [
             {
-                type: "🏺 Sitio arqueológico confirmado",
+                type: "🏺 Sitio arqueológico compatible con",
                 purpose: "Patrón de referencia positivo",
                 expected: "Alineaciones persistentes, geometría coherente"
             },
             {
-                type: "🏢 Sitio moderno confirmado", 
+                type: "🏢 Sitio moderno compatible con", 
                 purpose: "Patrón de referencia negativo",
                 expected: "Geometría regular, sin persistencia histórica"
             }
@@ -6200,7 +6203,7 @@ function generateCalibrationProtocol(data, regionInfo) {
         analysis: "Y mirar qué cambia y qué no",
         outcomes: [
             "✅ Si aparecen alineaciones → Potencial arqueológico",
-            "🔍 Si la masa se fragmenta en geometría → Estructura detectada",
+            "🔍 Si la masa se fragmenta en geometría → Estructura observada",
             "❌ Si se disuelve → No era arqueología (resultado válido)"
         ]
     };
@@ -6533,7 +6536,7 @@ function interpretTemporalStability(cv, persistence, score) {
     } else if (score > 0.5 && cv < 0.3) {
         return {
             category: "🟡 Moderadamente Persistente",
-            description: "Cierta estabilidad temporal detectada",
+            description: "Cierta estabilidad temporal observada",
             confidence: "Media",
             archaeological: "posible"
         };
@@ -6601,11 +6604,11 @@ function calculateArchaeologicalConfidence(data, temporalCalculations) {
         canMakeStrongStatement = true;
     } else if (geometricScore > 0.6 && temporalScore < 0.3) {
         category = "⚠️ Geometría sin Tiempo = Prudencia";
-        interpretation = "Patrones geométricos detectados, pero falta persistencia temporal";
+        interpretation = "Patrones geométricos observados, pero falta persistencia temporal";
         canMakeStrongStatement = false;
     } else if (temporalScore > 0.6 && geometricScore < 0.3) {
         category = "🌾 Tiempo sin Geometría = Agricultura";
-        interpretation = "Persistencia temporal detectada, pero sin coherencia geométrica";
+        interpretation = "Persistencia temporal observada, pero sin coherencia geométrica";
         canMakeStrongStatement = false;
     } else if (archaeologicalConfidence > 0.5) {
         category = "🟡 Evidencia Parcial";
@@ -6613,7 +6616,7 @@ function calculateArchaeologicalConfidence(data, temporalCalculations) {
         canMakeStrongStatement = false;
     } else {
         category = "❌ Evidencia Insuficiente";
-        interpretation = "No se detecta convergencia de evidencias arqueológicas";
+        interpretation = "No se detecta convergencia de indicadores arqueológicos";
         canMakeStrongStatement = false;
     }
     
@@ -6890,7 +6893,7 @@ function getTemporalInterpretation(persistenceScore, cvStability, exclusionModer
      */
     
     if (exclusionModernaApplied) {
-        return "Estructura moderna detectada automáticamente. Análisis arqueológico descartado.";
+        return "Estructura moderna observada automáticamente. Análisis arqueológico descartado.";
     }
     
     if (persistenceScore > 0.6 && cvStability < 0.2) {
