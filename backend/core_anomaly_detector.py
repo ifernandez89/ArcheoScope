@@ -89,6 +89,10 @@ class CoreAnomalyDetector:
         # Cargar firmas de anomalías por ambiente
         self.anomaly_signatures = self._load_anomaly_signatures()
         
+        # Inicializar sistema de confianza de sitios
+        from backend.site_confidence_system import site_confidence_system
+        self.site_confidence_system = site_confidence_system
+        
         logger.info("CoreAnomalyDetector inicializado correctamente")
     
     def _load_anomaly_signatures(self) -> Dict[str, Any]:
@@ -198,15 +202,18 @@ class CoreAnomalyDetector:
         logger.info("🏛️ PASO 5: Validando contra BD arqueológica...")
         validation = self._validate_against_known_sites(lat_min, lat_max, lon_min, lon_max)
         
+        # Obtener sitios cercanos para ajuste probabilístico
+        nearby_sites = self._get_nearby_sites_for_adjustment(lat_min, lat_max, lon_min, lon_max)
+        
         if validation['known_site_nearby']:
             logger.info(f"   ✅ Sitio conocido cercano: {validation['site_name']} ({validation['distance_km']:.2f} km)")
         else:
             logger.info(f"   ℹ️ No hay sitios conocidos en la región")
         
-        # PASO 6: Calcular probabilidad arqueológica
+        # PASO 6: Calcular probabilidad arqueológica (con ajuste probabilístico)
         logger.info("🎯 PASO 6: Calculando probabilidad arqueológica...")
         archaeological_probability = self._calculate_archaeological_probability(
-            anomaly_analysis, env_context, validation
+            anomaly_analysis, env_context, validation, nearby_sites
         )
         
         logger.info(f"   ✅ Probabilidad arqueológica: {archaeological_probability:.2%}")
@@ -573,14 +580,83 @@ class CoreAnomalyDetector:
                 'confidence_level': None
             }
     
+    def _get_nearby_sites_for_adjustment(self, lat_min: float, lat_max: float,
+                                        lon_min: float, lon_max: float) -> List[Dict[str, Any]]:
+        """
+        Obtener sitios cercanos para ajuste probabilístico
+        
+        Convierte objetos ArchaeologicalSite a diccionarios para el sistema de confianza
+        """
+        
+        validation_results = self.real_validator.validate_region(
+            lat_min, lat_max, lon_min, lon_max
+        )
+        
+        nearby_sites = []
+        
+        # Agregar sitios superpuestos
+        for site in validation_results.get('overlapping_sites', []):
+            nearby_sites.append({
+                'id': getattr(site, 'id', 'unknown'),
+                'name': getattr(site, 'name', 'Unknown Site'),
+                'latitude': getattr(site, 'latitude', 0.0),
+                'longitude': getattr(site, 'longitude', 0.0),
+                'source': self._map_confidence_to_source(getattr(site, 'confidence_level', 'MODERATE')),
+                'site_type': getattr(site, 'site_type', 'unknown'),
+                'distance_km': 0.0,
+                'excavated': getattr(site, 'excavation_status', 'UNEXCAVATED') in ['EXTENSIVELY_EXCAVATED', 'FULLY_EXCAVATED'],
+                'references': getattr(site, 'scientific_significance', None),
+                'geometry_accuracy_m': 100.0,  # Asumimos buena precisión para sitios en BD
+                'period': getattr(site, 'period', None),
+                'source_count': 1
+            })
+        
+        # Agregar sitios cercanos
+        for site, distance in validation_results.get('nearby_sites', []):
+            nearby_sites.append({
+                'id': getattr(site, 'id', 'unknown'),
+                'name': getattr(site, 'name', 'Unknown Site'),
+                'latitude': getattr(site, 'latitude', 0.0),
+                'longitude': getattr(site, 'longitude', 0.0),
+                'source': self._map_confidence_to_source(getattr(site, 'confidence_level', 'MODERATE')),
+                'site_type': getattr(site, 'site_type', 'unknown'),
+                'distance_km': distance,
+                'excavated': getattr(site, 'excavation_status', 'UNEXCAVATED') in ['EXTENSIVELY_EXCAVATED', 'FULLY_EXCAVATED'],
+                'references': getattr(site, 'scientific_significance', None),
+                'geometry_accuracy_m': 100.0,
+                'period': getattr(site, 'period', None),
+                'source_count': 1
+            })
+        
+        return nearby_sites
+    
+    def _map_confidence_to_source(self, confidence_level: str) -> str:
+        """
+        Mapear nivel de confianza de BD a fuente para sistema de confianza
+        
+        ConfidenceLevel enum → SiteSource string
+        """
+        
+        mapping = {
+            'CONFIRMED': 'excavated',
+            'HIGH': 'national',
+            'MODERATE': 'wikidata',
+            'LOW': 'osm',
+            'NEGATIVE_CONTROL': 'osm',
+            'CANDIDATE': 'osm'
+        }
+        
+        return mapping.get(confidence_level, 'osm')
+    
     def _calculate_archaeological_probability(self, anomaly_analysis: Dict[str, Any],
-                                             env_context, validation: Dict[str, Any]) -> float:
+                                             env_context, validation: Dict[str, Any],
+                                             nearby_sites: List[Dict[str, Any]] = None) -> float:
         """
         Calcular probabilidad arqueológica basada en:
         1. Convergencia instrumental
         2. Confianza de mediciones
         3. Contexto ambiental
-        4. Validación contra sitios conocidos (SOLO como confirmación, NO como input)
+        4. Ajuste probabilístico por sitios conocidos (NO descarte automático)
         """
         
         # Factor 1: Convergencia instrumental (peso 50%)
@@ -608,17 +684,29 @@ class CoreAnomalyDetector:
             'unknown': 0.3  # Baja confianza
         }.get(env_context.environment_type.value, 0.5)
         
-        # Calcular probabilidad combinada
-        probability = (
+        # Calcular probabilidad base
+        base_probability = (
             convergence_factor * 0.5 +
             confidence_factor * 0.3 +
             env_factor * 0.2
         )
         
-        # NOTA: La validación contra sitios conocidos NO afecta la probabilidad
-        # Solo se usa para CONFIRMAR si la detección es correcta
+        # Factor 4: Ajuste probabilístico por sitios conocidos
+        # IMPORTANTE: NO descartamos, solo ajustamos score
+        if nearby_sites and len(nearby_sites) > 0:
+            # Usar sistema de confianza para ajustar score
+            adjusted_prob, adjustment_details = self.site_confidence_system.adjust_anomaly_score(
+                base_probability,
+                nearby_sites,
+                validation.get('distance_km', 999.0)
+            )
+            
+            logger.info(f"   📊 Ajuste por sitios conocidos: {adjustment_details['adjustment']:.3f}")
+            logger.info(f"   📊 Probabilidad ajustada: {base_probability:.3f} → {adjusted_prob:.3f}")
+            
+            return min(adjusted_prob, 1.0)
         
-        return min(probability, 1.0)
+        return min(base_probability, 1.0)
     
     def _generate_final_result(self, env_context, env_signatures: Dict[str, Any],
                                measurements: List[InstrumentMeasurement],

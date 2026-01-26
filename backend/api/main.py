@@ -1594,6 +1594,150 @@ async def get_environment_statistics():
         logger.error(f"❌ Error obteniendo estadísticas de ambientes: {e}")
         raise HTTPException(status_code=500, detail=f"Error obteniendo estadísticas: {str(e)}")
 
+@app.post("/archaeological-sites/cultural-prior-map", tags=["Database", "Analysis"])
+async def generate_cultural_prior_map(
+    lat_min: float,
+    lat_max: float,
+    lon_min: float,
+    lon_max: float,
+    grid_size: int = 100
+):
+    """
+    ## Generar Mapa de Prior Cultural
+    
+    Convierte sitios arqueológicos discretos en una superficie continua de probabilidad cultural.
+    Usa kernel density estimation con pesos por confianza de sitio.
+    
+    **Parámetros:**
+    - `lat_min`, `lat_max`, `lon_min`, `lon_max`: Bounding box de análisis
+    - `grid_size`: Resolución del grid (default: 100x100)
+    
+    **Retorna:**
+    - `cultural_prior`: Array 2D con densidad cultural (0-1)
+    - `sites_used`: Lista de sitios incluidos en el mapa
+    - `cultural_gaps`: Coordenadas de huecos improbables
+    - `metadata`: Información sobre el análisis
+    
+    **Uso:**
+    
+    Este mapa permite:
+    1. Visualizar densidad de actividad humana histórica
+    2. Detectar huecos improbables (áreas sin sitios rodeadas de alta densidad)
+    3. Ajustar scores de anomalías probabilísticamente
+    4. Identificar áreas prioritarias para exploración
+    
+    **Ejemplo:**
+    ```bash
+    curl -X POST "http://localhost:8002/archaeological-sites/cultural-prior-map" \\
+      -H "Content-Type: application/json" \\
+      -d '{
+        "lat_min": 29.9,
+        "lat_max": 30.1,
+        "lon_min": 31.0,
+        "lon_max": 31.2,
+        "grid_size": 100
+      }'
+    ```
+    """
+    try:
+        from backend.site_confidence_system import site_confidence_system
+        
+        # Conectar a BD si no está conectada
+        if not database_connection.pool:
+            await database_connection.connect()
+        
+        # Buscar sitios en la región
+        center_lat = (lat_min + lat_max) / 2
+        center_lon = (lon_min + lon_max) / 2
+        
+        # Calcular radio de búsqueda (diagonal del bounding box)
+        import math
+        lat_diff = lat_max - lat_min
+        lon_diff = lon_max - lon_min
+        radius_km = math.sqrt(lat_diff**2 + lon_diff**2) * 111.32  # Aproximación
+        
+        sites = await database_connection.search_sites(
+            center_lat, center_lon, radius_km, limit=1000
+        )
+        
+        logger.info(f"🗺️ Generando mapa de prior cultural con {len(sites)} sitios")
+        
+        # Convertir sitios a formato para sistema de confianza
+        sites_for_map = []
+        for site in sites:
+            sites_for_map.append({
+                'id': site.get('id'),
+                'name': site.get('name'),
+                'latitude': site.get('latitude'),
+                'longitude': site.get('longitude'),
+                'source': _map_confidence_to_source(site.get('confidence_level', 'MODERATE')),
+                'site_type': site.get('site_type'),
+                'excavated': False,
+                'references': site.get('description'),
+                'geometry_accuracy_m': 100.0,
+                'period': site.get('period'),
+                'source_count': 1
+            })
+        
+        # Generar mapa de prior cultural
+        cultural_prior = site_confidence_system.create_cultural_prior_map(
+            sites_for_map,
+            grid_size=(grid_size, grid_size),
+            bounds=(lat_min, lat_max, lon_min, lon_max)
+        )
+        
+        # Detectar huecos culturales
+        cultural_gaps = site_confidence_system.detect_cultural_gaps(
+            cultural_prior,
+            threshold=0.1
+        )
+        
+        # Preparar respuesta
+        response = {
+            'cultural_prior': cultural_prior.tolist(),
+            'sites_used': len(sites_for_map),
+            'cultural_gaps': cultural_gaps[:50],  # Limitar a 50 huecos más significativos
+            'metadata': {
+                'bounds': {
+                    'lat_min': lat_min,
+                    'lat_max': lat_max,
+                    'lon_min': lon_min,
+                    'lon_max': lon_max
+                },
+                'grid_size': grid_size,
+                'max_density': float(cultural_prior.max()),
+                'mean_density': float(cultural_prior.mean()),
+                'gaps_detected': len(cultural_gaps)
+            },
+            'interpretation': {
+                'high_density_areas': int((cultural_prior > 0.7).sum()),
+                'medium_density_areas': int(((cultural_prior > 0.3) & (cultural_prior <= 0.7)).sum()),
+                'low_density_areas': int((cultural_prior <= 0.3).sum()),
+                'recommendation': 'Áreas con huecos culturales son candidatas prioritarias para exploración'
+            }
+        }
+        
+        logger.info(f"✅ Mapa de prior cultural generado: {len(cultural_gaps)} huecos detectados")
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"❌ Error generando mapa de prior cultural: {e}")
+        raise HTTPException(status_code=500, detail=f"Error generando mapa: {str(e)}")
+
+
+def _map_confidence_to_source(confidence_level: str) -> str:
+    """Mapear nivel de confianza de BD a fuente para sistema de confianza"""
+    mapping = {
+        'CONFIRMED': 'excavated',
+        'HIGH': 'national',
+        'MODERATE': 'wikidata',
+        'LOW': 'osm',
+        'NEGATIVE_CONTROL': 'osm',
+        'CANDIDATE': 'osm'
+    }
+    return mapping.get(confidence_level, 'osm')
+
 @app.post("/academic/validation/blind-test")
 async def run_blind_test():
     """
