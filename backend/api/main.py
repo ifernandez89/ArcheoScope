@@ -54,6 +54,7 @@ from ice.cryoarchaeology import CryoArchaeologyEngine
 from environment_classifier import EnvironmentClassifier, EnvironmentType
 from core_anomaly_detector import CoreAnomalyDetector
 from database import db as database_connection
+from multi_instrumental_enrichment import MultiInstrumentalEnrichment
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -2403,6 +2404,212 @@ async def get_recommended_zones_geojson(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generando GeoJSON: {str(e)}")
+
+@app.get("/archaeological-sites/enriched-candidates", tags=["Analysis", "Multi-Instrumental"])
+async def get_enriched_candidates(
+    lat_min: float,
+    lat_max: float,
+    lon_min: float,
+    lon_max: float,
+    strategy: str = "buffer",
+    max_zones: int = 50,
+    lidar_priority: bool = True,
+    min_convergence: float = 0.4
+):
+    """
+    ## Candidatas Arqueológicas Enriquecidas Multi-Instrumentalmente
+    
+    **Sistema de enriquecimiento con múltiples instrumentos complementarios**
+    
+    ### 🧠 Regla de Oro
+    
+    - **LiDAR** responde a: FORMA
+    - **Otros sistemas** responden a: MATERIAL, HUMEDAD, TEMPERATURA, COMPACTACIÓN, QUÍMICA, DINÁMICA TEMPORAL
+    
+    👉 La magia está en SUPERPOSICIÓN, no en reemplazo
+    
+    ### 🔥 Instrumentos Complementarios
+    
+    1. **SAR / InSAR** (Sentinel-1, ALOS, TerraSAR-X)
+       - Compactación del suelo
+       - Textura, humedad
+       - Microdeformaciones
+       - 📌 Caminos antiguos aparecen mejor en SAR que en LiDAR
+    
+    2. **Multiespectral** (Sentinel-2 / Landsat)
+       - Estrés vegetal (NDVI, Red-Edge)
+       - Química del suelo (indirecta)
+       - Drenaje, agricultura antigua
+       - 📌 Ciudades antiguas afectan vegetación siglos después
+    
+    3. **Térmico** (LST día/noche)
+       - Inercia térmica
+       - Materiales distintivos
+       - Rellenos artificiales, cámaras subterráneas
+       - 📌 Muros enterrados: más calientes de noche, más fríos de día
+    
+    4. **Multitemporal** (Archivo Landsat/Sentinel)
+       - Persistencia temporal
+       - Estacionalidad
+       - Resistencia al cambio
+       - 📌 Lo humano persiste, lo natural fluctúa
+    
+    ### 🧩 Combo Ganador
+    
+    **Stack mínimo pero potente:**
+    LiDAR + SAR + Multiespectral + Térmico + Multitemporal
+    
+    Esto proporciona: FORMA + MATERIAL + USO + PERSISTENCIA
+    
+    ### 📊 Respuesta
+    
+    Retorna candidatas con:
+    - **multi_instrumental_score**: Score combinado (0-1)
+    - **convergence_count**: Cuántos instrumentos detectan anomalía
+    - **convergence_ratio**: Ratio de convergencia (0-1)
+    - **recommended_action**: field_validation, detailed_analysis, monitor, discard
+    - **signals**: Señales de cada instrumento con interpretación
+    - **temporal_persistence**: Si la anomalía persiste temporalmente
+    
+    ### Parámetros
+    
+    - `lat_min`, `lat_max`, `lon_min`, `lon_max`: Bounding box
+    - `strategy`: buffer (recomendado), gradient, gaps
+    - `max_zones`: Máximo número de zonas
+    - `lidar_priority`: Priorizar zonas con LiDAR
+    - `min_convergence`: Convergencia mínima para incluir (0-1)
+    """
+    try:
+        logger.info(f"🔬 Generando candidatas enriquecidas multi-instrumentalmente")
+        
+        # Obtener zonas prioritarias base
+        zones_response = await get_recommended_analysis_zones(
+            lat_min, lat_max, lon_min, lon_max,
+            strategy, max_zones, lidar_priority, include_scoring=True
+        )
+        
+        # Inicializar sistema de enriquecimiento
+        enrichment_system = MultiInstrumentalEnrichment()
+        
+        # Enriquecer cada zona con señales multi-instrumentales
+        enriched_candidates = []
+        
+        for zone in zones_response['zones']:
+            # Simular datos instrumentales (en producción, obtener de APIs reales)
+            # Por ahora usamos el simulador interno
+            available_data = enrichment_system._simulate_instrumental_data(zone)
+            
+            # Enriquecer candidata
+            candidate = enrichment_system.enrich_candidate(zone, available_data)
+            
+            # Filtrar por convergencia mínima
+            if candidate.convergence_ratio >= min_convergence:
+                enriched_candidates.append(candidate)
+        
+        # Ordenar por score multi-instrumental
+        enriched_candidates.sort(
+            key=lambda c: c.multi_instrumental_score,
+            reverse=True
+        )
+        
+        # Preparar respuesta
+        candidates_data = []
+        for candidate in enriched_candidates:
+            # Convertir señales a dict serializable
+            signals_dict = {}
+            for inst_type, signal in candidate.signals.items():
+                signals_dict[inst_type.value] = {
+                    'detected': bool(signal.detected),  # Convert numpy.bool to Python bool
+                    'confidence': round(float(signal.confidence), 3),
+                    'values': {k: round(float(v), 3) if isinstance(v, (float, np.floating)) else int(v) if isinstance(v, (int, np.integer)) else v 
+                              for k, v in signal.values.items()},
+                    'interpretation': signal.interpretation,
+                    'source': signal.source,
+                    'resolution_m': float(signal.resolution_m) if signal.resolution_m else None
+                }
+            
+            candidates_data.append({
+                'candidate_id': candidate.candidate_id,
+                'zone_id': candidate.zone_id,
+                'location': {
+                    'lat': round(candidate.center_lat, 6),
+                    'lon': round(candidate.center_lon, 6),
+                    'area_km2': round(candidate.area_km2, 2)
+                },
+                'multi_instrumental_score': round(candidate.multi_instrumental_score, 3),
+                'convergence': {
+                    'count': candidate.convergence_count,
+                    'ratio': round(candidate.convergence_ratio, 3),
+                    'total_instruments': len(candidate.signals)
+                },
+                'recommended_action': candidate.recommended_action,
+                'temporal_persistence': {
+                    'detected': bool(candidate.temporal_persistence) if candidate.temporal_persistence is not None else False,
+                    'years': int(candidate.temporal_years) if candidate.temporal_years else 0
+                },
+                'signals': signals_dict
+            })
+        
+        # Estadísticas
+        field_validation_count = sum(1 for c in enriched_candidates 
+                                     if c.recommended_action == 'field_validation')
+        detailed_analysis_count = sum(1 for c in enriched_candidates 
+                                      if c.recommended_action == 'detailed_analysis')
+        
+        # Instrumentos más detectores
+        instrument_detection_counts = {}
+        for candidate in enriched_candidates:
+            for inst_type, signal in candidate.signals.items():
+                if bool(signal.detected):  # Convert numpy.bool to Python bool
+                    instrument_detection_counts[inst_type.value] = \
+                        instrument_detection_counts.get(inst_type.value, 0) + 1
+        
+        logger.info(f"✅ {len(enriched_candidates)} candidatas enriquecidas generadas")
+        logger.info(f"   Field validation priority: {field_validation_count}")
+        logger.info(f"   Detailed analysis: {detailed_analysis_count}")
+        
+        return {
+            'total_candidates': len(enriched_candidates),
+            'candidates': candidates_data,
+            'statistics': {
+                'field_validation_priority': field_validation_count,
+                'detailed_analysis': detailed_analysis_count,
+                'monitor': sum(1 for c in enriched_candidates 
+                              if c.recommended_action == 'monitor'),
+                'average_convergence': round(
+                    np.mean([c.convergence_ratio for c in enriched_candidates]), 3
+                ) if enriched_candidates else 0.0,
+                'average_multi_score': round(
+                    np.mean([c.multi_instrumental_score for c in enriched_candidates]), 3
+                ) if enriched_candidates else 0.0,
+                'temporal_persistence_detected': sum(1 for c in enriched_candidates 
+                                                    if c.temporal_persistence),
+                'instrument_detection_counts': instrument_detection_counts
+            },
+            'methodology': {
+                'approach': 'multi_instrumental_convergence',
+                'instruments_used': list(instrument_detection_counts.keys()),
+                'combo_strategy': 'LiDAR + SAR + Multispectral + Thermal + Multitemporal',
+                'convergence_threshold': min_convergence,
+                'note': 'La magia está en SUPERPOSICIÓN, no en reemplazo'
+            },
+            'metadata': {
+                'strategy': strategy,
+                'bounds': {
+                    'lat_min': lat_min,
+                    'lat_max': lat_max,
+                    'lon_min': lon_min,
+                    'lon_max': lon_max
+                },
+                'generated_at': datetime.now().isoformat()
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error generando candidatas enriquecidas: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @app.post("/academic/validation/blind-test")
 async def run_blind_test():
