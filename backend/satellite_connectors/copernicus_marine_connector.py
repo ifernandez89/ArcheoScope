@@ -86,22 +86,43 @@ class CopernicusMarineConnector(SatelliteConnector):
             
             logger.info(f"🛰️ Requesting Copernicus Marine sea ice data")
             
-            # Dataset ID para hielo marino
-            dataset_id = "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001"
+            # Dataset IDs actualizados (2024+)
+            # Intentar con diferentes IDs según disponibilidad
+            dataset_ids = [
+                "cmems_obs-si_glo_phy-siconc_nrt_multi-l4-1km_P1D",  # Nuevo formato
+                "SEAICE_GLO_PHY_L4_NRT_011_001",  # Alternativo
+                "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001"  # Legacy
+            ]
             
-            # Descargar datos
-            data = copernicusmarine.open_dataset(
-                dataset_id=dataset_id,
-                username=self.username,
-                password=self.password,
-                minimum_longitude=lon_min,
-                maximum_longitude=lon_max,
-                minimum_latitude=lat_min,
-                maximum_latitude=lat_max,
-                start_datetime=start_date.isoformat(),
-                end_datetime=end_date.isoformat(),
-                variables=["ice_concentration", "ice_type"]
-            )
+            data = None
+            last_error = None
+            
+            for dataset_id in dataset_ids:
+                try:
+                    logger.info(f"   Intentando dataset: {dataset_id}")
+                    # Descargar datos
+                    data = copernicusmarine.open_dataset(
+                        dataset_id=dataset_id,
+                        username=self.username,
+                        password=self.password,
+                        minimum_longitude=lon_min,
+                        maximum_longitude=lon_max,
+                        minimum_latitude=lat_min,
+                        maximum_latitude=lat_max,
+                        start_datetime=start_date.isoformat(),
+                        end_datetime=end_date.isoformat(),
+                        variables=["ice_concentration"]
+                    )
+                    logger.info(f"   ✅ Dataset encontrado: {dataset_id}")
+                    break  # Éxito, salir del loop
+                except Exception as e:
+                    last_error = e
+                    logger.warning(f"   ❌ Dataset {dataset_id} no disponible: {e}")
+                    continue
+            
+            if data is None:
+                logger.error(f"Error fetching Copernicus Marine data: {last_error}")
+                return None
             
             # Extraer concentración de hielo
             ice_conc = data['ice_concentration'].values
