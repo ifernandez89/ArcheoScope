@@ -47,11 +47,13 @@ class ICESat2Connector(SatelliteConnector):
             self.available = True
             # Autenticar con NASA Earthdata
             try:
+                import os
+                # earthaccess usa USERNAME/PASSWORD, ignorar TOKEN
                 earthaccess.login(strategy="environment")
                 logger.info("✅ ICESat-2 connector initialized (NASA Earthdata)")
             except Exception as e:
                 logger.warning(f"ICESat-2 authentication failed: {e}")
-                logger.info("Set EARTHDATA_USERNAME and EARTHDATA_PASSWORD in .env.local")
+                logger.info("Set EARTHDATA_USERNAME and EARTHDATA_PASSWORD in .env")
                 self.available = False
     
     async def get_elevation_data(

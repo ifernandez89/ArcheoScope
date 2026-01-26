@@ -86,7 +86,7 @@ class IntegratedAIValidator:
             self.ai_validator.is_available
         )
     
-    def analyze_with_ai_validation(self,
+    async def analyze_with_ai_validation(self,
                                   lat: float, lon: float,
                                   lat_min: float, lat_max: float,
                                   lon_min: float, lon_max: float,
@@ -125,7 +125,7 @@ class IntegratedAIValidator:
             # 1. DETECCIÓN BASE con Core Detector (NÚCLEO AUTÓNOMO)
             logger.info(f"🔍 Paso 1: Detección base para {region_name}")
             
-            base_result = self.core_detector.detect_anomaly(
+            base_result = await self.core_detector.detect_anomaly(
                 lat, lon, lat_min, lat_max, lon_min, lon_max, region_name
             )
             
@@ -433,7 +433,7 @@ class IntegratedAIValidator:
         unique_recommendations = list(dict.fromkeys(recommendations))
         return unique_recommendations[:8]  # Máximo 8 recomendaciones
     
-    def batch_analyze_with_validation(self,
+    async def batch_analyze_with_validation(self,
                                     regions: List[Dict[str, Any]],
                                     context: Optional[Dict[str, Any]] = None) -> List[IntegratedAnalysisResult]:
         """Analizar múltiples regiones con validación IA."""
@@ -442,7 +442,7 @@ class IntegratedAIValidator:
         
         for region in regions:
             try:
-                result = self.analyze_with_ai_validation(
+                result = await self.analyze_with_ai_validation(
                     lat=region['lat'],
                     lon=region['lon'],
                     lat_min=region['lat_min'],

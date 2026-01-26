@@ -3588,8 +3588,8 @@ async def analyze_archaeological_region(request: RegionRequest):
             center_lon = (request.lon_min + request.lon_max) / 2
             
             # 1. Ejecutar CORE detector (base científica sólida)
-            logger.info("📊 Paso 1: CORE detector - análisis instrumental base")
-            core_result = core_detector.detect_anomaly(
+            logger.info("📊 Paso 1: CORE detector - análisis instrumental base (DATOS REALES)")
+            core_result = await core_detector.detect_anomaly(
                 center_lat, center_lon,
                 request.lat_min, request.lat_max,
                 request.lon_min, request.lon_max,

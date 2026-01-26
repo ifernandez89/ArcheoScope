@@ -221,7 +221,7 @@ async def analyze_with_ai_validation(request: AIValidationRequest):
         # Ejecutar análisis integrado
         logger.info(f"🔍 Iniciando análisis con validación IA: {request.region_name}")
         
-        result = validator.analyze_with_ai_validation(
+        result = await validator.analyze_with_ai_validation(
             lat=center_lat,
             lon=center_lon,
             lat_min=request.lat_min,

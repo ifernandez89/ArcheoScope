@@ -5,8 +5,6 @@ yarn.lock
 
 # Environment variables
 .env
-.env.local
-.env.*.local
 
 # MCP Configuration (puede contener API keys)
 mcp.json.local
