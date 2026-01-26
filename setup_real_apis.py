@@ -38,8 +38,8 @@ def check_env_file():
         print("Creando desde plantilla...")
         
         if os.path.exists(".env.local.example"):
-            with open(".env.local.example", 'r') as src:
-                with open(env_file, 'w') as dst:
+            with open(".env.local.example", 'r', encoding='utf-8') as src:
+                with open(env_file, 'w', encoding='utf-8') as dst:
                     dst.write(src.read())
             print(f"✅ Archivo {env_file} creado")
         else:
@@ -58,7 +58,7 @@ def check_env_file():
     
     missing_keys = []
     
-    with open(env_file, 'r') as f:
+    with open(env_file, 'r', encoding='utf-8') as f:
         content = f.read()
         for key in required_keys:
             if f"{key}=" not in content or f"{key}=your_" in content or f"{key}=tu_" in content:

@@ -46,8 +46,8 @@ class SatelliteConnector(ABC):
     def __init__(self, cache_enabled: bool = True):
         self.cache_enabled = cache_enabled
         self.name = "BaseConnector"
+        self.available = True
     
-    @abstractmethod
     async def get_multispectral_data(
         self,
         lat_min: float,
@@ -64,9 +64,8 @@ class SatelliteConnector(ABC):
         Returns:
             SatelliteData con bandas RGB, NIR, SWIR y índices calculados
         """
-        pass
+        return None
     
-    @abstractmethod
     async def get_sar_data(
         self,
         lat_min: float,
@@ -82,9 +81,8 @@ class SatelliteConnector(ABC):
         Returns:
             SatelliteData con backscatter VV, VH y coherencia
         """
-        pass
+        return None
     
-    @abstractmethod
     async def get_thermal_data(
         self,
         lat_min: float,
@@ -100,7 +98,7 @@ class SatelliteConnector(ABC):
         Returns:
             SatelliteData con temperatura superficial (LST)
         """
-        pass
+        return None
     
     def calculate_ndvi(self, red: np.ndarray, nir: np.ndarray) -> np.ndarray:
         """Calcular NDVI (Normalized Difference Vegetation Index)"""
