@@ -95,15 +95,16 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
         print(f"  Confianza: {env_context.confidence:.2f}", flush=True)
         
         # 2. Medir con instrumentos reales
-        print("[STEP 2] Midiendo con instrumentos reales...", flush=True)
+        print("[STEP 2] Midiendo con TODOS los instrumentos disponibles para el ambiente...", flush=True)
         
-        # Obtener lista de instrumentos apropiados para el ambiente
-        # PRIMERO intentar con primary_sensors, LUEGO con secondary_sensors
-        instrument_names = env_context.primary_sensors + env_context.secondary_sensors
-        print(f"  Instrumentos a intentar: {len(instrument_names)} ({len(env_context.primary_sensors)} primarios + {len(env_context.secondary_sensors)} secundarios)", flush=True)
+        # USAR TODOS LOS INSTRUMENTOS DISPONIBLES (primarios + secundarios)
+        # No hay jerarquía - todos son igualmente importantes
+        all_instruments = list(set(env_context.primary_sensors + env_context.secondary_sensors))
+        print(f"  Total instrumentos disponibles para {env_context.environment_type.value}: {len(all_instruments)}", flush=True)
+        print(f"  Instrumentos: {', '.join(all_instruments)}", flush=True)
         
         measurements = []
-        for instrument_name in instrument_names:
+        for instrument_name in all_instruments:
             try:
                 measurement = await integrator.get_instrument_measurement(
                     instrument_name=instrument_name,
@@ -115,16 +116,19 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                 # Solo agregar si la medición es válida (no None)
                 if measurement is not None:
                     measurements.append(measurement)
+                    print(f"  ✅ {instrument_name}: {measurement.get('value', 0):.3f}", flush=True)
                 else:
-                    print(f"  [WARNING] {instrument_name} devolvió None", flush=True)
+                    print(f"  ❌ {instrument_name}: Sin datos", flush=True)
             except Exception as e:
-                print(f"  [WARNING] Error en {instrument_name}: {e}", flush=True)
+                print(f"  ❌ {instrument_name}: Error - {e}", flush=True)
                 continue
         
-        print(f"  Mediciones obtenidas: {len(measurements)}", flush=True)
-        for m in measurements:
-            if m is not None:  # Doble verificación
-                print(f"    - {m.instrument_name}: {m.value:.3f} ({m.data_mode})", flush=True)
+        print(f"\n  📊 RESUMEN: {len(measurements)}/{len(all_instruments)} instrumentos midieron exitosamente", flush=True)
+        if len(measurements) > 0:
+            print(f"  Instrumentos exitosos:", flush=True)
+            for m in measurements:
+                if m is not None:
+                    print(f"    - {m.get('instrument_name', 'unknown')}: {m.get('value', 0):.3f} ({m.get('data_mode', 'unknown')})", flush=True)
         
         # 3. Preparar datos para pipeline
         raw_measurements = {
@@ -158,20 +162,20 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
         result['environment_context'] = {
             'environment_type': env_context.environment_type.value,
             'confidence': env_context.confidence,
-            'primary_sensors': env_context.primary_sensors,
+            'available_instruments': list(set(env_context.primary_sensors + env_context.secondary_sensors)),  # TODOS los disponibles
             'archaeological_visibility': env_context.archaeological_visibility,
             'preservation_potential': env_context.preservation_potential
         }
         
         result['instrumental_measurements'] = [
             {
-                'instrument_name': m.instrument_name,
-                'value': m.value,
-                'threshold': m.threshold,
-                'exceeds_threshold': m.exceeds_threshold,
-                'confidence': m.confidence,
-                'data_mode': m.data_mode,
-                'source': m.source
+                'instrument_name': m.get('instrument_name', 'unknown'),
+                'value': m.get('value', 0),
+                'threshold': m.get('threshold', 0),
+                'exceeds_threshold': m.get('exceeds_threshold', False),
+                'confidence': m.get('confidence', 0),
+                'data_mode': m.get('data_mode', 'unknown'),
+                'source': m.get('source', 'unknown')
             }
             for m in measurements if m is not None  # Filtrar None
         ]

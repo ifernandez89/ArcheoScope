@@ -740,34 +740,21 @@
         }
         
         /**
-         * Mostrar estado de TODOS los instrumentos
+         * Mostrar estado de TODOS los instrumentos disponibles para el ambiente
          */
         function displayInstrumentsStatus(data) {
             const container = document.getElementById('instrumentsStatus');
             
-            // Lista completa de instrumentos disponibles
-            const allInstruments = [
-                'MODIS LST',
-                'Landsat 8 Thermal',
-                'Landsat 8 NDVI',
-                'Sentinel-2 NDVI',
-                'Sentinel-1 SAR',
-                'PALSAR-2',
-                'OpenTopography',
-                'ICESat-2'
-            ];
+            // Obtener TODOS los instrumentos disponibles para el ambiente
+            const availableInstruments = data.environmentContext?.available_instruments || [];
             
             // Obtener instrumentos medidos
             const measuredInstruments = data.instrumentalMeasurements || [];
             const measuredNames = measuredInstruments.map(m => m.instrument_name);
             
-            // Obtener instrumentos esperados para el ambiente
-            const expectedInstruments = data.environmentContext?.primary_sensors || [];
-            
-            // Crear cards para cada instrumento
-            const instrumentsHTML = allInstruments.map(instrumentName => {
+            // Crear cards para cada instrumento DISPONIBLE
+            const instrumentsHTML = availableInstruments.map(instrumentName => {
                 const measurement = measuredInstruments.find(m => m.instrument_name === instrumentName);
-                const isExpected = expectedInstruments.includes(instrumentName);
                 
                 if (measurement) {
                     // Instrumento medido exitosamente
@@ -786,8 +773,8 @@
                             </div>
                         </div>
                     `;
-                } else if (isExpected) {
-                    // Instrumento esperado pero falló
+                } else {
+                    // Instrumento disponible pero falló
                     return `
                         <div class="instrument-card failed">
                             <div style="flex: 1;">
@@ -795,28 +782,11 @@
                                     ✗ ${instrumentName}
                                 </div>
                                 <div class="instrument-details">
-                                    Esperado para este ambiente pero no disponible
+                                    Disponible para este ambiente pero sin datos en esta ubicación
                                 </div>
                             </div>
                             <div class="instrument-status">
-                                <span class="instrument-badge failed">FALLÓ</span>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    // Instrumento no aplicable para este ambiente
-                    return `
-                        <div class="instrument-card no-data">
-                            <div style="flex: 1;">
-                                <div class="instrument-name">
-                                    ○ ${instrumentName}
-                                </div>
-                                <div class="instrument-details">
-                                    No aplicable para este ambiente
-                                </div>
-                            </div>
-                            <div class="instrument-status">
-                                <span class="instrument-badge no-data">N/A</span>
+                                <span class="instrument-badge failed">SIN DATOS</span>
                             </div>
                         </div>
                     `;
@@ -825,15 +795,30 @@
             
             // Agregar resumen
             const successCount = measuredInstruments.length;
-            const expectedCount = expectedInstruments.length;
-            const failedCount = expectedCount - successCount;
+            const totalCount = availableInstruments.length;
+            const failedCount = totalCount - successCount;
             
             const summaryHTML = `
                 <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; border-left: 4px solid #2196f3;">
                     <div style="font-weight: 600; margin-bottom: 0.5rem; color: #1976d2;">
-                        📊 Resumen de Instrumentos
+                        📡 Instrumentos Disponibles para ${data.environmentContext?.environment_type || 'este ambiente'}
                     </div>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; font-size: 0.85rem;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.85rem;">
+                        <div>
+                            <div style="color: #27ae60; font-weight: 600;">✓ ${successCount} Medidos</div>
+                        </div>
+                        <div>
+                            <div style="color: #e74c3c; font-weight: 600;">✗ ${failedCount} Sin datos</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #546e7a;">
+                        Cobertura: ${successCount}/${totalCount} instrumentos (${((successCount/totalCount)*100).toFixed(0)}%)
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = summaryHTML + instrumentsHTML;
+        }
                         <div>
                             <div style="color: #27ae60; font-weight: 600;">✓ ${successCount} Medidos</div>
                         </div>
