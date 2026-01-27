@@ -401,6 +401,9 @@ class ScientificPipeline:
         anthropic_probability = anomaly_weight + morphology_weight + context_weight
         anthropic_probability = float(np.clip(anthropic_probability, 0, 1))
         
+        # Razonamiento (inicializar antes de usar)
+        reasoning = []
+        
         # MEJORA 3: Regla de freno contextual
         # Reduce probabilidad en ambientes con baja cobertura instrumental
         environment_type = normalized.raw_measurements.get('environment_type', 'unknown')
@@ -424,8 +427,7 @@ class ScientificPipeline:
             min(1.0, anthropic_probability + 0.1)
         )
         
-        # Razonamiento
-        reasoning = []
+        # Razonamiento adicional
         if anomaly.anomaly_score > 0.5:
             reasoning.append(f"anomalía significativa (score={anomaly.anomaly_score:.2f})")
         if morphology.symmetry_score > 0.7:
