@@ -677,17 +677,27 @@
             if (!output) return;
             
             // Resultados científicos
-            // Manejar valores NaN o undefined
-            const coverageEffective = (output.coverage_effective !== undefined && !isNaN(output.coverage_effective)) 
-                ? (output.coverage_effective * 100).toFixed(0) + '%'
-                : 'Sin datos';
-            
+            // Manejar valores NaN o undefined - usar campos que SÍ existen
             const anthropicProb = (output.anthropic_probability !== undefined && !isNaN(output.anthropic_probability))
                 ? (output.anthropic_probability * 100).toFixed(1) + '%'
                 : 'Sin datos';
             
             const anomalyScore = (output.anomaly_score !== undefined && !isNaN(output.anomaly_score))
                 ? (output.anomaly_score * 100).toFixed(1) + '%'
+                : 'Sin datos';
+            
+            // Calcular cobertura desde instrumental_measurements
+            const totalInstruments = data.environmentContext?.available_instruments?.length || 0;
+            const measuredInstruments = data.instrumentalMeasurements?.length || 0;
+            const coveragePercent = totalInstruments > 0 
+                ? ((measuredInstruments / totalInstruments) * 100).toFixed(0) + '%'
+                : 'Sin datos';
+            
+            // Confidence interval
+            const confidenceLower = output.confidence_interval?.[0];
+            const confidenceUpper = output.confidence_interval?.[1];
+            const confidenceText = (confidenceLower !== undefined && confidenceUpper !== undefined)
+                ? `${(confidenceLower * 100).toFixed(1)}% - ${(confidenceUpper * 100).toFixed(1)}%`
                 : 'Sin datos';
             
             const resultsHTML = `
@@ -699,7 +709,10 @@
                         <strong>Anomaly Score:</strong> ${anomalyScore}
                     </div>
                     <div style="margin-bottom: 0.5rem;">
-                        <strong>Cobertura Efectiva:</strong> ${coverageEffective}
+                        <strong>Cobertura Instrumental:</strong> ${coveragePercent} (${measuredInstruments}/${totalInstruments})
+                    </div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>Intervalo de Confianza:</strong> ${confidenceText}
                     </div>
                     <div style="margin-bottom: 0.5rem;">
                         <strong>Acción Recomendada:</strong> <span style="color: #8B4513; font-weight: 600;">${output.recommended_action}</span>

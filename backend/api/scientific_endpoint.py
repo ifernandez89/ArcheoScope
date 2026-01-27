@@ -58,20 +58,55 @@ class ScientificAnalysisRequest(BaseModel):
 @router.post("/analyze-scientific")
 async def analyze_scientific(request: ScientificAnalysisRequest):
     """
-    Análisis científico completo con pipeline de 7 fases.
+    # Análisis Científico Completo - Pipeline de 7 Fases
     
-    FASES:
-    0. Enriquecimiento con datos históricos de BD
-    A. Normalización por instrumento
-    B. Detección de anomalía pura
-    C. Análisis morfológico explícito
-    D. Inferencia antropogénica (con freno de mano)
-    E. Verificación de anti-patrones
-    F. Validación contra sitios conocidos
-    G. Salida científica
+    Ejecuta el pipeline científico determinístico completo para análisis arqueológico remoto.
     
-    Returns:
-        Resultado científico completo con todas las fases
+    ## Fases del Pipeline
+    
+    - **Fase 0**: Enriquecimiento con datos históricos de BD
+    - **Fase A**: Normalización por instrumento
+    - **Fase B**: Detección de anomalía pura
+    - **Fase C**: Análisis morfológico explícito
+    - **Fase D**: Inferencia antropogénica (con freno de mano)
+    - **Fase E**: Verificación de anti-patrones
+    - **Fase F**: Validación contra sitios conocidos
+    - **Fase G**: Salida científica
+    
+    ## Características
+    
+    - ✅ 100% Determinístico y reproducible
+    - ✅ Mediciones con instrumentos reales (Sentinel, Landsat, ICESat-2, etc.)
+    - ✅ Guardado automático en base de datos
+    - ✅ Etiquetado epistemológico completo
+    - ✅ Sin uso de IA en decisiones científicas
+    
+    ## Parámetros
+    
+    - `lat_min`, `lat_max`: Rango de latitud (grados decimales)
+    - `lon_min`, `lon_max`: Rango de longitud (grados decimales)
+    - `region_name`: Nombre descriptivo de la región
+    - `candidate_id` (opcional): ID personalizado del candidato
+    
+    ## Respuesta
+    
+    Retorna análisis completo con:
+    - Salida científica (probabilidad antropogénica, anomaly score, acción recomendada)
+    - Contexto ambiental (tipo de ambiente, visibilidad arqueológica)
+    - Mediciones instrumentales (valores, fuentes, modos de datos)
+    - Información de la solicitud (coordenadas, región)
+    
+    ## Ejemplo
+    
+    ```json
+    {
+      "lat_min": 64.19,
+      "lat_max": 64.21,
+      "lon_min": -51.71,
+      "lon_max": -51.69,
+      "region_name": "Groenlandia Test"
+    }
+    ```
     """
     
     print("\n" + "="*80, flush=True)
@@ -253,16 +288,37 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
         raise HTTPException(status_code=500, detail=f"Error en análisis científico: {str(e)}")
 
 
-@router.get("/analyses/recent")
+@router.get("/analyses/recent", summary="Obtener análisis recientes")
 async def get_recent_analyses(limit: int = 10):
     """
-    Obtener análisis recientes.
+    # Consultar Análisis Recientes
     
-    Parameters:
-        limit: Número máximo de análisis a retornar (default: 10)
+    Retorna los últimos N análisis realizados, ordenados por fecha (más reciente primero).
     
-    Returns:
-        Lista de análisis ordenados por fecha (más reciente primero)
+    ## Parámetros
+    
+    - `limit` (opcional): Número máximo de análisis a retornar (default: 10, máximo: 100)
+    
+    ## Respuesta
+    
+    Lista de análisis con:
+    - ID único del análisis
+    - Nombre del candidato
+    - Región analizada
+    - Probabilidad antropogénica
+    - Anomaly score
+    - Tipo de resultado (positive_candidate, negative_reference, uncertain)
+    - Acción recomendada
+    - Tipo de ambiente
+    - Nivel de confianza
+    - Fecha de creación
+    
+    ## Uso
+    
+    Útil para:
+    - Ver historial de análisis
+    - Monitorear actividad del sistema
+    - Identificar patrones en resultados
     """
     if not db_pool:
         raise HTTPException(status_code=503, detail="Base de datos no disponible")
@@ -308,16 +364,37 @@ async def get_recent_analyses(limit: int = 10):
         print(f"[ERROR] Error consultando análisis: {e}", flush=True)
         raise HTTPException(status_code=500, detail=f"Error consultando análisis: {str(e)}")
 
-@router.get("/analyses/{analysis_id}")
+@router.get("/analyses/{analysis_id}", summary="Obtener análisis por ID")
 async def get_analysis_by_id(analysis_id: int):
     """
-    Obtener análisis específico por ID.
+    # Consultar Análisis Específico
     
-    Parameters:
-        analysis_id: ID del análisis
+    Retorna un análisis completo por su ID, incluyendo todas las mediciones instrumentales asociadas.
     
-    Returns:
-        Análisis completo con mediciones asociadas
+    ## Parámetros
+    
+    - `analysis_id` (requerido): ID único del análisis
+    
+    ## Respuesta
+    
+    Objeto con dos secciones:
+    
+    ### 1. Analysis
+    - Datos completos del análisis científico
+    - Probabilidades, scores, acciones recomendadas
+    - Metadatos (ambiente, confianza, fecha)
+    
+    ### 2. Measurements
+    - Lista de mediciones instrumentales
+    - Nombre del instrumento (MODIS LST, ICESat-2, etc.)
+    - Valor medido y unidad
+    - Modo de datos (OK, DERIVED, SIMULATED)
+    - Coordenadas y timestamp
+    
+    ## Errores
+    
+    - `404`: Análisis no encontrado
+    - `503`: Base de datos no disponible
     """
     if not db_pool:
         raise HTTPException(status_code=503, detail="Base de datos no disponible")
@@ -364,4 +441,109 @@ async def get_analysis_by_id(analysis_id: int):
             return {
                 "analysis": {
                     "id": analysis['id'],
-                    "candidate_name": analys
+                    "candidate_name": analysis['candidate_name'],
+                    "region": analysis['region'],
+                    "archaeological_probability": float(analysis['archaeological_probability']),
+                    "anomaly_score": float(analysis['anomaly_score']),
+                    "result_type": analysis['result_type'],
+                    "recommended_action": analysis['recommended_action'],
+                    "environment_type": analysis['environment_type'],
+                    "confidence_level": float(analysis['confidence_level']),
+                    "created_at": analysis['created_at'].isoformat()
+                },
+                "measurements": [
+                    {
+                        "instrument_name": row['instrument_name'],
+                        "value": float(row['value']),
+                        "unit": row['unit'],
+                        "data_mode": row['data_mode'],
+                        "latitude": float(row['latitude']),
+                        "longitude": float(row['longitude']),
+                        "timestamp": row['measurement_timestamp'].isoformat()
+                    }
+                    for row in measurements
+                ]
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERROR] Error consultando análisis {analysis_id}: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Error consultando análisis: {str(e)}")
+
+@router.get("/analyses/by-region/{region_name}", summary="Obtener análisis por región")
+async def get_analyses_by_region(region_name: str, limit: int = 10):
+    """
+    # Consultar Análisis por Región
+    
+    Retorna todos los análisis realizados en una región específica.
+    
+    ## Parámetros
+    
+    - `region_name` (requerido): Nombre de la región (ej: "Groenlandia Test", "Sahara Norte")
+    - `limit` (opcional): Número máximo de análisis a retornar (default: 10)
+    
+    ## Respuesta
+    
+    Objeto con:
+    - `region`: Nombre de la región consultada
+    - `total`: Número de análisis encontrados
+    - `analyses`: Lista de análisis ordenados por fecha
+    
+    ## Uso
+    
+    Útil para:
+    - Comparar múltiples análisis de la misma región
+    - Evaluar cambios temporales
+    - Validar consistencia de resultados
+    - Análisis de series temporales
+    
+    ## Ejemplo
+    
+    ```
+    GET /api/scientific/analyses/by-region/Groenlandia%20Test?limit=5
+    ```
+    """
+    if not db_pool:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible")
+    
+    try:
+        async with db_pool.acquire() as conn:
+            analyses = await conn.fetch("""
+                SELECT 
+                    id,
+                    candidate_name,
+                    region,
+                    archaeological_probability,
+                    anomaly_score,
+                    result_type,
+                    recommended_action,
+                    environment_type,
+                    confidence_level,
+                    created_at
+                FROM archaeological_candidate_analyses
+                WHERE region = $1
+                ORDER BY created_at DESC
+                LIMIT $2
+            """, region_name, limit)
+            
+            return {
+                "region": region_name,
+                "total": len(analyses),
+                "analyses": [
+                    {
+                        "id": row['id'],
+                        "candidate_name": row['candidate_name'],
+                        "archaeological_probability": float(row['archaeological_probability']),
+                        "anomaly_score": float(row['anomaly_score']),
+                        "result_type": row['result_type'],
+                        "recommended_action": row['recommended_action'],
+                        "environment_type": row['environment_type'],
+                        "confidence_level": float(row['confidence_level']),
+                        "created_at": row['created_at'].isoformat()
+                    }
+                    for row in analyses
+                ]
+            }
+    except Exception as e:
+        print(f"[ERROR] Error consultando análisis de región {region_name}: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Error consultando análisis: {str(e)}")

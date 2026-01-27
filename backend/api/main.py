@@ -256,9 +256,18 @@ except ImportError as e:
 
 # NUEVO: Incluir router científico (pipeline de 6 fases)
 try:
-    from api.scientific_endpoint import router as scientific_router
-    app.include_router(scientific_router, tags=["Scientific Analysis"])
-    logger.info("✅ Router científico (6 fases) incluido")
+    from api.scientific_endpoint import router as scientific_router, init_db_pool
+    app.include_router(
+        scientific_router, 
+        prefix="/api/scientific",
+        tags=["Scientific Analysis"],
+        responses={
+            404: {"description": "Not found"},
+            500: {"description": "Internal server error"},
+            503: {"description": "Service unavailable"}
+        }
+    )
+    logger.info("✅ Router científico incluido en /api/scientific")
 except ImportError as e:
     logger.warning(f"⚠️ No se pudo cargar router científico: {e}")
 
