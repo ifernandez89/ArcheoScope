@@ -249,6 +249,14 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ No se pudo cargar router de sitios conocidos: {e}")
 
+# NUEVO: Incluir router científico (pipeline de 6 fases)
+try:
+    from api.scientific_endpoint import router as scientific_router
+    app.include_router(scientific_router, tags=["Scientific Analysis"])
+    logger.info("✅ Router científico (6 fases) incluido")
+except ImportError as e:
+    logger.warning(f"⚠️ No se pudo cargar router científico: {e}")
+
 # Modelos de datos (idénticos a CryoScope para mantener UI/UX)
 class RegionRequest(BaseModel):
     """Solicitud de análisis arqueológico de región"""
