@@ -92,9 +92,11 @@ class RealDataIntegrator:
                     log(f"         [OK] Sentinel-2 respondio: NDVI={data.indices.get('ndvi', 0.0):.3f}")
                     log_file.close()
                     return {
+                        'instrument_name': 'Sentinel-2 NDVI',  # AGREGADO
                         'value': data.indices.get('ndvi', 0.0),
                         'source': 'Sentinel-2 (Copernicus)',
                         'confidence': data.confidence,
+                        'data_mode': 'OK',  # AGREGADO
                         'acquisition_date': data.acquisition_date.isoformat(),
                         'status': 'OK',
                         'quality_flags': {'cloud_cover': data.cloud_cover, 'resolution_m': data.resolution_m}
@@ -112,9 +114,11 @@ class RealDataIntegrator:
                     log(f"         [OK] Sentinel-1 SAR respondio: VV={data.indices.get('vv_mean', 0.0):.3f} dB")
                     log_file.close()
                     return {
+                        'instrument_name': 'Sentinel-1 SAR',  # AGREGADO
                         'value': data.indices.get('vv_mean', 0.0),
                         'source': 'Sentinel-1 SAR (Copernicus)',
                         'confidence': data.confidence,
+                        'data_mode': 'OK',  # AGREGADO
                         'acquisition_date': data.acquisition_date.isoformat(),
                         'status': 'OK',
                         'quality_flags': {'resolution_m': data.resolution_m, 'vv_vh_ratio': data.indices.get('vv_vh_ratio', 1.0)}
@@ -131,8 +135,10 @@ class RealDataIntegrator:
                 if data:
                     print(f"         [OK] Landsat Thermal respondio: LST={data.indices.get('lst_mean', 0.0):.1f}K", flush=True)
                     return {
+                        'instrument_name': 'Landsat 8 Thermal',  # AGREGADO
                         'value': data.indices.get('lst_mean', 0.0),
                         'source': 'Landsat Thermal (NASA/USGS)',
+                        'data_mode': 'OK',  # AGREGADO
                         'confidence': data.confidence,
                         'acquisition_date': data.acquisition_date.isoformat(),
                         'status': 'OK',
@@ -218,7 +224,9 @@ class RealDataIntegrator:
                     log(f"         [OK] MODIS LST respondio: Inercia termica={data['thermal_inertia']:.2f}")
                     log_file.close()
                     return {
+                        'instrument_name': 'MODIS LST',  # AGREGADO
                         'value': data['thermal_inertia'],
+                        'data_mode': 'OK',  # AGREGADO
                         'lst_day': data['lst_day_celsius'],
                         'lst_night': data['lst_night_celsius'],
                         'source': data['source'],
@@ -274,7 +282,9 @@ class RealDataIntegrator:
                 if data:
                     print(f"         [OK] OpenTopography respondio: Rugosidad={data['roughness']:.3f}", flush=True)
                     return {
+                        'instrument_name': 'OpenTopography',  # AGREGADO
                         'value': data['roughness'],  # Rugosidad como indicador arqueologico
+                        'data_mode': 'OK',  # AGREGADO
                         'elevation_mean': data['elevation_mean'],
                         'archaeological_score': data.get('archaeological_score', 0.0),
                         'platforms_detected': data.get('platforms_detected', 0),
@@ -307,8 +317,10 @@ class RealDataIntegrator:
                 if data:
                     print(f"         [OK] Landsat NDVI respondio: NDVI={data.indices.get('ndvi', 0.0):.3f}", flush=True)
                     return {
+                        'instrument_name': 'Landsat 8 NDVI',  # AGREGADO
                         'value': data.indices.get('ndvi', 0.0),
                         'source': 'Landsat 8 (NASA/USGS)',
+                        'data_mode': 'OK',  # AGREGADO
                         'confidence': data.confidence,
                         'acquisition_date': data.acquisition_date.isoformat(),
                         'status': 'OK',

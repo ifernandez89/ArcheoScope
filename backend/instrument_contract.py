@@ -77,6 +77,7 @@ class InstrumentMeasurement:
             'value': self.value,
             'unit': self.unit,
             'status': self.status.value,
+            'data_mode': self.status.value,  # AGREGADO: alias para compatibilidad
             'confidence': self.confidence,
             'reason': self.reason,
             'quality_flags': self.quality_flags,

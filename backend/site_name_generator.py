@@ -163,15 +163,17 @@ class SiteNameGenerator:
     def _generate_slug(self, name: str, lat: float, lon: float) -> str:
         """Generar slug único para URL."""
         import re
+        import time
         
         # Convertir a minúsculas y reemplazar espacios
         slug = name.lower()
         slug = re.sub(r'[^\w\s-]', '', slug)
         slug = re.sub(r'[-\s]+', '-', slug)
         
-        # Agregar coordenadas para unicidad
+        # Agregar coordenadas Y timestamp para unicidad
         coord_suffix = f"{int(abs(lat)*1000)}-{int(abs(lon)*1000)}"
-        slug = f"{slug[:50]}-{coord_suffix}"
+        timestamp_suffix = str(int(time.time()))[-6:]  # Últimos 6 dígitos del timestamp
+        slug = f"{slug[:40]}-{coord_suffix}-{timestamp_suffix}"
         
         return slug
 
