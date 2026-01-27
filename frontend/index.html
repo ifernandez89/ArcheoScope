@@ -819,24 +819,6 @@
             
             container.innerHTML = summaryHTML + instrumentsHTML;
         }
-                        <div>
-                            <div style="color: #27ae60; font-weight: 600;">✓ ${successCount} Medidos</div>
-                        </div>
-                        <div>
-                            <div style="color: #e74c3c; font-weight: 600;">✗ ${failedCount} Fallaron</div>
-                        </div>
-                        <div>
-                            <div style="color: #95a5a6; font-weight: 600;">○ ${allInstruments.length - expectedCount} N/A</div>
-                        </div>
-                    </div>
-                    <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #546e7a;">
-                        Cobertura: ${successCount}/${expectedCount} instrumentos esperados (${((successCount/expectedCount)*100).toFixed(0)}%)
-                    </div>
-                </div>
-            `;
-            
-            container.innerHTML = summaryHTML + instrumentsHTML;
-        }
         
         /**
          * Mostrar explicación de IA
