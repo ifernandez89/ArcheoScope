@@ -669,16 +669,29 @@
             if (!output) return;
             
             // Resultados científicos
+            // Manejar valores NaN o undefined
+            const coverageEffective = (output.coverage_effective !== undefined && !isNaN(output.coverage_effective)) 
+                ? (output.coverage_effective * 100).toFixed(0) + '%'
+                : 'Sin datos';
+            
+            const anthropicProb = (output.anthropic_probability !== undefined && !isNaN(output.anthropic_probability))
+                ? (output.anthropic_probability * 100).toFixed(1) + '%'
+                : 'Sin datos';
+            
+            const anomalyScore = (output.anomaly_score !== undefined && !isNaN(output.anomaly_score))
+                ? (output.anomaly_score * 100).toFixed(1) + '%'
+                : 'Sin datos';
+            
             const resultsHTML = `
                 <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px;">
                     <div style="margin-bottom: 0.5rem;">
-                        <strong>Probabilidad Antropogénica:</strong> ${(output.anthropic_probability * 100).toFixed(1)}%
+                        <strong>Probabilidad Antropogénica:</strong> ${anthropicProb}
                     </div>
                     <div style="margin-bottom: 0.5rem;">
-                        <strong>Anomaly Score:</strong> ${(output.anomaly_score * 100).toFixed(1)}%
+                        <strong>Anomaly Score:</strong> ${anomalyScore}
                     </div>
                     <div style="margin-bottom: 0.5rem;">
-                        <strong>Cobertura Efectiva:</strong> ${(output.coverage_effective * 100).toFixed(0)}%
+                        <strong>Cobertura Efectiva:</strong> ${coverageEffective}
                     </div>
                     <div style="margin-bottom: 0.5rem;">
                         <strong>Acción Recomendada:</strong> <span style="color: #8B4513; font-weight: 600;">${output.recommended_action}</span>
