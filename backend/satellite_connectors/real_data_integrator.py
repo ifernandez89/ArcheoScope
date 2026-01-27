@@ -83,7 +83,7 @@ class RealDataIntegrator:
         
         try:
             # SENTINEL-2 (NDVI, Multispectral)
-            if instrument_name in ["sentinel_2_ndvi", "ndvi", "vegetation"]:
+            if instrument_name in ["sentinel_2_ndvi", "ndvi", "vegetation", "Sentinel-2 NDVI", "Sentinel-2"]:
                 log(f"         >> Llamando a Planetary Computer (Sentinel-2)...")
                 data = await self.planetary_computer.get_multispectral_data(
                     lat_min, lat_max, lon_min, lon_max
@@ -103,7 +103,7 @@ class RealDataIntegrator:
                     log(f"         [FAIL] Sentinel-2 no devolvio datos")
             
             # SENTINEL-1 (SAR)
-            elif instrument_name in ["sentinel_1_sar", "sar", "backscatter", "sar_penetration_anomalies", "sar_polarimetric_anomalies", "sentinel1_sar"]:
+            elif instrument_name in ["sentinel_1_sar", "sar", "backscatter", "sar_penetration_anomalies", "sar_polarimetric_anomalies", "sentinel1_sar", "Sentinel-1 SAR", "Sentinel-1"]:
                 log(f"         >> Llamando a Planetary Computer (Sentinel-1 SAR)...")
                 data = await self.planetary_computer.get_sar_data(
                     lat_min, lat_max, lon_min, lon_max
@@ -123,7 +123,7 @@ class RealDataIntegrator:
                     log(f"         [FAIL] Sentinel-1 SAR no devolvio datos")
             
             # LANDSAT (Termico)
-            elif instrument_name in ["landsat_thermal", "thermal", "lst"]:
+            elif instrument_name in ["landsat_thermal", "thermal", "lst", "Landsat 8 Thermal", "Landsat 8", "Landsat"]:
                 print(f"         >> Llamando a Planetary Computer (Landsat Thermal)...", flush=True)
                 data = await self.planetary_computer.get_thermal_data(
                     lat_min, lat_max, lon_min, lon_max
@@ -142,7 +142,7 @@ class RealDataIntegrator:
                     print(f"         [FAIL] Landsat Thermal no devolvio datos", flush=True)
             
             # ICESAT-2 (Elevacion) - ACTUALIZADO A INSTRUMENT CONTRACT
-            elif instrument_name in ["icesat2", "elevation", "ice_height", "icesat2_subsurface", "icesat2_elevation_anomalies"]:
+            elif instrument_name in ["icesat2", "elevation", "ice_height", "icesat2_subsurface", "icesat2_elevation_anomalies", "ICESat-2", "ICESat2"]:
                 log(f"         >> Llamando a ICESat-2 (NASA Earthdata)...")
                 measurement = await self.icesat2.get_elevation_data(
                     lat_min, lat_max, lon_min, lon_max
@@ -209,7 +209,7 @@ class RealDataIntegrator:
                     print(f"         [FAIL] NSIDC Snow no devolvio datos", flush=True)
             
             # MODIS LST (Termico regional) - NUEVO
-            elif instrument_name in ["modis_lst", "modis_thermal", "thermal_inertia", "modis_polar_thermal", "modis_thermal_ice"]:
+            elif instrument_name in ["modis_lst", "modis_thermal", "thermal_inertia", "modis_polar_thermal", "modis_thermal_ice", "MODIS LST", "MODIS"]:
                 log(f"         >> Llamando a MODIS LST...")
                 data = await self.modis_lst.get_land_surface_temperature(
                     lat_min, lat_max, lon_min, lon_max
@@ -265,7 +265,7 @@ class RealDataIntegrator:
                     print(f"         [FAIL] Copernicus SST no devolvio datos", flush=True)
             
             # OPENTOPOGRAPHY (DEM, elevacion, arqueología) - NUEVO
-            elif instrument_name in ["opentopography", "dem", "elevation_dem", "lidar_elevation"]:
+            elif instrument_name in ["opentopography", "dem", "elevation_dem", "lidar_elevation", "OpenTopography", "LiDAR"]:
                 print(f"         >> Llamando a OpenTopography...", flush=True)
                 data = await self.opentopography.get_elevation_data(
                     lat_min, lat_max, lon_min, lon_max,
@@ -290,6 +290,32 @@ class RealDataIntegrator:
                     }
                 else:
                     print(f"         [FAIL] OpenTopography no devolvio datos", flush=True)
+            
+            # PALSAR-2 (L-band SAR) - NO IMPLEMENTADO AÚN
+            elif instrument_name in ["palsar", "palsar2", "PALSAR-2", "PALSAR", "palsar_l_band"]:
+                log(f"         >> PALSAR-2 no implementado aún")
+                log(f"         [SKIP] PALSAR-2 requiere implementación de ASF DAAC")
+                return None
+            
+            # LANDSAT 8 NDVI - Usar Planetary Computer
+            elif instrument_name in ["landsat_ndvi", "Landsat 8 NDVI", "Landsat NDVI"]:
+                print(f"         >> Llamando a Planetary Computer (Landsat NDVI)...", flush=True)
+                # Reutilizar get_multispectral_data pero con Landsat
+                data = await self.planetary_computer.get_multispectral_data(
+                    lat_min, lat_max, lon_min, lon_max
+                )
+                if data:
+                    print(f"         [OK] Landsat NDVI respondio: NDVI={data.indices.get('ndvi', 0.0):.3f}", flush=True)
+                    return {
+                        'value': data.indices.get('ndvi', 0.0),
+                        'source': 'Landsat 8 (NASA/USGS)',
+                        'confidence': data.confidence,
+                        'acquisition_date': data.acquisition_date.isoformat(),
+                        'status': 'OK',
+                        'quality_flags': {'cloud_cover': data.cloud_cover, 'resolution_m': data.resolution_m}
+                    }
+                else:
+                    print(f"         [FAIL] Landsat NDVI no devolvio datos", flush=True)
             
             else:
                 log(f"         [WARN] Instrumento no reconocido: {instrument_name}")
