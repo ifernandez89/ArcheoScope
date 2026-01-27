@@ -53,19 +53,23 @@ class CopernicusMarineConnector:
     
     def __init__(self):
         """Inicializar conector Copernicus Marine."""
-        self.username = os.getenv("COPERNICUS_MARINE_USERNAME")
-        self.password = os.getenv("COPERNICUS_MARINE_PASSWORD")
+        # Leer credenciales desde BD encriptada
+        from credentials_manager import CredentialsManager
+        cm = CredentialsManager()
+        
+        self.username = cm.get_credential("copernicus_marine", "username")
+        self.password = cm.get_credential("copernicus_marine", "password")
         
         # Timeouts optimizados para velocidad
         self.timeout = float(os.getenv("SATELLITE_API_TIMEOUT", "5"))
         self.connect_timeout = float(os.getenv("SATELLITE_API_CONNECT_TIMEOUT", "3"))
         
         if not self.username or not self.password:
-            logger.warning("⚠️ Copernicus Marine: Credenciales no configuradas")
+            print("WARN: Copernicus Marine: Credenciales no configuradas", flush=True)
             self.available = False
         else:
             self.available = True
-            logger.info("✅ Copernicus Marine Connector inicializado")
+            print("[OK] Copernicus Marine Connector inicializado", flush=True)
             
             # Intentar importar librería
             try:
@@ -82,15 +86,15 @@ class CopernicusMarineConnector:
                     # Login sin parámetros (API correcta)
                     # DESHABILITADO: Pide credenciales interactivamente
                     # copernicusmarine.login()
-                    logger.info("   ℹ️ Login Copernicus Marine omitido (credenciales via comandos)")
+                    print("   [INFO] Login Copernicus Marine omitido (credenciales via comandos)", flush=True)
                 except Exception as e:
-                    logger.warning(f"   ⚠️ Login fallido: {e}")
+                    print(f"   [WARN] Login fallido: {e}", flush=True)
                     # No marcar como no disponible - puede funcionar con credenciales en comandos
-                    logger.info("   ℹ️ Se usarán credenciales en cada comando")
+                    print("   [INFO] Se usaran credenciales en cada comando", flush=True)
             
             except ImportError:
-                logger.warning("⚠️ Librería copernicusmarine no instalada")
-                logger.info("   Instalar con: pip install copernicusmarine")
+                print("WARN: Libreria copernicusmarine no instalada", flush=True)
+                print("   Instalar con: pip install copernicusmarine", flush=True)
                 self.available = False
                 self.copernicusmarine = None
     

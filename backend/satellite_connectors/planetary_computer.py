@@ -203,12 +203,27 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 logger.error(f"Solo se pudieron leer {len(bands)} bandas")
                 return None
             
-            # Calcular índices
-            blue = bands['B02']
-            green = bands['B03']
-            red = bands['B04']
-            nir = bands['B08']
-            swir = bands['B11']
+            # CRÍTICO: Resamplear todas las bandas al mismo tamaño (usar B04 como referencia)
+            reference_shape = bands['B04'].shape
+            logger.info(f"Shape de referencia (B04): {reference_shape}")
+            
+            resampled_bands = {}
+            for band_name, band_data in bands.items():
+                if band_data.shape != reference_shape:
+                    logger.info(f"Resampling {band_name} de {band_data.shape} a {reference_shape}")
+                    from scipy.ndimage import zoom
+                    zoom_factors = (reference_shape[0] / band_data.shape[0], 
+                                   reference_shape[1] / band_data.shape[1])
+                    resampled_bands[band_name] = zoom(band_data, zoom_factors, order=1)
+                else:
+                    resampled_bands[band_name] = band_data
+            
+            # Calcular índices con bandas resampled
+            blue = resampled_bands['B02']
+            green = resampled_bands['B03']
+            red = resampled_bands['B04']
+            nir = resampled_bands['B08']
+            swir = resampled_bands['B11']
             
             ndvi = self.calculate_ndvi(red, nir)
             ndwi = self.calculate_ndwi(green, nir)
@@ -517,11 +532,11 @@ class PlanetaryComputerConnector(SatelliteConnector):
                         else:
                             raise ValueError("Ventana vacía")
                     
-                    log(f"[SAR] ✅ Full resolution exitoso")
+                    log(f"[SAR] [OK] Full resolution exitoso")
                     
                 except Exception as e:
                     # FALLBACK: Usar overview (menor resolución pero estable)
-                    log(f"[SAR] ⚠️ Full-res falló: {e}")
+                    log(f"[SAR] [WARN] Full-res fallo: {e}")
                     log(f"[SAR] Fallback a overview level 2 (~30m)")
                     
                     try:
@@ -557,11 +572,11 @@ class PlanetaryComputerConnector(SatelliteConnector):
                                 ))
                                 log(f"[SAR] Banda VV cargada: {vv.shape} (sin overviews)")
                         
-                        log(f"[SAR] ✅ Fallback a overview exitoso (confidence reducida a 0.6)")
+                        log(f"[SAR] [OK] Fallback a overview exitoso (confidence reducida a 0.6)")
                         confidence = 0.6  # Reducir confianza por usar overview
                         
                     except Exception as e2:
-                        log(f"[SAR] ❌ Fallback también falló: {e2}")
+                        log(f"[SAR] [FAIL] Fallback tambien fallo: {e2}")
                         import traceback
                         log(f"[SAR] Traceback: {traceback.format_exc()}")
                         if log_file:
@@ -742,21 +757,40 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 best_item.properties['datetime'].replace('Z', '+00:00')
             )
             
-            logger.info(f"📅 Using Landsat scene from {acquisition_date}")
+            logger.info(f"Using Landsat scene from {acquisition_date.date()}")
             
-            # Cargar banda térmica (ST_B10)
-            stack = stackstac.stack(
-                [best_item],
-                assets=['lwir11'],  # Thermal band
-                bounds_latlon=bbox,
-                epsg=4326,  # WGS84
-                resolution=30
-            )
+            # Cargar banda térmica (lwir11) usando rasterio (sin stackstac)
+            lwir_asset = best_item.assets.get('lwir11')
             
-            data = stack.compute()
+            if not lwir_asset:
+                logger.error("Asset lwir11 no encontrado")
+                return None
             
-            # Extraer banda térmica
-            thermal = data[0, 0, :, :].values
+            # Firmar URL
+            lwir_url = planetary_computer.sign(lwir_asset.href)
+            
+            # Leer con rasterio
+            import rasterio
+            import rasterio.warp
+            
+            with rasterio.open(lwir_url) as src:
+                # Reprojectar bbox a CRS del raster
+                bbox_proj = rasterio.warp.transform_bounds(
+                    "EPSG:4326",
+                    src.crs,
+                    lon_min, lat_min, lon_max, lat_max
+                )
+                
+                # Crear ventana
+                window = rasterio.windows.from_bounds(*bbox_proj, transform=src.transform)
+                
+                # Validar ventana
+                if window.width == 0 or window.height == 0:
+                    logger.warning(f"Ventana vacía para Landsat thermal")
+                    return None
+                
+                # Leer datos
+                thermal = src.read(1, window=window).astype(float)
             
             # Convertir a temperatura Celsius (Landsat viene en Kelvin * 0.00341802 + 149.0)
             thermal_celsius = thermal * 0.00341802 + 149.0 - 273.15
