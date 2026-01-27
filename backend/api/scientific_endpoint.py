@@ -139,16 +139,18 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
             'environment_type': env_context.environment_type.value
         }
         
-        # Añadir mediciones
+        # Añadir mediciones (measurements son diccionarios)
         for m in measurements:
-            raw_measurements[m.instrument_name] = {
-                'value': m.value,
-                'threshold': m.threshold,
-                'exceeds_threshold': m.exceeds_threshold,
-                'confidence': m.confidence,
-                'data_mode': m.data_mode,
-                'source': m.source
-            }
+            if m is not None:
+                instrument_name = m.get('instrument_name', 'unknown')
+                raw_measurements[instrument_name] = {
+                    'value': m.get('value', 0),
+                    'threshold': m.get('threshold', 0),
+                    'exceeds_threshold': m.get('exceeds_threshold', False),
+                    'confidence': m.get('confidence', 0),
+                    'data_mode': m.get('data_mode', 'unknown'),
+                    'source': m.get('source', 'unknown')
+                }
         
         # 4. Ejecutar pipeline científico (ASYNC con enriquecimiento de BD)
         print("[STEP 3] Ejecutando pipeline científico...", flush=True)
