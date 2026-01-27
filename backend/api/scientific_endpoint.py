@@ -105,14 +105,10 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
             try:
                 measurement = await integrator.get_instrument_measurement(
                     instrument_name=instrument_name,
-                    lat=center_lat,
-                    lon=center_lon,
-                    bounds={
-                        'lat_min': request.lat_min,
-                        'lat_max': request.lat_max,
-                        'lon_min': request.lon_min,
-                        'lon_max': request.lon_max
-                    }
+                    lat_min=request.lat_min,
+                    lat_max=request.lat_max,
+                    lon_min=request.lon_min,
+                    lon_max=request.lon_max
                 )
                 measurements.append(measurement)
             except Exception as e:
