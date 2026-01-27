@@ -11,6 +11,7 @@ class ArcheoScopeInteractiveMap {
         this.instruments = {};
         this.currentAnalysis = null;
         this.isAnalyzing = false;
+        this.tempMarker = null; // Marcador temporal para coordenadas ingresadas manualmente
         
         // Configuración de instrumentos
         this.instrumentConfig = {
@@ -318,7 +319,47 @@ class ArcheoScopeInteractiveMap {
             const coords = document.getElementById('coordsInput').value;
             if (coords) {
                 const [lat, lon] = coords.split(',').map(s => parseFloat(s.trim()));
-                this.analyzeRegion(lat, lon);
+                
+                // Validar coordenadas
+                if (isNaN(lat) || isNaN(lon)) {
+                    alert('❌ Coordenadas inválidas. Formato: Lat, Lon (ej: -13.15, -72.55)');
+                    return;
+                }
+                
+                if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                    alert('❌ Coordenadas fuera de rango. Lat: -90 a 90, Lon: -180 a 180');
+                    return;
+                }
+                
+                // CENTRAR EL MAPA en las coordenadas ingresadas
+                console.log(`📍 Centrando mapa en: ${lat}, ${lon}`);
+                this.map.setView([lat, lon], 13); // Zoom 13 para ver detalles
+                
+                // Agregar marcador temporal en la ubicación
+                if (this.tempMarker) {
+                    this.map.removeLayer(this.tempMarker);
+                }
+                this.tempMarker = L.marker([lat, lon], {
+                    icon: L.divIcon({
+                        className: 'temp-marker',
+                        html: '<div style="background: #ff4444; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(255,68,68,0.5);"></div>',
+                        iconSize: [20, 20]
+                    })
+                }).addTo(this.map);
+                
+                // Analizar región después de centrar
+                setTimeout(() => {
+                    this.analyzeRegion(lat, lon);
+                }, 500); // Pequeño delay para que se vea el centrado
+            } else {
+                alert('⚠️ Por favor ingresa coordenadas (Lat, Lon)');
+            }
+        });
+        
+        // Soporte para Enter en el campo de coordenadas
+        document.getElementById('coordsInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('analyzeBtn').click();
             }
         });
         
