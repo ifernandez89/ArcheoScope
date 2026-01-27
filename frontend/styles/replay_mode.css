@@ -1,0 +1,414 @@
+/**
+ * ArcheoScope - Estilos para Modo Reproducibilidad
+ * Indicadores visuales claros de modo replay
+ */
+
+/* Indicador principal de replay mode */
+.replay-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    padding: 1rem;
+    z-index: 10000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-100%);
+    transition: transform 0.3s ease-out;
+    display: none;
+}
+
+.replay-indicator.active {
+    display: block;
+    transform: translateY(0);
+    animation: replayPulse 2s infinite;
+}
+
+@keyframes replayPulse {
+    0%, 100% {
+        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(231, 76, 60, 0.6);
+    }
+}
+
+.replay-indicator-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.replay-icon {
+    font-size: 2rem;
+    animation: replaySpin 3s linear infinite;
+}
+
+@keyframes replaySpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.replay-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.replay-text strong {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.replay-text span {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.replay-exit-btn {
+    padding: 0.5rem 1.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid white;
+    color: white;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.replay-exit-btn:hover {
+    background: white;
+    color: #e74c3c;
+    transform: scale(1.05);
+}
+
+/* Timeline de eventos */
+.replay-timeline-container {
+    position: fixed;
+    right: 20px;
+    top: 100px;
+    width: 350px;
+    max-height: 600px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    z-index: 9999;
+    display: none;
+}
+
+.replay-timeline-container.active {
+    display: block;
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.timeline-header {
+    background: linear-gradient(135deg, #8B4513 0%, #D2691E 100%);
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.timeline-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.timeline-header span {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.timeline-events {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.timeline-event {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: #f8f9fa;
+    border-left: 4px solid #bdc3c7;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.timeline-event:hover {
+    background: #ecf0f1;
+    border-left-color: #8B4513;
+    transform: translateX(4px);
+}
+
+.timeline-event.active {
+    background: #fff3cd;
+    border-left-color: #D2691E;
+    box-shadow: 0 2px 8px rgba(139, 69, 19, 0.2);
+}
+
+.event-time {
+    font-size: 0.75rem;
+    color: #7f8c8d;
+    margin-bottom: 0.25rem;
+}
+
+.event-name {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+}
+
+.event-payload {
+    font-size: 0.75rem;
+    color: #95a5a6;
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Controles de snapshot */
+.snapshot-controls {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 0.5rem;
+    z-index: 9998;
+}
+
+.snapshot-btn {
+    padding: 0.75rem 1rem;
+    background: white;
+    border: 2px solid #8B4513;
+    color: #8B4513;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.snapshot-btn:hover {
+    background: #8B4513;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+}
+
+.snapshot-btn:active {
+    transform: translateY(0);
+}
+
+/* Badge de reproducibilidad */
+.reproducibility-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+}
+
+.reproducibility-badge.not-reproducible {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+}
+
+.reproducibility-badge .badge-icon {
+    font-size: 1rem;
+}
+
+/* Modal de comparación de snapshots */
+.snapshot-comparison-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10001;
+}
+
+.snapshot-comparison-modal.active {
+    display: flex;
+}
+
+.comparison-content {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 900px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.comparison-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.comparison-header h2 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.comparison-column {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.comparison-column h3 {
+    margin: 0 0 1rem 0;
+    color: #8B4513;
+    font-size: 1rem;
+}
+
+.comparison-item {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 4px;
+}
+
+.comparison-item label {
+    display: block;
+    font-size: 0.75rem;
+    color: #7f8c8d;
+    margin-bottom: 0.25rem;
+}
+
+.comparison-item value {
+    display: block;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.comparison-delta {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.comparison-delta.positive {
+    background: #d4edda;
+    color: #155724;
+}
+
+.comparison-delta.negative {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.comparison-delta.neutral {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .replay-indicator-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .replay-timeline-container {
+        width: 90%;
+        right: 5%;
+    }
+    
+    .snapshot-controls {
+        flex-direction: column;
+        bottom: 10px;
+        right: 10px;
+    }
+    
+    .comparison-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Animaciones adicionales */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Scrollbar personalizado para timeline */
+.timeline-events::-webkit-scrollbar {
+    width: 8px;
+}
+
+.timeline-events::-webkit-scrollbar-track {
+    background: #f8f9fa;
+}
+
+.timeline-events::-webkit-scrollbar-thumb {
+    background: #8B4513;
+    border-radius: 4px;
+}
+
+.timeline-events::-webkit-scrollbar-thumb:hover {
+    background: #D2691E;
+}
