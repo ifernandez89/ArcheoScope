@@ -638,6 +638,14 @@
                 // Actualizar scientific state
                 scientificState.updateFromBackend(data);
                 
+                // GENERAR EXPLICACIÓN IA
+                console.log('[App] Generando explicación IA...');
+                await aiExplainerModule.generateExplanation({
+                    scientificOutput: data.scientific_output,
+                    environmentContext: data.environment_context,
+                    instrumentalMeasurements: data.instrumental_measurements
+                });
+                
                 // Emitir evento de completado
                 eventBus.emit(EVENTS.ANALYSIS_COMPLETED, {
                     coordinates: { lat, lon },
