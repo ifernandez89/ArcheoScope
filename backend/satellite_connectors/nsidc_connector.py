@@ -54,19 +54,29 @@ class NSIDCConnector:
     
     def __init__(self):
         """Inicializar conector NSIDC."""
-        self.username = os.getenv("EARTHDATA_USERNAME")
-        self.password = os.getenv("EARTHDATA_PASSWORD")
+        # Cargar credenciales desde BD
+        try:
+            sys.path.insert(0, str(Path(__file__).parent.parent))
+            from credentials_manager import CredentialsManager
+            
+            creds_manager = CredentialsManager()
+            self.username = creds_manager.get_credential("earthdata", "username")
+            self.password = creds_manager.get_credential("earthdata", "password")
+        except Exception as e:
+            logger.warning(f"Error cargando credenciales desde BD: {e}")
+            self.username = None
+            self.password = None
         
         # Timeouts optimizados para velocidad
         self.timeout = float(os.getenv("SATELLITE_API_TIMEOUT", "5"))
         self.connect_timeout = float(os.getenv("SATELLITE_API_CONNECT_TIMEOUT", "3"))
         
         if not self.username or not self.password:
-            logger.warning("⚠️ NSIDC: Credenciales Earthdata no configuradas")
+            logger.warning("NSIDC: Credenciales Earthdata no configuradas en BD")
             self.available = False
         else:
             self.available = True
-            logger.info("✅ NSIDC Connector inicializado")
+            logger.info("NSIDC Connector inicializado desde BD")
         
         # URLs base
         self.base_url = "https://n5eil01u.ecs.nsidc.org"

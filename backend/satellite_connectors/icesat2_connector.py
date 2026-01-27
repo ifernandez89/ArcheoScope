@@ -45,15 +45,33 @@ class ICESat2Connector(SatelliteConnector):
             self.available = False
         else:
             self.available = True
-            # Autenticar con NASA Earthdata
+            # Autenticar con NASA Earthdata usando credenciales de BD
             try:
-                import os
-                # earthaccess usa USERNAME/PASSWORD, ignorar TOKEN
-                earthaccess.login(strategy="environment")
-                logger.info("✅ ICESat-2 connector initialized (NASA Earthdata)")
+                import sys
+                from pathlib import Path
+                sys.path.insert(0, str(Path(__file__).parent.parent))
+                from credentials_manager import CredentialsManager
+                
+                creds_manager = CredentialsManager()
+                
+                # Obtener credenciales desde BD
+                username = creds_manager.get_credential("earthdata", "username")
+                password = creds_manager.get_credential("earthdata", "password")
+                
+                if username and password:
+                    # Configurar variables de entorno para earthaccess
+                    os.environ['EARTHDATA_USERNAME'] = username
+                    os.environ['EARTHDATA_PASSWORD'] = password
+                    
+                    earthaccess.login(strategy="environment")
+                    logger.info("ICESat-2 connector initialized (NASA Earthdata desde BD)")
+                else:
+                    logger.warning("Credenciales Earthdata no encontradas en BD")
+                    self.available = False
+                    
             except Exception as e:
                 logger.warning(f"ICESat-2 authentication failed: {e}")
-                logger.info("Set EARTHDATA_USERNAME and EARTHDATA_PASSWORD in .env")
+                logger.info("Configura credenciales con: python backend/credentials_manager.py")
                 self.available = False
     
     async def get_elevation_data(

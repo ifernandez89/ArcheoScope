@@ -1,0 +1,122 @@
+{
+  "candidate_id": "el_viandar_castle",
+  "candidate_name": "El Viandar Castle & Settlement",
+  "region": "Córdoba, España",
+  "environment_detected": "agricultural",
+  "environment_confidence": 0.5,
+  "archaeological_probability": 0.3121943172771007,
+  "confidence": "none",
+  "result_type": "consistent",
+  "instruments_measuring": 0,
+  "instruments_total": 5,
+  "convergence_achieved": false,
+  "temporal_analysis": false,
+  "ai_available": true,
+  "analysis_time_seconds": 22.11,
+  "timestamp": "2026-01-26T21:42:51.596687",
+  "full_result": {
+    "region_info": {
+      "name": "El Viandar Castle & Settlement",
+      "coordinates": {
+        "lat_range": [
+          38.035,
+          38.065
+        ],
+        "lon_range": [
+          -4.3149999999999995,
+          -4.285
+        ]
+      },
+      "resolution_m": 1000,
+      "area_km2": 8.49150000000014,
+      "analysis_type": "intelligent_integrated_archaeological_analysis"
+    },
+    "environment_classification": {
+      "environment_type": "agricultural",
+      "confidence": 0.5,
+      "primary_sensors": [
+        "sentinel2",
+        "landsat",
+        "sar"
+      ],
+      "secondary_sensors": [
+        "lidar",
+        "modis"
+      ],
+      "archaeological_visibility": "medium",
+      "preservation_potential": "moderate"
+    },
+    "archaeological_results": {
+      "result_type": "consistent",
+      "archaeological_probability": 0.3121943172771007,
+      "confidence": "none",
+      "modern_exclusion_score": 0.0,
+      "site_recognized": false,
+      "temporal_enhancement": 0.06219431727710066,
+      "ai_enhancement": 0.15,
+      "base_core_probability": 0.1
+    },
+    "instrumental_measurements": [],
+    "convergence_analysis": {
+      "instruments_converging": 0,
+      "minimum_required": 3,
+      "convergence_met": false,
+      "temporal_support": false,
+      "ai_support": true,
+      "enhanced_confidence": false
+    },
+    "statistical_results": {
+      "spatial_anomaly_pixels": 0,
+      "archaeological_signature_pixels": 0,
+      "total_pixels": 1000,
+      "anomaly_distribution": {
+        "high_confidence": 0,
+        "moderate_confidence": 0,
+        "low_confidence": 0,
+        "total_instruments": 0
+      },
+      "detection_probability": 0.3121943172771007,
+      "environmental_confidence": 0.5,
+      "temporal_confidence": 0.24877726910840264,
+      "ai_confidence": 0.15
+    },
+    "anomaly_map": {
+      "statistics": {
+        "spatial_anomaly_pixels": 0,
+        "archaeological_signature_pixels": 0,
+        "total_pixels": 1000,
+        "anomaly_distribution": {
+          "high_confidence": 0,
+          "moderate_confidence": 0,
+          "low_confidence": 0,
+          "total_instruments": 0
+        },
+        "detection_probability": 0.1,
+        "environmental_confidence": 0.5
+      }
+    },
+    "validation_metrics": {
+      "site_recognized": false,
+      "site_name": null,
+      "distance_km": null,
+      "overlapping_sites": [],
+      "nearby_sites": []
+    },
+    "scientific_explanation": {
+      "explanation": "Análisis en ambiente agricultural (confianza 50%). Ningún instrumento detectó anomalias significativas. Convergencia NO alcanzada (0/3 requeridos). No se detectó anomalía arqueologica significativa.",
+      "detection_reasoning": [],
+      "false_positive_risks": [],
+      "recommended_validation": []
+    },
+    "ai_explanations": {
+      "ai_available": true,
+      "explanation": "Análisis en ambiente agricultural (confianza 50%). Ningún instrumento detectó anomalias significativas. Convergencia NO alcanzada (0/3 requeridos). No se detectó anomalía arqueologica significativa.",
+      "mode": "core_detector"
+    },
+    "system_status": {
+      "analysis_completed": true,
+      "detector_used": "core_anomaly_detector",
+      "scientific_method": "instrumental_convergence"
+    }
+  }
+}

@@ -35,9 +35,17 @@ try:
     import planetary_computer
     import rasterio
     from rasterio.warp import transform_bounds
-    # import stackstac  # DESHABILITADO - requiere pyproj que tiene problemas de DLL
+    from rasterio import windows  # Para leer ventanas específicas
+    
+    # CRÍTICO: Importar stackstac DESPUÉS de configurar PROJ
+    try:
+        import stackstac
+        STACKSTAC_AVAILABLE = True
+    except ImportError as e:
+        print(f"stackstac no disponible: {e}")
+        STACKSTAC_AVAILABLE = False
+    
     PLANETARY_COMPUTER_AVAILABLE = True
-    STACKSTAC_AVAILABLE = False  # Deshabilitado temporalmente
 except ImportError as e:
     PLANETARY_COMPUTER_AVAILABLE = False
     STACKSTAC_AVAILABLE = False
@@ -142,26 +150,39 @@ class PlanetaryComputerConnector(SatelliteConnector):
             
             logger.info(f"📅 Using scene from {acquisition_date}, cloud cover: {cloud_cover}%")
             
-            # Cargar bandas necesarias
+            # Cargar bandas necesarias SIN stackstac (usando rasterio directamente)
             bands_to_load = ['B02', 'B03', 'B04', 'B08', 'B11']  # Blue, Green, Red, NIR, SWIR
             
-            # Usar stackstac para cargar datos
-            stack = stackstac.stack(
-                [best_item],
-                assets=bands_to_load,
-                bounds_latlon=bbox,
-                epsg=4326,  # WGS84
-                resolution=10  # 10m resolution
-            )
-            
-            # Computar (esto descarga los datos)
-            data = stack.compute()
-            
-            # Extraer bandas
+            # Leer bandas directamente con rasterio
             bands = {}
-            for i, band_name in enumerate(bands_to_load):
-                band_data = data[0, i, :, :].values
-                bands[band_name] = band_data
+            for band_name in bands_to_load:
+                try:
+                    asset = best_item.assets.get(band_name)
+                    if not asset:
+                        continue
+                    
+                    # Firmar URL con Planetary Computer
+                    signed_href = planetary_computer.sign(asset.href)
+                    
+                    # Leer con rasterio
+                    with rasterio.open(signed_href) as src:
+                        # Leer ventana que corresponde al bbox
+                        window = rasterio.windows.from_bounds(
+                            lon_min, lat_min, lon_max, lat_max,
+                            transform=src.transform
+                        )
+                        
+                        # Leer datos
+                        band_data = src.read(1, window=window)
+                        bands[band_name] = band_data.astype(float)
+                        
+                except Exception as e:
+                    logger.warning(f"Error leyendo banda {band_name}: {e}")
+                    continue
+            
+            if len(bands) < 4:  # Necesitamos al menos 4 bandas
+                logger.error(f"Solo se pudieron leer {len(bands)} bandas")
+                return None
             
             # Calcular índices
             blue = bands['B02']

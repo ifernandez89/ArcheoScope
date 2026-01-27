@@ -652,15 +652,29 @@ class EnvironmentClassifier:
     def _is_on_land(self, lat: float, lon: float) -> bool:
         """Verificar si coordenadas están en tierra firme (simplificado pero preciso)"""
         
-        # América del Norte (continental)
-        if 25 <= lat <= 72 and -170 <= lon <= -50:
-            # Excluir Grandes Lagos y costas
-            if not (41 <= lat <= 49 and -93 <= lon <= -76):  # Grandes Lagos
-                return True
+        # América del Norte (continental) - INCLUYE MÉXICO Y CENTROAMÉRICA
+        if 14 <= lat <= 72 and -170 <= lon <= -50:
+            # Excluir Grandes Lagos
+            if 41 <= lat <= 49 and -93 <= lon <= -76:  # Grandes Lagos
+                return False
+            # Excluir Golfo de México (solo agua abierta, no costas)
+            if 18 <= lat <= 30 and -97 <= lon <= -80:
+                # Península de Yucatán (México) - TIERRA FIRME
+                if 17 <= lat <= 22 and -92 <= lon <= -86:
+                    return True
+                # Costa de México (Veracruz, Tamaulipas) - TIERRA FIRME
+                if 18 <= lat <= 26 and -100 <= lon <= -96:
+                    return True
+                # Florida - TIERRA FIRME
+                if 24 <= lat <= 31 and -88 <= lon <= -80:
+                    return True
+                # Resto del Golfo - AGUA
+                return False
+            return True
         
-        # Caribe e islas - EXCLUIR (son mayormente agua)
+        # Caribe e islas - SOLO islas pequeñas, NO península de Yucatán
         # Port Royal, Jamaica está aquí: 17.94°N, -76.84°W
-        if 10 <= lat <= 25 and -90 <= lon <= -60:
+        if 10 <= lat <= 25 and -85 <= lon <= -60:
             # Esta es zona de islas caribeñas - considerar como AGUA
             return False
         
