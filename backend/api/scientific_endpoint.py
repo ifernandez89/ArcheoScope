@@ -199,6 +199,51 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
         print(f"  Anthropic probability: {result['scientific_output']['anthropic_probability']:.3f}", flush=True)
         print(f"  Recommended action: {result['scientific_output']['recommended_action']}", flush=True)
         
+        # 6. GUARDAR RESULTADOS EN BD
+        if db_pool:
+            try:
+                print("\n[BD] Guardando resultados en base de datos...", flush=True)
+                async with db_pool.acquire() as conn:
+                    # Guardar análisis
+                    await conn.execute("""
+                        INSERT INTO archaeological_candidate_analyses 
+                        (candidate_name, region, archaeological_probability, anomaly_score, 
+                         result_type, recommended_action, environment_type, confidence_level)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    """, 
+                        result['scientific_output']['candidate_id'],
+                        request.region_name,
+                        result['scientific_output']['anthropic_probability'],
+                        result['scientific_output']['anomaly_score'],
+                        result['scientific_output']['candidate_type'],
+                        result['scientific_output']['recommended_action'],
+                        env_context.environment_type.value,
+                        result['scientific_output']['confidence_interval'][0]  # Lower bound
+                    )
+                    
+                    # Guardar mediciones instrumentales
+                    for m in measurements:
+                        if m is not None:
+                            await conn.execute("""
+                                INSERT INTO measurements 
+                                (instrument_name, value, unit, data_mode, latitude, longitude)
+                                VALUES ($1, $2, $3, $4, $5, $6)
+                            """,
+                                m.get('instrument_name', 'unknown'),
+                                m.get('value', 0),
+                                'various',  # Unit varies by instrument
+                                m.get('data_mode', 'unknown'),
+                                center_lat,
+                                center_lon
+                            )
+                    
+                    print(f"[BD] ✅ Guardado: 1 análisis + {len(measurements)} mediciones", flush=True)
+            except Exception as e:
+                print(f"[BD] ⚠️ Error guardando en BD: {e}", flush=True)
+                # No fallar el análisis si falla el guardado
+        else:
+            print("[BD] ⚠️ Sin conexión a BD - resultados no persistidos", flush=True)
+        
         return result
         
     except Exception as e:
