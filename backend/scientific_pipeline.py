@@ -384,10 +384,10 @@ class ScientificPipeline:
                         candidate_name,
                         archaeological_probability,
                         result_type,
-                        analysis_timestamp
+                        created_at as analysis_timestamp
                     FROM archaeological_candidate_analyses
                     WHERE region = $1
-                    ORDER BY analysis_timestamp DESC
+                    ORDER BY created_at DESC
                     LIMIT 5
                 """, raw_measurements.get('region_name', 'unknown'))
                 
