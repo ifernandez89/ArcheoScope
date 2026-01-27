@@ -101,9 +101,14 @@ class CoreAnomalyDetector:
         from satellite_connectors.real_data_integrator_v2 import RealDataIntegratorV2
         self.real_data_integrator = RealDataIntegratorV2()
         
+        # MEJORA CRÍTICA: Sistema de calibración regional
+        from regional_calibration_system import RegionalCalibrationSystem
+        self.regional_calibration = RegionalCalibrationSystem()
+        
         print("CoreAnomalyDetector inicializado correctamente", flush=True)
         print("[OK] RealDataIntegratorV2 activado - BLINDAJE CRÍTICO IMPLEMENTADO", flush=True)
         print("[OK] Estados explícitos por instrumento - NUNCA ABORTAR BATCH", flush=True)
+        print("[OK] Sistema de calibración regional activado - ECO-REGIONES ESPECÍFICAS", flush=True)
     
     def _load_anomaly_signatures(self) -> Dict[str, Any]:
         """Cargar firmas de anomalias desde JSON"""
@@ -184,6 +189,16 @@ class CoreAnomalyDetector:
         print("[STEP2] PASO 2: Cargando firmas de anomalias para terreno...", flush=True)
         env_signatures = self._get_signatures_for_environment(env_context.environment_type.value)
         
+        # MEJORA CRÍTICA: Detectar eco-región específica
+        eco_region = self.regional_calibration.detect_eco_region(
+            lat, lon, env_context.environment_type.value
+        )
+        print(f"   [OK] Eco-región detectada: {eco_region.value}", flush=True)
+        
+        # Obtener calibración regional
+        regional_calibration = self.regional_calibration.get_regional_calibration(eco_region)
+        print(f"   [OK] Calibración regional aplicada: {regional_calibration.scientific_rationale}", flush=True)
+        
         if not env_signatures:
             print(f"   [WARN] No hay firmas definidas para {env_context.environment_type.value}", flush=True)
             return self._create_inconclusive_result(env_context, "No hay firmas de anomalias definidas para este terreno")
@@ -201,9 +216,37 @@ class CoreAnomalyDetector:
         
         # PASO 4: Comparar mediciones vs umbrales de anomalía
         print("[STATS] PASO 4: Comparando mediciones vs umbrales...", flush=True)
+        
+        # MEJORA CRÍTICA: Calcular matriz de sensores ponderada dinámicamente
+        sensor_weights = self.regional_calibration.calculate_weighted_sensor_matrix(
+            eco_region, env_context, measurements
+        )
+        print(f"   [OK] Pesos de sensores ajustados regionalmente", flush=True)
+        for sensor, weight in sensor_weights.items():
+            if weight > 0:
+                print(f"       {sensor}: {weight:.3f}", flush=True)
+        
+        # MEJORA CRÍTICA: Score de convergencia explicable
+        convergence_score = self.regional_calibration.calculate_convergence_score(
+            measurements, sensor_weights, eco_region
+        )
+        
+        print(f"   [OK] Score de convergencia: {convergence_score.total_score:.3f}", flush=True)
+        print(f"   [OK] Componentes: forma={convergence_score.forma_score:.2f}, "
+              f"compactación={convergence_score.compactacion_score:.2f}, "
+              f"térmico={convergence_score.termico_score:.2f}, "
+              f"espectral={convergence_score.espectral_score:.2f}", flush=True)
+        print(f"   [OK] Razón: {convergence_score.convergence_reason}", flush=True)
+        
+        # Análisis tradicional para compatibilidad
         anomaly_analysis = self._analyze_measurements_vs_thresholds(
             measurements, env_signatures
         )
+        
+        # Enriquecer con datos de convergencia
+        anomaly_analysis['convergence_score'] = convergence_score
+        anomaly_analysis['sensor_weights'] = sensor_weights
+        anomaly_analysis['eco_region'] = eco_region
         
         print(f"   [OK] Instrumentos que exceden umbral: {anomaly_analysis['instruments_exceeding']}/{len(measurements)}", flush=True)
         print(f"   [OK] Convergencia: {anomaly_analysis['convergence_met']}", flush=True)
@@ -222,8 +265,10 @@ class CoreAnomalyDetector:
         
         # PASO 6: Calcular probabilidad arqueologica (con ajuste probabilístico)
         print("[STEP6] PASO 6: Calculando probabilidad arqueologica...", flush=True)
-        archaeological_probability = self._calculate_archaeological_probability(
-            anomaly_analysis, env_context, validation, nearby_sites
+        
+        # MEJORA CRÍTICA: Usar score de convergencia en cálculo de probabilidad
+        archaeological_probability = self._calculate_archaeological_probability_enhanced(
+            anomaly_analysis, env_context, validation, nearby_sites, convergence_score
         )
         
         print(f"   [OK] Probabilidad arqueologica: {archaeological_probability:.2%}", flush=True)
@@ -709,6 +754,117 @@ class CoreAnomalyDetector:
         
         return min(base_probability, 1.0)
     
+    def _calculate_archaeological_probability_enhanced(self, anomaly_analysis: Dict[str, Any],
+                                                     env_context, validation: Dict[str, Any],
+                                                     nearby_sites: List[Dict[str, Any]] = None,
+                                                     convergence_score = None) -> float:
+        """
+        VERSIÓN MEJORADA: Calcular probabilidad arqueológica usando score de convergencia explicable
+        
+        MEJORAS:
+        1. Usa score de convergencia en lugar de simple conteo
+        2. Pondera por tipo de evidencia (forma, compactación, térmico, espectral)
+        3. Ajusta por eco-región específica
+        4. Mantiene ajuste probabilístico por sitios conocidos
+        """
+        
+        if convergence_score is None:
+            # Fallback al método tradicional
+            return self._calculate_archaeological_probability(
+                anomaly_analysis, env_context, validation, nearby_sites
+            )
+        
+        # Factor 1: Score de convergencia (peso 60%)
+        convergence_factor = convergence_score.total_score
+        
+        # Factor 2: Calidad de evidencia por tipo (peso 25%)
+        evidence_quality = 0.0
+        
+        # Forma geométrica es evidencia fuerte
+        if convergence_score.forma_score > 0.5:
+            evidence_quality += 0.4
+        
+        # Compactación + térmico juntos = evidencia muy fuerte
+        if (convergence_score.compactacion_score > 0.4 and 
+            convergence_score.termico_score > 0.4):
+            evidence_quality += 0.3
+        
+        # Múltiples tipos de evidencia
+        active_components = sum([
+            1 for score in [convergence_score.forma_score, 
+                          convergence_score.compactacion_score,
+                          convergence_score.termico_score, 
+                          convergence_score.espectral_score]
+            if score > 0.3
+        ])
+        
+        if active_components >= 3:
+            evidence_quality += 0.3
+        elif active_components >= 2:
+            evidence_quality += 0.2
+        
+        evidence_quality = min(evidence_quality, 1.0)
+        
+        # Factor 3: Contexto ambiental (peso 15%)
+        eco_region = anomaly_analysis.get('eco_region')
+        env_factor = self._get_environmental_factor_enhanced(env_context, eco_region)
+        
+        # Calcular probabilidad base mejorada
+        base_probability = (
+            convergence_factor * 0.6 +
+            evidence_quality * 0.25 +
+            env_factor * 0.15
+        )
+        
+        # Factor 4: Ajuste probabilístico por sitios conocidos (igual que antes)
+        if nearby_sites and len(nearby_sites) > 0:
+            adjusted_prob, adjustment_details = self.site_confidence_system.adjust_anomaly_score(
+                base_probability,
+                nearby_sites,
+                validation.get('distance_km', 999.0)
+            )
+            
+            print(f"   [STATS] Ajuste por sitios conocidos: {adjustment_details['adjustment']:.3f}", flush=True)
+            print(f"   [STATS] Probabilidad ajustada: {base_probability:.3f} → {adjusted_prob:.3f}", flush=True)
+            
+            return min(adjusted_prob, 1.0)
+        
+        return min(base_probability, 1.0)
+    
+    def _get_environmental_factor_enhanced(self, env_context, eco_region) -> float:
+        """Factor ambiental mejorado con eco-regiones específicas"""
+        
+        # Factores base por ambiente
+        base_factors = {
+            'desert': 0.9,  # Excelente visibilidad
+            'glacier': 0.8,  # Buena preservación
+            'shallow_sea': 0.7,  # Buena detección con sonar
+            'forest': 0.6,  # Requiere LiDAR
+            'polar_ice': 0.5,  # Difícil acceso
+            'mountain': 0.7,  # Buena preservación en altura
+            'unknown': 0.3  # Baja confianza
+        }
+        
+        base_factor = base_factors.get(env_context.environment_type.value, 0.5)
+        
+        # Ajustes por eco-región específica
+        if eco_region:
+            eco_adjustments = {
+                'sahara': 1.1,      # Excelente para arqueología
+                'atacama': 1.15,    # Extremadamente bueno
+                'amazon_humid': 0.8,  # Difícil por vegetación
+                'amazon_dry': 0.9,    # Mejor que húmeda
+                'antarctica_interior': 0.7,  # Extremadamente difícil
+                'antarctica_coastal': 0.8,    # Algo mejor
+                'caribbean_shallow': 0.9,     # Bueno para arqueología marina
+                'mediterranean': 0.85,        # Bueno pero con tráfico
+            }
+            
+            adjustment = eco_adjustments.get(eco_region.value, 1.0)
+            base_factor *= adjustment
+        
+        return min(base_factor, 1.0)
+    
     def _generate_final_result(self, env_context, env_signatures: Dict[str, Any],
                                measurements: List[InstrumentMeasurement],
                                anomaly_analysis: Dict[str, Any],
@@ -730,7 +886,7 @@ class CoreAnomalyDetector:
             confidence_level = "none"
         
         # Generar explicación
-        explanation = self._generate_explanation(
+        explanation = self._generate_explanation_enhanced(
             env_context, measurements, anomaly_analysis, validation, archaeological_probability
         )
         
@@ -823,6 +979,73 @@ class CoreAnomalyDetector:
                 )
         
         return reasoning
+    
+    def _generate_explanation_enhanced(self, env_context, measurements: List[InstrumentMeasurement],
+                                     anomaly_analysis: Dict[str, Any], validation: Dict[str, Any],
+                                     archaeological_probability: float) -> str:
+        """Generar explicación científica mejorada con información de convergencia"""
+        
+        parts = []
+        
+        # Contexto ambiental y eco-región
+        eco_region = anomaly_analysis.get('eco_region')
+        if eco_region:
+            parts.append(f"Análisis en eco-región {eco_region.value} "
+                        f"(ambiente {env_context.environment_type.value}, confianza {env_context.confidence:.0%}).")
+        else:
+            parts.append(f"Análisis en ambiente {env_context.environment_type.value} (confianza {env_context.confidence:.0%}).")
+        
+        # Información de convergencia
+        convergence_score = anomaly_analysis.get('convergence_score')
+        if convergence_score:
+            parts.append(f"Score de convergencia: {convergence_score.total_score:.2f}.")
+            parts.append(convergence_score.convergence_reason)
+            
+            # Detalles de componentes si son significativos
+            significant_components = []
+            if convergence_score.forma_score > 0.3:
+                significant_components.append(f"forma geométrica ({convergence_score.forma_score:.2f})")
+            if convergence_score.compactacion_score > 0.3:
+                significant_components.append(f"compactación ({convergence_score.compactacion_score:.2f})")
+            if convergence_score.termico_score > 0.3:
+                significant_components.append(f"térmico ({convergence_score.termico_score:.2f})")
+            if convergence_score.espectral_score > 0.3:
+                significant_components.append(f"espectral ({convergence_score.espectral_score:.2f})")
+            
+            if significant_components:
+                parts.append(f"Componentes activos: {', '.join(significant_components)}.")
+        
+        # Mediciones instrumentales
+        exceeding = [m for m in measurements if m.exceeds_threshold]
+        if exceeding:
+            parts.append(f"{len(exceeding)} de {len(measurements)} instrumentos detectaron anomalias.")
+        else:
+            parts.append(f"Ningún instrumento detectó anomalias significativas.")
+        
+        # Convergencia
+        if anomaly_analysis['convergence_met']:
+            parts.append(f"Convergencia instrumental alcanzada ({anomaly_analysis['instruments_exceeding']}/{anomaly_analysis['minimum_required']} requeridos).")
+        else:
+            parts.append(f"Convergencia NO alcanzada ({anomaly_analysis['instruments_exceeding']}/{anomaly_analysis['minimum_required']} requeridos).")
+        
+        # Validación
+        if validation['known_site_nearby']:
+            if validation['distance_km'] == 0.0:
+                parts.append(f"Sitio arqueologico conocido en la region: {validation['site_name']}.")
+            else:
+                parts.append(f"Sitio arqueologico conocido cercano: {validation['site_name']} ({validation['distance_km']:.1f} km).")
+        
+        # Conclusión
+        if archaeological_probability > 0.7:
+            parts.append("Alta probabilidad de anomalía arqueologica.")
+        elif archaeological_probability > 0.5:
+            parts.append("Probabilidad moderada de anomalía arqueologica.")
+        elif archaeological_probability > 0.3:
+            parts.append("Baja probabilidad de anomalía arqueologica.")
+        else:
+            parts.append("No se detectó anomalía arqueologica significativa.")
+        
+        return " ".join(parts)
     
     def _identify_false_positive_risks(self, env_signatures: Dict[str, Any],
                                       measurements: List[InstrumentMeasurement]) -> List[str]:
