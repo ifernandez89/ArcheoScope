@@ -613,7 +613,7 @@
             
             try {
                 // Llamar al backend
-                const response = await fetch(`${API_BASE_URL}/analyze-scientific`, {
+                const response = await fetch(`${API_BASE_URL}/api/scientific/analyze`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

@@ -55,7 +55,7 @@ class ScientificAnalysisRequest(BaseModel):
     region_name: str
     candidate_id: Optional[str] = None
 
-@router.post("/analyze-scientific")
+@router.post("/analyze")
 async def analyze_scientific(request: ScientificAnalysisRequest):
     """
     # Análisis Científico Completo - Pipeline de 7 Fases
