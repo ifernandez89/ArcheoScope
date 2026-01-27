@@ -513,7 +513,44 @@ class EnvironmentClassifier:
                 notes="Amazonía occidental - meseta con geoglifos precolombinos documentados (Acre, Brasil)"
             )
         
-        # Andes (incluyendo Machu Picchu)
+        # Andes Patagónicos (áridos, fríos) - SUBTIPO: mountain_arid
+        if -56 <= lat <= -40 and -76 <= lon <= -68:
+            logger.info("⛰️ ANDES PATAGÓNICOS detectados (mountain_arid)")
+            return EnvironmentContext(
+                environment_type=EnvironmentType.MOUNTAIN,
+                confidence=0.85,
+                coordinates=(lat, lon),
+                temperature_range_c=(-10, 15),
+                precipitation_mm_year=400,  # Árido
+                elevation_m=2000,
+                primary_sensors=["srtm_dem", "sentinel2", "sar", "lidar"],
+                secondary_sensors=["landsat", "modis"],
+                archaeological_visibility="medium",
+                preservation_potential="excellent",
+                access_difficulty="difficult",
+                notes="Andes patagónicos - montañas áridas (subtipo: mountain_arid)"
+            )
+        
+        # Andes centrales (incluyendo Machu Picchu) - SUBTIPO: mountain_forest
+        if -18 <= lat <= -10 and -78 <= lon <= -70:
+            # Machu Picchu está en: -13.1631°, -72.5450°
+            logger.info("⛰️ ANDES CENTRALES detectados (mountain_forest)")
+            return EnvironmentContext(
+                environment_type=EnvironmentType.MOUNTAIN,
+                confidence=0.90,
+                coordinates=(lat, lon),
+                temperature_range_c=(5, 25),
+                precipitation_mm_year=1500,  # Húmedo
+                elevation_m=3500,
+                primary_sensors=["srtm_dem", "sentinel2", "sar", "lidar"],
+                secondary_sensors=["landsat", "modis"],
+                archaeological_visibility="medium",
+                preservation_potential="excellent",
+                access_difficulty="difficult",
+                notes="Andes centrales - montañas con vegetación (subtipo: mountain_forest)"
+            )
+        
+        # Andes generales (resto)
         if -56 <= lat <= 11 and -82 <= lon <= -63:
             # Machu Picchu está en: -13.1631°, -72.5450°
             logger.info("⛰️ ANDES detectados")
@@ -532,10 +569,10 @@ class EnvironmentClassifier:
                 notes="Cordillera de los Andes - topografía montañosa compleja"
             )
         
-        # Himalaya
+        # Himalaya - SUBTIPO: mountain_glacial
         if 27 <= lat <= 36 and 70 <= lon <= 95:
             # Excluir glaciares ya detectados
-            logger.info("⛰️ HIMALAYA detectado")
+            logger.info("⛰️ HIMALAYA detectado (mountain_glacial)")
             return EnvironmentContext(
                 environment_type=EnvironmentType.MOUNTAIN,
                 confidence=0.90,
@@ -548,12 +585,12 @@ class EnvironmentClassifier:
                 archaeological_visibility="low",
                 preservation_potential="excellent",
                 access_difficulty="extreme",
-                notes="Himalaya - montañas de gran altitud"
+                notes="Himalaya - montañas de gran altitud (subtipo: mountain_glacial)"
             )
         
-        # Alpes (sin glaciares)
+        # Alpes (sin glaciares) - SUBTIPO: mountain_forest
         if 43 <= lat <= 48 and 5 <= lon <= 14:
-            logger.info("⛰️ ALPES detectados")
+            logger.info("⛰️ ALPES detectados (mountain_forest)")
             return EnvironmentContext(
                 environment_type=EnvironmentType.MOUNTAIN,
                 confidence=0.80,
@@ -566,25 +603,32 @@ class EnvironmentClassifier:
                 archaeological_visibility="medium",
                 preservation_potential="good",
                 access_difficulty="difficult",
-                notes="Alpes - montañas europeas"
+                notes="Alpes - montañas europeas (subtipo: mountain_forest)"
             )
         
-        # Montañas Rocosas
+        # Montañas Rocosas - SUBTIPO: mountain_arid (sur) / mountain_forest (norte)
         if 31 <= lat <= 60 and -120 <= lon <= -102:
-            logger.info("⛰️ MONTAÑAS ROCOSAS detectadas")
+            if lat < 40:
+                subtipo = "mountain_arid"
+                precip = 400
+            else:
+                subtipo = "mountain_forest"
+                precip = 800
+            
+            logger.info(f"⛰️ MONTAÑAS ROCOSAS detectadas ({subtipo})")
             return EnvironmentContext(
                 environment_type=EnvironmentType.MOUNTAIN,
                 confidence=0.80,
                 coordinates=(lat, lon),
                 temperature_range_c=(-20, 25),
-                precipitation_mm_year=600,
+                precipitation_mm_year=precip,
                 elevation_m=2500,
                 primary_sensors=["srtm_dem", "sentinel2", "sar", "lidar"],
                 secondary_sensors=["landsat", "modis"],
                 archaeological_visibility="medium",
                 preservation_potential="good",
                 access_difficulty="moderate",
-                notes="Montañas Rocosas de América del Norte"
+                notes=f"Montañas Rocosas de América del Norte (subtipo: {subtipo})"
             )
         
         return None

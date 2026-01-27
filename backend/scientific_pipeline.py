@@ -659,6 +659,10 @@ class ScientificPipeline:
         total_instruments = 8  # Total de instrumentos disponibles en el sistema
         coverage_ratio = instrument_count / total_instruments
         
+        # Contar instrumentos raw (presentes en raw_measurements)
+        raw_instrument_count = len([k for k, v in normalized.raw_measurements.items() 
+                                   if isinstance(v, dict) and 'value' in v])
+        
         # Penalización por baja cobertura
         coverage_penalty = 0.0
         if coverage_ratio < 0.5:  # Menos del 50% de instrumentos
@@ -666,15 +670,20 @@ class ScientificPipeline:
             anthropic_probability *= (1.0 - coverage_penalty)
             reasoning.append(f"⚠️ Coverage penalty: -{coverage_penalty*100:.0f}% (only {instrument_count}/{total_instruments} instruments)")
             print(f"[FASE D] ⚠️ PENALIZACIÓN POR COBERTURA: -{coverage_penalty*100:.0f}%", flush=True)
-            print(f"[FASE D]    Reason: insufficient optical/SAR confirmation ({instrument_count}/{total_instruments} instruments)", flush=True)
+            print(f"[FASE D]    Coverage effective: {instrument_count}/{total_instruments} (environment-relevant instruments)", flush=True)
+            print(f"[FASE D]    Coverage raw: {raw_instrument_count} instruments present", flush=True)
+            print(f"[FASE D]    Reason: insufficient optical/SAR confirmation", flush=True)
         elif coverage_ratio < 0.75:  # Entre 50-75%
             coverage_penalty = 0.08  # -8%
             anthropic_probability *= (1.0 - coverage_penalty)
             reasoning.append(f"⚠️ Coverage penalty: -{coverage_penalty*100:.0f}% (only {instrument_count}/{total_instruments} instruments)")
             print(f"[FASE D] ⚠️ PENALIZACIÓN POR COBERTURA: -{coverage_penalty*100:.0f}%", flush=True)
-            print(f"[FASE D]    Reason: moderate instrumental coverage ({instrument_count}/{total_instruments} instruments)", flush=True)
+            print(f"[FASE D]    Coverage effective: {instrument_count}/{total_instruments} (environment-relevant instruments)", flush=True)
+            print(f"[FASE D]    Coverage raw: {raw_instrument_count} instruments present", flush=True)
+            print(f"[FASE D]    Reason: moderate instrumental coverage", flush=True)
         else:
             print(f"[FASE D] ✅ Cobertura instrumental adecuada: {instrument_count}/{total_instruments} ({coverage_ratio*100:.0f}%)", flush=True)
+            print(f"[FASE D]    Coverage raw: {raw_instrument_count} instruments present", flush=True)
         
         # MEJORA 3: Regla de freno contextual
         # Reduce probabilidad en ambientes con baja cobertura instrumental
