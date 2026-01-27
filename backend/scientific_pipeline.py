@@ -48,6 +48,7 @@ class MorphologyResult:
     planarity: float
     artificial_indicators: List[str]
     geomorphology_hint: str = "unknown"  # NUEVO: contexto geológico
+    paleo_signature: Optional[Dict[str, Any]] = None  # NUEVO: firma de paleocauce u otras estructuras lineales
 
 @dataclass
 class AnthropicInference:
@@ -186,7 +187,8 @@ class ScientificPipeline:
                             environment_type: str,
                             symmetry: float,
                             planarity: float,
-                            edge_regularity: float) -> str:
+                            edge_regularity: float,
+                            raw_measurements: Dict[str, Any] = None) -> Tuple[str, Optional[Dict[str, Any]]]:
         """
         MEJORA 2: Inferir contexto geomorfológico (NO arqueología).
         
@@ -194,49 +196,94 @@ class ScientificPipeline:
         - Entrenar anti-patrones
         - Filtrar automáticamente regiones glaciares
         - Justificar descartes masivos
+        - NUEVO: Detectar paleocauces y otras firmas lineales
+        
+        Returns:
+            Tuple[str, Optional[Dict]]: (geomorphology_hint, paleo_signature)
         """
+        
+        paleo_signature = None
+        
+        # DETECTOR DE PALEOCAUCES (desiertos con anomalía lineal)
+        if environment_type in ['desert', 'semi_arid'] and raw_measurements:
+            # Buscar firma de paleocauce: térmica alta + NDVI lineal
+            thermal_value = 0.0
+            ndvi_value = 0.0
+            
+            # Extraer mediciones térmicas y NDVI
+            for key, measurement in raw_measurements.items():
+                if isinstance(measurement, dict):
+                    if 'thermal' in key.lower():
+                        thermal_value = measurement.get('value', 0.0)
+                    elif 'ndvi' in key.lower():
+                        ndvi_value = measurement.get('value', 0.0)
+            
+            # Firma de paleocauce: térmica alta (>15) + NDVI bajo pero presente (0.05-0.15)
+            if thermal_value > 15 and 0.05 < ndvi_value < 0.15:
+                # Calcular probabilidad de paleocauce
+                thermal_score = min(1.0, thermal_value / 25.0)  # Normalizar a 0-1
+                ndvi_score = ndvi_value / 0.15  # Normalizar a 0-1
+                
+                # Indicadores de linealidad (simulado - en producción usar geometría real)
+                linearity_score = 0.6 if symmetry < 0.5 else 0.3  # Baja simetría = más lineal
+                
+                paleo_probability = (thermal_score * 0.4 + ndvi_score * 0.3 + linearity_score * 0.3)
+                
+                if paleo_probability > 0.5:
+                    paleo_signature = {
+                        'type': 'paleo_channel',
+                        'probability': float(paleo_probability),
+                        'indicators': [
+                            f'thermal_inertia (value={thermal_value:.2f})',
+                            f'NDVI_linear_anomaly (value={ndvi_value:.3f})',
+                            f'low_symmetry (score={symmetry:.2f})'
+                        ],
+                        'confidence': 'medium' if paleo_probability > 0.7 else 'low'
+                    }
+                    print(f"[MORFOLOGÍA] 🏜️ PALEOCAUCE DETECTADO: prob={paleo_probability:.2f}", flush=True)
+                    return "paleo_channel_signature", paleo_signature
         
         # Ambientes glaciares
         if environment_type in ['polar_ice', 'glacier', 'permafrost']:
             if planarity > 0.7:
-                return "glacial_outwash_or_ablation_plain"
+                return "glacial_outwash_or_ablation_plain", paleo_signature
             elif symmetry > 0.6:
-                return "glacial_cirque_or_moraine"
+                return "glacial_cirque_or_moraine", paleo_signature
             else:
-                return "glacial_terrain_general"
+                return "glacial_terrain_general", paleo_signature
         
         # Ambientes desérticos
         elif environment_type in ['desert', 'arid']:
             if symmetry < 0.3 and edge_regularity < 0.3:
-                return "aeolian_dune_field"
+                return "aeolian_dune_field", paleo_signature
             elif planarity > 0.7:
-                return "desert_pavement_or_playa"
+                return "desert_pavement_or_playa", paleo_signature
             else:
-                return "desert_terrain_general"
+                return "desert_terrain_general", paleo_signature
         
         # Ambientes costeros/marinos
         elif environment_type in ['coastal', 'shallow_sea']:
             if planarity > 0.6:
-                return "tidal_flat_or_beach"
+                return "tidal_flat_or_beach", paleo_signature
             else:
-                return "coastal_terrain_general"
+                return "coastal_terrain_general", paleo_signature
         
         # Ambientes montañosos
         elif environment_type in ['mountain', 'highland']:
             if symmetry > 0.7:
-                return "volcanic_cone_or_crater"
+                return "volcanic_cone_or_crater", paleo_signature
             elif planarity < 0.3:
-                return "steep_mountain_terrain"
+                return "steep_mountain_terrain", paleo_signature
             else:
-                return "mountain_terrain_general"
+                return "mountain_terrain_general", paleo_signature
         
         # Ambientes de bosque/selva
         elif environment_type in ['forest', 'jungle']:
-            return "forested_terrain"
+            return "forested_terrain", paleo_signature
         
         # Default
         else:
-            return "terrain_general"
+            return "terrain_general", paleo_signature
     
     # =========================================================================
     # FASE 0: ENRIQUECIMIENTO CON DATOS HISTÓRICOS DE BD
@@ -526,23 +573,32 @@ class ScientificPipeline:
             artificial_indicators.append("superficie_plana")
         
         # MEJORA 2: Etiqueta geomorfológica explícita (contexto geológico, NO arqueología)
-        geomorphology_hint = self._infer_geomorphology(
+        geomorphology_hint, paleo_signature = self._infer_geomorphology(
             normalized.raw_measurements.get('environment_type', 'unknown'),
             symmetry_score,
             planarity,
-            edge_regularity
+            edge_regularity,
+            normalized.raw_measurements
         )
         
         print(f"[FASE C] Simetría: {symmetry_score:.3f}, Regularidad: {edge_regularity:.3f}, Planaridad: {planarity:.3f}", flush=True)
         print(f"[FASE C] Indicadores artificiales: {artificial_indicators}", flush=True)
         print(f"[FASE C] Geomorfología inferida: {geomorphology_hint}", flush=True)
         
+        if paleo_signature:
+            print(f"[FASE C] 🏜️ Firma paleocauce detectada:", flush=True)
+            print(f"  - Tipo: {paleo_signature['type']}", flush=True)
+            print(f"  - Probabilidad: {paleo_signature['probability']:.2f}", flush=True)
+            print(f"  - Indicadores: {', '.join(paleo_signature['indicators'])}", flush=True)
+            print(f"  - Confianza: {paleo_signature['confidence']}", flush=True)
+        
         return MorphologyResult(
             symmetry_score=symmetry_score,
             edge_regularity=edge_regularity,
             planarity=planarity,
             artificial_indicators=artificial_indicators,
-            geomorphology_hint=geomorphology_hint  # NUEVO
+            geomorphology_hint=geomorphology_hint,
+            paleo_signature=paleo_signature  # NUEVO
         )
     
     # =========================================================================
@@ -872,9 +928,19 @@ class ScientificPipeline:
                 if anthropic.anthropic_probability > baseline_profile['default_anthropic_ceiling']:
                     print(f"[FASE G] Probabilidad reducida por baseline ceiling: {baseline_profile['default_anthropic_ceiling']}", flush=True)
         
-        # AJUSTE 3: UMBRAL DINÁMICO POR REGIÓN ARQUEOLÓGICA
-        # Definir umbrales contextuales
-        decision_threshold_default = 0.50  # Umbral por defecto
+        # AJUSTE 3: UMBRAL DINÁMICO POR REGIÓN ARQUEOLÓGICA Y AMBIENTE
+        # Definir umbrales contextuales por ambiente
+        threshold_by_environment = {
+            'desert': 0.45,           # Desiertos: alta visibilidad, baja complejidad
+            'semi_arid': 0.45,        # Semiáridos: similar a desiertos
+            'polar_ice': 0.55,        # Hielo: alta complejidad, requiere más certeza
+            'glacier': 0.55,          # Glaciares: similar a hielo
+            'forest': 0.52,           # Bosques: complejidad media-alta
+            'deep_ocean': 0.60,       # Océano profundo: muy alta complejidad
+            'shallow_sea': 0.55,      # Mar poco profundo: alta complejidad
+            'default': 0.50           # Umbral por defecto
+        }
+        
         decision_threshold_known_region = 0.45  # Umbral en regiones con arqueología documentada
         
         # Detectar si estamos en región arqueológica conocida
@@ -905,10 +971,15 @@ class ScientificPipeline:
                 is_known_archaeological_region = True
                 print(f"[FASE G] 🏛️ Sitio conocido cercano a {closest_distance:.1f}km - región arqueológica", flush=True)
         
-        # Aplicar umbral contextual
-        decision_threshold = decision_threshold_known_region if is_known_archaeological_region else decision_threshold_default
+        # Aplicar umbral contextual (región arqueológica tiene prioridad sobre ambiente)
+        if is_known_archaeological_region:
+            decision_threshold = decision_threshold_known_region
+            threshold_reason = "región arqueológica conocida"
+        else:
+            decision_threshold = threshold_by_environment.get(environment_type, threshold_by_environment['default'])
+            threshold_reason = f"ambiente {environment_type}"
         
-        print(f"[FASE G] Umbral de decisión: {decision_threshold:.2f} ({'región arqueológica' if is_known_archaeological_region else 'región general'})", flush=True)
+        print(f"[FASE G] Umbral de decisión: {decision_threshold:.2f} ({threshold_reason})", flush=True)
         
         if is_known_archaeological_region and anthropic.anthropic_probability >= decision_threshold_known_region:
             print(f"[FASE G] ✅ Probabilidad {anthropic.anthropic_probability:.3f} supera umbral contextual {decision_threshold_known_region:.2f}", flush=True)
@@ -971,10 +1042,46 @@ class ScientificPipeline:
                 candidate_type = "positive_candidate"
                 negative_reason = None
         elif anthropic.anthropic_probability > 0.3:
-            recommended_action = "monitoring"
-            notes = f"Anomalía detectada (prob={anthropic.anthropic_probability:.3f}) - monitoreo recomendado"
-            candidate_type = "uncertain"
-            negative_reason = None
+            # AJUSTE 4: Diferenciar monitoring_passive vs monitoring_targeted
+            instrument_count = len([k for k in normalized.features.keys() if 'zscore' in k])
+            coverage_ratio = instrument_count / 8
+            
+            # Factores para monitoring_targeted:
+            # 1. Baja cobertura instrumental (<50%)
+            # 2. Ambiente con alta visibilidad (desert, semi_arid)
+            # 3. Firma de paleocauce detectada
+            # 4. Región arqueológica conocida
+            
+            is_high_visibility = environment_type in ['desert', 'semi_arid', 'grassland']
+            has_paleo_signature = morphology.paleo_signature is not None
+            
+            if (coverage_ratio < 0.5 and is_high_visibility) or has_paleo_signature or is_known_archaeological_region:
+                recommended_action = "monitoring_targeted"
+                
+                # Construir lista de instrumentos requeridos
+                required_instruments = []
+                if environment_type in ['desert', 'semi_arid']:
+                    required_instruments.append("Sentinel-1 SAR")
+                    required_instruments.append("Sentinel-2 multitemporal NDVI")
+                    if has_paleo_signature:
+                        required_instruments.append("Thermal nocturnal analysis")
+                elif environment_type == 'forest':
+                    required_instruments.append("Sentinel-1 SAR")
+                    required_instruments.append("Sentinel-2 Red Edge")
+                
+                notes = f"Anomalía con cobertura insuficiente ({instrument_count}/8 instrumentos) - monitoreo dirigido con: {', '.join(required_instruments)}"
+                candidate_type = "uncertain"
+                negative_reason = None
+                
+                print(f"[FASE G] 🎯 MONITORING_TARGETED activado", flush=True)
+                print(f"[FASE G]    Cobertura: {coverage_ratio*100:.0f}%", flush=True)
+                print(f"[FASE G]    Instrumentos requeridos: {', '.join(required_instruments)}", flush=True)
+            else:
+                recommended_action = "monitoring_passive"
+                notes = f"Anomalía detectada (prob={anthropic.anthropic_probability:.3f}) - monitoreo pasivo recomendado"
+                candidate_type = "uncertain"
+                negative_reason = None
+                print(f"[FASE G] 📊 MONITORING_PASSIVE activado", flush=True)
         else:
             recommended_action = "no_action"
             notes = "Consistente con procesos naturales - no requiere acción"
@@ -1132,7 +1239,8 @@ class ScientificPipeline:
                 "edge_regularity": morphology.edge_regularity,
                 "planarity": morphology.planarity,
                 "artificial_indicators": morphology.artificial_indicators,
-                "geomorphology_hint": morphology.geomorphology_hint  # MEJORA 2
+                "geomorphology_hint": morphology.geomorphology_hint,  # MEJORA 2
+                "paleo_signature": morphology.paleo_signature  # NUEVO: firma de paleocauce
             },
             "phase_d_anthropic": {
                 "anthropic_probability": anthropic.anthropic_probability,
