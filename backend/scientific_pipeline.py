@@ -83,6 +83,12 @@ class ScientificOutput:
     overlapping_known_site: Optional[Dict[str, Any]] = None  # Sitio solapado
     distance_to_known_site_km: Optional[float] = None  # Distancia al sitio más cercano
     is_known_site_rediscovery: bool = False  # True si coincide con sitio documentado
+    # ETIQUETADO EPISTEMOLÓGICO (blindaje académico y legal)
+    epistemic_mode: str = "deterministic_scientific"  # deterministic_scientific, assistive_ai, hybrid
+    ai_used: bool = False  # True si se usó IA en alguna fase
+    ai_role: Optional[str] = None  # explanation_only, validation_support, none
+    reproducible: bool = True  # True si el análisis es 100% reproducible
+    method_transparency: str = "full"  # full, partial, limited
 
 class ScientificPipeline:
     """
@@ -983,8 +989,8 @@ class ScientificPipeline:
         
         if is_known_archaeological_region and anthropic.anthropic_probability >= decision_threshold_known_region:
             print(f"[FASE G] ✅ Probabilidad {anthropic.anthropic_probability:.3f} supera umbral contextual {decision_threshold_known_region:.2f}", flush=True)
-        elif not is_known_archaeological_region and anthropic.anthropic_probability >= decision_threshold_default:
-            print(f"[FASE G] ✅ Probabilidad {anthropic.anthropic_probability:.3f} supera umbral estándar {decision_threshold_default:.2f}", flush=True)
+        elif not is_known_archaeological_region and anthropic.anthropic_probability >= decision_threshold:
+            print(f"[FASE G] ✅ Probabilidad {anthropic.anthropic_probability:.3f} supera umbral estándar {decision_threshold:.2f}", flush=True)
         else:
             print(f"[FASE G] ⚠️ Probabilidad {anthropic.anthropic_probability:.3f} por debajo de umbral {decision_threshold:.2f}", flush=True)
         
@@ -1108,6 +1114,19 @@ class ScientificPipeline:
         # Fases completadas
         phases_completed = ["0_enrich", "A_normalize", "B_anomaly", "C_morphology", "D_anthropic", "E_antipatterns", "F_known_sites", "G_output"]
         
+        # ETIQUETADO EPISTEMOLÓGICO (blindaje académico y legal)
+        epistemic_mode = "deterministic_scientific"  # Este pipeline es 100% determinístico
+        ai_used = False  # No se usa IA en ninguna fase del pipeline científico
+        ai_role = None  # IA no interviene
+        reproducible = True  # 100% reproducible con mismos inputs
+        method_transparency = "full"  # Todas las fases documentadas y explicables
+        
+        print(f"\n[FASE G] 🔬 ETIQUETADO EPISTEMOLÓGICO", flush=True)
+        print(f"  Modo epistémico: {epistemic_mode}", flush=True)
+        print(f"  IA utilizada: {ai_used}", flush=True)
+        print(f"  Reproducible: {reproducible}", flush=True)
+        print(f"  Transparencia metodológica: {method_transparency}", flush=True)
+        
         output = ScientificOutput(
             candidate_id=normalized.candidate_id,
             anomaly_score=anomaly.anomaly_score,
@@ -1126,7 +1145,13 @@ class ScientificPipeline:
             known_sites_nearby=nearby_sites,
             overlapping_known_site=overlapping_sites[0] if overlapping_sites else None,
             distance_to_known_site_km=distance_to_known,
-            is_known_site_rediscovery=is_rediscovery
+            is_known_site_rediscovery=is_rediscovery,
+            # ETIQUETADO EPISTEMOLÓGICO
+            epistemic_mode=epistemic_mode,
+            ai_used=ai_used,
+            ai_role=ai_role,
+            reproducible=reproducible,
+            method_transparency=method_transparency
         )
         
         print(f"[FASE G] Salida científica generada", flush=True)
@@ -1221,7 +1246,13 @@ class ScientificPipeline:
                 "known_sites_nearby": output.known_sites_nearby,
                 "overlapping_known_site": output.overlapping_known_site,
                 "distance_to_known_site_km": output.distance_to_known_site_km,
-                "is_known_site_rediscovery": output.is_known_site_rediscovery
+                "is_known_site_rediscovery": output.is_known_site_rediscovery,
+                # ETIQUETADO EPISTEMOLÓGICO (blindaje académico y legal)
+                "epistemic_mode": output.epistemic_mode,
+                "ai_used": output.ai_used,
+                "ai_role": output.ai_role,
+                "reproducible": output.reproducible,
+                "method_transparency": output.method_transparency
             },
             "phase_a_normalized": {
                 "features": normalized.features,
