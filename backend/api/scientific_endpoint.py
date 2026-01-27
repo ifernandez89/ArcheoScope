@@ -421,7 +421,8 @@ async def get_analysis_by_id(analysis_id: int):
             if not analysis:
                 raise HTTPException(status_code=404, detail=f"Análisis {analysis_id} no encontrado")
             
-            # Obtener mediciones asociadas (por región y fecha cercana)
+            # Obtener mediciones asociadas (por coordenadas cercanas y fecha cercana)
+            # Usar CAST para convertir timestamp sin zona horaria a timestamp con zona horaria
             measurements = await conn.fetch("""
                 SELECT 
                     instrument_name,
@@ -432,8 +433,8 @@ async def get_analysis_by_id(analysis_id: int):
                     longitude,
                     measurement_timestamp
                 FROM measurements
-                WHERE measurement_timestamp >= $1 - INTERVAL '1 hour'
-                  AND measurement_timestamp <= $1 + INTERVAL '1 hour'
+                WHERE measurement_timestamp >= ($1::timestamp - INTERVAL '1 hour')
+                  AND measurement_timestamp <= ($1::timestamp + INTERVAL '1 hour')
                 ORDER BY measurement_timestamp DESC
                 LIMIT 20
             """, analysis['created_at'])
