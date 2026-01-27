@@ -234,50 +234,158 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
         print(f"  Anthropic probability: {result['scientific_output']['anthropic_probability']:.3f}", flush=True)
         print(f"  Recommended action: {result['scientific_output']['recommended_action']}", flush=True)
         
-        # 6. GUARDAR RESULTADOS EN BD
+        # 6. GUARDAR RESULTADOS EN BD (ESTRUCTURA COMPLETA)
         if db_pool:
             try:
                 print("\n[BD] Guardando resultados en base de datos...", flush=True)
+                
+                # Importar generador de nombres
+                from site_name_generator import site_name_generator
+                
+                # Generar nombre descriptivo del sitio
+                site_info = site_name_generator.generate_name(
+                    center_lat, 
+                    center_lon, 
+                    env_context.environment_type.value
+                )
+                
+                print(f"[BD] Nombre generado: {site_info['name']}", flush=True)
+                print(f"[BD] País: {site_info['country']}, Región: {site_info['region']}", flush=True)
+                
+                # Mapear environment type a ENUM de BD
+                env_type_mapping = {
+                    'desert': 'DESERT',
+                    'semi_arid': 'SEMI_ARID',
+                    'forest': 'FOREST',
+                    'tropical_forest': 'FOREST',
+                    'grassland': 'GRASSLAND',
+                    'mountain': 'MOUNTAIN',
+                    'glacier': 'GLACIER',
+                    'polar_ice': 'POLAR_ICE',
+                    'permafrost': 'PERMAFROST',
+                    'shallow_sea': 'SHALLOW_SEA',
+                    'deep_ocean': 'DEEP_OCEAN',
+                    'coastal': 'COASTAL',
+                    'lake': 'LAKE',
+                    'river': 'RIVER',
+                    'agricultural': 'AGRICULTURAL',
+                    'urban': 'URBAN',
+                    'unknown': 'UNKNOWN'
+                }
+                
+                env_type_db = env_type_mapping.get(
+                    env_context.environment_type.value, 
+                    'UNKNOWN'
+                )
+                
                 async with db_pool.acquire() as conn:
-                    # Guardar análisis
+                    # 1. GUARDAR EN archaeological_sites (MISMA ESTRUCTURA QUE LOS 80K)
+                    site_id = await conn.fetchval("""
+                        INSERT INTO archaeological_sites 
+                        (name, slug, "environmentType", "siteType", "confidenceLevel", 
+                         "excavationStatus", "preservationStatus", latitude, longitude,
+                         country, region, description, "scientificSignificance",
+                         "isReferencesite", "isControlSite", "discoveryDate")
+                        VALUES ($1, $2, $3::text::"EnvironmentType", $4::text::"SiteType", 
+                                $5::text::"ConfidenceLevel", $6::text::"ExcavationStatus", 
+                                $7::text::"PreservationStatus", $8, $9, $10, $11, $12, $13, $14, $15, NOW())
+                        RETURNING id
+                    """,
+                        site_info['name'],
+                        site_info['slug'],
+                        env_type_db,
+                        'UNKNOWN',  # siteType: UNKNOWN hasta clasificación
+                        'CANDIDATE',  # confidenceLevel: CANDIDATE para nuevos sitios
+                        'UNEXCAVATED',  # excavationStatus
+                        'UNKNOWN',  # preservationStatus
+                        center_lat,
+                        center_lon,
+                        site_info['country'],
+                        site_info['region'],
+                        f"Candidato detectado por ArcheoScope. Probabilidad antropogénica: {result['scientific_output']['anthropic_probability']:.3f}",
+                        f"Anomaly score: {result['scientific_output']['anomaly_score']:.3f}. "
+                        f"Instrumentos: {len(measurements)}/{len(all_instruments)}. "
+                        f"Acción recomendada: {result['scientific_output']['recommended_action']}",
+                        False,  # isReferencesite
+                        result['scientific_output']['candidate_type'] == 'negative_reference'  # isControlSite
+                    )
+                    
+                    print(f"[BD] ✅ Sitio guardado con ID: {site_id}", flush=True)
+                    
+                    # 2. GUARDAR EN archaeological_candidate_analyses (análisis detallado)
                     await conn.execute("""
                         INSERT INTO archaeological_candidate_analyses 
                         (candidate_id, candidate_name, region, archaeological_probability, anomaly_score, 
-                         result_type, recommended_action, environment_type, confidence_level)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                         result_type, recommended_action, environment_type, confidence_level,
+                         instruments_measuring, instruments_total)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                     """, 
-                        result['scientific_output']['candidate_id'],  # candidate_id
-                        result['scientific_output']['candidate_id'],  # candidate_name (mismo valor)
+                        site_id,  # Usar ID del sitio
+                        site_info['name'],
                         request.region_name,
                         result['scientific_output']['anthropic_probability'],
                         result['scientific_output']['anomaly_score'],
                         result['scientific_output']['candidate_type'],
                         result['scientific_output']['recommended_action'],
                         env_context.environment_type.value,
-                        result['scientific_output']['confidence_interval'][0]  # Lower bound
+                        result['scientific_output']['confidence_interval'][0],  # Lower bound
+                        len(measurements),  # Instrumentos que midieron
+                        len(all_instruments)  # Total instrumentos disponibles
                     )
                     
-                    # Guardar mediciones instrumentales
+                    # 3. GUARDAR MEDICIONES INSTRUMENTALES (exitosas)
                     for m in measurements:
                         if m is not None:
                             await conn.execute("""
                                 INSERT INTO measurements 
-                                (instrument_name, measurement_type, value, unit, data_mode, source, latitude, longitude)
-                                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                                (instrument_name, measurement_type, value, unit, data_mode, source, 
+                                 latitude, longitude, region_name, environment_type)
+                                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                             """,
                                 m.get('instrument_name', 'unknown'),
-                                'remote_sensing',  # Tipo de medición
+                                'remote_sensing',
                                 m.get('value', 0),
-                                'various',  # Unit varies by instrument
+                                'various',
                                 m.get('data_mode', 'unknown'),
                                 m.get('source', 'unknown'),
                                 center_lat,
-                                center_lon
+                                center_lon,
+                                request.region_name,
+                                env_context.environment_type.value
                             )
                     
-                    print(f"[BD] ✅ Guardado: 1 análisis + {len(measurements)} mediciones", flush=True)
+                    # 4. GUARDAR INSTRUMENTOS FALLIDOS (los que no midieron)
+                    failed_instruments = set(all_instruments) - set([m.get('instrument_name') for m in measurements if m])
+                    for instrument_name in failed_instruments:
+                        await conn.execute("""
+                            INSERT INTO measurements 
+                            (instrument_name, measurement_type, value, unit, data_mode, source,
+                             latitude, longitude, region_name, environment_type)
+                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                        """,
+                            instrument_name,
+                            'remote_sensing',
+                            0.0,  # Valor 0 para fallidos
+                            'none',
+                            'NO_DATA',  # Marcar como sin datos
+                            'failed',
+                            center_lat,
+                            center_lon,
+                            request.region_name,
+                            env_context.environment_type.value
+                        )
+                    
+                    print(f"[BD] ✅ Guardado completo:", flush=True)
+                    print(f"     - 1 sitio arqueológico (ID: {site_id})", flush=True)
+                    print(f"     - 1 análisis científico", flush=True)
+                    print(f"     - {len(measurements)} mediciones exitosas", flush=True)
+                    print(f"     - {len(failed_instruments)} instrumentos fallidos registrados", flush=True)
+                    
             except Exception as e:
                 print(f"[BD] ⚠️ Error guardando en BD: {e}", flush=True)
+                import traceback
+                traceback.print_exc()
+                # No fallar el análisis si falla el guardado
                 # No fallar el análisis si falla el guardado
         else:
             print("[BD] ⚠️ Sin conexión a BD - resultados no persistidos", flush=True)
