@@ -95,7 +95,9 @@ class RealDataIntegrator:
                         'value': data.indices.get('ndvi', 0.0),
                         'source': 'Sentinel-2 (Copernicus)',
                         'confidence': data.confidence,
-                        'acquisition_date': data.acquisition_date.isoformat()
+                        'acquisition_date': data.acquisition_date.isoformat(),
+                        'status': 'OK',
+                        'quality_flags': {'cloud_cover': data.cloud_cover, 'resolution_m': data.resolution_m}
                     }
                 else:
                     log(f"         [FAIL] Sentinel-2 no devolvio datos")
@@ -113,7 +115,9 @@ class RealDataIntegrator:
                         'value': data.indices.get('vv_mean', 0.0),
                         'source': 'Sentinel-1 SAR (Copernicus)',
                         'confidence': data.confidence,
-                        'acquisition_date': data.acquisition_date.isoformat()
+                        'acquisition_date': data.acquisition_date.isoformat(),
+                        'status': 'OK',
+                        'quality_flags': {'resolution_m': data.resolution_m, 'vv_vh_ratio': data.indices.get('vv_vh_ratio', 1.0)}
                     }
                 else:
                     log(f"         [FAIL] Sentinel-1 SAR no devolvio datos")
@@ -130,7 +134,9 @@ class RealDataIntegrator:
                         'value': data.indices.get('lst_mean', 0.0),
                         'source': 'Landsat Thermal (NASA/USGS)',
                         'confidence': data.confidence,
-                        'acquisition_date': data.acquisition_date.isoformat()
+                        'acquisition_date': data.acquisition_date.isoformat(),
+                        'status': 'OK',
+                        'quality_flags': {'cloud_cover': data.cloud_cover, 'resolution_m': data.resolution_m}
                     }
                 else:
                     print(f"         [FAIL] Landsat Thermal no devolvio datos", flush=True)
@@ -160,26 +166,30 @@ class RealDataIntegrator:
                     log_file.close()
                     return None
             
-            # NSIDC (Hielo marino, criosfera) - NUEVO
+            # NSIDC (Hielo marino, criosfera) - MIGRADO A INSTRUMENT CONTRACT
             elif instrument_name in ["nsidc_sea_ice", "sea_ice_concentration", "nsidc_polar_ice", "nsidc_ice_concentration"]:
                 log(f"         >> Llamando a NSIDC (Sea Ice)...")
-                log(f"         >> self.nsidc = {self.nsidc}")
-                log(f"         >> self.nsidc.available = {self.nsidc.available if self.nsidc else 'N/A'}")
-                data = await self.nsidc.get_sea_ice_concentration(
+                measurement = await self.nsidc.get_sea_ice_concentration(
                     lat_min, lat_max, lon_min, lon_max
                 )
-                log(f"         >> NSIDC devolvio: {data}")
-                if data:
-                    log(f"         [OK] NSIDC respondio: Concentracion={data['value']:.2f}")
-                    log_file.close()
-                    return {
-                        'value': data['value'],
-                        'source': data['source'],
-                        'confidence': data['confidence'],
-                        'acquisition_date': data['acquisition_date']
-                    }
+                
+                # measurement es InstrumentMeasurement - devolver directamente su dict
+                if measurement:
+                    log(f"         >> NSIDC status: {measurement.status.value}")
+                    
+                    if measurement.is_usable():
+                        log(f"         [OK] NSIDC respondio: Concentracion={measurement.value:.2f} (confidence={measurement.confidence:.2f})")
+                        log_file.close()
+                        # Devolver dict completo del InstrumentMeasurement
+                        return measurement.to_dict()
+                    else:
+                        log(f"         [FAIL] NSIDC no usable: {measurement.reason}")
+                        log_file.close()
+                        return None
                 else:
-                    log(f"         [FAIL] NSIDC no devolvio datos")
+                    log(f"         [FAIL] NSIDC no devolvio medicion")
+                    log_file.close()
+                    return None
             
             # NSIDC (Cobertura de nieve) - NUEVO
             elif instrument_name in ["nsidc_snow_cover", "snow_cover"]:
@@ -213,7 +223,9 @@ class RealDataIntegrator:
                         'lst_night': data['lst_night_celsius'],
                         'source': data['source'],
                         'confidence': data['confidence'],
-                        'acquisition_date': data['acquisition_date']
+                        'acquisition_date': data['acquisition_date'],
+                        'status': 'OK',
+                        'quality_flags': {'lst_day': data['lst_day_celsius'], 'lst_night': data['lst_night_celsius']}
                     }
                 else:
                     log(f"         [FAIL] MODIS LST no devolvio datos")
@@ -269,7 +281,12 @@ class RealDataIntegrator:
                         'mounds_detected': data.get('mounds_detected', 0),
                         'source': data['source'],
                         'confidence': data['confidence'],
-                        'acquisition_date': data['acquisition_date']
+                        'acquisition_date': data['acquisition_date'],
+                        'status': 'OK',
+                        'quality_flags': {
+                            'elevation_mean': data['elevation_mean'],
+                            'archaeological_score': data.get('archaeological_score', 0.0)
+                        }
                     }
                 else:
                     print(f"         [FAIL] OpenTopography no devolvio datos", flush=True)

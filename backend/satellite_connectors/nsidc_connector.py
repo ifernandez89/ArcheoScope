@@ -88,33 +88,27 @@ class NSIDCConnector:
         lat_max: float,
         lon_min: float,
         lon_max: float
-    ) -> Optional[Dict[str, Any]]:
+    ):
         """
-        Obtener concentración de hielo marino.
+        Obtener concentración de hielo marino con InstrumentContract.
         
         Dataset: NSIDC-0051 (Sea Ice Concentrations from Nimbus-7 SMMR and DMSP SSM/I-SSMIS)
         Resolución: 25km
         Temporal: Diaria desde 1978
         
-        Uso arqueológico:
-        - Detección de estructuras bajo hielo marino
-        - Análisis de accesibilidad a sitios costeros árticos
-        - Cambios temporales en hielo (contexto ambiental)
-        
         Returns:
-            Dict con concentración de hielo o None si falla
+            InstrumentMeasurement con estado robusto
         """
-        
-        print(f"[NSIDC DEBUG] get_sea_ice_concentration LLAMADO", flush=True)
-        print(f"[NSIDC DEBUG] self.available = {self.available}", flush=True)
+        # Importar contrato
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from instrument_contract import InstrumentMeasurement, InstrumentStatus
         
         if not self.available:
             logger.warning("⚠️ NSIDC no disponible (credenciales faltantes) - usando fallback derivado")
-            print(f"[NSIDC DEBUG] self.available = False, ejecutando fallback", flush=True)
             # FALLBACK: estimación basada en ubicación (contexto físico válido)
-            result = self._fallback_sea_ice_estimation(lat_min, lat_max, lon_min, lon_max)
-            print(f"[NSIDC DEBUG] Fallback devolvio: {result}", flush=True)
-            return result
+            return self._fallback_sea_ice_estimation_contract(lat_min, lat_max, lon_min, lon_max)
         
         try:
             # Determinar hemisferio
@@ -124,10 +118,8 @@ class NSIDCConnector:
             date = (datetime.now() - timedelta(days=7)).strftime("%Y%m%d")
             
             logger.info(f"🧊 NSIDC: Obteniendo concentración de hielo marino ({hemisphere})")
-            print(f"[NSIDC DEBUG] Intentando obtener datos reales...", flush=True)
             
             # Construir URL del dataset
-            # Nota: NSIDC usa estructura de directorios por fecha
             url = f"{self.base_url}/MEASURES/NSIDC-0051.002/{date[:4]}.{date[4:6]}.{date[6:8]}/"
             
             async with httpx.AsyncClient(
@@ -156,33 +148,31 @@ class NSIDCConnector:
                     logger.info(f"   ✅ Concentración de hielo: {concentration:.2%}")
                     
                     # REAL data (API respondió exitosamente)
-                    return create_real_data_response(
+                    return InstrumentMeasurement(
+                        instrument_name="NSIDC",
+                        measurement_type="sea_ice_concentration",
                         value=concentration,
-                        source="NSIDC Sea Ice Concentrations",
+                        unit="fraction",
+                        status=InstrumentStatus.OK,
                         confidence=0.9,
-                        dataset="NSIDC-0051",
-                        resolution_km=25,
+                        reason=None,
+                        quality_flags={'hemisphere': hemisphere, 'resolution_km': 25},
+                        source="NSIDC Sea Ice Concentrations (NSIDC-0051)",
                         acquisition_date=date,
-                        hemisphere=hemisphere,
-                        unit="fraction"
+                        processing_notes="Real data from NSIDC API"
                     )
                 
                 elif response.status_code == 401:
                     logger.error("❌ NSIDC: Autenticación fallida - usando fallback")
-                    return self._fallback_sea_ice_estimation(lat_min, lat_max, lon_min, lon_max)
+                    return self._fallback_sea_ice_estimation_contract(lat_min, lat_max, lon_min, lon_max)
                 
                 else:
                     logger.warning(f"⚠️ NSIDC: HTTP {response.status_code} - usando fallback")
-                    return self._fallback_sea_ice_estimation(lat_min, lat_max, lon_min, lon_max)
+                    return self._fallback_sea_ice_estimation_contract(lat_min, lat_max, lon_min, lon_max)
         
         except Exception as e:
             logger.error(f"❌ NSIDC: Error obteniendo hielo marino: {e}")
-            print(f"[NSIDC DEBUG] Exception capturada: {e}", flush=True)
-            print(f"[NSIDC DEBUG] Ejecutando fallback...", flush=True)
-            # Fallback SIEMPRE se ejecuta
-            result = self._fallback_sea_ice_estimation(lat_min, lat_max, lon_min, lon_max)
-            print(f"[NSIDC DEBUG] Fallback devolvio: {result}", flush=True)
-            return result
+            return self._fallback_sea_ice_estimation_contract(lat_min, lat_max, lon_min, lon_max)
     
     async def get_snow_cover(
         self,
@@ -341,6 +331,58 @@ class NSIDCConnector:
             logger.error(f"❌ NSIDC: Error detectando glaciares: {e}")
             return None
     
+    def _fallback_sea_ice_estimation_contract(
+        self,
+        lat_min: float,
+        lat_max: float,
+        lon_min: float,
+        lon_max: float
+    ):
+        """
+        Fallback: estimación de concentración de hielo con InstrumentContract.
+        
+        CONTEXTO FÍSICO VÁLIDO - No es una anomalía, es estado ambiental base.
+        Etiquetado como DERIVED para transparencia científica.
+        """
+        # Importar contrato
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from instrument_contract import InstrumentMeasurement, InstrumentStatus
+        
+        avg_lat = (lat_min + lat_max) / 2
+        month = datetime.now().month
+        
+        # Hemisferio norte
+        if avg_lat > 0:
+            if month in [3, 4, 5]:  # Primavera (máximo hielo)
+                concentration = 0.85 if avg_lat > 75 else 0.60
+            elif month in [9, 10, 11]:  # Otoño (mínimo hielo)
+                concentration = 0.70 if avg_lat > 80 else 0.10
+            else:
+                concentration = 0.70 if avg_lat > 75 else 0.40
+        else:
+            # Hemisferio sur (invertir estaciones)
+            if month in [9, 10, 11]:  # Primavera sur
+                concentration = 0.85 if abs(avg_lat) > 75 else 0.60
+            elif month in [3, 4, 5]:  # Otoño sur
+                concentration = 0.70 if abs(avg_lat) > 80 else 0.10
+            else:
+                concentration = 0.70 if abs(avg_lat) > 75 else 0.40
+        
+        logger.info(f"   ℹ️ Estimación de hielo (fallback): {concentration:.2%}")
+        
+        # DERIVED data (estimación por ubicación)
+        return InstrumentMeasurement.create_derived(
+            instrument_name="NSIDC",
+            measurement_type="sea_ice_concentration",
+            value=concentration,
+            unit="fraction",
+            confidence=0.7,
+            derivation_method="Location-based seasonal model (latitude + month)",
+            source="NSIDC (estimated)"
+        )
+    
     def _fallback_sea_ice_estimation(
         self,
         lat_min: float,
@@ -351,8 +393,7 @@ class NSIDCConnector:
         """
         Fallback: estimación de concentración de hielo basada en ubicación y estación.
         
-        CONTEXTO FÍSICO VÁLIDO - No es una anomalía, es estado ambiental base.
-        Etiquetado como DERIVED para transparencia científica.
+        LEGACY METHOD - Mantener para compatibilidad
         """
         
         avg_lat = (lat_min + lat_max) / 2

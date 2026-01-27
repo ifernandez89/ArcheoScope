@@ -6,6 +6,8 @@ Salinidad y humedad del suelo
 import logging
 from typing import Optional
 import os
+import sys
+from pathlib import Path
 
 try:
     import cdsapi
@@ -25,22 +27,37 @@ class SMOSConnector(SatelliteConnector):
     Producto: SMOS L3 Soil Moisture
     Resolución: 25km
     API: Copernicus CDS (gratuita con registro)
+    
+    ACTUALIZADO: 2026-01-26 - Lee credenciales desde BD encriptadas
     """
     
     def __init__(self, cache_enabled: bool = True):
         super().__init__(cache_enabled)
         self.name = "SMOS"
-        self.api_key = os.getenv("CDS_API_KEY")
+        
+        # Cargar credenciales desde BD
+        try:
+            sys.path.insert(0, str(Path(__file__).parent.parent))
+            from credentials_manager import CredentialsManager
+            
+            creds_manager = CredentialsManager()
+            self.cds_url = creds_manager.get_credential("copernicus_cds", "url")
+            self.cds_api_key = creds_manager.get_credential("copernicus_cds", "api_key")
+        except Exception as e:
+            logger.warning(f"Error cargando credenciales CDS desde BD: {e}")
+            self.cds_url = None
+            self.cds_api_key = None
         
         if not SMOS_AVAILABLE:
             logger.warning("SMOS requires: pip install cdsapi")
             self.available = False
-        elif not self.api_key:
-            logger.warning("SMOS requires CDS_API_KEY in .env.local")
+        elif not self.cds_api_key:
+            logger.warning("SMOS requires Copernicus CDS credentials in BD")
+            logger.info("Configure with: python backend/credentials_manager.py")
             self.available = False
         else:
             self.available = True
-            logger.info("✅ SMOS connector initialized")
+            logger.info("✅ SMOS connector initialized (CDS credentials from BD)")
     
     async def get_soil_moisture(
         self,
