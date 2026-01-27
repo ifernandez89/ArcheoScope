@@ -654,36 +654,111 @@ class ScientificPipeline:
         reasoning = []
         
         # AJUSTE 2: PENALIZACIÓN EXPLÍCITA POR COBERTURA INSTRUMENTAL
-        # Contar instrumentos válidos (con mediciones reales)
-        instrument_count = len([k for k in normalized.features.keys() if 'zscore' in k])
-        total_instruments = 8  # Total de instrumentos disponibles en el sistema
-        coverage_ratio = instrument_count / total_instruments
+        # Sistema de ponderación por peso de instrumento (context-aware)
+        
+        # Definir pesos por tipo de instrumento y ambiente
+        instrument_weights = {
+            # Ambientes terrestres
+            'terrestrial': {
+                'landsat_thermal': 0.15,
+                'modis_lst': 0.10,
+                'sentinel_2_ndvi': 0.15,
+                'sentinel_1_sar': 0.20,
+                'opentopography': 0.15,
+                'icesat2': 0.10,
+                'lidar': 0.10,
+                'srtm_dem': 0.05
+            },
+            # Ambientes marinos/acuáticos
+            'marine': {
+                'multibeam_sonar': 0.30,
+                'side_scan_sonar': 0.25,
+                'magnetometer': 0.20,
+                'sub_bottom_profiler': 0.15,
+                'landsat_thermal': 0.02,
+                'modis_lst': 0.02,
+                'sentinel_1_sar': 0.03,
+                'sentinel_2_ndvi': 0.01,
+                'opentopography': 0.01,
+                'icesat2': 0.01
+            },
+            # Ambientes glaciares
+            'glacial': {
+                'icesat2': 0.25,
+                'sentinel_1_sar': 0.25,
+                'palsar': 0.20,
+                'modis_thermal': 0.15,
+                'landsat_thermal': 0.10,
+                'opentopography': 0.03,
+                'sentinel_2_ndvi': 0.02
+            }
+        }
+        
+        # Determinar categoría de ambiente
+        environment_type = normalized.raw_measurements.get('environment_type', 'unknown')
+        if environment_type in ['deep_ocean', 'shallow_sea', 'coastal', 'lake', 'river']:
+            env_category = 'marine'
+        elif environment_type in ['polar_ice', 'glacier', 'permafrost']:
+            env_category = 'glacial'
+        else:
+            env_category = 'terrestrial'
+        
+        weights = instrument_weights.get(env_category, instrument_weights['terrestrial'])
+        
+        # Calcular cobertura ponderada
+        total_weight_available = sum(weights.values())
+        effective_coverage = 0.0
+        raw_instrument_count = 0
+        
+        for key in normalized.features.keys():
+            if 'zscore' in key:
+                # Extraer nombre del instrumento
+                instrument_name = key.replace('_zscore', '')
+                # Buscar peso del instrumento
+                for inst_key, weight in weights.items():
+                    if inst_key.lower().replace('_', '') in instrument_name.lower().replace('_', ''):
+                        effective_coverage += weight
+                        break
         
         # Contar instrumentos raw (presentes en raw_measurements)
-        raw_instrument_count = len([k for k, v in normalized.raw_measurements.items() 
-                                   if isinstance(v, dict) and 'value' in v])
+        for k, v in normalized.raw_measurements.items():
+            if isinstance(v, dict) and 'value' in v:
+                raw_instrument_count += 1
+        
+        coverage_ratio = effective_coverage / total_weight_available if total_weight_available > 0 else 0
+        instrument_count = len([k for k in normalized.features.keys() if 'zscore' in k])
         
         # Penalización por baja cobertura
         coverage_penalty = 0.0
-        if coverage_ratio < 0.5:  # Menos del 50% de instrumentos
+        if coverage_ratio < 0.3:  # Menos del 30% de cobertura efectiva
+            coverage_penalty = 0.20  # -20%
+            anthropic_probability *= (1.0 - coverage_penalty)
+            reasoning.append(f"⚠️ Coverage penalty: -{coverage_penalty*100:.0f}% (effective coverage {coverage_ratio*100:.0f}%)")
+            print(f"[FASE D] ⚠️ PENALIZACIÓN POR COBERTURA: -{coverage_penalty*100:.0f}%", flush=True)
+            print(f"[FASE D]    Coverage effective: {coverage_ratio*100:.0f}% (weighted by instrument importance)", flush=True)
+            print(f"[FASE D]    Coverage raw: {raw_instrument_count} instruments present", flush=True)
+            print(f"[FASE D]    Environment category: {env_category}", flush=True)
+            print(f"[FASE D]    Reason: insufficient critical instrument coverage", flush=True)
+        elif coverage_ratio < 0.5:  # Entre 30-50%
             coverage_penalty = 0.15  # -15%
             anthropic_probability *= (1.0 - coverage_penalty)
-            reasoning.append(f"⚠️ Coverage penalty: -{coverage_penalty*100:.0f}% (only {instrument_count}/{total_instruments} instruments)")
+            reasoning.append(f"⚠️ Coverage penalty: -{coverage_penalty*100:.0f}% (effective coverage {coverage_ratio*100:.0f}%)")
             print(f"[FASE D] ⚠️ PENALIZACIÓN POR COBERTURA: -{coverage_penalty*100:.0f}%", flush=True)
-            print(f"[FASE D]    Coverage effective: {instrument_count}/{total_instruments} (environment-relevant instruments)", flush=True)
+            print(f"[FASE D]    Coverage effective: {coverage_ratio*100:.0f}% (weighted by instrument importance)", flush=True)
             print(f"[FASE D]    Coverage raw: {raw_instrument_count} instruments present", flush=True)
-            print(f"[FASE D]    Reason: insufficient optical/SAR confirmation", flush=True)
+            print(f"[FASE D]    Environment category: {env_category}", flush=True)
+            print(f"[FASE D]    Reason: moderate instrumental coverage", flush=True)
         elif coverage_ratio < 0.75:  # Entre 50-75%
             coverage_penalty = 0.08  # -8%
             anthropic_probability *= (1.0 - coverage_penalty)
-            reasoning.append(f"⚠️ Coverage penalty: -{coverage_penalty*100:.0f}% (only {instrument_count}/{total_instruments} instruments)")
+            reasoning.append(f"⚠️ Coverage penalty: -{coverage_penalty*100:.0f}% (effective coverage {coverage_ratio*100:.0f}%)")
             print(f"[FASE D] ⚠️ PENALIZACIÓN POR COBERTURA: -{coverage_penalty*100:.0f}%", flush=True)
-            print(f"[FASE D]    Coverage effective: {instrument_count}/{total_instruments} (environment-relevant instruments)", flush=True)
+            print(f"[FASE D]    Coverage effective: {coverage_ratio*100:.0f}% (weighted by instrument importance)", flush=True)
             print(f"[FASE D]    Coverage raw: {raw_instrument_count} instruments present", flush=True)
-            print(f"[FASE D]    Reason: moderate instrumental coverage", flush=True)
         else:
-            print(f"[FASE D] ✅ Cobertura instrumental adecuada: {instrument_count}/{total_instruments} ({coverage_ratio*100:.0f}%)", flush=True)
+            print(f"[FASE D] ✅ Cobertura instrumental adecuada: {coverage_ratio*100:.0f}% effective", flush=True)
             print(f"[FASE D]    Coverage raw: {raw_instrument_count} instruments present", flush=True)
+            print(f"[FASE D]    Environment category: {env_category}", flush=True)
         
         # MEJORA 3: Regla de freno contextual
         # Reduce probabilidad en ambientes con baja cobertura instrumental
@@ -1111,14 +1186,44 @@ class ScientificPipeline:
         # AJUSTE 3: Acción avanzada para regiones arqueológicas con cobertura insuficiente
         if is_known_archaeological_region and anthropic.anthropic_probability >= 0.40 and anthropic.anthropic_probability < decision_threshold:
             # Caso especial: región arqueológica, probabilidad alta pero bajo umbral por cobertura
-            instrument_count = len([k for k in normalized.features.keys() if 'zscore' in k])
-            if instrument_count < 4:  # Menos del 50% de instrumentos
-                recommended_action = "targeted_reanalysis"
-                notes = f"Región arqueológica con cobertura insuficiente ({instrument_count}/8 instrumentos) - re-análisis dirigido recomendado"
+            if coverage_ratio < 0.3:  # Cobertura crítica
+                recommended_action = "instrument_upgrade_required"
+                
+                # Identificar instrumentos críticos faltantes
+                missing_critical = []
+                if env_category == 'marine':
+                    if effective_coverage < 0.5:
+                        missing_critical = ["multibeam_sonar", "side_scan_sonar", "magnetometer"]
+                elif env_category == 'glacial':
+                    if effective_coverage < 0.5:
+                        missing_critical = ["icesat2", "sentinel1_sar", "palsar"]
+                elif env_category == 'terrestrial':
+                    if effective_coverage < 0.5:
+                        missing_critical = ["sentinel1_sar", "sentinel2_ndvi", "lidar"]
+                
+                notes = f"Región arqueológica con cobertura crítica ({coverage_ratio*100:.0f}% efectiva) - actualización instrumental REQUERIDA: {', '.join(missing_critical)}"
                 candidate_type = "uncertain"
+                print(f"[FASE G] 🚨 ACCIÓN CRÍTICA: instrument_upgrade_required", flush=True)
+                print(f"[FASE G]    Missing critical instruments: {', '.join(missing_critical)}", flush=True)
+            elif coverage_ratio < 0.5:
+                recommended_action = "targeted_reanalysis"
+                
+                # Construir lista de instrumentos requeridos
+                required_instruments = []
+                if environment_type in ['desert', 'semi_arid']:
+                    required_instruments.append("Sentinel-1 SAR")
+                    required_instruments.append("Sentinel-2 multitemporal NDVI")
+                    if morphology.paleo_signature:
+                        required_instruments.append("Thermal nocturnal analysis")
+                elif environment_type == 'forest':
+                    required_instruments.append("Sentinel-1 SAR")
+                    required_instruments.append("Sentinel-2 Red Edge")
+                
+                notes = f"Región arqueológica con cobertura insuficiente ({coverage_ratio*100:.0f}% efectiva) - re-análisis dirigido con: {', '.join(required_instruments)}"
+                candidate_type = "uncertain"
+                
                 print(f"[FASE G] 🎯 ACCIÓN AVANZADA: targeted_reanalysis", flush=True)
-                print(f"[FASE G]    Required instruments: Sentinel-2 (NDVI/Red Edge), Sentinel-1 SAR", flush=True)
-                print(f"[FASE G]    Optional: Dry season optical", flush=True)
+                print(f"[FASE G]    Required instruments: {', '.join(required_instruments)}", flush=True)
         
         # Fases completadas
         phases_completed = ["0_enrich", "A_normalize", "B_anomaly", "C_morphology", "D_anthropic", "E_antipatterns", "F_known_sites", "G_output"]
