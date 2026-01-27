@@ -209,7 +209,8 @@ class ICESat2Connector(SatelliteConnector):
             valid_elevations = elevations[valid_mask]
             
             # CRÍTICO: Validar mínimo de puntos
-            MIN_POINTS = 10
+            # AJUSTADO: 5 puntos mínimo (antes 10) para regiones glaciares con cobertura escasa
+            MIN_POINTS = 5
             if len(valid_elevations) < MIN_POINTS:
                 return InstrumentMeasurement.create_invalid(
                     instrument_name="ICESat-2",
