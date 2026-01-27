@@ -1,0 +1,209 @@
+{
+  "GET": [
+    {
+      "path": "/",
+      "description": "Root endpoint",
+      "status": 200,
+      "success": true,
+      "error": null
+    },
+    {
+      "path": "/status",
+      "description": "System status",
+      "status": 200,
+      "success": true,
+      "error": null
+    },
+    {
+      "path": "/status/detailed",
+      "description": "Detailed system status",
+      "status": 200,
+      "success": true,
+      "error": null
+    },
+    {
+      "path": "/test-ai",
+      "description": "AI assistant test",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/known-sites",
+      "description": "Known archaeological sites",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/data-sources",
+      "description": "Data sources info",
+      "status": 503,
+      "success": false,
+      "error": "{\"detail\":\"Sistema de transparencia no disponible\"}"
+    },
+    {
+      "path": "/validate-region?lat_min=25&lat_max=26&lon_min=31&lon_max=32",
+      "description": "Validate region",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/comparison-data",
+      "description": "Comparison data",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/lidar-benchmark",
+      "description": "LIDAR benchmark",
+      "status": 200,
+      "success": true,
+      "error": null
+    },
+    {
+      "path": "/instruments/status",
+      "description": "Instruments status",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/instruments/archaeological-value",
+      "description": "Archaeological value matrix",
+      "status": 200,
+      "success": true,
+      "error": null
+    },
+    {
+      "path": "/archaeological-sites/known",
+      "description": "All known sites",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/archaeological-sites/candidates",
+      "description": "Candidate sites",
+      "status": 200,
+      "success": true,
+      "error": null
+    },
+    {
+      "path": "/archaeological-sites/all?limit=10",
+      "description": "All sites paginated",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/archaeological-sites/by-environment/desert?limit=10",
+      "description": "Sites by environment",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/archaeological-sites/environments/stats",
+      "description": "Environment statistics",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/archaeological-sites/recommended-zones-geojson?lat_min=25&lat_max=26&lon_min=31&lon_max=32",
+      "description": "Recommended zones GeoJSON",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/archaeological-sites/enriched-candidates?lat_min=25&lat_max=26&lon_min=31&lon_max=32",
+      "description": "Enriched candidates",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/archaeological-sites/candidates/priority?limit=10",
+      "description": "Priority candidates",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/archaeological-sites/candidates/statistics",
+      "description": "Candidates statistics",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/archaeological-sites/candidates/search?lat=25.5&lon=31.5&radius_km=50",
+      "description": "Search candidates",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/volumetric/sites/catalog",
+      "description": "Volumetric sites catalog",
+      "status": 200,
+      "success": true,
+      "error": null
+    },
+    {
+      "path": "/api/scientific/analyses/recent?limit=5",
+      "description": "Recent analyses (NEW)",
+      "status": 200,
+      "success": true,
+      "error": null
+    },
+    {
+      "path": "/api/scientific/analyses/by-region/Test?limit=5",
+      "description": "Analyses by region (NEW)",
+      "status": 200,
+      "success": true,
+      "error": null
+    }
+  ],
+  "POST": [
+    {
+      "path": "/falsification-protocol",
+      "description": "Falsification protocol",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/archaeological-sites/cultural-prior-map",
+      "description": "Cultural prior map",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/archaeological-sites/recommended-zones",
+      "description": "Recommended zones",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/academic/validation/blind-test",
+      "description": "Blind test",
+      "status": 404,
+      "success": false,
+      "error": "{\"detail\":\"Not Found\"}"
+    },
+    {
+      "path": "/test-analyze",
+      "description": "Test analyze",
+      "status": 200,
+      "success": true,
+      "error": null
+    }
+  ]
+}

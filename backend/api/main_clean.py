@@ -245,31 +245,7 @@ async def get_data_sources():
     """Información sobre fuentes de datos utilizadas."""
     transparency = system_components.get('transparency')
     if not transparency:
-        # Retornar datos básicos si el componente no está disponible
-        return {
-            "sources": {
-                "sentinel2": {
-                    "name": "Sentinel-2",
-                    "provider": "ESA Copernicus",
-                    "type": "optical_multispectral",
-                    "resolution_m": 10
-                },
-                "landsat8": {
-                    "name": "Landsat 8",
-                    "provider": "NASA/USGS",
-                    "type": "optical_thermal",
-                    "resolution_m": 30
-                },
-                "icesat2": {
-                    "name": "ICESat-2",
-                    "provider": "NASA",
-                    "type": "lidar_altimetry",
-                    "resolution_m": 0.7
-                }
-            },
-            "total_sources": 3,
-            "note": "Lista básica de fuentes - componente de transparencia no disponible"
-        }
+        raise HTTPException(status_code=503, detail="Sistema de transparencia no disponible")
     
     try:
         return transparency.get_all_sources()
