@@ -401,6 +401,13 @@ async def startup_event():
     except Exception as e:
         logger.error(f"❌ Error conectando a base de datos PostgreSQL: {e}")
         logger.warning("El sistema continuará sin acceso a la base de datos")
+    
+    # Inicializar pool de BD para endpoint científico
+    try:
+        from api.scientific_endpoint import init_db_pool
+        await init_db_pool()
+    except Exception as e:
+        logger.error(f"❌ Error inicializando pool de BD para endpoint científico: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_event():

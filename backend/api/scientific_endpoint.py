@@ -3,7 +3,7 @@
 Endpoint Científico de Análisis - ArcheoScope
 ==============================================
 
-Implementa el pipeline científico completo de 6 fases.
+Implementa el pipeline científico completo de 7 fases (0, A-F, G).
 """
 
 from fastapi import APIRouter, HTTPException
@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from typing import Dict, List, Any, Optional
 import sys
 from pathlib import Path
+import os
 
 # Añadir backend al path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -18,13 +19,32 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from scientific_pipeline import ScientificPipeline
 from satellite_connectors.real_data_integrator import RealDataIntegrator
 from environment_classifier import EnvironmentClassifier
+from validation.real_archaeological_validator import RealArchaeologicalValidator
+import asyncpg
 
 router = APIRouter()
 
 # Inicializar componentes
-pipeline = ScientificPipeline()
 integrator = RealDataIntegrator()
 classifier = EnvironmentClassifier()
+validator = RealArchaeologicalValidator()
+
+# Pool de conexiones a BD (se inicializa en startup)
+db_pool = None
+
+async def init_db_pool():
+    """Inicializar pool de conexiones a BD."""
+    global db_pool
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        try:
+            db_pool = await asyncpg.create_pool(database_url, min_size=2, max_size=10)
+            print("[SCIENTIFIC_ENDPOINT] Pool de BD inicializado", flush=True)
+        except Exception as e:
+            print(f"[SCIENTIFIC_ENDPOINT] Error inicializando pool: {e}", flush=True)
+            db_pool = None
+    else:
+        print("[SCIENTIFIC_ENDPOINT] DATABASE_URL no configurada", flush=True)
 
 class ScientificAnalysisRequest(BaseModel):
     """Solicitud de análisis científico."""
@@ -38,15 +58,17 @@ class ScientificAnalysisRequest(BaseModel):
 @router.post("/analyze-scientific")
 async def analyze_scientific(request: ScientificAnalysisRequest):
     """
-    Análisis científico completo con pipeline de 6 fases.
+    Análisis científico completo con pipeline de 7 fases.
     
     FASES:
+    0. Enriquecimiento con datos históricos de BD
     A. Normalización por instrumento
     B. Detección de anomalía pura
     C. Análisis morfológico explícito
     D. Inferencia antropogénica (con freno de mano)
     E. Verificación de anti-patrones
-    F. Salida científica
+    F. Validación contra sitios conocidos
+    G. Salida científica
     
     Returns:
         Resultado científico completo con todas las fases
@@ -59,6 +81,9 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
     print("="*80 + "\n", flush=True)
     
     try:
+        # Inicializar pipeline con BD y validator
+        pipeline = ScientificPipeline(db_pool=db_pool, validator=validator)
+        
         # Calcular centro
         center_lat = (request.lat_min + request.lat_max) / 2
         center_lon = (request.lon_min + request.lon_max) / 2
@@ -118,9 +143,13 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                 'source': m.source
             }
         
-        # 4. Ejecutar pipeline científico
+        # 4. Ejecutar pipeline científico (ASYNC con enriquecimiento de BD)
         print("[STEP 3] Ejecutando pipeline científico...", flush=True)
-        result = pipeline.analyze(raw_measurements)
+        result = await pipeline.analyze(
+            raw_measurements,
+            request.lat_min, request.lat_max,
+            request.lon_min, request.lon_max
+        )
         
         # 5. Añadir contexto adicional
         result['environment_context'] = {

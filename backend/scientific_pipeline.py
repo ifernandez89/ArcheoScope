@@ -6,12 +6,14 @@ Pipeline Científico de Análisis Arqueológico - ArcheoScope
 FILOSOFÍA: Primero medís, después dudás, luego explicás, y recién al final sugerís.
 
 FASES:
+0. Enriquecimiento con datos históricos de BD (PRIMERO - crítico)
 A. Normalización y alineación (imprescindible)
 B. Anomalía pura (sin arqueología todavía)
 C. Morfología explícita (donde ganamos ventaja)
 D. Clasificador antropogénico (con freno de mano)
 E. Anti-patrones (nivel pro)
-F. Salida científica (no marketing)
+F. Validación contra sitios conocidos documentados
+G. Salida científica (no marketing)
 """
 
 import numpy as np
@@ -19,6 +21,7 @@ from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
 from scipy import stats
 from datetime import datetime
+import asyncpg
 
 @dataclass
 class NormalizedFeatures:
@@ -74,6 +77,11 @@ class ScientificOutput:
     discard_type: str = "none"  # discard_operational, archive_scientific_negative, none
     # AJUSTE FINO 3: Confianza científica del descarte
     scientific_confidence: str = "unknown"  # high, medium, low (certeza del descarte)
+    # FASE G: Validación contra sitios conocidos
+    known_sites_nearby: List[Dict[str, Any]] = None  # Sitios documentados cercanos
+    overlapping_known_site: Optional[Dict[str, Any]] = None  # Sitio solapado
+    distance_to_known_site_km: Optional[float] = None  # Distancia al sitio más cercano
+    is_known_site_rediscovery: bool = False  # True si coincide con sitio documentado
 
 class ScientificPipeline:
     """
@@ -83,11 +91,17 @@ class ScientificPipeline:
     NO decide - solo sugiere con evidencia.
     """
     
-    def __init__(self):
+    def __init__(self, db_pool=None, validator=None):
         """Inicializar pipeline."""
         self.anti_patterns = self._load_anti_patterns()
         self.baseline_profiles = self._load_baseline_profiles()  # AJUSTE FINO 1
+        self.db_pool = db_pool  # Pool de conexiones a PostgreSQL
+        self.validator = validator  # RealArchaeologicalValidator
         print("[PIPELINE] ScientificPipeline inicializado", flush=True)
+        if self.db_pool:
+            print("[PIPELINE] Conexión a BD disponible para enriquecimiento", flush=True)
+        if self.validator:
+            print(f"[PIPELINE] Validador con {len(self.validator.known_sites)} sitios conocidos", flush=True)
     
     def _load_baseline_profiles(self) -> Dict[str, Dict[str, Any]]:
         """
@@ -223,6 +237,116 @@ class ScientificPipeline:
         # Default
         else:
             return "terrain_general"
+    
+    # =========================================================================
+    # FASE 0: ENRIQUECIMIENTO CON DATOS HISTÓRICOS DE BD
+    # =========================================================================
+    
+    async def phase_0_enrich_from_db(self, 
+                                     raw_measurements: Dict[str, Any],
+                                     lat_min: float, lat_max: float,
+                                     lon_min: float, lon_max: float) -> Dict[str, Any]:
+        """
+        FASE 0: Consultar BD por mediciones previas en la zona.
+        
+        CRÍTICO: Esto se ejecuta ANTES de cualquier análisis.
+        
+        Enriquece raw_measurements con:
+        - Mediciones instrumentales previas en la zona
+        - Análisis previos realizados
+        - Sitios conocidos documentados cercanos
+        
+        Returns:
+            raw_measurements enriquecido con datos históricos
+        """
+        print("[FASE 0] Enriqueciendo con datos históricos de BD...", flush=True)
+        
+        if not self.db_pool:
+            print("[FASE 0] Sin conexión a BD - usando solo mediciones actuales", flush=True)
+            return raw_measurements
+        
+        try:
+            async with self.db_pool.acquire() as conn:
+                # Buscar mediciones previas en la zona (buffer de 0.1 grados)
+                center_lat = (lat_min + lat_max) / 2
+                center_lon = (lon_min + lon_max) / 2
+                buffer = 0.1
+                
+                historical_measurements = await conn.fetch("""
+                    SELECT 
+                        instrument_name,
+                        value,
+                        unit,
+                        data_mode,
+                        measurement_timestamp,
+                        latitude,
+                        longitude
+                    FROM measurements
+                    WHERE latitude BETWEEN $1 AND $2
+                      AND longitude BETWEEN $3 AND $4
+                      AND data_mode IN ('OK', 'DERIVED')
+                    ORDER BY measurement_timestamp DESC
+                    LIMIT 50
+                """, center_lat - buffer, center_lat + buffer,
+                     center_lon - buffer, center_lon + buffer)
+                
+                if historical_measurements:
+                    print(f"[FASE 0] Encontradas {len(historical_measurements)} mediciones históricas", flush=True)
+                    
+                    # Agrupar por instrumento y promediar
+                    instrument_data = {}
+                    for row in historical_measurements:
+                        instrument = row['instrument_name']
+                        if instrument not in instrument_data:
+                            instrument_data[instrument] = []
+                        instrument_data[instrument].append(float(row['value']))
+                    
+                    # Enriquecer raw_measurements con promedios históricos
+                    enriched_count = 0
+                    for instrument, values in instrument_data.items():
+                        avg_value = np.mean(values)
+                        std_value = np.std(values) if len(values) > 1 else 0
+                        
+                        # Si el instrumento no tiene medición actual, agregar histórica
+                        if instrument not in raw_measurements.get('instrumental_measurements', {}):
+                            if 'instrumental_measurements' not in raw_measurements:
+                                raw_measurements['instrumental_measurements'] = {}
+                            
+                            raw_measurements['instrumental_measurements'][instrument] = {
+                                'value': avg_value,
+                                'std': std_value,
+                                'source': 'historical_average',
+                                'n_measurements': len(values)
+                            }
+                            enriched_count += 1
+                            print(f"[FASE 0] Enriquecido {instrument}: {avg_value:.3f} (n={len(values)})", flush=True)
+                    
+                    print(f"[FASE 0] Total enriquecido: {enriched_count} instrumentos", flush=True)
+                else:
+                    print("[FASE 0] No hay mediciones históricas en la zona", flush=True)
+                
+                # Buscar análisis previos
+                previous_analyses = await conn.fetch("""
+                    SELECT 
+                        candidate_name,
+                        archaeological_probability,
+                        result_type,
+                        analysis_timestamp
+                    FROM archaeological_candidate_analyses
+                    WHERE region = $1
+                    ORDER BY analysis_timestamp DESC
+                    LIMIT 5
+                """, raw_measurements.get('region_name', 'unknown'))
+                
+                if previous_analyses:
+                    print(f"[FASE 0] Encontrados {len(previous_analyses)} análisis previos en región", flush=True)
+                    raw_measurements['previous_analyses'] = [dict(row) for row in previous_analyses]
+                
+        except Exception as e:
+            print(f"[FASE 0] Error consultando BD: {e}", flush=True)
+            # Continuar sin enriquecimiento
+        
+        return raw_measurements
     
     # =========================================================================
     # FASE A: NORMALIZACIÓN Y ALINEACIÓN
@@ -565,17 +689,111 @@ class ScientificPipeline:
         return None
     
     # =========================================================================
-    # FASE F: SALIDA CIENTÍFICA
+    # FASE F: VALIDACIÓN CONTRA SITIOS CONOCIDOS
     # =========================================================================
     
-    def phase_f_scientific_output(self,
+    def phase_f_validate_known_sites(self,
+                                     normalized: NormalizedFeatures,
+                                     lat_min: float, lat_max: float,
+                                     lon_min: float, lon_max: float) -> Dict[str, Any]:
+        """
+        FASE F: Validar contra sitios arqueológicos conocidos documentados.
+        
+        CRÍTICO: Esto define si es anomalía o redescubrimiento.
+        
+        Returns:
+            - overlapping_sites: Sitios documentados que solapan
+            - nearby_sites: Sitios cercanos (<50km)
+            - is_rediscovery: True si coincide con sitio conocido
+            - distance_to_known: Distancia al sitio más cercano
+        """
+        print("[FASE F] Validando contra sitios conocidos...", flush=True)
+        
+        if not self.validator:
+            print("[FASE F] Sin validador - saltando validación", flush=True)
+            return {
+                "overlapping_sites": [],
+                "nearby_sites": [],
+                "is_rediscovery": False,
+                "distance_to_known_km": None,
+                "validation_confidence": "no_validator"
+            }
+        
+        try:
+            validation = self.validator.validate_region(lat_min, lat_max, lon_min, lon_max)
+            
+            overlapping = validation.get('overlapping_sites', [])
+            nearby = validation.get('nearby_sites', [])
+            
+            is_rediscovery = len(overlapping) > 0
+            
+            # Calcular distancia al sitio más cercano
+            distance_to_known = None
+            if overlapping:
+                distance_to_known = 0.0  # Solapado
+            elif nearby:
+                distance_to_known = nearby[0][1] if nearby else None  # Distancia del más cercano
+            
+            print(f"[FASE F] Sitios solapados: {len(overlapping)}", flush=True)
+            print(f"[FASE F] Sitios cercanos: {len(nearby)}", flush=True)
+            
+            if is_rediscovery:
+                site = overlapping[0]
+                print(f"[FASE F] ⚠️ REDESCUBRIMIENTO: {site.name} ({site.confidence_level})", flush=True)
+            elif nearby:
+                site, dist = nearby[0]
+                print(f"[FASE F] Sitio cercano: {site.name} a {dist:.1f}km", flush=True)
+            else:
+                print(f"[FASE F] No hay sitios conocidos cercanos", flush=True)
+            
+            return {
+                "overlapping_sites": [
+                    {
+                        "name": s.name,
+                        "coordinates": s.coordinates,
+                        "site_type": s.site_type,
+                        "period": s.period,
+                        "confidence_level": s.confidence_level,
+                        "source": s.source
+                    } for s in overlapping
+                ],
+                "nearby_sites": [
+                    {
+                        "name": s.name,
+                        "coordinates": s.coordinates,
+                        "site_type": s.site_type,
+                        "distance_km": dist,
+                        "confidence_level": s.confidence_level
+                    } for s, dist in nearby
+                ],
+                "is_rediscovery": is_rediscovery,
+                "distance_to_known_km": distance_to_known,
+                "validation_confidence": validation.get('validation_confidence', 'unknown')
+            }
+            
+        except Exception as e:
+            print(f"[FASE F] Error en validación: {e}", flush=True)
+            return {
+                "overlapping_sites": [],
+                "nearby_sites": [],
+                "is_rediscovery": False,
+                "distance_to_known_km": None,
+                "validation_confidence": "error"
+            }
+    
+    # =========================================================================
+    # FASE G: SALIDA CIENTÍFICA
+    # =========================================================================
+    
+    def phase_g_scientific_output(self,
                                   normalized: NormalizedFeatures,
                                   anomaly: AnomalyResult,
                                   morphology: MorphologyResult,
                                   anthropic: AnthropicInference,
-                                  anti_pattern: Optional[Dict[str, Any]]) -> ScientificOutput:
+                                  anti_pattern: Optional[Dict[str, Any]],
+                                  known_sites_validation: Dict[str, Any]) -> ScientificOutput:
         """
-        FASE F: Generar salida científica (NO marketing).
+        FASE G: Generar salida científica (NO marketing).
         
         Nunca: ❌ "Sitio arqueológico detectado"
         Siempre: ✅ "Geo-candidata con anomalía morfológica significativa"
@@ -584,8 +802,25 @@ class ScientificPipeline:
         1. Comparar contra baseline profiles
         2. Diferenciar discard_operational vs archive_scientific_negative
         3. Calcular scientific_confidence (certeza del descarte)
+        4. Integrar validación de sitios conocidos (CRÍTICO)
         """
-        print("[FASE F] Generando salida científica...", flush=True)
+        print("[FASE G] Generando salida científica...", flush=True)
+        
+        # Extraer validación de sitios conocidos
+        is_rediscovery = known_sites_validation.get('is_rediscovery', False)
+        overlapping_sites = known_sites_validation.get('overlapping_sites', [])
+        nearby_sites = known_sites_validation.get('nearby_sites', [])
+        distance_to_known = known_sites_validation.get('distance_to_known_km')
+        
+        # Si es redescubrimiento, ajustar probabilidad antropogénica
+        if is_rediscovery:
+            print(f"[FASE G] ⚠️ REDESCUBRIMIENTO de sitio conocido", flush=True)
+            # Aumentar probabilidad si coincide con sitio confirmado
+            site = overlapping_sites[0]
+            if site['confidence_level'] == 'confirmed':
+                anthropic.anthropic_probability = min(0.95, anthropic.anthropic_probability + 0.3)
+                anthropic.reasoning.append(f"coincide con sitio confirmado: {site['name']}")
+                print(f"[FASE G] Probabilidad ajustada a {anthropic.anthropic_probability:.3f} (sitio confirmado)", flush=True)
         
         # AJUSTE FINO 1: Comparar contra baseline profile
         environment_type = normalized.raw_measurements.get('environment_type', 'unknown')
@@ -675,7 +910,7 @@ class ScientificPipeline:
                 discard_type = "discard_operational"  # Descarte operacional simple
         
         # Fases completadas
-        phases_completed = ["A_normalize", "B_anomaly", "C_morphology", "D_anthropic", "E_antipatterns", "F_output"]
+        phases_completed = ["0_enrich", "A_normalize", "B_anomaly", "C_morphology", "D_anthropic", "E_antipatterns", "F_known_sites", "G_output"]
         
         output = ScientificOutput(
             candidate_id=normalized.candidate_id,
@@ -689,15 +924,24 @@ class ScientificPipeline:
             candidate_type=candidate_type,
             negative_reason=negative_reason,
             reuse_for_training=candidate_type == "negative_reference",
-            discard_type=discard_type,  # NUEVO
-            scientific_confidence=scientific_confidence  # NUEVO
+            discard_type=discard_type,
+            scientific_confidence=scientific_confidence,
+            # FASE F: Sitios conocidos
+            known_sites_nearby=nearby_sites,
+            overlapping_known_site=overlapping_sites[0] if overlapping_sites else None,
+            distance_to_known_site_km=distance_to_known,
+            is_known_site_rediscovery=is_rediscovery
         )
         
-        print(f"[FASE F] Salida científica generada", flush=True)
+        print(f"[FASE G] Salida científica generada", flush=True)
         print(f"  - Anomaly score: {output.anomaly_score:.3f}", flush=True)
         print(f"  - Anthropic probability: {output.anthropic_probability:.3f}", flush=True)
         print(f"  - Recommended action: {output.recommended_action}", flush=True)
         print(f"  - Candidate type: {output.candidate_type}", flush=True)
+        if is_rediscovery:
+            print(f"  - ⚠️ REDESCUBRIMIENTO: {overlapping_sites[0]['name']}", flush=True)
+        elif nearby_sites:
+            print(f"  - Sitio cercano: {nearby_sites[0]['name']} ({nearby_sites[0]['distance_km']:.1f}km)", flush=True)
         if baseline_match:
             print(f"  - Baseline match: {baseline_match}", flush=True)
         if output.negative_reason:
@@ -713,9 +957,17 @@ class ScientificPipeline:
     # PIPELINE COMPLETO
     # =========================================================================
     
-    def analyze(self, raw_measurements: Dict[str, Any]) -> Dict[str, Any]:
+    async def analyze(self, raw_measurements: Dict[str, Any],
+                     lat_min: float, lat_max: float,
+                     lon_min: float, lon_max: float) -> Dict[str, Any]:
         """
         Ejecutar pipeline científico completo.
+        
+        FLUJO:
+        0. Enriquecer con datos históricos de BD
+        A-E. Pipeline científico
+        F. Validar contra sitios conocidos
+        G. Salida científica
         
         Returns:
             Dict con todas las fases y salida científica
@@ -723,6 +975,9 @@ class ScientificPipeline:
         print("\n" + "="*80, flush=True)
         print("INICIANDO PIPELINE CIENTÍFICO", flush=True)
         print("="*80 + "\n", flush=True)
+        
+        # FASE 0: Enriquecimiento con datos históricos
+        raw_measurements = await self.phase_0_enrich_from_db(raw_measurements, lat_min, lat_max, lon_min, lon_max)
         
         # FASE A: Normalización
         normalized = self.phase_a_normalize(raw_measurements)
@@ -739,8 +994,11 @@ class ScientificPipeline:
         # FASE E: Anti-patrones
         anti_pattern = self.phase_e_anti_patterns(normalized, morphology)
         
-        # FASE F: Salida científica
-        output = self.phase_f_scientific_output(normalized, anomaly, morphology, anthropic, anti_pattern)
+        # FASE F: Validación contra sitios conocidos
+        known_sites_validation = self.phase_f_validate_known_sites(normalized, lat_min, lat_max, lon_min, lon_max)
+        
+        # FASE G: Salida científica
+        output = self.phase_g_scientific_output(normalized, anomaly, morphology, anthropic, anti_pattern, known_sites_validation)
         
         print("\n" + "="*80, flush=True)
         print("PIPELINE CIENTÍFICO COMPLETADO", flush=True)
@@ -762,7 +1020,12 @@ class ScientificPipeline:
                 "reuse_for_training": output.reuse_for_training,
                 # AJUSTES FINOS
                 "discard_type": output.discard_type,
-                "scientific_confidence": output.scientific_confidence
+                "scientific_confidence": output.scientific_confidence,
+                # FASE F: Sitios conocidos
+                "known_sites_nearby": output.known_sites_nearby,
+                "overlapping_known_site": output.overlapping_known_site,
+                "distance_to_known_site_km": output.distance_to_known_site_km,
+                "is_known_site_rediscovery": output.is_known_site_rediscovery
             },
             "phase_a_normalized": {
                 "features": normalized.features,
