@@ -171,7 +171,8 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
             'region_name': request.region_name,
             'center_lat': center_lat,
             'center_lon': center_lon,
-            'environment_type': env_context.environment_type.value
+            'environment_type': env_context.environment_type.value,
+            'instruments_available': len(all_instruments)  # AGREGADO: número real de instrumentos disponibles
         }
         
         # Añadir mediciones (measurements son diccionarios)
@@ -312,13 +313,45 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                     
                     print(f"[BD] ✅ Sitio guardado con ID: {site_id}", flush=True)
                     
+                    # Generar explicación científica determinística
+                    # Crear objeto ScientificOutput temporal para la explicación
+                    from scientific_pipeline import ScientificOutput
+                    
+                    temp_output = ScientificOutput(
+                        candidate_id=site_id,
+                        anomaly_score=result['scientific_output']['anomaly_score'],
+                        anthropic_probability=result['scientific_output']['anthropic_probability'],
+                        confidence_interval=tuple(result['scientific_output']['confidence_interval']),
+                        recommended_action=result['scientific_output']['recommended_action'],
+                        notes=result['scientific_output']['notes'],
+                        phases_completed=[],  # No necesario para la explicación
+                        timestamp=result['scientific_output']['timestamp'],
+                        coverage_raw=result['scientific_output']['coverage_raw'],
+                        coverage_effective=result['scientific_output']['coverage_effective'],
+                        instruments_measured=result['scientific_output']['instruments_measured'],
+                        instruments_available=result['scientific_output']['instruments_available'],
+                        candidate_type=result['scientific_output']['candidate_type'],
+                        negative_reason=result['scientific_output'].get('negative_reason')
+                    )
+                    
+                    scientific_explanation = pipeline.generate_scientific_explanation(
+                        temp_output,
+                        env_context.environment_type.value,
+                        len(measurements),
+                        len(all_instruments)
+                    )
+                    
+                    print(f"[BD] 📝 Explicación generada: {scientific_explanation[:100]}...", flush=True)
+                    
                     # 2. GUARDAR EN archaeological_candidate_analyses (análisis detallado)
                     await conn.execute("""
                         INSERT INTO archaeological_candidate_analyses 
                         (candidate_id, candidate_name, region, archaeological_probability, anomaly_score, 
                          result_type, recommended_action, environment_type, confidence_level,
-                         instruments_measuring, instruments_total)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                         instruments_measuring, instruments_total,
+                         latitude, longitude, lat_min, lat_max, lon_min, lon_max,
+                         scientific_explanation, explanation_type)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
                     """, 
                         site_id,  # Usar ID del sitio
                         site_info['name'],
@@ -330,7 +363,15 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                         env_context.environment_type.value,
                         result['scientific_output']['confidence_interval'][0],  # Lower bound
                         len(measurements),  # Instrumentos que midieron
-                        len(all_instruments)  # Total instrumentos disponibles
+                        len(all_instruments),  # Total instrumentos disponibles
+                        center_lat,  # Coordenadas del centro
+                        center_lon,
+                        request.lat_min,  # Bounding box
+                        request.lat_max,
+                        request.lon_min,
+                        request.lon_max,
+                        scientific_explanation,  # Explicación en lenguaje natural
+                        'deterministic'  # Tipo de explicación
                     )
                     
                     # 3. GUARDAR MEDICIONES INSTRUMENTALES (exitosas)
@@ -447,6 +488,10 @@ async def get_recent_analyses(limit: int = 10):
                     recommended_action,
                     environment_type,
                     confidence_level,
+                    latitude,
+                    longitude,
+                    scientific_explanation,
+                    explanation_type,
                     created_at
                 FROM archaeological_candidate_analyses
                 ORDER BY created_at DESC
@@ -466,6 +511,10 @@ async def get_recent_analyses(limit: int = 10):
                         "recommended_action": row['recommended_action'],
                         "environment_type": row['environment_type'],
                         "confidence_level": float(row['confidence_level']),
+                        "latitude": float(row['latitude']) if row['latitude'] is not None else None,
+                        "longitude": float(row['longitude']) if row['longitude'] is not None else None,
+                        "scientific_explanation": row['scientific_explanation'],
+                        "explanation_type": row['explanation_type'],
                         "created_at": row['created_at'].isoformat()
                     }
                     for row in analyses
@@ -488,19 +537,21 @@ async def get_analysis_by_id(analysis_id: int):
     
     ## Respuesta
     
-    Objeto con dos secciones:
+    Objeto con tres secciones:
     
     ### 1. Analysis
     - Datos completos del análisis científico
     - Probabilidades, scores, acciones recomendadas
     - Metadatos (ambiente, confianza, fecha)
+    - **Instrumentos usados** (instruments_measured/instruments_total)
     
     ### 2. Measurements
-    - Lista de mediciones instrumentales
-    - Nombre del instrumento (MODIS LST, ICESat-2, etc.)
-    - Valor medido y unidad
-    - Modo de datos (OK, DERIVED, SIMULATED)
-    - Coordenadas y timestamp
+    - Lista de mediciones instrumentales EXITOSAS
+    - Nombre del instrumento, valor, unidad, modo de datos
+    
+    ### 3. Failed Instruments
+    - Lista de instrumentos que NO midieron
+    - Útil para entender cobertura incompleta
     
     ## Errores
     
@@ -524,6 +575,16 @@ async def get_analysis_by_id(analysis_id: int):
                     recommended_action,
                     environment_type,
                     confidence_level,
+                    instruments_measuring,
+                    instruments_total,
+                    latitude,
+                    longitude,
+                    lat_min,
+                    lat_max,
+                    lon_min,
+                    lon_max,
+                    scientific_explanation,
+                    explanation_type,
                     created_at
                 FROM archaeological_candidate_analyses
                 WHERE id = $1
@@ -532,20 +593,36 @@ async def get_analysis_by_id(analysis_id: int):
             if not analysis:
                 raise HTTPException(status_code=404, detail=f"Análisis {analysis_id} no encontrado")
             
-            # Obtener mediciones asociadas (por coordenadas cercanas y fecha cercana)
-            # Usar CAST para convertir timestamp sin zona horaria a timestamp con zona horaria
+            # Obtener mediciones EXITOSAS (data_mode != NO_DATA)
+            # Buscar mediciones en ventana de ±1 hora del análisis
             measurements = await conn.fetch("""
                 SELECT 
                     instrument_name,
                     value,
                     unit,
                     data_mode,
+                    source,
                     latitude,
                     longitude,
                     measurement_timestamp
                 FROM measurements
-                WHERE measurement_timestamp >= ($1::timestamp - INTERVAL '1 hour')
-                  AND measurement_timestamp <= ($1::timestamp + INTERVAL '1 hour')
+                WHERE measurement_timestamp BETWEEN ($1::timestamp - INTERVAL '1 hour') 
+                                                AND ($1::timestamp + INTERVAL '1 hour')
+                  AND data_mode != 'NO_DATA'
+                ORDER BY measurement_timestamp DESC
+                LIMIT 20
+            """, analysis['created_at'])
+            
+            # Obtener instrumentos FALLIDOS (data_mode = NO_DATA)
+            failed_instruments = await conn.fetch("""
+                SELECT 
+                    instrument_name,
+                    source,
+                    measurement_timestamp
+                FROM measurements
+                WHERE measurement_timestamp BETWEEN ($1::timestamp - INTERVAL '1 hour') 
+                                                AND ($1::timestamp + INTERVAL '1 hour')
+                  AND data_mode = 'NO_DATA'
                 ORDER BY measurement_timestamp DESC
                 LIMIT 20
             """, analysis['created_at'])
@@ -561,6 +638,22 @@ async def get_analysis_by_id(analysis_id: int):
                     "recommended_action": analysis['recommended_action'],
                     "environment_type": analysis['environment_type'],
                     "confidence_level": float(analysis['confidence_level']),
+                    "instruments_measured": analysis['instruments_measuring'],
+                    "instruments_total": analysis['instruments_total'],
+                    "coordinates": {
+                        "center": {
+                            "latitude": float(analysis['latitude']) if analysis['latitude'] is not None else None,
+                            "longitude": float(analysis['longitude']) if analysis['longitude'] is not None else None
+                        },
+                        "bounds": {
+                            "lat_min": float(analysis['lat_min']) if analysis['lat_min'] is not None else None,
+                            "lat_max": float(analysis['lat_max']) if analysis['lat_max'] is not None else None,
+                            "lon_min": float(analysis['lon_min']) if analysis['lon_min'] is not None else None,
+                            "lon_max": float(analysis['lon_max']) if analysis['lon_max'] is not None else None
+                        }
+                    },
+                    "scientific_explanation": analysis['scientific_explanation'],
+                    "explanation_type": analysis['explanation_type'],
                     "created_at": analysis['created_at'].isoformat()
                 },
                 "measurements": [
@@ -569,11 +662,21 @@ async def get_analysis_by_id(analysis_id: int):
                         "value": float(row['value']),
                         "unit": row['unit'],
                         "data_mode": row['data_mode'],
+                        "source": row['source'],
                         "latitude": float(row['latitude']),
                         "longitude": float(row['longitude']),
                         "timestamp": row['measurement_timestamp'].isoformat()
                     }
                     for row in measurements
+                ],
+                "failed_instruments": [
+                    {
+                        "instrument_name": row['instrument_name'],
+                        "reason": "NO_DATA",
+                        "source": row['source'],
+                        "timestamp": row['measurement_timestamp'].isoformat()
+                    }
+                    for row in failed_instruments
                 ]
             }
     except HTTPException:

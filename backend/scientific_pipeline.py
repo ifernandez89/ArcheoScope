@@ -441,7 +441,16 @@ class ScientificPipeline:
         }
         
         # Normalizar cada tipo de medición
+        # SKIP metadata keys que no son mediciones reales
+        skip_keys = ['candidate_id', 'region_name', 'center_lat', 'center_lon', 
+                     'environment_type', 'instruments_available', 'instrumental_measurements',
+                     'previous_analyses']
+        
         for instrument, measurement in raw_measurements.items():
+            # Skip metadata keys
+            if instrument in skip_keys:
+                continue
+            
             if not isinstance(measurement, dict):
                 continue
             
@@ -720,8 +729,13 @@ class ScientificPipeline:
         effective_coverage = 0.0
         raw_instrument_count = 0
         
+        # Contar instrumentos que REALMENTE midieron (tienen zscore)
+        # EXCLUIR features derivadas (mean_deviation, max_deviation, convergence_ratio)
+        derived_features = ['mean_deviation', 'max_deviation', 'convergence_ratio']
+        
         for key in normalized.features.keys():
-            if 'zscore' in key:
+            if 'zscore' in key and key not in derived_features:
+                raw_instrument_count += 1  # CORREGIDO: contar cada instrumento
                 # Extraer nombre del instrumento
                 instrument_name = key.replace('_zscore', '')
                 # Buscar peso del instrumento
@@ -730,10 +744,7 @@ class ScientificPipeline:
                         effective_coverage += weight
                         break
         
-        # Contar instrumentos raw (presentes en raw_measurements)
-        for k, v in normalized.raw_measurements.items():
-            if isinstance(v, dict) and 'value' in v:
-                raw_instrument_count += 1
+        # NO contar de raw_measurements - ya contamos arriba correctamente
         
         coverage_ratio = effective_coverage / total_weight_available if total_weight_available > 0 else 0
         instrument_count = len([k for k in normalized.features.keys() if 'zscore' in k])
@@ -818,8 +829,13 @@ class ScientificPipeline:
         print(f"[FASE D] Razonamiento: {reasoning}", flush=True)
         
         # Calcular métricas de cobertura para output
-        instruments_available_count = len(weights)  # Total instrumentos disponibles para este ambiente
+        # Usar el número REAL de instrumentos disponibles (pasado desde el endpoint)
+        instruments_available_count = normalized.raw_measurements.get('instruments_available', len(weights))
         coverage_raw_value = raw_instrument_count / instruments_available_count if instruments_available_count > 0 else 0.0
+        
+        print(f"[FASE D] 📊 Métricas de cobertura:", flush=True)
+        print(f"[FASE D]    Raw: {raw_instrument_count}/{instruments_available_count} = {coverage_raw_value:.1%}", flush=True)
+        print(f"[FASE D]    Effective: {coverage_ratio:.1%}", flush=True)
         
         return AnthropicInference(
             anthropic_probability=anthropic_probability,
@@ -1312,6 +1328,114 @@ class ScientificPipeline:
         return output
     
     # =========================================================================
+    # GENERACIÓN DE EXPLICACIÓN CIENTÍFICA
+    # =========================================================================
+    
+    def generate_scientific_explanation(self,
+                                       scientific_output: ScientificOutput,
+                                       environment_type: str,
+                                       instruments_measured: int,
+                                       instruments_available: int) -> str:
+        """
+        Generar explicación científica determinística en lenguaje natural.
+        
+        Esta explicación se guarda en BD para consultas rápidas.
+        NO usa IA - es 100% determinística basada en reglas.
+        """
+        
+        probability = scientific_output.anthropic_probability * 100
+        anomaly_score = scientific_output.anomaly_score * 100
+        action = scientific_output.recommended_action
+        coverage_raw = scientific_output.coverage_raw * 100
+        coverage_effective = scientific_output.coverage_effective * 100
+        
+        explanation = ""
+        
+        # Explicación basada en acción recomendada
+        if action in ['no_action', 'discard', 'reject_natural_process']:
+            if coverage_effective < 30:
+                explanation = (
+                    f"El análisis detectó una anomalía del {anomaly_score:.1f}%, pero la probabilidad "
+                    f"antropogénica es baja ({probability:.1f}%). Los patrones observados son consistentes "
+                    f"con procesos naturales. Cobertura instrumental: {coverage_raw:.0f}% raw "
+                    f"({instruments_measured}/{instruments_available} instrumentos), {coverage_effective:.0f}% "
+                    f"efectiva (los instrumentos presentes no muestran señal discriminante suficiente). "
+                    f"El sistema recomienda no tomar acción."
+                )
+            else:
+                explanation = (
+                    f"El análisis detectó una anomalía del {anomaly_score:.1f}%, pero la probabilidad "
+                    f"antropogénica es baja ({probability:.1f}%). Los patrones observados son consistentes "
+                    f"con procesos naturales. Cobertura instrumental: {coverage_raw:.0f}% "
+                    f"({instruments_measured}/{instruments_available} instrumentos). "
+                    f"El sistema recomienda no tomar acción."
+                )
+            
+            # Agregar razón de descarte si existe
+            if scientific_output.negative_reason:
+                explanation += f" Geomorfología identificada: {scientific_output.negative_reason}."
+        
+        elif action == 'monitoring_passive':
+            explanation = (
+                f"Se detectó una anomalía del {anomaly_score:.1f}% con probabilidad antropogénica "
+                f"moderada ({probability:.1f}%). Los datos actuales no son concluyentes debido a "
+                f"cobertura instrumental limitada ({coverage_raw:.0f}% raw, {coverage_effective:.0f}% efectiva). "
+                f"Se recomienda monitoreo pasivo para acumular más evidencia antes de invertir recursos."
+            )
+        
+        elif action == 'monitoring_targeted':
+            explanation = (
+                f"Anomalía significativa del {anomaly_score:.1f}% con probabilidad antropogénica de "
+                f"{probability:.1f}%. Los patrones detectados son prometedores pero requieren confirmación "
+                f"con instrumentos adicionales. Cobertura actual: {coverage_raw:.0f}% raw "
+                f"({instruments_measured}/{instruments_available}), {coverage_effective:.0f}% efectiva. "
+                f"Se recomienda análisis dirigido con SAR o LiDAR de alta resolución."
+            )
+        
+        elif action == 'field_verification':
+            explanation = (
+                f"Candidato arqueológico con anomalía del {anomaly_score:.1f}% y probabilidad "
+                f"antropogénica de {probability:.1f}%. Los datos instrumentales (cobertura {coverage_raw:.0f}% "
+                f"raw, {coverage_effective:.0f}% efectiva) muestran patrones consistentes con actividad "
+                f"humana pasada. Se recomienda validación de campo para confirmar hallazgo."
+            )
+        
+        elif action == 'field_verification_priority':
+            explanation = (
+                f"Candidato arqueológico prioritario con anomalía del {anomaly_score:.1f}% y alta "
+                f"probabilidad antropogénica ({probability:.1f}%). Los patrones morfológicos y espectrales "
+                f"son altamente consistentes con estructuras artificiales. Cobertura instrumental: "
+                f"{coverage_raw:.0f}% ({instruments_measured}/{instruments_available}). "
+                f"Se recomienda verificación de campo PRIORITARIA."
+            )
+        
+        elif action == 'instrument_upgrade_required':
+            explanation = (
+                f"Región arqueológicamente relevante pero con cobertura instrumental insuficiente "
+                f"({coverage_raw:.0f}% raw, {coverage_effective:.0f}% efectiva). Probabilidad antropogénica: "
+                f"{probability:.1f}%. Se requieren instrumentos adicionales (SAR, LiDAR, magnetometría) "
+                f"antes de poder emitir conclusiones científicas sólidas."
+            )
+        
+        elif action == 'targeted_reanalysis':
+            explanation = (
+                f"Región arqueológica con cobertura insuficiente ({coverage_raw:.0f}% raw, "
+                f"{coverage_effective:.0f}% efectiva) pero probabilidad antropogénica moderada ({probability:.1f}%). "
+                f"Se recomienda re-análisis dirigido con instrumentos específicos para el ambiente {environment_type}."
+            )
+        
+        else:
+            # Fallback genérico
+            explanation = (
+                f"Análisis completado con anomalía del {anomaly_score:.1f}% y probabilidad antropogénica "
+                f"de {probability:.1f}%. Cobertura instrumental: {coverage_raw:.0f}% raw "
+                f"({instruments_measured}/{instruments_available}), {coverage_effective:.0f}% efectiva. "
+                f"Acción recomendada: {action}."
+            )
+        
+        return explanation
+    
+    # =========================================================================
     # PIPELINE COMPLETO
     # =========================================================================
     
@@ -1372,6 +1496,11 @@ class ScientificPipeline:
                 "recommended_action": output.recommended_action,
                 "notes": output.notes,
                 "timestamp": output.timestamp,
+                # COBERTURA INSTRUMENTAL (separar raw vs effective)
+                "coverage_raw": output.coverage_raw,
+                "coverage_effective": output.coverage_effective,
+                "instruments_measured": output.instruments_measured,
+                "instruments_available": output.instruments_available,
                 # MEJORA PRO
                 "candidate_type": output.candidate_type,
                 "negative_reason": output.negative_reason,
@@ -1415,7 +1544,12 @@ class ScientificPipeline:
                 "confidence": anthropic.confidence,
                 "confidence_interval": list(anthropic.confidence_interval),
                 "reasoning": anthropic.reasoning,
-                "model_used": anthropic.model_used
+                "model_used": anthropic.model_used,
+                # MÉTRICAS DE COBERTURA INSTRUMENTAL
+                "coverage_raw": anthropic.coverage_raw,
+                "coverage_effective": anthropic.coverage_effective,
+                "instruments_measured": anthropic.instruments_measured,
+                "instruments_available": anthropic.instruments_available
             },
             "phase_e_anti_pattern": anti_pattern,
             "phases_completed": output.phases_completed
