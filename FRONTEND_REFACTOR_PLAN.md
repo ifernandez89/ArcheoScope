@@ -1,9 +1,11 @@
 # ArcheoScope Frontend Refactorization Plan
 ## Post-Backend Stabilization - Scientific UI/UX
 
-**Status**: Phase 1 Completed  
+**Status**: Phase 2 Completed  
 **Date**: January 27, 2026  
 **Objective**: Transform frontend into reproducible, robust scientific workstation
+
+**Progress**: 2/6 Phases Completed (33%)
 
 ---
 
@@ -84,39 +86,45 @@ EVENTS = {
 
 ---
 
-## Phase 2: Component Decoupling (🔄 IN PROGRESS)
+## Phase 2: Component Decoupling (✅ COMPLETED)
 
-### Módulos a refactorizar:
+### Módulos refactorizados:
 
-#### 2.1 `archaeological_lupa.js`
-**Cambios necesarios**:
-- [ ] Eliminar acceso directo a DOM global
-- [ ] Comunicar vía eventos únicamente
-- [ ] Escuchar `LUPA_ACTIVATED`
-- [ ] Emitir `LUPA_ANALYSIS_COMPLETED`
-- [ ] Throttling de análisis (max 1/segundo)
+#### 2.1 `frontend/modules/archaeological_lupa_module.js` ✅
+**Implementado**:
+- ✅ Eliminar acceso directo a DOM global
+- ✅ Comunicar vía eventos únicamente
+- ✅ Escuchar `LUPA_ACTIVATED`
+- ✅ Emitir `LUPA_ANALYSIS_COMPLETED`
+- ✅ Throttling de análisis (max 1/segundo)
+- ✅ Cleanup automático de recursos Leaflet
 
-#### 2.2 `professional_3d_viewer.js`
-**Cambios necesarios**:
-- [ ] Desacoplar de mapa principal
-- [ ] Escuchar `VIEWER_3D_OPENED`
-- [ ] Emitir `VIEWER_3D_DATA_LOADED`
-- [ ] Límite de FPS (30 fps max)
-- [ ] Cleanup de geometrías Three.js
+#### 2.2 `frontend/modules/viewer_3d_module.js` ✅
+**Implementado**:
+- ✅ Desacoplar de mapa principal
+- ✅ Escuchar `VIEWER_3D_OPENED`
+- ✅ Emitir `VIEWER_3D_DATA_LOADED`
+- ✅ Límite de FPS (30 fps max)
+- ✅ Cleanup de geometrías Three.js
+- ✅ Navegación entre anomalías
+- ✅ Exportación de screenshots
 
-#### 2.3 `lidar_availability_checker.js`
-**Cambios necesarios**:
-- [ ] Convertir a módulo independiente
-- [ ] Escuchar `REGION_SELECTED`
-- [ ] Emitir resultados vía eventos
-- [ ] Cache de consultas
+#### 2.3 `frontend/modules/lidar_availability_module.js` ✅
+**Implementado**:
+- ✅ Convertir a módulo independiente
+- ✅ Escuchar `REGION_SELECTED`
+- ✅ Emitir resultados vía eventos
+- ✅ Cache de consultas (1 hora)
+- ✅ 10 regiones de cobertura LiDAR
 
-#### 2.4 `anomaly_history_system.js`
-**Cambios necesarios**:
-- [ ] Integrar con `scientificState.history`
-- [ ] Escuchar `HISTORY_ENTRY_ADDED`
-- [ ] Emitir `HISTORY_ENTRY_SELECTED`
-- [ ] Persistencia en localStorage
+#### 2.4 `frontend/modules/history_module.js` ✅
+**Implementado**:
+- ✅ Integrar con `scientificState.history`
+- ✅ Escuchar `HISTORY_ENTRY_ADDED`
+- ✅ Emitir `HISTORY_ENTRY_SELECTED`
+- ✅ Persistencia en localStorage
+- ✅ Exportar/Importar JSON
+- ✅ Estadísticas de historial
 
 ---
 
@@ -299,15 +307,19 @@ test('UIState manages loading states')
 3. UI State (separated)
 4. Snapshot system
 5. Epistemic labeling structure
+6. **Archaeological Lupa Module (refactored)**
+7. **Viewer 3D Module (refactored)**
+8. **LiDAR Availability Module (refactored)**
+9. **History Module (refactored)**
 
 ### 🔄 In Progress:
-1. Component decoupling
-2. Reproducibility UI
-3. Epistemic visual differentiation
-4. Performance guardrails
+1. Reproducibility UI
+2. Epistemic visual differentiation
+3. Performance guardrails
+4. Integration with main index.html
 
 ### ⏳ Pending:
-1. Full component refactor
+1. Full integration testing
 2. Testing suite
 3. Documentation
 4. User guide
