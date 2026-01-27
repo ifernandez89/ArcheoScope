@@ -166,15 +166,34 @@ class PlanetaryComputerConnector(SatelliteConnector):
                     
                     # Leer con rasterio
                     with rasterio.open(signed_href) as src:
-                        # Leer ventana que corresponde al bbox
-                        window = rasterio.windows.from_bounds(
-                            lon_min, lat_min, lon_max, lat_max,
+                        # CRÍTICO: Reprojectar bbox de EPSG:4326 al CRS del raster
+                        bbox_proj = transform_bounds(
+                            "EPSG:4326",
+                            src.crs,
+                            lon_min, lat_min, lon_max, lat_max
+                        )
+                        
+                        # Crear ventana desde bbox reproyectado
+                        window = windows.from_bounds(
+                            *bbox_proj,
                             transform=src.transform
                         )
                         
+                        # VALIDAR que ventana tenga datos
+                        if window.width == 0 or window.height == 0:
+                            logger.warning(f"Ventana vacía para banda {band_name} (width={window.width}, height={window.height})")
+                            continue
+                        
                         # Leer datos
                         band_data = src.read(1, window=window)
+                        
+                        # Validar que tenga datos
+                        if band_data.size == 0:
+                            logger.warning(f"Array vacío para banda {band_name}")
+                            continue
+                        
                         bands[band_name] = band_data.astype(float)
+                        logger.info(f"✅ Banda {band_name} leída: {band_data.shape}, valores válidos: {np.sum(np.isfinite(band_data))}")
                         
                 except Exception as e:
                     logger.warning(f"Error leyendo banda {band_name}: {e}")
@@ -456,45 +475,98 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 
                 log(f"[SAR] URLs firmadas obtenidas")
                 
+                # Inicializar confidence
+                confidence = 0.8  # Default para full-resolution
+                
                 # Leer bandas con rasterio usando overviews de COG
                 # OPTIMIZACIÓN: Los COGs tienen overviews pre-calculados
                 # Esto es mucho más rápido que descargar el raster completo
                 
-                log(f"[SAR] Estrategia: Usar overview level 2 (resolución ~30m)")
+                log(f"[SAR] Estrategia: Intentar full resolution, fallback a overview si falla")
                 
-                with rasterio.open(vh_url) as src:
-                    # Leer overview level 2 (1/4 de resolución = ~40m)
-                    # Los COGs de Planetary Computer tienen overviews pre-calculados
-                    if src.overviews(1):
-                        # Usar overview más cercano a 30m
-                        overview_level = min(2, len(src.overviews(1)) - 1)
-                        vh = src.read(1, out_shape=(
-                            src.height // (2 ** overview_level),
-                            src.width // (2 ** overview_level)
-                        ))
-                        log(f"[SAR] Banda VH cargada: {vh.shape} (overview level {overview_level})")
-                    else:
-                        # Sin overviews, leer completo con reducción
-                        vh = src.read(1, out_shape=(
-                            src.height // 3,
-                            src.width // 3
-                        ))
-                        log(f"[SAR] Banda VH cargada: {vh.shape} (sin overviews)")
-                
-                with rasterio.open(vv_url) as src:
-                    if src.overviews(1):
-                        overview_level = min(2, len(src.overviews(1)) - 1)
-                        vv = src.read(1, out_shape=(
-                            src.height // (2 ** overview_level),
-                            src.width // (2 ** overview_level)
-                        ))
-                        log(f"[SAR] Banda VV cargada: {vv.shape} (overview level {overview_level})")
-                    else:
-                        vv = src.read(1, out_shape=(
-                            src.height // 3,
-                            src.width // 3
-                        ))
-                        log(f"[SAR] Banda VV cargada: {vv.shape} (sin overviews)")
+                # INTENTO 1: Full resolution con ventana específica
+                try:
+                    with rasterio.open(vh_url) as src:
+                        # Reprojectar bbox
+                        bbox_proj = transform_bounds(
+                            "EPSG:4326",
+                            src.crs,
+                            lon_min, lat_min, lon_max, lat_max
+                        )
+                        
+                        # Crear ventana
+                        window = windows.from_bounds(*bbox_proj, transform=src.transform)
+                        
+                        if window.width > 0 and window.height > 0:
+                            vh = src.read(1, window=window)
+                            log(f"[SAR] Banda VH cargada (full-res window): {vh.shape}")
+                        else:
+                            raise ValueError("Ventana vacía")
+                    
+                    with rasterio.open(vv_url) as src:
+                        bbox_proj = transform_bounds(
+                            "EPSG:4326",
+                            src.crs,
+                            lon_min, lat_min, lon_max, lat_max
+                        )
+                        window = windows.from_bounds(*bbox_proj, transform=src.transform)
+                        
+                        if window.width > 0 and window.height > 0:
+                            vv = src.read(1, window=window)
+                            log(f"[SAR] Banda VV cargada (full-res window): {vv.shape}")
+                        else:
+                            raise ValueError("Ventana vacía")
+                    
+                    log(f"[SAR] ✅ Full resolution exitoso")
+                    
+                except Exception as e:
+                    # FALLBACK: Usar overview (menor resolución pero estable)
+                    log(f"[SAR] ⚠️ Full-res falló: {e}")
+                    log(f"[SAR] Fallback a overview level 2 (~30m)")
+                    
+                    try:
+                        with rasterio.open(vh_url) as src:
+                            # Leer overview level 2 (1/4 de resolución = ~40m)
+                            if src.overviews(1):
+                                overview_level = min(2, len(src.overviews(1)) - 1)
+                                vh = src.read(1, out_shape=(
+                                    src.height // (2 ** overview_level),
+                                    src.width // (2 ** overview_level)
+                                ))
+                                log(f"[SAR] Banda VH cargada: {vh.shape} (overview level {overview_level})")
+                            else:
+                                # Sin overviews, leer completo con reducción
+                                vh = src.read(1, out_shape=(
+                                    src.height // 3,
+                                    src.width // 3
+                                ))
+                                log(f"[SAR] Banda VH cargada: {vh.shape} (sin overviews)")
+                        
+                        with rasterio.open(vv_url) as src:
+                            if src.overviews(1):
+                                overview_level = min(2, len(src.overviews(1)) - 1)
+                                vv = src.read(1, out_shape=(
+                                    src.height // (2 ** overview_level),
+                                    src.width // (2 ** overview_level)
+                                ))
+                                log(f"[SAR] Banda VV cargada: {vv.shape} (overview level {overview_level})")
+                            else:
+                                vv = src.read(1, out_shape=(
+                                    src.height // 3,
+                                    src.width // 3
+                                ))
+                                log(f"[SAR] Banda VV cargada: {vv.shape} (sin overviews)")
+                        
+                        log(f"[SAR] ✅ Fallback a overview exitoso (confidence reducida a 0.6)")
+                        confidence = 0.6  # Reducir confianza por usar overview
+                        
+                    except Exception as e2:
+                        log(f"[SAR] ❌ Fallback también falló: {e2}")
+                        import traceback
+                        log(f"[SAR] Traceback: {traceback.format_exc()}")
+                        if log_file:
+                            log_file.close()
+                        return None
                 
                 # Verificar que no estén vacías
                 if vh.size == 0 or vv.size == 0:
@@ -533,7 +605,10 @@ class PlanetaryComputerConnector(SatelliteConnector):
             log(f"[SAR] Indices calculados: VV={indices['vv_mean']:.2f} dB")
             
             # Detectar anomalías en backscatter
-            anomaly_score, confidence = self.detect_anomaly(vv)
+            anomaly_score, anomaly_confidence = self.detect_anomaly(vv)
+            
+            # Usar el confidence más bajo (del fallback o del detector)
+            final_confidence = min(confidence, anomaly_confidence)
             
             # Tipo de anomalía basado en backscatter
             if indices['vv_mean'] > -5:
@@ -546,7 +621,7 @@ class PlanetaryComputerConnector(SatelliteConnector):
             processing_time = asyncio.get_event_loop().time() - start_time
             
             log(f"[SAR] Procesamiento completado en {processing_time:.2f}s")
-            log(f"[SAR] EXITO TOTAL - Datos SAR obtenidos correctamente")
+            log(f"[SAR] EXITO TOTAL - Datos SAR obtenidos correctamente (confidence={final_confidence:.2f})")
             
             # GUARDAR EN CACHE para evitar re-descargas
             try:
@@ -597,7 +672,7 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 indices=indices,
                 anomaly_score=anomaly_score,
                 anomaly_type=anomaly_type,
-                confidence=confidence,
+                confidence=final_confidence,  # Usar confidence ajustado por fallback
                 processing_time_s=processing_time,
                 cached=False
             )

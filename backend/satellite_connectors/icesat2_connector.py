@@ -4,6 +4,7 @@ Elevación de precisión centimétrica para hielo y terreno
 """
 
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
 import numpy as np
@@ -83,16 +84,29 @@ class ICESat2Connector(SatelliteConnector):
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         product: str = "ATL06"
-    ) -> Optional[SatelliteData]:
+    ):
         """
-        Obtener datos de elevación ICESat-2
+        Obtener datos de elevación ICESat-2 con Instrument Contract
         
         Args:
             product: "ATL06" (Land Ice) o "ATL08" (Land/Vegetation)
+            
+        Returns:
+            InstrumentMeasurement con estado robusto
         """
+        # Importar contrato
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from instrument_contract import InstrumentMeasurement, InstrumentStatus
+        
         if not self.available:
-            logger.error("ICESat-2 not available")
-            return None
+            return InstrumentMeasurement.create_error(
+                instrument_name="ICESat-2",
+                measurement_type="elevation",
+                error_msg="ICESat-2 not available - credentials not configured",
+                source="NASA Earthdata"
+            )
         
         try:
             # Fechas por defecto: últimos 6 meses
@@ -103,7 +117,7 @@ class ICESat2Connector(SatelliteConnector):
             
             bbox = (lon_min, lat_min, lon_max, lat_max)
             
-            logger.info(f"🛰️ Buscando ICESat-2 {product} en bbox {bbox}")
+            logger.info(f"Buscando ICESat-2 {product} en bbox {bbox}")
             
             # Buscar granules
             results = earthaccess.search_data(
@@ -114,24 +128,33 @@ class ICESat2Connector(SatelliteConnector):
             )
             
             if not results:
-                logger.warning(f"No ICESat-2 {product} data found for bbox {bbox}")
-                return None
+                return InstrumentMeasurement.create_no_data(
+                    instrument_name="ICESat-2",
+                    measurement_type="elevation",
+                    reason=f"No {product} granules found for bbox and date range",
+                    source="NASA Earthdata"
+                )
             
-            logger.info(f"✅ Found {len(results)} ICESat-2 granules")
+            logger.info(f"Found {len(results)} ICESat-2 granules")
             
             # Descargar el granule más reciente
             granule = results[0]
+            acquisition_date = granule['umm']['TemporalExtent']['RangeDateTime']['BeginningDateTime']
+            
             files = earthaccess.download(granule, local_path="./cache/icesat2")
             
             if not files:
-                logger.error("Failed to download ICESat-2 data")
-                return None
+                return InstrumentMeasurement.create_error(
+                    instrument_name="ICESat-2",
+                    measurement_type="elevation",
+                    error_msg="Failed to download granule",
+                    source="NASA Earthdata"
+                )
             
             # Leer datos HDF5
             h5_file = files[0]
             elevations = []
-            lats = []
-            lons = []
+            quality_flags = []
             
             with h5py.File(h5_file, 'r') as f:
                 # ATL06 tiene 3 beams (gt1l, gt1r, gt2l, gt2r, gt3l, gt3r)
@@ -142,11 +165,17 @@ class ICESat2Connector(SatelliteConnector):
                             h_li = f[path]['h_li'][:]  # Altura sobre elipsoide
                             lat = f[path]['latitude'][:]
                             lon = f[path]['longitude'][:]
+                            # CRÍTICO: Leer quality flags
+                            try:
+                                atl06_quality = f[path]['atl06_quality_summary'][:]
+                            except:
+                                atl06_quality = np.zeros_like(h_li)
                         else:  # ATL08
                             path = f'{beam}/land_segments'
                             h_li = f[path]['terrain']['h_te_mean'][:]
                             lat = f[path]['latitude'][:]
                             lon = f[path]['longitude'][:]
+                            atl06_quality = np.zeros_like(h_li)
                         
                         # Filtrar por bbox
                         mask = (
@@ -155,66 +184,79 @@ class ICESat2Connector(SatelliteConnector):
                         )
                         
                         elevations.extend(h_li[mask])
-                        lats.extend(lat[mask])
-                        lons.extend(lon[mask])
+                        quality_flags.extend(atl06_quality[mask])
                         
                     except KeyError:
                         continue
             
             if not elevations:
-                logger.warning("No elevation data in bbox")
-                return None
+                return InstrumentMeasurement.create_no_data(
+                    instrument_name="ICESat-2",
+                    measurement_type="elevation",
+                    reason="No elevation data in bbox after filtering",
+                    source="NASA Earthdata"
+                )
             
             elevations = np.array(elevations)
-            lats = np.array(lats)
-            lons = np.array(lons)
+            quality_flags = np.array(quality_flags)
             
-            # Calcular estadísticas
-            indices = {
-                'elevation_mean': float(np.nanmean(elevations)),
-                'elevation_std': float(np.nanstd(elevations)),
-                'elevation_min': float(np.nanmin(elevations)),
-                'elevation_max': float(np.nanmax(elevations)),
-                'elevation_range': float(np.nanmax(elevations) - np.nanmin(elevations)),
-                'points_count': len(elevations)
-            }
+            # CRÍTICO: Filtrar por calidad Y valores finitos
+            valid_mask = (
+                (quality_flags == 0) &  # Quality flag 0 = good
+                np.isfinite(elevations)  # No inf/nan
+            )
             
-            # Detectar depresiones (anomalías negativas)
-            mean_elev = np.nanmean(elevations)
-            std_elev = np.nanstd(elevations)
-            depressions = elevations < (mean_elev - 2 * std_elev)
+            valid_elevations = elevations[valid_mask]
             
-            anomaly_score = float(np.sum(depressions) / len(elevations))
-            confidence = 0.9 if len(elevations) > 100 else 0.7  # Confianza como float
+            # CRÍTICO: Validar mínimo de puntos
+            MIN_POINTS = 10
+            if len(valid_elevations) < MIN_POINTS:
+                return InstrumentMeasurement.create_invalid(
+                    instrument_name="ICESat-2",
+                    measurement_type="elevation",
+                    reason=f"insufficient_valid_points - only {len(valid_elevations)} points after quality filtering (minimum: {MIN_POINTS})",
+                    source="NASA Earthdata",
+                    unit="meters"
+                )
             
-            # Tipo de anomalía
-            if indices['elevation_range'] > 50:
-                anomaly_type = 'high_relief'
-            elif anomaly_score > 0.1:
-                anomaly_type = 'depression_detected'
+            # Calcular elevación promedio
+            elevation_mean = float(np.mean(valid_elevations))
+            elevation_std = float(np.std(valid_elevations))
+            
+            # Calcular confianza basada en cantidad y dispersión
+            if len(valid_elevations) > 100 and elevation_std < 50:
+                confidence = 0.95
+            elif len(valid_elevations) > 50:
+                confidence = 0.85
             else:
-                anomaly_type = 'flat_terrain'
+                confidence = 0.70
             
-            logger.info(f"✅ ICESat-2 processed: {len(elevations)} points")
+            logger.info(f"ICESat-2 processed: {len(valid_elevations)} valid points, mean={elevation_mean:.2f}m")
             
-            return SatelliteData(
-                source=f'icesat2-{product.lower()}',
-                acquisition_date=datetime.now(),
-                cloud_cover=0.0,
-                resolution_m=17.0,
-                lat_min=lat_min,
-                lat_max=lat_max,
-                lon_min=lon_min,
-                lon_max=lon_max,
-                bands={'elevation': elevations, 'latitude': lats, 'longitude': lons},
-                indices=indices,
-                anomaly_score=anomaly_score,
-                anomaly_type=anomaly_type,
+            return InstrumentMeasurement(
+                instrument_name="ICESat-2",
+                measurement_type="elevation",
+                value=elevation_mean,
+                unit="meters",
+                status=InstrumentStatus.OK,
                 confidence=confidence,
-                processing_time_s=0.0,
-                cached=False
+                reason=None,
+                quality_flags={
+                    'valid_points': len(valid_elevations),
+                    'total_points': len(elevations),
+                    'quality_filtered': int(np.sum(quality_flags != 0)),
+                    'elevation_std': elevation_std
+                },
+                source="NASA Earthdata",
+                acquisition_date=acquisition_date[:10],
+                processing_notes=f"Filtered by quality flags (atl06_quality_summary==0) and finite values. {len(valid_elevations)}/{len(elevations)} points valid."
             )
             
         except Exception as e:
             logger.error(f"Error fetching ICESat-2 data: {e}", exc_info=True)
-            return None
+            return InstrumentMeasurement.create_error(
+                instrument_name="ICESat-2",
+                measurement_type="elevation",
+                error_msg=str(e),
+                source="NASA Earthdata"
+            )

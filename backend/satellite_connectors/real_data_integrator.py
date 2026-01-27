@@ -135,31 +135,30 @@ class RealDataIntegrator:
                 else:
                     print(f"         [FAIL] Landsat Thermal no devolvio datos", flush=True)
             
-            # ICESAT-2 (Elevacion)
+            # ICESAT-2 (Elevacion) - ACTUALIZADO A INSTRUMENT CONTRACT
             elif instrument_name in ["icesat2", "elevation", "ice_height", "icesat2_subsurface", "icesat2_elevation_anomalies"]:
                 log(f"         >> Llamando a ICESat-2 (NASA Earthdata)...")
-                data = await self.icesat2.get_elevation_data(
+                measurement = await self.icesat2.get_elevation_data(
                     lat_min, lat_max, lon_min, lon_max
                 )
-                if data:
-                    import math
-                    elev_mean = data.indices['elevation_mean']
-                    # Check for inf/nan values
-                    if math.isnan(elev_mean) or math.isinf(elev_mean):
-                        log(f"         [FAIL] ICESat-2 devolvio valores invalidos (inf/nan)")
+                
+                # measurement es InstrumentMeasurement - devolver directamente su dict
+                if measurement:
+                    log(f"         >> ICESat-2 status: {measurement.status.value}")
+                    
+                    if measurement.is_usable():
+                        log(f"         [OK] ICESat-2 respondio: Elevacion={measurement.value:.2f}m (confidence={measurement.confidence:.2f})")
+                        log_file.close()
+                        # Devolver dict completo del InstrumentMeasurement
+                        return measurement.to_dict()
+                    else:
+                        log(f"         [FAIL] ICESat-2 no usable: {measurement.reason}")
                         log_file.close()
                         return None
-                    
-                    log(f"         [OK] ICESat-2 respondio: Elevacion={elev_mean:.2f}m")
-                    log_file.close()
-                    return {
-                        'value': elev_mean,
-                        'source': 'ICESat-2 (NASA)',
-                        'confidence': data.confidence,
-                        'acquisition_date': data.acquisition_date.isoformat()
-                    }
                 else:
-                    log(f"         [FAIL] ICESat-2 no devolvio datos")
+                    log(f"         [FAIL] ICESat-2 no devolvio medicion")
+                    log_file.close()
+                    return None
             
             # NSIDC (Hielo marino, criosfera) - NUEVO
             elif instrument_name in ["nsidc_sea_ice", "sea_ice_concentration", "nsidc_polar_ice", "nsidc_ice_concentration"]:

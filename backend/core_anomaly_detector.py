@@ -312,7 +312,7 @@ class CoreAnomalyDetector:
                                         lat_min: float, lat_max: float,
                                         lon_min: float, lon_max: float) -> Optional[InstrumentMeasurement]:
         """
-        MEDICIÓN REAL usando APIs satelitales
+        MEDICIÓN REAL usando APIs satelitales con Instrument Contract
         
         Reemplaza simulaciones por datos reales de:
         - Sentinel-2 (NDVI, multispectral)
@@ -322,6 +322,8 @@ class CoreAnomalyDetector:
         - OpenTopography (DEM)
         - Copernicus Marine (hielo marino)
         - Y más...
+        
+        ACTUALIZADO: Maneja InstrumentMeasurement objects desde APIs
         """
         
         # Log to file for diagnostics
@@ -400,45 +402,116 @@ class CoreAnomalyDetector:
             
             threshold = indicator_config[threshold_key[0]]
             
-            # Valor real de la API
-            value = real_data['value']
-            
-            # Comparar con umbral
-            exceeds = value > threshold
-            
-            # Determinar confianza basada en la fuente
-            api_confidence = real_data.get('confidence', 0.8)
-            if exceeds:
-                ratio = value / threshold
-                if ratio > 1.8 and api_confidence > 0.8:
-                    confidence = "high"
-                elif ratio > 1.4 and api_confidence > 0.6:
-                    confidence = "moderate"
+            # CRITICAL: Manejar tanto Dict (legacy) como InstrumentMeasurement (nuevo)
+            if isinstance(real_data, dict):
+                # Legacy format - convertir a InstrumentMeasurement interno
+                value = real_data.get('value')
+                if value is None:
+                    log(f"      [FAIL] API devolvio None value")
+                    log_file.close()
+                    return None
+                
+                # Validar que no sea inf/nan
+                if not isinstance(value, (int, float)) or value != value or value == float('inf') or value == float('-inf'):
+                    log(f"      [FAIL] API devolvio valor invalido: {value}")
+                    log_file.close()
+                    return None
+                
+                # CRITICAL: Aceptar DERIVED data (datos estimados son válidos si están documentados)
+                data_mode = real_data.get('data_mode', 'REAL')
+                if data_mode == 'DERIVED':
+                    log(f"      [INFO] Dato DERIVED aceptado (estimado pero válido)")
+                
+                # Comparar con umbral
+                exceeds = value > threshold
+                
+                # Determinar confianza basada en la fuente
+                api_confidence = real_data.get('confidence', 0.8)
+                if exceeds:
+                    ratio = value / threshold
+                    if ratio > 1.8 and api_confidence > 0.8:
+                        confidence = "high"
+                    elif ratio > 1.4 and api_confidence > 0.6:
+                        confidence = "moderate"
+                    else:
+                        confidence = "low"
                 else:
-                    confidence = "low"
+                    confidence = "none"
+                
+                # Notas con fuente real
+                notes = indicator_config.get('expected_pattern', '')
+                notes += f" | Fuente: {real_data.get('source', 'Unknown')} | Fecha: {real_data.get('acquisition_date', 'N/A')}"
+                if data_mode == 'DERIVED':
+                    notes += f" | DERIVED: {real_data.get('estimation_method', 'estimated')}"
+                
+                log(f"   [OK] DATO REAL (legacy): {indicator_name} = {value:.2f} (fuente: {real_data.get('source', 'Unknown')}, mode: {data_mode})")
+                log_file.close()
+                
+                return InstrumentMeasurement(
+                    instrument_name=indicator_name,
+                    measurement_type=indicator_config.get('description', ''),
+                    value=value,
+                    unit=self._extract_unit(threshold_key[0]),
+                    threshold=threshold,
+                    exceeds_threshold=exceeds,
+                    confidence=confidence,
+                    notes=notes
+                )
             else:
-                confidence = "none"
-            
-            # Notas con fuente real
-            notes = indicator_config.get('expected_pattern', '')
-            notes += f" | Fuente: {real_data['source']} | Fecha: {real_data.get('acquisition_date', 'N/A')}"
-            
-            log(f"   [OK] DATO REAL: {indicator_name} = {value:.2f} (fuente: {real_data['source']})")
-            log_file.close()
-            
-            return InstrumentMeasurement(
-                instrument_name=indicator_name,
-                measurement_type=indicator_config.get('description', ''),
-                value=value,
-                unit=self._extract_unit(threshold_key[0]),
-                threshold=threshold,
-                exceeds_threshold=exceeds,
-                confidence=confidence,
-                notes=notes
-            )
+                # Nuevo formato InstrumentMeasurement - ya viene validado
+                log(f"   [OK] DATO REAL (InstrumentMeasurement): {indicator_name} status={real_data.get('status', 'unknown')}")
+                
+                # Si no es usable, retornar None
+                if real_data.get('status') not in ['OK', 'DERIVED']:
+                    log(f"      [SKIP] Medicion no usable: {real_data.get('reason', 'unknown')}")
+                    log_file.close()
+                    return None
+                
+                value = real_data.get('value')
+                if value is None:
+                    log(f"      [FAIL] InstrumentMeasurement sin value")
+                    log_file.close()
+                    return None
+                
+                # Comparar con umbral
+                exceeds = value > threshold
+                
+                # Mapear confidence de InstrumentMeasurement (0.0-1.0) a string
+                api_confidence = real_data.get('confidence', 0.8)
+                if exceeds:
+                    ratio = value / threshold
+                    if ratio > 1.8 and api_confidence > 0.8:
+                        confidence = "high"
+                    elif ratio > 1.4 and api_confidence > 0.6:
+                        confidence = "moderate"
+                    else:
+                        confidence = "low"
+                else:
+                    confidence = "none"
+                
+                # Notas con fuente real
+                notes = indicator_config.get('expected_pattern', '')
+                notes += f" | Fuente: {real_data.get('source', 'Unknown')} | Fecha: {real_data.get('acquisition_date', 'N/A')}"
+                if real_data.get('processing_notes'):
+                    notes += f" | {real_data.get('processing_notes')}"
+                
+                log_file.close()
+                
+                return InstrumentMeasurement(
+                    instrument_name=indicator_name,
+                    measurement_type=indicator_config.get('description', ''),
+                    value=value,
+                    unit=self._extract_unit(threshold_key[0]),
+                    threshold=threshold,
+                    exceeds_threshold=exceeds,
+                    confidence=confidence,
+                    notes=notes
+                )
         
         except Exception as e:
             log(f"   [FAIL] Error obteniendo dato real para {indicator_name}: {e}")
+            import traceback
+            log(f"   Traceback: {traceback.format_exc()}")
             try:
                 log_file.close()
             except:

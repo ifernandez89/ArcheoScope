@@ -1,0 +1,124 @@
+{
+  "candidate_id": "ocomtun_maya",
+  "candidate_name": "Ocomtún - Ciudad Maya (Calakmul)",
+  "region": "Calakmul, México",
+  "environment_detected": "forest",
+  "environment_confidence": 0.6,
+  "archaeological_probability": 0.3321943172771007,
+  "confidence": "none",
+  "result_type": "consistent",
+  "instruments_measuring": 0,
+  "instruments_total": 5,
+  "convergence_achieved": false,
+  "temporal_analysis": false,
+  "ai_available": true,
+  "analysis_time_seconds": 27.72,
+  "timestamp": "2026-01-26T22:18:47.483236",
+  "full_result": {
+    "region_info": {
+      "name": "Ocomtún - Ciudad Maya (Calakmul)",
+      "coordinates": {
+        "lat_range": [
+          18.525000000000002,
+          18.575
+        ],
+        "lon_range": [
+          -89.775,
+          -89.725
+        ]
+      },
+      "resolution_m": 1000,
+      "area_km2": 23.587500000004024,
+      "analysis_type": "intelligent_integrated_archaeological_analysis"
+    },
+    "environment_classification": {
+      "environment_type": "forest",
+      "confidence": 0.6,
+      "primary_sensors": [
+        "lidar",
+        "sentinel2",
+        "sar"
+      ],
+      "secondary_sensors": [
+        "landsat",
+        "modis"
+      ],
+      "archaeological_visibility": "low",
+      "preservation_potential": "poor"
+    },
+    "archaeological_results": {
+      "result_type": "consistent",
+      "archaeological_probability": 0.3321943172771007,
+      "confidence": "none",
+      "modern_exclusion_score": 0.0,
+      "site_recognized": false,
+      "temporal_enhancement": 0.06219431727710066,
+      "ai_enhancement": 0.15,
+      "base_core_probability": 0.12
+    },
+    "instrumental_measurements": [],
+    "convergence_analysis": {
+      "instruments_converging": 0,
+      "minimum_required": 2,
+      "convergence_met": false,
+      "temporal_support": false,
+      "ai_support": true,
+      "enhanced_confidence": false
+    },
+    "statistical_results": {
+      "spatial_anomaly_pixels": 0,
+      "archaeological_signature_pixels": 0,
+      "total_pixels": 1000,
+      "anomaly_distribution": {
+        "high_confidence": 0,
+        "moderate_confidence": 0,
+        "low_confidence": 0,
+        "total_instruments": 0
+      },
+      "detection_probability": 0.3321943172771007,
+      "environmental_confidence": 0.6,
+      "temporal_confidence": 0.24877726910840264,
+      "ai_confidence": 0.15
+    },
+    "anomaly_map": {
+      "statistics": {
+        "spatial_anomaly_pixels": 0,
+        "archaeological_signature_pixels": 0,
+        "total_pixels": 1000,
+        "anomaly_distribution": {
+          "high_confidence": 0,
+          "moderate_confidence": 0,
+          "low_confidence": 0,
+          "total_instruments": 0
+        },
+        "detection_probability": 0.12,
+        "environmental_confidence": 0.6
+      }
+    },
+    "validation_metrics": {
+      "site_recognized": false,
+      "site_name": null,
+      "distance_km": null,
+      "overlapping_sites": [],
+      "nearby_sites": []
+    },
+    "scientific_explanation": {
+      "explanation": "Análisis en ambiente forest (confianza 60%). Ningún instrumento detectó anomalias significativas. Convergencia NO alcanzada (0/2 requeridos). No se detectó anomalía arqueologica significativa.",
+      "detection_reasoning": [],
+      "false_positive_risks": [],
+      "recommended_validation": [
+        "LiDAR aerotransportado crítico para confirmar"
+      ]
+    },
+    "ai_explanations": {
+      "ai_available": true,
+      "explanation": "Análisis en ambiente forest (confianza 60%). Ningún instrumento detectó anomalias significativas. Convergencia NO alcanzada (0/2 requeridos). No se detectó anomalía arqueologica significativa.",
+      "mode": "core_detector"
+    },
+    "system_status": {
+      "analysis_completed": true,
+      "detector_used": "core_anomaly_detector",
+      "scientific_method": "instrumental_convergence"
+    }
+  }
+}

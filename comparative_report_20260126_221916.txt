@@ -1,0 +1,41 @@
+
+================================================================================
+REPORTE COMPARATIVO - CANDIDATOS ARQUEOLOGICOS
+================================================================================
+
+Total candidatos analizados: 5
+Timestamp: 2026-01-26 22:19:16
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Candidato                           │ Prob%  │ Inst  │ Conv  │ Tiempo   │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Valeriana - Ciudad Maya (LiDAR)     │ 33.2%  │ 0/5   │       │ 30.6s    │
+│ El Viandar Castle & Settlement      │ 31.2%  │ 0/5   │       │ 24.5s    │
+│ Cedar Creek Earthworks              │ 31.2%  │ 0/5   │       │ 24.3s    │
+│ Ocomtún - Ciudad Maya (Calakmul)    │ 33.2%  │ 0/5   │       │ 27.7s    │
+│ Ancient Amazonian Earthworks (Kuhik │ 33.2%  │ 0/5   │       │ 26.1s    │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+ESTADISTICAS:
+   Probabilidad promedio: 32.4%
+   Tiempo promedio: 26.6s
+   Convergencia alcanzada: 0/5
+
+RANKING POR PROBABILIDAD ARQUEOLOGICA:
+   1. Valeriana - Ciudad Maya (LiDAR): 33.2%
+   2. Ocomtún - Ciudad Maya (Calakmul): 33.2%
+   3. Ancient Amazonian Earthworks (Kuhikugu): 33.2%
+   4. El Viandar Castle & Settlement: 31.2%
+   5. Cedar Creek Earthworks: 31.2%
+
+AMBIENTES DETECTADOS:
+   forest: 3 sitios
+      - Valeriana - Ciudad Maya (LiDAR)
+      - Ocomtún - Ciudad Maya (Calakmul)
+      - Ancient Amazonian Earthworks (Kuhikugu)
+   agricultural: 1 sitios
+      - El Viandar Castle & Settlement
+   deep_ocean: 1 sitios
+      - Cedar Creek Earthworks
+
+================================================================================
