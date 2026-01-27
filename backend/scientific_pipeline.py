@@ -70,6 +70,10 @@ class ScientificOutput:
     candidate_type: str = "unknown"  # positive_candidate, negative_reference, uncertain
     negative_reason: Optional[str] = None  # geomorfología si es negativo
     reuse_for_training: bool = False  # True si es referencia negativa valiosa
+    # AJUSTE FINO 2: Diferenciar descartar de archivar
+    discard_type: str = "none"  # discard_operational, archive_scientific_negative, none
+    # AJUSTE FINO 3: Confianza científica del descarte
+    scientific_confidence: str = "unknown"  # high, medium, low (certeza del descarte)
 
 class ScientificPipeline:
     """
@@ -82,7 +86,62 @@ class ScientificPipeline:
     def __init__(self):
         """Inicializar pipeline."""
         self.anti_patterns = self._load_anti_patterns()
+        self.baseline_profiles = self._load_baseline_profiles()  # AJUSTE FINO 1
         print("[PIPELINE] ScientificPipeline inicializado", flush=True)
+    
+    def _load_baseline_profiles(self) -> Dict[str, Dict[str, Any]]:
+        """
+        AJUSTE FINO 1: Baseline profiles por tipo de ambiente.
+        
+        Permite comparar candidatos contra perfiles esperados y
+        rechazar más rápido cuando coinciden con geomorfología natural.
+        """
+        return {
+            "glacial": {
+                "baseline_type": "glacial",
+                "expected_morphology": ["planar", "low_symmetry"],
+                "instrument_expectations": ["SAR > optical"],
+                "default_anthropic_ceiling": 0.25,
+                "geomorphology_hints": [
+                    "glacial_outwash_or_ablation_plain",
+                    "moraine",
+                    "glacial_valley"
+                ]
+            },
+            "desert": {
+                "baseline_type": "desert",
+                "expected_morphology": ["dune_patterns", "wind_erosion"],
+                "instrument_expectations": ["thermal_high", "optical_clear"],
+                "default_anthropic_ceiling": 0.30,
+                "geomorphology_hints": [
+                    "aeolian_dune",
+                    "desert_pavement",
+                    "wadi"
+                ]
+            },
+            "coastal": {
+                "baseline_type": "coastal",
+                "expected_morphology": ["wave_patterns", "tidal_features"],
+                "instrument_expectations": ["SAR_water", "optical_variable"],
+                "default_anthropic_ceiling": 0.35,
+                "geomorphology_hints": [
+                    "beach_ridge",
+                    "tidal_flat",
+                    "coastal_erosion"
+                ]
+            },
+            "mountain": {
+                "baseline_type": "mountain",
+                "expected_morphology": ["steep_slopes", "erosion_channels"],
+                "instrument_expectations": ["lidar_relief", "slope_high"],
+                "default_anthropic_ceiling": 0.30,
+                "geomorphology_hints": [
+                    "mountain_ridge",
+                    "talus_slope",
+                    "alpine_valley"
+                ]
+            }
+        }
     
     def _load_anti_patterns(self) -> Dict[str, Dict[str, Any]]:
         """Cargar anti-patrones conocidos (volcanes, dunas, etc.)."""
@@ -520,15 +579,75 @@ class ScientificPipeline:
         
         Nunca: ❌ "Sitio arqueológico detectado"
         Siempre: ✅ "Geo-candidata con anomalía morfológica significativa"
+        
+        AJUSTES FINOS:
+        1. Comparar contra baseline profiles
+        2. Diferenciar discard_operational vs archive_scientific_negative
+        3. Calcular scientific_confidence (certeza del descarte)
         """
         print("[FASE F] Generando salida científica...", flush=True)
         
-        # Determinar acción recomendada
+        # AJUSTE FINO 1: Comparar contra baseline profile
+        environment_type = normalized.raw_measurements.get('environment_type', 'unknown')
+        baseline_match = None
+        baseline_profile = None
+        
+        if environment_type in ['polar_ice', 'glacier', 'permafrost']:
+            baseline_profile = self.baseline_profiles.get('glacial')
+        elif environment_type in ['desert', 'arid']:
+            baseline_profile = self.baseline_profiles.get('desert')
+        elif environment_type in ['coastal', 'shallow_sea']:
+            baseline_profile = self.baseline_profiles.get('coastal')
+        elif environment_type in ['mountain', 'alpine']:
+            baseline_profile = self.baseline_profiles.get('mountain')
+        
+        if baseline_profile:
+            # Verificar si coincide con baseline
+            geomorph_hint = morphology.geomorphology_hint
+            if geomorph_hint in baseline_profile['geomorphology_hints']:
+                baseline_match = baseline_profile['baseline_type']
+                print(f"[FASE F] Coincide con baseline profile: {baseline_match}", flush=True)
+                # Aplicar techo antropogénico del baseline
+                if anthropic.anthropic_probability > baseline_profile['default_anthropic_ceiling']:
+                    print(f"[FASE F] Probabilidad reducida por baseline ceiling: {baseline_profile['default_anthropic_ceiling']}", flush=True)
+        
+        # AJUSTE FINO 3: Calcular confianza científica del descarte
+        # (certeza de que NO es arqueológico, independiente de la probabilidad)
+        scientific_confidence = "unknown"
+        
+        if anti_pattern:
+            # Anti-patrón detectado → alta confianza en el descarte
+            scientific_confidence = "high"
+        elif baseline_match and anthropic.anthropic_probability < 0.3:
+            # Coincide con baseline natural → alta confianza en el descarte
+            scientific_confidence = "high"
+        elif morphology.geomorphology_hint != "unknown" and anthropic.anthropic_probability < 0.4:
+            # Geomorfología identificada + baja probabilidad → confianza media-alta
+            scientific_confidence = "medium_high"
+        elif anomaly.anomaly_score < 0.3 and anthropic.anthropic_probability < 0.5:
+            # Sin anomalía + baja probabilidad → confianza media
+            scientific_confidence = "medium"
+        elif anthropic.confidence == "low":
+            # Baja confianza en la inferencia → baja confianza en el descarte
+            scientific_confidence = "low"
+        else:
+            scientific_confidence = "medium"
+        
+        # Determinar acción recomendada y tipo de descarte
+        discard_type = "none"
+        
         if anti_pattern:
             recommended_action = "reject_natural_process"
             notes = f"Descartado como proceso natural: {anti_pattern['rejected_as']}"
-            candidate_type = "negative_reference"  # MEJORA PRO
+            candidate_type = "negative_reference"
             negative_reason = anti_pattern['rejected_as']
+            discard_type = "archive_scientific_negative"  # AJUSTE FINO 2
+        elif baseline_match and anthropic.anthropic_probability < 0.3:
+            recommended_action = "no_action"
+            notes = f"Consistente con baseline {baseline_match} - {morphology.geomorphology_hint}"
+            candidate_type = "negative_reference"
+            negative_reason = morphology.geomorphology_hint
+            discard_type = "archive_scientific_negative"  # AJUSTE FINO 2
         elif anthropic.anthropic_probability > 0.7 and anthropic.confidence == "high":
             recommended_action = "field_verification_priority"
             notes = "Geo-candidata con anomalía morfológica significativa - verificación de campo prioritaria"
@@ -547,9 +666,13 @@ class ScientificPipeline:
         else:
             recommended_action = "no_action"
             notes = "Consistente con procesos naturales - no requiere acción"
-            # MEJORA PRO: Resultados negativos valiosos
             candidate_type = "negative_reference"
             negative_reason = morphology.geomorphology_hint
+            # AJUSTE FINO 2: Diferenciar tipos de descarte
+            if scientific_confidence in ["high", "medium_high"]:
+                discard_type = "archive_scientific_negative"  # Vale para ciencia
+            else:
+                discard_type = "discard_operational"  # Descarte operacional simple
         
         # Fases completadas
         phases_completed = ["A_normalize", "B_anomaly", "C_morphology", "D_anthropic", "E_antipatterns", "F_output"]
@@ -563,9 +686,11 @@ class ScientificPipeline:
             notes=notes,
             phases_completed=phases_completed,
             timestamp=datetime.now().isoformat(),
-            candidate_type=candidate_type,  # NUEVO
-            negative_reason=negative_reason,  # NUEVO
-            reuse_for_training=candidate_type == "negative_reference"  # NUEVO
+            candidate_type=candidate_type,
+            negative_reason=negative_reason,
+            reuse_for_training=candidate_type == "negative_reference",
+            discard_type=discard_type,  # NUEVO
+            scientific_confidence=scientific_confidence  # NUEVO
         )
         
         print(f"[FASE F] Salida científica generada", flush=True)
@@ -573,9 +698,13 @@ class ScientificPipeline:
         print(f"  - Anthropic probability: {output.anthropic_probability:.3f}", flush=True)
         print(f"  - Recommended action: {output.recommended_action}", flush=True)
         print(f"  - Candidate type: {output.candidate_type}", flush=True)
+        if baseline_match:
+            print(f"  - Baseline match: {baseline_match}", flush=True)
         if output.negative_reason:
             print(f"  - Negative reason: {output.negative_reason}", flush=True)
             print(f"  - Reuse for training: {output.reuse_for_training}", flush=True)
+        print(f"  - Discard type: {output.discard_type}", flush=True)
+        print(f"  - Scientific confidence: {output.scientific_confidence}", flush=True)
         print(f"  - Notes: {output.notes}", flush=True)
         
         return output
@@ -630,7 +759,10 @@ class ScientificPipeline:
                 # MEJORA PRO
                 "candidate_type": output.candidate_type,
                 "negative_reason": output.negative_reason,
-                "reuse_for_training": output.reuse_for_training
+                "reuse_for_training": output.reuse_for_training,
+                # AJUSTES FINOS
+                "discard_type": output.discard_type,
+                "scientific_confidence": output.scientific_confidence
             },
             "phase_a_normalized": {
                 "features": normalized.features,

@@ -16,6 +16,11 @@ import logging
 import numpy as np
 from datetime import datetime
 import traceback
+import os
+from dotenv import load_dotenv
+
+# Cargar variables de entorno ANTES de cualquier otra cosa
+load_dotenv()
 
 # Agregar el backend al path
 sys.path.append(str(Path(__file__).parent.parent))
