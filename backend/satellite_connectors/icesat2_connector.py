@@ -169,23 +169,69 @@ class ICESat2Connector(SatelliteConnector):
             lats = np.array(lats)
             lons = np.array(lons)
             
-            # Calcular estadísticas
+            # CRÍTICO: Filtros de calidad robustos para ICESat-2
+            # 1. Eliminar valores finitos (inf/nan)
+            valid = elevations[np.isfinite(elevations)]
+            
+            # 2. Eliminar outliers absurdos (ICESat a veces devuelve locuras)
+            valid = valid[(valid > -500) & (valid < 9000)]  # Rango terrestre razonable
+            
+            # 3. Verificar cantidad mínima de puntos válidos
+            if valid.size < 10:
+                logger.warning(f"ICESat-2: Insuficientes puntos válidos ({valid.size}/10 mínimo)")
+                return SatelliteData(
+                    source=f'icesat2-{product.lower()}',
+                    acquisition_date=datetime.now(),
+                    cloud_cover=0.0,
+                    resolution_m=17.0,
+                    lat_min=lat_min,
+                    lat_max=lat_max,
+                    lon_min=lon_min,
+                    lon_max=lon_max,
+                    bands={},
+                    indices={
+                        'elevation_mean': None,
+                        'elevation_std': None,
+                        'points_count': len(elevations),
+                        'valid_points': valid.size
+                    },
+                    anomaly_score=0.0,
+                    anomaly_type='insufficient_data',
+                    confidence=0.0,
+                    processing_time_s=0.0,
+                    cached=False
+                )
+            
+            # 4. Calcular estadísticas SOLO con datos válidos
+            mean_elev = float(np.mean(valid))
+            std_elev = float(np.std(valid))
+            
             indices = {
-                'elevation_mean': float(np.nanmean(elevations)),
-                'elevation_std': float(np.nanstd(elevations)),
-                'elevation_min': float(np.nanmin(elevations)),
-                'elevation_max': float(np.nanmax(elevations)),
-                'elevation_range': float(np.nanmax(elevations) - np.nanmin(elevations)),
-                'points_count': len(elevations)
+                'elevation_mean': mean_elev,
+                'elevation_std': std_elev,
+                'elevation_min': float(np.min(valid)),
+                'elevation_max': float(np.max(valid)),
+                'elevation_range': float(np.max(valid) - np.min(valid)),
+                'points_count': len(elevations),
+                'valid_points': valid.size,
+                'quality_ratio': float(valid.size / len(elevations)) if len(elevations) > 0 else 0.0
             }
             
-            # Detectar depresiones (anomalías negativas)
-            mean_elev = np.nanmean(elevations)
-            std_elev = np.nanstd(elevations)
-            depressions = elevations < (mean_elev - 2 * std_elev)
+            # 5. Detectar depresiones con datos válidos
+            depressions = valid < (mean_elev - 2 * std_elev)
+            anomaly_score = float(np.sum(depressions) / len(valid)) if len(valid) > 0 else 0.0
             
-            anomaly_score = float(np.sum(depressions) / len(elevations))
-            confidence = 0.9 if len(elevations) > 100 else 0.7  # Confianza como float
+            # 6. Confianza basada en calidad de datos
+            quality_ratio = valid.size / len(elevations) if len(elevations) > 0 else 0.0
+            
+            if quality_ratio > 0.8 and valid.size > 100:
+                confidence = 0.9
+            elif quality_ratio > 0.6 and valid.size > 50:
+                confidence = 0.7
+            elif quality_ratio > 0.4 and valid.size > 20:
+                confidence = 0.5
+            else:
+                confidence = 0.3
             
             # Tipo de anomalía
             if indices['elevation_range'] > 50:

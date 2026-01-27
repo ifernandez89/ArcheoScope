@@ -97,11 +97,13 @@ class CoreAnomalyDetector:
         from site_confidence_system import SiteConfidenceSystem
         self.site_confidence_system = SiteConfidenceSystem()
         
-        # Inicializar integrador de datos reales
-        self.real_data_integrator = RealDataIntegrator()
+        # Inicializar integrador de datos reales V2 (CON BLINDAJE CRÍTICO)
+        from satellite_connectors.real_data_integrator_v2 import RealDataIntegratorV2
+        self.real_data_integrator = RealDataIntegratorV2()
         
         print("CoreAnomalyDetector inicializado correctamente", flush=True)
-        print("[OK] RealDataIntegrator activado - NO MAS SIMULACIONES", flush=True)
+        print("[OK] RealDataIntegratorV2 activado - BLINDAJE CRÍTICO IMPLEMENTADO", flush=True)
+        print("[OK] Estados explícitos por instrumento - NUNCA ABORTAR BATCH", flush=True)
     
     def _load_anomaly_signatures(self) -> Dict[str, Any]:
         """Cargar firmas de anomalias desde JSON"""
@@ -250,58 +252,89 @@ class CoreAnomalyDetector:
                                   lat_min: float, lat_max: float,
                                   lon_min: float, lon_max: float) -> List[InstrumentMeasurement]:
         """
-        Medir con instrumentos apropiados para el terreno
+        Medir con instrumentos apropiados para el terreno - VERSIÓN ROBUSTA V2
+        
+        MEJORAS CRÍTICAS:
+        - Blindaje global contra inf/nan
+        - Estados explícitos por instrumento
+        - Nunca abortar el batch completo
+        - Coverage score en tiempo real
         
         REGLA NRO 1 DE ARCHEOSCOPE: JAMÁS FALSEAR DATOS - SOLO APIS REALES
-        
-        Si la API falla o no está disponible, NO se mide ese instrumento.
-        El sistema debe trabajar con datos incompletos, NUNCA con datos falsos.
         """
-        measurements = []
         
         indicators = env_signatures.get('archaeological_indicators', {})
         
-        # Log to file for diagnostics
-        import sys
-        log_file = open('instrument_diagnostics.log', 'a', encoding='utf-8')
+        # Extraer nombres de instrumentos de los indicadores
+        instrument_names = list(indicators.keys())
         
-        def log(msg):
-            print(msg, flush=True)
-            log_file.write(msg + '\n')
-            log_file.flush()
+        print(f"\n{'='*80}", flush=True)
+        print(f"=== MEDICIONES INSTRUMENTALES ROBUSTAS V2 ===", flush=True)
+        print(f"   Ambiente: {env_context.environment_type}", flush=True)
+        print(f"   Indicadores a medir: {len(indicators)}", flush=True)
+        print(f"   Region: [{lat_min:.4f}, {lat_max:.4f}] x [{lon_min:.4f}, {lon_max:.4f}]", flush=True)
+        print(f"{'='*80}", flush=True)
         
-        log(f"\n{'='*80}")
-        log(f"=== INICIANDO MEDICIONES INSTRUMENTALES ===")
-        log(f"   Ambiente: {env_context.environment_type}")
-        log(f"   Indicadores a medir: {len(indicators)}")
-        log(f"   Region: [{lat_min:.4f}, {lat_max:.4f}] x [{lon_min:.4f}, {lon_max:.4f}]")
+        # Usar integrador robusto V2
+        batch = await self.real_data_integrator.get_batch_measurements(
+            instrument_names, lat_min, lat_max, lon_min, lon_max
+        )
         
-        for idx, (indicator_name, indicator_config) in enumerate(indicators.items(), 1):
-            log(f"\n[{idx}/{len(indicators)}] Midiendo: {indicator_name}")
-            
-            # SOLO intentar medicion REAL - NO SIMULACIONES
-            measurement = await self._get_real_instrument_measurement(
-                indicator_name, indicator_config, env_context,
-                lat_min, lat_max, lon_min, lon_max
-            )
-            
-            # Si falla, NO agregar medicion (NO SIMULAR JAMÁS)
-            if measurement:
+        # Convertir InstrumentResult a InstrumentMeasurement para compatibilidad
+        measurements = []
+        
+        for result in batch.results:
+            # Solo procesar resultados con datos válidos
+            if result.status.value in ['SUCCESS', 'DEGRADED'] and result.value is not None:
+                
+                # Obtener configuración del indicador
+                indicator_config = indicators.get(result.instrument_name, {})
+                
+                # Extraer umbral
+                threshold_key = [k for k in indicator_config.keys() if 'threshold' in k]
+                threshold = indicator_config[threshold_key[0]] if threshold_key else 1.0
+                
+                # Determinar si excede umbral
+                exceeds = result.value > threshold
+                
+                # Mapear confianza de InstrumentResult a string
+                if result.confidence > 0.8:
+                    confidence_str = "high"
+                elif result.confidence > 0.6:
+                    confidence_str = "moderate"
+                else:
+                    confidence_str = "low"
+                
+                # Crear InstrumentMeasurement
+                measurement = InstrumentMeasurement(
+                    instrument_name=result.instrument_name,
+                    measurement_type=result.measurement_type,
+                    value=result.value,
+                    unit=result.unit or "units",
+                    threshold=threshold,
+                    exceeds_threshold=exceeds,
+                    confidence=confidence_str,
+                    notes=f"Status: {result.status.value} | Source: {result.source or 'Unknown'} | {result.reason or ''}"
+                )
+                
                 measurements.append(measurement)
-                log(f"   [OK] Medicion EXITOSA: {indicator_name}")
-                log(f"      Valor: {measurement.value:.3f} {measurement.unit}")
-                log(f"      Umbral: {measurement.threshold:.3f}")
-                log(f"      Excede: {'SI' if measurement.exceeds_threshold else 'NO'}")
+                print(f"   [OK] {result.instrument_name}: {result.value:.3f} {result.unit} ({result.status.value})", flush=True)
+            
             else:
-                log(f"   [FAIL] SIN DATOS para {indicator_name} - OMITIDO (NO SE SIMULA)")
+                print(f"   [SKIP] {result.instrument_name}: {result.status.value} - {result.reason}", flush=True)
         
-        log(f"\n=== RESUMEN DE MEDICIONES ===")
-        log(f"   Total intentadas: {len(indicators)}")
-        log(f"   Exitosas: {len(measurements)}")
-        log(f"   Fallidas: {len(indicators) - len(measurements)}")
-        log(f"{'='*80}\n")
+        # Mostrar estadísticas del batch
+        report = batch.generate_report()
         
-        log_file.close()
+        print(f"\n=== ESTADÍSTICAS DEL BATCH ===", flush=True)
+        print(f"   Total instrumentos: {report['total_instruments']}", flush=True)
+        print(f"   Coverage Score: {report['coverage_score']:.1%}", flush=True)
+        print(f"   Instrumentos usables: {report['usable_instruments']}", flush=True)
+        print(f"   Mediciones válidas: {len(measurements)}", flush=True)
+        print(f"   Estados: SUCCESS={report['status_summary']['SUCCESS']}, "
+              f"DEGRADED={report['status_summary']['DEGRADED']}, "
+              f"FAILED={report['status_summary']['FAILED']}", flush=True)
+        print(f"{'='*80}\n", flush=True)
         
         return measurements
     
