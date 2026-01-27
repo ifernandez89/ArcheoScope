@@ -241,6 +241,14 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ No se pudo cargar router de validación IA: {e}")
 
+# NUEVO: Incluir router de sitios conocidos
+try:
+    from api.known_sites import router as known_sites_router
+    app.include_router(known_sites_router, prefix="/api", tags=["Known Sites"])
+    logger.info("✅ Router de sitios conocidos incluido")
+except ImportError as e:
+    logger.warning(f"⚠️ No se pudo cargar router de sitios conocidos: {e}")
+
 # Modelos de datos (idénticos a CryoScope para mantener UI/UX)
 class RegionRequest(BaseModel):
     """Solicitud de análisis arqueológico de región"""
