@@ -161,19 +161,29 @@ prisma/
 **archaeological_sites** (80,512 registros)
 - Sitios arqueológicos conocidos cosechados de Pleiades
 - Campos: id, name, latitude, longitude, country, period, site_type, confidence
+- **Uso**: FASE F del pipeline científico (validación contra sitios conocidos)
+- **Fuentes**: UNESCO World Heritage, Pleiades, excavaciones confirmadas
+- **Tipos**: monumental_complex, ceremonial_center, citadel, maya_city, rock_cut_city, megalithic_complex, bronze_age_city, etc.
 
 **measurements**
 - Mediciones instrumentales de análisis
 - Campos: id, analysis_id, instrument_name, value, confidence, source, data_mode, created_at
-- **Estado actual**: 31 mediciones guardadas (5 candidatos analizados)
+- **Estado actual**: 31 mediciones guardadas (2 candidatos analizados)
+- **Data modes**: OK (medición válida), NO_DATA (sin cobertura), ERROR (fallo API), ESTIMATED (fallback)
+- **Uso**: FASE 0 del pipeline (enriquecimiento con datos históricos)
 
 **archaeological_candidates**
 - Anomalías detectadas por el sistema
-- Campos: id, latitude, longitude, region_name, archaeological_probability, environment_type
+- Campos: id, candidate_id (UUID), latitude, longitude, region_name, archaeological_probability, environment_type, status, recommended_action
+- **Status**: pending, analyzing, analyzed, field_validated, rejected, archived
+- **Recommended action**: field_validation, detailed_analysis, monitor, discard
+- **Estado actual**: 1 candidato activo
 
 **archaeological_candidate_analyses**
-- Análisis detallados de candidatos
-- Relación con measurements y candidates
+- Análisis detallados de candidatos (pipeline científico completo)
+- Campos: id, candidate_id, candidate_name, region, environment_detected, archaeological_probability, confidence, result_type, full_result (JSONB)
+- **Full result incluye**: Todas las fases del pipeline (0, A-G)
+- **Estado actual**: 2 análisis guardados
 
 **credentials**
 - Credenciales encriptadas de APIs externas
@@ -235,9 +245,75 @@ prisma/
 ### 5.1 Endpoints Principales
 
 **POST /analyze**
-- Análisis arqueológico de región
+- Análisis arqueológico de región (legacy)
 - Input: lat_min, lat_max, lon_min, lon_max, region_name
 - Output: Resultado completo con mediciones instrumentales
+
+**POST /analyze-scientific** ⭐ NUEVO
+- **Pipeline científico completo de 7 fases**
+- Input: lat_min, lat_max, lon_min, lon_max, region_name, candidate_id
+- Output: Resultado científico con todas las fases
+- **FLUJO COMPLETO**:
+  1. **FASE 0**: Enriquecimiento con datos históricos de BD
+     - Consulta mediciones previas en la zona (buffer 0.1°)
+     - Agrupa por instrumento y promedia valores históricos
+     - Enriquece raw_measurements con datos faltantes
+     - Busca análisis previos en la región
+  
+  2. **Clasificación de Ambiente**
+     - Determina tipo de terreno (polar, desert, forest, etc.)
+     - Asigna instrumentos apropiados según ambiente
+     - Calcula visibilidad arqueológica y potencial de preservación
+  
+  3. **Medición Instrumental**
+     - Ejecuta 8 instrumentos satelitales en paralelo
+     - Obtiene datos reales de APIs (NO simulación)
+     - Marca data_mode: OK, NO_DATA, ERROR, ESTIMATED
+  
+  4. **FASE A**: Normalización por instrumento
+     - Z-score por instrumento
+     - Percentiles locales
+     - Diferencias contra entorno inmediato
+     - Status: applicable / not_applicable
+  
+  5. **FASE B**: Detección de anomalía pura
+     - Isolation Forest / LOF
+     - PCA residuals
+     - Outlier dimensions identificadas
+     - Confidence: high, medium, low
+  
+  6. **FASE C**: Análisis morfológico explícito
+     - Simetría radial
+     - Regularidad de bordes
+     - Planaridad
+     - Indicadores artificiales
+     - **Geomorfología inferida** (contexto geológico)
+  
+  7. **FASE D**: Inferencia antropogénica (con freno de mano)
+     - Probabilidad antropogénica (0.0-1.0)
+     - Intervalo de confianza (±10%)
+     - Razonamiento explícito
+     - **Freno contextual**: Reduce probabilidad en ambientes con baja cobertura
+  
+  8. **FASE E**: Verificación de anti-patrones
+     - Volcanes, dunas, erosión, karst
+     - Cada descarte entrena al sistema
+     - Confidence del rechazo
+  
+  9. **FASE F**: Validación contra sitios conocidos ⭐ CRÍTICO
+     - Consulta 80K+ sitios arqueológicos documentados
+     - Detecta solapamiento con sitios confirmados
+     - Identifica sitios cercanos (<50km)
+     - **Define si es anomalía o redescubrimiento**
+     - Ajusta probabilidad si coincide con sitio confirmado
+  
+  10. **FASE G**: Salida científica
+      - Comparación contra baseline profiles (glacial, desert, coastal, mountain)
+      - Tipo de candidato: positive_candidate, negative_reference, uncertain
+      - Tipo de descarte: discard_operational, archive_scientific_negative
+      - **Scientific confidence**: Certeza del descarte (high, medium, low)
+      - Acción recomendada: field_verification, monitoring, no_action
+      - Integración de validación de sitios conocidos
 
 **GET /known-sites**
 - Consulta sitios arqueológicos conocidos
@@ -259,6 +335,40 @@ prisma/
 - **Estado**: Configurado
 - **Origen permitido**: `http://localhost:8080`
 - **Métodos**: GET, POST, PUT, DELETE, OPTIONS
+
+### 5.3 Pipeline Científico - Detalles Técnicos
+
+**Archivo**: `backend/scientific_pipeline.py`
+
+**Componentes**:
+- `ScientificPipeline`: Orquestador principal
+- `NormalizedFeatures`: Features normalizadas por instrumento
+- `AnomalyResult`: Resultado de detección de anomalía pura
+- `MorphologyResult`: Análisis morfológico con geomorfología
+- `AnthropicInference`: Inferencia antropogénica con freno contextual
+- `ScientificOutput`: Salida científica completa
+
+**Baseline Profiles** (FASE G):
+- `glacial`: Esperado en ambientes polares (ceiling 0.25)
+- `desert`: Esperado en zonas áridas (ceiling 0.30)
+- `coastal`: Esperado en costas (ceiling 0.35)
+- `mountain`: Esperado en montañas (ceiling 0.30)
+
+**Validación de Sitios Conocidos** (FASE F):
+- **Archivo**: `backend/validation/real_archaeological_validator.py`
+- **Base de datos**: 80,512 sitios arqueológicos documentados
+- **Fuentes**: UNESCO, Pleiades, excavaciones confirmadas
+- **Tipos**: monumental_complex, ceremonial_center, citadel, maya_city, etc.
+- **Confidence levels**: confirmed, probable, possible
+- **Búsqueda**: Spatial filtering con bbox expandido (±0.5°)
+- **Optimización**: Máximo 3 sitios cercanos para performance
+
+**Enriquecimiento de BD** (FASE 0):
+- **Pool de conexiones**: asyncpg (min_size=2, max_size=10)
+- **Buffer espacial**: 0.1 grados (≈11km)
+- **Límite**: 50 mediciones históricas más recientes
+- **Agregación**: Promedio por instrumento
+- **Metadata**: n_measurements, std, source='historical_average'
 
 ---
 
@@ -364,9 +474,10 @@ print(f"[DB] Saved 4 measurements for analysis_id={uuid}", flush=True)
 - ⚠️ Frontend (requiere inicio manual)
 
 ### 10.2 Datos en Base de Datos
-- **Sitios conocidos**: 80,512 registros
-- **Mediciones**: 31 registros (5 candidatos)
-- **Candidatos**: Limpiado (inicio desde 0)
+- **Sitios conocidos**: 80,512 registros (usado en FASE F)
+- **Mediciones**: 31 registros (2 candidatos, usado en FASE 0)
+- **Candidatos**: 1 activo (re-analizados con pipeline completo)
+- **Análisis**: 2 registros (con pipeline científico de 7 fases)
 - **Credenciales**: 5 servicios configurados
 
 ### 10.3 Instrumentos Operacionales
@@ -485,13 +596,18 @@ print(f"[DB] Saved 4 measurements for analysis_id={uuid}", flush=True)
 ## 15. CONCLUSIONES
 
 ### 15.1 Estado General
-**SISTEMA OPERACIONAL Y ROBUSTO**
+**SISTEMA OPERACIONAL Y ROBUSTO - PIPELINE CIENTÍFICO COMPLETO**
 
 - ✅ 8/8 instrumentos funcionando (100%)
 - ✅ Base de datos operacional con 80K+ sitios
 - ✅ IA activa y resiliente
 - ✅ APIs reales sin falsificación de datos
 - ✅ Arquitectura limpia y mantenible
+- ✅ **Pipeline científico de 7 fases implementado**
+- ✅ **Enriquecimiento con datos históricos (FASE 0)**
+- ✅ **Validación contra sitios conocidos (FASE F)**
+- ✅ **Baseline profiles por ambiente**
+- ✅ **Scientific confidence del descarte**
 
 ### 15.2 Fortalezas
 1. **Honestidad científica**: Regla Nro 1 implementada
@@ -499,16 +615,114 @@ print(f"[DB] Saved 4 measurements for analysis_id={uuid}", flush=True)
 3. **Trazabilidad**: Cada dato auditable
 4. **Seguridad**: Credenciales encriptadas
 5. **Determinismo**: Resultados reproducibles
+6. **Pipeline científico robusto**: 7 fases con validación completa
+7. **Enriquecimiento inteligente**: Usa datos históricos de BD
+8. **Validación arqueológica**: Contrasta con 80K+ sitios documentados
+9. **Baseline profiles**: Reduce falsos positivos por ambiente
+10. **Scientific confidence**: Certeza del descarte independiente de probabilidad
 
-### 15.3 Áreas de Mejora
+### 15.3 Flujo Completo del Sistema
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Usuario solicita análisis de región                         │
+│    POST /analyze-scientific                                     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. FASE 0: Enriquecimiento con datos históricos                │
+│    - Consulta measurements previas en zona (buffer 0.1°)       │
+│    - Agrupa por instrumento y promedia                         │
+│    - Enriquece raw_measurements con datos faltantes           │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. Clasificación de ambiente                                    │
+│    - Determina tipo de terreno                                 │
+│    - Asigna instrumentos apropiados                            │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. Medición instrumental (8 instrumentos)                       │
+│    - APIs reales (NO simulación)                               │
+│    - Data modes: OK, NO_DATA, ERROR, ESTIMATED                 │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 5. FASE A: Normalización por instrumento                       │
+│    - Z-score, percentiles locales                              │
+│    - Status: applicable / not_applicable                       │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 6. FASE B: Detección de anomalía pura                          │
+│    - Isolation Forest, LOF, PCA residuals                      │
+│    - Outlier dimensions identificadas                          │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 7. FASE C: Análisis morfológico explícito                      │
+│    - Simetría, regularidad, planaridad                         │
+│    - Geomorfología inferida (contexto geológico)               │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 8. FASE D: Inferencia antropogénica (con freno)                │
+│    - Probabilidad antropogénica (0.0-1.0)                      │
+│    - Freno contextual por ambiente                             │
+│    - Razonamiento explícito                                    │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 9. FASE E: Verificación de anti-patrones                       │
+│    - Volcanes, dunas, erosión, karst                           │
+│    - Cada descarte entrena al sistema                          │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 10. FASE F: Validación contra sitios conocidos ⭐ CRÍTICO      │
+│     - Consulta 80K+ sitios arqueológicos documentados          │
+│     - Detecta solapamiento y sitios cercanos                   │
+│     - Define si es anomalía o redescubrimiento                 │
+│     - Ajusta probabilidad si coincide con sitio confirmado     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 11. FASE G: Salida científica                                  │
+│     - Comparación contra baseline profiles                     │
+│     - Tipo de candidato: positive/negative/uncertain           │
+│     - Scientific confidence del descarte                       │
+│     - Tipo de descarte: operational/scientific_negative        │
+│     - Acción recomendada                                       │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 12. Guardar en BD                                               │
+│     - archaeological_candidates (candidato)                     │
+│     - archaeological_candidate_analyses (análisis completo)     │
+│     - measurements (mediciones instrumentales)                  │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 13. Retornar resultado al usuario                               │
+│     - Todas las fases documentadas                             │
+│     - Trazabilidad completa                                    │
+│     - Decisión científicamente justificada                     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 15.4 Áreas de Mejora
 1. Estabilizar instrumentos con fallback
 2. Completar auditoría frontend
 3. Implementar monitoring continuo
 4. Expandir suite de tests
 
-### 15.4 Listo para Producción
+### 15.5 Listo para Producción
 **SÍ**, con las siguientes condiciones:
 - ✅ Backend completamente funcional
+- ✅ Pipeline científico de 7 fases operacional
+- ✅ Enriquecimiento con datos históricos
+- ✅ Validación contra sitios conocidos
 - ⚠️ Frontend requiere auditoría
 - ✅ Base de datos estable
 - ✅ Seguridad implementada
@@ -518,5 +732,5 @@ print(f"[DB] Saved 4 measurements for analysis_id={uuid}", flush=True)
 
 **Auditoría realizada por**: Sistema IA  
 **Fecha**: 2026-01-27  
-**Versión del sistema**: 2.0  
+**Versión del sistema**: 2.1 (Pipeline Científico Completo)  
 **Próxima auditoría recomendada**: Después de auditoría frontend
