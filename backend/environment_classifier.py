@@ -747,6 +747,9 @@ class EnvironmentClassifier:
         
         # Europa
         if 36 <= lat <= 71 and -10 <= lon <= 40:
+            # Excluir Mar del Norte (Doggerland sumergido)
+            if 51 <= lat <= 62 and -4 <= lon <= 9:
+                return False  # Mar del Norte - AGUA
             return True
         
         # África
