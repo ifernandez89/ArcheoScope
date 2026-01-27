@@ -1,11 +1,11 @@
 # ArcheoScope Frontend Refactorization Plan
 ## Post-Backend Stabilization - Scientific UI/UX
 
-**Status**: Phase 3 Completed  
+**Status**: Phase 4 Completed  
 **Date**: January 27, 2026  
 **Objective**: Transform frontend into reproducible, robust scientific workstation
 
-**Progress**: 3/6 Phases Completed (50%)
+**Progress**: 4/6 Phases Completed (67%)
 
 ---
 
@@ -182,20 +182,20 @@ EVENTS = {
 
 ---
 
-## Phase 4: Epistemic Integrity (🔄 IN PROGRESS)
+## Phase 4: Epistemic Integrity (✅ COMPLETED)
 
-### 4.1 Visual Differentiation
+### 4.1 Visual Differentiation ✅
 
-**Reglas UI obligatorias**:
+**Implementado**:
 
 | Tipo | Color | Label | Tooltip |
 |------|-------|-------|---------|
-| **Medición directa** | Verde | "MEASURED" | "Dato satelital directo" |
-| **Inferencia** | Amarillo | "INFERRED" | "Calculado por pipeline" |
-| **IA** | Naranja | "AI-ASSISTED" | "Explicación generada por IA" |
-| **Simulado** | Rojo | "SIMULATED" | "Dato simulado - NO REAL" |
+| **Medición directa** | Verde (#27ae60) | "MEASURED" 📡 | "Dato satelital directo" |
+| **Inferencia** | Amarillo (#f39c12) | "INFERRED" 🧮 | "Calculado por pipeline" |
+| **IA** | Naranja (#e67e22) | "AI-ASSISTED" 🤖 | "Explicación generada por IA" |
+| **Simulado** | Rojo (#e74c3c) | "SIMULATED" ⚠️ | "Dato simulado - NO REAL" |
 
-**Implementación**:
+**CSS Implementado**:
 ```css
 .measurement-direct { border-left: 4px solid #27ae60; }
 .measurement-inferred { border-left: 4px solid #f39c12; }
@@ -203,16 +203,18 @@ EVENTS = {
 .measurement-simulated { border-left: 4px solid #e74c3c; }
 ```
 
-### 4.2 Confidence Decay Visual
+### 4.2 Confidence Decay Visual ✅
 
-**Implementar**:
-- [ ] Barra de confianza con degradado
-- [ ] Tooltip con intervalo de confianza
-- [ ] Indicador de cobertura instrumental
+**Implementado**:
+- ✅ Barra de confianza con degradado
+- ✅ Tooltip con intervalo de confianza
+- ✅ Indicador de cobertura instrumental
+- ✅ Animación de shimmer
+- ✅ Colores dinámicos (verde/amarillo/rojo)
 
-### 4.3 Epistemic Labels Display
+### 4.3 Epistemic Labels Display ✅
 
-**Mostrar siempre**:
+**Implementado**:
 ```html
 <div class="epistemic-badge">
   <span class="badge-mode">🔬 Deterministic Scientific</span>
@@ -221,6 +223,31 @@ EVENTS = {
   <span class="badge-transparency">📊 Transparency: Full</span>
 </div>
 ```
+
+### 4.4 Módulo Completo ✅
+
+**Archivo**: `frontend/modules/epistemic_visual_module.js`
+- ✅ Configuración de colores y estilos
+- ✅ Etiquetado automático de mediciones
+- ✅ Etiquetado de fases del pipeline
+- ✅ Badges epistemológicos
+- ✅ Métricas con barras visuales
+- ✅ Confidence decay rendering
+- ✅ Tooltips informativos
+- ✅ Leyenda epistemológica
+
+### 4.5 Estilos CSS ✅
+
+**Archivo**: `frontend/styles/epistemic_visual.css`
+- ✅ Variables CSS para colores
+- ✅ Badges principales
+- ✅ Métricas con barras
+- ✅ Confidence decay
+- ✅ Inline badges
+- ✅ Leyenda epistemológica
+- ✅ Advertencia de simulación
+- ✅ Responsive design
+- ✅ Animaciones suaves
 
 ---
 
@@ -328,16 +355,21 @@ test('UIState manages loading states')
 7. Viewer 3D Module (refactored)
 8. LiDAR Availability Module (refactored)
 9. History Module (refactored)
-10. **Replay Mode Module (complete)**
-11. **Replay Mode UI & CSS**
-12. **Timeline de eventos**
-13. **Snapshot export/import**
-14. **Snapshot comparison**
+10. Replay Mode Module (complete)
+11. Replay Mode UI & CSS
+12. Timeline de eventos
+13. Snapshot export/import
+14. Snapshot comparison
+15. **Epistemic Visual Module (complete)**
+16. **Diferenciación visual medición vs inferencia**
+17. **Confidence decay visual**
+18. **Badges epistemológicos**
+19. **Métricas con barras visuales**
+20. **Leyenda epistemológica**
 
 ### 🔄 In Progress:
-1. Epistemic visual differentiation
-2. Performance guardrails
-3. Integration with main index.html
+1. Performance guardrails
+2. Integration with main index.html
 
 ### ⏳ Pending:
 1. Full integration testing
