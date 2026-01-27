@@ -251,3 +251,117 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error en análisis científico: {str(e)}")
+
+
+@router.get("/analyses/recent")
+async def get_recent_analyses(limit: int = 10):
+    """
+    Obtener análisis recientes.
+    
+    Parameters:
+        limit: Número máximo de análisis a retornar (default: 10)
+    
+    Returns:
+        Lista de análisis ordenados por fecha (más reciente primero)
+    """
+    if not db_pool:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible")
+    
+    try:
+        async with db_pool.acquire() as conn:
+            analyses = await conn.fetch("""
+                SELECT 
+                    id,
+                    candidate_name,
+                    region,
+                    archaeological_probability,
+                    anomaly_score,
+                    result_type,
+                    recommended_action,
+                    environment_type,
+                    confidence_level,
+                    created_at
+                FROM archaeological_candidate_analyses
+                ORDER BY created_at DESC
+                LIMIT $1
+            """, limit)
+            
+            return {
+                "total": len(analyses),
+                "analyses": [
+                    {
+                        "id": row['id'],
+                        "candidate_name": row['candidate_name'],
+                        "region": row['region'],
+                        "archaeological_probability": float(row['archaeological_probability']),
+                        "anomaly_score": float(row['anomaly_score']),
+                        "result_type": row['result_type'],
+                        "recommended_action": row['recommended_action'],
+                        "environment_type": row['environment_type'],
+                        "confidence_level": float(row['confidence_level']),
+                        "created_at": row['created_at'].isoformat()
+                    }
+                    for row in analyses
+                ]
+            }
+    except Exception as e:
+        print(f"[ERROR] Error consultando análisis: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Error consultando análisis: {str(e)}")
+
+@router.get("/analyses/{analysis_id}")
+async def get_analysis_by_id(analysis_id: int):
+    """
+    Obtener análisis específico por ID.
+    
+    Parameters:
+        analysis_id: ID del análisis
+    
+    Returns:
+        Análisis completo con mediciones asociadas
+    """
+    if not db_pool:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible")
+    
+    try:
+        async with db_pool.acquire() as conn:
+            # Obtener análisis
+            analysis = await conn.fetchrow("""
+                SELECT 
+                    id,
+                    candidate_name,
+                    region,
+                    archaeological_probability,
+                    anomaly_score,
+                    result_type,
+                    recommended_action,
+                    environment_type,
+                    confidence_level,
+                    created_at
+                FROM archaeological_candidate_analyses
+                WHERE id = $1
+            """, analysis_id)
+            
+            if not analysis:
+                raise HTTPException(status_code=404, detail=f"Análisis {analysis_id} no encontrado")
+            
+            # Obtener mediciones asociadas (por región y fecha cercana)
+            measurements = await conn.fetch("""
+                SELECT 
+                    instrument_name,
+                    value,
+                    unit,
+                    data_mode,
+                    latitude,
+                    longitude,
+                    measurement_timestamp
+                FROM measurements
+                WHERE measurement_timestamp >= $1 - INTERVAL '1 hour'
+                  AND measurement_timestamp <= $1 + INTERVAL '1 hour'
+                ORDER BY measurement_timestamp DESC
+                LIMIT 20
+            """, analysis['created_at'])
+            
+            return {
+                "analysis": {
+                    "id": analysis['id'],
+                    "candidate_name": analys
