@@ -272,6 +272,78 @@
                 grid-template-rows: auto 500px auto;
             }
         }
+        
+        /* Instrument status cards */
+        .instrument-card {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .instrument-card.success {
+            border-left-color: #27ae60;
+            background: #d4edda;
+        }
+        
+        .instrument-card.failed {
+            border-left-color: #e74c3c;
+            background: #f8d7da;
+        }
+        
+        .instrument-card.no-data {
+            border-left-color: #95a5a6;
+            background: #e2e3e5;
+        }
+        
+        .instrument-name {
+            font-weight: 600;
+            color: #2c3e50;
+            flex: 1;
+        }
+        
+        .instrument-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .instrument-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .instrument-badge.success {
+            background: #27ae60;
+        }
+        
+        .instrument-badge.failed {
+            background: #e74c3c;
+        }
+        
+        .instrument-badge.no-data {
+            background: #95a5a6;
+        }
+        
+        .instrument-value {
+            font-family: 'Courier New', monospace;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .instrument-details {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body>
@@ -365,7 +437,12 @@
                 </div>
 
                 <div class="result-section">
-                    <h4>📡 Mediciones Instrumentales</h4>
+                    <h4>📡 Estado de Instrumentos</h4>
+                    <div id="instrumentsStatus"></div>
+                </div>
+                
+                <div class="result-section">
+                    <h4>📊 Mediciones Obtenidas</h4>
                     <div id="instrumentalMeasurements"></div>
                 </div>
 
@@ -610,12 +687,21 @@
             `;
             document.getElementById('scientificResults').innerHTML = resultsHTML;
             
-            // Mediciones instrumentales
+            // NUEVO: Estado de TODOS los instrumentos
+            displayInstrumentsStatus(data);
+            
+            // Mediciones instrumentales (solo las exitosas)
             if (data.instrumentalMeasurements) {
                 const measurementsHTML = data.instrumentalMeasurements.map((m, index) => `
-                    <div data-measurement-index="${index}" style="background: #f8f9fa; padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem;">
-                        <strong>${m.instrument_name}</strong>: ${m.value.toFixed(3)}
-                        <div style="font-size: 0.8rem; color: #7f8c8d;">
+                    <div data-measurement-index="${index}" style="background: #d4edda; padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; border-left: 4px solid #27ae60;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong>${m.instrument_name}</strong>
+                            <span class="instrument-badge success">✓ MEDIDO</span>
+                        </div>
+                        <div style="font-size: 1.1rem; font-weight: 600; margin: 0.25rem 0;">
+                            Valor: ${m.value.toFixed(3)}
+                        </div>
+                        <div style="font-size: 0.8rem; color: #155724;">
                             Modo: ${m.data_mode} | Fuente: ${m.source}
                         </div>
                     </div>
@@ -638,6 +724,120 @@
             // Renderizar badges epistemológicos
             epistemicVisualModule.updateVisualLabels(data);
             epistemicVisualModule.renderEpistemicBadges({ scientificOutput: output });
+        }
+        
+        /**
+         * Mostrar estado de TODOS los instrumentos
+         */
+        function displayInstrumentsStatus(data) {
+            const container = document.getElementById('instrumentsStatus');
+            
+            // Lista completa de instrumentos disponibles
+            const allInstruments = [
+                'MODIS LST',
+                'Landsat 8 Thermal',
+                'Landsat 8 NDVI',
+                'Sentinel-2 NDVI',
+                'Sentinel-1 SAR',
+                'PALSAR-2',
+                'OpenTopography',
+                'ICESat-2'
+            ];
+            
+            // Obtener instrumentos medidos
+            const measuredInstruments = data.instrumentalMeasurements || [];
+            const measuredNames = measuredInstruments.map(m => m.instrument_name);
+            
+            // Obtener instrumentos esperados para el ambiente
+            const expectedInstruments = data.environmentContext?.primary_sensors || [];
+            
+            // Crear cards para cada instrumento
+            const instrumentsHTML = allInstruments.map(instrumentName => {
+                const measurement = measuredInstruments.find(m => m.instrument_name === instrumentName);
+                const isExpected = expectedInstruments.includes(instrumentName);
+                
+                if (measurement) {
+                    // Instrumento medido exitosamente
+                    return `
+                        <div class="instrument-card success">
+                            <div style="flex: 1;">
+                                <div class="instrument-name">
+                                    ✓ ${instrumentName}
+                                </div>
+                                <div class="instrument-details">
+                                    Valor: ${measurement.value.toFixed(3)} | ${measurement.data_mode} | ${measurement.source}
+                                </div>
+                            </div>
+                            <div class="instrument-status">
+                                <span class="instrument-badge success">MEDIDO</span>
+                            </div>
+                        </div>
+                    `;
+                } else if (isExpected) {
+                    // Instrumento esperado pero falló
+                    return `
+                        <div class="instrument-card failed">
+                            <div style="flex: 1;">
+                                <div class="instrument-name">
+                                    ✗ ${instrumentName}
+                                </div>
+                                <div class="instrument-details">
+                                    Esperado para este ambiente pero no disponible
+                                </div>
+                            </div>
+                            <div class="instrument-status">
+                                <span class="instrument-badge failed">FALLÓ</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Instrumento no aplicable para este ambiente
+                    return `
+                        <div class="instrument-card no-data">
+                            <div style="flex: 1;">
+                                <div class="instrument-name">
+                                    ○ ${instrumentName}
+                                </div>
+                                <div class="instrument-details">
+                                    No aplicable para este ambiente
+                                </div>
+                            </div>
+                            <div class="instrument-status">
+                                <span class="instrument-badge no-data">N/A</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+            
+            // Agregar resumen
+            const successCount = measuredInstruments.length;
+            const expectedCount = expectedInstruments.length;
+            const failedCount = expectedCount - successCount;
+            
+            const summaryHTML = `
+                <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; border-left: 4px solid #2196f3;">
+                    <div style="font-weight: 600; margin-bottom: 0.5rem; color: #1976d2;">
+                        📊 Resumen de Instrumentos
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; font-size: 0.85rem;">
+                        <div>
+                            <div style="color: #27ae60; font-weight: 600;">✓ ${successCount} Medidos</div>
+                        </div>
+                        <div>
+                            <div style="color: #e74c3c; font-weight: 600;">✗ ${failedCount} Fallaron</div>
+                        </div>
+                        <div>
+                            <div style="color: #95a5a6; font-weight: 600;">○ ${allInstruments.length - expectedCount} N/A</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #546e7a;">
+                        Cobertura: ${successCount}/${expectedCount} instrumentos esperados (${((successCount/expectedCount)*100).toFixed(0)}%)
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = summaryHTML + instrumentsHTML;
         }
         
         /**
