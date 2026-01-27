@@ -1,11 +1,11 @@
 # ArcheoScope Frontend Refactorization Plan
 ## Post-Backend Stabilization - Scientific UI/UX
 
-**Status**: Phase 4 Completed  
+**Status**: Phase 5 Completed  
 **Date**: January 27, 2026  
 **Objective**: Transform frontend into reproducible, robust scientific workstation
 
-**Progress**: 4/6 Phases Completed (67%)
+**Progress**: 5/6 Phases Completed (83%)
 
 ---
 
@@ -251,18 +251,18 @@ EVENTS = {
 
 ---
 
-## Phase 5: Performance & Safety (🔄 IN PROGRESS)
+## Phase 5: Performance & Safety (✅ COMPLETED)
 
-### 5.1 Guardrails
+### 5.1 Guardrails ✅
 
-**Implementar**:
+**Implementado**:
 
 #### Lupa Arqueológica:
 ```javascript
 const lupaThrottle = {
   maxCallsPerSecond: 1,
-  lastCall: 0,
-  queue: []
+  maxLayers: 10,
+  maxMarkers: 100
 };
 ```
 
@@ -271,6 +271,7 @@ const lupaThrottle = {
 const viewer3DLimits = {
   maxFPS: 30,
   maxGeometries: 10000,
+  maxVertices: 100000,
   autoCleanup: true
 };
 ```
@@ -280,25 +281,75 @@ const viewer3DLimits = {
 const mapLimits = {
   maxMarkers: 1000,
   clusterThreshold: 100,
-  tileLoadTimeout: 5000
+  tileLoadTimeout: 5000,
+  maxZoom: 19
 };
 ```
 
-### 5.2 Memory Management
+### 5.2 Memory Management ✅
 
-**Implementar**:
-- [ ] Cleanup de event listeners al cerrar modales
-- [ ] Dispose de geometrías Three.js
-- [ ] Clear de capas Leaflet no visibles
-- [ ] Garbage collection hints
+**Implementado**:
+- ✅ Cleanup de event listeners al cerrar modales
+- ✅ Dispose de geometrías Three.js
+- ✅ Clear de capas Leaflet no visibles
+- ✅ Garbage collection hints
+- ✅ Límite de event log (100 eventos)
+- ✅ Límite de snapshots (50 en memoria)
+- ✅ Cleanup automático periódico
 
-### 5.3 Fallback Degradado
+### 5.3 Fallback Degradado ✅
 
-**Implementar**:
-- [ ] Detectar sobrecarga (FPS < 15)
-- [ ] Reducir calidad automáticamente
-- [ ] Mostrar warning al usuario
-- [ ] Opción de "Modo Ligero"
+**Implementado**:
+- ✅ Detectar sobrecarga (FPS < 15 o memoria > 80%)
+- ✅ Reducir calidad automáticamente
+- ✅ Mostrar warning al usuario
+- ✅ Modo ligero disponible
+- ✅ Recuperación automática
+- ✅ Reducción de animaciones
+- ✅ Eliminación de sombras
+
+### 5.4 Monitoring ✅
+
+**Implementado**:
+- ✅ Monitoreo de FPS en tiempo real
+- ✅ Monitoreo de uso de memoria
+- ✅ Detección de sobrecarga
+- ✅ Sistema de advertencias
+- ✅ Reporte de performance
+- ✅ Performance stats overlay
+- ✅ Performance meter
+
+### 5.5 Throttling ✅
+
+**Implementado**:
+- ✅ Throttle genérico reutilizable
+- ✅ Throttle de lupa (1/segundo)
+- ✅ Throttle de análisis
+- ✅ Indicador visual de throttling
+
+### 5.6 Módulo Completo ✅
+
+**Archivo**: `frontend/modules/performance_guardrails_module.js`
+- ✅ Configuración de límites por módulo
+- ✅ Monitoreo automático cada 5 segundos
+- ✅ Detección de FPS bajo
+- ✅ Detección de memoria alta
+- ✅ Modo degradado automático
+- ✅ Cleanup de recursos
+- ✅ Sistema de throttling
+- ✅ Reportes de performance
+
+### 5.7 Estilos CSS ✅
+
+**Archivo**: `frontend/styles/performance_warnings.css`
+- ✅ Advertencias de performance
+- ✅ Indicador de modo degradado
+- ✅ Performance stats overlay
+- ✅ Performance meter
+- ✅ Throttle indicator
+- ✅ Memory cleanup notification
+- ✅ Responsive design
+- ✅ Animaciones optimizadas
 
 ---
 
@@ -360,22 +411,28 @@ test('UIState manages loading states')
 12. Timeline de eventos
 13. Snapshot export/import
 14. Snapshot comparison
-15. **Epistemic Visual Module (complete)**
-16. **Diferenciación visual medición vs inferencia**
-17. **Confidence decay visual**
-18. **Badges epistemológicos**
-19. **Métricas con barras visuales**
-20. **Leyenda epistemológica**
+15. Epistemic Visual Module (complete)
+16. Diferenciación visual medición vs inferencia
+17. Confidence decay visual
+18. Badges epistemológicos
+19. Métricas con barras visuales
+20. Leyenda epistemológica
+21. **Performance Guardrails Module (complete)**
+22. **Monitoreo de FPS y memoria**
+23. **Modo degradado automático**
+24. **Throttling system**
+25. **Memory management**
+26. **Cleanup automático**
+27. **Performance warnings UI**
 
 ### 🔄 In Progress:
-1. Performance guardrails
-2. Integration with main index.html
+1. Integration with main index.html
+2. Testing suite
 
 ### ⏳ Pending:
 1. Full integration testing
-2. Testing suite
-3. Documentation updates
-4. User guide
+2. Documentation updates
+3. User guide
 
 ---
 
