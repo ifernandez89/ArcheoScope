@@ -98,7 +98,9 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
         print("[STEP 2] Midiendo con instrumentos reales...", flush=True)
         
         # Obtener lista de instrumentos apropiados para el ambiente
-        instrument_names = env_context.primary_sensors
+        # PRIMERO intentar con primary_sensors, LUEGO con secondary_sensors
+        instrument_names = env_context.primary_sensors + env_context.secondary_sensors
+        print(f"  Instrumentos a intentar: {len(instrument_names)} ({len(env_context.primary_sensors)} primarios + {len(env_context.secondary_sensors)} secundarios)", flush=True)
         
         measurements = []
         for instrument_name in instrument_names:
