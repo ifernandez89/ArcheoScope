@@ -564,6 +564,10 @@ class ScientificPipeline:
         - contexto (agua, altitud, rutas)
         
         Modelo explicable: Random Forest / Gradient Boosting simulado
+        
+        AJUSTES IMPLEMENTADOS:
+        - Penalización explícita por cobertura instrumental (AJUSTE 2)
+        - Umbral dinámico por región arqueológica (AJUSTE 3)
         """
         print("[FASE D] Inferencia antropogénica (con freno de mano)...", flush=True)
         
@@ -587,10 +591,32 @@ class ScientificPipeline:
         # Razonamiento (inicializar antes de usar)
         reasoning = []
         
+        # AJUSTE 2: PENALIZACIÓN EXPLÍCITA POR COBERTURA INSTRUMENTAL
+        # Contar instrumentos válidos (con mediciones reales)
+        instrument_count = len([k for k in normalized.features.keys() if 'zscore' in k])
+        total_instruments = 8  # Total de instrumentos disponibles en el sistema
+        coverage_ratio = instrument_count / total_instruments
+        
+        # Penalización por baja cobertura
+        coverage_penalty = 0.0
+        if coverage_ratio < 0.5:  # Menos del 50% de instrumentos
+            coverage_penalty = 0.15  # -15%
+            anthropic_probability *= (1.0 - coverage_penalty)
+            reasoning.append(f"⚠️ Coverage penalty: -{coverage_penalty*100:.0f}% (only {instrument_count}/{total_instruments} instruments)")
+            print(f"[FASE D] ⚠️ PENALIZACIÓN POR COBERTURA: -{coverage_penalty*100:.0f}%", flush=True)
+            print(f"[FASE D]    Reason: insufficient optical/SAR confirmation ({instrument_count}/{total_instruments} instruments)", flush=True)
+        elif coverage_ratio < 0.75:  # Entre 50-75%
+            coverage_penalty = 0.08  # -8%
+            anthropic_probability *= (1.0 - coverage_penalty)
+            reasoning.append(f"⚠️ Coverage penalty: -{coverage_penalty*100:.0f}% (only {instrument_count}/{total_instruments} instruments)")
+            print(f"[FASE D] ⚠️ PENALIZACIÓN POR COBERTURA: -{coverage_penalty*100:.0f}%", flush=True)
+            print(f"[FASE D]    Reason: moderate instrumental coverage ({instrument_count}/{total_instruments} instruments)", flush=True)
+        else:
+            print(f"[FASE D] ✅ Cobertura instrumental adecuada: {instrument_count}/{total_instruments} ({coverage_ratio*100:.0f}%)", flush=True)
+        
         # MEJORA 3: Regla de freno contextual
         # Reduce probabilidad en ambientes con baja cobertura instrumental
         environment_type = normalized.raw_measurements.get('environment_type', 'unknown')
-        instrument_count = len([k for k in normalized.features.keys() if 'zscore' in k])
         
         if environment_type in ['polar_ice', 'glacier', 'permafrost'] and instrument_count < 2:
             anthropic_probability *= 0.7
@@ -841,10 +867,55 @@ class ScientificPipeline:
             geomorph_hint = morphology.geomorphology_hint
             if geomorph_hint in baseline_profile['geomorphology_hints']:
                 baseline_match = baseline_profile['baseline_type']
-                print(f"[FASE F] Coincide con baseline profile: {baseline_match}", flush=True)
+                print(f"[FASE G] Coincide con baseline profile: {baseline_match}", flush=True)
                 # Aplicar techo antropogénico del baseline
                 if anthropic.anthropic_probability > baseline_profile['default_anthropic_ceiling']:
-                    print(f"[FASE F] Probabilidad reducida por baseline ceiling: {baseline_profile['default_anthropic_ceiling']}", flush=True)
+                    print(f"[FASE G] Probabilidad reducida por baseline ceiling: {baseline_profile['default_anthropic_ceiling']}", flush=True)
+        
+        # AJUSTE 3: UMBRAL DINÁMICO POR REGIÓN ARQUEOLÓGICA
+        # Definir umbrales contextuales
+        decision_threshold_default = 0.50  # Umbral por defecto
+        decision_threshold_known_region = 0.45  # Umbral en regiones con arqueología documentada
+        
+        # Detectar si estamos en región arqueológica conocida
+        is_known_archaeological_region = False
+        region_name = normalized.raw_measurements.get('region_name', '').lower()
+        
+        # Regiones arqueológicas conocidas
+        known_regions = [
+            'acre', 'amazonía', 'amazonia', 'geoglifos',  # Amazonía occidental
+            'rub al khali', 'arabia', 'paleocauces',  # Arabia con paleocauces
+            'sahara', 'egipto', 'nilo',  # Norte de África
+            'petra', 'nabateo',  # Medio Oriente
+            'angkor', 'khmer',  # Sudeste Asiático
+            'machu picchu', 'inca', 'andes',  # Andes
+            'maya', 'yucatan', 'mesoamerica'  # Mesoamérica
+        ]
+        
+        for known_region in known_regions:
+            if known_region in region_name:
+                is_known_archaeological_region = True
+                print(f"[FASE G] 🏛️ REGIÓN ARQUEOLÓGICA CONOCIDA detectada: {known_region}", flush=True)
+                break
+        
+        # También considerar si hay sitios conocidos cercanos
+        if nearby_sites and len(nearby_sites) > 0:
+            closest_distance = nearby_sites[0]['distance_km']
+            if closest_distance < 50:  # Menos de 50km de sitio conocido
+                is_known_archaeological_region = True
+                print(f"[FASE G] 🏛️ Sitio conocido cercano a {closest_distance:.1f}km - región arqueológica", flush=True)
+        
+        # Aplicar umbral contextual
+        decision_threshold = decision_threshold_known_region if is_known_archaeological_region else decision_threshold_default
+        
+        print(f"[FASE G] Umbral de decisión: {decision_threshold:.2f} ({'región arqueológica' if is_known_archaeological_region else 'región general'})", flush=True)
+        
+        if is_known_archaeological_region and anthropic.anthropic_probability >= decision_threshold_known_region:
+            print(f"[FASE G] ✅ Probabilidad {anthropic.anthropic_probability:.3f} supera umbral contextual {decision_threshold_known_region:.2f}", flush=True)
+        elif not is_known_archaeological_region and anthropic.anthropic_probability >= decision_threshold_default:
+            print(f"[FASE G] ✅ Probabilidad {anthropic.anthropic_probability:.3f} supera umbral estándar {decision_threshold_default:.2f}", flush=True)
+        else:
+            print(f"[FASE G] ⚠️ Probabilidad {anthropic.anthropic_probability:.3f} por debajo de umbral {decision_threshold:.2f}", flush=True)
         
         # AJUSTE FINO 3: Calcular confianza científica del descarte
         # (certeza de que NO es arqueológico, independiente de la probabilidad)
@@ -888,14 +959,20 @@ class ScientificPipeline:
             notes = "Geo-candidata con anomalía morfológica significativa - verificación de campo prioritaria"
             candidate_type = "positive_candidate"
             negative_reason = None
-        elif anthropic.anthropic_probability > 0.5:
-            recommended_action = "field_verification"
-            notes = "Geo-candidata con indicadores antropogénicos - verificación de campo recomendada"
-            candidate_type = "positive_candidate"
-            negative_reason = None
+        elif anthropic.anthropic_probability >= decision_threshold:  # AJUSTE 3: Usar umbral dinámico
+            if is_known_archaeological_region:
+                recommended_action = "field_verification"
+                notes = f"Geo-candidata en región arqueológica conocida (prob={anthropic.anthropic_probability:.3f}, umbral={decision_threshold:.2f}) - verificación de campo recomendada"
+                candidate_type = "positive_candidate"
+                negative_reason = None
+            else:
+                recommended_action = "field_verification"
+                notes = "Geo-candidata con indicadores antropogénicos - verificación de campo recomendada"
+                candidate_type = "positive_candidate"
+                negative_reason = None
         elif anthropic.anthropic_probability > 0.3:
             recommended_action = "monitoring"
-            notes = "Anomalía detectada - monitoreo recomendado"
+            notes = f"Anomalía detectada (prob={anthropic.anthropic_probability:.3f}) - monitoreo recomendado"
             candidate_type = "uncertain"
             negative_reason = None
         else:
@@ -908,6 +985,18 @@ class ScientificPipeline:
                 discard_type = "archive_scientific_negative"  # Vale para ciencia
             else:
                 discard_type = "discard_operational"  # Descarte operacional simple
+        
+        # AJUSTE 3: Acción avanzada para regiones arqueológicas con cobertura insuficiente
+        if is_known_archaeological_region and anthropic.anthropic_probability >= 0.40 and anthropic.anthropic_probability < decision_threshold:
+            # Caso especial: región arqueológica, probabilidad alta pero bajo umbral por cobertura
+            instrument_count = len([k for k in normalized.features.keys() if 'zscore' in k])
+            if instrument_count < 4:  # Menos del 50% de instrumentos
+                recommended_action = "targeted_reanalysis"
+                notes = f"Región arqueológica con cobertura insuficiente ({instrument_count}/8 instrumentos) - re-análisis dirigido recomendado"
+                candidate_type = "uncertain"
+                print(f"[FASE G] 🎯 ACCIÓN AVANZADA: targeted_reanalysis", flush=True)
+                print(f"[FASE G]    Required instruments: Sentinel-2 (NDVI/Red Edge), Sentinel-1 SAR", flush=True)
+                print(f"[FASE G]    Optional: Dry season optical", flush=True)
         
         # Fases completadas
         phases_completed = ["0_enrich", "A_normalize", "B_anomaly", "C_morphology", "D_anthropic", "E_antipatterns", "F_known_sites", "G_output"]

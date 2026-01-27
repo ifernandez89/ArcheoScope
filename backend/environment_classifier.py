@@ -494,6 +494,25 @@ class EnvironmentClassifier:
     def _check_mountain_regions(self, lat: float, lon: float) -> Optional[EnvironmentContext]:
         """Detectar regiones montañosas específicas"""
         
+        # AJUSTE 1: Amazonía occidental (Acre, Brasil) - EXCEPCIÓN CRÍTICA
+        # Geoglifos precolombinos documentados en mesetas suavemente elevadas
+        if -12 <= lat <= -8 and -70 <= lon <= -65:
+            logger.info("🌳 AMAZONÍA OCCIDENTAL (Acre) detectada - zona de geoglifos")
+            return EnvironmentContext(
+                environment_type=EnvironmentType.FOREST,
+                confidence=0.90,
+                coordinates=(lat, lon),
+                temperature_range_c=(20, 32),
+                precipitation_mm_year=1800,
+                elevation_m=200,  # Meseta suavemente elevada, NO montaña
+                primary_sensors=["sentinel2", "sentinel1_sar", "lidar"],
+                secondary_sensors=["landsat", "modis"],
+                archaeological_visibility="medium",  # Vegetación pero detectable
+                preservation_potential="excellent",  # Geoglifos preservados
+                access_difficulty="moderate",
+                notes="Amazonía occidental - meseta con geoglifos precolombinos documentados (Acre, Brasil)"
+            )
+        
         # Andes (incluyendo Machu Picchu)
         if -56 <= lat <= 11 and -82 <= lon <= -63:
             # Machu Picchu está en: -13.1631°, -72.5450°
