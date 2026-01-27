@@ -242,11 +242,12 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                     # Guardar análisis
                     await conn.execute("""
                         INSERT INTO archaeological_candidate_analyses 
-                        (candidate_name, region, archaeological_probability, anomaly_score, 
+                        (candidate_id, candidate_name, region, archaeological_probability, anomaly_score, 
                          result_type, recommended_action, environment_type, confidence_level)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                     """, 
-                        result['scientific_output']['candidate_id'],
+                        result['scientific_output']['candidate_id'],  # candidate_id
+                        result['scientific_output']['candidate_id'],  # candidate_name (mismo valor)
                         request.region_name,
                         result['scientific_output']['anthropic_probability'],
                         result['scientific_output']['anomaly_score'],
@@ -261,13 +262,15 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                         if m is not None:
                             await conn.execute("""
                                 INSERT INTO measurements 
-                                (instrument_name, value, unit, data_mode, latitude, longitude)
-                                VALUES ($1, $2, $3, $4, $5, $6)
+                                (instrument_name, measurement_type, value, unit, data_mode, source, latitude, longitude)
+                                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                             """,
                                 m.get('instrument_name', 'unknown'),
+                                'remote_sensing',  # Tipo de medición
                                 m.get('value', 0),
                                 'various',  # Unit varies by instrument
                                 m.get('data_mode', 'unknown'),
+                                m.get('source', 'unknown'),
                                 center_lat,
                                 center_lon
                             )
