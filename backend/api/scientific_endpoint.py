@@ -71,11 +71,28 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
         
         # 2. Medir con instrumentos reales
         print("[STEP 2] Midiendo con instrumentos reales...", flush=True)
-        measurements = await integrator.measure_all_instruments(
-            lat=center_lat,
-            lon=center_lon,
-            environment_type=env_context.environment_type.value
-        )
+        
+        # Obtener lista de instrumentos apropiados para el ambiente
+        instrument_names = env_context.primary_sensors
+        
+        measurements = []
+        for instrument_name in instrument_names:
+            try:
+                measurement = await integrator.get_instrument_measurement(
+                    instrument_name=instrument_name,
+                    lat=center_lat,
+                    lon=center_lon,
+                    bounds={
+                        'lat_min': request.lat_min,
+                        'lat_max': request.lat_max,
+                        'lon_min': request.lon_min,
+                        'lon_max': request.lon_max
+                    }
+                )
+                measurements.append(measurement)
+            except Exception as e:
+                print(f"  [WARNING] Error en {instrument_name}: {e}", flush=True)
+                continue
         
         print(f"  Mediciones obtenidas: {len(measurements)}", flush=True)
         for m in measurements:

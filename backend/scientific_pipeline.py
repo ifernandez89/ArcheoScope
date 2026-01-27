@@ -44,6 +44,7 @@ class MorphologyResult:
     edge_regularity: float
     planarity: float
     artificial_indicators: List[str]
+    geomorphology_hint: str = "unknown"  # NUEVO: contexto geológico
 
 @dataclass
 class AnthropicInference:
@@ -65,6 +66,10 @@ class ScientificOutput:
     notes: str
     phases_completed: List[str]
     timestamp: str
+    # MEJORA PRO: Resultados negativos valiosos
+    candidate_type: str = "unknown"  # positive_candidate, negative_reference, uncertain
+    negative_reason: Optional[str] = None  # geomorfología si es negativo
+    reuse_for_training: bool = False  # True si es referencia negativa valiosa
 
 class ScientificPipeline:
     """
@@ -103,6 +108,62 @@ class ScientificPipeline:
                 "slope_steep": True
             }
         }
+    
+    def _infer_geomorphology(self, 
+                            environment_type: str,
+                            symmetry: float,
+                            planarity: float,
+                            edge_regularity: float) -> str:
+        """
+        MEJORA 2: Inferir contexto geomorfológico (NO arqueología).
+        
+        Esto permite:
+        - Entrenar anti-patrones
+        - Filtrar automáticamente regiones glaciares
+        - Justificar descartes masivos
+        """
+        
+        # Ambientes glaciares
+        if environment_type in ['polar_ice', 'glacier', 'permafrost']:
+            if planarity > 0.7:
+                return "glacial_outwash_or_ablation_plain"
+            elif symmetry > 0.6:
+                return "glacial_cirque_or_moraine"
+            else:
+                return "glacial_terrain_general"
+        
+        # Ambientes desérticos
+        elif environment_type in ['desert', 'arid']:
+            if symmetry < 0.3 and edge_regularity < 0.3:
+                return "aeolian_dune_field"
+            elif planarity > 0.7:
+                return "desert_pavement_or_playa"
+            else:
+                return "desert_terrain_general"
+        
+        # Ambientes costeros/marinos
+        elif environment_type in ['coastal', 'shallow_sea']:
+            if planarity > 0.6:
+                return "tidal_flat_or_beach"
+            else:
+                return "coastal_terrain_general"
+        
+        # Ambientes montañosos
+        elif environment_type in ['mountain', 'highland']:
+            if symmetry > 0.7:
+                return "volcanic_cone_or_crater"
+            elif planarity < 0.3:
+                return "steep_mountain_terrain"
+            else:
+                return "mountain_terrain_general"
+        
+        # Ambientes de bosque/selva
+        elif environment_type in ['forest', 'jungle']:
+            return "forested_terrain"
+        
+        # Default
+        else:
+            return "terrain_general"
     
     # =========================================================================
     # FASE A: NORMALIZACIÓN Y ALINEACIÓN
@@ -161,7 +222,14 @@ class ScientificPipeline:
         
         candidate_id = raw_measurements.get('candidate_id', 'UNKNOWN')
         
-        print(f"[FASE A] Normalizadas {len(features)} features", flush=True)
+        # MEJORA 1: Diferenciar ausencia de no aplicable
+        if len(features) == 0:
+            local_context['features_status'] = 'not_applicable'
+            local_context['reason'] = 'no instrument coverage'
+            print(f"[FASE A] ⚠️ No hay features (no instrument coverage)", flush=True)
+        else:
+            local_context['features_status'] = 'available'
+            print(f"[FASE A] Normalizadas {len(features)} features", flush=True)
         
         return NormalizedFeatures(
             candidate_id=candidate_id,
@@ -274,14 +342,24 @@ class ScientificPipeline:
         if planarity > 0.7:
             artificial_indicators.append("superficie_plana")
         
+        # MEJORA 2: Etiqueta geomorfológica explícita (contexto geológico, NO arqueología)
+        geomorphology_hint = self._infer_geomorphology(
+            normalized.raw_measurements.get('environment_type', 'unknown'),
+            symmetry_score,
+            planarity,
+            edge_regularity
+        )
+        
         print(f"[FASE C] Simetría: {symmetry_score:.3f}, Regularidad: {edge_regularity:.3f}, Planaridad: {planarity:.3f}", flush=True)
         print(f"[FASE C] Indicadores artificiales: {artificial_indicators}", flush=True)
+        print(f"[FASE C] Geomorfología inferida: {geomorphology_hint}", flush=True)
         
         return MorphologyResult(
             symmetry_score=symmetry_score,
             edge_regularity=edge_regularity,
             planarity=planarity,
-            artificial_indicators=artificial_indicators
+            artificial_indicators=artificial_indicators,
+            geomorphology_hint=geomorphology_hint  # NUEVO
         )
     
     # =========================================================================
@@ -321,6 +399,23 @@ class ScientificPipeline:
         context_weight = 0.1  # Placeholder
         
         anthropic_probability = anomaly_weight + morphology_weight + context_weight
+        anthropic_probability = float(np.clip(anthropic_probability, 0, 1))
+        
+        # MEJORA 3: Regla de freno contextual
+        # Reduce probabilidad en ambientes con baja cobertura instrumental
+        environment_type = normalized.raw_measurements.get('environment_type', 'unknown')
+        instrument_count = len([k for k in normalized.features.keys() if 'zscore' in k])
+        
+        if environment_type in ['polar_ice', 'glacier', 'permafrost'] and instrument_count < 2:
+            anthropic_probability *= 0.7
+            reasoning.append(f"ajuste contextual: ambiente glaciar con baja cobertura ({instrument_count} instrumentos)")
+            print(f"[FASE D] Aplicado freno contextual: glaciar con {instrument_count} instrumentos → -30%", flush=True)
+        
+        elif environment_type in ['deep_ocean', 'shallow_sea'] and instrument_count < 2:
+            anthropic_probability *= 0.8
+            reasoning.append(f"ajuste contextual: ambiente marino con baja cobertura ({instrument_count} instrumentos)")
+            print(f"[FASE D] Aplicado freno contextual: marino con {instrument_count} instrumentos → -20%", flush=True)
+        
         anthropic_probability = float(np.clip(anthropic_probability, 0, 1))
         
         # Intervalo de confianza (±10%)
@@ -430,18 +525,29 @@ class ScientificPipeline:
         if anti_pattern:
             recommended_action = "reject_natural_process"
             notes = f"Descartado como proceso natural: {anti_pattern['rejected_as']}"
+            candidate_type = "negative_reference"  # MEJORA PRO
+            negative_reason = anti_pattern['rejected_as']
         elif anthropic.anthropic_probability > 0.7 and anthropic.confidence == "high":
             recommended_action = "field_verification_priority"
             notes = "Geo-candidata con anomalía morfológica significativa - verificación de campo prioritaria"
+            candidate_type = "positive_candidate"
+            negative_reason = None
         elif anthropic.anthropic_probability > 0.5:
             recommended_action = "field_verification"
             notes = "Geo-candidata con indicadores antropogénicos - verificación de campo recomendada"
+            candidate_type = "positive_candidate"
+            negative_reason = None
         elif anthropic.anthropic_probability > 0.3:
             recommended_action = "monitoring"
             notes = "Anomalía detectada - monitoreo recomendado"
+            candidate_type = "uncertain"
+            negative_reason = None
         else:
             recommended_action = "no_action"
             notes = "Consistente con procesos naturales - no requiere acción"
+            # MEJORA PRO: Resultados negativos valiosos
+            candidate_type = "negative_reference"
+            negative_reason = morphology.geomorphology_hint
         
         # Fases completadas
         phases_completed = ["A_normalize", "B_anomaly", "C_morphology", "D_anthropic", "E_antipatterns", "F_output"]
@@ -454,13 +560,20 @@ class ScientificPipeline:
             recommended_action=recommended_action,
             notes=notes,
             phases_completed=phases_completed,
-            timestamp=datetime.now().isoformat()
+            timestamp=datetime.now().isoformat(),
+            candidate_type=candidate_type,  # NUEVO
+            negative_reason=negative_reason,  # NUEVO
+            reuse_for_training=candidate_type == "negative_reference"  # NUEVO
         )
         
         print(f"[FASE F] Salida científica generada", flush=True)
         print(f"  - Anomaly score: {output.anomaly_score:.3f}", flush=True)
         print(f"  - Anthropic probability: {output.anthropic_probability:.3f}", flush=True)
         print(f"  - Recommended action: {output.recommended_action}", flush=True)
+        print(f"  - Candidate type: {output.candidate_type}", flush=True)
+        if output.negative_reason:
+            print(f"  - Negative reason: {output.negative_reason}", flush=True)
+            print(f"  - Reuse for training: {output.reuse_for_training}", flush=True)
         print(f"  - Notes: {output.notes}", flush=True)
         
         return output
@@ -511,12 +624,16 @@ class ScientificPipeline:
                 "confidence_interval": list(output.confidence_interval),
                 "recommended_action": output.recommended_action,
                 "notes": output.notes,
-                "timestamp": output.timestamp
+                "timestamp": output.timestamp,
+                # MEJORA PRO
+                "candidate_type": output.candidate_type,
+                "negative_reason": output.negative_reason,
+                "reuse_for_training": output.reuse_for_training
             },
             "phase_a_normalized": {
                 "features": normalized.features,
                 "normalization_method": normalized.normalization_method,
-                "local_context": normalized.local_context
+                "local_context": normalized.local_context  # Incluye features_status y reason
             },
             "phase_b_anomaly": {
                 "anomaly_score": anomaly.anomaly_score,
@@ -528,7 +645,8 @@ class ScientificPipeline:
                 "symmetry_score": morphology.symmetry_score,
                 "edge_regularity": morphology.edge_regularity,
                 "planarity": morphology.planarity,
-                "artificial_indicators": morphology.artificial_indicators
+                "artificial_indicators": morphology.artificial_indicators,
+                "geomorphology_hint": morphology.geomorphology_hint  # MEJORA 2
             },
             "phase_d_anthropic": {
                 "anthropic_probability": anthropic.anthropic_probability,
