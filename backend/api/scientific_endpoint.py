@@ -110,14 +110,19 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                     lon_min=request.lon_min,
                     lon_max=request.lon_max
                 )
-                measurements.append(measurement)
+                # Solo agregar si la medición es válida (no None)
+                if measurement is not None:
+                    measurements.append(measurement)
+                else:
+                    print(f"  [WARNING] {instrument_name} devolvió None", flush=True)
             except Exception as e:
                 print(f"  [WARNING] Error en {instrument_name}: {e}", flush=True)
                 continue
         
         print(f"  Mediciones obtenidas: {len(measurements)}", flush=True)
         for m in measurements:
-            print(f"    - {m.instrument_name}: {m.value:.3f} ({m.data_mode})", flush=True)
+            if m is not None:  # Doble verificación
+                print(f"    - {m.instrument_name}: {m.value:.3f} ({m.data_mode})", flush=True)
         
         # 3. Preparar datos para pipeline
         raw_measurements = {
@@ -166,7 +171,7 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                 'data_mode': m.data_mode,
                 'source': m.source
             }
-            for m in measurements
+            for m in measurements if m is not None  # Filtrar None
         ]
         
         result['request_info'] = {
