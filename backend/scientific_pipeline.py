@@ -58,6 +58,11 @@ class AnthropicInference:
     confidence_interval: Tuple[float, float]
     reasoning: List[str]
     model_used: str
+    # Métricas de cobertura instrumental
+    coverage_raw: float = 0.0  # Instrumentos presentes / disponibles
+    coverage_effective: float = 0.0  # Cobertura ponderada
+    instruments_measured: int = 0
+    instruments_available: int = 0
 
 @dataclass
 class ScientificOutput:
@@ -70,6 +75,11 @@ class ScientificOutput:
     notes: str
     phases_completed: List[str]
     timestamp: str
+    # COBERTURA INSTRUMENTAL (separar raw vs effective)
+    coverage_raw: float = 0.0  # Instrumentos presentes / disponibles (0-1)
+    coverage_effective: float = 0.0  # Cobertura ponderada por importancia (0-1)
+    instruments_measured: int = 0  # Número de instrumentos que midieron
+    instruments_available: int = 0  # Número de instrumentos disponibles
     # MEJORA PRO: Resultados negativos valiosos
     candidate_type: str = "unknown"  # positive_candidate, negative_reference, uncertain
     negative_reason: Optional[str] = None  # geomorfología si es negativo
@@ -807,12 +817,20 @@ class ScientificPipeline:
         print(f"[FASE D] Confianza: {confidence}", flush=True)
         print(f"[FASE D] Razonamiento: {reasoning}", flush=True)
         
+        # Calcular métricas de cobertura para output
+        instruments_available_count = len(weights)  # Total instrumentos disponibles para este ambiente
+        coverage_raw_value = raw_instrument_count / instruments_available_count if instruments_available_count > 0 else 0.0
+        
         return AnthropicInference(
             anthropic_probability=anthropic_probability,
             confidence=confidence,
             confidence_interval=confidence_interval,
             reasoning=reasoning,
-            model_used="weighted_ensemble_v1"
+            model_used="weighted_ensemble_v1",
+            coverage_raw=coverage_raw_value,
+            coverage_effective=coverage_ratio,
+            instruments_measured=raw_instrument_count,
+            instruments_available=instruments_available_count
         )
     
     # =========================================================================
@@ -1250,6 +1268,11 @@ class ScientificPipeline:
             notes=notes,
             phases_completed=phases_completed,
             timestamp=datetime.now().isoformat(),
+            # COBERTURA INSTRUMENTAL
+            coverage_raw=anthropic.coverage_raw,
+            coverage_effective=anthropic.coverage_effective,
+            instruments_measured=anthropic.instruments_measured,
+            instruments_available=anthropic.instruments_available,
             candidate_type=candidate_type,
             negative_reason=negative_reason,
             reuse_for_training=candidate_type == "negative_reference",
