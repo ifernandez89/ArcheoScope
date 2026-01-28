@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 🧭 SOBRE AGREGAR PETP (Planetary) — OPINIÓN CLARA
 
 👉 Sí, es el siguiente paso lógico
@@ -156,4 +157,164 @@ No usar IA para decisiones
 
 Toda inferencia debe ser trazable
 
+=======
+🧭 SOBRE AGREGAR PETP (Planetary) — OPINIÓN CLARA
+
+👉 Sí, es el siguiente paso lógico
+👉 NO debe mezclarse con ETP
+👉 Debe vivir como “Research Mode” / pestaña experimental
+
+Muy buena tu intuición de ponerlo en otra pestaña.
+
+¿Por qué?
+
+Porque:
+
+cambia la ontología (no hay humanos)
+
+cambia el vocabulario
+
+cambia el criterio de “anomalía”
+
+Eso es otra ciencia, no otra feature.
+
+🧠 NUEVA FEATURE: PETP (Planetary Environmental Tomographic Profile)
+
+Te propongo exactamente este framing:
+
+🧪 Estado
+
+Experimental / Research / Frontier
+
+🎯 Propósito
+
+Comprender procesos planetarios a través de tomografía ambiental multiinstrumental
+
+🔁 DIFERENCIA CLAVE ETP vs PETP
+ETP (Tierra)	PETP (Planetario)
+Ocupación humana	Evento geológico
+Agua = vida	Agua = proceso
+Sitio arqueológico	Región de interés
+Validación arqueológica	Validación geológica
+ESS humano	PCS geológico
+
+👉 Misma arquitectura, distinta semántica.
+
+🧩 QUÉ AGREGA PETP (SIN ROMPER NADA)
+Nuevas capas (análogas a ETP)
+
+Geological Process Context
+
+Impact / Volcanism Detection
+
+Subsurface Radar Stratigraphy
+
+Thermal Inertia & Diurnal Cycles
+
+Nuevas métricas
+
+PCS – Process Consistency Score
+
+SES – Stratigraphic Echo Score
+
+TIS – Thermal Inertia Score
+
+RPS – Regolith Penetration Score
+
+🧱 ARQUITECTURA (NO SE MEZCLA)
+/etp/
+  etp_core.py
+  etp_generator.py
+
+/petp/
+  petp_core.py
+  petp_generator.py
+  planetary_context.py
+
+
+Frontend:
+
+[ ETP | PETP (Experimental) ]
+
+🚀 PROMPT FINAL PARA KIRO (LISTO PARA COPIAR)
+
+Este es el prompt definitivo, limpio y accionable:
+
+🧠 PROMPT PARA KIRO — NUEVA FEATURE PETP
+
+Implementar una nueva pestaña experimental llamada “Planetary Environmental Tomographic Profile (PETP)” dentro de ArcheoScope, sin modificar ni romper el sistema ETP existente.
+
+🎯 Objetivo
+
+Permitir análisis tomográfico ambiental en cuerpos planetarios (Luna / Marte), enfocado en procesos geológicos, no en ocupación humana.
+
+📐 Requisitos conceptuales
+
+PETP es modo investigación
+
+No usa conceptos arqueológicos
+
+No reutiliza narrativa humana
+
+Comparte arquitectura, no semántica
+
+🛰️ Instrumentos (solo públicos)
+
+HiRISE / CTX (imágenes)
+
+MOLA / LOLA (altimetría)
+
+SHARAD / Mini-RF (radar subsuperficie)
+
+THEMIS (térmico)
+
+🧩 Capas PETP
+
+Planetary Geological Context
+
+Impact / Volcanic Process Detection
+
+Subsurface Stratigraphic Echoes
+
+Thermal Inertia & Temporal Cycles
+
+📊 Métricas PETP
+
+Process Consistency Score (PCS)
+
+Stratigraphic Coherence
+
+Subsurface Echo Confidence
+
+Thermal Inertia Anomaly
+
+🧠 Output esperado
+
+Volumen tomográfico XYZ + tiempo
+
+Clasificación de procesos dominantes
+
+Narrativa científica planetaria
+
+Sección explícita: limits of interpretation
+
+🎨 Frontend
+
+Nueva pestaña “PETP (Experimental)”
+
+Visualización 4-paneles (igual a ETP)
+
+Lenguaje científico planetario
+
+Advertencia visible: Research Mode
+
+⚠️ Restricciones
+
+No mezclar ETP y PETP
+
+No usar IA para decisiones
+
+Toda inferencia debe ser trazable
+
+>>>>>>> c203fb8b67951281e91e44a780739bf8feec2673
 Resultado final: ArcheoScope se extiende de explicador territorial terrestre a motor de interpretación planetaria, manteniendo rigor científico y separación epistemológica.
