@@ -141,9 +141,6 @@ class EnvironmentalTomographicProfile:
     ess_volumetrico: float
     ess_temporal: float
     
-    # Cobertura instrumental (NUEVO - separado de ESS)
-    instrumental_coverage: Dict[str, Any] = field(default_factory=dict)
-    
     # Métricas 3D/4D (campos requeridos)
     coherencia_3d: float
     persistencia_temporal: float
@@ -151,6 +148,9 @@ class EnvironmentalTomographicProfile:
     
     # Campos con valores por defecto
     generation_timestamp: datetime = field(default_factory=datetime.now)
+    
+    # Cobertura instrumental (NUEVO - separado de ESS)
+    instrumental_coverage: Dict[str, Any] = field(default_factory=dict)
     
     # Contexto geológico (campos opcionales) - NOMBRES CORREGIDOS
     geological_context: Any = None
