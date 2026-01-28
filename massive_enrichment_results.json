@@ -1,0 +1,899 @@
+[
+  {
+    "site": {
+      "name": "Pirámides de Giza",
+      "country": "Egipto",
+      "lat": 29.9792,
+      "lon": 31.1342,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.7100000000000001
+  },
+  {
+    "site": {
+      "name": "Valle de los Reyes",
+      "country": "Egipto",
+      "lat": 25.7402,
+      "lon": 32.6014,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.7100000000000001
+  },
+  {
+    "site": {
+      "name": "Karnak",
+      "country": "Egipto",
+      "lat": 25.7188,
+      "lon": 32.6573,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.7100000000000001
+  },
+  {
+    "site": {
+      "name": "Abu Simbel",
+      "country": "Egipto",
+      "lat": 22.3372,
+      "lon": 31.6258,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.7400000000000001
+  },
+  {
+    "site": {
+      "name": "Luxor",
+      "country": "Egipto",
+      "lat": 25.6872,
+      "lon": 32.6396,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.7100000000000001
+  },
+  {
+    "site": {
+      "name": "Saqqara",
+      "country": "Egipto",
+      "lat": 29.8714,
+      "lon": 31.2166,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Dendera",
+      "country": "Egipto",
+      "lat": 26.1417,
+      "lon": 32.6703,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.7100000000000001
+  },
+  {
+    "site": {
+      "name": "Edfu",
+      "country": "Egipto",
+      "lat": 24.9778,
+      "lon": 32.8736,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.7100000000000001
+  },
+  {
+    "site": {
+      "name": "Kom Ombo",
+      "country": "Egipto",
+      "lat": 24.4517,
+      "lon": 32.9317,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.7100000000000001
+  },
+  {
+    "site": {
+      "name": "Philae",
+      "country": "Egipto",
+      "lat": 24.0253,
+      "lon": 32.8844,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.7100000000000001
+  },
+  {
+    "site": {
+      "name": "Machu Picchu",
+      "country": "Perú",
+      "lat": -13.1631,
+      "lon": -72.545,
+      "env": "mountain"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.74
+  },
+  {
+    "site": {
+      "name": "Líneas de Nazca",
+      "country": "Perú",
+      "lat": -14.739,
+      "lon": -75.13,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.74
+  },
+  {
+    "site": {
+      "name": "Cusco",
+      "country": "Perú",
+      "lat": -13.5319,
+      "lon": -71.9675,
+      "env": "mountain"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.74
+  },
+  {
+    "site": {
+      "name": "Ollantaytambo",
+      "country": "Perú",
+      "lat": -13.2572,
+      "lon": -72.2653,
+      "env": "mountain"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.74
+  },
+  {
+    "site": {
+      "name": "Sacsayhuamán",
+      "country": "Perú",
+      "lat": -13.5089,
+      "lon": -71.9819,
+      "env": "mountain"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.74
+  },
+  {
+    "site": {
+      "name": "Chan Chan",
+      "country": "Perú",
+      "lat": -8.1061,
+      "lon": -79.0747,
+      "env": "coastal"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.74
+  },
+  {
+    "site": {
+      "name": "Chavín de Huántar",
+      "country": "Perú",
+      "lat": -9.5944,
+      "lon": -77.1772,
+      "env": "mountain"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.74
+  },
+  {
+    "site": {
+      "name": "Caral",
+      "country": "Perú",
+      "lat": -10.8933,
+      "lon": -77.5203,
+      "env": "coastal"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.74
+  },
+  {
+    "site": {
+      "name": "Sipán",
+      "country": "Perú",
+      "lat": -6.7667,
+      "lon": -79.6,
+      "env": "coastal"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.74
+  },
+  {
+    "site": {
+      "name": "Kuélap",
+      "country": "Perú",
+      "lat": -6.4167,
+      "lon": -77.9167,
+      "env": "mountain"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.74
+  },
+  {
+    "site": {
+      "name": "Teotihuacán",
+      "country": "México",
+      "lat": 19.6925,
+      "lon": -98.8438,
+      "env": "highland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Chichén Itzá",
+      "country": "México",
+      "lat": 20.6843,
+      "lon": -88.5678,
+      "env": "tropical_forest"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Palenque",
+      "country": "México",
+      "lat": 17.4839,
+      "lon": -92.0458,
+      "env": "tropical_forest"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Uxmal",
+      "country": "México",
+      "lat": 20.3597,
+      "lon": -89.7714,
+      "env": "tropical_forest"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Tulum",
+      "country": "México",
+      "lat": 20.2114,
+      "lon": -87.4289,
+      "env": "coastal"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Monte Albán",
+      "country": "México",
+      "lat": 17.0433,
+      "lon": -96.7678,
+      "env": "highland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Calakmul",
+      "country": "México",
+      "lat": 18.105,
+      "lon": -89.8119,
+      "env": "tropical_forest"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Tikal",
+      "country": "Guatemala",
+      "lat": 17.2221,
+      "lon": -89.6236,
+      "env": "tropical_forest"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Copán",
+      "country": "Honduras",
+      "lat": 14.84,
+      "lon": -89.1419,
+      "env": "tropical_forest"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Tenochtitlán",
+      "country": "México",
+      "lat": 19.4326,
+      "lon": -99.1332,
+      "env": "urban"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Acrópolis de Atenas",
+      "country": "Grecia",
+      "lat": 37.9715,
+      "lon": 23.7257,
+      "env": "urban"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Delfos",
+      "country": "Grecia",
+      "lat": 38.4824,
+      "lon": 22.5011,
+      "env": "mountain"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Olimpia",
+      "country": "Grecia",
+      "lat": 37.6379,
+      "lon": 21.63,
+      "env": "grassland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Micenas",
+      "country": "Grecia",
+      "lat": 37.7308,
+      "lon": 22.7564,
+      "env": "highland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Knossos",
+      "country": "Grecia",
+      "lat": 35.298,
+      "lon": 25.1631,
+      "env": "coastal"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Epidauro",
+      "country": "Grecia",
+      "lat": 37.5961,
+      "lon": 23.0789,
+      "env": "grassland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Delos",
+      "country": "Grecia",
+      "lat": 37.3964,
+      "lon": 25.2683,
+      "env": "coastal"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Meteora",
+      "country": "Grecia",
+      "lat": 39.7217,
+      "lon": 21.6306,
+      "env": "mountain"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Pompeya",
+      "country": "Italia",
+      "lat": 40.7489,
+      "lon": 14.4839,
+      "env": "urban"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Herculano",
+      "country": "Italia",
+      "lat": 40.8061,
+      "lon": 14.3478,
+      "env": "urban"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Coliseo Romano",
+      "country": "Italia",
+      "lat": 41.8902,
+      "lon": 12.4922,
+      "env": "urban"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Foro Romano",
+      "country": "Italia",
+      "lat": 41.8925,
+      "lon": 12.4853,
+      "env": "urban"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Ostia Antica",
+      "country": "Italia",
+      "lat": 41.7556,
+      "lon": 12.2917,
+      "env": "coastal"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Paestum",
+      "country": "Italia",
+      "lat": 40.42,
+      "lon": 15.0058,
+      "env": "coastal"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Valle de los Templos",
+      "country": "Italia",
+      "lat": 37.2903,
+      "lon": 13.5844,
+      "env": "coastal"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Angkor Wat",
+      "country": "Camboya",
+      "lat": 13.4125,
+      "lon": 103.867,
+      "env": "tropical_forest"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Borobudur",
+      "country": "Indonesia",
+      "lat": -7.6079,
+      "lon": 110.2038,
+      "env": "tropical_forest"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "none",
+    "ess_score": 0.0
+  },
+  {
+    "site": {
+      "name": "Gran Muralla China",
+      "country": "China",
+      "lat": 40.4319,
+      "lon": 116.5704,
+      "env": "mountain"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Terracota de Xi'an",
+      "country": "China",
+      "lat": 34.3848,
+      "lon": 109.2789,
+      "env": "highland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Petra",
+      "country": "Jordania",
+      "lat": 30.3285,
+      "lon": 35.4444,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "very_high",
+    "ess_score": 0.77
+  },
+  {
+    "site": {
+      "name": "Persépolis",
+      "country": "Irán",
+      "lat": 29.9344,
+      "lon": 52.8906,
+      "env": "highland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "very_high",
+    "ess_score": 0.77
+  },
+  {
+    "site": {
+      "name": "Bagan",
+      "country": "Myanmar",
+      "lat": 21.1717,
+      "lon": 94.8578,
+      "env": "grassland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Ayutthaya",
+      "country": "Tailandia",
+      "lat": 14.3532,
+      "lon": 100.5775,
+      "env": "tropical_forest"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Hampi",
+      "country": "India",
+      "lat": 15.335,
+      "lon": 76.46,
+      "env": "highland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Mohenjo-daro",
+      "country": "Pakistán",
+      "lat": 27.3244,
+      "lon": 68.1378,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Stonehenge",
+      "country": "Reino Unido",
+      "lat": 51.1789,
+      "lon": -1.8262,
+      "env": "grassland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "none",
+    "ess_score": 0.0
+  },
+  {
+    "site": {
+      "name": "Carnac",
+      "country": "Francia",
+      "lat": 47.5828,
+      "lon": -3.0758,
+      "env": "coastal"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Newgrange",
+      "country": "Irlanda",
+      "lat": 53.6947,
+      "lon": -6.4753,
+      "env": "grassland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Avebury",
+      "country": "Reino Unido",
+      "lat": 51.4289,
+      "lon": -1.8536,
+      "env": "grassland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "none",
+    "ess_score": 0.0
+  },
+  {
+    "site": {
+      "name": "Skara Brae",
+      "country": "Reino Unido",
+      "lat": 59.0489,
+      "lon": -3.3428,
+      "env": "coastal"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "none",
+    "ess_score": 0.0
+  },
+  {
+    "site": {
+      "name": "Palmira",
+      "country": "Siria",
+      "lat": 34.5561,
+      "lon": 38.2692,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Babilonia",
+      "country": "Irak",
+      "lat": 32.5355,
+      "lon": 44.4275,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Ur",
+      "country": "Irak",
+      "lat": 30.9625,
+      "lon": 46.1031,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "very_high",
+    "ess_score": 0.77
+  },
+  {
+    "site": {
+      "name": "Nínive",
+      "country": "Irak",
+      "lat": 36.36,
+      "lon": 43.1528,
+      "env": "highland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Jerash",
+      "country": "Jordania",
+      "lat": 32.2811,
+      "lon": 35.8911,
+      "env": "highland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Gran Zimbabwe",
+      "country": "Zimbabwe",
+      "lat": -20.2667,
+      "lon": 30.9333,
+      "env": "grassland"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  },
+  {
+    "site": {
+      "name": "Lalibela",
+      "country": "Etiopía",
+      "lat": 12.0333,
+      "lon": 39.0472,
+      "env": "mountain"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "very_high",
+    "ess_score": 0.77
+  },
+  {
+    "site": {
+      "name": "Meroe",
+      "country": "Sudán",
+      "lat": 16.9383,
+      "lon": 33.7483,
+      "env": "desert"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "very_high",
+    "ess_score": 0.77
+  },
+  {
+    "site": {
+      "name": "Cartago",
+      "country": "Túnez",
+      "lat": 36.8528,
+      "lon": 10.3233,
+      "env": "coastal"
+    },
+    "success": true,
+    "analysis_id": null,
+    "ess": "high",
+    "ess_score": 0.68
+  }
+]

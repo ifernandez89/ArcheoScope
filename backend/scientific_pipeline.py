@@ -773,7 +773,7 @@ class ScientificPipeline:
         """
         print("[FASE D] Inferencia antropogénica (con freno de mano)...", flush=True)
         
-        # Calcular probabilidad antropogénica
+        # Calcular probabilidad antropogénica LEGACY
         # Pesos: anomalía (40%), morfología (40%), contexto (20%)
         
         anomaly_weight = anomaly.anomaly_score * 0.4
@@ -1102,6 +1102,16 @@ class ScientificPipeline:
         print(f"[FASE D]    Actividad antropogénica: {anthropic_activity_probability:.2%}", flush=True)
         print(f"[FASE D]    Anomalía instrumental: {instrumental_anomaly_probability:.2%}", flush=True)
         print(f"[FASE D]    Confianza del modelo: {model_inference_confidence}", flush=True)
+        
+        # 🔧 AJUSTE CRÍTICO: Actualizar probabilidad legacy para sitios históricos
+        # Si detectamos origen alto + anomalía baja = sitio histórico integrado
+        if anthropic_origin_probability >= 0.70 and instrumental_anomaly_probability < 0.05:
+            # Usar origen como probabilidad legacy (más representativo)
+            anthropic_probability_adjusted = anthropic_origin_probability
+            print(f"[FASE D] 🏛️ SITIO HISTÓRICO detectado:", flush=True)
+            print(f"[FASE D]    Probabilidad legacy ajustada: {anthropic_probability:.2%} → {anthropic_probability_adjusted:.2%}", flush=True)
+            anthropic_probability = anthropic_probability_adjusted
+            reasoning.append("sitio histórico: origen alto sin anomalía actual")
         
         return AnthropicInference(
             anthropic_probability=anthropic_probability,
