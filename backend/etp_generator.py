@@ -379,6 +379,13 @@ class ETProfileGenerator:
                         lon_max=bounds.lon_max
                     )
                     
+                    # DEBUG: Ver qué está retornando
+                    logger.debug(f"      🔍 {instrument} result type: {type(result)}")
+                    if result:
+                        logger.debug(f"      🔍 {instrument} has status: {hasattr(result, 'status')}")
+                        if hasattr(result, 'status'):
+                            logger.debug(f"      🔍 {instrument} status value: {result.status}")
+                    
                     if result and hasattr(result, 'status') and result.status in ['SUCCESS', 'DEGRADED']:
                         layer_data[instrument] = {
                             'value': getattr(result, 'value', 0.0),
@@ -386,13 +393,13 @@ class ETProfileGenerator:
                             'confidence': getattr(result, 'confidence', 0.5),
                             'status': result.status
                         }
-                        logger.info(f"    ✅ {instrument}: {layer_data[instrument]['value']:.3f}")
+                        logger.info(f"    ✅ {instrument}: {layer_data[instrument]['value']:.3f} AGREGADO A LAYER_DATA")
                     else:
                         # FIX 3: Sensor fallido = NEUTRAL (no se agrega, no penaliza)
                         if self._is_optional_sensor(instrument):
                             logger.info(f"    ⚠️ {instrument}: Opcional - sin datos (no penaliza)")
                         else:
-                            logger.info(f"    ⚠️ {instrument}: Sin datos (neutral)")
+                            logger.info(f"    ⚠️ {instrument}: Sin datos (neutral) - result={result}, has_status={hasattr(result, 'status') if result else False}")
                         # NO agregar al layer_data - ausencia = neutral, no negativo
                         
                 except Exception as e:
