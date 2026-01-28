@@ -59,7 +59,8 @@ def start_frontend_server():
             print("Presiona Ctrl+C para detener el servidor")
             
             # Abrir navegador automáticamente
-            frontend_url = f"http://localhost:{frontend_port}/index.html"
+            # Abrir TIMT version
+            frontend_url = f"http://localhost:{frontend_port}/index_timt.html"
             try:
                 webbrowser.open(frontend_url)
                 print(f"Abierto en navegador: {frontend_url}")
