@@ -21,13 +21,18 @@ from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
 from scipy import stats
 from datetime import datetime
-import asyncpg
+
+# Import condicional para evitar errores en testing
+try:
+    import asyncpg
+except ImportError:
+    asyncpg = None
 
 # Importar desde módulos pipeline
-from .pipeline.normalization import NormalizedFeatures, normalize_data
-from .pipeline.anomaly_detection import AnomalyResult, detect_anomaly
-from .pipeline.morphology import MorphologyResult, analyze_morphology
-from .pipeline.anthropic_inference import AnthropicInference, infer_anthropic_probability
+from pipeline.normalization import NormalizedFeatures, normalize_data
+from pipeline.anomaly_detection import AnomalyResult, detect_anomaly
+from pipeline.morphology import MorphologyResult, analyze_morphology
+from pipeline.anthropic_inference import AnthropicInference, infer_anthropic_probability
 
 @dataclass
 class ScientificOutput:
