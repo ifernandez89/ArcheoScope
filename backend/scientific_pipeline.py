@@ -23,58 +23,11 @@ from scipy import stats
 from datetime import datetime
 import asyncpg
 
-@dataclass
-class NormalizedFeatures:
-    """Features normalizadas por instrumento."""
-    candidate_id: str
-    features: Dict[str, float]
-    raw_measurements: Dict[str, float]
-    normalization_method: str
-    local_context: Dict[str, Any]
-
-@dataclass
-class AnomalyResult:
-    """Resultado de detección de anomalía pura."""
-    anomaly_score: float  # 0.0 - 1.0
-    outlier_dimensions: List[str]
-    method: str
-    confidence: str  # "high", "medium", "low"
-
-@dataclass
-class MorphologyResult:
-    """Resultado de análisis morfológico."""
-    symmetry_score: float
-    edge_regularity: float
-    planarity: float
-    artificial_indicators: List[str]
-    geomorphology_hint: str = "unknown"  # NUEVO: contexto geológico
-    paleo_signature: Optional[Dict[str, Any]] = None  # NUEVO: firma de paleocauce u otras estructuras lineales
-
-@dataclass
-class AnthropicInference:
-    """Inferencia antropogénica (con freno de mano)."""
-    anthropic_probability: float
-    confidence: str
-    confidence_interval: Tuple[float, float]
-    reasoning: List[str]
-    model_used: str
-    # Métricas de cobertura instrumental
-    coverage_raw: float = 0.0  # Instrumentos presentes / disponibles
-    coverage_effective: float = 0.0  # Cobertura ponderada
-    instruments_measured: int = 0
-    instruments_available: int = 0
-    # 🟠 AFINADO 2: Separar probabilidad de incertidumbre
-    epistemic_uncertainty: float = 0.0  # Incertidumbre por falta de datos (0-1)
-    uncertainty_sources: List[str] = None  # Fuentes de incertidumbre
-    # 🔬 EXPLANATORY STRANGENESS: Capturar "algo extraño" sin sensacionalismo
-    explanatory_strangeness: str = "none"  # none, low, medium, high, very_high
-    strangeness_score: float = 0.0  # Score numérico (0-1)
-    strangeness_reasons: List[str] = None  # Razones específicas
-    # 🎯 SEPARACIÓN CIENTÍFICA EXPLÍCITA (estado del arte)
-    anthropic_origin_probability: float = 0.0  # ¿Fue creado por humanos? (0-1)
-    anthropic_activity_probability: float = 0.0  # ¿Hay actividad humana actual? (0-1)
-    instrumental_anomaly_probability: float = 0.0  # Probabilidad de anomalía instrumental (0-1)
-    model_inference_confidence: str = "unknown"  # Confianza del modelo (low, medium, high)
+# Importar desde módulos pipeline
+from .pipeline.normalization import NormalizedFeatures, normalize_data
+from .pipeline.anomaly_detection import AnomalyResult, detect_anomaly
+from .pipeline.morphology import MorphologyResult, analyze_morphology
+from .pipeline.anthropic_inference import AnthropicInference, infer_anthropic_probability
 
 @dataclass
 class ScientificOutput:
@@ -1923,16 +1876,16 @@ class ScientificPipeline:
         raw_measurements = await self.phase_0_enrich_from_db(raw_measurements, lat_min, lat_max, lon_min, lon_max)
         
         # FASE A: Normalización
-        normalized = self.phase_a_normalize(raw_measurements)
+        normalized = normalize_data(raw_measurements)
         
         # FASE B: Anomalía pura
-        anomaly = self.phase_b_anomaly_detection(normalized)
+        anomaly = detect_anomaly(normalized)
         
         # FASE C: Morfología
-        morphology = self.phase_c_morphology(normalized, anomaly)
+        morphology = analyze_morphology(normalized, anomaly)
         
         # FASE D: Inferencia antropogénica
-        anthropic = self.phase_d_anthropic_inference(normalized, anomaly, morphology)
+        anthropic = infer_anthropic_probability(normalized, anomaly, morphology)
         
         # FASE E: Anti-patrones
         anti_pattern = self.phase_e_anti_patterns(normalized, morphology)
