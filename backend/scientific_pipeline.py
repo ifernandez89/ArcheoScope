@@ -70,6 +70,11 @@ class AnthropicInference:
     explanatory_strangeness: str = "none"  # none, low, medium, high, very_high
     strangeness_score: float = 0.0  # Score numérico (0-1)
     strangeness_reasons: List[str] = None  # Razones específicas
+    # 🎯 SEPARACIÓN CIENTÍFICA EXPLÍCITA (estado del arte)
+    anthropic_origin_probability: float = 0.0  # ¿Fue creado por humanos? (0-1)
+    anthropic_activity_probability: float = 0.0  # ¿Hay actividad humana actual? (0-1)
+    instrumental_anomaly_probability: float = 0.0  # Probabilidad de anomalía instrumental (0-1)
+    model_inference_confidence: str = "unknown"  # Confianza del modelo (low, medium, high)
 
 @dataclass
 class ScientificOutput:
@@ -78,6 +83,46 @@ class ScientificOutput:
     anomaly_score: float
     anthropic_probability: float
     confidence_interval: Tuple[float, float]
+    recommended_action: str
+    notes: str
+    phases_completed: List[str]
+    timestamp: str
+    # COBERTURA INSTRUMENTAL (separar raw vs effective)
+    coverage_raw: float = 0.0  # Instrumentos presentes / disponibles (0-1)
+    coverage_effective: float = 0.0  # Cobertura ponderada por importancia (0-1)
+    instruments_measured: int = 0  # Número de instrumentos que midieron
+    instruments_available: int = 0  # Número de instrumentos disponibles
+    # 🟠 AFINADO 2: Incertidumbre epistemológica
+    epistemic_uncertainty: float = 0.0  # Incertidumbre por falta de datos (0-1)
+    uncertainty_sources: List[str] = None  # Fuentes de incertidumbre
+    # 🔬 EXPLANATORY STRANGENESS: "Algo extraño" sin sensacionalismo
+    explanatory_strangeness: str = "none"  # none, low, medium, high, very_high
+    strangeness_score: float = 0.0  # Score numérico (0-1)
+    strangeness_reasons: List[str] = None  # Razones específicas
+    # 🎯 SEPARACIÓN CIENTÍFICA EXPLÍCITA (estado del arte)
+    anthropic_origin_probability: float = 0.0  # ¿Fue creado por humanos? (0-1)
+    anthropic_activity_probability: float = 0.0  # ¿Hay actividad humana actual? (0-1)
+    instrumental_anomaly_probability: float = 0.0  # Probabilidad de anomalía instrumental (0-1)
+    model_inference_confidence: str = "unknown"  # Confianza del modelo (low, medium, high)
+    # MEJORA PRO: Resultados negativos valiosos
+    candidate_type: str = "unknown"  # positive_candidate, negative_reference, uncertain
+    negative_reason: Optional[str] = None  # geomorfología si es negativo
+    reuse_for_training: bool = False  # True si es referencia negativa valiosa
+    # AJUSTE FINO 2: Diferenciar descartar de archivar
+    discard_type: str = "none"  # discard_operational, archive_scientific_negative, none
+    # AJUSTE FINO 3: Confianza científica del descarte
+    scientific_confidence: str = "unknown"  # high, medium, low (certeza del descarte)
+    # FASE G: Validación contra sitios conocidos
+    known_sites_nearby: List[Dict[str, Any]] = None  # Sitios documentados cercanos
+    overlapping_known_site: Optional[Dict[str, Any]] = None  # Sitio solapado
+    distance_to_known_site_km: Optional[float] = None  # Distancia al sitio más cercano
+    is_known_site_rediscovery: bool = False  # True si coincide con sitio documentado
+    # ETIQUETADO EPISTEMOLÓGICO (blindaje académico y legal)
+    epistemic_mode: str = "deterministic_scientific"  # deterministic_scientific, assistive_ai, hybrid
+    ai_used: bool = False  # True si se usó IA en alguna fase
+    ai_role: Optional[str] = None  # explanation_only, validation_support, none
+    reproducible: bool = True  # True si el análisis es 100% reproducible
+    method_transparency: str = "full"  # full, partial, limited
     recommended_action: str
     notes: str
     phases_completed: List[str]
@@ -968,6 +1013,96 @@ class ScientificPipeline:
             environment_type=environment_type
         )
         
+        # 🎯 SEPARACIÓN CIENTÍFICA EXPLÍCITA DE MÉTRICAS (estado del arte)
+        # Separar ORIGEN vs ACTIVIDAD antropogénica
+        print("[FASE D] 🎯 Calculando métricas separadas (origen vs actividad)...", flush=True)
+        
+        # 1. ANTHROPIC ORIGIN PROBABILITY: ¿Fue creado por humanos?
+        # Basado en: morfología + ESS + sitios conocidos + contexto histórico
+        anthropic_origin_probability = 0.0
+        
+        # Base: morfología (simetría, planaridad, regularidad)
+        morphology_score = (
+            morphology.symmetry_score * 0.4 +
+            morphology.planarity * 0.3 +
+            morphology.edge_regularity * 0.3
+        )
+        
+        # Boost por ESS (si hay "algo extraño") - AUMENTADO para dar más peso
+        ess_boost = 0.0
+        if explanatory_strangeness == "very_high":
+            ess_boost = 0.40  # Aumentado de 0.30 a 0.40
+        elif explanatory_strangeness == "high":
+            ess_boost = 0.30  # Aumentado de 0.20 a 0.30
+        elif explanatory_strangeness == "medium":
+            ess_boost = 0.15  # Aumentado de 0.10 a 0.15
+        
+        # Boost por sitios conocidos cercanos (si hay validación histórica)
+        known_site_boost = 0.0
+        if normalized.raw_measurements.get('is_known_archaeological_site', False):
+            known_site_boost = 0.40  # Sitio conocido documentado
+            print(f"[FASE D] 🏛️ Sitio arqueológico conocido detectado → +40% origen", flush=True)
+        
+        # Calcular probabilidad de origen
+        anthropic_origin_probability = min(1.0, morphology_score + ess_boost + known_site_boost)
+        
+        # Ajustar por cobertura (si hay poca cobertura, reducir certeza pero no tanto)
+        if coverage_ratio < 0.5:
+            # Penalizar menos cuando hay ESS alto
+            if explanatory_strangeness in ['high', 'very_high']:
+                anthropic_origin_probability *= (0.7 + coverage_ratio * 0.3)  # Penalizar menos
+            else:
+                anthropic_origin_probability *= (0.5 + coverage_ratio)  # Penalizar más
+        
+        anthropic_origin_probability = float(np.clip(anthropic_origin_probability, 0, 1))
+        
+        # 2. ANTHROPIC ACTIVITY PROBABILITY: ¿Hay actividad humana actual?
+        # Basado en: anomaly_score + señales térmicas + NDVI alto + cambios temporales
+        anthropic_activity_probability = 0.0
+        
+        # Base: anomaly score (actividad genera anomalías)
+        anthropic_activity_probability = anomaly.anomaly_score * 0.6
+        
+        # Boost por señales térmicas altas (actividad genera calor)
+        thermal_boost = 0.0
+        for key in normalized.features.keys():
+            if 'thermal' in key.lower() or 'lst' in key.lower():
+                thermal_value = abs(normalized.features.get(key, 0.0))
+                if thermal_value > 2.0:  # Más de 2σ
+                    thermal_boost = min(0.2, thermal_value / 10.0)
+                    break
+        
+        # Boost por NDVI alto (vegetación activa)
+        ndvi_boost = 0.0
+        for key in normalized.features.keys():
+            if 'ndvi' in key.lower():
+                ndvi_value = abs(normalized.features.get(key, 0.0))
+                if ndvi_value > 1.5:  # NDVI anormalmente alto
+                    ndvi_boost = min(0.15, ndvi_value / 10.0)
+                    break
+        
+        anthropic_activity_probability += thermal_boost + ndvi_boost
+        anthropic_activity_probability = float(np.clip(anthropic_activity_probability, 0, 1))
+        
+        # 3. INSTRUMENTAL ANOMALY PROBABILITY: Probabilidad de anomalía instrumental
+        # Simplemente = anomaly_score (ya calculado en FASE B)
+        instrumental_anomaly_probability = float(anomaly.anomaly_score)
+        
+        # 4. MODEL INFERENCE CONFIDENCE: Confianza del modelo
+        # Basado en: cobertura + convergencia + evidencia
+        if coverage_ratio > 0.75 and len(reasoning) >= 3:
+            model_inference_confidence = "high"
+        elif coverage_ratio > 0.5 and len(reasoning) >= 2:
+            model_inference_confidence = "medium"
+        else:
+            model_inference_confidence = "low"
+        
+        print(f"[FASE D] 🎯 Métricas separadas calculadas:", flush=True)
+        print(f"[FASE D]    Origen antropogénico: {anthropic_origin_probability:.2%}", flush=True)
+        print(f"[FASE D]    Actividad antropogénica: {anthropic_activity_probability:.2%}", flush=True)
+        print(f"[FASE D]    Anomalía instrumental: {instrumental_anomaly_probability:.2%}", flush=True)
+        print(f"[FASE D]    Confianza del modelo: {model_inference_confidence}", flush=True)
+        
         return AnthropicInference(
             anthropic_probability=anthropic_probability,
             confidence=confidence,
@@ -982,7 +1117,12 @@ class ScientificPipeline:
             uncertainty_sources=uncertainty_sources if uncertainty_sources else [],
             explanatory_strangeness=explanatory_strangeness,
             strangeness_score=strangeness_score,
-            strangeness_reasons=strangeness_reasons
+            strangeness_reasons=strangeness_reasons,
+            # 🎯 MÉTRICAS SEPARADAS (estado del arte)
+            anthropic_origin_probability=anthropic_origin_probability,
+            anthropic_activity_probability=anthropic_activity_probability,
+            instrumental_anomaly_probability=instrumental_anomaly_probability,
+            model_inference_confidence=model_inference_confidence
         )
     
     # =========================================================================
@@ -1595,6 +1735,11 @@ class ScientificPipeline:
             explanatory_strangeness=anthropic.explanatory_strangeness,
             strangeness_score=anthropic.strangeness_score,
             strangeness_reasons=anthropic.strangeness_reasons,
+            # 🎯 MÉTRICAS SEPARADAS (estado del arte)
+            anthropic_origin_probability=anthropic.anthropic_origin_probability,
+            anthropic_activity_probability=anthropic.anthropic_activity_probability,
+            instrumental_anomaly_probability=anthropic.instrumental_anomaly_probability,
+            model_inference_confidence=anthropic.model_inference_confidence,
             candidate_type=candidate_type,
             negative_reason=negative_reason,
             reuse_for_training=candidate_type == "negative_reference",
@@ -1814,6 +1959,11 @@ class ScientificPipeline:
                 "explanatory_strangeness": output.explanatory_strangeness,
                 "strangeness_score": output.strangeness_score,
                 "strangeness_reasons": output.strangeness_reasons,
+                # 🎯 MÉTRICAS SEPARADAS (estado del arte)
+                "anthropic_origin_probability": output.anthropic_origin_probability,
+                "anthropic_activity_probability": output.anthropic_activity_probability,
+                "instrumental_anomaly_probability": output.instrumental_anomaly_probability,
+                "model_inference_confidence": output.model_inference_confidence,
                 # MEJORA PRO
                 "candidate_type": output.candidate_type,
                 "negative_reason": output.negative_reason,
@@ -1866,7 +2016,12 @@ class ScientificPipeline:
                 # 🔬 EXPLANATORY STRANGENESS SCORE
                 "explanatory_strangeness": anthropic.explanatory_strangeness,
                 "strangeness_score": anthropic.strangeness_score,
-                "strangeness_reasons": anthropic.strangeness_reasons
+                "strangeness_reasons": anthropic.strangeness_reasons,
+                # 🎯 MÉTRICAS SEPARADAS (estado del arte)
+                "anthropic_origin_probability": anthropic.anthropic_origin_probability,
+                "anthropic_activity_probability": anthropic.anthropic_activity_probability,
+                "instrumental_anomaly_probability": anthropic.instrumental_anomaly_probability,
+                "model_inference_confidence": anthropic.model_inference_confidence
             },
             "phase_e_anti_pattern": anti_pattern,
             "phases_completed": output.phases_completed
