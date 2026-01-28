@@ -249,16 +249,21 @@ async def save_timt_result_to_db(db_pool, result: TerritorialInferentialTomograp
                 # 8. Guardar TAMBIÉN en tabla antigua para compatibilidad con endpoints existentes
                 print("[BD] Guardando en tabla antigua para compatibilidad...", flush=True)
                 
+                # Generar candidate_id único basado en el analysis_id
+                candidate_id = f"TIMT_{result.analysis_id}"
+                
                 await conn.execute("""
                     INSERT INTO archaeological_candidate_analyses (
-                        candidate_name, region,
+                        candidate_id, candidate_name, region,
                         archaeological_probability, anomaly_score,
                         result_type, recommended_action,
                         environment_type, confidence_level,
                         latitude, longitude,
+                        lat_min, lat_max, lon_min, lon_max,
                         scientific_explanation, explanation_type
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
                 """,
+                    candidate_id,
                     request_data.get('region_name', 'Unknown'),
                     f"TIMT Analysis {result.analysis_id}",
                     result.tomographic_profile.densidad_arqueologica_m3,
@@ -269,6 +274,10 @@ async def save_timt_result_to_db(db_pool, result: TerritorialInferentialTomograp
                     result.scientific_rigor_score,
                     (result.territory_bounds.lat_min + result.territory_bounds.lat_max) / 2,
                     (result.territory_bounds.lon_min + result.territory_bounds.lon_max) / 2,
+                    result.territory_bounds.lat_min,
+                    result.territory_bounds.lat_max,
+                    result.territory_bounds.lon_min,
+                    result.territory_bounds.lon_max,
                     result.academic_summary[:1000] if result.academic_summary else '',
                     'timt_analysis'
                 )
