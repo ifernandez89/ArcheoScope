@@ -1807,6 +1807,13 @@ class ScientificPipeline:
                 "coverage_effective": output.coverage_effective,
                 "instruments_measured": output.instruments_measured,
                 "instruments_available": output.instruments_available,
+                # 🟠 INCERTIDUMBRE EPISTEMOLÓGICA
+                "epistemic_uncertainty": output.epistemic_uncertainty,
+                "uncertainty_sources": output.uncertainty_sources,
+                # 🔬 EXPLANATORY STRANGENESS SCORE
+                "explanatory_strangeness": output.explanatory_strangeness,
+                "strangeness_score": output.strangeness_score,
+                "strangeness_reasons": output.strangeness_reasons,
                 # MEJORA PRO
                 "candidate_type": output.candidate_type,
                 "negative_reason": output.negative_reason,
@@ -1855,7 +1862,11 @@ class ScientificPipeline:
                 "coverage_raw": anthropic.coverage_raw,
                 "coverage_effective": anthropic.coverage_effective,
                 "instruments_measured": anthropic.instruments_measured,
-                "instruments_available": anthropic.instruments_available
+                "instruments_available": anthropic.instruments_available,
+                # 🔬 EXPLANATORY STRANGENESS SCORE
+                "explanatory_strangeness": anthropic.explanatory_strangeness,
+                "strangeness_score": anthropic.strangeness_score,
+                "strangeness_reasons": anthropic.strangeness_reasons
             },
             "phase_e_anti_pattern": anti_pattern,
             "phases_completed": output.phases_completed
