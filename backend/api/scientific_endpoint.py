@@ -183,6 +183,10 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
             print("="*80 + "\n", flush=True)
             
             # Ejecutar análisis territorial completo con TIMT
+            # AJUSTES OPTIMIZADOS:
+            # - Objetivo: EXPLORATORY (análisis amplio)
+            # - Resolución: 150m (balance cobertura/detalle)
+            # - Radio: 5km (contexto territorial)
             timt_result = await timt_engine.analyze_territory(
                 lat_min=request.lat_min,
                 lat_max=request.lat_max,
@@ -190,7 +194,7 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                 lon_max=request.lon_max,
                 analysis_objective=AnalysisObjective.EXPLORATORY,
                 analysis_radius_km=5.0,
-                resolution_m=None,  # Usar recomendación TCP
+                resolution_m=150.0,  # AJUSTE: 150m por defecto
                 communication_level=CommunicationLevel.TECHNICAL
             )
             
@@ -293,6 +297,10 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                     'ess_superficial': etp.ess_superficial,
                     'ess_volumetrico': etp.ess_volumetrico,
                     'ess_temporal': etp.ess_temporal,
+                    
+                    # NUEVO: Cobertura instrumental (separada de ESS)
+                    'instrumental_coverage': etp.instrumental_coverage,
+                    
                     'coherencia_3d': etp.coherencia_3d,
                     'persistencia_temporal': etp.persistencia_temporal,
                     'densidad_arqueologica_m3': etp.densidad_arqueologica_m3,

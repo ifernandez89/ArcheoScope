@@ -141,6 +141,9 @@ class EnvironmentalTomographicProfile:
     ess_volumetrico: float
     ess_temporal: float
     
+    # Cobertura instrumental (NUEVO - separado de ESS)
+    instrumental_coverage: Dict[str, Any] = field(default_factory=dict)
+    
     # Métricas 3D/4D (campos requeridos)
     coherencia_3d: float
     persistencia_temporal: float
