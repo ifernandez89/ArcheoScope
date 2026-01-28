@@ -1074,7 +1074,9 @@ async def get_sites_layer(
     confidence_level: Optional[str] = None,
     site_type: Optional[str] = None,
     country: Optional[str] = None,
-    limit: int = 10000
+    limit: int = 2000,  # REDUCIDO: 10000 → 2000 para mejor UX
+    # FASE 2: Filtrado espacial (bbox)
+    bbox: Optional[str] = None  # "lat_min,lon_min,lat_max,lon_max"
 ):
     """
     Obtener sitios para capa de mapa (GeoJSON).
@@ -1083,14 +1085,20 @@ async def get_sites_layer(
     - confidence_level: HIGH, MODERATE, LOW, CANDIDATE
     - site_type: Filtrar por tipo
     - country: Filtrar por país
-    - limit: Máximo de sitios (default 10000)
+    - limit: Máximo de sitios (default 2000, max 10000)
+    - bbox: Bounding box "lat_min,lon_min,lat_max,lon_max" (opcional)
     
     Returns:
-        GeoJSON FeatureCollection con todos los sitios
+        GeoJSON FeatureCollection con sitios filtrados
     """
     
     if not db_pool:
         raise HTTPException(status_code=500, detail="Database not available")
+    
+    # FASE 1: Limitar resultados para mejor UX
+    if limit > 10000:
+        limit = 10000
+        print(f"⚠️ WARNING: Limit capped at 10000 for performance")
     
     try:
         async with db_pool.acquire() as conn:
@@ -1114,7 +1122,28 @@ async def get_sites_layer(
                 params.append(country)
                 param_count += 1
             
+            # FASE 2: Filtrado por bounding box
+            if bbox:
+                try:
+                    lat_min, lon_min, lat_max, lon_max = map(float, bbox.split(','))
+                    where_clauses.append(f'latitude BETWEEN ${param_count} AND ${param_count + 1}')
+                    where_clauses.append(f'longitude BETWEEN ${param_count + 2} AND ${param_count + 3}')
+                    params.extend([lat_min, lat_max, lon_min, lon_max])
+                    param_count += 4
+                    print(f"📍 Spatial filter applied: bbox={bbox}")
+                except ValueError:
+                    print(f"⚠️ WARNING: Invalid bbox format '{bbox}', ignoring spatial filter")
+            
             where_sql = " AND ".join(where_clauses) if where_clauses else "TRUE"
+            
+            # Contar total antes de limitar
+            count_query = f"""
+                SELECT COUNT(*) as total
+                FROM archaeological_sites
+                WHERE {where_sql}
+            """
+            
+            total_count = await conn.fetchval(count_query, *params)
             
             query = f"""
                 SELECT 
@@ -1138,6 +1167,10 @@ async def get_sites_layer(
             params.append(limit)
             
             sites = await conn.fetch(query, *params)
+            
+            # FASE 1: Warning si se trunca
+            if total_count > limit:
+                print(f"⚠️ WARNING: Results truncated - showing {limit} of {total_count} sites")
             
             # Convertir a GeoJSON
             features = []
@@ -1168,10 +1201,15 @@ async def get_sites_layer(
                 "features": features,
                 "metadata": {
                     "total": len(features),
+                    "total_available": total_count,  # NUEVO: total sin límite
+                    "truncated": total_count > limit,  # NUEVO: indica si se truncó
+                    "spatial_filtered": bbox is not None,  # NUEVO: indica si hay filtro espacial
                     "filters": {
                         "confidence_level": confidence_level,
                         "site_type": site_type,
-                        "country": country
+                        "country": country,
+                        "bbox": bbox,
+                        "limit": limit
                     }
                 }
             }
