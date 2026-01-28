@@ -63,6 +63,9 @@ class AnthropicInference:
     coverage_effective: float = 0.0  # Cobertura ponderada
     instruments_measured: int = 0
     instruments_available: int = 0
+    # 🟠 AFINADO 2: Separar probabilidad de incertidumbre
+    epistemic_uncertainty: float = 0.0  # Incertidumbre por falta de datos (0-1)
+    uncertainty_sources: List[str] = None  # Fuentes de incertidumbre
 
 @dataclass
 class ScientificOutput:
@@ -80,6 +83,9 @@ class ScientificOutput:
     coverage_effective: float = 0.0  # Cobertura ponderada por importancia (0-1)
     instruments_measured: int = 0  # Número de instrumentos que midieron
     instruments_available: int = 0  # Número de instrumentos disponibles
+    # 🟠 AFINADO 2: Incertidumbre epistemológica
+    epistemic_uncertainty: float = 0.0  # Incertidumbre por falta de datos (0-1)
+    uncertainty_sources: List[str] = None  # Fuentes de incertidumbre
     # MEJORA PRO: Resultados negativos valiosos
     candidate_type: str = "unknown"  # positive_candidate, negative_reference, uncertain
     negative_reason: Optional[str] = None  # geomorfología si es negativo
@@ -286,6 +292,37 @@ class ScientificPipeline:
         
         # Ambientes montañosos
         elif environment_type in ['mountain', 'highland']:
+            # 🔴 AFINADO 1: Override para arquitectura lítica en montaña
+            # Evitar falso positivo "volcán" cuando hay evidencia de terrazas/arquitectura
+            
+            # Buscar rugosidad del DEM (indicador de terrazas)
+            dem_rugosity_high = False
+            ndvi_missing = False
+            
+            if raw_measurements:
+                # Verificar si hay DEM con alta variabilidad (terrazas)
+                for key, measurement in raw_measurements.items():
+                    if isinstance(measurement, dict):
+                        if 'dem' in key.lower() or 'topography' in key.lower():
+                            value = measurement.get('value', 0.0)
+                            if abs(value) > 1.5:  # Alta variabilidad topográfica
+                                dem_rugosity_high = True
+                        elif 'ndvi' in key.lower():
+                            data_mode = measurement.get('data_mode', 'OK')
+                            if data_mode == 'NO_DATA':
+                                ndvi_missing = True
+            
+            # REGLA DE OVERRIDE CONTEXTUAL:
+            # IF mountain AND DEM.rugosity high AND symmetry high AND NDVI missing
+            # THEN candidate = anthropogenic_terracing_possible
+            if dem_rugosity_high and symmetry > 0.6 and ndvi_missing:
+                print(f"[MORFOLOGÍA] 🏛️ OVERRIDE: Arquitectura lítica posible (no volcán)", flush=True)
+                print(f"  - DEM rugosity: high", flush=True)
+                print(f"  - Symmetry: {symmetry:.2f}", flush=True)
+                print(f"  - NDVI: missing", flush=True)
+                return "anthropogenic_terracing_possible", paleo_signature
+            
+            # Clasificación normal si no hay override
             if symmetry > 0.7:
                 return "volcanic_cone_or_crater", paleo_signature
             elif planarity < 0.3:
@@ -749,35 +786,41 @@ class ScientificPipeline:
         coverage_ratio = effective_coverage / total_weight_available if total_weight_available > 0 else 0
         instrument_count = len([k for k in normalized.features.keys() if 'zscore' in k])
         
-        # Penalización por baja cobertura
-        coverage_penalty = 0.0
+        # 🟠 AFINADO 2: SEPARAR PROBABILIDAD DE INCERTIDUMBRE
+        # En lugar de penalizar probabilidad, calcular incertidumbre epistemológica
+        
+        uncertainty_sources = []
+        epistemic_uncertainty = 0.0
+        
+        # Calcular incertidumbre por falta de instrumentos críticos
         if coverage_ratio < 0.3:  # Menos del 30% de cobertura efectiva
-            coverage_penalty = 0.20  # -20%
-            anthropic_probability *= (1.0 - coverage_penalty)
-            reasoning.append(f"⚠️ Coverage penalty: -{coverage_penalty*100:.0f}% (effective coverage {coverage_ratio*100:.0f}%)")
-            print(f"[FASE D] ⚠️ PENALIZACIÓN POR COBERTURA: -{coverage_penalty*100:.0f}%", flush=True)
+            epistemic_uncertainty = 0.7  # Alta incertidumbre
+            uncertainty_sources.append(f"cobertura crítica ({coverage_ratio*100:.0f}% effective)")
+            reasoning.append(f"⚠️ Alta incertidumbre: cobertura {coverage_ratio*100:.0f}% (instrumentos críticos faltantes)")
+            print(f"[FASE D] ⚠️ ALTA INCERTIDUMBRE EPISTEMOLÓGICA: {epistemic_uncertainty:.1%}", flush=True)
             print(f"[FASE D]    Coverage effective: {coverage_ratio*100:.0f}% (weighted by instrument importance)", flush=True)
             print(f"[FASE D]    Coverage raw: {raw_instrument_count} instruments present", flush=True)
             print(f"[FASE D]    Environment category: {env_category}", flush=True)
-            print(f"[FASE D]    Reason: insufficient critical instrument coverage", flush=True)
+            print(f"[FASE D]    Interpretación: NO sabemos (no = es natural)", flush=True)
         elif coverage_ratio < 0.5:  # Entre 30-50%
-            coverage_penalty = 0.15  # -15%
-            anthropic_probability *= (1.0 - coverage_penalty)
-            reasoning.append(f"⚠️ Coverage penalty: -{coverage_penalty*100:.0f}% (effective coverage {coverage_ratio*100:.0f}%)")
-            print(f"[FASE D] ⚠️ PENALIZACIÓN POR COBERTURA: -{coverage_penalty*100:.0f}%", flush=True)
+            epistemic_uncertainty = 0.5  # Incertidumbre moderada
+            uncertainty_sources.append(f"cobertura moderada ({coverage_ratio*100:.0f}% effective)")
+            reasoning.append(f"⚠️ Incertidumbre moderada: cobertura {coverage_ratio*100:.0f}%")
+            print(f"[FASE D] ⚠️ INCERTIDUMBRE MODERADA: {epistemic_uncertainty:.1%}", flush=True)
             print(f"[FASE D]    Coverage effective: {coverage_ratio*100:.0f}% (weighted by instrument importance)", flush=True)
             print(f"[FASE D]    Coverage raw: {raw_instrument_count} instruments present", flush=True)
             print(f"[FASE D]    Environment category: {env_category}", flush=True)
-            print(f"[FASE D]    Reason: moderate instrumental coverage", flush=True)
         elif coverage_ratio < 0.75:  # Entre 50-75%
-            coverage_penalty = 0.08  # -8%
-            anthropic_probability *= (1.0 - coverage_penalty)
-            reasoning.append(f"⚠️ Coverage penalty: -{coverage_penalty*100:.0f}% (effective coverage {coverage_ratio*100:.0f}%)")
-            print(f"[FASE D] ⚠️ PENALIZACIÓN POR COBERTURA: -{coverage_penalty*100:.0f}%", flush=True)
+            epistemic_uncertainty = 0.3  # Incertidumbre baja
+            uncertainty_sources.append(f"cobertura aceptable ({coverage_ratio*100:.0f}% effective)")
+            reasoning.append(f"⚠️ Incertidumbre baja: cobertura {coverage_ratio*100:.0f}%")
+            print(f"[FASE D] ⚠️ INCERTIDUMBRE BAJA: {epistemic_uncertainty:.1%}", flush=True)
             print(f"[FASE D]    Coverage effective: {coverage_ratio*100:.0f}% (weighted by instrument importance)", flush=True)
             print(f"[FASE D]    Coverage raw: {raw_instrument_count} instruments present", flush=True)
         else:
+            epistemic_uncertainty = 0.1  # Incertidumbre mínima
             print(f"[FASE D] ✅ Cobertura instrumental adecuada: {coverage_ratio*100:.0f}% effective", flush=True)
+            print(f"[FASE D]    Incertidumbre epistemológica: {epistemic_uncertainty:.1%}", flush=True)
             print(f"[FASE D]    Coverage raw: {raw_instrument_count} instruments present", flush=True)
             print(f"[FASE D]    Environment category: {env_category}", flush=True)
         
@@ -846,7 +889,9 @@ class ScientificPipeline:
             coverage_raw=coverage_raw_value,
             coverage_effective=coverage_ratio,
             instruments_measured=raw_instrument_count,
-            instruments_available=instruments_available_count
+            instruments_available=instruments_available_count,
+            epistemic_uncertainty=epistemic_uncertainty,
+            uncertainty_sources=uncertainty_sources if uncertainty_sources else []
         )
     
     # =========================================================================
@@ -1289,6 +1334,9 @@ class ScientificPipeline:
             coverage_effective=anthropic.coverage_effective,
             instruments_measured=anthropic.instruments_measured,
             instruments_available=anthropic.instruments_available,
+            # 🟠 AFINADO 2: Incertidumbre epistemológica
+            epistemic_uncertainty=anthropic.epistemic_uncertainty,
+            uncertainty_sources=anthropic.uncertainty_sources,
             candidate_type=candidate_type,
             negative_reason=negative_reason,
             reuse_for_training=candidate_type == "negative_reference",
