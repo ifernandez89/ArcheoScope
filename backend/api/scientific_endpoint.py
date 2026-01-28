@@ -791,3 +791,275 @@ async def get_analyses_by_region(region_name: str, limit: int = 10):
     except Exception as e:
         print(f"[ERROR] Error consultando análisis de región {region_name}: {e}", flush=True)
         raise HTTPException(status_code=500, detail=f"Error consultando análisis: {str(e)}")
+
+
+@router.get("/sites/all", summary="Listar todos los sitios arqueológicos")
+async def get_all_archaeological_sites(
+    page: int = 1,
+    page_size: int = 100,
+    country: Optional[str] = None,
+    site_type: Optional[str] = None,
+    environment_type: Optional[str] = None,
+    confidence_level: Optional[str] = None,
+    search: Optional[str] = None
+):
+    """
+    # Listar Todos los Sitios Arqueológicos
+    
+    Retorna todos los sitios arqueológicos de la base de datos con paginación y filtros.
+    
+    ## Parámetros de Paginación
+    
+    - `page`: Número de página (default: 1)
+    - `page_size`: Tamaño de página (default: 100, max: 1000)
+    
+    ## Filtros Opcionales
+    
+    - `country`: Filtrar por país (ej: "México", "Perú")
+    - `site_type`: Filtrar por tipo de sitio (SETTLEMENT, MONUMENT, BURIAL, etc.)
+    - `environment_type`: Filtrar por ambiente (DESERT, MOUNTAIN, FOREST, etc.)
+    - `confidence_level`: Filtrar por nivel de confianza (CONFIRMED, PROBABLE, POSSIBLE)
+    - `search`: Búsqueda por nombre (case-insensitive)
+    
+    ## Respuesta
+    
+    Retorna:
+    - `total`: Total de sitios en la BD
+    - `page`: Página actual
+    - `page_size`: Tamaño de página
+    - `total_pages`: Total de páginas
+    - `sites`: Array de sitios con información completa
+    
+    ## Ejemplo
+    
+    ```
+    GET /api/scientific/sites/all?page=1&page_size=50&country=México
+    ```
+    """
+    
+    if not db_pool:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible")
+    
+    # Validar page_size
+    if page_size > 1000:
+        page_size = 1000
+    if page_size < 1:
+        page_size = 100
+    
+    if page < 1:
+        page = 1
+    
+    try:
+        async with db_pool.acquire() as conn:
+            # Construir query con filtros
+            where_clauses = []
+            params = []
+            param_count = 1
+            
+            if country:
+                where_clauses.append(f"country = ${param_count}")
+                params.append(country)
+                param_count += 1
+            
+            if site_type:
+                where_clauses.append(f'"siteType" = ${param_count}')
+                params.append(site_type)
+                param_count += 1
+            
+            if environment_type:
+                where_clauses.append(f'"environmentType" = ${param_count}')
+                params.append(environment_type)
+                param_count += 1
+            
+            if confidence_level:
+                where_clauses.append(f'"confidenceLevel" = ${param_count}')
+                params.append(confidence_level)
+                param_count += 1
+            
+            if search:
+                where_clauses.append(f"name ILIKE ${param_count}")
+                params.append(f"%{search}%")
+                param_count += 1
+            
+            where_sql = " AND ".join(where_clauses) if where_clauses else "TRUE"
+            
+            # Contar total de sitios (con filtros)
+            count_query = f"SELECT COUNT(*) FROM archaeological_sites WHERE {where_sql}"
+            total = await conn.fetchval(count_query, *params)
+            
+            # Calcular offset
+            offset = (page - 1) * page_size
+            
+            # Obtener sitios paginados
+            sites_query = f"""
+                SELECT 
+                    id,
+                    name,
+                    slug,
+                    "siteType",
+                    "environmentType",
+                    "confidenceLevel",
+                    latitude,
+                    longitude,
+                    country,
+                    region,
+                    description,
+                    "scientificSignificance",
+                    "isControlSite",
+                    "discoveryDate",
+                    "createdAt",
+                    "updatedAt"
+                FROM archaeological_sites
+                WHERE {where_sql}
+                ORDER BY "createdAt" DESC
+                LIMIT ${param_count} OFFSET ${param_count + 1}
+            """
+            params.extend([page_size, offset])
+            
+            sites = await conn.fetch(sites_query, *params)
+            
+            # Calcular total de páginas
+            total_pages = (total + page_size - 1) // page_size
+            
+            return {
+                "total": total,
+                "page": page,
+                "page_size": page_size,
+                "total_pages": total_pages,
+                "filters": {
+                    "country": country,
+                    "site_type": site_type,
+                    "environment_type": environment_type,
+                    "confidence_level": confidence_level,
+                    "search": search
+                },
+                "sites": [
+                    {
+                        "id": str(row['id']),
+                        "name": row['name'],
+                        "slug": row['slug'],
+                        "site_type": row['siteType'],
+                        "environment_type": row['environmentType'],
+                        "confidence_level": row['confidenceLevel'],
+                        "coordinates": {
+                            "latitude": float(row['latitude']) if row['latitude'] is not None else None,
+                            "longitude": float(row['longitude']) if row['longitude'] is not None else None
+                        },
+                        "location": {
+                            "country": row['country'],
+                            "region": row['region']
+                        },
+                        "description": row['description'],
+                        "scientific_significance": row['scientificSignificance'],
+                        "is_control_site": row['isControlSite'],
+                        "discovery_date": row['discoveryDate'].isoformat() if row['discoveryDate'] else None,
+                        "created_at": row['createdAt'].isoformat() if row['createdAt'] else None,
+                        "updated_at": row['updatedAt'].isoformat() if row['updatedAt'] else None
+                    }
+                    for row in sites
+                ]
+            }
+            
+    except Exception as e:
+        print(f"[ERROR] Error listando sitios: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Error listando sitios: {str(e)}")
+
+
+@router.get("/sites/stats", summary="Estadísticas de sitios arqueológicos")
+async def get_sites_statistics():
+    """
+    # Estadísticas de Sitios Arqueológicos
+    
+    Retorna estadísticas agregadas de todos los sitios en la base de datos.
+    
+    ## Respuesta
+    
+    Retorna:
+    - `total_sites`: Total de sitios en la BD
+    - `by_country`: Distribución por país (top 20)
+    - `by_site_type`: Distribución por tipo de sitio
+    - `by_environment`: Distribución por tipo de ambiente
+    - `by_confidence`: Distribución por nivel de confianza
+    - `control_sites`: Número de sitios de control
+    - `recent_additions`: Sitios agregados en los últimos 7 días
+    """
+    
+    if not db_pool:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible")
+    
+    try:
+        async with db_pool.acquire() as conn:
+            # Total de sitios
+            total = await conn.fetchval('SELECT COUNT(*) FROM archaeological_sites')
+            
+            # Por país (top 20)
+            by_country = await conn.fetch("""
+                SELECT country, COUNT(*) as count
+                FROM archaeological_sites
+                WHERE country IS NOT NULL
+                GROUP BY country
+                ORDER BY count DESC
+                LIMIT 20
+            """)
+            
+            # Por tipo de sitio
+            by_site_type = await conn.fetch("""
+                SELECT "siteType", COUNT(*) as count
+                FROM archaeological_sites
+                GROUP BY "siteType"
+                ORDER BY count DESC
+            """)
+            
+            # Por ambiente
+            by_environment = await conn.fetch("""
+                SELECT "environmentType", COUNT(*) as count
+                FROM archaeological_sites
+                GROUP BY "environmentType"
+                ORDER BY count DESC
+            """)
+            
+            # Por confianza
+            by_confidence = await conn.fetch("""
+                SELECT "confidenceLevel", COUNT(*) as count
+                FROM archaeological_sites
+                GROUP BY "confidenceLevel"
+                ORDER BY count DESC
+            """)
+            
+            # Sitios de control
+            control_sites = await conn.fetchval("""
+                SELECT COUNT(*) FROM archaeological_sites
+                WHERE "isControlSite" = TRUE
+            """)
+            
+            # Adiciones recientes (últimos 7 días)
+            recent = await conn.fetchval("""
+                SELECT COUNT(*) FROM archaeological_sites
+                WHERE "createdAt" >= NOW() - INTERVAL '7 days'
+            """)
+            
+            return {
+                "total_sites": total,
+                "by_country": [
+                    {"country": row['country'], "count": row['count']}
+                    for row in by_country
+                ],
+                "by_site_type": [
+                    {"site_type": row['siteType'], "count": row['count']}
+                    for row in by_site_type
+                ],
+                "by_environment": [
+                    {"environment_type": row['environmentType'], "count": row['count']}
+                    for row in by_environment
+                ],
+                "by_confidence": [
+                    {"confidence_level": row['confidenceLevel'], "count": row['count']}
+                    for row in by_confidence
+                ],
+                "control_sites": control_sites,
+                "recent_additions": recent
+            }
+            
+    except Exception as e:
+        print(f"[ERROR] Error obteniendo estadísticas: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Error obteniendo estadísticas: {str(e)}")
