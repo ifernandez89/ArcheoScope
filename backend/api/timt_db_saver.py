@@ -246,6 +246,35 @@ async def save_timt_result_to_db(db_pool, result: TerritorialInferentialTomograp
                 
                 logger.info(f"✅ Multilevel communication saved")
                 
+                # 8. Guardar TAMBIÉN en tabla antigua para compatibilidad con endpoints existentes
+                print("[BD] Guardando en tabla antigua para compatibilidad...", flush=True)
+                
+                await conn.execute("""
+                    INSERT INTO archaeological_candidate_analyses (
+                        candidate_name, region,
+                        archaeological_probability, anomaly_score,
+                        result_type, recommended_action,
+                        environment_type, confidence_level,
+                        latitude, longitude,
+                        scientific_explanation, explanation_type
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                """,
+                    request_data.get('region_name', 'Unknown'),
+                    f"TIMT Analysis {result.analysis_id}",
+                    result.tomographic_profile.densidad_arqueologica_m3,
+                    result.tomographic_profile.ess_superficial,
+                    'positive_candidate' if result.tomographic_profile.densidad_arqueologica_m3 > 0.5 else 'uncertain',
+                    result.tomographic_profile.get_archaeological_recommendation(),
+                    result.territorial_context.historical_biome.value,
+                    result.scientific_rigor_score,
+                    (result.territory_bounds.lat_min + result.territory_bounds.lat_max) / 2,
+                    (result.territory_bounds.lon_min + result.territory_bounds.lon_max) / 2,
+                    result.academic_summary[:1000] if result.academic_summary else '',
+                    'timt_analysis'
+                )
+                
+                logger.info(f"✅ Saved to legacy table for compatibility")
+                
                 logger.info(f"🎉 TIMT result completely saved to database: {result.analysis_id}")
                 
                 return timt_id
