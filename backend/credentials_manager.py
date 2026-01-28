@@ -30,8 +30,16 @@ class CredentialsManager:
         self.db_url = os.getenv("DATABASE_URL")
         
         # Generar clave de encriptación desde variable de entorno
-        # Si no existe, usar una clave por defecto (CAMBIAR EN PRODUCCIÓN)
-        master_password = os.getenv("CREDENTIALS_MASTER_KEY", "archeoscope-default-key-change-in-production")
+        master_password = os.getenv("CREDENTIALS_MASTER_KEY")
+        env = os.getenv("ENV", "development")
+        
+        if not master_password:
+            if env == "production":
+                raise RuntimeError("CREDENTIALS_MASTER_KEY is required in production")
+            else:
+                print("⚠️  WARNING: Using default master key in development. Set CREDENTIALS_MASTER_KEY for production!")
+                master_password = "archeoscope-default-key-dev-only"
+        
         self.cipher = self._create_cipher(master_password)
         
         # Crear tabla si no existe
