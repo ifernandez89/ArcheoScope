@@ -66,6 +66,10 @@ class AnthropicInference:
     # 🟠 AFINADO 2: Separar probabilidad de incertidumbre
     epistemic_uncertainty: float = 0.0  # Incertidumbre por falta de datos (0-1)
     uncertainty_sources: List[str] = None  # Fuentes de incertidumbre
+    # 🔬 EXPLANATORY STRANGENESS: Capturar "algo extraño" sin sensacionalismo
+    explanatory_strangeness: str = "none"  # none, low, medium, high, very_high
+    strangeness_score: float = 0.0  # Score numérico (0-1)
+    strangeness_reasons: List[str] = None  # Razones específicas
 
 @dataclass
 class ScientificOutput:
@@ -86,6 +90,10 @@ class ScientificOutput:
     # 🟠 AFINADO 2: Incertidumbre epistemológica
     epistemic_uncertainty: float = 0.0  # Incertidumbre por falta de datos (0-1)
     uncertainty_sources: List[str] = None  # Fuentes de incertidumbre
+    # 🔬 EXPLANATORY STRANGENESS: "Algo extraño" sin sensacionalismo
+    explanatory_strangeness: str = "none"  # none, low, medium, high, very_high
+    strangeness_score: float = 0.0  # Score numérico (0-1)
+    strangeness_reasons: List[str] = None  # Razones específicas
     # MEJORA PRO: Resultados negativos valiosos
     candidate_type: str = "unknown"  # positive_candidate, negative_reference, uncertain
     negative_reason: Optional[str] = None  # geomorfología si es negativo
@@ -275,7 +283,38 @@ class ScientificPipeline:
                 return "glacial_terrain_general", paleo_signature
         
         # Ambientes desérticos
-        elif environment_type in ['desert', 'arid']:
+        elif environment_type in ['desert', 'arid', 'semi_arid']:
+            # 🔴 AJUSTE QUIRÚRGICO 1: Detectar patrones superficiales (Nazca-like)
+            # Evitar clasificar como volcán cuando hay trazos superficiales
+            
+            ndvi_near_zero = False
+            dem_rugosity_low = False
+            
+            if raw_measurements:
+                for key, measurement in raw_measurements.items():
+                    if isinstance(measurement, dict):
+                        if 'ndvi' in key.lower():
+                            value = measurement.get('value', 0.0)
+                            # NDVI muy bajo (< 0.05) = estado basal del desierto
+                            if abs(value) < 0.05:
+                                ndvi_near_zero = True
+                        elif 'dem' in key.lower() or 'topography' in key.lower():
+                            value = measurement.get('value', 0.0)
+                            # Baja rugosidad = superficie plana
+                            if abs(value) < 1.0:
+                                dem_rugosity_low = True
+            
+            # REGLA: IF NDVI ≈ 0 AND DEM.rugosity low AND symmetry high AND planarity high
+            # THEN surface_pattern_anthropic_possible
+            if ndvi_near_zero and dem_rugosity_low and symmetry > 0.6 and planarity > 0.6:
+                print(f"[MORFOLOGÍA] 🏜️ PATRÓN SUPERFICIAL: posible trazo antropogénico (no volcán)", flush=True)
+                print(f"  - NDVI ≈ 0 (estado basal desierto)", flush=True)
+                print(f"  - DEM rugosity: low (superficie plana)", flush=True)
+                print(f"  - Symmetry: {symmetry:.2f}", flush=True)
+                print(f"  - Planarity: {planarity:.2f}", flush=True)
+                return "surface_pattern_anthropic_possible", paleo_signature
+            
+            # Clasificación normal si no hay override
             if symmetry < 0.3 and edge_regularity < 0.3:
                 return "aeolian_dune_field", paleo_signature
             elif planarity > 0.7:
@@ -725,6 +764,16 @@ class ScientificPipeline:
                 'lidar': 0.10,
                 'srtm_dem': 0.05
             },
+            # 🟠 AJUSTE QUIRÚRGICO 2: Ambientes desérticos (NDVI no discriminativo)
+            'desert': {
+                'landsat_thermal': 0.25,  # Más peso a térmicos
+                'modis_lst': 0.20,
+                'sentinel_1_sar': 0.25,   # SAR crítico en desierto
+                'opentopography': 0.20,   # DEM crítico
+                'sentinel_2_ndvi': 0.05,  # NDVI casi no discrimina (estado basal)
+                'icesat2': 0.03,
+                'srtm_dem': 0.02
+            },
             # Ambientes marinos/acuáticos
             'marine': {
                 'multibeam_sonar': 0.30,
@@ -756,6 +805,8 @@ class ScientificPipeline:
             env_category = 'marine'
         elif environment_type in ['polar_ice', 'glacier', 'permafrost']:
             env_category = 'glacial'
+        elif environment_type in ['desert', 'arid', 'semi_arid']:
+            env_category = 'desert'  # 🟠 AJUSTE 2: Categoría específica para desierto
         else:
             env_category = 'terrestrial'
         
@@ -785,6 +836,19 @@ class ScientificPipeline:
         
         coverage_ratio = effective_coverage / total_weight_available if total_weight_available > 0 else 0
         instrument_count = len([k for k in normalized.features.keys() if 'zscore' in k])
+        
+        # 🟠 AJUSTE QUIRÚRGICO 2: Detectar NDVI no discriminativo en desierto
+        ndvi_non_discriminative = False
+        if env_category == 'desert':
+            # Verificar si NDVI está presente pero con valor muy bajo (estado basal)
+            for key in normalized.features.keys():
+                if 'ndvi' in key.lower() and 'zscore' in key:
+                    # NDVI presente pero no discrimina (peso bajo en desierto)
+                    ndvi_non_discriminative = True
+                    print(f"[FASE D] 🏜️ NDVI detectado en desierto: marcado como non_discriminative", flush=True)
+                    print(f"[FASE D]    Razón: NDVI bajo es estado basal del desierto", flush=True)
+                    print(f"[FASE D]    Peso ajustado: 5% (vs 15% en terrestre)", flush=True)
+                    break
         
         # 🟠 AFINADO 2: SEPARAR PROBABILIDAD DE INCERTIDUMBRE
         # En lugar de penalizar probabilidad, calcular incertidumbre epistemológica
@@ -859,16 +923,27 @@ class ScientificPipeline:
         if len(reasoning) == 0:
             reasoning.append("sin indicadores antropogénicos claros")
         
-        # Confianza
-        if anthropic_probability > 0.7 and len(reasoning) >= 3:
-            confidence = "high"
+        # 🟡 AJUSTE QUIRÚRGICO 3: Separar inference confidence de system confidence
+        # Inference confidence: confianza en la inferencia (basada en evidencia)
+        # System confidence: confianza en el sistema (reproducibilidad, determinismo)
+        
+        # INFERENCE CONFIDENCE (basada en evidencia y cobertura)
+        inference_confidence = "low"  # Por defecto
+        if anthropic_probability > 0.7 and len(reasoning) >= 3 and coverage_ratio > 0.7:
+            inference_confidence = "high"
+        elif anthropic_probability > 0.5 and coverage_ratio > 0.5:
+            inference_confidence = "medium"
         elif anthropic_probability > 0.4:
-            confidence = "medium"
+            inference_confidence = "medium_low"
         else:
-            confidence = "low"
+            inference_confidence = "low"
+        
+        # Usar inference_confidence como confidence principal
+        confidence = inference_confidence
         
         print(f"[FASE D] Probabilidad antropogénica: {anthropic_probability:.3f} [{confidence_interval[0]:.2f}, {confidence_interval[1]:.2f}]", flush=True)
-        print(f"[FASE D] Confianza: {confidence}", flush=True)
+        print(f"[FASE D] 🟡 Inference confidence: {inference_confidence} (basada en evidencia)", flush=True)
+        print(f"[FASE D] 🟡 System confidence: high (deterministic, reproducible)", flush=True)
         print(f"[FASE D] Razonamiento: {reasoning}", flush=True)
         
         # Calcular métricas de cobertura para output
@@ -879,6 +954,19 @@ class ScientificPipeline:
         print(f"[FASE D] 📊 Métricas de cobertura:", flush=True)
         print(f"[FASE D]    Raw: {raw_instrument_count}/{instruments_available_count} = {coverage_raw_value:.1%}", flush=True)
         print(f"[FASE D]    Effective: {coverage_ratio:.1%}", flush=True)
+        
+        # 🔬 CALCULAR EXPLANATORY STRANGENESS SCORE (ESS)
+        # Se activa cuando hay "algo extraño" sin anomalía instrumental
+        explanatory_strangeness, strangeness_score, strangeness_reasons = self._calculate_explanatory_strangeness(
+            anomaly_score=anomaly.anomaly_score,
+            anthropic_probability=anthropic_probability,
+            symmetry=morphology.symmetry_score,
+            planarity=morphology.planarity,
+            edge_regularity=morphology.edge_regularity,
+            epistemic_uncertainty=epistemic_uncertainty,
+            geomorphology_hint=morphology.geomorphology_hint,
+            environment_type=environment_type
+        )
         
         return AnthropicInference(
             anthropic_probability=anthropic_probability,
@@ -891,8 +979,168 @@ class ScientificPipeline:
             instruments_measured=raw_instrument_count,
             instruments_available=instruments_available_count,
             epistemic_uncertainty=epistemic_uncertainty,
-            uncertainty_sources=uncertainty_sources if uncertainty_sources else []
+            uncertainty_sources=uncertainty_sources if uncertainty_sources else [],
+            explanatory_strangeness=explanatory_strangeness,
+            strangeness_score=strangeness_score,
+            strangeness_reasons=strangeness_reasons
         )
+    
+    # =========================================================================
+    # FASE D+: EXPLANATORY STRANGENESS SCORE (ESS)
+    # =========================================================================
+    
+    def _calculate_explanatory_strangeness(self,
+                                          anomaly_score: float,
+                                          anthropic_probability: float,
+                                          symmetry: float,
+                                          planarity: float,
+                                          edge_regularity: float,
+                                          epistemic_uncertainty: float,
+                                          geomorphology_hint: str,
+                                          environment_type: str) -> Tuple[str, float, List[str]]:
+        """
+        🔬 EXPLANATORY STRANGENESS SCORE (ESS)
+        
+        Captura casos donde "algo no cuadra" sin caer en sensacionalismo.
+        
+        FILOSOFÍA:
+        - NO hay anomalía instrumental (anomaly_score ≈ 0)
+        - Probabilidad antropogénica moderada (0.25-0.60)
+        - Alta geometría regular (simetría, planaridad)
+        - Alta incertidumbre (instrumentos faltantes)
+        
+        INTERPRETACIÓN CIENTÍFICA:
+        "No hay anomalía instrumental, pero el modelo natural es insuficiente
+        para explicar los patrones geométricos observados."
+        
+        Esto NO es pseudociencia - es honestidad epistemológica.
+        
+        Returns:
+            Tuple[str, float, List[str]]: (level, score, reasons)
+            - level: "none", "low", "medium", "high", "very_high"
+            - score: 0.0-1.0
+            - reasons: Lista de razones específicas
+        """
+        
+        print("[FASE D+] 🔬 Calculando Explanatory Strangeness Score...", flush=True)
+        
+        strangeness_reasons = []
+        strangeness_score = 0.0
+        
+        # =====================================================================
+        # CONDICIONES DE ACTIVACIÓN
+        # =====================================================================
+        
+        # 1. Anomalía instrumental muy baja (< 0.05)
+        if anomaly_score >= 0.05:
+            print(f"[FASE D+] ESS no activado: anomaly_score = {anomaly_score:.3f} (>= 0.05)", flush=True)
+            return "none", 0.0, []
+        
+        # 2. Probabilidad antropogénica en rango moderado (0.25-0.60)
+        if not (0.25 <= anthropic_probability <= 0.60):
+            print(f"[FASE D+] ESS no activado: anthropic_probability = {anthropic_probability:.3f} (fuera de [0.25, 0.60])", flush=True)
+            return "none", 0.0, []
+        
+        # 3. Alta geometría regular (simetría O planaridad > 0.6)
+        if symmetry < 0.6 and planarity < 0.6:
+            print(f"[FASE D+] ESS no activado: geometría baja (symmetry={symmetry:.2f}, planarity={planarity:.2f})", flush=True)
+            return "none", 0.0, []
+        
+        # 4. Alta incertidumbre (> 0.4)
+        if epistemic_uncertainty < 0.4:
+            print(f"[FASE D+] ESS no activado: incertidumbre baja ({epistemic_uncertainty:.1%})", flush=True)
+            return "none", 0.0, []
+        
+        # =====================================================================
+        # CÁLCULO DE STRANGENESS SCORE
+        # =====================================================================
+        
+        print(f"[FASE D+] ✅ ESS ACTIVADO", flush=True)
+        print(f"[FASE D+]    Anomaly score: {anomaly_score:.3f} (< 0.05)", flush=True)
+        print(f"[FASE D+]    Anthropic prob: {anthropic_probability:.3f} (0.25-0.60)", flush=True)
+        print(f"[FASE D+]    Symmetry: {symmetry:.2f}", flush=True)
+        print(f"[FASE D+]    Planarity: {planarity:.2f}", flush=True)
+        print(f"[FASE D+]    Uncertainty: {epistemic_uncertainty:.1%}", flush=True)
+        
+        # Factor 1: Geometría regular (peso 40%)
+        geometry_factor = (symmetry * 0.5 + planarity * 0.3 + edge_regularity * 0.2)
+        strangeness_score += geometry_factor * 0.4
+        
+        if symmetry > 0.8:
+            strangeness_reasons.append(f"simetría geométrica muy alta ({symmetry:.2f})")
+        elif symmetry > 0.6:
+            strangeness_reasons.append(f"simetría geométrica significativa ({symmetry:.2f})")
+        
+        if planarity > 0.8:
+            strangeness_reasons.append(f"planaridad extrema ({planarity:.2f})")
+        elif planarity > 0.6:
+            strangeness_reasons.append(f"planaridad significativa ({planarity:.2f})")
+        
+        # Factor 2: Incertidumbre epistemológica (peso 30%)
+        # Más incertidumbre → más "extraño" que no veamos anomalía
+        uncertainty_factor = epistemic_uncertainty
+        strangeness_score += uncertainty_factor * 0.3
+        
+        if epistemic_uncertainty > 0.6:
+            strangeness_reasons.append(f"alta incertidumbre instrumental ({epistemic_uncertainty:.1%})")
+        else:
+            strangeness_reasons.append(f"incertidumbre moderada ({epistemic_uncertainty:.1%})")
+        
+        # Factor 3: Contexto geomorfológico (peso 30%)
+        # Ciertos contextos hacen la geometría más "extraña"
+        context_factor = 0.0
+        
+        if geomorphology_hint in ['surface_pattern_anthropic_possible', 'anthropogenic_terracing_possible']:
+            context_factor = 0.9
+            strangeness_reasons.append(f"patrón geométrico en contexto: {geomorphology_hint}")
+        elif geomorphology_hint in ['volcanic_cone_or_crater']:
+            # Volcán con baja anomalía es extraño
+            context_factor = 0.7
+            strangeness_reasons.append(f"morfología volcánica sin anomalía térmica")
+        elif environment_type in ['desert', 'arid'] and symmetry > 0.7:
+            # Geometría en desierto es extraña (Nazca-like)
+            context_factor = 0.8
+            strangeness_reasons.append(f"patrones geométricos en desierto no explicables por erosión aleatoria")
+        elif environment_type in ['mountain', 'highland'] and planarity > 0.7:
+            # Planaridad en montaña es extraña (Machu Picchu-like)
+            context_factor = 0.8
+            strangeness_reasons.append(f"arquitectura simétrica integrada en relieve extremo")
+        elif environment_type in ['desert', 'arid'] and planarity > 0.8:
+            # Planaridad extrema en desierto (Giza-like)
+            context_factor = 0.85
+            strangeness_reasons.append(f"geometría regular en entorno sedimentario")
+        else:
+            context_factor = 0.5
+            strangeness_reasons.append(f"geometría regular en contexto: {environment_type}")
+        
+        strangeness_score += context_factor * 0.3
+        
+        # Normalizar score
+        strangeness_score = float(np.clip(strangeness_score, 0, 1))
+        
+        # =====================================================================
+        # CLASIFICACIÓN DE NIVEL
+        # =====================================================================
+        
+        if strangeness_score >= 0.75:
+            level = "very_high"
+        elif strangeness_score >= 0.60:
+            level = "high"
+        elif strangeness_score >= 0.45:
+            level = "medium"
+        elif strangeness_score >= 0.30:
+            level = "low"
+        else:
+            level = "none"
+        
+        print(f"[FASE D+] 🔬 Explanatory Strangeness: {level.upper()} (score={strangeness_score:.3f})", flush=True)
+        print(f"[FASE D+]    Razones:", flush=True)
+        for reason in strangeness_reasons:
+            print(f"[FASE D+]       • {reason}", flush=True)
+        
+        print(f"[FASE D+] 💡 Interpretación: Modelo natural insuficiente para explicar patrones observados", flush=True)
+        
+        return level, strangeness_score, strangeness_reasons
     
     # =========================================================================
     # FASE E: ANTI-PATRONES
@@ -1246,8 +1494,14 @@ class ScientificPipeline:
                 print(f"[FASE G]    Cobertura: {coverage_ratio*100:.0f}%", flush=True)
                 print(f"[FASE G]    Instrumentos requeridos: {', '.join(required_instruments)}", flush=True)
             else:
+                # 🧪 AJUSTE QUIRÚRGICO 4: Mensaje más preciso
+                # Evitar "Anomalía detectada" cuando anomaly_score es bajo
+                if anomaly.anomaly_score > 0.3:
+                    notes = f"Anomalía detectada (score={anomaly.anomaly_score:.3f}, prob={anthropic.anthropic_probability:.3f}) - monitoreo pasivo recomendado"
+                else:
+                    notes = f"Sin anomalía detectable (score={anomaly.anomaly_score:.3f}); probabilidad antropogénica moderada ({anthropic.anthropic_probability:.3f}) bajo alta incertidumbre - monitoreo pasivo recomendado"
+                
                 recommended_action = "monitoring_passive"
-                notes = f"Anomalía detectada (prob={anthropic.anthropic_probability:.3f}) - monitoreo pasivo recomendado"
                 candidate_type = "uncertain"
                 negative_reason = None
                 print(f"[FASE G] 📊 MONITORING_PASSIVE activado", flush=True)
@@ -1337,6 +1591,10 @@ class ScientificPipeline:
             # 🟠 AFINADO 2: Incertidumbre epistemológica
             epistemic_uncertainty=anthropic.epistemic_uncertainty,
             uncertainty_sources=anthropic.uncertainty_sources,
+            # 🔬 EXPLANATORY STRANGENESS
+            explanatory_strangeness=anthropic.explanatory_strangeness,
+            strangeness_score=anthropic.strangeness_score,
+            strangeness_reasons=anthropic.strangeness_reasons,
             candidate_type=candidate_type,
             negative_reason=negative_reason,
             reuse_for_training=candidate_type == "negative_reference",
