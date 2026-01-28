@@ -14,6 +14,7 @@ from cryptography.hazmat.backends import default_backend
 import base64
 from typing import Optional, Dict
 from dotenv import load_dotenv
+from .logger import info, error
 
 load_dotenv()
 
@@ -37,7 +38,7 @@ class CredentialsManager:
             if env == "production":
                 raise RuntimeError("CREDENTIALS_MASTER_KEY is required in production")
             else:
-                print("⚠️  WARNING: Using default master key in development. Set CREDENTIALS_MASTER_KEY for production!")
+                info("⚠️  WARNING: Using default master key in development. Set CREDENTIALS_MASTER_KEY for production!")
                 master_password = "archeoscope-default-key-dev-only"
         
         self.cipher = self._create_cipher(master_password)
@@ -87,10 +88,10 @@ class CredentialsManager:
             cur.close()
             conn.close()
             
-            print("[OK] Tabla api_credentials lista")
+            info("[OK] Tabla api_credentials lista")
             
         except Exception as e:
-            print(f"[ERROR] Creando tabla de credenciales: {e}")
+            error(f"[ERROR] Creando tabla de credenciales: {e}")
     
     def store_credential(self, service_name: str, credential_key: str, 
                         credential_value: str, description: str = "") -> bool:
@@ -128,11 +129,11 @@ class CredentialsManager:
             cur.close()
             conn.close()
             
-            print(f"[OK] Credencial guardada: {service_name}.{credential_key}")
+            info(f"[OK] Credencial guardada: {service_name}.{credential_key}")
             return True
             
         except Exception as e:
-            print(f"[ERROR] Guardando credencial {service_name}.{credential_key}: {e}")
+            error(f"[ERROR] Guardando credencial {service_name}.{credential_key}: {e}")
             return False
     
     def get_credential(self, service_name: str, credential_key: str) -> Optional[str]:
@@ -170,7 +171,7 @@ class CredentialsManager:
             return decrypted_value
             
         except Exception as e:
-            print(f"[ERROR] Obteniendo credencial {service_name}.{credential_key}: {e}")
+            error(f"[ERROR] Obteniendo credencial {service_name}.{credential_key}: {e}")
             return None
     
     def get_all_credentials(self, service_name: str) -> Dict[str, str]:
@@ -207,7 +208,7 @@ class CredentialsManager:
             return credentials
             
         except Exception as e:
-            print(f"[ERROR] Obteniendo credenciales de {service_name}: {e}")
+            error(f"[ERROR] Obteniendo credenciales de {service_name}: {e}")
             return {}
     
     def list_services(self) -> list:
@@ -229,7 +230,7 @@ class CredentialsManager:
             return [dict(s) for s in services]
             
         except Exception as e:
-            print(f"[ERROR] Listando servicios: {e}")
+            error(f"[ERROR] Listando servicios: {e}")
             return []
     
     def delete_credential(self, service_name: str, credential_key: str = None) -> bool:
@@ -262,11 +263,11 @@ class CredentialsManager:
             cur.close()
             conn.close()
             
-            print(f"[OK] Credencial eliminada: {service_name}" + (f".{credential_key}" if credential_key else ""))
+            info(f"[OK] Credencial eliminada: {service_name}" + (f".{credential_key}" if credential_key else ""))
             return True
             
         except Exception as e:
-            print(f"[ERROR] Eliminando credencial: {e}")
+            error(f"[ERROR] Eliminando credencial: {e}")
             return False
 
 
@@ -277,9 +278,9 @@ def migrate_credentials_from_env():
     
     manager = CredentialsManager()
     
-    print("\n" + "="*80)
-    print("MIGRANDO CREDENCIALES DESDE .env A BD")
-    print("="*80 + "\n")
+    info("\n" + "="*80)
+    info("MIGRANDO CREDENCIALES DESDE .env A BD")
+    info("="*80 + "\n")
     
     # NASA Earthdata
     earthdata_username = os.getenv("EARTHDATA_USERNAME")
@@ -308,15 +309,15 @@ def migrate_credentials_from_env():
     if opentopo_key:
         manager.store_credential("opentopography", "api_key", opentopo_key, "OpenTopography API key")
     
-    print("\n" + "="*80)
-    print("MIGRACION COMPLETADA")
-    print("="*80)
+    info("\n" + "="*80)
+    info("MIGRACION COMPLETADA")
+    info("="*80)
     
     # Listar servicios
     services = manager.list_services()
-    print(f"\nServicios configurados: {len(services)}")
+    info(f"\nServicios configurados: {len(services)}")
     for service in services:
-        print(f"  - {service['service_name']}: {service['description']}")
+        info(f"  - {service['service_name']}: {service['description']}")
 
 
 if __name__ == "__main__":
