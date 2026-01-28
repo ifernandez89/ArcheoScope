@@ -406,7 +406,43 @@ class CoreAnomalyDetector:
                 'elevation_terracing': 'icesat2',
                 'slope_anomalies': 'icesat2',
                 'sar_structural_anomalies': 'sentinel_1_sar',
-                'generic_anomalies': 'sentinel_2_ndvi'  # Fallback genérico
+                'generic_anomalies': 'sentinel_2_ndvi',  # Fallback genérico
+                
+                # NEW: VIIRS mappings (Instrumento 11/15)
+                'viirs_thermal_anomalies': 'viirs_thermal',
+                'viirs_vegetation_stress': 'viirs_ndvi',
+                'viirs_fire_detection': 'viirs_fire',
+                'thermal_inertia_viirs': 'viirs_thermal',
+                'ndvi_high_frequency': 'viirs_ndvi',
+                
+                # NEW: SRTM mappings (Instrumento 12/15)
+                'srtm_elevation_anomalies': 'srtm_elevation',
+                'srtm_slope_analysis': 'srtm_slope',
+                'elevation_terracing_srtm': 'srtm_slope',
+                'slope_anomalies_srtm': 'srtm_slope',
+                'topographic_anomalies': 'srtm_elevation',
+                
+                # NEW: PALSAR-2 mappings (Instrumento 13/15)
+                'palsar_l_band_penetration': 'palsar_penetration',
+                'palsar_backscatter_anomalies': 'palsar_backscatter',
+                'palsar_soil_moisture_analysis': 'palsar_soil_moisture',
+                'forest_penetration_l_band': 'palsar_penetration',
+                'sar_l_band_palsar': 'palsar_backscatter',
+                
+                # NEW: ERA5 mappings (Instrumento 14/15)
+                'era5_climate_context': 'era5_climate',
+                'era5_preservation_analysis': 'era5_preservation',
+                'era5_seasonal_accessibility': 'era5_accessibility',
+                'climate_stability': 'era5_climate',
+                'preservation_conditions': 'era5_preservation',
+                
+                # NEW: CHIRPS mappings (Instrumento 15/15)
+                'chirps_precipitation_analysis': 'chirps_precipitation',
+                'chirps_drought_indicators': 'chirps_drought',
+                'chirps_seasonal_patterns': 'chirps_seasonal',
+                'chirps_water_systems': 'chirps_water_management',
+                'precipitation_history': 'chirps_precipitation',
+                'drought_analysis': 'chirps_drought'
             }
             
             # Obtener nombre de instrumento de API

@@ -11,7 +11,7 @@
     "desert": {
       "environment_type": "desert",
       "description": "Desiertos áridos - alta visibilidad, baja vegetación",
-      "primary_instruments": ["landsat_thermal", "modis_lst", "sentinel2", "sar"],
+      "primary_instruments": ["landsat_thermal", "modis_lst", "sentinel2", "sar", "viirs_thermal", "srtm_elevation"],
       "archaeological_indicators": {
         "thermal_anomalies": {
           "description": "Estructuras enterradas tienen diferente inercia térmica que arena",
@@ -44,16 +44,32 @@
           "confidence_high": "NDVI < 0.2 con geometría",
           "confidence_moderate": "NDVI 0.2-0.3",
           "false_positive_risk": "Zonas naturalmente áridas"
+        },
+        "viirs_thermal_anomalies": {
+          "description": "VIIRS proporciona detección térmica de alta frecuencia (375m)",
+          "threshold_thermal_delta_k": 4.0,
+          "expected_pattern": "Anomalías térmicas diarias persistentes",
+          "confidence_high": "> 6K diferencia con geometría",
+          "confidence_moderate": "4-6K diferencia",
+          "false_positive_risk": "Rocas expuestas, variabilidad natural"
+        },
+        "srtm_elevation_anomalies": {
+          "description": "SRTM DEM detecta montículos artificiales (30m resolución)",
+          "threshold_elevation_delta_m": 2.0,
+          "expected_pattern": "Elevaciones geométricas no naturales",
+          "confidence_high": "> 5m altura con forma regular",
+          "confidence_moderate": "2-5m altura",
+          "false_positive_risk": "Dunas, afloramientos naturales"
         }
       },
       "minimum_convergence": 2,
-      "notes": "Landsat + MODIS LST proporcionan cobertura térmica completa. Requiere al menos 2 instrumentos convergentes."
+      "notes": "VIIRS + SRTM complementan Landsat/MODIS. Resolución mejorada para detección de estructuras pequeñas."
     },
     
     "forest": {
       "environment_type": "forest",
       "description": "Bosques y selvas - vegetación densa, requiere penetración",
-      "primary_instruments": ["lidar", "sentinel2", "sar"],
+      "primary_instruments": ["lidar", "sentinel2", "sar", "palsar_penetration", "viirs_ndvi"],
       "archaeological_indicators": {
         "lidar_elevation_anomalies": {
           "description": "Montículos artificiales detectables bajo dosel",
@@ -78,10 +94,26 @@
           "confidence_high": "Coherencia > 0.6 con geometría",
           "confidence_moderate": "Coherencia 0.35-0.6",
           "false_positive_risk": "Afloramientos rocosos"
+        },
+        "palsar_l_band_penetration": {
+          "description": "PALSAR-2 L-band penetra hasta 10m en vegetación densa",
+          "threshold_penetration_ratio": 1.5,
+          "expected_pattern": "Ratio HH/HV anómalo indica estructuras bajo dosel",
+          "confidence_high": "Ratio > 2.0 con geometría definida",
+          "confidence_moderate": "Ratio 1.5-2.0",
+          "false_positive_risk": "Variaciones naturales de humedad"
+        },
+        "viirs_vegetation_stress": {
+          "description": "VIIRS NDVI diario detecta estrés de vegetación sobre estructuras",
+          "threshold_ndvi_temporal_variance": 0.08,
+          "expected_pattern": "Variabilidad temporal anómala en NDVI",
+          "confidence_high": "Varianza > 0.12 con patrón espacial",
+          "confidence_moderate": "Varianza 0.08-0.12",
+          "false_positive_risk": "Estrés hídrico natural, plagas"
         }
       },
       "minimum_convergence": 2,
-      "notes": "LiDAR es crítico - sin LiDAR, confianza baja. Umbrales ajustados para detectar sitios bajo vegetación densa."
+      "notes": "PALSAR-2 L-band es crítico para penetración profunda. VIIRS complementa con monitoreo temporal de alta frecuencia."
     },
     
     "glacier": {
@@ -213,7 +245,7 @@
     "mountain": {
       "environment_type": "mountain",
       "description": "Montañas y zonas de alta elevación - topografía compleja",
-      "primary_instruments": ["srtm_dem", "sentinel2", "sar", "lidar"],
+      "primary_instruments": ["srtm_dem", "sentinel2", "sar", "lidar", "era5_climate"],
       "archaeological_indicators": {
         "elevation_terracing": {
           "description": "Terrazas artificiales en laderas montañosas",
@@ -238,10 +270,26 @@
           "confidence_high": "Coherencia > 0.7 con geometría",
           "confidence_moderate": "Coherencia 0.4-0.7",
           "false_positive_risk": "Formaciones rocosas"
+        },
+        "srtm_slope_analysis": {
+          "description": "SRTM 30m detecta terrazas y modificaciones del terreno",
+          "threshold_slope_change": 20.0,
+          "expected_pattern": "Cambios sistemáticos de pendiente en laderas",
+          "confidence_high": "> 35° cambio con regularidad espacial",
+          "confidence_moderate": "20-35° cambio",
+          "false_positive_risk": "Procesos geológicos naturales"
+        },
+        "era5_climate_context": {
+          "description": "ERA5 proporciona contexto climático para ocupación altitudinal",
+          "threshold_accessibility_score": 0.6,
+          "expected_pattern": "Condiciones climáticas favorables para ocupación humana",
+          "confidence_high": "Score > 0.8 con estabilidad temporal",
+          "confidence_moderate": "Score 0.6-0.8",
+          "false_positive_risk": "Variabilidad climática natural"
         }
       },
       "minimum_convergence": 2,
-      "notes": "Topografía compleja requiere análisis cuidadoso. Terrazas y muros son indicadores clave."
+      "notes": "SRTM DEM esencial para análisis topográfico. ERA5 proporciona contexto climático para viabilidad de ocupación."
     },
     
     "unknown": {
@@ -260,6 +308,48 @@
       },
       "minimum_convergence": 3,
       "notes": "Requiere más convergencia por falta de contexto"
+    },
+    
+    "arid_agricultural": {
+      "environment_type": "arid_agricultural",
+      "description": "Zonas áridas con evidencia de agricultura antigua - requiere análisis de agua",
+      "primary_instruments": ["chirps_precipitation", "era5_climate", "srtm_elevation", "palsar_soil_moisture", "viirs_ndvi"],
+      "archaeological_indicators": {
+        "chirps_precipitation_analysis": {
+          "description": "CHIRPS detecta patrones históricos de precipitación y sequías",
+          "threshold_drought_frequency": 0.3,
+          "expected_pattern": "Períodos de sequía correlacionados con abandono de sitios",
+          "confidence_high": "Sequías severas documentadas + evidencia estructural",
+          "confidence_moderate": "Variabilidad climática moderada",
+          "false_positive_risk": "Variabilidad climática natural"
+        },
+        "chirps_water_systems": {
+          "description": "Indicadores de necesidad de sistemas de manejo de agua",
+          "threshold_management_score": 0.6,
+          "expected_pattern": "Alta necesidad de irrigación/almacenamiento",
+          "confidence_high": "Score > 0.8 con evidencia topográfica",
+          "confidence_moderate": "Score 0.6-0.8",
+          "false_positive_risk": "Condiciones naturales áridas"
+        },
+        "palsar_soil_moisture_analysis": {
+          "description": "PALSAR-2 detecta patrones de humedad y canales antiguos",
+          "threshold_moisture_variance": 0.2,
+          "expected_pattern": "Variaciones sistemáticas de humedad del suelo",
+          "confidence_high": "Patrones lineales de humedad + geometría",
+          "confidence_moderate": "Variaciones moderadas",
+          "false_positive_risk": "Drenaje natural, geología"
+        },
+        "era5_preservation_analysis": {
+          "description": "ERA5 evalúa condiciones de preservación arqueológica",
+          "threshold_preservation_score": 0.7,
+          "expected_pattern": "Condiciones favorables para preservación",
+          "confidence_high": "Score > 0.8 con estabilidad climática",
+          "confidence_moderate": "Score 0.7-0.8",
+          "false_positive_risk": "Variabilidad climática reciente"
+        }
+      },
+      "minimum_convergence": 3,
+      "notes": "Nuevo ambiente que aprovecha capacidades de análisis climático y de agua. Crítico para detectar sistemas agrícolas antiguos en zonas áridas."
     }
   },
   

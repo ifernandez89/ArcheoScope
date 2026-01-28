@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcheoScope - Tomografía Territorial</title>
+    <style>
+        /* ESTILO CIENTÍFICO TOMOGRÁFICO */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0a0e13;
+            color: #e2e8f0;
+            overflow: hidden;
+        }
+
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER CIENTÍFICO */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 12px 20px;
+            border-bottom: 2px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1::before {
+            content: "🧠";
+            font-size: 1.2rem;
+        }
+
+        .territory-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            font-size: 0.9rem;
+        }
+
+        .territory-id {
+            color: #94a3b8;
+            font-family: 'Courier New', monospace;
+        }
+
+        .territory-coords {
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        /* GRID TOMOGRÁFICO - 4 PANELES SINCRONIZADOS */
+        .tomography-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 2px;
+            background: #1e293b;
+            padding: 2px;
+        }
+
+        .panel {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .panel-header {
+            background: #1e293b;
+            padding: 8px 12px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+
+        .panel-metrics {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-family: 'Courier New', monospace;
+        }
+
+        .panel-content {
+            flex: 1;
+            position: relative;
+            background: #020617;
+        }
+
+        /* CANVAS TOMOGRÁFICOS */
+        .tomography-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: crosshair;
+        }
+
+        /* CONTROLES INTERACTIVOS */
+        .controls-overlay {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .depth-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .depth-slider {
+            flex: 1;
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .depth-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .depth-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            min-width: 80px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .time-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .time-slider {
+            flex: 1;
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .time-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #10b981;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .time-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            min-width: 100px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* MÉTRICAS ESS */
+        .metrics-panel {
+            padding: 15px;
+            background: #0f172a;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: #1e293b;
+            border-radius: 6px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .metric-bar {
+            width: 100px;
+            height: 6px;
+            background: #334155;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-left: 10px;
+        }
+
+        .metric-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            transition: width 0.3s ease;
+        }
+
+        /* COLORES CIENTÍFICOS */
+        .ess-superficial { color: #f59e0b; }
+        .ess-volumetrico { color: #3b82f6; }
+        .ess-temporal { color: #10b981; }
+        .coherencia-3d { color: #8b5cf6; }
+
+        /* NARRATIVA TERRITORIAL */
+        .narrative-section {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            border-left: 4px solid #10b981;
+        }
+
+        .narrative-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #10b981;
+            margin-bottom: 8px;
+        }
+
+        .narrative-text {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #cbd5e1;
+        }
+
+        /* LOADING STATES */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .loading::before {
+            content: "⚡";
+            margin-right: 8px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .tomography-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- HEADER CIENTÍFICO -->
+        <header class="header">
+            <h1>Environmental Tomographic Profile</h1>
+            <div class="territory-info">
+                <div class="territory-id" id="territoryId">Cargando territorio...</div>
+                <div class="territory-coords" id="territoryCoords">Coordenadas: --</div>
+            </div>
+        </header>
+
+        <!-- GRID TOMOGRÁFICO - 4 PANELES SINCRONIZADOS -->
+        <main class="tomography-grid">
+            
+            <!-- PANEL 1: VISTA SUPERIOR XY -->
+            <section class="panel" id="panel-xy">
+                <div class="panel-header">
+                    <div class="panel-title">🗺️ Vista Superior (XY)</div>
+                    <div class="panel-metrics" id="xy-metrics">ESS: --</div>
+                </div>
+                <div class="panel-content">
+                    <canvas class="tomography-canvas" id="canvasXY"></canvas>
+                    <div class="controls-overlay">
+                        <div class="depth-control">
+                            <label class="depth-label">Profundidad:</label>
+                            <input type="range" class="depth-slider" id="depthSlider" 
+                                   min="0" max="20" value="0" step="0.5">
+                            <span class="depth-label" id="depthValue">0.0m</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL 2: CORTE VERTICAL XZ -->
+            <section class="panel" id="panel-xz">
+                <div class="panel-header">
+                    <div class="panel-title">📐 Corte Vertical (XZ)</div>
+                    <div class="panel-metrics" id="xz-metrics">Coherencia: --</div>
+                </div>
+                <div class="panel-content">
+                    <canvas class="tomography-canvas" id="canvasXZ"></canvas>
+                </div>
+            </section>
+
+            <!-- PANEL 3: CORTE LATERAL YZ -->
+            <section class="panel" id="panel-yz">
+                <div class="panel-header">
+                    <div class="panel-title">📏 Corte Lateral (YZ)</div>
+                    <div class="panel-metrics" id="yz-metrics">Anomalías: --</div>
+                </div>
+                <div class="panel-content">
+                    <canvas class="tomography-canvas" id="canvasYZ"></canvas>
+                </div>
+            </section>
+
+            <!-- PANEL 4: MÉTRICAS Y NARRATIVA -->
+            <section class="panel" id="panel-metrics">
+                <div class="panel-header">
+                    <div class="panel-title">📊 Análisis Territorial</div>
+                    <div class="panel-metrics" id="overall-metrics">Generando...</div>
+                </div>
+                <div class="panel-content">
+                    <div class="metrics-panel">
+                        <!-- MÉTRICAS ESS -->
+                        <div class="metric-item">
+                            <div class="metric-label">ESS Superficial</div>
+                            <div style="display: flex; align-items: center;">
+                                <div class="metric-value ess-superficial" id="essSuperficial">0.00</div>
+                                <div class="metric-bar">
+                                    <div class="metric-fill" id="essSuperficialBar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-item">
+                            <div class="metric-label">ESS Volumétrico</div>
+                            <div style="display: flex; align-items: center;">
+                                <div class="metric-value ess-volumetrico" id="essVolumetrico">0.00</div>
+                                <div class="metric-bar">
+                                    <div class="metric-fill" id="essVolumetricoBar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-item">
+                            <div class="metric-label">ESS Temporal</div>
+                            <div style="display: flex; align-items: center;">
+                                <div class="metric-value ess-temporal" id="essTemporal">0.00</div>
+                                <div class="metric-bar">
+                                    <div class="metric-fill" id="essTemporalBar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-item">
+                            <div class="metric-label">Coherencia 3D</div>
+                            <div style="display: flex; align-items: center;">
+                                <div class="metric-value coherencia-3d" id="coherencia3d">0.00</div>
+                                <div class="metric-bar">
+                                    <div class="metric-fill" id="coherencia3dBar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- NARRATIVA TERRITORIAL -->
+                        <div class="narrative-section">
+                            <div class="narrative-title">🏛️ Explicación del Territorio</div>
+                            <div class="narrative-text" id="territorialNarrative">
+                                Generando análisis territorial...
+                            </div>
+                        </div>
+
+                        <!-- CONTROLES TEMPORALES -->
+                        <div class="controls-overlay" style="position: relative; margin-top: 15px;">
+                            <div class="time-control">
+                                <label class="time-label">Período:</label>
+                                <input type="range" class="time-slider" id="timeSlider" 
+                                       min="-2000" max="2024" value="2024" step="50">
+                                <span class="time-label" id="timeValue">2024 CE</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // SISTEMA TOMOGRÁFICO JAVASCRIPT
+        class ArcheoScopeTomography {
+            constructor() {
+                this.territoryData = null;
+                this.currentDepth = 0.0;
+                this.currentTime = 2024;
+                
+                // Canvas contexts
+                this.canvasXY = document.getElementById('canvasXY');
+                this.canvasXZ = document.getElementById('canvasXZ');
+                this.canvasYZ = document.getElementById('canvasYZ');
+                
+                this.ctxXY = this.canvasXY.getContext('2d');
+                this.ctxXZ = this.canvasXZ.getContext('2d');
+                this.ctxYZ = this.canvasYZ.getContext('2d');
+                
+                this.initializeCanvases();
+                this.setupEventListeners();
+                this.loadTerritoryData();
+            }
+            
+            initializeCanvases() {
+                // Configurar tamaño de canvas
+                const panels = document.querySelectorAll('.panel-content');
+                panels.forEach(panel => {
+                    const canvas = panel.querySelector('canvas');
+                    if (canvas) {
+                        const rect = panel.getBoundingClientRect();
+                        canvas.width = rect.width;
+                        canvas.height = rect.height;
+                    }
+                });
+            }
+            
+            setupEventListeners() {
+                // Control de profundidad
+                const depthSlider = document.getElementById('depthSlider');
+                const depthValue = document.getElementById('depthValue');
+                
+                depthSlider.addEventListener('input', (e) => {
+                    this.currentDepth = parseFloat(e.target.value);
+                    depthValue.textContent = `${this.currentDepth.toFixed(1)}m`;
+                    this.updateVisualization();
+                });
+                
+                // Control temporal
+                const timeSlider = document.getElementById('timeSlider');
+                const timeValue = document.getElementById('timeValue');
+                
+                timeSlider.addEventListener('input', (e) => {
+                    this.currentTime = parseInt(e.target.value);
+                    const era = this.currentTime > 0 ? 'CE' : 'BCE';
+                    const year = Math.abs(this.currentTime);
+                    timeValue.textContent = `${year} ${era}`;
+                    this.updateVisualization();
+                });
+                
+                // Resize handler
+                window.addEventListener('resize', () => {
+                    this.initializeCanvases();
+                    this.updateVisualization();
+                });
+            }
+            
+            async loadTerritoryData() {
+                try {
+                    // Simular carga de datos ETP
+                    // En producción: await fetch('/api/etp/territory_id/visualization')
+                    
+                    this.territoryData = {
+                        territory_id: 'ETP_29.9500_31.1500_20241128_143022',
+                        bounds: {
+                            lat_min: 29.9, lat_max: 30.0,
+                            lon_min: 31.1, lon_max: 31.2
+                        },
+                        metrics: {
+                            ess_superficial: 0.73,
+                            ess_volumetrico: 0.68,
+                            ess_temporal: 0.71,
+                            coherencia_3d: 0.82
+                        },
+                        xz_slice: {
+                            depths: [0, -0.5, -1, -2, -3, -5, -10, -20],
+                            intensities: [0.73, 0.68, 0.71, 0.65, 0.58, 0.45, 0.32, 0.18],
+                            probabilities: [0.71, 0.69, 0.72, 0.68, 0.61, 0.48, 0.35, 0.22]
+                        },
+                        yz_slice: {
+                            depths: [0, -0.5, -1, -2, -3, -5, -10, -20],
+                            intensities: [0.71, 0.66, 0.69, 0.63, 0.56, 0.43, 0.30, 0.16],
+                            probabilities: [0.69, 0.67, 0.70, 0.66, 0.59, 0.46, 0.33, 0.20]
+                        },
+                        narrative: "Este territorio presenta un patrón complejo de ocupación arqueológica con múltiples fases constructivas. La evidencia volumétrica indica estructuras monumentales en superficie, sistemas de canales a -2m, y posibles cámaras funerarias a -5m. El análisis climático sugiere condiciones favorables para preservación."
+                    };
+                    
+                    this.updateUI();
+                    this.updateVisualization();
+                    
+                } catch (error) {
+                    console.error('Error cargando datos territoriales:', error);
+                    this.showError('Error cargando datos del territorio');
+                }
+            }
+            
+            updateUI() {
+                if (!this.territoryData) return;
+                
+                // Actualizar información del territorio
+                document.getElementById('territoryId').textContent = this.territoryData.territory_id;
+                document.getElementById('territoryCoords').textContent = 
+                    `${this.territoryData.bounds.lat_min.toFixed(4)}, ${this.territoryData.bounds.lon_min.toFixed(4)}`;
+                
+                // Actualizar métricas
+                const metrics = this.territoryData.metrics;
+                
+                document.getElementById('essSuperficial').textContent = metrics.ess_superficial.toFixed(2);
+                document.getElementById('essSuperficialBar').style.width = `${metrics.ess_superficial * 100}%`;
+                
+                document.getElementById('essVolumetrico').textContent = metrics.ess_volumetrico.toFixed(2);
+                document.getElementById('essVolumetricoBar').style.width = `${metrics.ess_volumetrico * 100}%`;
+                
+                document.getElementById('essTemporal').textContent = metrics.ess_temporal.toFixed(2);
+                document.getElementById('essTemporalBar').style.width = `${metrics.ess_temporal * 100}%`;
+                
+                document.getElementById('coherencia3d').textContent = metrics.coherencia_3d.toFixed(2);
+                document.getElementById('coherencia3dBar').style.width = `${metrics.coherencia_3d * 100}%`;
+                
+                // Actualizar narrativa
+                document.getElementById('territorialNarrative').textContent = this.territoryData.narrative;
+                
+                // Actualizar métricas de paneles
+                document.getElementById('xy-metrics').textContent = `ESS: ${metrics.ess_superficial.toFixed(2)}`;
+                document.getElementById('xz-metrics').textContent = `Coherencia: ${metrics.coherencia_3d.toFixed(2)}`;
+                document.getElementById('yz-metrics').textContent = `Anomalías: ${this.territoryData.xz_slice.intensities.filter(i => i > 0.6).length}`;
+                document.getElementById('overall-metrics').textContent = `Vol: ${metrics.ess_volumetrico.toFixed(2)}`;
+            }
+            
+            updateVisualization() {
+                if (!this.territoryData) return;
+                
+                this.drawXYView();
+                this.drawXZSlice();
+                this.drawYZSlice();
+            }
+            
+            drawXYView() {
+                const ctx = this.ctxXY;
+                const canvas = this.canvasXY;
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Fondo
+                ctx.fillStyle = '#020617';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Grid de referencia
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 1;
+                
+                for (let i = 0; i < canvas.width; i += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, canvas.height);
+                    ctx.stroke();
+                }
+                
+                for (let i = 0; i < canvas.height; i += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(canvas.width, i);
+                    ctx.stroke();
+                }
+                
+                // Heatmap de anomalías para la profundidad actual
+                const depthIndex = this.getDepthIndex(this.currentDepth);
+                const intensity = this.territoryData.xz_slice.intensities[depthIndex] || 0;
+                
+                // Anomalía principal
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const radius = 60 * intensity;
+                
+                const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+                gradient.addColorStop(0, `rgba(59, 130, 246, ${intensity})`);
+                gradient.addColorStop(0.5, `rgba(16, 185, 129, ${intensity * 0.7})`);
+                gradient.addColorStop(1, `rgba(59, 130, 246, 0)`);
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Anomalías secundarias
+                for (let i = 0; i < 3; i++) {
+                    const x = centerX + (Math.random() - 0.5) * 200;
+                    const y = centerY + (Math.random() - 0.5) * 150;
+                    const r = 30 * intensity * (0.5 + Math.random() * 0.5);
+                    
+                    const secGradient = ctx.createRadialGradient(x, y, 0, x, y, r);
+                    secGradient.addColorStop(0, `rgba(245, 158, 11, ${intensity * 0.6})`);
+                    secGradient.addColorStop(1, `rgba(245, 158, 11, 0)`);
+                    
+                    ctx.fillStyle = secGradient;
+                    ctx.beginPath();
+                    ctx.arc(x, y, r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Etiqueta de profundidad
+                ctx.fillStyle = '#e2e8f0';
+                ctx.font = '14px Courier New';
+                ctx.fillText(`Profundidad: ${this.currentDepth.toFixed(1)}m`, 10, 25);
+                ctx.fillText(`Intensidad: ${intensity.toFixed(2)}`, 10, 45);
+            }
+            
+            drawXZSlice() {
+                const ctx = this.ctxXZ;
+                const canvas = this.canvasXZ;
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Fondo
+                ctx.fillStyle = '#020617';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const data = this.territoryData.xz_slice;
+                const depths = data.depths;
+                const intensities = data.intensities;
+                
+                // Escala vertical (profundidad)
+                const maxDepth = Math.abs(Math.min(...depths));
+                const depthScale = canvas.height / maxDepth;
+                
+                // Dibujar perfil topográfico (superficie)
+                ctx.strokeStyle = '#22c55e';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                
+                for (let x = 0; x < canvas.width; x++) {
+                    const surfaceY = 50 + Math.sin(x * 0.02) * 20; // Topografía simulada
+                    if (x === 0) {
+                        ctx.moveTo(x, surfaceY);
+                    } else {
+                        ctx.lineTo(x, surfaceY);
+                    }
+                }
+                ctx.stroke();
+                
+                // Dibujar capas subsuperficiales
+                for (let i = 1; i < depths.length; i++) {
+                    const depth = Math.abs(depths[i]);
+                    const intensity = intensities[i];
+                    const y = 50 + depth * depthScale * 0.8;
+                    
+                    // Color basado en intensidad
+                    const alpha = intensity;
+                    ctx.strokeStyle = `rgba(59, 130, 246, ${alpha})`;
+                    ctx.lineWidth = 2 + intensity * 3;
+                    
+                    ctx.beginPath();
+                    for (let x = 0; x < canvas.width; x++) {
+                        const variation = Math.sin(x * 0.01 + depth) * 10 * intensity;
+                        const layerY = y + variation;
+                        
+                        if (x === 0) {
+                            ctx.moveTo(x, layerY);
+                        } else {
+                            ctx.lineTo(x, layerY);
+                        }
+                    }
+                    ctx.stroke();
+                }
+                
+                // Etiquetas de profundidad
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '12px Courier New';
+                
+                for (let i = 0; i < depths.length; i++) {
+                    const depth = Math.abs(depths[i]);
+                    const y = 50 + depth * depthScale * 0.8;
+                    const intensity = intensities[i];
+                    
+                    if (intensity > 0.3) {
+                        ctx.fillText(`${depths[i]}m`, 10, y - 5);
+                        ctx.fillText(`${intensity.toFixed(2)}`, 10, y + 10);
+                    }
+                }
+                
+                // Línea de profundidad actual
+                const currentY = 50 + this.currentDepth * depthScale * 0.8;
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(0, currentY);
+                ctx.lineTo(canvas.width, currentY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            drawYZSlice() {
+                const ctx = this.ctxYZ;
+                const canvas = this.canvasYZ;
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Fondo
+                ctx.fillStyle = '#020617';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const data = this.territoryData.yz_slice;
+                const depths = data.depths;
+                const intensities = data.intensities;
+                
+                // Similar al XZ pero con orientación Norte-Sur
+                const maxDepth = Math.abs(Math.min(...depths));
+                const depthScale = canvas.height / maxDepth;
+                
+                // Perfil lateral
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                
+                for (let x = 0; x < canvas.width; x++) {
+                    const surfaceY = 60 + Math.cos(x * 0.015) * 15;
+                    if (x === 0) {
+                        ctx.moveTo(x, surfaceY);
+                    } else {
+                        ctx.lineTo(x, surfaceY);
+                    }
+                }
+                ctx.stroke();
+                
+                // Capas subsuperficiales
+                for (let i = 1; i < depths.length; i++) {
+                    const depth = Math.abs(depths[i]);
+                    const intensity = intensities[i];
+                    const y = 60 + depth * depthScale * 0.8;
+                    
+                    ctx.strokeStyle = `rgba(139, 92, 246, ${intensity})`;
+                    ctx.lineWidth = 2 + intensity * 3;
+                    
+                    ctx.beginPath();
+                    for (let x = 0; x < canvas.width; x++) {
+                        const variation = Math.cos(x * 0.012 + depth * 0.5) * 8 * intensity;
+                        const layerY = y + variation;
+                        
+                        if (x === 0) {
+                            ctx.moveTo(x, layerY);
+                        } else {
+                            ctx.lineTo(x, layerY);
+                        }
+                    }
+                    ctx.stroke();
+                }
+                
+                // Línea de profundidad actual
+                const currentY = 60 + this.currentDepth * depthScale * 0.8;
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(0, currentY);
+                ctx.lineTo(canvas.width, currentY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            getDepthIndex(depth) {
+                const depths = this.territoryData.xz_slice.depths;
+                let closestIndex = 0;
+                let minDiff = Math.abs(depths[0] - (-depth));
+                
+                for (let i = 1; i < depths.length; i++) {
+                    const diff = Math.abs(depths[i] - (-depth));
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closestIndex = i;
+                    }
+                }
+                
+                return closestIndex;
+            }
+            
+            showError(message) {
+                document.getElementById('territorialNarrative').textContent = `Error: ${message}`;
+                document.getElementById('territoryId').textContent = 'Error de carga';
+            }
+        }
+        
+        // INICIALIZAR SISTEMA TOMOGRÁFICO
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🧠 Inicializando ArcheoScope Tomography System...');
+            window.tomographySystem = new ArcheoScopeTomography();
+        });
+    </script>
+</body>
+</html>

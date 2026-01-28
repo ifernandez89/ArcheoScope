@@ -41,6 +41,13 @@ from .nsidc_connector import NSIDCConnector
 from .modis_lst_connector import MODISLSTConnector
 from .copernicus_marine_connector import CopernicusMarineConnector
 
+# NEW: 5 additional satellite connectors (10→15 instruments)
+from .viirs_connector import VIIRSConnector
+from .srtm_connector import SRTMConnector
+from .palsar_connector import PALSARConnector
+from .era5_connector import ERA5Connector
+from .chirps_connector import CHIRPSConnector
+
 logger = logging.getLogger(__name__)
 
 
@@ -103,6 +110,42 @@ class RealDataIntegratorV2:
         except Exception as e:
             logger.warning(f"⚠️ Copernicus Marine failed to initialize: {e}")
             self.connectors['copernicus_marine'] = None
+        
+        # NEW: Initialize 5 additional satellite connectors (10→15 instruments)
+        try:
+            self.connectors['viirs'] = VIIRSConnector()
+            logger.info("✅ VIIRS connector initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ VIIRS failed to initialize: {e}")
+            self.connectors['viirs'] = None
+        
+        try:
+            self.connectors['srtm'] = SRTMConnector()
+            logger.info("✅ SRTM DEM connector initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ SRTM failed to initialize: {e}")
+            self.connectors['srtm'] = None
+        
+        try:
+            self.connectors['palsar'] = PALSARConnector()
+            logger.info("✅ ALOS PALSAR-2 connector initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ PALSAR-2 failed to initialize: {e}")
+            self.connectors['palsar'] = None
+        
+        try:
+            self.connectors['era5'] = ERA5Connector()
+            logger.info("✅ ERA5 connector initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ ERA5 failed to initialize: {e}")
+            self.connectors['era5'] = None
+        
+        try:
+            self.connectors['chirps'] = CHIRPSConnector()
+            logger.info("✅ CHIRPS connector initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ CHIRPS failed to initialize: {e}")
+            self.connectors['chirps'] = None
         
         # Contar conectores disponibles
         available_count = sum(1 for c in self.connectors.values() if c is not None)
@@ -201,7 +244,43 @@ class RealDataIntegratorV2:
                 # OpenTopography (DEM, LiDAR)
                 'opentopography': ('opentopography', 'get_elevation_data'),
                 'dem': ('opentopography', 'get_elevation_data'),
-                'lidar': ('opentopography', 'get_elevation_data')
+                'lidar': ('opentopography', 'get_elevation_data'),
+                
+                # NEW: VIIRS (thermal, NDVI, fire detection) - Instrumento 11/15
+                'viirs_thermal': ('viirs', 'get_thermal_data'),
+                'viirs_ndvi': ('viirs', 'get_ndvi_data'),
+                'viirs_fire': ('viirs', 'get_fire_data'),
+                'viirs_thermal_anomalies': ('viirs', 'get_thermal_data'),
+                'viirs_vegetation_stress': ('viirs', 'get_ndvi_data'),
+                
+                # NEW: SRTM DEM (topographic analysis) - Instrumento 12/15
+                'srtm_elevation': ('srtm', 'get_elevation_data'),
+                'srtm_slope': ('srtm', 'get_slope_analysis'),
+                'srtm_dem': ('srtm', 'get_elevation_data'),
+                'elevation_terracing_srtm': ('srtm', 'get_slope_analysis'),
+                'slope_anomalies_srtm': ('srtm', 'get_slope_analysis'),
+                
+                # NEW: ALOS PALSAR-2 (L-band SAR penetration) - Instrumento 13/15
+                'palsar_backscatter': ('palsar', 'get_sar_backscatter'),
+                'palsar_penetration': ('palsar', 'get_forest_penetration'),
+                'palsar_soil_moisture': ('palsar', 'get_soil_moisture'),
+                'sar_l_band_palsar': ('palsar', 'get_sar_backscatter'),
+                'forest_penetration_l_band': ('palsar', 'get_forest_penetration'),
+                
+                # NEW: ERA5 (climate context) - Instrumento 14/15
+                'era5_climate': ('era5', 'get_climate_context'),
+                'era5_preservation': ('era5', 'get_preservation_conditions'),
+                'era5_accessibility': ('era5', 'get_seasonal_accessibility'),
+                'climate_context': ('era5', 'get_climate_context'),
+                'preservation_conditions': ('era5', 'get_preservation_conditions'),
+                
+                # NEW: CHIRPS (precipitation history) - Instrumento 15/15
+                'chirps_precipitation': ('chirps', 'get_precipitation_history'),
+                'chirps_drought': ('chirps', 'get_drought_analysis'),
+                'chirps_seasonal': ('chirps', 'get_seasonal_patterns'),
+                'chirps_water_management': ('chirps', 'get_water_management_indicators'),
+                'precipitation_history': ('chirps', 'get_precipitation_history'),
+                'drought_analysis': ('chirps', 'get_drought_analysis')
             }
             
             # Verificar si el instrumento está mapeado
