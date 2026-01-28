@@ -33,6 +33,9 @@ from instrument_status import InstrumentStatus  # IMPORT CRÍTICO
 from temporal_archaeological_signature import (  # SALTO EVOLUTIVO 1
     TemporalArchaeologicalSignatureEngine, TemporalArchaeologicalSignature, TemporalScale
 )
+from deep_inference_layer import (  # SALTO EVOLUTIVO 2
+    DeepInferenceLayerEngine, InferredDepthSignature
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +59,9 @@ class ETProfileGenerator:
         
         # SALTO EVOLUTIVO 1: Sistema TAS (Temporal Archaeological Signature)
         self.tas_engine = TemporalArchaeologicalSignatureEngine(integrator_15_instruments)
+        
+        # SALTO EVOLUTIVO 2: Sistema DIL (Deep Inference Layer)
+        self.dil_engine = DeepInferenceLayerEngine(integrator_15_instruments)
         
         # Capas de profundidad estándar para análisis tomográfico
         # AJUSTE: Profundidad máxima reducida a -5m para análisis exploratorio
@@ -236,6 +242,19 @@ class ETProfileGenerator:
         logger.info(f"   📡 Coherencia SAR: {tas_signature.sar_coherence:.3f}")
         logger.info(f"   🌿 Frecuencia Estrés: {tas_signature.stress_frequency:.3f}")
         
+        # FASE 3C: SALTO EVOLUTIVO 2 - Deep Inference Layer (DIL)
+        logger.info("🔬 FASE 3C: Cálculo de Deep Inference Layer (DIL)...")
+        dil_signature = await self.dil_engine.calculate_dil(
+            lat_min=bounds.lat_min,
+            lat_max=bounds.lat_max,
+            lon_min=bounds.lon_min,
+            lon_max=bounds.lon_max
+        )
+        logger.info(f"   🎯 DIL Score: {dil_signature.dil_score:.3f}")
+        logger.info(f"   📏 Profundidad estimada: {dil_signature.estimated_depth_m:.1f}m")
+        logger.info(f"   📊 Confianza: {dil_signature.confidence:.3f}")
+        logger.info(f"   🏛️ Relevancia arqueológica: {dil_signature.archaeological_relevance:.3f}")
+        
         # FASE 4: Cálculo de cobertura instrumental (NUEVO)
         logger.info("📊 FASE 4A: Cálculo de cobertura instrumental...")
         instrumental_coverage = self._calculate_instrumental_coverage(layered_data)
@@ -332,6 +351,7 @@ class ETProfileGenerator:
             ess_temporal=ess_temporal,
             instrumental_coverage=instrumental_coverage,  # NUEVO: Cobertura separada de ESS
             tas_signature=tas_signature,  # SALTO EVOLUTIVO 1: TAS
+            dil_signature=dil_signature,  # SALTO EVOLUTIVO 2: DIL
             coherencia_3d=coherencia_3d,
             persistencia_temporal=persistencia,
             densidad_arqueologica_m3=densidad_m3,
@@ -360,6 +380,7 @@ class ETProfileGenerator:
         logger.info(f"   📊 ESS Volumétrico: {ess_volumetrico:.3f} (contraste estratigráfico)")
         logger.info(f"   📊 ESS Temporal: {ess_temporal:.3f}")
         logger.info(f"   🕐 TAS Score: {tas_signature.tas_score:.3f} (firma temporal arqueológica)")
+        logger.info(f"   🔬 DIL Score: {dil_signature.dil_score:.3f} (profundidad inferida: {dil_signature.estimated_depth_m:.1f}m)")
         logger.info(f"   📊 Coherencia 3D: {coherencia_3d:.3f}")
         logger.info(f"   🏛️ Anomalías detectadas: {len(volumetric_anomalies)}")
         logger.info(f"   🗿 GCS (Geological): {geological_compatibility.gcs_score:.3f}")

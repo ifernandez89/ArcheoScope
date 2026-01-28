@@ -304,6 +304,9 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                     # SALTO EVOLUTIVO 1: Temporal Archaeological Signature (TAS)
                     'tas_signature': etp.tas_signature.to_dict() if etp.tas_signature else None,
                     
+                    # SALTO EVOLUTIVO 2: Deep Inference Layer (DIL)
+                    'dil_signature': etp.dil_signature.to_dict() if etp.dil_signature else None,
+                    
                     'coherencia_3d': etp.coherencia_3d,
                     'persistencia_temporal': etp.persistencia_temporal,
                     'densidad_arqueologica_m3': etp.densidad_arqueologica_m3,

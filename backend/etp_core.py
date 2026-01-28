@@ -155,6 +155,9 @@ class EnvironmentalTomographicProfile:
     # SALTO EVOLUTIVO 1: Temporal Archaeological Signature (TAS)
     tas_signature: Any = None  # TemporalArchaeologicalSignature
     
+    # SALTO EVOLUTIVO 2: Deep Inference Layer (DIL)
+    dil_signature: Any = None  # InferredDepthSignature
+    
     # Contexto geológico (campos opcionales) - NOMBRES CORREGIDOS
     geological_context: Any = None
     geological_compatibility: Any = None  # GeologicalCompatibilityScore (no geological_compatibility_score)
