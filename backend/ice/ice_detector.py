@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ArcheoScope Ice Detection Module - CryoScope
+ArcheoScope Ice Detection Module - ArcheoScope
 Detecta automáticamente ambientes de hielo, glaciares, permafrost y nieve compacta
 """
 

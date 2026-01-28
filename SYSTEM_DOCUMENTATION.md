@@ -1,6 +1,6 @@
-# 🧊 CryoScope - Subglacial Coherence Engine
+# 🏺 ArcheoScope - Archaeological Coherence Engine
 
-## Sistema Científico para Detección de Anomalías Glaciológicas
+## Sistema Científico para Detección de Anomalías Arqueológicas
 
 **Versión:** 2.0.0  
 **Estado:** Producción - Instrumento Científico Real  
@@ -10,7 +10,7 @@
 
 ## 🎯 **Filosofía del Sistema**
 
-> **"CryoScope no es un detector de verdades, es un amplificador de hipótesis espaciales."**
+> **"ArcheoScope no es un detector de verdades, es un amplificador de hipótesis espaciales."**
 
 Este sistema está diseñado como un **instrumento científico real** que:
 - Se comporta responsablemente según la escala espacial
@@ -242,7 +242,7 @@ test: Pruebas
 
 ## 📞 **Contacto y Contribuciones**
 
-**Repositorio:** https://github.com/ifernandez89/CryoScope  
+**Repositorio:** https://github.com/ifernandez89/ArcheoScope  
 **Licencia:** MIT  
 **Contribuciones:** Bienvenidas vía Pull Requests  
 
@@ -256,4 +256,4 @@ Desarrollado con la asistencia de **Kiro AI** - Un ejemplo excepcional de colabo
 
 *"La ciencia avanza no solo descubriendo lo que sabemos, sino reconociendo honestamente lo que no sabemos."*
 
-**CryoScope v2.0.0 - Enero 2026** 🧊🔬🤖
+**ArcheoScope v2.0.0 - Enero 2026** 🏺🔬🤖

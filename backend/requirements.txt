@@ -1,5 +1,5 @@
 # ArcheoScope Backend Dependencies
-# Core framework (same as CryoScope)
+# Core framework (same as ArcheoScope)
 fastapi==0.104.1
 uvicorn==0.24.0
 pydantic==2.5.0

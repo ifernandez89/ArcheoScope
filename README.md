@@ -50,8 +50,8 @@ ollama pull qwen2.5:3b-instruct
 ### **2. Instalación**
 ```bash
 # Clonar repositorio
-git clone https://github.com/ifernandez89/CryoScope.git
-cd CryoScope
+git clone https://github.com/ifernandez89/ArcheoScope.git
+cd ArcheoScope
 
 # Instalar dependencias básicas
 pip install fastapi uvicorn numpy scipy requests
@@ -139,7 +139,7 @@ if (area > 100_km²) {
 ## 🏗️ **Arquitectura**
 
 ```
-CryoScope/
+ArcheoScope/
 ├── 🖥️  Backend (Python + FastAPI)
 │   ├── demo_server.py          # Servidor principal
 │   ├── ai/ollama_assistant.py  # Integración IA
@@ -251,8 +251,8 @@ Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para detalles.
 
 ## 📞 **Contacto**
 
-- **Issues:** [GitHub Issues](https://github.com/ifernandez89/CryoScope/issues)
-- **Discusiones:** [GitHub Discussions](https://github.com/ifernandez89/CryoScope/discussions)
+- **Issues:** [GitHub Issues](https://github.com/ifernandez89/ArcheoScope/issues)
+- **Discusiones:** [GitHub Discussions](https://github.com/ifernandez89/ArcheoScope/discussions)
 - **Email:** [Contacto del proyecto]
 
 ---
@@ -267,8 +267,8 @@ Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para detalles.
 
 *"La ciencia avanza no solo descubriendo lo que sabemos, sino reconociendo honestamente lo que no sabemos."*
 
-**CryoScope - Donde la glaciología encuentra la inteligencia artificial responsable** 🧊🤖
+**ArcheoScope - Donde la arqueología encuentra la inteligencia artificial responsable** 🏺🤖
 
 ---
 
-[![Made with ❤️ and 🧠](https://img.shields.io/badge/Made%20with-❤️%20and%20🧠-red)](https://github.com/ifernandez89/CryoScope)
+[![Made with ❤️ and 🧠](https://img.shields.io/badge/Made%20with-❤️%20and%20🧠-red)](https://github.com/ifernandez89/ArcheoScope)

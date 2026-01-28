@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test de calibración de CryoScope con sitios reales de anomalías de hielo
+Test de calibración de ArcheoScope con sitios reales de anomalías de hielo
 Incluye lagos subglaciales, cráteres, grietas y depresiones documentadas
 """
 
@@ -19,7 +19,7 @@ from ice.cryoarchaeology import CryoArchaeologyEngine
 def test_cryoscope_calibration():
     """Test de calibración con múltiples sitios reales de anomalías de hielo"""
     
-    print("❄️ CRYOSCOPE - TEST DE CALIBRACIÓN CON ANOMALÍAS REALES")
+    print("❄️ ARCHEOSCOPE - TEST DE CALIBRACIÓN CON ANOMALÍAS REALES")
     print("=" * 70)
     print("Sitios de prueba: Lagos subglaciales, cráteres, grietas y depresiones")
     print("Objetivo: Calibrar detección de geometrías y volumetrías bajo hielo")
@@ -347,7 +347,7 @@ def test_cryoscope_calibration():
     
     calibration_results = {
         "test_info": {
-            "test_name": "CryoScope Calibration with Real Ice Anomalies",
+            "test_name": "ArcheoScope Calibration with Real Ice Anomalies",
             "test_date": datetime.now().isoformat(),
             "sites_tested": len(test_sites),
             "successful_tests": len(successful_tests)
@@ -361,14 +361,14 @@ def test_cryoscope_calibration():
         "calibration_recommendations": weak_categories if successful_tests else []
     }
     
-    output_file = f"cryoscope_calibration_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    output_file = f"archeoscope_calibration_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(calibration_results, f, indent=2, ensure_ascii=False)
     
     print(f"✅ Resultados guardados en: {output_file}")
     
     # Resumen final
-    print(f"\n🏆 RESUMEN DE CALIBRACIÓN CRYOSCOPE")
+    print(f"\n🏆 RESUMEN DE CALIBRACIÓN ARCHEOSCOPE")
     print("=" * 70)
     
     if successful_tests:
@@ -385,7 +385,7 @@ def test_cryoscope_calibration():
     else:
         print(f"❌ No se pudieron procesar sitios exitosamente")
     
-    print(f"\n❄️ Calibración de CryoScope completada!")
+    print(f"\n❄️ Calibración de ArcheoScope completada!")
     
     return calibration_results
 

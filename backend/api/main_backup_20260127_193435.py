@@ -2,7 +2,7 @@
 """
 API principal para ArcheoScope - Archaeological Remote Sensing Engine.
 
-Mantiene la misma UI/UX que CryoScope pero optimizada para arqueología remota.
+Mantiene la misma UI/UX que ArcheoScope pero optimizada para arqueología remota.
 """
 
 from fastapi import FastAPI, HTTPException
@@ -271,7 +271,7 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ No se pudo cargar router científico: {e}")
 
-# Modelos de datos (idénticos a CryoScope para mantener UI/UX)
+# Modelos de datos (idénticos a ArcheoScope para mantener UI/UX)
 class RegionRequest(BaseModel):
     """Solicitud de análisis arqueológico de región"""
     lat_min: float
@@ -288,7 +288,7 @@ class RegionRequest(BaseModel):
     include_validation_metrics: Optional[bool] = False  # Nueva opción para métricas de validación
 
 class AnalysisResponse(BaseModel):
-    """Respuesta del análisis arqueológico (compatible con CryoScope UI)"""
+    """Respuesta del análisis arqueológico (compatible con ArcheoScope UI)"""
     region_info: Dict[str, Any]
     statistical_results: Dict[str, Any]
     physics_results: Dict[str, Any]  # Renombrado pero mantiene estructura
@@ -4288,7 +4288,7 @@ def perform_archaeological_evaluation(datasets: Dict[str, Any],
     rules_engine = system_components['rules_engine']
     evaluations = rules_engine.evaluate_all_rules(datasets)
     
-    # Convertir a formato compatible con CryoScope UI
+    # Convertir a formato compatible con ArcheoScope UI
     results = {
         "evaluations": {},
         "contradictions": [],

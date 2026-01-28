@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Academic Use](https://img.shields.io/badge/Use-Academic%20%26%20Research-green.svg)](https://github.com/ifernandez89/CryoScope/blob/main/archeoscope/ARCHEOSCOPE_TECHNICAL_MANIFESTO.md)
+[![Academic Use](https://img.shields.io/badge/Use-Academic%20%26%20Research-green.svg)](https://github.com/ifernandez89/ArcheoScope/blob/main/archeoscope/ARCHEOSCOPE_TECHNICAL_MANIFESTO.md)
 
 ## ⚠️ IMPORTANT DISCLAIMER
 
@@ -278,7 +278,7 @@ If you use ArcheoScope in academic research, please cite:
   title={ArcheoScope: A Framework for Inferential Remote Archaeological Screening},
   author={ArcheoScope Development Team},
   year={2026},
-  url={https://github.com/ifernandez89/CryoScope/tree/main/archeoscope},
+  url={https://github.com/ifernandez89/ArcheoScope/tree/main/archeoscope},
   version={1.0}
 }
 ```

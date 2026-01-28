@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Servidor de demostración simplificado para CryoScope.
+Servidor de demostración simplificado para ArcheoScope.
 """
 
 from fastapi import FastAPI, HTTPException
@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 
 # Crear aplicación FastAPI
 app = FastAPI(
-    title="CryoScope Demo Server",
-    description="Sistema científico para detectar donde las explicaciones glaciológicas actuales fallan",
+    title="ArcheoScope Demo Server",
+    description="Sistema científico para detectar donde las explicaciones arqueológicas actuales fallan",
     version="1.0.0-demo"
 )
 
@@ -58,8 +58,8 @@ class AnalysisResponse(BaseModel):
 @app.get("/")
 async def root():
     return {
-        "name": "CryoScope Demo Server",
-        "purpose": "Detectar donde las explicaciones glaciológicas actuales fallan",
+        "name": "ArcheoScope Demo Server",
+        "purpose": "Detectar donde las explicaciones arqueológicas actuales fallan",
         "version": "1.0.0-demo",
         "status": "operational"
     }

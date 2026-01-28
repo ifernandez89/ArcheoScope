@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Test de validación final de las mejoras de calibración
-Prueba tanto el sistema submarino como el CryoScope con casos representativos
+Prueba tanto el sistema submarino como el ArcheoScope con casos representativos
 """
 
 import sys
@@ -132,7 +132,7 @@ def test_calibration_validation():
                     })
             
             elif case['environment'] == 'ice':
-                # Test sistema CryoScope
+                # Test sistema ArcheoScope
                 ice_context = ice_detector.detect_ice_context(
                     case['coordinates']['lat'], 
                     case['coordinates']['lon']
@@ -199,7 +199,7 @@ def test_calibration_validation():
         
         if ice_tests:
             ice_accuracy = sum(r['accuracy'] for r in ice_tests) / len(ice_tests)
-            print(f"❄️ Precisión CryoScope: {ice_accuracy:.1%}")
+            print(f"❄️ Precisión ArcheoScope: {ice_accuracy:.1%}")
         
         # Categorías específicas
         print(f"\n📈 Precisión por categoría:")

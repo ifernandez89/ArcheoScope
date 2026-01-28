@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ArcheoScope CryoArchaeology Module - CryoScope
+ArcheoScope CryoArchaeology Module - ArcheoScope
 Instrumentos especializados para arqueología en ambientes de hielo y permafrost
 """
 

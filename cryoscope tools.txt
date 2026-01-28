@@ -1,4 +1,4 @@
-🔹 Instrumentos que usamos en CryoScope:
+🔹 Instrumentos que usamos en ArcheoScope:
 
 ICESat-2 ATL08 / ATL06
 
@@ -34,7 +34,7 @@ SMOS / SMAP (opcional)
 
 Detecta humedad y salinidad en el hielo y nieve, útil para permafrost y hielo costero.
 
-✅ Filosofía CryoScope:
+✅ Filosofía ArcheoScope:
 
 Detección inicial: ICESat-2 + SAR → anomalías de elevación o densidad.
 

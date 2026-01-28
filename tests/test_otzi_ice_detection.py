@@ -18,7 +18,7 @@ from ice.cryoarchaeology import CryoArchaeologyEngine
 def test_otzi_ice_detection():
     """Test completo con coordenadas del sitio de Ötzi"""
     
-    print("❄️ CRYOSCOPE - TEST DE DETECCIÓN EN HIELO")
+    print("❄️ ARCHEOSCOPE - TEST DE DETECCIÓN EN HIELO")
     print("=" * 60)
     print("Ubicación: Sitio de Ötzi (Ötztal Alps)")
     print("Coordenadas: 46.7869° N, 10.8493° E")
@@ -247,14 +247,14 @@ def test_otzi_ice_detection():
             }
         }
         
-        output_file = f"otzi_cryoscope_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        output_file = f"otzi_archeoscope_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(test_results, f, indent=2, ensure_ascii=False)
         
         print(f"✅ Resultados guardados en: {output_file}")
         
         # 8. RESUMEN FINAL
-        print(f"\n🏆 RESUMEN FINAL DEL TEST CRYOSCOPE")
+        print(f"\n🏆 RESUMEN FINAL DEL TEST ARCHEOSCOPE")
         print("=" * 60)
         print(f"✅ Detección de hielo: {'EXITOSA' if ice_context.is_ice_environment else 'FALLIDA'}")
         print(f"✅ Clasificación como hielo alpino: {'CORRECTA' if detection_accuracy['ice_type'] else 'INCORRECTA'}")
@@ -266,7 +266,7 @@ def test_otzi_ice_detection():
             print(f"✅ Candidatos detectados: {len(cryo_results['cryo_candidates'])}")
             print(f"✅ Instrumentos crioarqueológicos activados: {len(cryo_results['instruments_used'])}")
         
-        print(f"\n🎯 CALIBRACIÓN DEL SISTEMA CRYOSCOPE:")
+        print(f"\n🎯 CALIBRACIÓN DEL SISTEMA ARCHEOSCOPE:")
         print(f"   - Sistema detecta correctamente ambientes de hielo alpino")
         print(f"   - Identifica condiciones excepcionales de preservación")
         print(f"   - Activa instrumentos crioarqueológicos apropiados")
@@ -285,6 +285,6 @@ def test_otzi_ice_detection():
 if __name__ == "__main__":
     results = test_otzi_ice_detection()
     if results:
-        print(f"\n❄️ Test de CryoScope (Ötzi) completado exitosamente!")
+        print(f"\n❄️ Test de ArcheoScope (Ötzi) completado exitosamente!")
     else:
-        print(f"\n💥 Test de CryoScope falló!")
+        print(f"\n💥 Test de ArcheoScope falló!")

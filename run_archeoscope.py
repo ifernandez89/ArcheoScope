@@ -2,7 +2,7 @@
 """
 Script para ejecutar ArcheoScope - Archaeological Remote Sensing Engine.
 
-Mantiene la misma estructura que CryoScope pero optimizado para arqueología remota.
+Mantiene la misma estructura que ArcheoScope pero optimizado para arqueología remota.
 """
 
 import subprocess

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test simplificado de CryoScope con múltiples ambientes de hielo
+Test simplificado de ArcheoScope con múltiples ambientes de hielo
 """
 
 import sys
@@ -17,7 +17,7 @@ from ice.cryoarchaeology import CryoArchaeologyEngine
 def test_cryoscope_simple():
     """Test simplificado con múltiples ubicaciones de hielo"""
     
-    print("❄️ CRYOSCOPE - TEST SIMPLIFICADO DE DETECCIÓN DE HIELO")
+    print("❄️ ARCHEOSCOPE - TEST SIMPLIFICADO DE DETECCIÓN DE HIELO")
     print("=" * 60)
     
     # Coordenadas de prueba
@@ -122,7 +122,7 @@ def test_cryoscope_simple():
             print(f"   - {result['location']}: {result['ice_type']} (potencial: {result['archaeological_potential']})")
     
     # Guardar resultados
-    output_file = f"cryoscope_simple_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    output_file = f"archeoscope_simple_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump({
             "test_date": datetime.now().isoformat(),
