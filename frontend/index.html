@@ -603,6 +603,27 @@
             
             console.log('[App] Iniciando análisis...', { lat, lon, region });
             
+            // 🗺️ CENTRAR MAPA EN LAS COORDENADAS INGRESADAS
+            if (map) {
+                map.setView([lat, lon], 13);
+                
+                // Agregar marcador temporal en la ubicación
+                if (currentMarker) {
+                    map.removeLayer(currentMarker);
+                }
+                currentMarker = L.marker([lat, lon], {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(map);
+                currentMarker.bindPopup(`<b>Analizando...</b><br>Lat: ${lat.toFixed(4)}<br>Lon: ${lon.toFixed(4)}`).openPopup();
+            }
+            
             // Mostrar loading
             document.getElementById('loadingSpinner').classList.add('active');
             document.getElementById('resultsContainer').classList.remove('active');

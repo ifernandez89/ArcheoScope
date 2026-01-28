@@ -111,7 +111,7 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
     
     print("\n" + "="*80, flush=True)
     print("ENDPOINT /analyze-scientific ALCANZADO", flush=True)
-    print(f"Región: {request.region_name}", flush=True)
+    print(f"Región solicitada: {request.region_name}", flush=True)
     print(f"Bounds: [{request.lat_min}, {request.lat_max}] x [{request.lon_min}, {request.lon_max}]", flush=True)
     print("="*80 + "\n", flush=True)
     
@@ -122,6 +122,34 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
         # Calcular centro
         center_lat = (request.lat_min + request.lat_max) / 2
         center_lon = (request.lon_min + request.lon_max) / 2
+        
+        # DETECTAR REGIÓN AUTOMÁTICAMENTE si no se proporcionó o es genérica
+        detected_region = request.region_name
+        if not request.region_name or request.region_name in ['Test Region', 'Interactive Analysis', 'Unknown']:
+            print("[STEP 0] Detectando región automáticamente...", flush=True)
+            from site_name_generator import site_name_generator
+            
+            # Usar geocoding reverso para obtener la región
+            location_info = site_name_generator._reverse_geocode(center_lat, center_lon)
+            if location_info:
+                # Construir nombre de región descriptivo
+                parts = []
+                if location_info.get('state'):
+                    parts.append(location_info['state'])
+                if location_info.get('country'):
+                    parts.append(location_info['country'])
+                
+                if parts:
+                    detected_region = ' - '.join(parts)
+                    print(f"  ✅ Región detectada: {detected_region}", flush=True)
+                else:
+                    detected_region = f"Lat {center_lat:.2f}, Lon {center_lon:.2f}"
+                    print(f"  ⚠️ Región no identificada, usando coordenadas", flush=True)
+            else:
+                detected_region = f"Lat {center_lat:.2f}, Lon {center_lon:.2f}"
+                print(f"  ⚠️ Geocoding falló, usando coordenadas", flush=True)
+        else:
+            print(f"[STEP 0] Usando región proporcionada: {detected_region}", flush=True)
         
         # 1. Clasificar ambiente
         print("[STEP 1] Clasificando ambiente...", flush=True)
@@ -167,8 +195,8 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
         
         # 3. Preparar datos para pipeline
         raw_measurements = {
-            'candidate_id': request.candidate_id or f"{request.region_name}_{center_lat:.4f}_{center_lon:.4f}",
-            'region_name': request.region_name,
+            'candidate_id': request.candidate_id or f"{detected_region}_{center_lat:.4f}_{center_lon:.4f}",
+            'region_name': detected_region,  # Usar región detectada
             'center_lat': center_lat,
             'center_lon': center_lon,
             'environment_type': env_context.environment_type.value,
@@ -219,7 +247,7 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
         ]
         
         result['request_info'] = {
-            'region_name': request.region_name,
+            'region_name': detected_region,  # Usar región detectada
             'center_lat': center_lat,
             'center_lon': center_lon,
             'bounds': {
@@ -344,7 +372,7 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                     print(f"[BD] 📝 Explicación generada: {scientific_explanation[:100]}...", flush=True)
                     
                     # 2. GUARDAR EN archaeological_candidate_analyses (análisis detallado)
-                    await conn.execute("""
+                    analysis_id = await conn.fetchval("""
                         INSERT INTO archaeological_candidate_analyses 
                         (candidate_id, candidate_name, region, archaeological_probability, anomaly_score, 
                          result_type, recommended_action, environment_type, confidence_level,
@@ -352,10 +380,11 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                          latitude, longitude, lat_min, lat_max, lon_min, lon_max,
                          scientific_explanation, explanation_type)
                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+                        RETURNING id
                     """, 
                         site_id,  # Usar ID del sitio
                         site_info['name'],
-                        request.region_name,
+                        detected_region,  # Usar región detectada
                         result['scientific_output']['anthropic_probability'],
                         result['scientific_output']['anomaly_score'],
                         result['scientific_output']['candidate_type'],
@@ -374,14 +403,16 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                         'deterministic'  # Tipo de explicación
                     )
                     
+                    print(f"[BD] ✅ Análisis guardado con ID: {analysis_id}", flush=True)
+                    
                     # 3. GUARDAR MEDICIONES INSTRUMENTALES (exitosas)
                     for m in measurements:
                         if m is not None:
                             await conn.execute("""
                                 INSERT INTO measurements 
                                 (instrument_name, measurement_type, value, unit, data_mode, source, 
-                                 latitude, longitude, region_name, environment_type)
-                                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                                 latitude, longitude, region_name, environment_type, analysis_id)
+                                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                             """,
                                 m.get('instrument_name', 'unknown'),
                                 'remote_sensing',
@@ -391,8 +422,9 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                                 m.get('source', 'unknown'),
                                 center_lat,
                                 center_lon,
-                                request.region_name,
-                                env_context.environment_type.value
+                                detected_region,  # Usar región detectada
+                                env_context.environment_type.value,
+                                analysis_id  # Vincular con el análisis
                             )
                     
                     # 4. GUARDAR INSTRUMENTOS FALLIDOS (los que no midieron)
@@ -401,8 +433,8 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                         await conn.execute("""
                             INSERT INTO measurements 
                             (instrument_name, measurement_type, value, unit, data_mode, source,
-                             latitude, longitude, region_name, environment_type)
-                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                             latitude, longitude, region_name, environment_type, analysis_id)
+                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                         """,
                             instrument_name,
                             'remote_sensing',
@@ -412,8 +444,9 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                             'failed',
                             center_lat,
                             center_lon,
-                            request.region_name,
-                            env_context.environment_type.value
+                            detected_region,  # Usar región detectada
+                            env_context.environment_type.value,
+                            analysis_id  # Vincular con el análisis
                         )
                     
                     print(f"[BD] ✅ Guardado completo:", flush=True)
@@ -594,7 +627,7 @@ async def get_analysis_by_id(analysis_id: int):
                 raise HTTPException(status_code=404, detail=f"Análisis {analysis_id} no encontrado")
             
             # Obtener mediciones EXITOSAS (data_mode != NO_DATA)
-            # Buscar mediciones en ventana de ±1 hora del análisis
+            # Usar analysis_id para obtener exactamente las mediciones de este análisis
             measurements = await conn.fetch("""
                 SELECT 
                     instrument_name,
@@ -606,12 +639,10 @@ async def get_analysis_by_id(analysis_id: int):
                     longitude,
                     measurement_timestamp
                 FROM measurements
-                WHERE measurement_timestamp BETWEEN ($1::timestamp - INTERVAL '1 hour') 
-                                                AND ($1::timestamp + INTERVAL '1 hour')
+                WHERE analysis_id = $1
                   AND data_mode != 'NO_DATA'
                 ORDER BY measurement_timestamp DESC
-                LIMIT 20
-            """, analysis['created_at'])
+            """, analysis_id)
             
             # Obtener instrumentos FALLIDOS (data_mode = NO_DATA)
             failed_instruments = await conn.fetch("""
@@ -620,12 +651,10 @@ async def get_analysis_by_id(analysis_id: int):
                     source,
                     measurement_timestamp
                 FROM measurements
-                WHERE measurement_timestamp BETWEEN ($1::timestamp - INTERVAL '1 hour') 
-                                                AND ($1::timestamp + INTERVAL '1 hour')
+                WHERE analysis_id = $1
                   AND data_mode = 'NO_DATA'
                 ORDER BY measurement_timestamp DESC
-                LIMIT 20
-            """, analysis['created_at'])
+            """, analysis_id)
             
             return {
                 "analysis": {

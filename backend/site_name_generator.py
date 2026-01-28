@@ -66,11 +66,28 @@ class SiteNameGenerator:
             # Generar slug
             slug = self._generate_slug(name, lat, lon)
             
+            # 🔧 VALORES POR DEFECTO: Manejar casos donde geocoding falla parcialmente
+            country = location_info.get('country')
+            if not country:
+                # Determinar país por defecto según ubicación
+                if -90 <= lat <= -60:
+                    country = 'Antarctica'
+                elif lat >= 66.5:
+                    country = 'Arctic Region'
+                elif abs(lat) < 23.5 and (lon < -30 or lon > 60):
+                    country = 'International Waters'
+                else:
+                    country = 'Unknown'
+            
+            region = location_info.get('state') or location_info.get('county')
+            if not region:
+                region = 'Unknown Region'
+            
             return {
                 'name': name,
                 'slug': slug,
-                'country': location_info.get('country', 'Unknown'),
-                'region': location_info.get('state') or location_info.get('county')
+                'country': country,
+                'region': region
             }
         else:
             # Fallback sin geocoding
@@ -79,11 +96,25 @@ class SiteNameGenerator:
             if env_suffix:
                 name += f" - {env_suffix}"
             
+            # 🔧 VALORES POR DEFECTO: Determinar país/región por ubicación geográfica
+            if -90 <= lat <= -60:
+                country = 'Antarctica'
+                region = 'Antarctic Region'
+            elif abs(lat) < 23.5 and (lon < -30 or lon > 60):
+                country = 'International Waters'
+                region = 'Open Ocean'
+            elif lat > 66.5:
+                country = 'Arctic Region'
+                region = 'Arctic Circle'
+            else:
+                country = 'Unknown'
+                region = 'Unknown Region'
+            
             return {
                 'name': name,
                 'slug': self._generate_slug(name, lat, lon),
-                'country': 'Unknown',
-                'region': None
+                'country': country,
+                'region': region
             }
     
     def _reverse_geocode(self, lat: float, lon: float) -> Optional[Dict]:
