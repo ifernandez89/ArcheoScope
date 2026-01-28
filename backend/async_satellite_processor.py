@@ -9,8 +9,8 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
 from dataclasses import asdict
 
-from .satellite_connectors import PlanetaryComputerConnector, SatelliteData
-from .satellite_cache import satellite_cache
+from satellite_connectors import PlanetaryComputerConnector, SatelliteData
+from satellite_cache import satellite_cache
 
 logger = logging.getLogger(__name__)
 

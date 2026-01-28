@@ -149,17 +149,17 @@ class EnvironmentalTomographicProfile:
     # Campos con valores por defecto
     generation_timestamp: datetime = field(default_factory=datetime.now)
     
-    # Contexto geológico (campos opcionales)
+    # Contexto geológico (campos opcionales) - NOMBRES CORREGIDOS
     geological_context: Any = None
-    geological_compatibility_score: Any = None
+    geological_compatibility: Any = None  # GeologicalCompatibilityScore (no geological_compatibility_score)
     
-    # Contexto hidrográfico (campos opcionales)
+    # Contexto hidrográfico (campos opcionales) - NOMBRES CORREGIDOS
     hydrographic_features: List[Any] = field(default_factory=list)
-    water_availability_score: Any = None
+    water_availability: Any = None  # WaterAvailabilityScore (no water_availability_score)
     
-    # Validación externa (campos opcionales)
-    external_archaeological_sites: List[Any] = field(default_factory=list)
-    external_consistency_score: Any = None
+    # Validación externa (campos opcionales) - NOMBRES CORREGIDOS
+    external_sites: List[Any] = field(default_factory=list)  # (no external_archaeological_sites)
+    external_consistency: Any = None  # ExternalConsistencyScore (no external_consistency_score)
     
     # Trazas humanas (campos opcionales)
     human_traces: List[Any] = field(default_factory=list)
@@ -182,16 +182,16 @@ class EnvironmentalTomographicProfile:
         
         # Factores de contexto
         geological_factor = 1.0
-        if self.geological_compatibility_score:
-            geological_factor = 1.0 + (self.geological_compatibility_score.gcs_score - 0.5) * 0.2
+        if self.geological_compatibility:
+            geological_factor = 1.0 + (self.geological_compatibility.gcs_score - 0.5) * 0.2
         
         hydrographic_factor = 1.0
-        if self.water_availability_score:
-            hydrographic_factor = 1.0 + (self.water_availability_score.settlement_viability - 0.5) * 0.15
+        if self.water_availability:
+            hydrographic_factor = 1.0 + (self.water_availability.settlement_viability - 0.5) * 0.15
         
         external_factor = 1.0
-        if self.external_consistency_score:
-            external_factor = 1.0 + (self.external_consistency_score.ecs_score - 0.5) * 0.25
+        if self.external_consistency:
+            external_factor = 1.0 + (self.external_consistency.ecs_score - 0.5) * 0.25
         
         human_traces_factor = 1.0
         if self.territorial_use_profile:
@@ -212,12 +212,12 @@ class EnvironmentalTomographicProfile:
         confidence_factors.append(self.coherencia_3d)
         
         # Factor geológico
-        if self.geological_compatibility_score:
-            confidence_factors.append(self.geological_compatibility_score.gcs_score)
+        if self.geological_compatibility:
+            confidence_factors.append(self.geological_compatibility.gcs_score)
         
         # Factor de validación externa
-        if self.external_consistency_score:
-            confidence_factors.append(self.external_consistency_score.ecs_score)
+        if self.external_consistency:
+            confidence_factors.append(self.external_consistency.ecs_score)
         
         # Factor de persistencia temporal
         confidence_factors.append(self.persistencia_temporal)
@@ -247,60 +247,6 @@ class EnvironmentalTomographicProfile:
             return "preliminary_assessment"
         else:
             return "monitoring"
-    confidence: float
-
-@dataclass
-class LandscapeEvolution:
-    """Evolución del paisaje en el tiempo."""
-    natural_baseline: str
-    human_modifications: List[str]
-    abandonment_indicators: List[str]
-    current_state: str
-
-@dataclass
-class EnvironmentalTomographicProfile:
-    """Perfil tomográfico ambiental completo - NÚCLEO DEL SISTEMA."""
-    
-    # Identificación
-    territory_id: str
-    bounds: BoundingBox
-    resolution_m: float
-    generation_timestamp: datetime = field(default_factory=datetime.now)
-    
-    # Cortes tomográficos
-    xz_profile: Optional[TomographicSlice] = None  # Longitudinal
-    yz_profile: Optional[TomographicSlice] = None  # Latitudinal
-    xy_profiles: List[TomographicSlice] = field(default_factory=list)  # Por profundidad
-    temporal_profile: Optional[Dict[str, Any]] = None
-    
-    # ESS evolucionado - CLAVE DEL CONCEPTO
-    ess_superficial: float = 0.0
-    ess_volumetrico: float = 0.0
-    ess_temporal: float = 0.0
-    
-    # Métricas 3D
-    coherencia_3d: float = 0.0
-    persistencia_temporal: float = 0.0
-    densidad_arqueologica_m3: float = 0.0
-    
-    # Interpretación narrativa - REVOLUCIÓN CONCEPTUAL
-    narrative_explanation: str = ""
-    occupational_history: List[OccupationPeriod] = field(default_factory=list)
-    territorial_function: Optional[TerritorialFunction] = None
-    landscape_evolution: Optional[LandscapeEvolution] = None
-    
-    # Datos para visualización
-    visualization_data: Dict[str, Any] = field(default_factory=dict)
-    
-    # Contextos adicionales - NUEVOS SISTEMAS
-    geological_context: Optional[Any] = None  # GeologicalContext
-    geological_compatibility: Optional[Any] = None  # GeologicalCompatibilityScore
-    hydrographic_features: List[Any] = field(default_factory=list)  # List[HydrographicFeature]
-    water_availability: Optional[Any] = None  # WaterAvailabilityScore
-    external_sites: List[Any] = field(default_factory=list)  # List[ExternalArchaeologicalSite]
-    external_consistency: Optional[Any] = None  # ExternalConsistencyScore
-    human_traces: List[Any] = field(default_factory=list)  # List[HumanTrace]
-    territorial_use_profile: Optional[Any] = None  # TerritorialUseProfile
     
     def get_summary_metrics(self) -> Dict[str, float]:
         """Obtener métricas resumen para dashboard."""
@@ -328,3 +274,11 @@ class EnvironmentalTomographicProfile:
         period_text = f" ({dominant_period.occupation_type}, {dominant_period.start_year}-{dominant_period.end_year})" if dominant_period else ""
         
         return f"{self.territorial_function.primary_function.title()} territory{period_text} - ESS: {self.ess_volumetrico:.2f}"
+
+@dataclass
+class LandscapeEvolution:
+    """Evolución del paisaje en el tiempo."""
+    natural_baseline: str
+    human_modifications: List[str]
+    abandonment_indicators: List[str]
+    current_state: str

@@ -171,10 +171,19 @@ async def startup_event():
     
     # Inicializar pool para endpoint científico
     try:
-        from api.scientific_endpoint import init_db_pool
+        from api.scientific_endpoint import init_db_pool, initialize_timt_engine
         await init_db_pool()
+        initialize_timt_engine()  # Inicializar TIMT para fusión transparente
+        logger.info("✅ Motor TIMT inicializado para fusión transparente")
     except Exception as e:
-        logger.error(f"❌ Error inicializando pool científico: {e}")
+        logger.error(f"❌ Error inicializando pool científico o TIMT: {e}")
+    
+    # Inicializar pool para TIMT
+    try:
+        from api.timt_endpoints import init_timt_db_pool
+        await init_timt_db_pool()
+    except Exception as e:
+        logger.error(f"❌ Error inicializando pool TIMT: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -391,6 +400,38 @@ try:
     logger.info("✅ Router científico incluido en /api/scientific")
 except ImportError as e:
     logger.error(f"❌ No se pudo cargar router científico: {e}")
+
+# ============================================================================
+# INCLUIR ROUTER TIMT (TERRITORIAL INFERENTIAL TOMOGRAPHY)
+# ============================================================================
+
+try:
+    import sys
+    from pathlib import Path
+    
+    # Asegurar que backend esté en el path
+    backend_path = Path(__file__).parent.parent
+    if str(backend_path) not in sys.path:
+        sys.path.insert(0, str(backend_path))
+    
+    from api.timt_endpoints import timt_router, initialize_timt_engine
+    
+    # Inicializar motor TIMT
+    initialize_timt_engine()
+    
+    app.include_router(
+        timt_router,
+        tags=["Territorial Inferential Tomography"]
+    )
+    logger.info("✅ Router TIMT incluido en /timt")
+except ImportError as e:
+    logger.error(f"❌ No se pudo cargar router TIMT: {e}")
+    import traceback
+    traceback.print_exc()
+except Exception as e:
+    logger.error(f"❌ Error inicializando motor TIMT: {e}")
+    import traceback
+    traceback.print_exc()
 
 # ============================================================================
 # ENDPOINT /analyze PRINCIPAL (MANTENER PARA COMPATIBILIDAD)

@@ -17,15 +17,22 @@ from pydantic import BaseModel, Field
 from typing import Dict, List, Any, Optional
 import logging
 from datetime import datetime
+import sys
+from pathlib import Path
 
-from ..territorial_inferential_tomography import (
+# Añadir backend al path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from territorial_inferential_tomography import (
     TerritorialInferentialTomographyEngine, 
     TerritorialInferentialTomographyResult,
     AnalysisObjective,
     CommunicationLevel
 )
-from ..territorial_context_profile import TerritorialContextProfile
-from ..satellite_connectors.real_data_integrator_v2 import RealDataIntegratorV2
+from territorial_context_profile import TerritorialContextProfile
+from satellite_connectors.real_data_integrator_v2 import RealDataIntegratorV2
+import asyncpg
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +41,24 @@ timt_router = APIRouter(prefix="/timt", tags=["Territorial Inferential Tomograph
 
 # Inicializar motor TIMT (se hará en startup)
 timt_engine: Optional[TerritorialInferentialTomographyEngine] = None
+
+# Pool de conexiones a BD
+db_pool = None
+
+async def init_timt_db_pool():
+    """Inicializar pool de conexiones a BD para TIMT."""
+    global db_pool
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        database_url = database_url.strip('"').strip("'")
+        try:
+            db_pool = await asyncpg.create_pool(database_url, min_size=2, max_size=10)
+            logger.info("✅ TIMT DB Pool initialized")
+        except Exception as e:
+            logger.error(f"❌ Error initializing TIMT DB pool: {e}")
+            db_pool = None
+    else:
+        logger.warning("⚠️ DATABASE_URL not configured for TIMT")
 
 def initialize_timt_engine():
     """Inicializar motor TIMT con integrador de 15 instrumentos."""
@@ -253,6 +278,25 @@ async def analyze_territory_complete(request: TIMTAnalysisRequest):
         )
         
         logger.info(f"✅ TIMT analysis completed successfully: {result.analysis_id}")
+        
+        # Guardar en base de datos
+        try:
+            from api.timt_db_saver import save_timt_result_to_db
+            
+            request_dict = {
+                'region_name': request.region_name,
+                'analysis_radius_km': request.analysis_radius_km,
+                'resolution_m': request.resolution_m
+            }
+            
+            timt_db_id = await save_timt_result_to_db(db_pool, result, request_dict)
+            if timt_db_id:
+                logger.info(f"✅ TIMT result saved to DB with ID: {timt_db_id}")
+            else:
+                logger.warning("⚠️ TIMT result not saved to DB")
+        except Exception as e:
+            logger.error(f"❌ Error saving TIMT to DB: {e}")
+            # No fallar el análisis si falla el guardado
         
         return response
         

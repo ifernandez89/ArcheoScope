@@ -20,15 +20,15 @@ import logging
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime, timedelta
 
-from .etp_core import (
+from etp_core import (
     EnvironmentalTomographicProfile, TomographicSlice, TomographicLayer,
     VolumetricAnomaly, BoundingBox, SliceType, OccupationPeriod,
     TerritorialFunction, LandscapeEvolution
 )
-from .geological_context import GeologicalContextSystem, GeologicalCompatibilityScore
-from .historical_hydrography import HistoricalHydrographySystem, WaterAvailabilityScore
-from .external_archaeological_validation import ExternalArchaeologicalValidationSystem, ExternalConsistencyScore
-from .human_traces_analysis import HumanTracesAnalysisSystem, TerritorialUseProfile
+from geological_context import GeologicalContextSystem, GeologicalCompatibilityScore
+from historical_hydrography import HistoricalHydrographySystem, WaterAvailabilityScore
+from external_archaeological_validation import ExternalArchaeologicalValidationSystem, ExternalConsistencyScore
+from human_traces_analysis import HumanTracesAnalysisSystem, TerritorialUseProfile
 
 logger = logging.getLogger(__name__)
 
@@ -219,13 +219,13 @@ class ETProfileGenerator:
             territorial_function=territorial_function,
             landscape_evolution=landscape_evolution,
             visualization_data=visualization_data,
-            # Contextos adicionales - REVOLUCIÓN CONCEPTUAL
+            # Contextos adicionales - REVOLUCIÓN CONCEPTUAL (nombres correctos)
             geological_context=geological_context,
-            geological_compatibility_score=geological_compatibility,
+            geological_compatibility=geological_compatibility,  # Sin _score
             hydrographic_features=hydrographic_features,
-            water_availability_score=water_availability,
-            external_archaeological_sites=external_sites,
-            external_consistency_score=external_consistency,
+            water_availability=water_availability,  # Sin _score
+            external_sites=external_sites,  # No external_archaeological_sites
+            external_consistency=external_consistency,  # Sin _score
             human_traces=human_traces,
             territorial_use_profile=territorial_use_profile
         )

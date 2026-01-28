@@ -23,9 +23,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 
-from .territorial_context_profile import TerritorialContextProfileSystem, TerritorialContextProfile, AnalysisObjective
-from .etp_generator import ETProfileGenerator
-from .etp_core import EnvironmentalTomographicProfile, BoundingBox
+from territorial_context_profile import TerritorialContextProfileSystem, TerritorialContextProfile, AnalysisObjective
+from etp_generator import ETProfileGenerator
+from etp_core import EnvironmentalTomographicProfile, BoundingBox
 
 logger = logging.getLogger(__name__)
 
@@ -101,22 +101,24 @@ class SystemTransparencyReport:
 class TerritorialInferentialTomographyResult:
     """Resultado completo del análisis tomográfico territorial."""
     
-    # Identificación
+    # Identificación (campos requeridos primero)
     analysis_id: str
     territory_bounds: BoundingBox
-    analysis_timestamp: datetime = field(default_factory=datetime.now)
     
-    # CAPA 0: Contexto territorial
+    # CAPA 0: Contexto territorial (requerido)
     territorial_context: TerritorialContextProfile
     
-    # CAPA 1: Perfil tomográfico
+    # CAPA 1: Perfil tomográfico (requerido)
     tomographic_profile: EnvironmentalTomographicProfile
     
-    # CAPA 2: Validación de hipótesis
-    hypothesis_validations: List[HypothesisValidation] = field(default_factory=list)
-    
-    # CAPA 3: Transparencia
+    # CAPA 3: Transparencia (requerido)
     transparency_report: SystemTransparencyReport
+    
+    # Campos con defaults
+    analysis_timestamp: datetime = field(default_factory=datetime.now)
+    
+    # CAPA 2: Validación de hipótesis (opcional)
+    hypothesis_validations: List[HypothesisValidation] = field(default_factory=list)
     
     # Comunicación multinivel
     technical_summary: str = ""

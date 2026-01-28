@@ -30,10 +30,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 
-from .geological_context import GeologicalContextSystem, GeologicalContext
-from .historical_hydrography import HistoricalHydrographySystem, HydrographicFeature
-from .external_archaeological_validation import ExternalArchaeologicalValidationSystem, ExternalArchaeologicalSite
-from .human_traces_analysis import HumanTracesAnalysisSystem, HumanTrace
+from geological_context import GeologicalContextSystem, GeologicalContext
+from historical_hydrography import HistoricalHydrographySystem, HydrographicFeature
+from external_archaeological_validation import ExternalArchaeologicalValidationSystem, ExternalArchaeologicalSite
+from human_traces_analysis import HumanTracesAnalysisSystem, HumanTrace
 
 logger = logging.getLogger(__name__)
 
