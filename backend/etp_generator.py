@@ -72,6 +72,40 @@ class ETProfileGenerator:
             -20: []  # Solo inferencia basada en patrones superiores
         }
         
+        # NUEVO: Clasificación de instrumentos por tipo (FIX CRÍTICO)
+        self.instrument_types = {
+            'superficial': [
+                'sentinel_2_ndvi', 'viirs_ndvi', 'viirs_thermal', 
+                'srtm_elevation', 'landsat_ndvi'
+            ],
+            'subsuperficial': [
+                'sentinel_1_sar', 'landsat_thermal', 'modis_lst',
+                'palsar_backscatter', 'palsar_soil_moisture'
+            ],
+            'profundo': [
+                'palsar_penetration', 'icesat2'
+            ]
+        }
+        
+        # NUEVO: Criterios de validación por tipo de sensor
+        self.validation_criteria = {
+            'superficial': lambda data: (
+                data.get('value') is not None and 
+                data.get('confidence', 0) > 0.5
+            ),
+            'subsuperficial': lambda data: (
+                data.get('value') is not None and 
+                data.get('confidence', 0) > 0.4
+            ),
+            'profundo': lambda data: (
+                data.get('value') is not None and 
+                data.get('confidence', 0) > 0.3
+            )
+        }
+        
+        # NUEVO: Sensores opcionales (no penalizan si fallan)
+        self.optional_sensors = ['viirs_thermal', 'viirs_ndvi']  # 403 Forbidden común
+        
         # Pesos por profundidad para ESS volumétrico
         self.depth_weights = {
             0: 1.0,      # Superficie - peso completo
@@ -85,6 +119,36 @@ class ETProfileGenerator:
         }
         
         logger.info("🧠 ETProfileGenerator inicializado - SISTEMA TOMOGRÁFICO ACTIVO")
+    
+    def _get_sensor_type(self, instrument: str) -> str:
+        """Determinar tipo de sensor (superficial/subsuperficial/profundo)."""
+        for sensor_type, instruments in self.instrument_types.items():
+            if instrument in instruments:
+                return sensor_type
+        return 'superficial'  # Default
+    
+    def _validate_sensor_data(self, instrument: str, data: Dict[str, Any]) -> bool:
+        """
+        Validar datos de sensor según su tipo.
+        
+        FIX CRÍTICO: No exigir datos volumétricos a sensores superficiales.
+        """
+        if not isinstance(data, dict):
+            return False
+        
+        # Determinar tipo de sensor
+        sensor_type = self._get_sensor_type(instrument)
+        
+        # Aplicar criterio de validación apropiado
+        validation_func = self.validation_criteria.get(sensor_type)
+        if not validation_func:
+            return False
+        
+        return validation_func(data)
+    
+    def _is_optional_sensor(self, instrument: str) -> bool:
+        """Verificar si sensor es opcional (no penaliza si falla)."""
+        return instrument in self.optional_sensors
     
     async def generate_etp(self, bounds: BoundingBox, 
                           resolution_m: float = 30.0) -> EnvironmentalTomographicProfile:
@@ -463,28 +527,62 @@ class ETProfileGenerator:
         return np.mean(anomaly_scores) if anomaly_scores else 0.0
     
     def _calculate_volumetric_ess(self, layered_data: Dict[float, Dict[str, Any]]) -> float:
-        """Calcular ESS volumétrico - NÚCLEO DEL CONCEPTO ETP."""
+        """
+        Calcular ESS volumétrico - NÚCLEO DEL CONCEPTO ETP.
         
-        volumetric_scores = []
+        FIX CRÍTICO: Validación por tipo de sensor, no criterios volumétricos universales.
+        """
+        
+        # Calcular ESS por tipo de capa
+        ess_by_layer = {
+            'superficial': [],
+            'subsuperficial': [],
+            'profundo': []
+        }
         
         for depth, layer_data in layered_data.items():
             if not layer_data:
                 continue
             
-            # ESS de la capa
-            layer_ess = self._calculate_surface_ess(layer_data)
-            
-            # Aplicar peso por profundidad
-            depth_weight = self.depth_weights.get(depth, 0.1)
-            weighted_ess = layer_ess * depth_weight
-            
-            volumetric_scores.append(weighted_ess)
+            for instrument, data in layer_data.items():
+                # Validar según tipo de sensor
+                if not self._validate_sensor_data(instrument, data):
+                    # Si es sensor opcional y falló, no penalizar
+                    if self._is_optional_sensor(instrument):
+                        logger.info(f"    ⚠️ {instrument}: Opcional - no penaliza")
+                        continue
+                    logger.info(f"    ❌ {instrument}: No cumple criterios de validación")
+                    continue
+                
+                # Determinar tipo de sensor
+                sensor_type = self._get_sensor_type(instrument)
+                
+                # Calcular score normalizado
+                normalized_score = self._normalize_instrument_value(instrument, data['value'])
+                confidence = data.get('confidence', 0.5)
+                weighted_score = normalized_score * confidence
+                
+                # Acumular en capa apropiada
+                ess_by_layer[sensor_type].append(weighted_score)
+                logger.info(f"    ✅ {instrument}: {weighted_score:.3f} ({sensor_type})")
         
-        if not volumetric_scores:
-            return 0.0
+        # Calcular promedio por capa
+        layer_averages = {}
+        for layer_type, scores in ess_by_layer.items():
+            if scores:
+                layer_averages[layer_type] = np.mean(scores)
+                logger.info(f"  📊 ESS {layer_type}: {layer_averages[layer_type]:.3f} ({len(scores)} sensores)")
+            else:
+                layer_averages[layer_type] = 0.0
         
-        # ESS volumétrico = promedio ponderado por profundidad
-        volumetric_ess = np.sum(volumetric_scores) / len(self.depth_layers)
+        # Combinar con pesos por tipo de capa
+        volumetric_ess = (
+            layer_averages.get('superficial', 0.0) * 0.4 +
+            layer_averages.get('subsuperficial', 0.0) * 0.4 +
+            layer_averages.get('profundo', 0.0) * 0.2
+        )
+        
+        logger.info(f"  🎯 ESS Volumétrico combinado: {volumetric_ess:.3f}")
         
         return min(1.0, volumetric_ess)  # Normalizar a [0,1]
     
