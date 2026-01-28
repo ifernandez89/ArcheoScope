@@ -25,6 +25,10 @@ from .etp_core import (
     VolumetricAnomaly, BoundingBox, SliceType, OccupationPeriod,
     TerritorialFunction, LandscapeEvolution
 )
+from .geological_context import GeologicalContextSystem, GeologicalCompatibilityScore
+from .historical_hydrography import HistoricalHydrographySystem, WaterAvailabilityScore
+from .external_archaeological_validation import ExternalArchaeologicalValidationSystem, ExternalConsistencyScore
+from .human_traces_analysis import HumanTracesAnalysisSystem, TerritorialUseProfile
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +43,12 @@ class ETProfileGenerator:
             integrator_15_instruments: RealDataIntegratorV2 con 15 instrumentos
         """
         self.integrator = integrator_15_instruments
+        
+        # Inicializar sistemas de contexto adicionales
+        self.geological_system = GeologicalContextSystem()
+        self.hydrography_system = HistoricalHydrographySystem()
+        self.external_validation_system = ExternalArchaeologicalValidationSystem()
+        self.human_traces_system = HumanTracesAnalysisSystem()
         
         # Capas de profundidad estándar para análisis tomográfico
         self.depth_layers = [0, -0.5, -1, -2, -3, -5, -10, -20]  # metros
@@ -140,13 +150,56 @@ class ETProfileGenerator:
         territorial_function = self._determine_territorial_function(volumetric_anomalies, layered_data)
         landscape_evolution = self._analyze_landscape_evolution(temporal_profile, layered_data)
         
-        # FASE 8: Preparación de datos de visualización
-        logger.info("🎨 FASE 8: Preparación de datos de visualización...")
-        visualization_data = self._prepare_visualization_data(
-            xz_profile, yz_profile, xy_profiles, layered_data
+        # FASE 8: Análisis de contexto geológico
+        logger.info("🗿 FASE 8: Análisis de contexto geológico...")
+        geological_context = await self.geological_system.get_geological_context(
+            bounds.lat_min, bounds.lat_max, bounds.lon_min, bounds.lon_max
         )
         
-        # Crear perfil tomográfico completo
+        # Calcular GCS (Geological Compatibility Score)
+        max_anomaly_depth = max([a.center_3d[2] for a in volumetric_anomalies], default=0.0)
+        geological_compatibility = self.geological_system.calculate_geological_compatibility_score(
+            geological_context, abs(max_anomaly_depth)
+        )
+        
+        # FASE 9: Análisis de hidrografía histórica
+        logger.info("💧 FASE 9: Análisis de hidrografía histórica...")
+        hydrographic_features = await self.hydrography_system.get_hydrographic_context(
+            bounds.lat_min, bounds.lat_max, bounds.lon_min, bounds.lon_max
+        )
+        
+        water_availability = self.hydrography_system.calculate_water_availability_score(
+            hydrographic_features, temporal_profile
+        )
+        
+        # FASE 10: Validación arqueológica externa
+        logger.info("🏛️ FASE 10: Validación arqueológica externa...")
+        external_sites = await self.external_validation_system.get_external_archaeological_context(
+            bounds.lat_min, bounds.lat_max, bounds.lon_min, bounds.lon_max
+        )
+        
+        # Calcular ECS (External Consistency Score)
+        candidate_type = territorial_function.primary_function if territorial_function else "unknown"
+        external_consistency = self.external_validation_system.calculate_external_consistency_score(
+            bounds.center_lat, bounds.center_lon, candidate_type, external_sites
+        )
+        
+        # FASE 11: Análisis de trazas humanas
+        logger.info("👥 FASE 11: Análisis de trazas humanas...")
+        human_traces = await self.human_traces_system.analyze_human_traces(
+            bounds.lat_min, bounds.lat_max, bounds.lon_min, bounds.lon_max
+        )
+        
+        territorial_use_profile = self.human_traces_system.generate_territorial_use_profile(human_traces)
+        
+        # FASE 12: Preparación de datos de visualización (actualizada)
+        logger.info("🎨 FASE 12: Preparación de datos de visualización...")
+        visualization_data = self._prepare_visualization_data(
+            xz_profile, yz_profile, xy_profiles, layered_data,
+            geological_context, hydrographic_features, external_sites, human_traces
+        )
+        
+        # Crear perfil tomográfico completo con contextos adicionales
         etp = EnvironmentalTomographicProfile(
             territory_id=territory_id,
             bounds=bounds,
@@ -165,7 +218,16 @@ class ETProfileGenerator:
             occupational_history=occupational_history,
             territorial_function=territorial_function,
             landscape_evolution=landscape_evolution,
-            visualization_data=visualization_data
+            visualization_data=visualization_data,
+            # Contextos adicionales - REVOLUCIÓN CONCEPTUAL
+            geological_context=geological_context,
+            geological_compatibility_score=geological_compatibility,
+            hydrographic_features=hydrographic_features,
+            water_availability_score=water_availability,
+            external_archaeological_sites=external_sites,
+            external_consistency_score=external_consistency,
+            human_traces=human_traces,
+            territorial_use_profile=territorial_use_profile
         )
         
         logger.info(f"✅ ETP generado exitosamente:")
@@ -173,6 +235,10 @@ class ETProfileGenerator:
         logger.info(f"   📊 ESS Temporal: {ess_temporal:.3f}")
         logger.info(f"   📊 Coherencia 3D: {coherencia_3d:.3f}")
         logger.info(f"   🏛️ Anomalías detectadas: {len(volumetric_anomalies)}")
+        logger.info(f"   🗿 GCS (Geological): {geological_compatibility.gcs_score:.3f}")
+        logger.info(f"   💧 Disponibilidad agua: {water_availability.holocene_availability:.3f}")
+        logger.info(f"   🏛️ ECS (External): {external_consistency.ecs_score:.3f}")
+        logger.info(f"   👥 Trazas humanas: {len(human_traces)}")
         
         return etp
     
@@ -751,8 +817,12 @@ class ETProfileGenerator:
     def _prepare_visualization_data(self, xz_profile: TomographicSlice, 
                                    yz_profile: TomographicSlice,
                                    xy_profiles: List[TomographicSlice],
-                                   layered_data: Dict[float, Dict[str, Any]]) -> Dict[str, Any]:
-        """Preparar datos para visualización tomográfica."""
+                                   layered_data: Dict[float, Dict[str, Any]],
+                                   geological_context: Any = None,
+                                   hydrographic_features: List[Any] = None,
+                                   external_sites: List[Any] = None,
+                                   human_traces: List[Any] = None) -> Dict[str, Any]:
+        """Preparar datos para visualización tomográfica con contextos adicionales."""
         
         viz_data = {
             'xz_slice': {
@@ -774,7 +844,47 @@ class ETProfileGenerator:
                 for slice_xy in xy_profiles
             ],
             'depth_layers': self.depth_layers,
-            'instrument_data': layered_data
+            'instrument_data': layered_data,
+            
+            # Contextos adicionales para visualización
+            'geological_context': {
+                'dominant_lithology': geological_context.dominant_lithology.value if geological_context else 'unknown',
+                'geological_age': geological_context.geological_age.value if geological_context else 'unknown',
+                'archaeological_suitability': geological_context.archaeological_suitability if geological_context else 0.5,
+                'explanation': geological_context.geological_explanation if geological_context else 'No disponible'
+            },
+            
+            'hydrographic_context': [
+                {
+                    'type': feature.watercourse_type.value,
+                    'period': feature.hydrographic_period.value,
+                    'relevance': feature.archaeological_relevance,
+                    'coords': feature.center_coords
+                }
+                for feature in (hydrographic_features or [])
+            ],
+            
+            'external_validation': [
+                {
+                    'name': site.site_name,
+                    'type': site.site_type.value,
+                    'coords': [site.latitude, site.longitude],
+                    'quality': site.data_quality,
+                    'source': site.data_source.value
+                }
+                for site in (external_sites or [])
+            ],
+            
+            'human_traces': [
+                {
+                    'type': trace.trace_type.value,
+                    'intensity': trace.activity_intensity.value,
+                    'temporal_scale': trace.temporal_scale.value,
+                    'coords': trace.center_coords,
+                    'relevance': trace.archaeological_relevance
+                }
+                for trace in (human_traces or [])
+            ]
         }
         
         return viz_data
@@ -882,3 +992,43 @@ class ETProfileGenerator:
             return 'high'
         else:
             return 'low'
+    
+    # Métodos auxiliares para visualización
+    
+    def _calculate_distance_to_center(self, site: Any) -> float:
+        """Calcular distancia de un sitio al centro del territorio."""
+        # Implementación simplificada - en producción usar coordenadas reales
+        return 5.0  # km por defecto
+    
+    def _get_dominant_activity_level(self, traces: List[Any]) -> str:
+        """Obtener nivel de actividad dominante de las trazas."""
+        if not traces:
+            return 'unknown'
+        
+        # Contar intensidades
+        intensity_counts = {}
+        for trace in traces:
+            intensity = trace.activity_intensity.value if hasattr(trace.activity_intensity, 'value') else 'moderate'
+            intensity_counts[intensity] = intensity_counts.get(intensity, 0) + 1
+        
+        return max(intensity_counts.keys(), key=lambda k: intensity_counts[k]) if intensity_counts else 'moderate'
+    
+    def _get_temporal_depth(self, traces: List[Any]) -> str:
+        """Obtener profundidad temporal de las trazas."""
+        if not traces:
+            return 'unknown'
+        
+        # Buscar la traza más antigua
+        temporal_scales = []
+        for trace in traces:
+            if hasattr(trace, 'temporal_scale') and hasattr(trace.temporal_scale, 'value'):
+                temporal_scales.append(trace.temporal_scale.value)
+        
+        if 'ancient' in temporal_scales:
+            return 'ancient'
+        elif 'historical' in temporal_scales:
+            return 'historical'
+        elif 'recent_historical' in temporal_scales:
+            return 'recent'
+        else:
+            return 'contemporary'
