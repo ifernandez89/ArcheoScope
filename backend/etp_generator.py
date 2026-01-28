@@ -29,6 +29,7 @@ from geological_context import GeologicalContextSystem, GeologicalCompatibilityS
 from historical_hydrography import HistoricalHydrographySystem, WaterAvailabilityScore
 from external_archaeological_validation import ExternalArchaeologicalValidationSystem, ExternalConsistencyScore
 from human_traces_analysis import HumanTracesAnalysisSystem, TerritorialUseProfile
+from instrument_status import InstrumentStatus  # IMPORT CRÍTICO
 
 logger = logging.getLogger(__name__)
 
@@ -385,13 +386,15 @@ class ETProfileGenerator:
                         logger.debug(f"      🔍 {instrument} has status: {hasattr(result, 'status')}")
                         if hasattr(result, 'status'):
                             logger.debug(f"      🔍 {instrument} status value: {result.status}")
+                            logger.debug(f"      🔍 {instrument} status type: {type(result.status)}")
                     
-                    if result and hasattr(result, 'status') and result.status in ['SUCCESS', 'DEGRADED']:
+                    # FIX CRÍTICO: Comparar con Enum, no con strings
+                    if result and hasattr(result, 'status') and result.status in [InstrumentStatus.SUCCESS, InstrumentStatus.DEGRADED]:
                         layer_data[instrument] = {
                             'value': getattr(result, 'value', 0.0),
                             'unit': getattr(result, 'unit', 'units'),
                             'confidence': getattr(result, 'confidence', 0.5),
-                            'status': result.status
+                            'status': result.status.value  # Guardar como string
                         }
                         logger.info(f"    ✅ {instrument}: {layer_data[instrument]['value']:.3f} AGREGADO A LAYER_DATA")
                     else:
@@ -399,7 +402,8 @@ class ETProfileGenerator:
                         if self._is_optional_sensor(instrument):
                             logger.info(f"    ⚠️ {instrument}: Opcional - sin datos (no penaliza)")
                         else:
-                            logger.info(f"    ⚠️ {instrument}: Sin datos (neutral) - result={result}, has_status={hasattr(result, 'status') if result else False}")
+                            status_str = result.status.value if (result and hasattr(result, 'status')) else 'None'
+                            logger.info(f"    ⚠️ {instrument}: Sin datos (neutral) - status={status_str}")
                         # NO agregar al layer_data - ausencia = neutral, no negativo
                         
                 except Exception as e:
