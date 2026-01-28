@@ -90,18 +90,20 @@ class ETProfileGenerator:
         }
         
         # NUEVO: Criterios de validación por tipo de sensor
+        # FIX QUIRÚRGICO: Sensores superficiales solo necesitan valor + confianza mínima
+        # NO exigir: profundidad, gradiente vertical, coherencia 3D
         self.validation_criteria = {
             'superficial': lambda data: (
                 data.get('value') is not None and 
-                data.get('confidence', 0) > 0.5
+                data.get('confidence', 0) >= 0.3  # Umbral más permisivo
             ),
             'subsuperficial': lambda data: (
                 data.get('value') is not None and 
-                data.get('confidence', 0) > 0.4
+                data.get('confidence', 0) >= 0.3
             ),
             'profundo': lambda data: (
                 data.get('value') is not None and 
-                data.get('confidence', 0) > 0.3
+                data.get('confidence', 0) >= 0.2
             )
         }
         
@@ -133,9 +135,17 @@ class ETProfileGenerator:
         """
         Validar datos de sensor según su tipo.
         
-        FIX CRÍTICO: No exigir datos volumétricos a sensores superficiales.
+        FIX QUIRÚRGICO: Sensores superficiales solo necesitan valor + confianza.
+        NO exigir: profundidad, gradiente vertical, coherencia 3D.
         """
         if not isinstance(data, dict):
+            logger.debug(f"    ❌ {instrument}: data no es dict")
+            return False
+        
+        # Verificar que tenga valor
+        value = data.get('value')
+        if value is None:
+            logger.debug(f"    ❌ {instrument}: value es None")
             return False
         
         # Determinar tipo de sensor
@@ -144,9 +154,18 @@ class ETProfileGenerator:
         # Aplicar criterio de validación apropiado
         validation_func = self.validation_criteria.get(sensor_type)
         if not validation_func:
+            logger.debug(f"    ❌ {instrument}: sin criterio de validación para {sensor_type}")
             return False
         
-        return validation_func(data)
+        is_valid = validation_func(data)
+        
+        if not is_valid:
+            confidence = data.get('confidence', 0)
+            logger.debug(f"    ❌ {instrument}: validación falló (value={value}, conf={confidence}, tipo={sensor_type})")
+        else:
+            logger.debug(f"    ✅ {instrument}: validación OK (tipo={sensor_type})")
+        
+        return is_valid
     
     def _is_optional_sensor(self, instrument: str) -> bool:
         """Verificar si sensor es opcional (no penaliza si falla)."""
@@ -540,21 +559,28 @@ class ETProfileGenerator:
         """
         Calcular ESS superficial tradicional.
         
-        FIX: Usar validación por tipo de sensor.
+        FIX QUIRÚRGICO: Usar validación por tipo de sensor.
+        Sensores superficiales solo necesitan valor + confianza mínima.
         """
         
         if not surface_data:
+            logger.info(f"  ⚠️ Sin datos superficiales")
             return 0.0
+        
+        logger.info(f"  📊 Calculando ESS Superficial con {len(surface_data)} instrumentos...")
         
         anomaly_scores = []
         
         for instrument, data in surface_data.items():
+            logger.debug(f"    🔍 Procesando {instrument}: {data}")
+            
             # Validar según tipo de sensor
             if not self._validate_sensor_data(instrument, data):
                 # Si es sensor opcional y falló, no penalizar
                 if self._is_optional_sensor(instrument):
+                    logger.info(f"    ⚠️ {instrument}: Opcional - no penaliza")
                     continue
-                logger.debug(f"    ⚠️ {instrument}: No cumple criterios (superficial)")
+                logger.info(f"    ⚠️ {instrument}: No cumple criterios de validación")
                 continue
             
             # Normalizar valor según tipo de instrumento
@@ -564,10 +590,10 @@ class ETProfileGenerator:
             # Score ponderado por confianza
             weighted_score = normalized_score * confidence
             anomaly_scores.append(weighted_score)
-            logger.debug(f"    ✅ {instrument}: {weighted_score:.3f} (superficial)")
+            logger.info(f"    ✅ {instrument}: valor={data['value']:.3f}, norm={normalized_score:.3f}, conf={confidence:.2f}, score={weighted_score:.3f}")
         
         result = np.mean(anomaly_scores) if anomaly_scores else 0.0
-        logger.info(f"  📊 ESS Superficial: {result:.3f} ({len(anomaly_scores)} sensores válidos)")
+        logger.info(f"  📊 ESS Superficial: {result:.3f} ({len(anomaly_scores)}/{len(surface_data)} sensores válidos)")
         return result
     
     def _calculate_instrumental_coverage(self, layered_data: Dict[float, Dict[str, Any]]) -> Dict[str, Any]:
@@ -575,7 +601,10 @@ class ETProfileGenerator:
         Calcular cobertura instrumental por tipo de sensor.
         
         IMPORTANTE: Esto mide disponibilidad de datos, NO anomalía estratigráfica.
+        FIX QUIRÚRGICO: Si el sensor midió (SUCCESS), cuenta para cobertura.
         """
+        
+        logger.info(f"  📊 Calculando cobertura instrumental...")
         
         coverage_by_type = {}
         
@@ -583,8 +612,11 @@ class ETProfileGenerator:
             successful = 0
             total = len([i for i in instruments if i not in self.disabled_instruments])
             
+            logger.debug(f"    🔍 Tipo {sensor_type}: {total} instrumentos activos")
+            
             for instrument in instruments:
                 if instrument in self.disabled_instruments:
+                    logger.debug(f"      ⏭️ {instrument}: deshabilitado")
                     continue
                 
                 # Buscar en cualquier profundidad
@@ -592,20 +624,26 @@ class ETProfileGenerator:
                 for depth, layer_data in layered_data.items():
                     if instrument in layer_data:
                         data = layer_data[instrument]
+                        logger.debug(f"      🔍 {instrument} en {depth}m: {data}")
                         if self._validate_sensor_data(instrument, data):
                             successful += 1
                             found_data = True
+                            logger.info(f"      ✅ {instrument}: VÁLIDO (cobertura)")
                             break
                 
-                if not found_data and not self._is_optional_sensor(instrument):
-                    # Sensor obligatorio sin datos
-                    pass
+                if not found_data:
+                    if self._is_optional_sensor(instrument):
+                        logger.debug(f"      ⚠️ {instrument}: opcional sin datos")
+                    else:
+                        logger.debug(f"      ❌ {instrument}: sin datos válidos")
             
             coverage_by_type[sensor_type] = {
                 'successful': successful,
                 'total': total,
                 'percentage': (successful / total * 100) if total > 0 else 0
             }
+            
+            logger.info(f"    📊 {sensor_type}: {successful}/{total} ({coverage_by_type[sensor_type]['percentage']:.0f}%)")
         
         return coverage_by_type
     
