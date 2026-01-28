@@ -344,7 +344,12 @@ class ETProfileGenerator:
                         }
                         logger.info(f"    ✅ {instrument}: {layer_data[instrument]['value']:.3f}")
                     else:
-                        logger.info(f"    ❌ {instrument}: Sin datos válidos")
+                        # FIX 3: Sensor fallido = NEUTRAL (no se agrega, no penaliza)
+                        if self._is_optional_sensor(instrument):
+                            logger.info(f"    ⚠️ {instrument}: Opcional - sin datos (no penaliza)")
+                        else:
+                            logger.info(f"    ⚠️ {instrument}: Sin datos (neutral)")
+                        # NO agregar al layer_data - ausencia = neutral, no negativo
                         
                 except Exception as e:
                     logger.warning(f"    💥 {instrument}: Error - {e}")
@@ -507,7 +512,11 @@ class ETProfileGenerator:
         return temporal_data
     
     def _calculate_surface_ess(self, surface_data: Dict[str, Any]) -> float:
-        """Calcular ESS superficial tradicional."""
+        """
+        Calcular ESS superficial tradicional.
+        
+        FIX: Usar validación por tipo de sensor.
+        """
         
         if not surface_data:
             return 0.0
@@ -515,16 +524,26 @@ class ETProfileGenerator:
         anomaly_scores = []
         
         for instrument, data in surface_data.items():
-            if isinstance(data, dict) and 'value' in data:
-                # Normalizar valor según tipo de instrumento
-                normalized_score = self._normalize_instrument_value(instrument, data['value'])
-                confidence = data.get('confidence', 0.5)
-                
-                # Score ponderado por confianza
-                weighted_score = normalized_score * confidence
-                anomaly_scores.append(weighted_score)
+            # Validar según tipo de sensor
+            if not self._validate_sensor_data(instrument, data):
+                # Si es sensor opcional y falló, no penalizar
+                if self._is_optional_sensor(instrument):
+                    continue
+                logger.debug(f"    ⚠️ {instrument}: No cumple criterios (superficial)")
+                continue
+            
+            # Normalizar valor según tipo de instrumento
+            normalized_score = self._normalize_instrument_value(instrument, data['value'])
+            confidence = data.get('confidence', 0.5)
+            
+            # Score ponderado por confianza
+            weighted_score = normalized_score * confidence
+            anomaly_scores.append(weighted_score)
+            logger.debug(f"    ✅ {instrument}: {weighted_score:.3f} (superficial)")
         
-        return np.mean(anomaly_scores) if anomaly_scores else 0.0
+        result = np.mean(anomaly_scores) if anomaly_scores else 0.0
+        logger.info(f"  📊 ESS Superficial: {result:.3f} ({len(anomaly_scores)} sensores válidos)")
+        return result
     
     def _calculate_volumetric_ess(self, layered_data: Dict[float, Dict[str, Any]]) -> float:
         """
