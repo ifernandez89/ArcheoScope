@@ -3,25 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏺 ArcheoScope - Scientific Archaeological Analysis v2.2</title>
+    <title>🏺 ArcheoScope TIMT - Territorial Inferential Multi-modal Tomography v3.0</title>
     
-    <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏺</text></svg>">
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
-          crossorigin="anonymous" 
-          referrerpolicy="no-referrer" />
+          crossorigin="anonymous" />
     
     <!-- Three.js para visor 3D -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    
-    <!-- Estilos del sistema refactorizado -->
-    <link rel="stylesheet" href="styles/replay_mode.css">
-    <link rel="stylesheet" href="styles/epistemic_visual.css">
-    <link rel="stylesheet" href="styles/performance_warnings.css">
     
     <style>
         * {
@@ -32,142 +24,161 @@
 
         body {
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            background-color: #f8f9fa;
-            color: #2c3e50;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ecf0f1;
             overflow-x: hidden;
         }
 
-        /* Barra superior */
-        .top-bar {
+        /* Header */
+        .header {
             background: linear-gradient(135deg, #8B4513 0%, #D2691E 100%);
-            color: white;
-            padding: 1rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             position: sticky;
             top: 0;
             z-index: 1000;
         }
 
-        .top-bar h1 {
+        .header h1 {
             font-size: 1.5rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
         }
 
-        .top-bar-subtitle {
+        .header-subtitle {
             font-size: 0.85rem;
             opacity: 0.9;
         }
 
-        /* Layout principal */
+        .system-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-left: 1rem;
+        }
+
+        /* Main Layout */
         .main-container {
             display: grid;
-            grid-template-columns: 350px 1fr 400px;
-            height: calc(100vh - 80px);
+            grid-template-columns: 380px 1fr 450px;
+            height: calc(100vh - 100px);
             gap: 1rem;
             padding: 1rem;
         }
 
-        /* Panel izquierdo - Controles */
-        .left-panel {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        /* Panels */
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             overflow-y: auto;
         }
 
-        .panel-section {
-            margin-bottom: 1.5rem;
+        .panel-header {
+            background: rgba(139, 69, 19, 0.3);
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        .panel-section h3 {
-            font-size: 1rem;
-            margin-bottom: 0.75rem;
-            color: #8B4513;
-            border-bottom: 2px solid #D2691E;
-            padding-bottom: 0.5rem;
+        .panel-header h2 {
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
+        .panel-content {
+            padding: 1.5rem;
+        }
+
+        /* Left Panel - Controls */
         .input-group {
-            margin-bottom: 0.75rem;
+            margin-bottom: 1rem;
         }
 
         .input-group label {
             display: block;
             font-size: 0.85rem;
-            margin-bottom: 0.25rem;
-            color: #7f8c8d;
+            margin-bottom: 0.5rem;
+            color: #bdc3c7;
         }
 
-        .input-group input {
+        .input-group input,
+        .input-group select {
             width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #bdc3c7;
-            border-radius: 4px;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #ecf0f1;
             font-family: inherit;
             font-size: 0.9rem;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #D2691E;
+            background: rgba(255, 255, 255, 0.15);
         }
 
         .btn {
             width: 100%;
-            padding: 0.75rem;
+            padding: 1rem;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-family: inherit;
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
+            margin-bottom: 0.5rem;
         }
 
         .btn-primary {
             background: linear-gradient(135deg, #8B4513 0%, #D2691E 100%);
             color: white;
+            box-shadow: 0 4px 12px rgba(139, 69, 19, 0.4);
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+            box-shadow: 0 6px 20px rgba(139, 69, 19, 0.6);
         }
 
         .btn-primary:disabled {
-            background: #95a5a6;
+            background: #555;
             cursor: not-allowed;
             transform: none;
         }
 
         .btn-secondary {
-            background: white;
-            color: #8B4513;
-            border: 2px solid #8B4513;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ecf0f1;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .btn-secondary:hover {
-            background: #8B4513;
-            color: white;
-        }
-
-        /* Panel central - Mapa */
-        .center-panel {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            position: relative;
-        }
-
+        /* Center Panel - Map */
         #map {
             width: 100%;
             height: 100%;
+            border-radius: 12px;
         }
 
-        /* Panel derecho - Resultados */
-        .right-panel {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            overflow-y: auto;
+        /* Right Panel - Results */
+        .results-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #7f8c8d;
+        }
+
+        .results-empty.hidden {
+            display: none;
         }
 
         .results-container {
@@ -178,21 +189,11 @@
             display: block;
         }
 
-        .result-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .result-section h4 {
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            color: #2c3e50;
-        }
-
-        /* Loading spinner */
+        /* Loading */
         .loading-spinner {
             display: none;
             text-align: center;
-            padding: 2rem;
+            padding: 3rem;
         }
 
         .loading-spinner.active {
@@ -200,11 +201,11 @@
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #8B4513;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #D2691E;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             animation: spin 1s linear infinite;
             margin: 0 auto 1rem;
         }
@@ -214,246 +215,443 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* AI Explanation box */
-        .ai-explanation {
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-            border-left: 4px solid #e67e22;
+        /* Result Sections */
+        .result-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
             padding: 1rem;
-            border-radius: 6px;
-            margin-top: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
         }
 
-        .ai-explanation-header {
+        .result-section.tcp {
+            border-left-color: #3498db;
+        }
+
+        .result-section.etp {
+            border-left-color: #e67e22;
+        }
+
+        .result-section.validation {
+            border-left-color: #2ecc71;
+        }
+
+        .result-section.metrics {
+            border-left-color: #9b59b6;
+        }
+
+        .result-section h3 {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            margin-bottom: 0.5rem;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #bdc3c7;
+            font-size: 0.85rem;
+        }
+
+        .metric-value {
             font-weight: 600;
-            color: #e67e22;
-        }
-
-        .ai-explanation-text {
             font-size: 0.9rem;
-            line-height: 1.5;
-            color: #2c3e50;
         }
 
-        /* Status indicators */
-        .status-indicators {
+        .metric-value.high {
+            color: #e74c3c;
+        }
+
+        .metric-value.medium {
+            color: #f39c12;
+        }
+
+        .metric-value.low {
+            color: #27ae60;
+        }
+
+        /* Hypothesis Cards */
+        .hypothesis-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid;
+        }
+
+        .hypothesis-card.validated {
+            border-left-color: #2ecc71;
+        }
+
+        .hypothesis-card.rejected {
+            border-left-color: #e74c3c;
+        }
+
+        .hypothesis-card.uncertain {
+            border-left-color: #f39c12;
+        }
+
+        .hypothesis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .hypothesis-type {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .hypothesis-score {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        .hypothesis-explanation {
+            font-size: 0.8rem;
+            color: #bdc3c7;
+            line-height: 1.4;
+        }
+
+        /* Instrument Status */
+        .instrument-list {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .instrument-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .instrument-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .instrument-status.success {
+            background: #2ecc71;
+            box-shadow: 0 0 8px #2ecc71;
+        }
+
+        .instrument-status.failed {
+            background: #e74c3c;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8B4513, #D2691E);
+            transition: width 0.3s;
+        }
+
+        /* Tabs */
+        .tabs {
             display: flex;
             gap: 0.5rem;
             margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
+        .tab {
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: none;
+            color: #bdc3c7;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: #ecf0f1;
+        }
+
+        .tab.active {
+            color: #D2691E;
+            border-bottom-color: #D2691E;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
             padding: 0.25rem 0.5rem;
-            border-radius: 4px;
+            border-radius: 12px;
             font-size: 0.75rem;
             font-weight: 600;
         }
 
-        .status-indicator.online {
-            background: #d4edda;
-            color: #155724;
+        .badge.success {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
         }
 
-        .status-indicator.offline {
-            background: #f8d7da;
-            color: #721c24;
+        .badge.warning {
+            background: rgba(243, 156, 18, 0.2);
+            color: #f39c12;
+        }
+
+        .badge.danger {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .badge.info {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
         }
 
         /* Responsive */
-        @media (max-width: 1200px) {
+        @media (max-width: 1400px) {
             .main-container {
                 grid-template-columns: 1fr;
                 grid-template-rows: auto 500px auto;
             }
         }
-        
-        /* Instrument status cards */
-        .instrument-card {
-            background: #f8f9fa;
-            border-radius: 6px;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-            border-left: 4px solid;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .instrument-card.success {
-            border-left-color: #27ae60;
-            background: #d4edda;
-        }
-        
-        .instrument-card.failed {
-            border-left-color: #e74c3c;
-            background: #f8d7da;
-        }
-        
-        .instrument-card.no-data {
-            border-left-color: #95a5a6;
-            background: #e2e3e5;
-        }
-        
-        .instrument-name {
-            font-weight: 600;
-            color: #2c3e50;
-            flex: 1;
-        }
-        
-        .instrument-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
-        }
-        
-        .instrument-badge {
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: white;
-        }
-        
-        .instrument-badge.success {
-            background: #27ae60;
-        }
-        
-        .instrument-badge.failed {
-            background: #e74c3c;
-        }
-        
-        .instrument-badge.no-data {
-            background: #95a5a6;
-        }
-        
-        .instrument-value {
-            font-family: 'Courier New', monospace;
-            color: #2c3e50;
-            font-weight: 600;
-        }
-        
-        .instrument-details {
-            font-size: 0.75rem;
-            color: #7f8c8d;
-            margin-top: 0.25rem;
-        }
     </style>
 </head>
 <body>
-    <!-- Barra superior -->
-    <div class="top-bar">
-        <h1>🏺 ArcheoScope - Scientific Archaeological Analysis</h1>
-        <div class="top-bar-subtitle">
-            Pre-screening System | Deterministic Scientific Pipeline | v2.2
+    <!-- Header -->
+    <div class="header">
+        <h1>
+            🏺 ArcheoScope TIMT
+            <span class="system-badge">v3.0 - Territorial Inferential Multi-modal Tomography</span>
+        </h1>
+        <div class="header-subtitle">
+            Sistema Científico de Análisis Territorial con Flujo de 3 Capas: TCP → ETP → Validación
         </div>
     </div>
 
-    <!-- Container principal -->
+    <!-- Main Container -->
     <div class="main-container">
-        <!-- Panel izquierdo - Controles -->
-        <div class="left-panel">
-            <!-- Status indicators -->
-            <div class="status-indicators">
-                <div class="status-indicator online" id="backendStatus">
-                    <span>●</span> Backend
-                </div>
-                <div class="status-indicator offline" id="aiStatus">
-                    <span>●</span> AI
-                </div>
+        <!-- Left Panel - Controls -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>🎯 Configuración de Análisis</h2>
             </div>
-
-            <!-- Badges epistemológicos -->
-            <div id="epistemicBadgeContainer"></div>
-
-            <!-- Coordenadas -->
-            <div class="panel-section">
-                <h3>📍 Coordenadas</h3>
+            <div class="panel-content">
                 <div class="input-group">
-                    <label>Latitud</label>
-                    <input type="number" id="inputLat" step="0.0001" value="64.2" placeholder="Ej: 64.2">
+                    <label>📍 Latitud Mínima</label>
+                    <input type="number" id="lat-min" step="0.0001" value="31.76" placeholder="-90 a 90">
                 </div>
-                <div class="input-group">
-                    <label>Longitud</label>
-                    <input type="number" id="inputLon" step="0.0001" value="-51.7" placeholder="Ej: -51.7">
-                </div>
-                <div class="input-group">
-                    <label>Nombre de región</label>
-                    <input type="text" id="inputRegion" value="Test Region" placeholder="Ej: Nuuk, Groenlandia">
-                </div>
-            </div>
 
-            <!-- Botón de análisis -->
-            <button class="btn btn-primary" id="analyzeBtn" onclick="startAnalysis()">
-                🔬 Analizar Región
-            </button>
+                <div class="input-group">
+                    <label>📍 Latitud Máxima</label>
+                    <input type="number" id="lat-max" step="0.0001" value="31.78" placeholder="-90 a 90">
+                </div>
 
-            <!-- Acciones adicionales -->
-            <div class="panel-section" style="margin-top: 1.5rem;">
-                <h3>🔧 Acciones</h3>
-                <button class="btn btn-secondary" onclick="openHistoryPanel()" style="margin-bottom: 0.5rem;">
-                    📋 Ver Historial
+                <div class="input-group">
+                    <label>📍 Longitud Mínima</label>
+                    <input type="number" id="lon-min" step="0.0001" value="130.60" placeholder="-180 a 180">
+                </div>
+
+                <div class="input-group">
+                    <label>📍 Longitud Máxima</label>
+                    <input type="number" id="lon-max" step="0.0001" value="130.62" placeholder="-180 a 180">
+                </div>
+
+                <div class="input-group">
+                    <label>🏷️ Nombre del Territorio</label>
+                    <input type="text" id="territory-name" placeholder="Ej: Valle del Nilo">
+                </div>
+
+                <div class="input-group">
+                    <label>🎯 Objetivo del Análisis</label>
+                    <select id="analysis-objective">
+                        <option value="exploratory">🔍 Exploratorio</option>
+                        <option value="validation">✅ Validación</option>
+                        <option value="academic">🎓 Académico</option>
+                        <option value="monitoring">📊 Monitoreo</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>📏 Radio de Análisis (km)</label>
+                    <input type="number" id="analysis-radius" step="0.5" value="5.0" min="1" max="50">
+                </div>
+
+                <div class="input-group">
+                    <label>🔬 Resolución (metros)</label>
+                    <input type="number" id="resolution" step="10" value="30" min="10" max="1000">
+                </div>
+
+                <div class="input-group">
+                    <label>💬 Nivel de Comunicación</label>
+                    <select id="communication-level">
+                        <option value="executive">👔 Ejecutivo</option>
+                        <option value="technical" selected>🔧 Técnico</option>
+                        <option value="scientific">🔬 Científico</option>
+                        <option value="educational">📚 Educativo</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary" id="analyze-btn">
+                    🚀 Iniciar Análisis TIMT
                 </button>
-                <button class="btn btn-secondary" onclick="exportSnapshot()" style="margin-bottom: 0.5rem;">
-                    💾 Exportar Snapshot
-                </button>
-                <button class="btn btn-secondary" onclick="togglePerformanceStats()">
-                    📊 Performance Stats
+
+                <button class="btn btn-secondary" id="clear-btn">
+                    🗑️ Limpiar Resultados
                 </button>
             </div>
         </div>
 
-        <!-- Panel central - Mapa -->
-        <div class="center-panel">
+        <!-- Center Panel - Map -->
+        <div class="panel">
             <div id="map"></div>
         </div>
 
-        <!-- Panel derecho - Resultados -->
-        <div class="right-panel">
-            <!-- Loading -->
-            <div class="loading-spinner" id="loadingSpinner">
-                <div class="spinner"></div>
-                <p>Analizando región...</p>
-                <p style="font-size: 0.85rem; color: #7f8c8d;">Midiendo con instrumentos reales</p>
+        <!-- Right Panel - Results -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>📊 Resultados del Análisis</h2>
             </div>
-
-            <!-- Resultados -->
-            <div class="results-container" id="resultsContainer">
-                <div class="result-section">
-                    <h4>📊 Resultados Científicos</h4>
-                    <div id="resultsEpistemicBadges"></div>
-                    <div id="scientificResults"></div>
+            <div class="panel-content">
+                <!-- Empty State -->
+                <div class="results-empty" id="results-empty">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🏺</div>
+                    <p>Configura los parámetros y presiona<br>"Iniciar Análisis TIMT"</p>
                 </div>
 
-                <div class="result-section">
-                    <h4>🤖 Explicación IA</h4>
-                    <div id="aiExplanationContainer"></div>
+                <!-- Loading -->
+                <div class="loading-spinner" id="loading-spinner">
+                    <div class="spinner"></div>
+                    <h3 style="margin-bottom: 1rem;">🔬 Ejecutando Análisis TIMT</h3>
+                    <p style="margin-bottom: 0.5rem;">Procesando territorio con sistema de 3 capas...</p>
+                    
+                    <div style="text-align: left; max-width: 300px; margin: 1rem auto; font-size: 0.85rem; color: #bdc3c7;">
+                        <p><strong>🧩 CAPA 0:</strong> Generando contexto territorial</p>
+                        <p><strong>🔬 CAPA 1:</strong> Creando perfil tomográfico 3D</p>
+                        <p><strong>✅ CAPA 2:</strong> Validando hipótesis</p>
+                    </div>
+                    
+                    <p style="font-size: 0.8rem; color: #7f8c8d; margin-top: 1rem;">
+                        ⏱️ Tiempo estimado: 30-90 segundos
+                    </p>
+                    <p style="font-size: 0.75rem; color: #7f8c8d;">
+                        El sistema está midiendo con instrumentos reales...
+                    </p>
                 </div>
 
-                <div class="result-section">
-                    <h4>📡 Estado de Instrumentos</h4>
-                    <div id="instrumentsStatus"></div>
-                </div>
-                
-                <div class="result-section">
-                    <h4>📊 Mediciones Obtenidas</h4>
-                    <div id="instrumentalMeasurements"></div>
-                </div>
+                <!-- Results -->
+                <div class="results-container" id="results-container">
+                    <!-- Tabs -->
+                    <div class="tabs">
+                        <button class="tab active" data-tab="overview">📋 Resumen</button>
+                        <button class="tab" data-tab="tcp">🧩 TCP</button>
+                        <button class="tab" data-tab="etp">🔬 ETP</button>
+                        <button class="tab" data-tab="validation">✅ Validación</button>
+                    </div>
 
-                <div class="result-section">
-                    <h4>🌍 Contexto Ambiental</h4>
-                    <div id="environmentContext"></div>
-                </div>
+                    <!-- Tab: Overview -->
+                    <div class="tab-content active" id="tab-overview">
+                        <div class="result-section metrics">
+                            <h3>🎯 Métricas Principales</h3>
+                            <div id="main-metrics"></div>
+                        </div>
 
-                <div class="result-section">
-                    <h4>🔬 Pipeline Científico</h4>
-                    <div id="pipelinePhases"></div>
+                        <div class="result-section">
+                            <h3>🛰️ Cobertura Instrumental</h3>
+                            <div id="instrument-coverage"></div>
+                        </div>
+
+                        <div class="result-section">
+                            <h3>💡 Recomendación</h3>
+                            <div id="recommendation"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: TCP -->
+                    <div class="tab-content" id="tab-tcp">
+                        <div class="result-section tcp">
+                            <h3>🧩 Territorial Context Profile</h3>
+                            <div id="tcp-content"></div>
+                        </div>
+
+                        <div class="result-section">
+                            <h3>🧠 Hipótesis Territoriales</h3>
+                            <div id="tcp-hypotheses"></div>
+                        </div>
+
+                        <div class="result-section">
+                            <h3>🛰️ Estrategia Instrumental</h3>
+                            <div id="tcp-strategy"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: ETP -->
+                    <div class="tab-content" id="tab-etp">
+                        <div class="result-section etp">
+                            <h3>🔬 Environmental Tomographic Profile</h3>
+                            <div id="etp-content"></div>
+                        </div>
+
+                        <div class="result-section">
+                            <h3>📊 Anomalías Volumétricas</h3>
+                            <div id="etp-anomalies"></div>
+                        </div>
+
+                        <div class="result-section">
+                            <h3>🎨 Visualización 3D</h3>
+                            <div id="etp-visualization"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Validation -->
+                    <div class="tab-content" id="tab-validation">
+                        <div class="result-section validation">
+                            <h3>✅ Validación de Hipótesis</h3>
+                            <div id="validation-results"></div>
+                        </div>
+
+                        <div class="result-section">
+                            <h3>🔬 Transparencia del Sistema</h3>
+                            <div id="transparency-report"></div>
+                        </div>
+
+                        <div class="result-section">
+                            <h3>💬 Comunicación Multinivel</h3>
+                            <div id="multilevel-communication"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -462,458 +660,8 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
-            crossorigin="anonymous" 
-            referrerpolicy="no-referrer"></script>
+            crossorigin="anonymous"></script>
 
-    <!-- MÓDULOS REFACTORIZADOS - ORDEN CRÍTICO -->
-    
-    <!-- 1. Core -->
-    <script src="core/event_bus.js"></script>
-    <script src="state/scientific_state.js"></script>
-    <script src="state/ui_state.js"></script>
-    
-    <!-- 2. Modules -->
-    <script src="modules/archaeological_lupa_module.js"></script>
-    <script src="modules/viewer_3d_module.js"></script>
-    <script src="modules/lidar_availability_module.js"></script>
-    <script src="modules/history_module.js"></script>
-    <script src="modules/replay_mode_module.js"></script>
-    <script src="modules/epistemic_visual_module.js"></script>
-    <script src="modules/performance_guardrails_module.js"></script>
-    <script src="modules/ai_explainer_module.js"></script>
-
-    <!-- 3. Known Sites Layer -->
-    <script src="known_sites_layer.js"></script>
-
-    <!-- 4. Main Application -->
-    <script>
-        // Configuración
-        const API_BASE_URL = 'http://localhost:8002';
-        
-        // Variables globales
-        let map = null;
-        let currentMarker = null;
-        
-        /**
-         * Inicializar aplicación
-         */
-        function initApp() {
-            console.log('[App] Inicializando ArcheoScope v2.2...');
-            
-            // Inicializar mapa
-            initMap();
-            
-            // Verificar backend
-            checkBackendStatus();
-            
-            // Verificar IA
-            aiExplainerModule.checkAvailability();
-            
-            // Registrar event listeners
-            registerEventListeners();
-            
-            console.log('[App] ✅ Aplicación inicializada');
-        }
-        
-        /**
-         * Inicializar mapa
-         */
-        function initMap() {
-            map = L.map('map').setView([64.2, -51.7], 10);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            }).addTo(map);
-            
-            // Click en mapa para seleccionar coordenadas
-            map.on('click', function(e) {
-                document.getElementById('inputLat').value = e.latlng.lat.toFixed(4);
-                document.getElementById('inputLon').value = e.latlng.lng.toFixed(4);
-                
-                // Actualizar marcador
-                if (currentMarker) {
-                    map.removeLayer(currentMarker);
-                }
-                currentMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
-            });
-        }
-        
-        /**
-         * Verificar estado del backend
-         */
-        async function checkBackendStatus() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/status`, {
-                    method: 'GET',
-                    timeout: 5000
-                });
-                
-                const statusEl = document.getElementById('backendStatus');
-                if (response.ok) {
-                    statusEl.classList.remove('offline');
-                    statusEl.classList.add('online');
-                } else {
-                    statusEl.classList.remove('online');
-                    statusEl.classList.add('offline');
-                }
-            } catch (error) {
-                const statusEl = document.getElementById('backendStatus');
-                statusEl.classList.remove('online');
-                statusEl.classList.add('offline');
-            }
-        }
-        
-        /**
-         * Registrar event listeners
-         */
-        function registerEventListeners() {
-            // Escuchar explicaciones de IA
-            eventBus.on('ai:explanation_generated', (explanation) => {
-                displayAIExplanation(explanation);
-            });
-            
-            // Escuchar disponibilidad de IA
-            eventBus.on('ai:availability_checked', (result) => {
-                const statusEl = document.getElementById('aiStatus');
-                if (result.available) {
-                    statusEl.classList.remove('offline');
-                    statusEl.classList.add('online');
-                } else {
-                    statusEl.classList.remove('online');
-                    statusEl.classList.add('offline');
-                }
-            });
-            
-            // Escuchar datos científicos actualizados
-            eventBus.on(EVENTS.SCIENTIFIC_DATA_UPDATED, (data) => {
-                displayResults(data);
-            });
-        }
-        
-        /**
-         * Iniciar análisis
-         */
-        async function startAnalysis() {
-            const lat = parseFloat(document.getElementById('inputLat').value);
-            const lon = parseFloat(document.getElementById('inputLon').value);
-            const region = document.getElementById('inputRegion').value;
-            
-            if (isNaN(lat) || isNaN(lon)) {
-                alert('Por favor ingresa coordenadas válidas');
-                return;
-            }
-            
-            console.log('[App] Iniciando análisis...', { lat, lon, region });
-            
-            // 🗺️ CENTRAR MAPA EN LAS COORDENADAS INGRESADAS
-            if (map) {
-                map.setView([lat, lon], 13);
-                
-                // Agregar marcador temporal en la ubicación
-                if (currentMarker) {
-                    map.removeLayer(currentMarker);
-                }
-                currentMarker = L.marker([lat, lon], {
-                    icon: L.icon({
-                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
-                    })
-                }).addTo(map);
-                currentMarker.bindPopup(`<b>Analizando...</b><br>Lat: ${lat.toFixed(4)}<br>Lon: ${lon.toFixed(4)}`).openPopup();
-            }
-            
-            // Mostrar loading
-            document.getElementById('loadingSpinner').classList.add('active');
-            document.getElementById('resultsContainer').classList.remove('active');
-            document.getElementById('analyzeBtn').disabled = true;
-            
-            // Emitir evento de inicio
-            eventBus.emit(EVENTS.ANALYSIS_STARTED, { lat, lon, region });
-            
-            try {
-                // Llamar al backend
-                const response = await fetch(`${API_BASE_URL}/api/scientific/analyze`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        lat_min: lat - 0.01,
-                        lat_max: lat + 0.01,
-                        lon_min: lon - 0.01,
-                        lon_max: lon + 0.01,
-                        region_name: region
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                console.log('[App] ✅ Análisis completado', data);
-                
-                // Actualizar scientific state
-                scientificState.updateFromBackend(data);
-                
-                // GENERAR EXPLICACIÓN IA
-                console.log('[App] Generando explicación IA...');
-                await aiExplainerModule.generateExplanation({
-                    scientificOutput: data.scientific_output,
-                    environmentContext: data.environment_context,
-                    instrumentalMeasurements: data.instrumental_measurements
-                });
-                
-                // Emitir evento de completado
-                eventBus.emit(EVENTS.ANALYSIS_COMPLETED, {
-                    coordinates: { lat, lon },
-                    region: region,
-                    scientificOutput: data.scientific_output,
-                    environmentContext: data.environment_context
-                });
-                
-            } catch (error) {
-                console.error('[App] ❌ Error en análisis:', error);
-                alert('Error en análisis: ' + error.message);
-                
-                eventBus.emit(EVENTS.ANALYSIS_FAILED, { error: error.message });
-            } finally {
-                // Ocultar loading
-                document.getElementById('loadingSpinner').classList.remove('active');
-                document.getElementById('analyzeBtn').disabled = false;
-            }
-        }
-        
-        /**
-         * Mostrar resultados
-         */
-        function displayResults(data) {
-            const container = document.getElementById('resultsContainer');
-            container.classList.add('active');
-            
-            const output = data.scientificOutput;
-            if (!output) return;
-            
-            // Resultados científicos
-            // Manejar valores NaN o undefined - usar campos que SÍ existen
-            const anthropicProb = (output.anthropic_probability !== undefined && !isNaN(output.anthropic_probability))
-                ? (output.anthropic_probability * 100).toFixed(1) + '%'
-                : 'Sin datos';
-            
-            const anomalyScore = (output.anomaly_score !== undefined && !isNaN(output.anomaly_score))
-                ? (output.anomaly_score * 100).toFixed(1) + '%'
-                : 'Sin datos';
-            
-            // Calcular cobertura desde instrumental_measurements
-            const totalInstruments = data.environmentContext?.available_instruments?.length || 0;
-            const measuredInstruments = data.instrumentalMeasurements?.length || 0;
-            const coveragePercent = totalInstruments > 0 
-                ? ((measuredInstruments / totalInstruments) * 100).toFixed(0) + '%'
-                : 'Sin datos';
-            
-            // Confidence interval
-            const confidenceLower = output.confidence_interval?.[0];
-            const confidenceUpper = output.confidence_interval?.[1];
-            const confidenceText = (confidenceLower !== undefined && confidenceUpper !== undefined)
-                ? `${(confidenceLower * 100).toFixed(1)}% - ${(confidenceUpper * 100).toFixed(1)}%`
-                : 'Sin datos';
-            
-            const resultsHTML = `
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px;">
-                    <div style="margin-bottom: 0.5rem;">
-                        <strong>Probabilidad Antropogénica:</strong> ${anthropicProb}
-                    </div>
-                    <div style="margin-bottom: 0.5rem;">
-                        <strong>Anomaly Score:</strong> ${anomalyScore}
-                    </div>
-                    <div style="margin-bottom: 0.5rem;">
-                        <strong>Cobertura Instrumental:</strong> ${coveragePercent} (${measuredInstruments}/${totalInstruments})
-                    </div>
-                    <div style="margin-bottom: 0.5rem;">
-                        <strong>Intervalo de Confianza:</strong> ${confidenceText}
-                    </div>
-                    <div style="margin-bottom: 0.5rem;">
-                        <strong>Acción Recomendada:</strong> <span style="color: #8B4513; font-weight: 600;">${output.recommended_action}</span>
-                    </div>
-                </div>
-            `;
-            document.getElementById('scientificResults').innerHTML = resultsHTML;
-            
-            // NUEVO: Estado de TODOS los instrumentos
-            displayInstrumentsStatus(data);
-            
-            // Mediciones instrumentales (solo las exitosas)
-            if (data.instrumentalMeasurements) {
-                const measurementsHTML = data.instrumentalMeasurements.map((m, index) => `
-                    <div data-measurement-index="${index}" style="background: #d4edda; padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; border-left: 4px solid #27ae60;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <strong>${m.instrument_name}</strong>
-                            <span class="instrument-badge success">✓ MEDIDO</span>
-                        </div>
-                        <div style="font-size: 1.1rem; font-weight: 600; margin: 0.25rem 0;">
-                            Valor: ${m.value.toFixed(3)}
-                        </div>
-                        <div style="font-size: 0.8rem; color: #155724;">
-                            Modo: ${m.data_mode} | Fuente: ${m.source}
-                        </div>
-                    </div>
-                `).join('');
-                document.getElementById('instrumentalMeasurements').innerHTML = measurementsHTML;
-            }
-            
-            // Contexto ambiental
-            if (data.environmentContext) {
-                const envHTML = `
-                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px;">
-                        <div><strong>Tipo:</strong> ${data.environmentContext.environment_type}</div>
-                        <div><strong>Visibilidad:</strong> ${data.environmentContext.archaeological_visibility}</div>
-                        <div><strong>Preservación:</strong> ${data.environmentContext.preservation_potential}</div>
-                    </div>
-                `;
-                document.getElementById('environmentContext').innerHTML = envHTML;
-            }
-            
-            // Renderizar badges epistemológicos
-            epistemicVisualModule.updateVisualLabels(data);
-            epistemicVisualModule.renderEpistemicBadges({ scientificOutput: output });
-        }
-        
-        /**
-         * Mostrar estado de TODOS los instrumentos disponibles para el ambiente
-         */
-        function displayInstrumentsStatus(data) {
-            const container = document.getElementById('instrumentsStatus');
-            
-            // Obtener TODOS los instrumentos disponibles para el ambiente
-            const availableInstruments = data.environmentContext?.available_instruments || [];
-            
-            // Obtener instrumentos medidos
-            const measuredInstruments = data.instrumentalMeasurements || [];
-            const measuredNames = measuredInstruments.map(m => m.instrument_name);
-            
-            // Crear cards para cada instrumento DISPONIBLE
-            const instrumentsHTML = availableInstruments.map(instrumentName => {
-                const measurement = measuredInstruments.find(m => m.instrument_name === instrumentName);
-                
-                if (measurement) {
-                    // Instrumento medido exitosamente
-                    return `
-                        <div class="instrument-card success">
-                            <div style="flex: 1;">
-                                <div class="instrument-name">
-                                    ✓ ${instrumentName}
-                                </div>
-                                <div class="instrument-details">
-                                    Valor: ${measurement.value.toFixed(3)} | ${measurement.data_mode} | ${measurement.source}
-                                </div>
-                            </div>
-                            <div class="instrument-status">
-                                <span class="instrument-badge success">MEDIDO</span>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    // Instrumento disponible pero falló
-                    return `
-                        <div class="instrument-card failed">
-                            <div style="flex: 1;">
-                                <div class="instrument-name">
-                                    ✗ ${instrumentName}
-                                </div>
-                                <div class="instrument-details">
-                                    Disponible para este ambiente pero sin datos en esta ubicación
-                                </div>
-                            </div>
-                            <div class="instrument-status">
-                                <span class="instrument-badge failed">SIN DATOS</span>
-                            </div>
-                        </div>
-                    `;
-                }
-            }).join('');
-            
-            // Agregar resumen
-            const successCount = measuredInstruments.length;
-            const totalCount = availableInstruments.length;
-            const failedCount = totalCount - successCount;
-            
-            const summaryHTML = `
-                <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; border-left: 4px solid #2196f3;">
-                    <div style="font-weight: 600; margin-bottom: 0.5rem; color: #1976d2;">
-                        📡 Instrumentos Disponibles para ${data.environmentContext?.environment_type || 'este ambiente'}
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.85rem;">
-                        <div>
-                            <div style="color: #27ae60; font-weight: 600;">✓ ${successCount} Medidos</div>
-                        </div>
-                        <div>
-                            <div style="color: #e74c3c; font-weight: 600;">✗ ${failedCount} Sin datos</div>
-                        </div>
-                    </div>
-                    <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #546e7a;">
-                        Cobertura: ${successCount}/${totalCount} instrumentos (${((successCount/totalCount)*100).toFixed(0)}%)
-                    </div>
-                </div>
-            `;
-            
-            container.innerHTML = summaryHTML + instrumentsHTML;
-        }
-        
-        /**
-         * Mostrar explicación de IA
-         */
-        function displayAIExplanation(explanation) {
-            const container = document.getElementById('aiExplanationContainer');
-            
-            const icon = explanation.type === 'ai' ? '🤖' : '🧮';
-            const label = explanation.type === 'ai' ? 'AI-ASSISTED' : 'DETERMINISTIC';
-            
-            container.innerHTML = `
-                <div class="ai-explanation">
-                    <div class="ai-explanation-header">
-                        ${icon} ${label}
-                    </div>
-                    <div class="ai-explanation-text">
-                        ${explanation.text}
-                    </div>
-                    <div style="font-size: 0.75rem; color: #7f8c8d; margin-top: 0.5rem;">
-                        Modelo: ${explanation.model} | ${new Date(explanation.timestamp).toLocaleString()}
-                    </div>
-                </div>
-            `;
-        }
-        
-        /**
-         * Abrir panel de historial
-         */
-        function openHistoryPanel() {
-            historyModule.activate();
-        }
-        
-        /**
-         * Exportar snapshot
-         */
-        function exportSnapshot() {
-            replayModeModule.downloadSnapshot();
-        }
-        
-        /**
-         * Toggle performance stats
-         */
-        function togglePerformanceStats() {
-            const report = performanceGuardrails.getPerformanceReport();
-            console.log('Performance Report:', report);
-            alert(`Performance Report:\nFPS: ${report.fps}\nMemory: ${report.memoryUsage.toFixed(1)}%\nDegraded Mode: ${report.degradedMode}`);
-        }
-        
-        // Inicializar al cargar
-        window.addEventListener('DOMContentLoaded', initApp);
-    </script>
+    <script src="archeoscope_timt.js"></script>
 </body>
 </html>
