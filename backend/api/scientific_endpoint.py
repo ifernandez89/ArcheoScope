@@ -301,6 +301,9 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                     # NUEVO: Cobertura instrumental (separada de ESS)
                     'instrumental_coverage': etp.instrumental_coverage,
                     
+                    # SALTO EVOLUTIVO 1: Temporal Archaeological Signature (TAS)
+                    'tas_signature': etp.tas_signature.to_dict() if etp.tas_signature else None,
+                    
                     'coherencia_3d': etp.coherencia_3d,
                     'persistencia_temporal': etp.persistencia_temporal,
                     'densidad_arqueologica_m3': etp.densidad_arqueologica_m3,

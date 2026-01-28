@@ -152,6 +152,9 @@ class EnvironmentalTomographicProfile:
     # Cobertura instrumental (NUEVO - separado de ESS)
     instrumental_coverage: Dict[str, Any] = field(default_factory=dict)
     
+    # SALTO EVOLUTIVO 1: Temporal Archaeological Signature (TAS)
+    tas_signature: Any = None  # TemporalArchaeologicalSignature
+    
     # Contexto geológico (campos opcionales) - NOMBRES CORREGIDOS
     geological_context: Any = None
     geological_compatibility: Any = None  # GeologicalCompatibilityScore (no geological_compatibility_score)

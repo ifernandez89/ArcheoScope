@@ -30,6 +30,9 @@ from historical_hydrography import HistoricalHydrographySystem, WaterAvailabilit
 from external_archaeological_validation import ExternalArchaeologicalValidationSystem, ExternalConsistencyScore
 from human_traces_analysis import HumanTracesAnalysisSystem, TerritorialUseProfile
 from instrument_status import InstrumentStatus  # IMPORT CRÍTICO
+from temporal_archaeological_signature import (  # SALTO EVOLUTIVO 1
+    TemporalArchaeologicalSignatureEngine, TemporalArchaeologicalSignature, TemporalScale
+)
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +53,9 @@ class ETProfileGenerator:
         self.hydrography_system = HistoricalHydrographySystem()
         self.external_validation_system = ExternalArchaeologicalValidationSystem()
         self.human_traces_system = HumanTracesAnalysisSystem()
+        
+        # SALTO EVOLUTIVO 1: Sistema TAS (Temporal Archaeological Signature)
+        self.tas_engine = TemporalArchaeologicalSignatureEngine(integrator_15_instruments)
         
         # Capas de profundidad estándar para análisis tomográfico
         # AJUSTE: Profundidad máxima reducida a -5m para análisis exploratorio
@@ -215,6 +221,21 @@ class ETProfileGenerator:
         logger.info("⏰ FASE 3: Análisis temporal...")
         temporal_profile = await self._generate_temporal_analysis(bounds)
         
+        # FASE 3B: SALTO EVOLUTIVO 1 - Temporal Archaeological Signature (TAS)
+        logger.info("🕐 FASE 3B: Cálculo de Temporal Archaeological Signature (TAS)...")
+        tas_signature = await self.tas_engine.calculate_tas(
+            lat_min=bounds.lat_min,
+            lat_max=bounds.lat_max,
+            lon_min=bounds.lon_min,
+            lon_max=bounds.lon_max,
+            temporal_scale=TemporalScale.LONG  # Usar escala larga por defecto
+        )
+        logger.info(f"   🎯 TAS Score: {tas_signature.tas_score:.3f}")
+        logger.info(f"   📊 Persistencia NDVI: {tas_signature.ndvi_persistence:.3f}")
+        logger.info(f"   🌡️ Estabilidad Térmica: {tas_signature.thermal_stability:.3f}")
+        logger.info(f"   📡 Coherencia SAR: {tas_signature.sar_coherence:.3f}")
+        logger.info(f"   🌿 Frecuencia Estrés: {tas_signature.stress_frequency:.3f}")
+        
         # FASE 4: Cálculo de cobertura instrumental (NUEVO)
         logger.info("📊 FASE 4A: Cálculo de cobertura instrumental...")
         instrumental_coverage = self._calculate_instrumental_coverage(layered_data)
@@ -310,6 +331,7 @@ class ETProfileGenerator:
             ess_volumetrico=ess_volumetrico,
             ess_temporal=ess_temporal,
             instrumental_coverage=instrumental_coverage,  # NUEVO: Cobertura separada de ESS
+            tas_signature=tas_signature,  # SALTO EVOLUTIVO 1: TAS
             coherencia_3d=coherencia_3d,
             persistencia_temporal=persistencia,
             densidad_arqueologica_m3=densidad_m3,
@@ -337,6 +359,7 @@ class ETProfileGenerator:
         logger.info(f"   📊 ESS Superficial: {ess_superficial:.3f}")
         logger.info(f"   📊 ESS Volumétrico: {ess_volumetrico:.3f} (contraste estratigráfico)")
         logger.info(f"   📊 ESS Temporal: {ess_temporal:.3f}")
+        logger.info(f"   🕐 TAS Score: {tas_signature.tas_score:.3f} (firma temporal arqueológica)")
         logger.info(f"   📊 Coherencia 3D: {coherencia_3d:.3f}")
         logger.info(f"   🏛️ Anomalías detectadas: {len(volumetric_anomalies)}")
         logger.info(f"   🗿 GCS (Geological): {geological_compatibility.gcs_score:.3f}")
