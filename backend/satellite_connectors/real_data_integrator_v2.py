@@ -366,6 +366,7 @@ class RealDataIntegratorV2:
             # Extraer valor principal con sanitización
             value = None
             confidence = 0.0
+            raw_value = None  # Para debugging
             
             # Diferentes formas de extraer valor según el tipo de datos
             if hasattr(api_data, 'indices') and api_data.indices:
@@ -374,7 +375,14 @@ class RealDataIntegratorV2:
                 
                 # Priorizar valores según el instrumento
                 if 'elevation_mean' in indices:
-                    value = safe_float(indices['elevation_mean'])
+                    raw_value = indices['elevation_mean']
+                    # CRÍTICO: ICESat-2 elevation NO normalizar (puede ser >1000m)
+                    # Solo validar que sea finito
+                    if isinstance(raw_value, (int, float)) and not (np.isnan(raw_value) or np.isinf(raw_value)):
+                        value = float(raw_value)
+                        self.log(f"   ✅ ICESat-2 elevation: {value:.1f}m (sin normalizar)")
+                    else:
+                        self.log(f"   ⚠️ ICESat-2 elevation inválido: {raw_value}")
                 elif 'ndvi' in indices:
                     value = safe_float(indices['ndvi'])
                 elif 'vv_mean' in indices:
@@ -402,7 +410,7 @@ class RealDataIntegratorV2:
             
             # Verificar si obtuvimos un valor válido
             if value is None:
-                self.log(f"[{instrument_name}] ❌ Valor extraído es None/inf/nan")
+                self.log(f"[{instrument_name}] ❌ Valor extraído es None/inf/nan (raw_value={raw_value})")
                 return InstrumentResult.create_invalid(
                     instrument_name=instrument_name,
                     measurement_type="invalid_value",

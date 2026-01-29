@@ -29,6 +29,13 @@ class VIIRSConnector:
     
     def __init__(self):
         """Inicializar conector VIIRS."""
+        
+        # DESACTIVADO: 403 Forbidden constante
+        self.available = False
+        self.disabled_reason = "VIIRS temporarily unavailable (403 Forbidden - API access restricted)"
+        
+        logger.info(f"⚠️ VIIRS: {self.disabled_reason}")
+        
         self.base_url = "https://appeears.earthdatacloud.nasa.gov/api/v1"
         self.product_mapping = {
             'thermal': 'VNP21A1D.001',  # Land Surface Temperature Daily
@@ -40,14 +47,19 @@ class VIIRSConnector:
         import os
         self.username = os.getenv('EARTHDATA_USERNAME')
         self.password = os.getenv('EARTHDATA_PASSWORD')
-        
-        logger.info("🛰️ VIIRS Connector initialized")
     
     async def get_thermal_data(self, lat_min: float, lat_max: float, 
                               lon_min: float, lon_max: float,
                               days_back: int = 7) -> Dict[str, Any]:
         """
         Obtener datos de temperatura superficial VIIRS.
+        
+        DESACTIVADO: API devuelve 403 Forbidden constantemente.
+        """
+        
+        if not self.available:
+            logger.info("ℹ️ VIIRS: Skipped (temporarily unavailable)")
+            return None
         
         VENTAJA vs MODIS: Mayor resolución espacial (375m vs 1km)
         """

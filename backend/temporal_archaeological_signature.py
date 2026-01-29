@@ -145,13 +145,15 @@ class TemporalArchaeologicalSignatureEngine:
     
     async def calculate_tas(self, lat_min: float, lat_max: float,
                            lon_min: float, lon_max: float,
-                           temporal_scale: TemporalScale = TemporalScale.LONG) -> TemporalArchaeologicalSignature:
+                           temporal_scale: TemporalScale = TemporalScale.LONG,
+                           environment_type: str = "temperate") -> TemporalArchaeologicalSignature:
         """
         Calcular Temporal Archaeological Signature completa.
         
         Args:
             lat_min, lat_max, lon_min, lon_max: Bounding box
             temporal_scale: Escala temporal de análisis
+            environment_type: Tipo de ambiente (arid, tropical, temperate, polar)
             
         Returns:
             TemporalArchaeologicalSignature completa
@@ -185,15 +187,17 @@ class TemporalArchaeologicalSignatureEngine:
         stress_frequency = self._count_stress_events(ndvi_series) if ndvi_series else 0.0
         logger.info(f"   🌿 Stress Frequency: {stress_frequency:.3f}")
         
-        # FASE 3: Calcular TAS Score combinado
+        # FASE 3: Calcular TAS Score combinado (adaptativo por ambiente)
         tas_score = self._calculate_tas_score(
-            ndvi_persistence, thermal_stability, sar_coherence, stress_frequency
+            ndvi_persistence, thermal_stability, sar_coherence, stress_frequency,
+            environment_type
         )
-        logger.info(f"   🎯 TAS Score: {tas_score:.3f}")
+        logger.info(f"   🎯 TAS Score: {tas_score:.3f} (ambiente: {environment_type})")
         
-        # FASE 4: Interpretación
+        # FASE 4: Interpretación (con contexto ambiental)
         interpretation = self._interpret_tas(
-            tas_score, ndvi_persistence, thermal_stability, sar_coherence, stress_frequency
+            tas_score, ndvi_persistence, thermal_stability, sar_coherence, stress_frequency,
+            environment_type
         )
         
         # Calcular confianza basada en disponibilidad de datos
@@ -471,30 +475,86 @@ class TemporalArchaeologicalSignatureEngine:
         return frequency
     
     def _calculate_tas_score(self, ndvi_persistence: float, thermal_stability: float,
-                            sar_coherence: float, stress_frequency: float) -> float:
+                            sar_coherence: float, stress_frequency: float,
+                            environment_type: str = "temperate") -> float:
         """
-        Calcular TAS Score combinado.
+        Calcular TAS Score combinado con pesos adaptativos por ambiente.
         
-        Pesos:
-        - NDVI Persistence: 30% (señal principal)
-        - Thermal Stability: 30% (masa enterrada)
-        - SAR Coherence: 25% (cambio subsuperficial)
-        - Stress Frequency: 15% (uso humano)
+        PESOS ADAPTATIVOS:
+        - ÁRIDO: Thermal 40%, SAR 40%, NDVI 10%, Stress 10%
+          (NDVI bajo es normal, priorizar SAR/térmico)
+        
+        - TROPICAL: Thermal 20%, SAR 30%, NDVI 30%, Stress 20%
+          (NDVI alto es normal, importante para detectar anomalías)
+        
+        - TEMPLADO: Thermal 30%, SAR 25%, NDVI 30%, Stress 15%
+          (Balanceado, todas las señales relevantes)
+        
+        - POLAR: Thermal 35%, SAR 35%, NDVI 5%, Stress 25%
+          (NDVI casi inexistente, priorizar térmico/SAR/estrés)
+        
+        Args:
+            ndvi_persistence: Persistencia NDVI (0-1)
+            thermal_stability: Estabilidad térmica (0-1)
+            sar_coherence: Coherencia SAR (0-1)
+            stress_frequency: Frecuencia de estrés (0-1)
+            environment_type: Tipo de ambiente
+        
+        Returns:
+            TAS Score (0-1)
         """
         
+        # Determinar pesos según ambiente
+        if environment_type == "arid":
+            weights = {
+                'thermal_stability': 0.40,
+                'sar_coherence': 0.40,
+                'ndvi_persistence': 0.10,  # Reducido (NDVI bajo es normal)
+                'stress_frequency': 0.10
+            }
+            logger.debug(f"      Pesos TAS (árido): Thermal 40%, SAR 40%, NDVI 10%")
+            
+        elif environment_type == "tropical":
+            weights = {
+                'thermal_stability': 0.20,
+                'sar_coherence': 0.30,
+                'ndvi_persistence': 0.30,  # Aumentado (NDVI importante)
+                'stress_frequency': 0.20
+            }
+            logger.debug(f"      Pesos TAS (tropical): NDVI 30%, SAR 30%, Stress 20%")
+            
+        elif environment_type == "polar":
+            weights = {
+                'thermal_stability': 0.35,
+                'sar_coherence': 0.35,
+                'ndvi_persistence': 0.05,  # Casi cero (sin vegetación)
+                'stress_frequency': 0.25
+            }
+            logger.debug(f"      Pesos TAS (polar): Thermal 35%, SAR 35%, Stress 25%")
+            
+        else:  # temperate (default)
+            weights = {
+                'thermal_stability': 0.30,
+                'sar_coherence': 0.25,
+                'ndvi_persistence': 0.30,
+                'stress_frequency': 0.15
+            }
+            logger.debug(f"      Pesos TAS (templado): Balanceado")
+        
+        # Calcular score ponderado
         tas_score = (
-            ndvi_persistence * 0.30 +
-            thermal_stability * 0.30 +
-            sar_coherence * 0.25 +
-            stress_frequency * 0.15
+            ndvi_persistence * weights['ndvi_persistence'] +
+            thermal_stability * weights['thermal_stability'] +
+            sar_coherence * weights['sar_coherence'] +
+            stress_frequency * weights['stress_frequency']
         )
         
         return min(1.0, tas_score)
     
     def _interpret_tas(self, tas_score: float, ndvi_persistence: float,
                       thermal_stability: float, sar_coherence: float,
-                      stress_frequency: float) -> str:
-        """Interpretar TAS Score."""
+                      stress_frequency: float, environment_type: str = "temperate") -> str:
+        """Interpretar TAS Score con contexto ambiental."""
         
         interpretations = []
         
@@ -511,6 +571,9 @@ class TemporalArchaeologicalSignatureEngine:
         # Detalles específicos
         if ndvi_persistence > self.persistence_threshold:
             interpretations.append("Persistencia de anomalía NDVI detectada (zona siempre distinta)")
+        elif ndvi_persistence < 0.1 and environment_type == "arid":
+            # Mensaje mejorado para NDVI bajo en árido
+            interpretations.append("⚠️ NDVI muy bajo (suelo desnudo) - Detección basada en SAR/térmico/topografía")
         
         if thermal_stability > self.stability_threshold:
             interpretations.append("Alta estabilidad térmica (posible masa enterrada)")
