@@ -1,132 +1,445 @@
-🧊 1. Groenlandia – márgenes glaciares retraídos (HIELO)
+📍 Acción: monitoring_targeted — Banco Dogger (zona costera somera)
+📌 Coordenadas sugeridas (Mar del Norte — banco Dogger, ~<40–50 m)
+
+Estas coordenadas están dentro del área poco profunda del Banco Dogger en el Mar del Norte (zona central-sur, tradicionalmente sumergida pero con profundidades bajas y hallazgos arqueológicos mesolíticos):
+
+Centro aproximado del Banco Dogger somero
+📍 55.0° N, 2.5° E
+
+Sector occidental (menores profundidades ~15–30 m)
+📍 54.8° N, 1.5° E
+
+Sector oriental somero (~20–35 m)
+📍 55.2° N, 3.5° E
+
+Límite sur de banco somero (~25–40 m)
+📍 54.5° N, 4.0° E
+
+Zona central elevada (~18–30 m)
+📍 55.0° N, 3.0° E
+
+📌 Contexto operativo
+
+El Banco Dogger es una meseta submarina extensa con profundidades tan bajas como ~15–30 m por debajo del nivel del mar, lo que lo hace ideal para pruebas de monitoring_targeted.
+
+Esta área corresponde a antiguos paisajes terrestres (antes de ~6500 a.C.) y ha producido artefactos, fósiles de fauna y evidencia de ocupación humana mesolítica.
+
+🔎 Por qué es un objetivo ideal
+
+Profundidades someras (<40–50 m) significativas para evaluar si tu sistema ETP detecta señales en un contexto marino “difícil”.
+
+Combina sensores actuales (NDVI / DEM) con posibles anomalías geomorfológicas y paleo-relieves que pueden aparecer en tomografía de subsuelo marino.
+
+🧭 Backlog de candidatos sugeridos (bonuses)
+
+A continuación, coordenadas y razones para cada sitio sugerido (del listado que propusiste).
+
+🗺 Campos de Túmulos del Orinoco (Venezuela)
+
+Región conocida por túmulos precolombinos en llanuras inundables.
+📍 8.5° N, 66.0° W
+Uso: pruebas en ambientes fluviales tropicales.
+
+🌏 Zonas periféricas de Angkor (Camboya)
+
+Complejo arqueológico monumental con geometrías hidráulicas.
+📍 13.423° N, 103.861° E
+Uso: contraste de vegetación histórica, reservorios y caminos de agua.
+
+📍 Geoglifos del Turgai — Kazajistán
+
+Cientos de geoglifos en la depresión de Turgai, formas geométricas antiguas documentadas públicamente.
+📍 50.0° N, 62.0° E
+Uso: análisis de patrones geométricos no convencionales en paisaje.
+
+🏞 Tierras altas del sur de Etiopía — terrazas agrícolas antiguas
+
+Sistemas de terrazas y manejo del paisaje que pueden aparecer como anomalías estructurales.
+📍 5.0° N, 38.5° E
+Uso: evaluar ESS volumétrico en contextos agrícolas pre-modernos.
+
+🛶 Crannogs sumergidos — Escocia (lagos)
+
+Crannogs son sitios de ocupación humana en lagos o cuerpos de agua poco profundos, con restos sumergidos.
+
+Ejemplos de coordenadas aproximadas de lagos con crannogs:
+
+Loch Achilty, Highlands, Escocia
+📍 57.6° N, 5.2° W
+
+Loch Leven, Escocia (sitios de crannogs)
+📍 56.2° N, 3.4° W
+
+Uso: contrastar tomografía 3D en agua dulce somera con contenido subacuático arqueológico conocido.
+/************************************************************/
+
+
+Machu Picchu (Perú)
+
+Latitud: -13.163141
+
+Longitud: -72.544963
+
+Ambiente: mountain
+Uso: antropogénico histórico + vegetación
+
+🏜️ Líneas de Nazca (Perú)
+
+Latitud: -14.739000
+
+Longitud: -75.130000
+
+Ambiente: desert
+Uso: antropogénico sutil / patrones espaciales
+
+🏙️ Teotihuacán (México)
+
+Latitud: 19.692500
+
+Longitud: -98.843889
+
+Ambiente: semi-arid / urban fringe
+Uso: histórico + ruido urbano moderno
+
+🧊 Base McMurdo / Valles Secos (Antártida)
+
+📍 Punto cercano a instalaciones humanas reales
+
+Latitud: -77.841900
+
+Longitud: 166.686300
+
+Ambiente: polar desert
+Uso: actividad humana mínima detectable
+
+🌋 Isla de Pascua – Rapa Nui (Chile)
+
+📍 Zona Moái Ahu Tongariki
+
+Latitud: -27.112723
+
+Longitud: -109.349686
+
+Ambiente: island / volcanic
+Uso: piedra vs geología natural
+
+☢️ Bonus – Chernóbil (Ucrania)
+
+📍 Planta nuclear
+
+Latitud: 51.389000
+
+Longitud: 30.099000
+
+Ambiente: forest / abandoned urban
+Uso: antropogénico moderno sin actividad térmica clara
+
+
+/********************************************************************/
+🥇 OPCIÓN 1 — Paleocauces del Río Tecolutla (top tier)
+
+👉 Mucho mejor que la costa directa
+
+📍 Coordenadas sugeridas (ventana amplia)
+20.520 – 20.600  N
+-97.050 – -96.930 W
 
 Por qué es ideal
 
-Retroceso glaciar acelerado → superficies nuevas expuestas
+Paleocanales meándricos enterrados
 
-Series NSIDC desde 1970s + ICESat-2 + SAR = combo brutal
+Asentamientos prehispánicos ribereños documentados
 
-Arqueología humana + paleogeografía muy incompleta
+Mejor respuesta SAR + NDVI diferencial
 
-Qué buscar
+Menos ruido urbano que Papantla / Poza Rica
 
-alineamientos lineales
+🛰️ Sensores que más rinden acá
 
-terrazas costeras antiguas
+Sentinel-1 SAR
 
-estructuras ahora fuera del hielo
+Sentinel-2 NDVI multitemporal
 
-👉 Altísimo valor científico, bajo ruido moderno, excavación puntual viable.
+Landsat térmico
 
-🌿 2. Amazonia occidental (Perú / Brasil fronterizo) – selva densa
+Inferencia estratigráfica funciona mejor
 
-Por qué
+👉 Si buscás ESS > 0.4, este es EL lugar.
 
-LIDAR existe pero está fragmentado
-
-Mucho enfoque en “descubrimientos espectaculares”, poco análisis sistemático
-
-NDVI + SAR + humedad = ventaja clara
-
-Qué buscar
-
-patrones geométricos persistentes
-
-caminos elevados
-
-manejo hidráulico antiguo
-
-👉 Excavación física difícil → excavación digital es donde ganás.
-
-🏜️ 3. Desierto de Arabia (Rub’ al Khali y alrededores)
+🥈 OPCIÓN 2 — Transición Sierra Madre Oriental (piedemonte)
+📍 Coordenadas sugeridas
+20.650 – 20.750 N
+-97.150 – -97.050 W
 
 Por qué
 
-Cambios climáticos pasados documentados
+Cambio fuerte pendiente ↔ planicie
 
-Infraestructura moderna mínima
+Terrazas fluviales antiguas
 
-SAR + térmico + humedad histórica = oro
+Caminos prehispánicos y coloniales
 
-Qué buscar
+ICESat + DEM empiezan a aportar
 
-paleocauces
+📌 Ideal si querés activar de verdad la tomografía 3D.
 
-asentamientos efímeros
-
-nodos logísticos antiguos
-
-👉 Mucho por descubrir, poca cobertura integrada.
-
-🧊 4. Patagonia austral (Argentina/Chile) – estepas + glaciares
+🥉 OPCIÓN 3 — Laguna costera fósil (más experimental)
+📍 Coordenadas sugeridas
+20.300 – 20.360 N
+-96.880 – -96.820 W
 
 Por qué
 
-Enorme extensión, poca densidad de estudios
+Antiguos estuarios sellados
 
-Glaciares, lagos proglaciares, terrazas
+Señales térmicas residuales
 
-Acceso a campo difícil → ventaja digital
+Alta preservación orgánica
 
-Qué buscar
+Poca ocupación moderna
 
-sitios de ocupación temprana
-
-estructuras de abrigo
-
-patrones de movilidad
-
-👉 Tenés ventaja local + técnica acá, no la subestimes.
-
-🌊 5. Plataforma continental poco profunda (Mar del Norte / Báltico)
-
-Por qué
-
-Zonas inundadas post-glaciación
-
-Mucha data dispersa, poco análisis cruzado
-
-Batimetría + térmico + series marinas
-
-Qué buscar
-
-paleopaisajes
-
-rutas humanas
-
-asentamientos costeros sumergidos
-
-👉 Excavación física carísima → tu sistema brilla como filtro
+👉 Menos “seguro” que Tecolutla, pero excelente para hipótesis nuevas.
 
 
 
+/****************************************/
 
-🚀 Recomendación estratégica (muy importante)
-🔥 Donde ArcheoScope VA A GANAR de verdad
+🚫 Dónde NO insistir (por ahora)
 
-(no teórica, operativamente)
+Costa directa activa 🌊
 
-Lagos proglaciares Patagonia (binacional)
+Llanura agrícola intensiva 🚜
 
-MODIS ✔️
+Zonas urbanas modernas 🏙️
 
-Sentinel-1 ✔️
 
-NSIDC (hielo estacional) ✔️
+/************************************************************/
+🥇 OPCIÓN 1 — Paleoterraza elevada (la mejor ahora mismo)
 
-Topografía ✔️
-👉 Acá vas a lograr convergencia REAL.
+👉 No la llanura
+👉 La terraza abandonada
 
-Estepas frías + lagos secos
+📍 Coordenadas recomendadas
+Centro: 20.70, -96.98
+Bounds aprox:
+Lat: 20.66 – 20.74
+Lon: -97.04 – -96.92
 
-Menos ruido
+Por qué acá va a cambiar TODO
 
-Mejor SAR
+Superficie estable (siglos/milenios)
 
-Más patrones antrópicos claros
+Estratos sellados
 
-Zonas “casi investigadas”
+Humedad diferencial
 
-Donde hay datos parciales
+SAR y térmico sí divergen con profundidad
 
-Pero nunca instrumentación cruzada
+ICESat empieza a tener sentido
+
+🎯 Acá deberías empezar a ver:
+
+ESS volumétrico > 0.3
+
+Coherencia 3D > 0.6
+
+Alguna anomalía leve pero real
+
+🥈 OPCIÓN 2 — Piedemonte (transición dura)
+
+👉 Ideal para TIMT
+👉 Muy poco ruido moderno
+
+📍 Coordenadas
+Centro: 20.85, -97.15
+Bounds:
+Lat: 20.80 – 20.90
+Lon: -97.22 – -97.08
+
+Qué aporta
+
+Cambio abrupto de pendiente
+
+Coluviones + terrazas
+
+Cortes naturales
+
+Volumen “real”, no inferido
+
+⚠️ Tip:
+
+Resolución 150 m, no 100
+
+Profundidad máx: -5 m
+
+🥉 OPCIÓN 3 — Paleolaguna elevada (experimental pero interesante)
+
+👉 No la laguna activa
+👉 Sí la sellada
+
+📍 Coordenadas
+Centro: 20.47, -96.85
+Bounds:
+Lat: 20.44 – 20.50
+Lon: -96.90 – -96.80
+
+Qué esperar
+
+Señal térmica residual
+
+Humedad estratificada
+
+ESS bajo–medio, pero no cero
+
+🚫 Dónde NO insistir con TIMT (aunque el TCP sea lindo)
+
+Llanura costera activa
+
+Planicie aluvial joven
+
+Zonas agrícolas homogéneas
+
+Regiones sin relieve relativo
+
+Ahí el sistema siempre va a ser honesto y darte ESS ≈ 0.
+
+/**************************************************************/
+
+🥇 OPCIÓN A — Escarpe de terraza (esto sí cambia el juego)
+
+👉 No la terraza
+👉 El borde erosionado
+
+📍 Coordenadas
+Centro: 20.72, -97.05
+Bounds sugeridos:
+Lat: 20.69 – 20.76
+Lon: -97.10 – -97.00
+
+Por qué acá
+
+Cambio abrupto de pendiente
+
+Estratos expuestos
+
+Diferencial térmico real
+
+SAR empieza a variar con profundidad
+
+🎯 Acá deberías ver:
+
+ESS volumétrico > 0.25
+
+Coherencia 3D > 0.6
+
+Alguna anomalía leve (aunque sea difusa)
+
+🥈 OPCIÓN B — Confluencia fluvial abandonada (muy buena)
+
+👉 Paleocauce + terraza secundaria
+
+📍 Coordenadas
+Centro: 20.63, -97.12
+Bounds:
+Lat: 20.60 – 20.66
+Lon: -97.18 – -97.06
+
+Qué aporta
+
+Sedimentos escalonados
+
+Humedad estratificada
+
+Ruptura clara de homogeneidad
+
+Ideal para:
+
+TIMT exploratorio
+
+Anomalías suaves pero coherentes
+
+🥉 OPCIÓN C — Piedemonte bajo (más señal, menos “lindo”)
+
+👉 Donde empieza a subir el terreno
+
+📍 Coordenadas
+Centro: 20.85, -97.15
+Bounds:
+Lat: 20.80 – 20.90
+Lon: -97.22 – -97.08
+
+Qué cambia
+
+Relieve real
+
+Coluviones
+
+Cortes naturales
+
+⚠️ Tip:
+
+Resolución: 150 m
+
+Profundidad máx: -5 m
+
+
+/*****************************************************/
+OPCIÓN 1 — Escarpe + terraza disectada (muy buena)
+Lat: 20.78 – 20.86
+Lon: -97.20 – -97.10
+
+
+Por qué:
+
+Ruptura real de pendiente
+
+Estratos parcialmente expuestos
+
+SAR y térmico empiezan a divergir espacialmente
+
+Ideal para ESS superficial + volumétrico bajo–medio
+
+OPCIÓN 2 — Piedemonte más abrupto (TIMT “real”)
+Lat: 20.95 – 21.05
+Lon: -97.35 – -97.20
+
+
+Ahí sí:
+
+ICESat empieza a servir
+
+DEM deja de ser plano
+
+Volumen deja de ser inferencia pura
+
+OPCIÓN 3 — Terraza alta aislada (experimental)
+Lat: 20.60 – 20.65
+Lon: -96.90 – -96.80
+
+
+Para:
+
+Señal térmica residual
+
+Humedad sellada
+
+Muy buena para hipótesis suaves
+
+
+/***********************************************/
+
+
+OPCIÓN 1 — Escarpe + terraza disectada (muy buena)
+Lat: 20.78 – 20.86
+Lon: -97.20 – -97.10
+
+
+Por qué:
+
+Ruptura real de pendiente
+
+Estratos parcialmente expuestos
+
+SAR y térmico empiezan a divergir espacialmente
+
+Ideal para ESS superficial + volumétrico bajo–medio
