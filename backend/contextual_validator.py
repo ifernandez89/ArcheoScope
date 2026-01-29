@@ -120,6 +120,8 @@ class ContextualValidator:
     Usa solo: ambiente, tipo de sitio, terreno, coordenadas.
     """
     
+    MAX_CONTEXTUAL_PENALTY = 0.15  # Máxima penalización para evitar sesgo conservador excesivo
+    
     def __init__(self):
         self.known_sites: List[KnownSite] = []
         self.contextual_profiles: Dict[EnvironmentType, ContextualProfile] = {}
@@ -448,7 +450,7 @@ class ContextualValidator:
         if false_positive_risk > 0.5:
             penalty += 0.20  # Penalizar 20% si alto riesgo FP
         
-        return min(penalty, 0.5)  # Máximo 50% de penalización
+        return min(penalty, self.MAX_CONTEXTUAL_PENALTY)
     
     def _calculate_confidence_adjustment(
         self,

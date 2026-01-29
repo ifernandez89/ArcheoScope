@@ -399,12 +399,20 @@ class MultiInstrumentalEnrichment:
             else:
                 interpretation = f"Subsurface anomaly at {depth:.1f}m depth (requires validation)"
         
+        # Si la fuente es sintética (patrones), limitar la confianza máxima
+        # para no simular certezas inexistentes.
+        source = gpr_data.get('source', 'synthetic_reference')
+        if source == 'synthetic_reference':
+            confidence_cap = 0.6
+            confidence = min(confidence, confidence_cap)
+            values['confidence_capped'] = True
+        
         return InstrumentSignal(
             instrument=InstrumentType.GPR,
             detected=subsurface_anomaly_detected,
             confidence=confidence,
             values=values,
-            source=gpr_data.get('source', 'GPR_Pattern_Matching'),
+            source=source,
             acquisition_date=gpr_data.get('acquisition_date'),
             resolution_m=gpr_data.get('resolution_m', 0.1),
             interpretation=interpretation

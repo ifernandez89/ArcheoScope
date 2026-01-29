@@ -70,7 +70,7 @@
 ✅ **Control negativo indirecto** - Detecta falsos positivos cerca de sitios conocidos  
 ✅ **Definición de "zonas normales"** - Rangos esperados por contexto  
 ✅ **Validación blanda** - Verifica comportamiento razonable del algoritmo  
-✅ **Ajustes automáticos** - Penalización de score y confianza  
+✅ **Ajustes automáticos** - Penalización de score (CAP 15%) y confianza epistémica  
 
 #### Ejemplo de Uso:
 ```python
@@ -181,7 +181,8 @@ humidity_score              DOUBLE PRECISION
 subsidence_score            DOUBLE PRECISION
 geometric_symmetry          DOUBLE PRECISION
 scientific_conclusion       TEXT
-confidence                  DOUBLE PRECISION
+measurement_confidence      DOUBLE PRECISION -- calidad de datos (sensores)
+epistemic_confidence        DOUBLE PRECISION -- solidez inferencial (convergencia)
 is_stable_terrain           BOOLEAN
 rejection_reason            TEXT
 ```
@@ -327,12 +328,28 @@ void_probability = (
 
 ### Umbrales Científicos
 
-| Score | Nivel | Acción Recomendada |
-|-------|-------|-------------------|
-| < 0.4 | Natural | Descartar |
-| 0.4 - 0.6 | Ambiguo | Monitorear |
-| 0.6 - 0.75 | Probable | Análisis detallado |
 | > 0.75 | Fuerte | **Validación de campo** |
+
+---
+
+## 🔬 Rigor Científico y Honestidad del Sistema
+
+Para asegurar la integridad de las inferencias, se han implementado tres mecanismos de control:
+
+### 1. Separación de Confianzas
+El sistema ya no entrega un único valor de confianza, sino que lo divide en:
+*   **Measurement Confidence (Confianza de Medida)**: Calidad técnica de los datos del sensor (SNR, resolución, ruido).
+*   **Epistemic Confidence (Confianza Epistémica)**: Solidez de la inferencia basada en la convergencia de señales. Si dos señales se contradicen, la confianza epistémica baja aunque las medidas sean de alta calidad.
+
+### 2. Cap de Datos Sintéticos (GPR)
+Dado que el GPR satelital no es una medida directa en tiempo real:
+*   Las detecciones basadas en **patrones de referencia** se marcan como `synthetic_reference`.
+*   Su confianza está **limitada automáticamente a 0.6**. Esto evita que el sistema "simule certezas" inexistentes y mantiene la honestidad sobre el origen del dato.
+
+### 3. Límite de Penalización Contextual (CAP 15%)
+El `ContextualValidator` ajusta el score basándose en precedentes históricos:
+*   Se ha implementado un **CAP del 15%** en la penalización máxima.
+*   Esto previene el **sesgo conservador excesivo**, asegurando que el sistema pueda identificar sitios genuinamente únicos o en ambientes sin precedentes sin descartarlos por completo.
 
 ---
 

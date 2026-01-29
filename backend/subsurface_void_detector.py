@@ -116,7 +116,8 @@ class VoidDetectionResult:
     
     # Conclusión científica
     scientific_conclusion: str
-    confidence: float
+    measurement_confidence: float          # Calidad de datos (sensores)
+    epistemic_confidence: float            # Solidez inferencial (convergencia)
     
     # Metadata
     analyzed_at: str
@@ -190,7 +191,8 @@ class SubsurfaceVoidDetector:
                 orientation_bias=False,
                 modular_repetition=False,
                 scientific_conclusion=f"Análisis no aplicable: {stability.rejection_reason}",
-                confidence=0.0,
+                measurement_confidence=0.0,
+                epistemic_confidence=0.0,
                 analyzed_at=datetime.utcnow().isoformat(),
                 coordinates=(lat, lon)
             )
@@ -213,8 +215,8 @@ class SubsurfaceVoidDetector:
             stability, signals, void_score, classification
         )
         
-        # PASO 6: Calcular confianza
-        confidence = self._calculate_confidence(signals, satellite_data)
+        # PASO 6: Calcular confianza (separada en medida y epistémica)
+        measurement_conf, epistemic_conf = self._calculate_confidence_metrics(signals, satellite_data)
         
         return VoidDetectionResult(
             stability=stability,
@@ -227,7 +229,8 @@ class SubsurfaceVoidDetector:
             orientation_bias=orientation,
             modular_repetition=modular,
             scientific_conclusion=conclusion,
-            confidence=confidence,
+            measurement_confidence=measurement_conf,
+            epistemic_confidence=epistemic_conf,
             analyzed_at=datetime.utcnow().isoformat(),
             coordinates=(lat, lon)
         )
@@ -525,20 +528,23 @@ class SubsurfaceVoidDetector:
         
         return conclusion
     
-    def _calculate_confidence(
+    def _calculate_confidence_metrics(
         self,
         signals: VoidSignals,
         satellite_data: Dict[str, Any]
-    ) -> float:
+    ) -> Tuple[float, float]:
         """
-        Calcular confianza en el resultado.
+        Calcular métricas de confianza.
         
-        Basado en:
-        - Número de señales detectadas
-        - Calidad de datos satelitales
-        - Convergencia de señales
+        Returns:
+            (measurement_confidence, epistemic_confidence)
         """
-        # Contar señales detectadas
+        # 1. Measurement Confidence (Calidad de datos de sensores)
+        # Basado en la calidad reportada por los conectores
+        measurement_confidence = satellite_data.get('data_quality_score', 0.7)
+        
+        # 2. Epistemic Confidence (Solidez de la inferencia)
+        # Basado en la convergencia de señales independientes
         signal_count = sum([
             signals.sar_coherence_drop,
             signals.thermal_night_anomaly > 2.0,
@@ -546,15 +552,13 @@ class SubsurfaceVoidDetector:
             signals.subsidence_symmetric
         ])
         
-        # Calidad de datos
-        data_quality = satellite_data.get('data_quality_score', 0.7)
+        # Convergencia: cuantas más señales coincidan, más sólida es la inferencia
+        epistemic_confidence = min(signal_count / 4.0, 1.0)
         
-        # Convergencia (todas las señales apuntan en la misma dirección)
-        convergence = min(signal_count / 4.0, 1.0)
-        
-        confidence = (convergence * 0.6 + data_quality * 0.4)
-        
-        return float(np.clip(confidence, 0.0, 1.0))
+        return (
+            float(np.clip(measurement_confidence, 0.0, 1.0)),
+            float(np.clip(epistemic_confidence, 0.0, 1.0))
+        )
 
 
 # Instancia global

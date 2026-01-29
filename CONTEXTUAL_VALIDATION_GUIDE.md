@@ -231,8 +231,8 @@ class ValidationResult:
     similar_known_sites_without_cavities: int
     
     # Ajustes
-    score_penalty: float           # 0.0 - 0.5
-    confidence_adjustment: float   # -0.5 - 0.0
+    score_penalty: float           # 0.0 - 0.15 (CAP para evitar sesgo)
+    confidence_adjustment: float   # -0.5 - 0.0 (Sobre confianza epistémica)
     
     # Explicación
     validation_notes: str
@@ -251,8 +251,8 @@ class ValidationResult:
    Sitios cercanos sin cavidades: 2
 
    AJUSTES RECOMENDADOS:
-   Penalización al score: -10.0%
-   Ajuste de confianza: -10.0%
+   Penalización al score: -7.5%
+   Ajuste de confianza epistémica: -10.0%
 
    NOTAS:
    ✓ Ambiente visto en sitios conocidos | ✓ Terreno compatible
@@ -297,8 +297,8 @@ Validación:
 ⚠️ Alta desviación de contexto (0.65)
 
 Ajustes:
-- Penalización: -25%
-- Ajuste de confianza: -20%
+- Penalización: -15% (MAX CAP)
+- Ajuste de confianza epistémica: -20%
 
 → Score: 0.75 → 0.50 (AMBIGUOUS)
 ```
@@ -321,8 +321,8 @@ Validación:
 ⚠️ Riesgo de FP: 60%
 
 Ajustes:
-- Penalización: -30%
-- Ajuste de confianza: -15%
+- Penalización: -15% (MAX CAP)
+- Ajuste de confianza epistémica: -15%
 
 → Score: 0.85 → 0.55 (AMBIGUOUS)
 → Requiere validación adicional

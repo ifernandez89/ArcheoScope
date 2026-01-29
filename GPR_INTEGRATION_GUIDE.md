@@ -48,7 +48,7 @@ GPR público **NO** está disponible como servicio en tiempo real. Se usa median
 ```python
 from backend.satellite_connectors.gpr_connector import gpr_connector
 
-# Calcular similitud con patrones conocidos
+# Calcular similitud con patrones conocidos (SINTÉTICO)
 result = gpr_connector.get_gpr_similarity_score(
     lat=30.0,
     lon=31.0,
@@ -57,7 +57,8 @@ result = gpr_connector.get_gpr_similarity_score(
 )
 
 print(f"GPR Similarity Score: {result.value}")
-print(f"Confidence: {result.confidence}")
+print(f"Confidence: {result.confidence}") # 0.6 (CAP para sintéticos)
+print(f"Source: {result.source}") # 'synthetic_reference'
 ```
 
 #### Patrones de Referencia

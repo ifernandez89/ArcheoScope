@@ -226,7 +226,8 @@ Resultados de análisis:
 - `void_classification`
 - `sar_score`, `thermal_score`, `humidity_score`, `subsidence_score`
 - `scientific_conclusion`
-- `confidence`
+- `measurement_confidence` (calidad de datos de sensores)
+- `epistemic_confidence` (solidez de la inferencia/convergencia)
 
 ## 🧪 Testing en Casa
 

@@ -211,7 +211,7 @@ class GPRConnector(BaseConnector):
                 value=similarity_score,
                 unit="similarity_score",
                 confidence=0.6,  # Menor confianza porque es basado en patrones
-                source="reference_patterns",
+                source="synthetic_reference",
                 reason=f"Pattern-based similarity for {environment_type} environment"
             )
             

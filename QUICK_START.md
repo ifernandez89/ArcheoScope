@@ -35,7 +35,7 @@ PASO 3: Detección de Vacío
 PASO 3.5: Validación Contextual 🆕
   ✅ 25 sitios conocidos cargados
   Ambiente visto: ✓
-  Penalización: -10%
+  Penalización: -7.5%
   Score ajustado: 0.617
 
 PASO 4: Guardado en BD
@@ -61,8 +61,8 @@ Candidata cerca de Petra:
 - Void Score: 0.82 (STRONG_VOID)
 - Sitios cercanos sin cavidades: 3
 - Riesgo de FP: 60%
-- Penalización: -30%
-- Score ajustado: 0.52 (AMBIGUOUS)
+- Penalización: -15% (MAX CAP)
+- Score ajustado: 0.67 (PROBABLE_CAVITY)
 ```
 
 ## 📚 Documentación

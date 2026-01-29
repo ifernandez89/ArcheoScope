@@ -147,7 +147,7 @@ PASO 3.5: Validación Contextual (Sitios Conocidos como Anclas)
   ✅ 25 sitios cargados
   Plausibilidad: 0.725
   Ambiente visto antes: ✓
-  Penalización al score: -10.0%
+  Penalización al score: -7.5%
   Score ajustado: 0.617
 
 PASO 4: Guardando Resultados en BD
@@ -434,7 +434,8 @@ psql -d archeoscope -c "\d known_archaeological_sites"
 | Ambiente sin precedentes | -15% |
 | Terreno incompatible | -10% |
 | Alta desviación de contexto | -10% |
-| Alto riesgo de falso positivo | -20% |
+| Alto riesgo de falso positivo | -15% |
+| **PENALIZACIÓN MÁXIMA (CAP)** | **-15%** |
 
 ---
 

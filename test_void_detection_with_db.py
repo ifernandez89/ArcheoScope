@@ -201,7 +201,8 @@ def test_void_detection_with_real_data(lat: float, lon: float):
         
         print(f"\n5. CONCLUSIÓN CIENTÍFICA:")
         print(f"   {result.scientific_conclusion}")
-        print(f"   Confianza: {result.confidence:.1%}")
+        print(f"   Confianza de medida (sensores): {result.measurement_confidence:.1%}")
+        print(f"   Confianza epistémica (inferencial): {result.epistemic_confidence:.1%}")
         
         # PASO 3.5: Validación Contextual (usando sitios conocidos como anclas)
         print(f"\n" + "=" * 80)
@@ -247,13 +248,13 @@ def test_void_detection_with_real_data(lat: float, lon: float):
         print(f"\n   NOTAS:")
         print(f"   {validation.validation_notes}")
         
-        # Aplicar ajustes
+        # Aplicar ajustes (se aplican principalmente a la confianza epistémica/solidez de inferencia)
         adjusted_score = max(0.0, result.void_probability_score - validation.score_penalty)
-        adjusted_confidence = max(0.0, result.confidence + validation.confidence_adjustment)
+        adjusted_epistemic_conf = max(0.0, result.epistemic_confidence + validation.confidence_adjustment)
         
         print(f"\n   SCORES AJUSTADOS:")
         print(f"   Score original: {result.void_probability_score:.3f} → Ajustado: {adjusted_score:.3f}")
-        print(f"   Confianza original: {result.confidence:.1%} → Ajustada: {adjusted_confidence:.1%}")
+        print(f"   Confianza epistémica original: {result.epistemic_confidence:.1%} → Ajustada: {adjusted_epistemic_conf:.1%}")
         
         # PASO 4: Guardar en BD
         print(f"\n" + "=" * 80)
@@ -272,12 +273,13 @@ def test_void_detection_with_real_data(lat: float, lon: float):
             sar_score, thermal_score, humidity_score, subsidence_score,
             geometric_symmetry,
             scientific_conclusion,
-            confidence,
+            measurement_confidence,
+            epistemic_confidence,
             is_stable_terrain,
             rejection_reason,
             created_at
         ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         )
         RETURNING id
         """
@@ -294,7 +296,8 @@ def test_void_detection_with_real_data(lat: float, lon: float):
             result.signals.subsidence_score if result.signals else None,
             result.geometric_symmetry,
             result.scientific_conclusion,
-            result.confidence,
+            result.measurement_confidence,
+            result.epistemic_confidence,
             result.stability.is_stable,
             result.stability.rejection_reason,
             datetime.utcnow()

@@ -74,7 +74,8 @@ def apply_migration():
             ("subsidence_score", "DOUBLE PRECISION"),
             ("geometric_symmetry", "DOUBLE PRECISION"),
             ("scientific_conclusion", "TEXT"),
-            ("confidence", "DOUBLE PRECISION"),
+            ("measurement_confidence", "DOUBLE PRECISION"),
+            ("epistemic_confidence", "DOUBLE PRECISION"),
             ("is_stable_terrain", "BOOLEAN"),
             ("rejection_reason", "TEXT"),
         ]
