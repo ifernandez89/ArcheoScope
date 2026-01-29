@@ -20,15 +20,22 @@ import logging
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime, timedelta
 
-from .etp_core import (
+from etp_core import (
     EnvironmentalTomographicProfile, TomographicSlice, TomographicLayer,
     VolumetricAnomaly, BoundingBox, SliceType, OccupationPeriod,
     TerritorialFunction, LandscapeEvolution
 )
-from .geological_context import GeologicalContextSystem, GeologicalCompatibilityScore
-from .historical_hydrography import HistoricalHydrographySystem, WaterAvailabilityScore
-from .external_archaeological_validation import ExternalArchaeologicalValidationSystem, ExternalConsistencyScore
-from .human_traces_analysis import HumanTracesAnalysisSystem, TerritorialUseProfile
+from geological_context import GeologicalContextSystem, GeologicalCompatibilityScore
+from historical_hydrography import HistoricalHydrographySystem, WaterAvailabilityScore
+from external_archaeological_validation import ExternalArchaeologicalValidationSystem, ExternalConsistencyScore
+from human_traces_analysis import HumanTracesAnalysisSystem, TerritorialUseProfile
+from instrument_status import InstrumentStatus  # IMPORT CRÍTICO
+from temporal_archaeological_signature import (  # SALTO EVOLUTIVO 1
+    TemporalArchaeologicalSignatureEngine, TemporalArchaeologicalSignature, TemporalScale
+)
+from deep_inference_layer import (  # SALTO EVOLUTIVO 2
+    DeepInferenceLayerEngine, InferredDepthSignature
+)
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +57,18 @@ class ETProfileGenerator:
         self.external_validation_system = ExternalArchaeologicalValidationSystem()
         self.human_traces_system = HumanTracesAnalysisSystem()
         
+        # SALTO EVOLUTIVO 1: Sistema TAS (Temporal Archaeological Signature)
+        self.tas_engine = TemporalArchaeologicalSignatureEngine(integrator_15_instruments)
+        
+        # SALTO EVOLUTIVO 2: Sistema DIL (Deep Inference Layer)
+        self.dil_engine = DeepInferenceLayerEngine(integrator_15_instruments)
+        
         # Capas de profundidad estándar para análisis tomográfico
-        self.depth_layers = [0, -0.5, -1, -2, -3, -5, -10, -20]  # metros
+        # AJUSTE: Profundidad máxima reducida a -5m para análisis exploratorio
+        self.depth_layers = [0, -0.5, -1, -2, -3, -5]  # metros (antes: hasta -20m)
+        
+        # AJUSTE: Deshabilitar PALSAR (bugs conocidos + datos limitados)
+        self.disabled_instruments = ['palsar_backscatter', 'palsar_penetration', 'palsar_soil_moisture']
         
         # Mapeo de instrumentos por capacidad de penetración
         self.instrument_depth_mapping = {
@@ -60,17 +77,51 @@ class ETProfileGenerator:
             
             # Subsuperficie ligera (-0.5m a -1m)
             -0.5: ['sentinel_1_sar', 'viirs_thermal', 'landsat_thermal'],
-            -1: ['sentinel_1_sar', 'modis_lst', 'palsar_backscatter'],
+            -1: ['sentinel_1_sar', 'modis_lst'],
             
             # Subsuperficie media (-2m a -3m)
-            -2: ['palsar_backscatter', 'palsar_penetration', 'icesat2'],
-            -3: ['palsar_penetration', 'palsar_soil_moisture'],
+            -2: ['icesat2'],
+            -3: [],
             
-            # Profundidad (-5m a -20m)
-            -5: ['palsar_penetration'],  # Máxima penetración L-band
-            -10: ['palsar_penetration'],  # Inferencia geofísica
-            -20: []  # Solo inferencia basada en patrones superiores
+            # Profundidad (-5m) - solo inferencia
+            -5: []  # Solo inferencia basada en patrones superiores
         }
+        
+        # NUEVO: Clasificación de instrumentos por tipo (FIX CRÍTICO)
+        self.instrument_types = {
+            'superficial': [
+                'sentinel_2_ndvi', 'viirs_ndvi', 'viirs_thermal', 
+                'srtm_elevation', 'landsat_ndvi'
+            ],
+            'subsuperficial': [
+                'sentinel_1_sar', 'landsat_thermal', 'modis_lst',
+                'palsar_backscatter', 'palsar_soil_moisture'
+            ],
+            'profundo': [
+                'palsar_penetration', 'icesat2'
+            ]
+        }
+        
+        # NUEVO: Criterios de validación por tipo de sensor
+        # FIX QUIRÚRGICO: Sensores superficiales solo necesitan valor + confianza mínima
+        # NO exigir: profundidad, gradiente vertical, coherencia 3D
+        self.validation_criteria = {
+            'superficial': lambda data: (
+                data.get('value') is not None and 
+                data.get('confidence', 0) >= 0.3  # Umbral más permisivo
+            ),
+            'subsuperficial': lambda data: (
+                data.get('value') is not None and 
+                data.get('confidence', 0) >= 0.3
+            ),
+            'profundo': lambda data: (
+                data.get('value') is not None and 
+                data.get('confidence', 0) >= 0.2
+            )
+        }
+        
+        # NUEVO: Sensores opcionales (no penalizan si fallan)
+        self.optional_sensors = ['viirs_thermal', 'viirs_ndvi']  # 403 Forbidden común
         
         # Pesos por profundidad para ESS volumétrico
         self.depth_weights = {
@@ -86,8 +137,55 @@ class ETProfileGenerator:
         
         logger.info("🧠 ETProfileGenerator inicializado - SISTEMA TOMOGRÁFICO ACTIVO")
     
+    def _get_sensor_type(self, instrument: str) -> str:
+        """Determinar tipo de sensor (superficial/subsuperficial/profundo)."""
+        for sensor_type, instruments in self.instrument_types.items():
+            if instrument in instruments:
+                return sensor_type
+        return 'superficial'  # Default
+    
+    def _validate_sensor_data(self, instrument: str, data: Dict[str, Any]) -> bool:
+        """
+        Validar datos de sensor según su tipo.
+        
+        FIX QUIRÚRGICO: Sensores superficiales solo necesitan valor + confianza.
+        NO exigir: profundidad, gradiente vertical, coherencia 3D.
+        """
+        if not isinstance(data, dict):
+            logger.debug(f"    ❌ {instrument}: data no es dict")
+            return False
+        
+        # Verificar que tenga valor
+        value = data.get('value')
+        if value is None:
+            logger.debug(f"    ❌ {instrument}: value es None")
+            return False
+        
+        # Determinar tipo de sensor
+        sensor_type = self._get_sensor_type(instrument)
+        
+        # Aplicar criterio de validación apropiado
+        validation_func = self.validation_criteria.get(sensor_type)
+        if not validation_func:
+            logger.debug(f"    ❌ {instrument}: sin criterio de validación para {sensor_type}")
+            return False
+        
+        is_valid = validation_func(data)
+        
+        if not is_valid:
+            confidence = data.get('confidence', 0)
+            logger.debug(f"    ❌ {instrument}: validación falló (value={value}, conf={confidence}, tipo={sensor_type})")
+        else:
+            logger.debug(f"    ✅ {instrument}: validación OK (tipo={sensor_type})")
+        
+        return is_valid
+    
+    def _is_optional_sensor(self, instrument: str) -> bool:
+        """Verificar si sensor es opcional (no penaliza si falla)."""
+        return instrument in self.optional_sensors
+    
     async def generate_etp(self, bounds: BoundingBox, 
-                          resolution_m: float = 30.0) -> EnvironmentalTomographicProfile:
+                          resolution_m: float = 150.0) -> EnvironmentalTomographicProfile:  # AJUSTE: 150m por defecto
         """
         Generar perfil tomográfico completo.
         
@@ -97,9 +195,14 @@ class ETProfileGenerator:
         3. ESS evolucionado → métricas 3D/4D
         4. Narrativa territorial → explicación automática
         
+        AJUSTES OPTIMIZADOS:
+        - Resolución: 150m (balance cobertura/detalle)
+        - Profundidad máxima: -5m (análisis exploratorio)
+        - PALSAR deshabilitado (bugs conocidos)
+        
         Args:
             bounds: Región 3D a analizar
-            resolution_m: Resolución espacial en metros
+            resolution_m: Resolución espacial en metros (default: 150m)
             
         Returns:
             EnvironmentalTomographicProfile completo
@@ -124,8 +227,43 @@ class ETProfileGenerator:
         logger.info("⏰ FASE 3: Análisis temporal...")
         temporal_profile = await self._generate_temporal_analysis(bounds)
         
-        # FASE 4: Cálculo de ESS evolucionado
-        logger.info("📊 FASE 4: Cálculo de ESS volumétrico y temporal...")
+        # FASE 3B: SALTO EVOLUTIVO 1 - Temporal Archaeological Signature (TAS)
+        logger.info("🕐 FASE 3B: Cálculo de Temporal Archaeological Signature (TAS)...")
+        tas_signature = await self.tas_engine.calculate_tas(
+            lat_min=bounds.lat_min,
+            lat_max=bounds.lat_max,
+            lon_min=bounds.lon_min,
+            lon_max=bounds.lon_max,
+            temporal_scale=TemporalScale.LONG  # Usar escala larga por defecto
+        )
+        logger.info(f"   🎯 TAS Score: {tas_signature.tas_score:.3f}")
+        logger.info(f"   📊 Persistencia NDVI: {tas_signature.ndvi_persistence:.3f}")
+        logger.info(f"   🌡️ Estabilidad Térmica: {tas_signature.thermal_stability:.3f}")
+        logger.info(f"   📡 Coherencia SAR: {tas_signature.sar_coherence:.3f}")
+        logger.info(f"   🌿 Frecuencia Estrés: {tas_signature.stress_frequency:.3f}")
+        
+        # FASE 3C: SALTO EVOLUTIVO 2 - Deep Inference Layer (DIL)
+        logger.info("🔬 FASE 3C: Cálculo de Deep Inference Layer (DIL)...")
+        dil_signature = await self.dil_engine.calculate_dil(
+            lat_min=bounds.lat_min,
+            lat_max=bounds.lat_max,
+            lon_min=bounds.lon_min,
+            lon_max=bounds.lon_max
+        )
+        logger.info(f"   🎯 DIL Score: {dil_signature.dil_score:.3f}")
+        logger.info(f"   📏 Profundidad estimada: {dil_signature.estimated_depth_m:.1f}m")
+        logger.info(f"   📊 Confianza: {dil_signature.confidence:.3f}")
+        logger.info(f"   🏛️ Relevancia arqueológica: {dil_signature.archaeological_relevance:.3f}")
+        
+        # FASE 4: Cálculo de cobertura instrumental (NUEVO)
+        logger.info("📊 FASE 4A: Cálculo de cobertura instrumental...")
+        instrumental_coverage = self._calculate_instrumental_coverage(layered_data)
+        logger.info(f"   🌍 Superficial: {instrumental_coverage['superficial']['percentage']:.0f}%")
+        logger.info(f"   📡 Subsuperficial: {instrumental_coverage['subsuperficial']['percentage']:.0f}%")
+        logger.info(f"   🔬 Profundo: {instrumental_coverage['profundo']['percentage']:.0f}%")
+        
+        # FASE 4B: Cálculo de ESS evolucionado (SEPARADO de cobertura)
+        logger.info("📊 FASE 4B: Cálculo de ESS volumétrico y temporal...")
         ess_superficial = self._calculate_surface_ess(layered_data.get(0, {}))
         ess_volumetrico = self._calculate_volumetric_ess(layered_data)
         ess_temporal = self._calculate_temporal_ess(temporal_profile, ess_volumetrico)
@@ -211,6 +349,9 @@ class ETProfileGenerator:
             ess_superficial=ess_superficial,
             ess_volumetrico=ess_volumetrico,
             ess_temporal=ess_temporal,
+            instrumental_coverage=instrumental_coverage,  # NUEVO: Cobertura separada de ESS
+            tas_signature=tas_signature,  # SALTO EVOLUTIVO 1: TAS
+            dil_signature=dil_signature,  # SALTO EVOLUTIVO 2: DIL
             coherencia_3d=coherencia_3d,
             persistencia_temporal=persistencia,
             densidad_arqueologica_m3=densidad_m3,
@@ -219,20 +360,27 @@ class ETProfileGenerator:
             territorial_function=territorial_function,
             landscape_evolution=landscape_evolution,
             visualization_data=visualization_data,
-            # Contextos adicionales - REVOLUCIÓN CONCEPTUAL
+            # Contextos adicionales - REVOLUCIÓN CONCEPTUAL (nombres correctos)
             geological_context=geological_context,
-            geological_compatibility_score=geological_compatibility,
+            geological_compatibility=geological_compatibility,  # Sin _score
             hydrographic_features=hydrographic_features,
-            water_availability_score=water_availability,
-            external_archaeological_sites=external_sites,
-            external_consistency_score=external_consistency,
+            water_availability=water_availability,  # Sin _score
+            external_sites=external_sites,  # No external_archaeological_sites
+            external_consistency=external_consistency,  # Sin _score
             human_traces=human_traces,
             territorial_use_profile=territorial_use_profile
         )
         
         logger.info(f"✅ ETP generado exitosamente:")
-        logger.info(f"   📊 ESS Volumétrico: {ess_volumetrico:.3f}")
+        logger.info(f"   📊 Cobertura Instrumental:")
+        logger.info(f"      🌍 Superficial: {instrumental_coverage['superficial']['percentage']:.0f}% ({instrumental_coverage['superficial']['successful']}/{instrumental_coverage['superficial']['total']})")
+        logger.info(f"      📡 Subsuperficial: {instrumental_coverage['subsuperficial']['percentage']:.0f}% ({instrumental_coverage['subsuperficial']['successful']}/{instrumental_coverage['subsuperficial']['total']})")
+        logger.info(f"      🔬 Profundo: {instrumental_coverage['profundo']['percentage']:.0f}% ({instrumental_coverage['profundo']['successful']}/{instrumental_coverage['profundo']['total']})")
+        logger.info(f"   📊 ESS Superficial: {ess_superficial:.3f}")
+        logger.info(f"   📊 ESS Volumétrico: {ess_volumetrico:.3f} (contraste estratigráfico)")
         logger.info(f"   📊 ESS Temporal: {ess_temporal:.3f}")
+        logger.info(f"   🕐 TAS Score: {tas_signature.tas_score:.3f} (firma temporal arqueológica)")
+        logger.info(f"   🔬 DIL Score: {dil_signature.dil_score:.3f} (profundidad inferida: {dil_signature.estimated_depth_m:.1f}m)")
         logger.info(f"   📊 Coherencia 3D: {coherencia_3d:.3f}")
         logger.info(f"   🏛️ Anomalías detectadas: {len(volumetric_anomalies)}")
         logger.info(f"   🗿 GCS (Geological): {geological_compatibility.gcs_score:.3f}")
@@ -262,6 +410,11 @@ class ETProfileGenerator:
             layer_data = {}
             
             for instrument in instruments:
+                # AJUSTE: Filtrar instrumentos deshabilitados
+                if instrument in self.disabled_instruments:
+                    logger.info(f"    ⏭️ {instrument}: Deshabilitado (bugs conocidos)")
+                    continue
+                
                 try:
                     result = await self.integrator.get_instrument_measurement_robust(
                         instrument_name=instrument,
@@ -271,16 +424,31 @@ class ETProfileGenerator:
                         lon_max=bounds.lon_max
                     )
                     
-                    if result and hasattr(result, 'status') and result.status in ['SUCCESS', 'DEGRADED']:
+                    # DEBUG: Ver qué está retornando
+                    logger.debug(f"      🔍 {instrument} result type: {type(result)}")
+                    if result:
+                        logger.debug(f"      🔍 {instrument} has status: {hasattr(result, 'status')}")
+                        if hasattr(result, 'status'):
+                            logger.debug(f"      🔍 {instrument} status value: {result.status}")
+                            logger.debug(f"      🔍 {instrument} status type: {type(result.status)}")
+                    
+                    # FIX CRÍTICO: Comparar con Enum, no con strings
+                    if result and hasattr(result, 'status') and result.status in [InstrumentStatus.SUCCESS, InstrumentStatus.DEGRADED]:
                         layer_data[instrument] = {
                             'value': getattr(result, 'value', 0.0),
                             'unit': getattr(result, 'unit', 'units'),
                             'confidence': getattr(result, 'confidence', 0.5),
-                            'status': result.status
+                            'status': result.status.value  # Guardar como string
                         }
-                        logger.info(f"    ✅ {instrument}: {layer_data[instrument]['value']:.3f}")
+                        logger.info(f"    ✅ {instrument}: {layer_data[instrument]['value']:.3f} AGREGADO A LAYER_DATA")
                     else:
-                        logger.info(f"    ❌ {instrument}: Sin datos válidos")
+                        # FIX 3: Sensor fallido = NEUTRAL (no se agrega, no penaliza)
+                        if self._is_optional_sensor(instrument):
+                            logger.info(f"    ⚠️ {instrument}: Opcional - sin datos (no penaliza)")
+                        else:
+                            status_str = result.status.value if (result and hasattr(result, 'status')) else 'None'
+                            logger.info(f"    ⚠️ {instrument}: Sin datos (neutral) - status={status_str}")
+                        # NO agregar al layer_data - ausencia = neutral, no negativo
                         
                 except Exception as e:
                     logger.warning(f"    💥 {instrument}: Error - {e}")
@@ -443,50 +611,171 @@ class ETProfileGenerator:
         return temporal_data
     
     def _calculate_surface_ess(self, surface_data: Dict[str, Any]) -> float:
-        """Calcular ESS superficial tradicional."""
+        """
+        Calcular ESS superficial tradicional.
+        
+        FIX QUIRÚRGICO: Usar validación por tipo de sensor.
+        Sensores superficiales solo necesitan valor + confianza mínima.
+        """
         
         if not surface_data:
+            logger.info(f"  ⚠️ Sin datos superficiales")
             return 0.0
+        
+        logger.info(f"  📊 Calculando ESS Superficial con {len(surface_data)} instrumentos...")
         
         anomaly_scores = []
         
         for instrument, data in surface_data.items():
-            if isinstance(data, dict) and 'value' in data:
-                # Normalizar valor según tipo de instrumento
-                normalized_score = self._normalize_instrument_value(instrument, data['value'])
-                confidence = data.get('confidence', 0.5)
-                
-                # Score ponderado por confianza
-                weighted_score = normalized_score * confidence
-                anomaly_scores.append(weighted_score)
-        
-        return np.mean(anomaly_scores) if anomaly_scores else 0.0
-    
-    def _calculate_volumetric_ess(self, layered_data: Dict[float, Dict[str, Any]]) -> float:
-        """Calcular ESS volumétrico - NÚCLEO DEL CONCEPTO ETP."""
-        
-        volumetric_scores = []
-        
-        for depth, layer_data in layered_data.items():
-            if not layer_data:
+            logger.debug(f"    🔍 Procesando {instrument}: {data}")
+            
+            # Validar según tipo de sensor
+            if not self._validate_sensor_data(instrument, data):
+                # Si es sensor opcional y falló, no penalizar
+                if self._is_optional_sensor(instrument):
+                    logger.info(f"    ⚠️ {instrument}: Opcional - no penaliza")
+                    continue
+                logger.info(f"    ⚠️ {instrument}: No cumple criterios de validación")
                 continue
             
-            # ESS de la capa
-            layer_ess = self._calculate_surface_ess(layer_data)
+            # Normalizar valor según tipo de instrumento
+            normalized_score = self._normalize_instrument_value(instrument, data['value'])
+            confidence = data.get('confidence', 0.5)
             
-            # Aplicar peso por profundidad
-            depth_weight = self.depth_weights.get(depth, 0.1)
-            weighted_ess = layer_ess * depth_weight
+            # Score ponderado por confianza
+            weighted_score = normalized_score * confidence
+            anomaly_scores.append(weighted_score)
+            logger.info(f"    ✅ {instrument}: valor={data['value']:.3f}, norm={normalized_score:.3f}, conf={confidence:.2f}, score={weighted_score:.3f}")
+        
+        result = np.mean(anomaly_scores) if anomaly_scores else 0.0
+        logger.info(f"  📊 ESS Superficial: {result:.3f} ({len(anomaly_scores)}/{len(surface_data)} sensores válidos)")
+        return result
+    
+    def _calculate_instrumental_coverage(self, layered_data: Dict[float, Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Calcular cobertura instrumental por tipo de sensor.
+        
+        IMPORTANTE: Esto mide disponibilidad de datos, NO anomalía estratigráfica.
+        FIX QUIRÚRGICO: Si el sensor midió (SUCCESS), cuenta para cobertura.
+        """
+        
+        logger.info(f"  📊 Calculando cobertura instrumental...")
+        
+        coverage_by_type = {}
+        
+        for sensor_type, instruments in self.instrument_types.items():
+            successful = 0
+            total = len([i for i in instruments if i not in self.disabled_instruments])
             
-            volumetric_scores.append(weighted_ess)
+            logger.debug(f"    🔍 Tipo {sensor_type}: {total} instrumentos activos")
+            
+            for instrument in instruments:
+                if instrument in self.disabled_instruments:
+                    logger.debug(f"      ⏭️ {instrument}: deshabilitado")
+                    continue
+                
+                # Buscar en cualquier profundidad
+                found_data = False
+                for depth, layer_data in layered_data.items():
+                    if instrument in layer_data:
+                        data = layer_data[instrument]
+                        logger.debug(f"      🔍 {instrument} en {depth}m: {data}")
+                        if self._validate_sensor_data(instrument, data):
+                            successful += 1
+                            found_data = True
+                            logger.info(f"      ✅ {instrument}: VÁLIDO (cobertura)")
+                            break
+                
+                if not found_data:
+                    if self._is_optional_sensor(instrument):
+                        logger.debug(f"      ⚠️ {instrument}: opcional sin datos")
+                    else:
+                        logger.debug(f"      ❌ {instrument}: sin datos válidos")
+            
+            coverage_by_type[sensor_type] = {
+                'successful': successful,
+                'total': total,
+                'percentage': (successful / total * 100) if total > 0 else 0
+            }
+            
+            logger.info(f"    📊 {sensor_type}: {successful}/{total} ({coverage_by_type[sensor_type]['percentage']:.0f}%)")
         
-        if not volumetric_scores:
-            return 0.0
+        return coverage_by_type
+    
+    def _calculate_layer_signature(self, layer_data: Dict[str, Any]) -> Optional[float]:
+        """
+        Calcular firma espectral/física de una capa.
         
-        # ESS volumétrico = promedio ponderado por profundidad
-        volumetric_ess = np.sum(volumetric_scores) / len(self.depth_layers)
+        Combina múltiples sensores para caracterizar la capa.
+        """
         
-        return min(1.0, volumetric_ess)  # Normalizar a [0,1]
+        if not layer_data:
+            return None
+        
+        signatures = []
+        
+        for instrument, data in layer_data.items():
+            if not self._validate_sensor_data(instrument, data):
+                continue
+            
+            # Normalizar valor según tipo de sensor
+            normalized = self._normalize_instrument_value(instrument, data['value'])
+            confidence = data.get('confidence', 0.5)
+            
+            signatures.append(normalized * confidence)
+        
+        return np.mean(signatures) if signatures else None
+    
+    def _calculate_volumetric_ess(self, layered_data: Dict[float, Dict[str, Any]]) -> float:
+        """
+        Calcular ESS volumétrico como medida de CONTRASTE ESTRATIGRÁFICO.
+        
+        CONCEPTO CLAVE (CORRECCIÓN CONCEPTUAL):
+        - ESS = 0 NO significa "sin datos"
+        - ESS = 0 significa "sin contraste vertical"
+        - En planicies aluviales activas, ESS = 0 es CORRECTO
+        
+        TIMT solo "ve" volumen cuando hay:
+        - Rupturas geomorfológicas
+        - Paleo-superficies selladas
+        - Contraste de materiales
+        - Estructuras enterradas
+        """
+        
+        # Calcular contraste entre capas adyacentes
+        layer_contrasts = []
+        
+        depths = sorted(layered_data.keys())
+        for i in range(len(depths) - 1):
+            depth1, depth2 = depths[i], depths[i + 1]
+            
+            layer1_signature = self._calculate_layer_signature(layered_data[depth1])
+            layer2_signature = self._calculate_layer_signature(layered_data[depth2])
+            
+            # Contraste = diferencia entre capas adyacentes
+            if layer1_signature is not None and layer2_signature is not None:
+                contrast = abs(layer1_signature - layer2_signature)
+                layer_contrasts.append(contrast)
+                logger.debug(f"  Contraste {depth1}m → {depth2}m: {contrast:.3f}")
+        
+        # ESS volumétrico = promedio de contrastes
+        ess_value = np.mean(layer_contrasts) if layer_contrasts else 0.0
+        
+        # Interpretación científica
+        if ess_value < 0.1:
+            interpretation = 'sedimentos_homogeneos'
+            logger.info(f"  🟢 ESS Volumétrico: {ess_value:.3f} (sedimentos homogéneos - esperado en planicies)")
+        elif ess_value < 0.3:
+            interpretation = 'contraste_leve'
+            logger.info(f"  🟡 ESS Volumétrico: {ess_value:.3f} (contraste leve)")
+        elif ess_value < 0.6:
+            interpretation = 'contraste_moderado'
+            logger.info(f"  🟠 ESS Volumétrico: {ess_value:.3f} (contraste moderado)")
+        else:
+            interpretation = 'contraste_fuerte'
+            logger.info(f"  🔴 ESS Volumétrico: {ess_value:.3f} (contraste fuerte - posible anomalía)")
+        
+        return min(1.0, ess_value)  # Normalizar a [0,1]
     
     def _calculate_temporal_ess(self, temporal_profile: Dict[str, Any], 
                                volumetric_ess: float) -> float:

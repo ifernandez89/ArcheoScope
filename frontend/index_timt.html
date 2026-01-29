@@ -441,23 +441,10 @@
         }
 
         /* Responsive */
-        @media (max-width: 1600px) {
-            .main-container {
-                grid-template-columns: 350px 1fr 400px;
-            }
-        }
-        
-        @media (max-width: 1200px) {
-            .main-container {
-                grid-template-columns: 300px 1fr 350px;
-            }
-        }
-        
-        @media (max-width: 1000px) {
+        @media (max-width: 1400px) {
             .main-container {
                 grid-template-columns: 1fr;
-                grid-template-rows: auto 400px auto;
-                height: auto;
+                grid-template-rows: auto 500px auto;
             }
         }
     </style>
@@ -483,13 +470,23 @@
             </div>
             <div class="panel-content">
                 <div class="input-group">
-                    <label>📍 Latitud</label>
-                    <input type="number" id="latitude" step="0.0001" value="31.77" placeholder="-90 a 90">
+                    <label>📍 Latitud Mínima</label>
+                    <input type="number" id="lat-min" step="0.0001" value="31.76" placeholder="-90 a 90">
                 </div>
 
                 <div class="input-group">
-                    <label>📍 Longitud</label>
-                    <input type="number" id="longitude" step="0.0001" value="130.61" placeholder="-180 a 180">
+                    <label>📍 Latitud Máxima</label>
+                    <input type="number" id="lat-max" step="0.0001" value="31.78" placeholder="-90 a 90">
+                </div>
+
+                <div class="input-group">
+                    <label>📍 Longitud Mínima</label>
+                    <input type="number" id="lon-min" step="0.0001" value="130.60" placeholder="-180 a 180">
+                </div>
+
+                <div class="input-group">
+                    <label>📍 Longitud Máxima</label>
+                    <input type="number" id="lon-max" step="0.0001" value="130.62" placeholder="-180 a 180">
                 </div>
 
                 <div class="input-group">
@@ -528,7 +525,7 @@
                 </div>
 
                 <button class="btn btn-primary" id="analyze-btn">
-                    🔬 Iniciar Análisis Científico
+                    🚀 Iniciar Análisis TIMT
                 </button>
 
                 <button class="btn btn-secondary" id="clear-btn">
@@ -557,22 +554,9 @@
                 <!-- Loading -->
                 <div class="loading-spinner" id="loading-spinner">
                     <div class="spinner"></div>
-                    <h3 style="margin-bottom: 1rem;">🔬 Ejecutando Pipeline Científico</h3>
-                    <p style="margin-bottom: 0.5rem;">Procesando territorio con sistema determinístico...</p>
-                    
-                    <div style="text-align: left; max-width: 300px; margin: 1rem auto; font-size: 0.85rem; color: #bdc3c7;">
-                        <p><strong>📊 FASE A:</strong> Normalizando mediciones</p>
-                        <p><strong>🔍 FASE B:</strong> Detectando anomalías</p>
-                        <p><strong>🧠 FASE C:</strong> Análisis morfológico</p>
-                        <p><strong>🎯 FASE D:</strong> Inferencia antropogénica</p>
-                        <p><strong>✅ FASE E-G:</strong> Validación y salida</p>
-                    </div>
-                    
-                    <p style="font-size: 0.8rem; color: #7f8c8d; margin-top: 1rem;">
-                        ⏱️ Tiempo estimado: 30-90 segundos
-                    </p>
-                    <p style="font-size: 0.75rem; color: #7f8c8d;">
-                        Sistema 100% determinístico, 0% IA en decisiones...
+                    <p>Ejecutando análisis territorial...</p>
+                    <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: 0.5rem;">
+                        Esto puede tomar 30-60 segundos
                     </p>
                 </div>
 

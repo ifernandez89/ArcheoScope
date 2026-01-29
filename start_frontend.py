@@ -58,7 +58,7 @@ def start_frontend_server():
             print("Para conectar con backend, asegúrate que está corriendo en http://localhost:8002")
             print("Presiona Ctrl+C para detener el servidor")
             
-            # Abrir navegador automáticamente
+            # Abrir navegador - index.html unificado
             frontend_url = f"http://localhost:{frontend_port}/index.html"
             try:
                 webbrowser.open(frontend_url)

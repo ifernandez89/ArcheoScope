@@ -14,7 +14,12 @@ from cryptography.hazmat.backends import default_backend
 import base64
 from typing import Optional, Dict
 from dotenv import load_dotenv
-from .logger import info, error
+
+# Intentar import relativo, si falla usar import absoluto
+try:
+    from .logger import info, error
+except ImportError:
+    from logger import info, error
 
 load_dotenv()
 

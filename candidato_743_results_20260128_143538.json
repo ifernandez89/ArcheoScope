@@ -1,0 +1,21 @@
+{
+  "candidato": {
+    "id": "d5ecd7fd-109c-4e29-9dcd-4ffcdb53b0d0",
+    "name": "\u5c71\u7530\u306e\u51f1\u65cb\u9580",
+    "slug": "-645327615-75049",
+    "siteType": "URBAN_SETTLEMENT",
+    "environmentType": "FOREST",
+    "confidenceLevel": "MODERATE",
+    "latitude": 31.7737506,
+    "longitude": 130.6142744,
+    "country": "China",
+    "region": null,
+    "description": null,
+    "createdAt": "2026-01-25 20:27:56.117000"
+  },
+  "analisis": {
+    "status": "ok",
+    "region": "\u5c71\u7530\u306e\u51f1\u65cb\u9580",
+    "message": "Backend funcionando correctamente"
+  }
+}
