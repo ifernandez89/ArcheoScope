@@ -1,0 +1,75 @@
+{
+  "nombre": "Patagonia \u00c1rida - Meseta Central (TOP TIER)",
+  "coordenadas": {
+    "lat_center": -47.0,
+    "lon_center": -69.0,
+    "lat_min": -47.06737333812433,
+    "lat_max": -46.93262666187567,
+    "lon_min": -69.00143347527924,
+    "lon_max": -68.99856652472076
+  },
+  "timestamp": "2026-01-29T15:20:01.067557",
+  "clasificacion": "INTERMEDIO - Se\u00f1al moderada",
+  "metricas": {
+    "ess_superficial": 0.013749790002155574,
+    "ess_volumetrico": 0.3931251049989222,
+    "ess_temporal": 0.3931251049989222,
+    "coherencia_3d": 0.6068748950010778,
+    "persistencia_temporal": 0.35,
+    "densidad_arqueologica_m3": 0.27492999999999995
+  },
+  "cobertura": {
+    "superficial": {
+      "successful": 1,
+      "total": 5,
+      "percentage": 20.0
+    },
+    "subsuperficial": {
+      "successful": 2,
+      "total": 3,
+      "percentage": 66.66666666666666
+    },
+    "profundo": {
+      "successful": 0,
+      "total": 1,
+      "percentage": 0.0
+    }
+  },
+  "tas": {
+    "tas_score": 0.546143749309304,
+    "ndvi_persistence": 0.0,
+    "thermal_stability": 0.9871558765259897,
+    "sar_coherence": 0.9999879454060283,
+    "stress_frequency": 0.0,
+    "temporal_scale": "long",
+    "years_analyzed": 26,
+    "sensors_used": [
+      "landsat_thermal",
+      "sentinel_1_sar"
+    ],
+    "interpretation": "Firma arqueol\u00f3gica temporal MODERADA. Alta estabilidad t\u00e9rmica (posible masa enterrada).",
+    "confidence": 0.57465
+  },
+  "dil": {
+    "estimated_depth_m": 2.4,
+    "confidence": 0.075,
+    "confidence_level": "very_low",
+    "sar_coherence_loss": 0.0,
+    "thermal_inertia": 1.0,
+    "subsurface_moisture": 0.0,
+    "topographic_anomaly": 0.0,
+    "dil_score": 0.3,
+    "sensors_used": [
+      "landsat_thermal"
+    ],
+    "inference_method": "multi_source_coherent",
+    "interpretation": "Profundidad inferida MEDIA (2.4m). Baja confianza en inferencia (se\u00f1ales d\u00e9biles). Alta inercia t\u00e9rmica (posible masa enterrada).",
+    "archaeological_relevance": 0.018
+  },
+  "top_tier_evaluation": {
+    "baja_vegetacion": true,
+    "sar_coherente": true,
+    "thermal_ok": true,
+    "coherencia_ok": true
+  }
+}
