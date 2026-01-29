@@ -48,6 +48,21 @@ from .palsar_connector import PALSARConnector
 from .era5_connector import ERA5Connector
 from .chirps_connector import CHIRPSConnector
 
+# NEW: Import SAR enhanced processing
+import sys
+from pathlib import Path
+backend_path = Path(__file__).parent.parent
+if str(backend_path) not in sys.path:
+    sys.path.insert(0, str(backend_path))
+
+try:
+    from sar_enhanced_processing import process_sar_enhanced
+    SAR_ENHANCED_AVAILABLE = True
+    logger.info("✅ SAR Enhanced Processing module loaded")
+except ImportError as e:
+    SAR_ENHANCED_AVAILABLE = False
+    logger.warning(f"⚠️ SAR Enhanced Processing not available: {e}")
+
 logger = logging.getLogger(__name__)
 
 
@@ -428,6 +443,31 @@ class RealDataIntegratorV2:
                 # Dictionary response
                 value = safe_float(api_data.get('value'))
                 confidence = safe_float(api_data.get('confidence', 0.8)) or 0.8
+            
+            # NUEVO: Procesar SAR con métricas mejoradas (no solo valor absoluto)
+            sar_enhanced_result = None
+            if SAR_ENHANCED_AVAILABLE and 'sar' in instrument_name.lower() and value is not None:
+                try:
+                    # Intentar obtener datos 2D si están disponibles
+                    sar_data_2d = None
+                    if hasattr(api_data, 'data_2d'):
+                        sar_data_2d = api_data.data_2d
+                    
+                    # Procesar SAR con derivados estructurales
+                    sar_enhanced_result = process_sar_enhanced(value, sar_data_2d)
+                    
+                    # Si tenemos índice estructural, usarlo como valor principal
+                    if sar_enhanced_result.get('processing_mode') == 'spatial':
+                        structural_index = sar_enhanced_result.get('sar_structural_index', 0.0)
+                        if structural_index > 0:
+                            self.log(f"   🔬 SAR Enhanced: structural_index={structural_index:.3f} (reemplaza norm={value:.3f})")
+                            value = structural_index
+                            # Aumentar confianza si hay análisis espacial
+                            confidence = min(1.0, confidence + 0.1)
+                    
+                except Exception as e:
+                    self.log(f"   ⚠️ SAR Enhanced processing failed: {e}")
+                    # Continuar con valor original
             
             # Verificar si obtuvimos un valor válido
             if value is None:
