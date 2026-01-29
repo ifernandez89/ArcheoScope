@@ -55,14 +55,12 @@ class VIIRSConnector:
         Obtener datos de temperatura superficial VIIRS.
         
         DESACTIVADO: API devuelve 403 Forbidden constantemente.
+        VENTAJA vs MODIS: Mayor resolución espacial (375m vs 1km)
         """
         
         if not self.available:
             logger.info("ℹ️ VIIRS: Skipped (temporarily unavailable)")
             return None
-        
-        VENTAJA vs MODIS: Mayor resolución espacial (375m vs 1km)
-        """
         
         try:
             # Calcular fechas
