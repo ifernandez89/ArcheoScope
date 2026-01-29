@@ -29,6 +29,7 @@ class InstrumentType(Enum):
     HYPERSPECTRAL = "hyperspectral"          # Firmas minerales, suelos alterados
     GRAVIMETRY = "gravimetry"                # Anomalías de densidad
     MAGNETOMETRY = "magnetometry"            # Hornos, metalurgia, suelos quemados
+    GPR = "gpr"                              # Ground Penetrating Radar - subsuperficie
     HISTORICAL_PHOTOGRAMMETRY = "historical" # Fotos aéreas antiguas
     MULTITEMPORAL = "multitemporal"          # Persistencia temporal
 
@@ -92,16 +93,17 @@ class MultiInstrumentalEnrichment:
     
     # Pesos por instrumento (basado en confiabilidad arqueológica)
     INSTRUMENT_WEIGHTS = {
-        InstrumentType.LIDAR: 0.20,              # Forma
-        InstrumentType.SAR: 0.18,                # Compactación (CLAVE)
-        InstrumentType.THERMAL: 0.15,            # Inercia térmica (SUBUTILIZADO)
-        InstrumentType.MULTISPECTRAL: 0.12,      # Estrés vegetal
-        InstrumentType.MULTITEMPORAL: 0.15,      # Persistencia (CRÍTICO)
-        InstrumentType.INSAR: 0.08,              # Microdeformaciones
-        InstrumentType.HYPERSPECTRAL: 0.05,      # Firmas minerales (raro)
-        InstrumentType.GRAVIMETRY: 0.04,         # Contexto
-        InstrumentType.MAGNETOMETRY: 0.02,       # Actividad humana
-        InstrumentType.HISTORICAL_PHOTOGRAMMETRY: 0.01  # Validación histórica
+        InstrumentType.LIDAR: 0.18,              # Forma
+        InstrumentType.SAR: 0.17,                # Compactación (CLAVE)
+        InstrumentType.THERMAL: 0.14,            # Inercia térmica (SUBUTILIZADO)
+        InstrumentType.GPR: 0.13,                # Subsuperficie (FUERTE en ambientes áridos)
+        InstrumentType.MULTISPECTRAL: 0.11,      # Estrés vegetal
+        InstrumentType.MULTITEMPORAL: 0.14,      # Persistencia (CRÍTICO)
+        InstrumentType.INSAR: 0.07,              # Microdeformaciones
+        InstrumentType.HYPERSPECTRAL: 0.03,      # Firmas minerales (raro)
+        InstrumentType.GRAVIMETRY: 0.02,         # Contexto
+        InstrumentType.MAGNETOMETRY: 0.01,       # Actividad humana
+        InstrumentType.HISTORICAL_PHOTOGRAMMETRY: 0.00  # Validación histórica
     }
     
     # Combos ganadores (instrumentos que se refuerzan mutuamente)
@@ -169,7 +171,13 @@ class MultiInstrumentalEnrichment:
                 available_data['multispectral']
             )
         
-        # 5. Multitemporal (persistencia)
+        # 5. GPR (si disponible - especialmente en desiertos)
+        if 'gpr' in available_data:
+            signals[InstrumentType.GPR] = self._process_gpr_signal(
+                available_data['gpr']
+            )
+        
+        # 6. Multitemporal (persistencia)
         if 'multitemporal' in available_data:
             signals[InstrumentType.MULTITEMPORAL] = self._process_multitemporal_signal(
                 available_data['multitemporal']
@@ -351,6 +359,54 @@ class MultiInstrumentalEnrichment:
             source=ms_data.get('source', 'Sentinel-2'),
             acquisition_date=ms_data.get('acquisition_date'),
             resolution_m=ms_data.get('resolution_m', 10.0),
+            interpretation=interpretation
+        )
+    
+    def _process_gpr_signal(self, gpr_data: Dict[str, Any]) -> InstrumentSignal:
+        """
+        Procesar señal GPR (Ground Penetrating Radar - subsuperficie)
+        
+        🔥 POTENTE en ambientes áridos/semiáridos
+        Detecta: cavidades, muros enterrados, fundaciones, anomalías de humedad
+        """
+        
+        subsurface_anomaly_detected = gpr_data.get('subsurface_anomaly_detected', False)
+        confidence = gpr_data.get('confidence', 0.0)
+        
+        values = {
+            'similarity_score': gpr_data.get('similarity_score', 0.0),
+            'depth_m': gpr_data.get('depth_m', 0.0),
+            'anomaly_type': gpr_data.get('anomaly_type', 'unknown'),
+            'amplitude_threshold': gpr_data.get('amplitude_threshold', 0.0),
+            'pattern_match_confidence': gpr_data.get('pattern_match_confidence', 0.0)
+        }
+        
+        interpretation = None
+        if subsurface_anomaly_detected:
+            anomaly_type = values['anomaly_type']
+            depth = values['depth_m']
+            
+            if anomaly_type == 'cavity':
+                interpretation = f"Cavity detected at {depth:.1f}m depth (chamber, tomb, or cistern)"
+            elif anomaly_type == 'buried_wall':
+                interpretation = f"Buried wall detected at {depth:.1f}m depth (foundation or structure)"
+            elif anomaly_type == 'foundation':
+                interpretation = f"Foundation detected at {depth:.1f}m depth (platform or building base)"
+            elif anomaly_type == 'moisture':
+                interpretation = f"Moisture anomaly at {depth:.1f}m depth (tunnel, aqueduct, or drainage)"
+            elif anomaly_type == 'compaction':
+                interpretation = f"Compaction anomaly at {depth:.1f}m depth (ancient road or plaza)"
+            else:
+                interpretation = f"Subsurface anomaly at {depth:.1f}m depth (requires validation)"
+        
+        return InstrumentSignal(
+            instrument=InstrumentType.GPR,
+            detected=subsurface_anomaly_detected,
+            confidence=confidence,
+            values=values,
+            source=gpr_data.get('source', 'GPR_Pattern_Matching'),
+            acquisition_date=gpr_data.get('acquisition_date'),
+            resolution_m=gpr_data.get('resolution_m', 0.1),
             interpretation=interpretation
         )
     

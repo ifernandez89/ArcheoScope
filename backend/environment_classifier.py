@@ -428,11 +428,11 @@ class EnvironmentClassifier:
                     precipitation_mm_year=50,
                     elevation_m=300,
                     primary_sensors=["Landsat 8 Thermal", "Sentinel-2 NDVI", "Sentinel-1 SAR"],
-                    secondary_sensors=["MODIS LST", "OpenTopography"],
+                    secondary_sensors=["MODIS LST", "OpenTopography", "GPR"],
                     archaeological_visibility="high",
                     preservation_potential="excellent",
                     access_difficulty="moderate",
-                    notes="Desierto del Sahara - excelente para detección arqueológica"
+                    notes="Desierto del Sahara - excelente para detección arqueológica, GPR óptimo"
                 )
         
         # Desierto Arábigo
@@ -446,11 +446,11 @@ class EnvironmentClassifier:
                 precipitation_mm_year=100,
                 elevation_m=500,
                 primary_sensors=["Landsat 8 Thermal", "Sentinel-2 NDVI", "Sentinel-1 SAR"],
-                secondary_sensors=["MODIS LST", "OpenTopography"],
+                secondary_sensors=["MODIS LST", "OpenTopography", "GPR"],
                 archaeological_visibility="high",
                 preservation_potential="excellent",
                 access_difficulty="moderate",
-                notes="Desierto Arábigo"
+                notes="Desierto Arábigo - GPR óptimo para estructuras enterradas"
             )
         
         # Desierto de Gobi
@@ -464,11 +464,11 @@ class EnvironmentClassifier:
                 precipitation_mm_year=150,
                 elevation_m=1000,
                 primary_sensors=["Landsat 8 Thermal", "Sentinel-2 NDVI", "Sentinel-1 SAR"],
-                secondary_sensors=["MODIS LST", "OpenTopography"],
+                secondary_sensors=["MODIS LST", "OpenTopography", "GPR"],
                 archaeological_visibility="high",
                 preservation_potential="good",
                 access_difficulty="moderate",
-                notes="Desierto de Gobi"
+                notes="Desierto de Gobi - GPR efectivo en suelos secos"
             )
         
         # Desierto de Atacama
@@ -482,11 +482,11 @@ class EnvironmentClassifier:
                 precipitation_mm_year=15,  # Uno de los más secos
                 elevation_m=2500,
                 primary_sensors=["Landsat 8 Thermal", "Sentinel-2 NDVI", "Sentinel-1 SAR"],
-                secondary_sensors=["MODIS LST", "OpenTopography"],
+                secondary_sensors=["MODIS LST", "OpenTopography", "GPR"],
                 archaeological_visibility="high",
                 preservation_potential="excellent",
                 access_difficulty="moderate",
-                notes="Desierto de Atacama - extremadamente árido"
+                notes="Desierto de Atacama - extremadamente árido, GPR con máxima penetración"
             )
         
         return None
