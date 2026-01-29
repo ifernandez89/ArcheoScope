@@ -13,7 +13,7 @@ from .palsar_connector import PALSARConnector
 from .smos_connector import SMOSConnector
 from .smap_connector import SMAPConnector
 from .nsidc_connector import NSIDCConnector
-from .gpr_connector import GPRConnector
+# from .gpr_connector import GPRConnector  # Temporalmente deshabilitado - requiere BaseConnector
 
 __all__ = [
     'SatelliteConnector',
