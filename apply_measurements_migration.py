@@ -21,12 +21,16 @@ async def apply_migration():
     
     # Conectar a BD
     try:
+        # USAR VARIABLES DE ENTORNO
+        import os
+        db_password = os.getenv("POSTGRES_PASSWORD", "postgres")
+        
         conn = await asyncpg.connect(
             host="localhost",
             port=5433,
             database="archeoscope",
             user="postgres",
-            password="postgres"
+            password=db_password
         )
         
         print("✅ Conectado a BD")

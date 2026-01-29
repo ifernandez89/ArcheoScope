@@ -268,13 +268,17 @@ if __name__ == "__main__":
     async def test_repository():
         """Test del repositorio."""
         
+        # USAR VARIABLES DE ENTORNO
+        import os
+        db_password = os.getenv("POSTGRES_PASSWORD", "postgres")
+        
         # Conectar a BD
         db_pool = await asyncpg.create_pool(
             host="localhost",
             port=5433,
             database="archeoscope",
             user="postgres",
-            password="postgres"
+            password=db_password
         )
         
         repo = MeasurementsRepository(db_pool)

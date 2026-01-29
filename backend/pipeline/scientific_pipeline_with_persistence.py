@@ -218,13 +218,17 @@ class ScientificPipelineWithPersistence:
 async def example_usage():
     """Ejemplo de uso del pipeline."""
     
+    # USAR VARIABLES DE ENTORNO
+    import os
+    db_password = os.getenv("POSTGRES_PASSWORD", "postgres")
+    
     # Conectar a BD
     db_pool = await asyncpg.create_pool(
         host="localhost",
         port=5433,
         database="archeoscope",
         user="postgres",
-        password="postgres"
+        password=db_password
     )
     
     # Crear pipeline
