@@ -221,9 +221,22 @@ class ICESat2Connector(SatelliteConnector):
                     unit="meters"
                 )
             
-            # Calcular elevación promedio
+            # CRÍTICO: Calcular RUGOSIDAD (std) como señal arqueológica
+            # NO usar mean (valor absoluto sin contexto)
             elevation_mean = float(np.mean(valid_elevations))
-            elevation_std = float(np.std(valid_elevations))
+            elevation_std = float(np.std(valid_elevations))  # RUGOSIDAD
+            elevation_variance = float(np.var(valid_elevations))
+            
+            # Calcular gradiente altimétrico (cambio de elevación)
+            if len(valid_elevations) > 1:
+                elevation_gradient = float(np.max(valid_elevations) - np.min(valid_elevations))
+            else:
+                elevation_gradient = 0.0
+            
+            # SEÑAL ARQUEOLÓGICA: Rugosidad (std) detecta irregularidades
+            # - Rugosidad alta = terreno irregular = posible estructura
+            # - Rugosidad baja = terreno plano = menos interesante
+            archaeological_signal = elevation_std
             
             # Calcular confianza basada en cantidad y dispersión
             if len(valid_elevations) > 100 and elevation_std < 50:
@@ -233,12 +246,15 @@ class ICESat2Connector(SatelliteConnector):
             else:
                 confidence = 0.70
             
-            logger.info(f"ICESat-2 processed: {len(valid_elevations)} valid points, mean={elevation_mean:.2f}m")
+            logger.info(f"ICESat-2 processed: {len(valid_elevations)} valid points")
+            logger.info(f"   Mean elevation: {elevation_mean:.2f}m")
+            logger.info(f"   Rugosity (std): {elevation_std:.2f}m ← SEÑAL ARQUEOLÓGICA")
+            logger.info(f"   Gradient: {elevation_gradient:.2f}m")
             
             return InstrumentMeasurement(
                 instrument_name="ICESat-2",
-                measurement_type="elevation",
-                value=elevation_mean,
+                measurement_type="elevation_rugosity",  # Cambiar tipo
+                value=archaeological_signal,  # Devolver rugosidad, no mean
                 unit="meters",
                 status=InstrumentStatus.OK,
                 confidence=confidence,
@@ -247,11 +263,14 @@ class ICESat2Connector(SatelliteConnector):
                     'valid_points': len(valid_elevations),
                     'total_points': len(elevations),
                     'quality_filtered': int(np.sum(quality_flags != 0)),
-                    'elevation_std': elevation_std
+                    'elevation_mean': elevation_mean,  # Guardar mean como metadata
+                    'elevation_std': elevation_std,
+                    'elevation_variance': elevation_variance,
+                    'elevation_gradient': elevation_gradient
                 },
                 source="NASA Earthdata",
                 acquisition_date=acquisition_date[:10],
-                processing_notes=f"Filtered by quality flags (atl06_quality_summary==0) and finite values. {len(valid_elevations)}/{len(elevations)} points valid."
+                processing_notes=f"Rugosity (std) used as archaeological signal. Filtered by quality flags. {len(valid_elevations)}/{len(elevations)} points valid."
             )
             
         except Exception as e:

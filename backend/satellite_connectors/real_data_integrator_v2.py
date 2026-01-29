@@ -374,13 +374,34 @@ class RealDataIntegratorV2:
                 indices = api_data.indices
                 
                 # Priorizar valores según el instrumento
-                if 'elevation_mean' in indices:
+                if 'elevation_std' in indices:
+                    # CRÍTICO: ICESat-2 rugosidad (std) como señal arqueológica
+                    raw_value = indices['elevation_std']
+                    if isinstance(raw_value, (int, float)) and not (np.isnan(raw_value) or np.isinf(raw_value)):
+                        value = float(raw_value)
+                        self.log(f"   ✅ ICESat-2 rugosity: {value:.2f}m (señal arqueológica)")
+                    else:
+                        self.log(f"   ⚠️ ICESat-2 rugosity inválido: {raw_value}")
+                elif 'elevation_variance' in indices:
+                    # Alternativa: varianza
+                    raw_value = indices['elevation_variance']
+                    if isinstance(raw_value, (int, float)) and not (np.isnan(raw_value) or np.isinf(raw_value)):
+                        value = float(raw_value)
+                        self.log(f"   ✅ ICESat-2 variance: {value:.2f}m² (señal arqueológica)")
+                elif 'elevation_gradient' in indices:
+                    # Alternativa: gradiente
+                    raw_value = indices['elevation_gradient']
+                    if isinstance(raw_value, (int, float)) and not (np.isnan(raw_value) or np.isinf(raw_value)):
+                        value = float(raw_value)
+                        self.log(f"   ✅ ICESat-2 gradient: {value:.2f}m (señal arqueológica)")
+                elif 'elevation_mean' in indices:
+                    # FALLBACK: mean (solo si no hay rugosidad)
                     raw_value = indices['elevation_mean']
                     # CRÍTICO: ICESat-2 elevation NO normalizar (puede ser >1000m)
                     # Solo validar que sea finito
                     if isinstance(raw_value, (int, float)) and not (np.isnan(raw_value) or np.isinf(raw_value)):
                         value = float(raw_value)
-                        self.log(f"   ✅ ICESat-2 elevation: {value:.1f}m (sin normalizar)")
+                        self.log(f"   ⚠️ ICESat-2 elevation mean: {value:.1f}m (fallback - preferir rugosidad)")
                     else:
                         self.log(f"   ⚠️ ICESat-2 elevation inválido: {raw_value}")
                 elif 'ndvi' in indices:
