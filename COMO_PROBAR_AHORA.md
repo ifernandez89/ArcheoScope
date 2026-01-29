@@ -4,7 +4,7 @@
 
 **TODO ESTÁ FUNCIONANDO Y LISTO PARA PROBAR**
 
-- ✅ Backend corriendo en `http://localhost:8002`
+- ✅ Backend corriendo en `http://localhost:8003`
 - ✅ Coverage Assessment integrado
 - ✅ Scientific Narrative integrado
 - ✅ Anomaly Map Generator integrado
@@ -39,7 +39,7 @@ python test_integracion_completa.py
 
 ### 1. Backend ya está corriendo
 ```
-✅ http://localhost:8002
+✅ http://localhost:8003
 ```
 
 ### 2. Abrir Frontend
@@ -57,7 +57,7 @@ file:///C:/Python/ArcheoScope/frontend/index.html
 
 #### Análisis Científico Completo
 ```
-POST http://localhost:8002/api/scientific/analyze
+POST http://localhost:8003/api/scientific/analyze
 ```
 
 **Body ejemplo**:
@@ -85,7 +85,7 @@ POST http://localhost:8002/api/scientific/analyze
 
 #### Generar Mapa de Anomalía
 ```
-POST http://localhost:8002/api/generate-anomaly-map
+POST http://localhost:8003/api/generate-anomaly-map
 ```
 
 **Body ejemplo**:
@@ -111,12 +111,12 @@ POST http://localhost:8002/api/generate-anomaly-map
 
 #### Descargar PNG del Mapa
 ```
-GET http://localhost:8002/api/anomaly-map/{analysis_id}/png
+GET http://localhost:8003/api/anomaly-map/{analysis_id}/png
 ```
 
 #### Estado del Sistema
 ```
-GET http://localhost:8002/status
+GET http://localhost:8003/status
 ```
 
 ---
@@ -279,7 +279,7 @@ start anomaly_maps/TEST_001.png
 ### Backend no responde
 ```bash
 # Verificar que está corriendo
-curl http://localhost:8002/status
+curl http://localhost:8003/status
 
 # Si no responde, reiniciar
 python run_archeoscope.py
@@ -334,11 +334,11 @@ Cuando hagas un análisis, deberías ver:
 
 ## 🚀 ¡A PROBAR!
 
-**Backend ya está corriendo**: `http://localhost:8002`
+**Backend ya está corriendo**: `http://localhost:8003`
 
 **Prueba rápida con curl**:
 ```bash
-curl -X POST http://localhost:8002/api/scientific/analyze \
+curl -X POST http://localhost:8003/api/scientific/analyze \
   -H "Content-Type: application/json" \
   -d '{
     "lat_min": 29.97,
@@ -356,6 +356,6 @@ O usa Postman / Insomnia / Thunder Client para una experiencia más visual.
 
 **Fecha**: 2026-01-29  
 **Estado**: ✅ TODO FUNCIONANDO  
-**Backend**: ✅ CORRIENDO en http://localhost:8002  
+**Backend**: ✅ CORRIENDO en http://localhost:8003  
 **Test**: ✅ 100% PASS  
 **Commits**: ✅ PUSHEADOS a GitHub

@@ -74,7 +74,7 @@ def start_backend():
         # Cambiar al directorio backend y ejecutar
         process = subprocess.Popen([
             sys.executable, "-m", "uvicorn", "api.main:app", 
-            "--host", "0.0.0.0", "--port", "8002", "--reload"
+            "--host", "0.0.0.0", "--port", "8003", "--reload"
         ], cwd=backend_path)
         
         return process
@@ -88,7 +88,7 @@ def wait_for_backend():
     
     for i in range(15):
         try:
-            response = requests.get("http://localhost:8002/", timeout=3)
+            response = requests.get("http://localhost:8003/", timeout=3)
             if response.status_code == 200:
                 print("ArcheoScope listo")
                 return True
@@ -107,7 +107,7 @@ def open_frontend():
     print("Para iniciar el frontend:")
     print("   python start_frontend.py")
     print("Esto resolverá problemas CORS sirviendo desde localhost")
-    print("El backend debe estar corriendo en http://localhost:8002")
+    print("El backend debe estar corriendo en http://localhost:8003")
     return True
 
 def main():
@@ -142,9 +142,9 @@ def main():
         print("ARCHEOSCOPE COMPLETAMENTE OPERATIVO")
         print("=" * 60)
         print("Frontend: Abierto en tu navegador")
-        print("Backend API: http://localhost:8002")
-        print("Documentación API: http://localhost:8002/docs")
-        print("Estado del sistema: http://localhost:8002/status")
+        print("Backend API: http://localhost:8003")
+        print("Documentación API: http://localhost:8003/docs")
+        print("Estado del sistema: http://localhost:8003/status")
         
         print("\nCómo usar ArcheoScope:")
         print("1. Selecciona una región arqueologica en el mapa (Ctrl+click y arrastra)")
