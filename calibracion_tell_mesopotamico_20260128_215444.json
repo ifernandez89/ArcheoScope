@@ -1,0 +1,214 @@
+{
+  "A_PISO": {
+    "nombre": "A. PISO - Pampa Argentina",
+    "coordenadas": {
+      "lat": -35.15,
+      "lon": -61.8
+    },
+    "timestamp": "2026-01-28T21:52:57.534007",
+    "metricas": {
+      "ess_superficial": 0.3774259592071926,
+      "ess_volumetrico": 0.18679497960359628,
+      "ess_temporal": 0.18679497960359628,
+      "coherencia_3d": 0.8132050203964037,
+      "persistencia_temporal": 0.35,
+      "densidad_arqueologica_m3": 0.0
+    },
+    "cobertura": {
+      "superficial": {
+        "successful": 1,
+        "total": 5,
+        "percentage": 20.0
+      },
+      "subsuperficial": {
+        "successful": 1,
+        "total": 3,
+        "percentage": 33.33333333333333
+      },
+      "profundo": {
+        "successful": 0,
+        "total": 1,
+        "percentage": 0.0
+      }
+    },
+    "tas": {
+      "tas_score": 0.0943439298017339,
+      "ndvi_persistence": 0.0,
+      "thermal_stability": 0.0,
+      "sar_coherence": 0.3773757192069356,
+      "stress_frequency": 0.0,
+      "temporal_scale": "long",
+      "years_analyzed": 26,
+      "sensors_used": [
+        "sentinel_1_sar"
+      ],
+      "interpretation": "Sin firma arqueol\u00f3gica temporal significativa. Baja coherencia SAR (cambio subsuperficial).",
+      "confidence": 0.8
+    },
+    "dil": {
+      "estimated_depth_m": 3.4664349999999997,
+      "confidence": 0.086660875,
+      "confidence_level": "very_low",
+      "sar_coherence_loss": 0.99041,
+      "thermal_inertia": 0.0,
+      "subsurface_moisture": 0.0,
+      "topographic_anomaly": 0.0,
+      "dil_score": 0.3466435,
+      "sensors_used": [
+        "sentinel_1_sar"
+      ],
+      "inference_method": "multi_source_coherent",
+      "interpretation": "Profundidad inferida MEDIA (3.5m). Baja confianza en inferencia (se\u00f1ales d\u00e9biles). P\u00e9rdida de coherencia SAR detectada (cambio subsuperficial).",
+      "archaeological_relevance": 0.024032343218450002
+    },
+    "validacion": {
+      "ess_volumetrico_ok": true,
+      "ess_temporal_ok": true,
+      "coherencia_ok": true,
+      "all_ok": true
+    }
+  },
+  "B_ZONA_HABITABLE": {
+    "nombre": "B. ZONA HABITABLE - Laguna Veracruz",
+    "coordenadas": {
+      "lat": 20.58,
+      "lon": -96.92
+    },
+    "timestamp": "2026-01-28T21:53:33.793557",
+    "metricas": {
+      "ess_superficial": 0.04391222903710278,
+      "ess_volumetrico": 0.47804388548144866,
+      "ess_temporal": 0.47804388548144866,
+      "coherencia_3d": 0.5219561145185514,
+      "persistencia_temporal": 0.35,
+      "densidad_arqueologica_m3": 0.10024359999999997
+    },
+    "cobertura": {
+      "superficial": {
+        "successful": 1,
+        "total": 5,
+        "percentage": 20.0
+      },
+      "subsuperficial": {
+        "successful": 2,
+        "total": 3,
+        "percentage": 66.66666666666666
+      },
+      "profundo": {
+        "successful": 0,
+        "total": 1,
+        "percentage": 0.0
+      }
+    },
+    "tas": {
+      "tas_score": 0.3480402472392438,
+      "ndvi_persistence": 0.0,
+      "thermal_stability": 0.9745397695810184,
+      "sar_coherence": 0.2227132654597533,
+      "stress_frequency": 0.0,
+      "temporal_scale": "long",
+      "years_analyzed": 26,
+      "sensors_used": [
+        "landsat_thermal",
+        "sentinel_1_sar"
+      ],
+      "interpretation": "Firma arqueol\u00f3gica temporal D\u00c9BIL. Alta estabilidad t\u00e9rmica (posible masa enterrada). Baja coherencia SAR (cambio subsuperficial).",
+      "confidence": 0.9
+    },
+    "dil": {
+      "estimated_depth_m": 4.424026818474249,
+      "confidence": 0.23466482224353194,
+      "confidence_level": "low",
+      "sar_coherence_loss": 0.99391,
+      "thermal_inertia": 0.37559566226547786,
+      "subsurface_moisture": 0.04391222903710278,
+      "topographic_anomaly": 0.0,
+      "dil_score": 0.4693296444870639,
+      "sensors_used": [
+        "sentinel_1_sar",
+        "landsat_thermal",
+        "sentinel_2_ndwi"
+      ],
+      "inference_method": "multi_source_coherent",
+      "interpretation": "Profundidad inferida MEDIA (4.4m). Baja confianza en inferencia (se\u00f1ales d\u00e9biles). P\u00e9rdida de coherencia SAR detectada (cambio subsuperficial).",
+      "archaeological_relevance": 0.08810812607774152
+    },
+    "validacion": {
+      "ess_volumetrico_ok": true,
+      "ess_temporal_ok": true,
+      "coherencia_ok": true,
+      "all_ok": true
+    }
+  },
+  "C_TECHO": {
+    "nombre": "C. TECHO - Tell Brak",
+    "coordenadas": {
+      "lat": 36.365,
+      "lon": 43.124
+    },
+    "timestamp": "2026-01-28T21:54:44.753292",
+    "metricas": {
+      "ess_superficial": 0.12802339419979736,
+      "ess_volumetrico": 0.4016072099375512,
+      "ess_temporal": 0.4016072099375512,
+      "coherencia_3d": 0.5983927900624488,
+      "persistencia_temporal": 0.35,
+      "densidad_arqueologica_m3": 0.0
+    },
+    "cobertura": {
+      "superficial": {
+        "successful": 1,
+        "total": 5,
+        "percentage": 20.0
+      },
+      "subsuperficial": {
+        "successful": 2,
+        "total": 3,
+        "percentage": 66.66666666666666
+      },
+      "profundo": {
+        "successful": 0,
+        "total": 1,
+        "percentage": 0.0
+      }
+    },
+    "tas": {
+      "tas_score": 0.48894013578258044,
+      "ndvi_persistence": 0.0,
+      "thermal_stability": 0.9437708902661837,
+      "sar_coherence": 0.8232354748109014,
+      "stress_frequency": 0.0,
+      "temporal_scale": "long",
+      "years_analyzed": 26,
+      "sensors_used": [
+        "landsat_thermal",
+        "sentinel_1_sar"
+      ],
+      "interpretation": "Firma arqueol\u00f3gica temporal D\u00c9BIL. Alta estabilidad t\u00e9rmica (posible masa enterrada).",
+      "confidence": 0.9
+    },
+    "dil": {
+      "estimated_depth_m": 5.802035,
+      "confidence": 0.32010174999999996,
+      "confidence_level": "low",
+      "sar_coherence_loss": 0.97201,
+      "thermal_inertia": 1.0,
+      "subsurface_moisture": 0.0,
+      "topographic_anomaly": 0.0,
+      "dil_score": 0.6402034999999999,
+      "sensors_used": [
+        "sentinel_1_sar",
+        "landsat_thermal"
+      ],
+      "inference_method": "multi_source_coherent",
+      "interpretation": "Profundidad inferida PROFUNDA (5.8m). Baja confianza en inferencia (se\u00f1ales d\u00e9biles). P\u00e9rdida de coherencia SAR detectada (cambio subsuperficial). Alta inercia t\u00e9rmica (posible masa enterrada).",
+      "archaeological_relevance": 0.10246513035306247
+    },
+    "validacion": {
+      "ess_volumetrico_ok": false,
+      "ess_temporal_ok": false,
+      "coherencia_ok": false,
+      "all_ok": false
+    }
+  }
+}
