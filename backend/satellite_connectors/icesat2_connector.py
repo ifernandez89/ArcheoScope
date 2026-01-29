@@ -251,26 +251,27 @@ class ICESat2Connector(SatelliteConnector):
             logger.info(f"   Rugosity (std): {elevation_std:.2f}m ← SEÑAL ARQUEOLÓGICA")
             logger.info(f"   Gradient: {elevation_gradient:.2f}m")
             
-            return InstrumentMeasurement(
-                instrument_name="ICESat-2",
-                measurement_type="elevation_rugosity",  # Cambiar tipo
-                value=archaeological_signal,  # Devolver rugosidad, no mean
-                unit="meters",
-                status=InstrumentStatus.OK,
-                confidence=confidence,
-                reason=None,
-                quality_flags={
+            # CRÍTICO: Devolver SatelliteData con indices para compatibilidad con integrador
+            from .base_connector import SatelliteData
+            
+            return SatelliteData(
+                source="NASA Earthdata ICESat-2",
+                acquisition_date=acquisition_date[:10],
+                cloud_cover=0.0,
+                indices={
+                    'elevation_std': elevation_std,  # RUGOSIDAD - señal principal
+                    'elevation_variance': elevation_variance,
+                    'elevation_gradient': elevation_gradient,
+                    'elevation_mean': elevation_mean,  # Metadata
                     'valid_points': len(valid_elevations),
                     'total_points': len(elevations),
-                    'quality_filtered': int(np.sum(quality_flags != 0)),
-                    'elevation_mean': elevation_mean,  # Guardar mean como metadata
-                    'elevation_std': elevation_std,
-                    'elevation_variance': elevation_variance,
-                    'elevation_gradient': elevation_gradient
+                    'quality_filtered': int(np.sum(quality_flags != 0))
                 },
-                source="NASA Earthdata",
-                acquisition_date=acquisition_date[:10],
-                processing_notes=f"Rugosity (std) used as archaeological signal. Filtered by quality flags. {len(valid_elevations)}/{len(elevations)} points valid."
+                confidence=confidence,
+                metadata={
+                    'measurement_type': 'elevation_rugosity',
+                    'processing_notes': f"Rugosity (std) used as archaeological signal. {len(valid_elevations)}/{len(elevations)} points valid."
+                }
             )
             
         except Exception as e:
