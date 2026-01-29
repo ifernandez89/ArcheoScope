@@ -34,6 +34,35 @@ from pipeline.anomaly_detection import AnomalyResult, detect_anomaly
 from pipeline.morphology import MorphologyResult, analyze_morphology
 from pipeline.anthropic_inference import AnthropicInference, infer_anthropic_probability
 
+# NUEVOS MÓDULOS - 5 CORRECCIONES CRÍTICAS
+try:
+    from pipeline.coverage_assessment import (
+        calculate_coverage_score,
+        separate_confidence_and_signal,
+        CoverageAssessment
+    )
+    COVERAGE_ASSESSMENT_AVAILABLE = True
+except ImportError:
+    COVERAGE_ASSESSMENT_AVAILABLE = False
+    print("⚠️ Coverage Assessment no disponible")
+
+try:
+    from scientific_narrative import (
+        generate_archaeological_narrative,
+        ArchaeologicalNarrative
+    )
+    SCIENTIFIC_NARRATIVE_AVAILABLE = True
+except ImportError:
+    SCIENTIFIC_NARRATIVE_AVAILABLE = False
+    print("⚠️ Scientific Narrative no disponible")
+
+try:
+    from anomaly_map_generator import AnomalyMapGenerator, AnomalyMap
+    ANOMALY_MAP_AVAILABLE = True
+except ImportError:
+    ANOMALY_MAP_AVAILABLE = False
+    print("⚠️ Anomaly Map Generator no disponible")
+
 @dataclass
 class ScientificOutput:
     """Salida científica completa."""
@@ -48,6 +77,23 @@ class ScientificOutput:
     # COBERTURA INSTRUMENTAL (separar raw vs effective)
     coverage_raw: float = 0.0  # Instrumentos presentes / disponibles (0-1)
     coverage_effective: float = 0.0  # Cobertura ponderada por importancia (0-1)
+    instruments_measured: int = 0  # Número de instrumentos que midieron
+    instruments_available: int = 0  # Número de instrumentos disponibles
+    # SEPARACIÓN CONFIANZA vs SEÑAL
+    confidence_level: float = 0.0  # Qué tan confiable es el análisis (0-1)
+    signal_strength: float = 0.0  # Qué tan fuerte es la señal detectada (0-1)
+    # NARRATIVA CIENTÍFICA
+    scientific_narrative: str = ""  # Narrativa completa generada
+    classification: str = "unknown"  # Clasificación del sitio
+    priority: str = "NORMAL"  # Prioridad de investigación
+    # MAPA DE ANOMALÍA
+    anomaly_map_path: str = ""  # Path al PNG del mapa
+    anomaly_map_metadata: Dict[str, Any] = None  # Metadata del mapa
+    
+    def __post_init__(self):
+        """Inicializar campos opcionales."""
+        if self.anomaly_map_metadata is None:
+            self.anomaly_map_metadata = {}
     instruments_measured: int = 0  # Número de instrumentos que midieron
     instruments_available: int = 0  # Número de instrumentos disponibles
     # 🟠 AFINADO 2: Incertidumbre epistemológica
@@ -1883,6 +1929,43 @@ class ScientificPipeline:
         # FASE A: Normalización
         normalized = normalize_data(raw_measurements)
         
+        # =====================================================================
+        # INTEGRACIÓN: COVERAGE ASSESSMENT (Corrección #1)
+        # =====================================================================
+        coverage_assessment = None
+        confidence_signal = None
+        
+        if COVERAGE_ASSESSMENT_AVAILABLE:
+            print("[INTEGRACIÓN] Calculando Coverage Assessment...", flush=True)
+            try:
+                # Extraer instrumentos disponibles
+                instruments_available = list(raw_measurements.get('instrumental_measurements', {}).keys())
+                
+                # Calcular coverage score
+                coverage_assessment = calculate_coverage_score(instruments_available)
+                
+                print(f"   Coverage score: {coverage_assessment.coverage_score:.2f}", flush=True)
+                print(f"   Coverage quality: {coverage_assessment.coverage_quality.value}", flush=True)
+                print(f"   Core coverage: {coverage_assessment.core_coverage:.2f}", flush=True)
+                
+                # Separar confianza de señal
+                measurements_list = []
+                for key, measurement in raw_measurements.get('instrumental_measurements', {}).items():
+                    if isinstance(measurement, dict):
+                        measurements_list.append(measurement)
+                
+                confidence_signal = separate_confidence_and_signal(
+                    measurements=measurements_list,
+                    coverage_assessment=coverage_assessment
+                )
+                
+                print(f"   Confidence level: {confidence_signal['confidence_level']:.2f}", flush=True)
+                print(f"   Signal strength: {confidence_signal['signal_strength']:.2f}", flush=True)
+                print(f"   ✅ Coverage Assessment completado", flush=True)
+                
+            except Exception as e:
+                print(f"   ⚠️ Error en Coverage Assessment: {e}", flush=True)
+        
         # FASE B: Anomalía pura
         anomaly = detect_anomaly(normalized)
         
@@ -1900,6 +1983,112 @@ class ScientificPipeline:
         
         # FASE G: Salida científica
         output = self.phase_g_scientific_output(normalized, anomaly, morphology, anthropic, anti_pattern, known_sites_validation)
+        
+        # =====================================================================
+        # INTEGRACIÓN: SCIENTIFIC NARRATIVE (Corrección #5)
+        # =====================================================================
+        if SCIENTIFIC_NARRATIVE_AVAILABLE:
+            print("[INTEGRACIÓN] Generando Scientific Narrative...", flush=True)
+            try:
+                # Extraer datos necesarios
+                thermal_stability = 0.0
+                sar_structural_index = 0.0
+                icesat2_rugosity = None
+                ndvi_persistence = 0.0
+                tas_score = 0.0
+                environment_type = raw_measurements.get('environment_type', 'temperate')
+                flags = []
+                
+                # Intentar extraer de mediciones
+                for key, measurement in raw_measurements.get('instrumental_measurements', {}).items():
+                    if isinstance(measurement, dict):
+                        if 'thermal' in key.lower():
+                            thermal_stability = measurement.get('value', 0.0) / 100.0  # Normalizar
+                        elif 'sar' in key.lower():
+                            sar_structural_index = measurement.get('value', 0.0)
+                        elif 'icesat' in key.lower():
+                            icesat2_rugosity = measurement.get('value')
+                        elif 'ndvi' in key.lower():
+                            ndvi_persistence = measurement.get('value', 0.0)
+                
+                # Generar narrativa
+                narrative = generate_archaeological_narrative(
+                    thermal_stability=thermal_stability,
+                    sar_structural_index=sar_structural_index,
+                    icesat2_rugosity=icesat2_rugosity,
+                    ndvi_persistence=ndvi_persistence,
+                    tas_score=tas_score,
+                    coverage_score=coverage_assessment.coverage_score if coverage_assessment else 0.5,
+                    environment_type=environment_type,
+                    flags=flags
+                )
+                
+                # Actualizar output
+                output.scientific_narrative = narrative.full_narrative
+                output.classification = narrative.classification.value
+                output.priority = narrative.priority
+                output.notes = narrative.full_narrative  # Reemplazar notes con narrativa
+                if narrative.recommendations:
+                    output.recommended_action = narrative.recommendations[0]
+                
+                print(f"   Clasificación: {narrative.classification.value}", flush=True)
+                print(f"   Prioridad: {narrative.priority}", flush=True)
+                print(f"   ✅ Scientific Narrative completado", flush=True)
+                
+            except Exception as e:
+                print(f"   ⚠️ Error en Scientific Narrative: {e}", flush=True)
+        
+        # =====================================================================
+        # INTEGRACIÓN: ANOMALY MAP GENERATOR (Visualización)
+        # =====================================================================
+        if ANOMALY_MAP_AVAILABLE:
+            print("[INTEGRACIÓN] Generando Anomaly Map...", flush=True)
+            try:
+                generator = AnomalyMapGenerator(resolution_m=30.0)
+                
+                anomaly_map = generator.generate_anomaly_map(
+                    measurements=raw_measurements,
+                    lat_min=lat_min,
+                    lat_max=lat_max,
+                    lon_min=lon_min,
+                    lon_max=lon_max,
+                    environment_type=raw_measurements.get('environment_type', 'temperate')
+                )
+                
+                # Exportar PNG
+                import os
+                os.makedirs('anomaly_maps', exist_ok=True)
+                output_path = f"anomaly_maps/{output.candidate_id}.png"
+                generator.export_to_png(anomaly_map, output_path)
+                
+                # Actualizar output
+                output.anomaly_map_path = output_path
+                output.anomaly_map_metadata = {
+                    'layers_used': anomaly_map.layers_used,
+                    'resolution_m': anomaly_map.resolution_m,
+                    'anomaly_mean': anomaly_map.metadata.get('anomaly_mean', 0.0),
+                    'anomaly_max': anomaly_map.metadata.get('anomaly_max', 0.0),
+                    'geometric_features_count': anomaly_map.metadata.get('geometric_features_count', 0)
+                }
+                
+                print(f"   Layers: {anomaly_map.layers_used}", flush=True)
+                print(f"   Anomaly range: [{np.min(anomaly_map.anomaly_map):.3f}, {np.max(anomaly_map.anomaly_map):.3f}]", flush=True)
+                print(f"   PNG exportado: {output_path}", flush=True)
+                print(f"   ✅ Anomaly Map completado", flush=True)
+                
+            except Exception as e:
+                print(f"   ⚠️ Error en Anomaly Map: {e}", flush=True)
+        
+        # Actualizar coverage en output si está disponible
+        if coverage_assessment:
+            output.coverage_raw = coverage_assessment.coverage_score
+            output.coverage_effective = confidence_signal['coverage_factor'] if confidence_signal else coverage_assessment.coverage_score
+            output.instruments_measured = coverage_assessment.instruments_available
+            output.instruments_available = coverage_assessment.instruments_total
+        
+        if confidence_signal:
+            output.confidence_level = confidence_signal['confidence_level']
+            output.signal_strength = confidence_signal['signal_strength']
         
         print("\n" + "="*80, flush=True)
         print("PIPELINE CIENTÍFICO COMPLETADO", flush=True)
@@ -1920,6 +2109,16 @@ class ScientificPipeline:
                 "coverage_effective": output.coverage_effective,
                 "instruments_measured": output.instruments_measured,
                 "instruments_available": output.instruments_available,
+                # SEPARACIÓN CONFIANZA vs SEÑAL
+                "confidence_level": output.confidence_level,
+                "signal_strength": output.signal_strength,
+                # NARRATIVA CIENTÍFICA
+                "scientific_narrative": output.scientific_narrative,
+                "classification": output.classification,
+                "priority": output.priority,
+                # MAPA DE ANOMALÍA
+                "anomaly_map_path": output.anomaly_map_path,
+                "anomaly_map_metadata": output.anomaly_map_metadata,
                 # 🟠 INCERTIDUMBRE EPISTEMOLÓGICA
                 "epistemic_uncertainty": output.epistemic_uncertainty,
                 "uncertainty_sources": output.uncertainty_sources,

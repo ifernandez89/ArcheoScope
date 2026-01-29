@@ -434,6 +434,27 @@ except Exception as e:
     traceback.print_exc()
 
 # ============================================================================
+# INCLUIR ROUTER ANOMALY VISUALIZATION (NUEVO)
+# ============================================================================
+
+try:
+    from api.anomaly_visualization_endpoint import router as anomaly_viz_router
+    
+    app.include_router(
+        anomaly_viz_router,
+        tags=["Anomaly Visualization"]
+    )
+    logger.info("✅ Router Anomaly Visualization incluido")
+except ImportError as e:
+    logger.error(f"❌ No se pudo cargar router Anomaly Visualization: {e}")
+    import traceback
+    traceback.print_exc()
+except Exception as e:
+    logger.error(f"❌ Error inicializando Anomaly Visualization: {e}")
+    import traceback
+    traceback.print_exc()
+
+# ============================================================================
 # ENDPOINT /analyze PRINCIPAL (MANTENER PARA COMPATIBILIDAD)
 # ============================================================================
 
