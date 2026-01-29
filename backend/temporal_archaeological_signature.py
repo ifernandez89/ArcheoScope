@@ -99,6 +99,15 @@ class TemporalArchaeologicalSignature:
     interpretation: str = ""
     confidence: float = 0.5
     
+    # Flags especiales
+    flags: List[str] = None  # ['THERMAL_ANCHOR_ZONE', 'HIGH_PRIORITY', etc.]
+    priority: str = "NORMAL"  # NORMAL, HIGH, CRITICAL
+    
+    def __post_init__(self):
+        """Inicializar flags si es None."""
+        if self.flags is None:
+            self.flags = []
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convertir a diccionario para JSON."""
         return {
@@ -111,7 +120,9 @@ class TemporalArchaeologicalSignature:
             "years_analyzed": self.years_analyzed,
             "sensors_used": self.sensors_used,
             "interpretation": self.interpretation,
-            "confidence": self.confidence
+            "confidence": self.confidence,
+            "flags": self.flags,
+            "priority": self.priority
         }
 
 
@@ -215,6 +226,22 @@ class TemporalArchaeologicalSignatureEngine:
         if sar_series:
             sensors_used.append(sar_series.sensor_name)
         
+        # FASE 5: Flags especiales y prioridad
+        flags = []
+        priority = "NORMAL"
+        
+        if thermal_stability > 0.9:
+            flags.append("THERMAL_ANCHOR_ZONE")
+            priority = "HIGH"
+            logger.info(f"   🔥 THERMAL ANCHOR ZONE detectada - Prioridad HIGH")
+        
+        if tas_score > 0.7:
+            flags.append("HIGH_CONFIDENCE")
+            priority = "HIGH"
+        
+        if ndvi_persistence < 0.1 and environment_type == "arid":
+            flags.append("LOW_NDVI_ARID")
+        
         # Crear firma TAS
         tas = TemporalArchaeologicalSignature(
             ndvi_persistence=ndvi_persistence,
@@ -229,7 +256,9 @@ class TemporalArchaeologicalSignatureEngine:
             thermal_series=thermal_series,
             sar_series=sar_series,
             interpretation=interpretation,
-            confidence=confidence
+            confidence=confidence,
+            flags=flags,
+            priority=priority
         )
         
         logger.info(f"✅ TAS calculado exitosamente:")
@@ -481,8 +510,9 @@ class TemporalArchaeologicalSignatureEngine:
         Calcular TAS Score combinado con pesos adaptativos por ambiente.
         
         PESOS ADAPTATIVOS:
-        - ÁRIDO: Thermal 40%, SAR 40%, NDVI 10%, Stress 10%
+        - ÁRIDO: Thermal 40-50%, SAR 40%, NDVI 5-10%, Stress 10%
           (NDVI bajo es normal, priorizar SAR/térmico)
+          (Si thermal > 0.9 → THERMAL ANCHOR ZONE → peso 50%)
         
         - TROPICAL: Thermal 20%, SAR 30%, NDVI 30%, Stress 20%
           (NDVI alto es normal, importante para detectar anomalías)
@@ -506,13 +536,24 @@ class TemporalArchaeologicalSignatureEngine:
         
         # Determinar pesos según ambiente
         if environment_type == "arid":
-            weights = {
-                'thermal_stability': 0.40,
-                'sar_coherence': 0.40,
-                'ndvi_persistence': 0.10,  # Reducido (NDVI bajo es normal)
-                'stress_frequency': 0.10
-            }
-            logger.debug(f"      Pesos TAS (árido): Thermal 40%, SAR 40%, NDVI 10%")
+            # CRÍTICO: Si thermal > 0.9 → THERMAL ANCHOR ZONE
+            if thermal_stability > 0.9:
+                weights = {
+                    'thermal_stability': 0.50,  # ↑ Aumentar (señal MUY fuerte)
+                    'sar_coherence': 0.35,
+                    'ndvi_persistence': 0.05,   # ↓ Reducir más (casi cero)
+                    'stress_frequency': 0.10
+                }
+                logger.info(f"      🔥 THERMAL ANCHOR ZONE detectada (thermal={thermal_stability:.3f})")
+                logger.info(f"      Pesos TAS (árido + thermal anchor): Thermal 50%, SAR 35%, NDVI 5%")
+            else:
+                weights = {
+                    'thermal_stability': 0.40,
+                    'sar_coherence': 0.40,
+                    'ndvi_persistence': 0.10,
+                    'stress_frequency': 0.10
+                }
+                logger.debug(f"      Pesos TAS (árido): Thermal 40%, SAR 40%, NDVI 10%")
             
         elif environment_type == "tropical":
             weights = {
