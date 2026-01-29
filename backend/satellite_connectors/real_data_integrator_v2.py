@@ -63,8 +63,20 @@ class RealDataIntegratorV2:
     - Degradación controlada
     """
     
-    def __init__(self):
+    def __init__(self, credentials_manager=None):
         """Inicializar todos los conectores con manejo de errores robusto."""
+        
+        # CRÍTICO: Inicializar credentials_manager si no se proporciona
+        if credentials_manager is None:
+            try:
+                from backend.credentials_manager import CredentialsManager
+                self.credentials_manager = CredentialsManager()
+                logger.info("✅ CredentialsManager initialized from BD")
+            except Exception as e:
+                logger.warning(f"⚠️ Could not initialize CredentialsManager: {e}")
+                self.credentials_manager = None
+        else:
+            self.credentials_manager = credentials_manager
         
         # Inicializar conectores con manejo de errores
         self.connectors = {}
@@ -120,7 +132,8 @@ class RealDataIntegratorV2:
             self.connectors['viirs'] = None
         
         try:
-            self.connectors['srtm'] = SRTMConnector()
+            # CRÍTICO: Pasar credentials_manager a SRTM para leer de BD
+            self.connectors['srtm'] = SRTMConnector(credentials_manager=self.credentials_manager)
             logger.info("✅ SRTM DEM connector initialized")
         except Exception as e:
             logger.warning(f"⚠️ SRTM failed to initialize: {e}")

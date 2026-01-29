@@ -128,10 +128,11 @@ class ICESat2Connector(SatelliteConnector):
             )
             
             if not results:
+                logger.info(f"ICESat-2: coverage=false (no granules in region) - NORMAL, not error")
                 return InstrumentMeasurement.create_no_data(
                     instrument_name="ICESat-2",
                     measurement_type="elevation",
-                    reason=f"No {product} granules found for bbox and date range",
+                    reason=f"No {product} granules found - limited orbital coverage (expected)",
                     source="NASA Earthdata"
                 )
             

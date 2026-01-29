@@ -1,0 +1,78 @@
+{
+  "nombre": "Oasis Antiguos - Sahara (Egipto Occidental)",
+  "coordenadas": {
+    "lat_center": 26.0,
+    "lon_center": 28.5,
+    "lat_min": 25.932626661875673,
+    "lat_max": 26.067373338124327,
+    "lon_min": 28.49740871776445,
+    "lon_max": 28.50259128223555
+  },
+  "timestamp": "2026-01-29T15:54:39.544769",
+  "clasificacion": "ZONA HABITABLE - Paisaje cultural difuso",
+  "comparacion_atacama": {
+    "atacama_ess": 0.477,
+    "sahara_ess": 0.4621311085788661,
+    "diferencia": -0.0148688914211339
+  },
+  "metricas": {
+    "ess_superficial": 0.07573778284226781,
+    "ess_volumetrico": 0.4621311085788661,
+    "ess_temporal": 0.33273439817678363,
+    "coherencia_3d": 0.5378688914211338,
+    "persistencia_temporal": 0.35,
+    "densidad_arqueologica_m3": 0.1005152
+  },
+  "cobertura": {
+    "superficial": {
+      "successful": 1,
+      "total": 5,
+      "percentage": 20.0
+    },
+    "subsuperficial": {
+      "successful": 2,
+      "total": 3,
+      "percentage": 66.66666666666666
+    },
+    "profundo": {
+      "successful": 0,
+      "total": 1,
+      "percentage": 0.0
+    }
+  },
+  "tas": {
+    "tas_score": 0.4524302795367411,
+    "ndvi_persistence": 0.0,
+    "thermal_stability": 0.9786826926113668,
+    "sar_coherence": 0.6353018870133244,
+    "stress_frequency": 0.0,
+    "temporal_scale": "long",
+    "years_analyzed": 26,
+    "sensors_used": [
+      "landsat_thermal",
+      "sentinel_1_sar"
+    ],
+    "interpretation": "Firma arqueol\u00f3gica temporal D\u00c9BIL. Alta estabilidad t\u00e9rmica (posible masa enterrada).",
+    "confidence": 0.9
+  },
+  "dil": {
+    "estimated_depth_m": 3.9638767879555834,
+    "confidence": 0.10227789962361197,
+    "confidence_level": "very_low",
+    "sar_coherence_loss": 0.98712,
+    "thermal_inertia": 0.21206532831482647,
+    "subsurface_moisture": 0.0,
+    "topographic_anomaly": 0.0,
+    "dil_score": 0.4091115984944479,
+    "sensors_used": [
+      "sentinel_1_sar",
+      "landsat_thermal"
+    ],
+    "inference_method": "multi_source_coherent",
+    "interpretation": "Profundidad inferida MEDIA (4.0m). Baja confianza en inferencia (se\u00f1ales d\u00e9biles). P\u00e9rdida de coherencia SAR detectada (cambio subsuperficial).",
+    "archaeological_relevance": 0.03347446000453647
+  },
+  "water_availability": {
+    "holocene_availability": 0.57
+  }
+}

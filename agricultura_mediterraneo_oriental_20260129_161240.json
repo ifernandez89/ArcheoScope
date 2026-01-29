@@ -1,0 +1,78 @@
+{
+  "nombre": "Agricultura Antigua - Mediterr\u00e1neo Oriental",
+  "coordenadas": {
+    "lat_center": 35.4,
+    "lon_center": 36.5,
+    "lat_min": 35.33262666187567,
+    "lat_max": 35.467373338124325,
+    "lon_min": 36.49809679835807,
+    "lon_max": 36.50190320164193
+  },
+  "timestamp": "2026-01-29T16:12:40.218528",
+  "clasificacion": "PISO - Sin huella humana persistente",
+  "comparacion_atacama": {
+    "atacama_ess": 0.477,
+    "mediterraneo_ess": 0.0748727135143572,
+    "diferencia": -0.4021272864856428
+  },
+  "metricas": {
+    "ess_superficial": 0.1580094270287144,
+    "ess_volumetrico": 0.0748727135143572,
+    "ess_temporal": 0.05390835373033719,
+    "coherencia_3d": 0.9251272864856428,
+    "persistencia_temporal": 0.35,
+    "densidad_arqueologica_m3": 0.0
+  },
+  "cobertura": {
+    "superficial": {
+      "successful": 1,
+      "total": 5,
+      "percentage": 20.0
+    },
+    "subsuperficial": {
+      "successful": 2,
+      "total": 3,
+      "percentage": 66.66666666666666
+    },
+    "profundo": {
+      "successful": 0,
+      "total": 1,
+      "percentage": 0.0
+    }
+  },
+  "tas": {
+    "tas_score": 0.3951413280842836,
+    "ndvi_persistence": 0.0,
+    "thermal_stability": 0.6301443774679414,
+    "sar_coherence": 0.8243920593756049,
+    "stress_frequency": 0.0,
+    "temporal_scale": "long",
+    "years_analyzed": 26,
+    "sensors_used": [
+      "landsat_thermal",
+      "sentinel_1_sar"
+    ],
+    "interpretation": "Firma arqueol\u00f3gica temporal D\u00c9BIL.",
+    "confidence": 0.9
+  },
+  "dil": {
+    "estimated_depth_m": 5.82769,
+    "confidence": 0.32138449999999996,
+    "confidence_level": "low",
+    "sar_coherence_loss": 0.97934,
+    "thermal_inertia": 1.0,
+    "subsurface_moisture": 0.0,
+    "topographic_anomaly": 0.0,
+    "dil_score": 0.6427689999999999,
+    "sensors_used": [
+      "sentinel_1_sar",
+      "landsat_thermal"
+    ],
+    "inference_method": "multi_source_coherent",
+    "interpretation": "Profundidad inferida PROFUNDA (5.8m). Baja confianza en inferencia (se\u00f1ales d\u00e9biles). P\u00e9rdida de coherencia SAR detectada (cambio subsuperficial). Alta inercia t\u00e9rmica (posible masa enterrada).",
+    "archaeological_relevance": 0.10328799684024997
+  },
+  "water_availability": {
+    "holocene_availability": 0.8
+  }
+}

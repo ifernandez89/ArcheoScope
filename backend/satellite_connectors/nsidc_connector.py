@@ -99,6 +99,12 @@ class NSIDCConnector:
         Returns:
             InstrumentMeasurement con estado robusto
         """
+        # PRE-CONDICIÓN: Solo regiones polares
+        center_lat = (lat_min + lat_max) / 2
+        if abs(center_lat) < 60:
+            logger.info(f"NSIDC: Skipping non-polar region (lat={center_lat:.1f}°)")
+            return None
+        
         # Importar contrato
         import sys
         from pathlib import Path
@@ -490,6 +496,11 @@ async def test_nsidc_connection():
     print("="*80)
     
     return True
+
+
+# Agregar alias para compatibilidad con RealDataIntegratorV2
+NSIDCConnector.get_sea_ice_data = NSIDCConnector.get_sea_ice_concentration
+NSIDCConnector.get_snow_data = NSIDCConnector.get_snow_cover
 
 
 if __name__ == "__main__":

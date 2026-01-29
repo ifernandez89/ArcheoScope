@@ -307,6 +307,12 @@ class MODISLSTConnector:
             return "Inercia baja - Suelo suelto o arena"
         else:
             return "Inercia muy baja - Agua o superficie muy reflectiva"
+    
+    # Alias para compatibilidad con RealDataIntegratorV2
+    async def get_thermal_data(self, lat_min: float, lat_max: float, 
+                               lon_min: float, lon_max: float) -> Optional[Dict[str, Any]]:
+        """Alias para get_land_surface_temperature (compatibilidad)."""
+        return await self.get_land_surface_temperature(lat_min, lat_max, lon_min, lon_max)
 
 
 # ============================================================================

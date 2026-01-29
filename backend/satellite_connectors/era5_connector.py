@@ -227,52 +227,126 @@ class ERA5Connector:
     async def _get_era5_variable(self, variable: str, lat_min: float, lat_max: float,
                                 lon_min: float, lon_max: float,
                                 start_year: int, end_year: int) -> Optional[Dict[str, Any]]:
-        """Obtener variable específica de ERA5."""
+        """Obtener variable específica de ERA5 con timeseries API (ROBUSTO)."""
         
         try:
             # Crear archivo temporal para descarga
-            with tempfile.NamedTemporaryFile(suffix='.nc', delete=False) as tmp_file:
+            with tempfile.NamedTemporaryFile(suffix='.grib', delete=False) as tmp_file:
                 tmp_path = tmp_file.name
             
-            # Parámetros de descarga CDS
-            request_params = {
-                'product_type': 'reanalysis',
-                'variable': variable,
-                'year': [str(year) for year in range(start_year, end_year + 1)],
-                'month': ['01', '02', '03', '04', '05', '06',
-                         '07', '08', '09', '10', '11', '12'],
-                'day': ['01', '15'],  # Muestreo quincenal
-                'time': ['00:00', '12:00'],  # Dos veces al día
-                'area': [lat_max, lon_min, lat_min, lon_max],  # Norte, Oeste, Sur, Este
-                'format': 'netcdf'
+            # CONFIGURACIÓN A PRUEBA DE BALAS
+            dataset = "reanalysis-era5-single-levels"
+            
+            # Centro de la región
+            center_lat = (lat_min + lat_max) / 2
+            center_lon = (lon_min + lon_max) / 2
+            
+            # Limitar período (máximo 5 años)
+            if end_year - start_year > 5:
+                start_year = end_year - 5
+            
+            # Request robusto con GRIB (más estable que NetCDF)
+            request = {
+                "product_type": ["reanalysis"],
+                "variable": [variable],
+                "year": [str(year) for year in range(start_year, end_year + 1)],
+                "month": ['01', '04', '07', '10'],  # Trimestral (más rápido)
+                "day": ['15'],  # Día 15 de cada mes
+                "time": ['12:00'],  # Solo mediodía
+                "area": [
+                    center_lat + 0.25,  # Norte (bbox pequeño ≤ 0.5°)
+                    center_lon - 0.25,  # Oeste
+                    center_lat - 0.25,  # Sur
+                    center_lon + 0.25   # Este
+                ],
+                "data_format": "grib",  # GRIB más estable que NetCDF
+                "download_format": "unarchived"
             }
             
             # Descargar datos
-            self.cds_client.retrieve('reanalysis-era5-single-levels', request_params, tmp_path)
+            logger.info(f"📥 Descargando ERA5 {variable}...")
+            result = self.cds_client.retrieve(dataset, request)
+            result.download(tmp_path)
             
-            # Leer con xarray
-            with xr.open_dataset(tmp_path) as ds:
+            # Verificar archivo
+            if not os.path.exists(tmp_path) or os.path.getsize(tmp_path) == 0:
+                logger.error(f"❌ Archivo descargado vacío")
+                return None
+            
+            logger.info(f"✅ Descarga completa: {os.path.getsize(tmp_path)} bytes")
+            
+            # Leer con xarray (GRIB con cfgrib engine)
+            try:
+                ds = xr.open_dataset(
+                    tmp_path,
+                    engine="cfgrib",
+                    backend_kwargs={'indexpath': ''}
+                )
+            except Exception as e1:
+                logger.warning(f"cfgrib failed: {e1}, trying h5netcdf...")
+                try:
+                    ds = xr.open_dataset(tmp_path, engine="h5netcdf")
+                except Exception as e2:
+                    logger.error(f"All engines failed: {e2}")
+                    return None
+            
+            # VALIDACIÓN AUTOMÁTICA
+            if not self._validate_era5_dataset(ds):
+                logger.error(f"❌ Dataset inválido")
+                ds.close()
+                return None
+            
+            with ds:
                 # Extraer variable (nombre puede variar)
                 var_names = list(ds.data_vars.keys())
-                if var_names:
-                    var_data = ds[var_names[0]]
-                    
-                    # Calcular estadísticas
+                if not var_names:
+                    logger.error("❌ No variables en dataset")
+                    return None
+                
+                var_data = ds[var_names[0]]
+                
+                # Validar que hay datos válidos
+                if var_data.isnull().all():
+                    logger.error("❌ Todos los valores son nulos")
+                    return None
+                
+                # Calcular estadísticas (skipna=True para ignorar NaN)
+                try:
                     stats = {
-                        'mean': float(var_data.mean()),
-                        'std': float(var_data.std()),
-                        'min': float(var_data.min()),
-                        'max': float(var_data.max()),
-                        'median': float(var_data.median())
+                        'mean': float(var_data.mean(skipna=True)),
+                        'std': float(var_data.std(skipna=True)),
+                        'min': float(var_data.min(skipna=True)),
+                        'max': float(var_data.max(skipna=True)),
+                        'median': float(var_data.median(skipna=True))
                     }
                     
-                    # Tendencia temporal
-                    time_series = var_data.mean(dim=['latitude', 'longitude'])
-                    trend = self._calculate_trend(time_series.values)
+                    # Verificar que los stats son válidos
+                    if any(np.isnan(v) or np.isinf(v) for v in stats.values()):
+                        logger.error("❌ Estadísticas inválidas (NaN/Inf)")
+                        return None
                     
-                    return {
-                        'statistics': stats,
-                        'trend': trend,
+                except Exception as e:
+                    logger.error(f"❌ Error calculando estadísticas: {e}")
+                    return None
+                
+                # Tendencia temporal
+                try:
+                    # Promediar espacialmente primero
+                    if 'latitude' in var_data.dims and 'longitude' in var_data.dims:
+                        time_series = var_data.mean(dim=['latitude', 'longitude'], skipna=True)
+                    else:
+                        time_series = var_data
+                    
+                    trend = self._calculate_trend(time_series.values)
+                except Exception as e:
+                    logger.warning(f"⚠️ No se pudo calcular tendencia: {e}")
+                    trend = {'slope': 0.0, 'direction': 'stable'}
+                
+                logger.info(f"✅ ERA5 stats: mean={stats['mean']:.2f}, range=[{stats['min']:.2f}, {stats['max']:.2f}]")
+                
+                return {
+                    'statistics': stats,
+                    'trend': trend,
                         'time_series_length': len(time_series),
                         'spatial_coverage': {
                             'lat_range': [float(var_data.latitude.min()), float(var_data.latitude.max())],
@@ -555,6 +629,49 @@ class ERA5Connector:
             return 'moderate'
         else:
             return 'poor'
+    
+    def _validate_era5_dataset(self, ds: xr.Dataset) -> bool:
+        """
+        Validación automática de dataset ERA5.
+        
+        Previene errores comunes:
+        - Dataset vacío
+        - Dimensiones faltantes
+        - Datos nulos
+        """
+        try:
+            # Verificar dimensión time (puede ser 'time' o 'valid_time')
+            time_dim = None
+            if "time" in ds.dims:
+                time_dim = "time"
+            elif "valid_time" in ds.dims:
+                time_dim = "valid_time"
+            else:
+                logger.error(f"❌ Dimensión temporal faltante. Dims: {list(ds.dims.keys())}")
+                return False
+            
+            # Verificar que hay datos
+            if ds.dims[time_dim] == 0:
+                logger.error(f"❌ Dataset vacío ({time_dim}=0)")
+                return False
+            
+            # Verificar que no todo es nulo
+            var_names = list(ds.data_vars.keys())
+            if not var_names:
+                logger.error("❌ No hay variables en dataset")
+                return False
+            
+            var_data = ds[var_names[0]]
+            if var_data.isnull().all():
+                logger.error("❌ Todos los valores son nulos")
+                return False
+            
+            logger.info(f"✅ Dataset válido: {ds.dims[time_dim]} timesteps, vars: {var_names}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Error validando dataset: {e}")
+            return False
     
     def _calculate_trend(self, time_series: np.ndarray) -> Dict[str, float]:
         """Calcular tendencia temporal."""

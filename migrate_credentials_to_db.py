@@ -47,6 +47,26 @@ async def migrate_credentials():
     print(f"   ✅ Password guardado")
     print()
     
+    # Credenciales de OpenTopography
+    print("🏔️ OpenTopography:")
+    opentopography_api_key = "a50282b0e5ff10cc45ada6d8ac1bf0b3"
+    
+    cm.store_credential("opentopography", "api_key", opentopography_api_key, "OpenTopography API key")
+    print(f"   ✅ API Key guardada")
+    print()
+    
+    # Credenciales de Copernicus CDS
+    print("🌍 Copernicus CDS:")
+    cds_api_key = "688997f8-954e-4cc4-bfae-430d5a67f4d3"
+    cds_url = "https://cds.climate.copernicus.eu/api/v2"
+    
+    cm.store_credential("copernicus_cds", "api_key", cds_api_key, "Copernicus CDS API Key")
+    print(f"   ✅ API Key guardada")
+    
+    cm.store_credential("copernicus_cds", "url", cds_url, "Copernicus CDS API URL")
+    print(f"   ✅ URL guardada")
+    print()
+    
     # Verificar que se guardaron correctamente
     print("="*80)
     print("🔍 Verificando credenciales guardadas")
@@ -68,6 +88,20 @@ async def migrate_credentials():
         print(f"✅ Copernicus Marine: {copernicus_user} / {'*' * len(copernicus_pass)}")
     else:
         print("❌ Copernicus Marine: No encontrado")
+    
+    opentopo_key = cm.get_credential("opentopography", "api_key")
+    
+    if opentopo_key:
+        print(f"✅ OpenTopography: {opentopo_key[:10]}...{opentopo_key[-5:]}")
+    else:
+        print("❌ OpenTopography: No encontrado")
+    
+    cds_key = cm.get_credential("copernicus_cds", "api_key")
+    
+    if cds_key:
+        print(f"✅ Copernicus CDS: {cds_key[:10]}...{cds_key[-5:]}")
+    else:
+        print("❌ Copernicus CDS: No encontrado")
     
     print()
     print("="*80)

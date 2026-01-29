@@ -411,6 +411,11 @@ async def test_copernicus_marine_connection():
     return True
 
 
+# Agregar alias para compatibilidad con RealDataIntegratorV2
+CopernicusMarineConnector.get_sst_data = CopernicusMarineConnector.get_sea_surface_temperature
+CopernicusMarineConnector.get_sea_ice_data = CopernicusMarineConnector.get_sea_ice_concentration
+
+
 if __name__ == "__main__":
     import asyncio
     asyncio.run(test_copernicus_marine_connection())
