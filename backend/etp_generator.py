@@ -577,7 +577,7 @@ class ETProfileGenerator:
                 lon_max=bounds.lon_max
             )
             
-            if era5_result and hasattr(era5_result, 'value'):
+            if era5_result and hasattr(era5_result, 'value') and era5_result.value is not None:
                 temporal_data['climate_context'] = {
                     'preservation_score': era5_result.value,
                     'climate_stability': 'stable' if era5_result.value > 0.7 else 'variable'
@@ -592,7 +592,7 @@ class ETProfileGenerator:
                 lon_max=bounds.lon_max
             )
             
-            if chirps_result and hasattr(chirps_result, 'value'):
+            if chirps_result and hasattr(chirps_result, 'value') and chirps_result.value is not None:
                 temporal_data['precipitation_history'] = {
                     'precipitation_index': chirps_result.value,
                     'water_availability': 'high' if chirps_result.value > 0.6 else 'low'
