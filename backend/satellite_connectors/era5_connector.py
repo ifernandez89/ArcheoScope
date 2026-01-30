@@ -98,14 +98,33 @@ class ERA5Connector:
                 # Analizar contexto arqueológico
                 archaeological_context = self._analyze_archaeological_climate(climate_data)
                 
-                return {
-                    'climate_data': climate_data,
-                    'archaeological_context': archaeological_context,
-                    'analysis_period': f"{start_year}-{end_year}",
-                    'source': 'ERA5_reanalysis',
-                    'resolution_km': 25,
-                    'quality': 'high'
-                }
+                # CRÍTICO: Calcular thermal_stability como valor principal
+                thermal_stability = 0.5  # Default
+                if 'temperature' in climate_data:
+                    thermal_stability = self._calculate_thermal_stability(climate_data['temperature'])
+                
+                # CRÍTICO: Retornar InstrumentMeasurement, NO dict
+                import sys
+                from pathlib import Path
+                sys.path.insert(0, str(Path(__file__).parent.parent))
+                from instrument_contract import InstrumentMeasurement
+                
+                return InstrumentMeasurement.create_success(
+                    instrument_name="ERA5",
+                    measurement_type="thermal_stability",
+                    value=thermal_stability,  # SEÑAL PRINCIPAL: estabilidad térmica
+                    unit="stability_index",
+                    confidence=0.85,
+                    source="ERA5 Reanalysis",
+                    acquisition_date=datetime.now().isoformat()[:10],
+                    metadata={
+                        'climate_data': climate_data,
+                        'archaeological_context': archaeological_context,
+                        'analysis_period': f"{start_year}-{end_year}",
+                        'resolution_km': 25,
+                        'quality': 'high'
+                    }
+                )
             
             return None
             

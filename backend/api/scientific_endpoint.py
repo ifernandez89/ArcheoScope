@@ -376,10 +376,133 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
             # Fallback: usar pipeline científico básico si TIMT no está disponible
             print("\n⚠️ TIMT no disponible, usando pipeline científico básico", flush=True)
             
-            # [CÓDIGO ORIGINAL DEL PIPELINE BÁSICO AQUÍ - MANTENER COMO FALLBACK]
-            # ... (código existente) ...
+            # Primero obtener mediciones con RealDataIntegratorV2
+            integrator_v2 = RealDataIntegratorV2()
             
-            raise HTTPException(status_code=503, detail="TIMT engine not available")
+            # Lista de instrumentos a medir (NOMBRES CORRECTOS según mapping)
+            instrument_names = [
+                'sentinel2',  # Sentinel-2 NDVI
+                'sentinel_1_sar',  # Sentinel-1 SAR
+                'landsat_thermal',  # Landsat térmico
+                'icesat2',  # ICESat-2 elevación
+                'srtm_dem',  # SRTM DEM
+                'modis_lst',  # MODIS LST
+                'era5_climate',  # ERA5 clima
+                'chirps_precipitation',  # CHIRPS precipitación
+                'copernicus_sst',  # Copernicus Marine
+                'viirs_thermal',  # VIIRS térmico
+                'opentopography',  # OpenTopography LiDAR
+                'palsar_backscatter'  # PALSAR SAR
+            ]
+            
+            print(f"\n[MEDICIONES] Obteniendo datos de {len(instrument_names)} instrumentos...", flush=True)
+            
+            instrument_batch = await integrator_v2.get_batch_measurements(
+                instrument_names=instrument_names,
+                lat_min=request.lat_min,
+                lat_max=request.lat_max,
+                lon_min=request.lon_min,
+                lon_max=request.lon_max
+            )
+            
+            # Convertir InstrumentBatch a diccionario compatible con pipeline
+            raw_measurements = {
+                'instrumental_measurements': {},
+                'metadata': {
+                    'coverage_score': instrument_batch.get_coverage_score(),
+                    'status_summary': instrument_batch.get_status_summary()
+                }
+            }
+            
+            # Agregar cada medición al diccionario
+            for result in instrument_batch.results:
+                raw_measurements['instrumental_measurements'][result.instrument_name] = {
+                    'value': result.value,
+                    'confidence': result.confidence,
+                    'status': result.status.value,
+                    'unit': result.unit,
+                    'quality_ratio': result.quality_ratio,
+                    'source': result.source,
+                    'acquisition_date': result.acquisition_date,
+                    'reason': result.reason
+                }
+            
+            print(f"[MEDICIONES] Obtenidas {len(raw_measurements['instrumental_measurements'])} mediciones", flush=True)
+            print(f"[MEDICIONES] Coverage score: {raw_measurements['metadata']['coverage_score']:.2f}", flush=True)
+            
+            # Usar el pipeline científico con los parámetros correctos
+            pipeline = ScientificPipeline(
+                db_pool=db_pool,
+                validator=validator
+            )
+            
+            # Ejecutar análisis con las mediciones
+            result = await pipeline.analyze(
+                raw_measurements=raw_measurements,
+                lat_min=request.lat_min,
+                lat_max=request.lat_max,
+                lon_min=request.lon_min,
+                lon_max=request.lon_max
+            )
+            
+            # Extraer scientific_output
+            scientific_output = result.get('scientific_output', {})
+            
+            # Construir lista de mediciones para el frontend
+            measurements_list = []
+            for inst_name, inst_data in raw_measurements['instrumental_measurements'].items():
+                measurements_list.append({
+                    'instrument_name': inst_name,
+                    'value': inst_data.get('value'),
+                    'confidence': inst_data.get('confidence', 0),
+                    'status': inst_data.get('status', 'UNKNOWN'),
+                    'unit': inst_data.get('unit', ''),
+                    'source': inst_data.get('source', ''),
+                    'quality_ratio': inst_data.get('quality_ratio')
+                })
+            
+            # Construir respuesta compatible con frontend
+            response_data = {
+                'analysis_id': scientific_output.get('candidate_id', 'unknown'),
+                'region_name': detected_region,
+                'timestamp': scientific_output.get('timestamp'),
+                'measurements': measurements_list,  # Lista de instrumentos
+                'archaeological_results': {
+                    'anomaly_score': scientific_output.get('anomaly_score', 0),
+                    'anthropic_probability': scientific_output.get('anthropic_probability', 0),
+                    'confidence_interval': scientific_output.get('confidence_interval', [0, 0]),
+                    'recommended_action': scientific_output.get('recommended_action', 'unknown'),
+                    'classification': scientific_output.get('classification', 'unknown'),
+                    'priority': scientific_output.get('priority', 'NORMAL'),
+                    'scientific_confidence': scientific_output.get('scientific_confidence', 'low')
+                },
+                'environment_context': {
+                    'coverage_raw': scientific_output.get('coverage_raw', 0),
+                    'coverage_effective': scientific_output.get('coverage_effective', 0),
+                    'instruments_measured': scientific_output.get('instruments_measured', 0),
+                    'instruments_available': scientific_output.get('instruments_available', 0),
+                    'epistemic_uncertainty': scientific_output.get('epistemic_uncertainty', 0)
+                },
+                'anomaly_map': {
+                    'path': scientific_output.get('anomaly_map_path', ''),
+                    'metadata': scientific_output.get('anomaly_map_metadata', {})
+                },
+                'scientific_narrative': scientific_output.get('scientific_narrative', ''),
+                'request_info': {
+                    'region_name': detected_region,
+                    'center_lat': center_lat,
+                    'center_lon': center_lon,
+                    'bounds': {
+                        'lat_min': request.lat_min,
+                        'lat_max': request.lat_max,
+                        'lon_min': request.lon_min,
+                        'lon_max': request.lon_max
+                    }
+                }
+            }
+            
+            print("\n✅ Análisis científico básico completado", flush=True)
+            return response_data
         
         # ============================================================================
         # GUARDAR EN BASE DE DATOS (estructura completa TIMT)

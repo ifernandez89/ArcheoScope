@@ -41,20 +41,32 @@ class OpenTopographyConnector(SatelliteConnector):
         super().__init__(cache_enabled)
         self.name = "OpenTopography"
         
-        # Cargar API key desde environment
-        self.api_key = api_key or os.getenv("OPENTOPOGRAPHY_API_KEY")
+        # Cargar API key desde BD encriptada o environment
+        if api_key:
+            self.api_key = api_key
+        else:
+            try:
+                import sys
+                from pathlib import Path
+                sys.path.insert(0, str(Path(__file__).parent.parent))
+                from credentials_manager import CredentialsManager
+                creds_manager = CredentialsManager()
+                self.api_key = creds_manager.get_credential("opentopography", "api_key")
+            except Exception as e:
+                logger.warning(f"⚠️ No se pudo cargar API key desde BD: {e}")
+                self.api_key = os.getenv("OPENTOPOGRAPHY_API_KEY")
         
         if not self.api_key:
             logger.warning("⚠️ OpenTopography API key no configurada")
-            logger.warning("   Configura OPENTOPOGRAPHY_API_KEY en .env")
+            logger.warning("   Configura OPENTOPOGRAPHY_API_KEY en .env o BD")
             self.available = False
         else:
             logger.info("✅ OpenTopography API key configurada")
             self.available = True
         
-        # Timeout configuration
-        self.timeout = float(os.getenv("OPENTOPOGRAPHY_TIMEOUT", "30"))  # 30s para descargas
-        self.connect_timeout = float(os.getenv("SATELLITE_API_CONNECT_TIMEOUT", "5"))
+        # Timeout configuration - aumentado para regiones grandes
+        self.timeout = float(os.getenv("OPENTOPOGRAPHY_TIMEOUT", "120"))  # 120s para descargas grandes
+        self.connect_timeout = float(os.getenv("SATELLITE_API_CONNECT_TIMEOUT", "10"))
     
     async def get_elevation_data(
         self,
@@ -126,15 +138,26 @@ class OpenTopographyConnector(SatelliteConnector):
                             logger.info(f"   Elevación: {stats['elevation_min']:.1f}m - {stats['elevation_max']:.1f}m")
                             logger.info(f"   Rugosidad: {stats['roughness']:.3f}")
                             
-                            return {
-                                "source": f"OpenTopography {dem_type}",
-                                "acquisition_date": datetime.now().isoformat(),
-                                "resolution_m": 30 if "30" in dem_type or "GL1" in dem_type else 90,
-                                "confidence": 0.95,  # OpenTopography es muy confiable
-                                "data_mode": "REAL",
-                                **stats,
-                                **archaeological_features
-                            }
+                            # CRÍTICO: Retornar InstrumentMeasurement, NO dict
+                            import sys
+                            from pathlib import Path
+                            sys.path.insert(0, str(Path(__file__).parent.parent))
+                            from instrument_contract import InstrumentMeasurement
+                            
+                            return InstrumentMeasurement.create_success(
+                                instrument_name="OpenTopography",
+                                measurement_type="elevation_rugosity",
+                                value=stats['roughness'],  # SEÑAL PRINCIPAL: rugosidad
+                                unit="rugosity_index",
+                                confidence=0.95,
+                                source=f"OpenTopography {dem_type}",
+                                acquisition_date=datetime.now().isoformat()[:10],
+                                metadata={
+                                    **stats,
+                                    **archaeological_features,
+                                    "resolution_m": 30 if "30" in dem_type or "GL1" in dem_type else 90
+                                }
+                            )
                     finally:
                         # Limpiar archivo temporal
                         try:

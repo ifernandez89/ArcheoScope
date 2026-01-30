@@ -141,13 +141,21 @@ def initialize_system():
     """Inicializar componentes del sistema."""
     try:
         system_components['rules_engine'] = ArchaeologicalRulesEngine()
-        system_components['ai_assistant'] = ArchaeologicalAssistant()
+        
+        # AI Assistant deshabilitado temporalmente - causaba bloqueo en startup
+        # system_components['ai_assistant'] = ArchaeologicalAssistant()
+        system_components['ai_assistant'] = None
+        logger.info("⚠️ AI Assistant deshabilitado temporalmente")
+        
         system_components['explainer'] = ScientificExplainer()
         system_components['geometric_engine'] = GeometricInferenceEngine()
         system_components['environment_classifier'] = EnvironmentClassifier()
-        system_components['core_anomaly_detector'] = CoreAnomalyDetector(
-            environment_classifier=system_components.get('environment_classifier')
-        )
+        
+        # CoreAnomalyDetector necesita real_validator y data_loader
+        # Temporalmente deshabilitado para evitar dependencias circulares
+        system_components['core_anomaly_detector'] = None
+        logger.info("⚠️ CoreAnomalyDetector deshabilitado temporalmente")
+        
         system_components['transparency'] = DataSourceTransparency()
         
         logger.info("✅ Sistema ArcheoScope inicializado correctamente")
@@ -159,40 +167,44 @@ def initialize_system():
 @app.on_event("startup")
 async def startup_event():
     """Inicializar sistema al arrancar."""
-    initialize_system()
+    logger.info("🚀 Iniciando ArcheoScope...")
+    
+    # Inicializar componentes básicos
+    try:
+        initialize_system()
+    except Exception as e:
+        logger.error(f"❌ Error en initialize_system: {e}")
     
     # Inicializar BD
     try:
-        await database_connection.connect()
-        site_count = await database_connection.count_sites()
-        logger.info(f"✅ Base de datos conectada - {site_count:,} sitios disponibles")
+        if database_connection is not None:
+            await database_connection.connect()
+            site_count = await database_connection.count_sites()
+            logger.info(f"✅ Base de datos conectada - {site_count:,} sitios disponibles")
+        else:
+            logger.warning("⚠️ Database connection no disponible")
     except Exception as e:
-        logger.error(f"❌ Error conectando a BD: {e}")
+        logger.warning(f"⚠️ BD no disponible (continuando sin BD): {e}")
     
     # Inicializar pool para endpoint científico
     try:
-        from api.scientific_endpoint import init_db_pool, initialize_timt_engine
+        from api.scientific_endpoint import init_db_pool
         await init_db_pool()
-        initialize_timt_engine()  # Inicializar TIMT para fusión transparente
-        logger.info("✅ Motor TIMT inicializado para fusión transparente")
+        logger.info("✅ Pool científico inicializado")
     except Exception as e:
-        logger.error(f"❌ Error inicializando pool científico o TIMT: {e}")
+        logger.warning(f"⚠️ Pool científico no disponible: {e}")
     
-    # Inicializar pool para TIMT
-    try:
-        from api.timt_endpoints import init_timt_db_pool
-        await init_timt_db_pool()
-    except Exception as e:
-        logger.error(f"❌ Error inicializando pool TIMT: {e}")
+    logger.info("✅ ArcheoScope iniciado completamente")
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cerrar conexiones."""
     try:
-        await database_connection.close()
-        logger.info("✅ Conexión a BD cerrada")
+        if database_connection is not None:
+            await database_connection.close()
+            logger.info("✅ Conexión a BD cerrada")
     except Exception as e:
-        logger.error(f"❌ Error cerrando BD: {e}")
+        logger.warning(f"⚠️ Error cerrando BD: {e}")
 
 # ============================================================================
 # ENDPOINTS FUNCIONALES
@@ -239,15 +251,27 @@ async def get_detailed_system_status():
             "explainer": "operational" if system_components.get('explainer') else "offline",
             "geometric_engine": "operational" if system_components.get('geometric_engine') else "offline",
             "environment_classifier": "operational" if system_components.get('environment_classifier') else "offline",
-            "core_anomaly_detector": "operational" if system_components.get('core_anomaly_detector') else "offline"
-        },
-        "capabilities": {
-            "scientific_analysis": True,
-            "volumetric_inference": bool(system_components.get('geometric_engine')),
-            "environment_classification": bool(system_components.get('environment_classifier')),
-            "ai_explanations": bool(ai_assistant and ai_assistant.is_available)
+            "core_anomaly_detector": "operational" if system_components.get('core_anomaly_detector') else "offline",
+            "transparency": "operational" if system_components.get('transparency') else "offline"
         }
     }
+
+@app.get("/anomaly-map/{filename}", tags=["Anomaly Maps"])
+async def get_anomaly_map(filename: str):
+    """Servir imagen de mapa de anomalía."""
+    from fastapi.responses import FileResponse
+    
+    # Path al archivo
+    map_path = Path("anomaly_maps") / filename
+    
+    if not map_path.exists():
+        raise HTTPException(status_code=404, detail="Mapa no encontrado")
+    
+    return FileResponse(
+        path=str(map_path),
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=3600"}
+    )
 
 @app.get("/data-sources", tags=["Data"])
 async def get_data_sources():
@@ -437,17 +461,18 @@ except Exception as e:
 # INCLUIR ROUTER ANOMALY VISUALIZATION (NUEVO)
 # ============================================================================
 
-try:
-    from api.anomaly_visualization_endpoint import router as anomaly_viz_router
-    
-    app.include_router(
-        anomaly_viz_router,
-        tags=["Anomaly Visualization"]
-    )
-    logger.info("✅ Router Anomaly Visualization incluido")
-except ImportError as e:
-    logger.error(f"❌ No se pudo cargar router Anomaly Visualization: {e}")
-    import traceback
+# TEMPORALMENTE DESHABILITADO - Causaba bloqueo del backend
+# try:
+#     from api.anomaly_visualization_endpoint import router as anomaly_viz_router
+#     
+#     app.include_router(
+#         anomaly_viz_router,
+#         tags=["Anomaly Visualization"]
+#     )
+#     logger.info("✅ Router Anomaly Visualization incluido")
+# except ImportError as e:
+#     logger.error(f"❌ No se pudo cargar router Anomaly Visualization: {e}")
+#     import traceback
     traceback.print_exc()
 except Exception as e:
     logger.error(f"❌ Error inicializando Anomaly Visualization: {e}")

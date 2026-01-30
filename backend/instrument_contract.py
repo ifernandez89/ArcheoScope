@@ -172,6 +172,26 @@ class InstrumentMeasurement:
             acquisition_date=None,
             processing_notes=f"NOT a direct measurement. Estimated using: {derivation_method}"
         )
+    
+    @classmethod
+    def create_success(cls, instrument_name: str, measurement_type: str,
+                      value: float, unit: str, confidence: float,
+                      source: str, acquisition_date: Optional[str] = None,
+                      metadata: Optional[Dict[str, Any]] = None) -> 'InstrumentMeasurement':
+        """Factory: Crear medición exitosa"""
+        return cls(
+            instrument_name=instrument_name,
+            measurement_type=measurement_type,
+            value=value,
+            unit=unit,
+            status=InstrumentStatus.OK,
+            confidence=confidence,
+            reason=None,
+            quality_flags=metadata or {},
+            source=source,
+            acquisition_date=acquisition_date,
+            processing_notes=None
+        )
 
 
 def validate_measurement(measurement: InstrumentMeasurement) -> bool:

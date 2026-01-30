@@ -42,16 +42,27 @@ class PALSARConnector:
             'interferometry': 'ALOS_PALSAR_INTERFEROMETRY'
         }
         
-        # Credenciales Earthdata (hasheadas en BD)
-        import os
-        self.username = os.getenv('EARTHDATA_USERNAME')
-        self.password = os.getenv('EARTHDATA_PASSWORD')
+        # Cargar credenciales Earthdata desde BD encriptada
+        try:
+            import sys
+            from pathlib import Path
+            sys.path.insert(0, str(Path(__file__).parent.parent))
+            from credentials_manager import CredentialsManager
+            creds_manager = CredentialsManager()
+            self.username = creds_manager.get_credential("earthdata", "username")
+            self.password = creds_manager.get_credential("earthdata", "password")
+        except Exception as e:
+            logger.warning(f"⚠️ No se pudieron cargar credenciales desde BD: {e}")
+            # Fallback a environment variables
+            import os
+            self.username = os.getenv('EARTHDATA_USERNAME')
+            self.password = os.getenv('EARTHDATA_PASSWORD')
         
         logger.info("📡 ALOS PALSAR-2 Connector initialized")
     
     async def get_sar_backscatter(self, lat_min: float, lat_max: float,
                                  lon_min: float, lon_max: float,
-                                 polarization: str = 'HH') -> Dict[str, Any]:
+                                 polarization: str = 'HH') -> Optional['InstrumentMeasurement']:
         """
         Obtener datos de backscatter SAR L-band.
         
@@ -59,9 +70,18 @@ class PALSARConnector:
             polarization: 'HH', 'HV', 'VV', 'VH'
         
         VENTAJA L-band: Penetra vegetación hasta 10m de profundidad
+        
+        Returns:
+            InstrumentMeasurement con backscatter como valor principal
         """
         
         try:
+            # Importar InstrumentMeasurement
+            import sys
+            from pathlib import Path
+            sys.path.insert(0, str(Path(__file__).parent.parent))
+            from instrument_contract import InstrumentMeasurement
+            
             # Buscar escenas PALSAR-2 disponibles
             search_params = {
                 'platform': 'ALOS-2',
@@ -76,10 +96,13 @@ class PALSARConnector:
             # Realizar búsqueda
             response = await self._make_asf_request(self.search_url, search_params)
             
-            if response and response.get('results'):
-                # Procesar escenas encontradas
-                scenes = response['results']
-                logger.info(f"Encontradas {len(scenes)} escenas PALSAR-2")
+            # CRÍTICO: response puede ser lista o dict
+            if response:
+                # Si es lista, usarla directamente como scenes
+                scenes = response if isinstance(response, list) else response.get('results', [])
+                
+                if scenes:
+                    logger.info(f"Encontradas {len(scenes)} escenas PALSAR-2")
                 
                 # Seleccionar la escena más reciente con mejor cobertura
                 best_scene = self._select_best_scene(scenes, lat_min, lat_max, lon_min, lon_max)
@@ -91,41 +114,66 @@ class PALSARConnector:
                     )
                     
                     if backscatter_data:
-                        return {
-                            'value': backscatter_data['mean_backscatter'],
-                            'backscatter_stats': backscatter_data['stats'],
-                            'polarization': polarization,
-                            'penetration_indicators': backscatter_data['penetration'],
-                            'unit': 'dB',
-                            'source': f'PALSAR2_{polarization}',
-                            'resolution_m': 25,
-                            'acquisition_date': best_scene.get('startTime', ''),
-                            'quality': backscatter_data['quality']
-                        }
+                        return InstrumentMeasurement.create_success(
+                            instrument_name="PALSAR-2",
+                            measurement_type=f"sar_backscatter_{polarization}",
+                            value=backscatter_data['mean_backscatter'],
+                            unit='dB',
+                            confidence=0.85 if backscatter_data['quality'] == 'high' else 0.7,
+                            source=f'ASF DAAC PALSAR2 {polarization}',
+                            acquisition_date=best_scene.get('startTime', '')[:10] if best_scene.get('startTime') else None,
+                            metadata={
+                                'backscatter_stats': backscatter_data['stats'],
+                                'polarization': polarization,
+                                'penetration_indicators': backscatter_data['penetration'],
+                                'resolution_m': 25,
+                                'quality': backscatter_data['quality']
+                            }
+                        )
             
-            return None
+            # No hay datos disponibles
+            return InstrumentMeasurement.create_no_data(
+                instrument_name="PALSAR-2",
+                measurement_type=f"sar_backscatter_{polarization}",
+                reason="No scenes found for region",
+                source="ASF DAAC"
+            )
             
         except Exception as e:
             logger.error(f"Error obteniendo backscatter PALSAR-2: {e}")
-            return None
+            return InstrumentMeasurement.create_error(
+                instrument_name="PALSAR-2",
+                measurement_type=f"sar_backscatter_{polarization}",
+                error_msg=str(e),
+                source="ASF DAAC"
+            )
     
     async def get_forest_penetration(self, lat_min: float, lat_max: float,
-                                    lon_min: float, lon_max: float) -> Dict[str, Any]:
+                                    lon_min: float, lon_max: float) -> Optional['InstrumentMeasurement']:
         """
         Análisis específico de penetración forestal con L-band.
         
         APLICACIÓN: Detectar estructuras bajo dosel denso
+        
+        Returns:
+            InstrumentMeasurement con penetration_ratio como valor principal
         """
         
         try:
+            # Importar InstrumentMeasurement
+            import sys
+            from pathlib import Path
+            sys.path.insert(0, str(Path(__file__).parent.parent))
+            from instrument_contract import InstrumentMeasurement
+            
             # Obtener datos HH y HV para análisis de penetración
             hh_data = await self.get_sar_backscatter(lat_min, lat_max, lon_min, lon_max, 'HH')
             hv_data = await self.get_sar_backscatter(lat_min, lat_max, lon_min, lon_max, 'HV')
             
-            if hh_data and hv_data:
+            if hh_data and hh_data.is_usable() and hv_data and hv_data.is_usable():
                 # Calcular ratio HH/HV (indicador de penetración)
-                hh_value = hh_data['value']
-                hv_value = hv_data['value']
+                hh_value = hh_data.value
+                hv_value = hv_data.value
                 
                 if hv_value != 0:
                     penetration_ratio = hh_value / hv_value
@@ -133,61 +181,106 @@ class PALSARConnector:
                     # Interpretar ratio para arqueología
                     penetration_analysis = self._analyze_penetration_ratio(penetration_ratio)
                     
-                    return {
-                        'value': penetration_ratio,
-                        'hh_backscatter': hh_value,
-                        'hv_backscatter': hv_value,
-                        'penetration_analysis': penetration_analysis,
-                        'archaeological_potential': penetration_analysis['archaeological_score'],
-                        'unit': 'ratio',
-                        'source': 'PALSAR2_penetration',
-                        'quality': 'high' if abs(penetration_ratio - 1.0) > 0.2 else 'medium'
-                    }
+                    return InstrumentMeasurement.create_success(
+                        instrument_name="PALSAR-2",
+                        measurement_type="forest_penetration_ratio",
+                        value=penetration_ratio,
+                        unit='ratio',
+                        confidence=0.8,
+                        source='ASF DAAC PALSAR2 HH/HV',
+                        acquisition_date=hh_data.acquisition_date,
+                        metadata={
+                            'hh_backscatter': hh_value,
+                            'hv_backscatter': hv_value,
+                            'penetration_analysis': penetration_analysis,
+                            'archaeological_potential': penetration_analysis['archaeological_score'],
+                            'quality': 'high' if abs(penetration_ratio - 1.0) > 0.2 else 'medium'
+                        }
+                    )
             
-            return None
+            # No hay datos disponibles
+            return InstrumentMeasurement.create_no_data(
+                instrument_name="PALSAR-2",
+                measurement_type="forest_penetration_ratio",
+                reason="Insufficient HH/HV data for penetration analysis",
+                source="ASF DAAC"
+            )
             
         except Exception as e:
             logger.error(f"Error en análisis de penetración forestal: {e}")
-            return None
+            return InstrumentMeasurement.create_error(
+                instrument_name="PALSAR-2",
+                measurement_type="forest_penetration_ratio",
+                error_msg=str(e),
+                source="ASF DAAC"
+            )
     
     async def get_soil_moisture(self, lat_min: float, lat_max: float,
-                               lon_min: float, lon_max: float) -> Dict[str, Any]:
+                               lon_min: float, lon_max: float) -> Optional['InstrumentMeasurement']:
         """
         Estimación de humedad del suelo usando L-band.
         
         APLICACIÓN: Detectar sistemas de drenaje y canales antiguos
+        
+        Returns:
+            InstrumentMeasurement con moisture_index como valor principal
         """
         
         try:
+            # Importar InstrumentMeasurement
+            import sys
+            from pathlib import Path
+            sys.path.insert(0, str(Path(__file__).parent.parent))
+            from instrument_contract import InstrumentMeasurement
+            
             # Obtener backscatter VV (sensible a humedad del suelo)
             vv_data = await self.get_sar_backscatter(lat_min, lat_max, lon_min, lon_max, 'VV')
             
-            if vv_data:
-                backscatter_vv = vv_data['value']
+            if vv_data and vv_data.is_usable():
+                backscatter_vv = vv_data.value
                 
                 # Modelo empírico para humedad del suelo (simplificado)
                 # En producción usar algoritmos más sofisticados
                 moisture_index = self._estimate_soil_moisture(backscatter_vv)
                 
                 # Detectar patrones de drenaje
-                drainage_indicators = self._detect_drainage_patterns(vv_data)
+                drainage_indicators = self._detect_drainage_patterns({
+                    'value': backscatter_vv,
+                    'backscatter_stats': vv_data.quality_flags.get('backscatter_stats', {})
+                })
                 
-                return {
-                    'value': moisture_index,
-                    'backscatter_vv': backscatter_vv,
-                    'moisture_classification': self._classify_moisture(moisture_index),
-                    'drainage_indicators': drainage_indicators,
-                    'archaeological_relevance': drainage_indicators['archaeological_score'],
-                    'unit': 'moisture_index',
-                    'source': 'PALSAR2_soil_moisture',
-                    'quality': 'medium'  # Estimación indirecta
-                }
+                return InstrumentMeasurement.create_success(
+                    instrument_name="PALSAR-2",
+                    measurement_type="soil_moisture_index",
+                    value=moisture_index,
+                    unit='moisture_index',
+                    confidence=0.7,  # Estimación indirecta
+                    source='ASF DAAC PALSAR2 VV',
+                    acquisition_date=vv_data.acquisition_date,
+                    metadata={
+                        'backscatter_vv': backscatter_vv,
+                        'moisture_classification': self._classify_moisture(moisture_index),
+                        'drainage_indicators': drainage_indicators,
+                        'archaeological_relevance': drainage_indicators['archaeological_score']
+                    }
+                )
             
-            return None
+            # No hay datos disponibles
+            return InstrumentMeasurement.create_no_data(
+                instrument_name="PALSAR-2",
+                measurement_type="soil_moisture_index",
+                reason="No VV backscatter data available",
+                source="ASF DAAC"
+            )
             
         except Exception as e:
             logger.error(f"Error estimando humedad del suelo: {e}")
-            return None
+            return InstrumentMeasurement.create_error(
+                instrument_name="PALSAR-2",
+                measurement_type="soil_moisture_index",
+                error_msg=str(e),
+                source="ASF DAAC"
+            )
     
     def _select_best_scene(self, scenes: list, lat_min: float, lat_max: float,
                           lon_min: float, lon_max: float) -> Optional[Dict]:
@@ -197,6 +290,12 @@ class PALSARConnector:
             if not scenes:
                 return None
             
+            # CRÍTICO: Validar que scenes contiene dicts
+            valid_scenes = [s for s in scenes if isinstance(s, dict)]
+            if not valid_scenes:
+                logger.warning("No hay escenas válidas (todas son listas o no-dict)")
+                return None
+            
             # Criterios de selección:
             # 1. Cobertura del área de interés
             # 2. Fecha más reciente
@@ -204,7 +303,7 @@ class PALSARConnector:
             
             scored_scenes = []
             
-            for scene in scenes:
+            for scene in valid_scenes:
                 score = 0
                 
                 # Calcular cobertura
@@ -217,14 +316,17 @@ class PALSARConnector:
                 
                 # Penalizar por antigüedad
                 try:
-                    scene_date = datetime.fromisoformat(scene.get('startTime', '').replace('Z', '+00:00'))
-                    days_old = (datetime.now(scene_date.tzinfo) - scene_date).days
-                    score -= days_old * 0.1
+                    start_time = scene.get('startTime', '')
+                    if start_time:
+                        scene_date = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                        days_old = (datetime.now(scene_date.tzinfo) - scene_date).days
+                        score -= days_old * 0.1
                 except:
                     score -= 100  # Penalizar si no hay fecha
                 
                 # Bonus por procesamiento de alta resolución
-                if 'HI_RES' in scene.get('processingLevel', ''):
+                processing_level = scene.get('processingLevel', '')
+                if 'HI_RES' in processing_level:
                     score += 10
                 
                 scored_scenes.append((score, scene))
@@ -232,7 +334,14 @@ class PALSARConnector:
             # Retornar la escena con mayor score
             if scored_scenes:
                 scored_scenes.sort(key=lambda x: x[0], reverse=True)
-                return scored_scenes[0][1]
+                best_scene = scored_scenes[0][1]  # Extraer el dict de la tupla
+                
+                # VALIDACIÓN FINAL: Asegurar que es dict
+                if not isinstance(best_scene, dict):
+                    logger.error(f"Best scene no es dict: {type(best_scene)}")
+                    return None
+                
+                return best_scene
             
             return None
             
@@ -269,6 +378,11 @@ class PALSARConnector:
         """Procesar escena PALSAR-2 para extraer estadísticas de backscatter."""
         
         try:
+            # CRÍTICO: Validar que scene es dict
+            if not isinstance(scene, dict):
+                logger.error(f"Scene debe ser dict, recibido: {type(scene)}")
+                return None
+            
             # En implementación completa, descargaría y procesaría la escena
             # Por ahora, simular procesamiento con metadatos disponibles
             

@@ -270,8 +270,14 @@ class CopernicusMarineConnector:
                 return None
         
         except Exception as e:
-            logger.error(f"❌ Copernicus Marine: Error obteniendo SST: {e}")
-            return None
+            error_msg = str(e)
+            # Si es región terrestre o dataset no existe, retornar None silenciosamente
+            if "Please check that the dataset exists" in error_msg or "SST_GLO" in error_msg:
+                logger.info(f"ℹ️ Copernicus SST: No disponible para esta región (posiblemente terrestre)")
+                return None
+            else:
+                logger.error(f"❌ Copernicus Marine: Error obteniendo SST: {e}")
+                return None
     
     def _estimate_sea_ice(
         self,

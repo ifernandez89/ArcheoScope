@@ -55,7 +55,7 @@ def start_frontend_server():
         # Iniciar servidor
         with socketserver.TCPServer(("", frontend_port), QuietHTTPRequestHandler) as httpd:
             print(f"Frontend servidor corriendo en: http://localhost:{frontend_port}")
-            print("Para conectar con backend, asegúrate que está corriendo en http://localhost:8002")
+            print("Para conectar con backend, asegúrate que está corriendo en http://localhost:8003")
             print("Presiona Ctrl+C para detener el servidor")
             
             # Abrir navegador - index.html unificado

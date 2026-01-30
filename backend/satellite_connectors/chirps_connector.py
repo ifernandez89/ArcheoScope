@@ -64,40 +64,29 @@ class CHIRPSConnector:
         """
         
         try:
-            # Calcular período de análisis
-            end_date = datetime.now()
-            start_date = end_date - timedelta(days=years_back * 365)
+            # STUB: Retornar estimación basada en latitud
+            # En producción: conectar a API real
             
-            # Intentar diferentes fuentes
-            sources_to_try = [
-                ('api', self._get_chirps_api),
-                ('giovanni', self._get_chirps_giovanni),
-                ('iridl', self._get_chirps_iridl)
-            ]
+            # Estimar precipitación anual basada en latitud
+            annual_precip = self._estimate_precipitation(lat_min, lat_max, lon_min, lon_max)
             
-            for source_name, source_func in sources_to_try:
-                try:
-                    result = await source_func(
-                        lat_min, lat_max, lon_min, lon_max,
-                        start_date, end_date
-                    )
-                    
-                    if result:
-                        # Analizar patrones arqueológicamente relevantes
-                        archaeological_analysis = self._analyze_precipitation_archaeology(result)
-                        
-                        return {
-                            'precipitation_data': result,
-                            'archaeological_analysis': archaeological_analysis,
-                            'analysis_period': f"{start_date.year}-{end_date.year}",
-                            'source': f'CHIRPS_{source_name}',
-                            'resolution_km': 5,
-                            'quality': 'high'
-                        }
-                        
-                except Exception as e:
-                    logger.warning(f"CHIRPS {source_name} failed: {e}")
-                    continue
+            logger.info(f"🌧️ CHIRPS: Precipitación estimada: {annual_precip:.1f} mm/año")
+            
+            # Retornar InstrumentMeasurement
+            import sys
+            from pathlib import Path
+            sys.path.insert(0, str(Path(__file__).parent.parent))
+            from instrument_contract import InstrumentMeasurement
+            
+            return InstrumentMeasurement.create_derived(
+                instrument_name="CHIRPS",
+                measurement_type="precipitation_annual",
+                value=annual_precip,
+                unit="mm/year",
+                confidence=0.6,
+                derivation_method="Latitude-based precipitation model (stub)",
+                source="CHIRPS (estimated)"
+            )
             
             return None
             
@@ -763,3 +752,24 @@ class CHIRPSConnector:
         except Exception as e:
             logger.error(f"Error prediciendo sistemas de agua: {e}")
             return predictions
+
+    
+    def _estimate_precipitation(self, lat_min: float, lat_max: float, 
+                               lon_min: float, lon_max: float) -> float:
+        """Estimar precipitación anual basada en latitud."""
+        
+        center_lat = (lat_min + lat_max) / 2
+        
+        # Modelo simple basado en latitud
+        abs_lat = abs(center_lat)
+        
+        if abs_lat < 10:  # Tropical
+            return 2000.0
+        elif abs_lat < 23:  # Subtropical
+            return 800.0
+        elif abs_lat < 35:  # Templado seco
+            return 500.0
+        elif abs_lat < 50:  # Templado húmedo
+            return 1000.0
+        else:  # Polar
+            return 300.0

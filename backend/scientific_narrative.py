@@ -61,7 +61,8 @@ def generate_archaeological_narrative(
     tas_score: float,
     coverage_score: float,
     environment_type: str,
-    flags: List[str]
+    flags: List[str],
+    anomaly_score: float = 0.0  # NUEVO: score de anomalía instrumental
 ) -> ArchaeologicalNarrative:
     """
     Generar narrativa arqueológica explícita y accionable.
@@ -75,6 +76,7 @@ def generate_archaeological_narrative(
         coverage_score: Score de cobertura (0-1)
         environment_type: Tipo de ambiente
         flags: Flags especiales (THERMAL_ANCHOR_ZONE, etc.)
+        anomaly_score: Score de anomalía instrumental (0-1)
     
     Returns:
         ArchaeologicalNarrative completa
@@ -84,7 +86,7 @@ def generate_archaeological_narrative(
     
     # 1. Determinar clasificación principal
     classification = _determine_classification(
-        thermal_stability, sar_structural_index, tas_score, flags
+        thermal_stability, sar_structural_index, tas_score, flags, anomaly_score
     )
     
     # 2. Calcular confianza
@@ -145,9 +147,16 @@ def _determine_classification(
     thermal_stability: float,
     sar_structural_index: float,
     tas_score: float,
-    flags: List[str]
+    flags: List[str],
+    anomaly_score: float = 0.0  # NUEVO
 ) -> SiteClassification:
     """Determinar clasificación principal del sitio."""
+    
+    # Validar valores None
+    thermal_stability = thermal_stability or 0.0
+    sar_structural_index = sar_structural_index or 0.0
+    tas_score = tas_score or 0.0
+    anomaly_score = anomaly_score or 0.0
     
     if 'THERMAL_ANCHOR_ZONE' in flags:
         return SiteClassification.THERMAL_ANCHOR
@@ -167,6 +176,10 @@ def _determine_classification(
     if tas_score > 0.4:
         return SiteClassification.MONITORING_ZONE
     
+    # NUEVA REGLA: Si anomaly_score > 0.6, NUNCA clasificar como NO_INTEREST
+    if anomaly_score > 0.6:
+        return SiteClassification.STRUCTURAL_ANOMALY  # Anomalía sin explicar
+    
     return SiteClassification.NO_INTEREST
 
 
@@ -177,6 +190,12 @@ def _calculate_narrative_confidence(
     tas_score: float
 ) -> float:
     """Calcular confianza de la narrativa."""
+    
+    # Validar valores None
+    thermal_stability = thermal_stability or 0.0
+    sar_structural_index = sar_structural_index or 0.0
+    coverage_score = coverage_score or 0.0
+    tas_score = tas_score or 0.0
     
     # Confianza basada en señales fuertes
     signal_confidence = (thermal_stability * 0.4 + sar_structural_index * 0.4 + tas_score * 0.2)
@@ -230,6 +249,12 @@ def _collect_evidence(
     environment_type: str
 ) -> List[str]:
     """Recopilar evidencias detectadas."""
+    
+    # Validar valores None
+    thermal_stability = thermal_stability or 0.0
+    sar_structural_index = sar_structural_index or 0.0
+    ndvi_persistence = ndvi_persistence or 0.0
+    tas_score = tas_score or 0.0
     
     evidence = []
     
@@ -322,6 +347,11 @@ def _generate_recommendations(
 ) -> List[str]:
     """Generar recomendaciones accionables."""
     
+    # Validar valores None
+    thermal_stability = thermal_stability or 0.0
+    sar_structural_index = sar_structural_index or 0.0
+    coverage_score = coverage_score or 0.0
+    
     recommendations = []
     
     # Recomendaciones por señal detectada
@@ -360,11 +390,20 @@ def _determine_priority(
 ) -> str:
     """Determinar prioridad de investigación."""
     
+    # Validar valores None
+    thermal_stability = thermal_stability or 0.0
+    sar_structural_index = sar_structural_index or 0.0
+    confidence = confidence or 0.0
+    
     if classification == SiteClassification.THERMAL_ANCHOR:
         return "HIGH"
     
     if classification == SiteClassification.HIGH_CONFIDENCE:
         return "HIGH"
+    
+    # STRUCTURAL_ANOMALY (anomalía sin explicar) = MEDIUM
+    if classification == SiteClassification.STRUCTURAL_ANOMALY:
+        return "MEDIUM"
     
     if thermal_stability > 0.8 or sar_structural_index > 0.6:
         return "HIGH"

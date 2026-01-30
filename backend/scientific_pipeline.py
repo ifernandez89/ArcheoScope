@@ -2020,7 +2020,8 @@ class ScientificPipeline:
                     tas_score=tas_score,
                     coverage_score=coverage_assessment.coverage_score if coverage_assessment else 0.5,
                     environment_type=environment_type,
-                    flags=flags
+                    flags=flags,
+                    anomaly_score=anomaly.anomaly_score  # NUEVO: pasar anomaly score
                 )
                 
                 # Actualizar output

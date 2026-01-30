@@ -61,26 +61,36 @@ INSTRUMENT_CATEGORIES = {
     # CORE: Esenciales para cualquier análisis
     InstrumentCategory.CORE: [
         'sentinel_2_ndvi',
+        'sentinel2_ndvi',  # ALIAS
         'sentinel_1_sar',
+        'sentinel1_sar',  # ALIAS
         'landsat_thermal',
         'srtm_elevation',
+        'srtm_dem',  # ALIAS
     ],
     
     # IMPORTANT: Mejoran significativamente el análisis
     InstrumentCategory.IMPORTANT: [
         'icesat2',
+        'icesat2_elevation',  # ALIAS
+        'icesat2_rugosity',  # ALIAS - métrica derivada
         'modis_lst',
         'era5_climate',
+        'era5_soil_moisture',  # ALIAS
         'opentopography',
+        'opentopography_lidar',  # ALIAS
     ],
     
     # OPTIONAL: Contexto adicional
     InstrumentCategory.OPTIONAL: [
         'viirs_thermal',
+        'viirs_nightlights',  # ALIAS
         'chirps_precipitation',
         'palsar_backscatter',
+        'palsar_sar',  # ALIAS
         'nsidc_sea_ice',
         'copernicus_sst',
+        'copernicus_marine',  # ALIAS
     ]
 }
 
@@ -166,7 +176,9 @@ def calculate_coverage_score(
     
     # Calcular penalización por confianza
     # Si CORE está completo (≥75%), no penalizar
-    if core_coverage >= 0.75:
+    if core_coverage is None:
+        confidence_penalty = 0.5  # Penalización alta si no hay datos
+    elif core_coverage >= 0.75:
         confidence_penalty = 0.0
     else:
         # Penalizar proporcionalmente a CORE faltante
@@ -283,18 +295,20 @@ def separate_confidence_and_signal(
         base_confidence += 0.2
     
     # Aplicar penalización por cobertura
-    confidence_level = base_confidence * (1.0 - coverage_assessment.confidence_penalty)
+    penalty = coverage_assessment.confidence_penalty if coverage_assessment.confidence_penalty is not None else 0.5
+    confidence_level = base_confidence * (1.0 - penalty)
     confidence_level = min(1.0, max(0.0, confidence_level))
     
     logger.info(f"📊 Confidence vs Signal:")
     logger.info(f"   Confidence level: {confidence_level:.2f} (qué tan confiable)")
     logger.info(f"   Signal strength: {signal_strength:.2f} (qué tan fuerte)")
-    logger.info(f"   Coverage factor: {1.0 - coverage_assessment.confidence_penalty:.2f}")
+    penalty_safe = coverage_assessment.confidence_penalty if coverage_assessment.confidence_penalty is not None else 0.5
+    logger.info(f"   Coverage factor: {1.0 - penalty_safe:.2f}")
     
     return {
         'confidence_level': confidence_level,
         'signal_strength': signal_strength,
-        'coverage_factor': 1.0 - coverage_assessment.confidence_penalty,
+        'coverage_factor': 1.0 - penalty_safe,
         'interpretation': _interpret_confidence_signal(confidence_level, signal_strength)
     }
 

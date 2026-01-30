@@ -251,26 +251,25 @@ class ICESat2Connector(SatelliteConnector):
             logger.info(f"   Rugosity (std): {elevation_std:.2f}m ← SEÑAL ARQUEOLÓGICA")
             logger.info(f"   Gradient: {elevation_gradient:.2f}m")
             
-            # CRÍTICO: Devolver SatelliteData con indices para compatibilidad con integrador
-            from .base_connector import SatelliteData
-            
-            return SatelliteData(
-                source="NASA Earthdata ICESat-2",
+            # CRÍTICO: Devolver InstrumentMeasurement con métricas derivadas
+            # NO usar SatelliteData (requiere campos que no tenemos)
+            return InstrumentMeasurement.create_success(
+                instrument_name="ICESat-2",
+                measurement_type="elevation_rugosity",
+                value=elevation_std,  # SEÑAL PRINCIPAL: rugosidad
+                unit="meters",
+                confidence=confidence,
+                source="NASA Earthdata",
                 acquisition_date=acquisition_date[:10],
-                cloud_cover=0.0,
-                indices={
-                    'elevation_std': elevation_std,  # RUGOSIDAD - señal principal
+                metadata={
+                    'rugosity': elevation_std,
+                    'elevation_std': elevation_std,
                     'elevation_variance': elevation_variance,
                     'elevation_gradient': elevation_gradient,
-                    'elevation_mean': elevation_mean,  # Metadata
+                    'elevation_mean': elevation_mean,
                     'valid_points': len(valid_elevations),
                     'total_points': len(elevations),
                     'quality_filtered': int(np.sum(quality_flags != 0))
-                },
-                confidence=confidence,
-                metadata={
-                    'measurement_type': 'elevation_rugosity',
-                    'processing_notes': f"Rugosity (std) used as archaeological signal. {len(valid_elevations)}/{len(elevations)} points valid."
                 }
             )
             

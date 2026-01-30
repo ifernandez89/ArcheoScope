@@ -378,7 +378,56 @@ class RealDataIntegratorV2:
                     processing_time_s=processing_time
                 )
             
-            # Extraer valor principal con sanitización
+            # CRÍTICO: Manejar InstrumentMeasurement (nuevo contrato)
+            if hasattr(api_data, 'status'):
+                # Es un InstrumentMeasurement - convertir directamente
+                self.log(f"[{instrument_name}] 📦 InstrumentMeasurement recibido: status={api_data.status}")
+                
+                # Convertir status string a InstrumentStatus enum
+                from instrument_status import InstrumentStatus
+                if isinstance(api_data.status, str):
+                    status_map = {
+                        'OK': InstrumentStatus.SUCCESS,
+                        'NO_DATA': InstrumentStatus.FAILED,
+                        'INVALID': InstrumentStatus.INVALID,
+                        'LOW_QUALITY': InstrumentStatus.DEGRADED,
+                        'DERIVED': InstrumentStatus.DEGRADED,
+                        'TIMEOUT': InstrumentStatus.FAILED,
+                        'ERROR': InstrumentStatus.FAILED
+                    }
+                    status = status_map.get(api_data.status, InstrumentStatus.FAILED)
+                elif hasattr(api_data.status, 'value'):
+                    # Es un enum, mapear su valor
+                    status_map = {
+                        'OK': InstrumentStatus.SUCCESS,
+                        'NO_DATA': InstrumentStatus.FAILED,
+                        'INVALID': InstrumentStatus.INVALID,
+                        'LOW_QUALITY': InstrumentStatus.DEGRADED,
+                        'DERIVED': InstrumentStatus.DEGRADED,
+                        'TIMEOUT': InstrumentStatus.FAILED,
+                        'ERROR': InstrumentStatus.FAILED
+                    }
+                    status = status_map.get(api_data.status.value, InstrumentStatus.FAILED)
+                else:
+                    status = api_data.status
+                
+                # Convertir a InstrumentResult (sin 'metadata', usar quality_flags si existe)
+                return InstrumentResult(
+                    instrument_name=api_data.instrument_name,
+                    status=status,
+                    measurement_type=api_data.measurement_type,
+                    value=api_data.value,
+                    unit=api_data.unit,
+                    confidence=api_data.confidence,
+                    source=api_data.source,
+                    acquisition_date=api_data.acquisition_date,
+                    reason=api_data.reason,
+                    error_details=api_data.reason,  # InstrumentMeasurement usa 'reason', no 'error_details'
+                    processing_time_s=processing_time
+                    # NO incluir metadata - InstrumentResult no lo acepta
+                )
+            
+            # Extraer valor principal con sanitización (para SatelliteData legacy)
             value = None
             confidence = 0.0
             raw_value = None  # Para debugging
@@ -469,13 +518,36 @@ class RealDataIntegratorV2:
                     self.log(f"   ⚠️ SAR Enhanced processing failed: {e}")
                     # Continuar con valor original
             
-            # Verificar si obtuvimos un valor válido
+            # NUEVA LÓGICA: Si value es None, buscar métricas derivadas válidas
+            if value is None and hasattr(api_data, 'indices') and api_data.indices:
+                indices = api_data.indices
+                self.log(f"[{instrument_name}] 🔍 raw_value=None, buscando métricas derivadas...")
+                
+                # Buscar CUALQUIER métrica derivada válida
+                derived_metrics = [
+                    'rugosity', 'elevation_std', 'elevation_variance', 'elevation_gradient',
+                    'structural_index', 'coherence', 'texture_variance',
+                    'thermal_stability', 'thermal_inertia',
+                    'slope_mean', 'slope_std', 'aspect_variance'
+                ]
+                
+                for metric in derived_metrics:
+                    if metric in indices:
+                        derived_value = safe_float(indices[metric])
+                        if derived_value is not None:
+                            value = derived_value
+                            self.log(f"   ✅ Métrica derivada válida: {metric}={value:.3f}")
+                            # Ajustar confidence porque es métrica derivada
+                            confidence = min(confidence * 0.9, 0.95) if confidence else 0.7
+                            break
+            
+            # Verificar si obtuvimos un valor válido (después de buscar derivadas)
             if value is None:
-                self.log(f"[{instrument_name}] ❌ Valor extraído es None/inf/nan (raw_value={raw_value})")
+                self.log(f"[{instrument_name}] ❌ Sin valor válido (ni raw ni derivado)")
                 return InstrumentResult.create_invalid(
                     instrument_name=instrument_name,
                     measurement_type="invalid_value",
-                    reason="EXTRACTED_VALUE_INVALID",
+                    reason="NO_VALID_VALUE_OR_DERIVED_METRIC",
                     processing_time_s=processing_time
                 )
             

@@ -55,8 +55,18 @@ class MODISLSTConnector:
     
     def __init__(self):
         """Inicializar conector MODIS LST."""
-        self.username = os.getenv("EARTHDATA_USERNAME")
-        self.password = os.getenv("EARTHDATA_PASSWORD")
+        
+        # Cargar credenciales desde BD encriptada
+        try:
+            from backend.credentials_manager import CredentialsManager
+            creds_manager = CredentialsManager()
+            self.username = creds_manager.get_credential("earthdata", "username")
+            self.password = creds_manager.get_credential("earthdata", "password")
+        except Exception as e:
+            logger.warning(f"⚠️ No se pudieron cargar credenciales desde BD: {e}")
+            # Fallback a environment variables
+            self.username = os.getenv("EARTHDATA_USERNAME")
+            self.password = os.getenv("EARTHDATA_PASSWORD")
         
         # Timeouts optimizados para velocidad
         self.timeout = float(os.getenv("SATELLITE_API_TIMEOUT", "5"))
@@ -142,7 +152,7 @@ class MODISLSTConnector:
             year = date.strftime("%Y")
             url = f"{self.terra_url}/{date_str}/"
             
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=10.0)) as client:
                 # Autenticación HTTP Basic
                 auth = httpx.BasicAuth(self.username, self.password)
                 
@@ -202,7 +212,7 @@ class MODISLSTConnector:
                     )
         
         except Exception as e:
-            logger.error(f"❌ MODIS LST: Error obteniendo temperatura: {e}")
+            logger.error(f"❌ MODIS LST: Error obteniendo temperatura: {e}", exc_info=True)
             return None
     
     def _estimate_lst(self, lat: float, lon: float, month: int) -> Tuple[float, float]:
