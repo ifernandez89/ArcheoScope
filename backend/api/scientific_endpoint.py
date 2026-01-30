@@ -307,7 +307,7 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                     'hypotheses_rejected': timt_result.transparency_report.hypotheses_rejected,
                     'can_infer': timt_result.transparency_report.can_infer,
                     'cannot_affirm': timt_result.transparency_report.cannot_affirm,
-                    'analysis_process_steps': len(timt_result.transparency_report.analysis_process_steps)
+                    'analysis_process_steps': len(timt_result.transparency_report.analysis_process)
                 },
                 
                 'technical_summary': timt_result.technical_summary,

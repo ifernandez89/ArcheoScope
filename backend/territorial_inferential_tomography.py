@@ -94,6 +94,11 @@ class SystemTransparencyReport:
     decisions_made: List[str]
     hypotheses_discarded: List[str]
     
+    # Métricas cuantitativas de transparencia
+    hypotheses_evaluated: int = 0
+    hypotheses_validated: int = 0
+    hypotheses_rejected: int = 0
+    
     # Incertidumbres
     measurement_uncertainties: List[str]
     interpretation_uncertainties: List[str]
@@ -494,10 +499,19 @@ class TerritorialInferentialTomographyEngine:
             "Integración con bases de datos arqueológicas"
         ]
         
+        # Métricas de hipótesis
+        valid_evidence_levels = [EvidenceLevel.STRONG, EvidenceLevel.MODERATE]
+        hypotheses_evaluated = len(validations)
+        hypotheses_validated = len([v for v in validations if v.overall_evidence_level in valid_evidence_levels])
+        hypotheses_rejected = len([v for v in validations if v.overall_evidence_level not in valid_evidence_levels])
+
         return SystemTransparencyReport(
             analysis_process=analysis_process,
             decisions_made=decisions_made,
             hypotheses_discarded=hypotheses_discarded,
+            hypotheses_evaluated=hypotheses_evaluated,
+            hypotheses_validated=hypotheses_validated,
+            hypotheses_rejected=hypotheses_rejected,
             measurement_uncertainties=measurement_uncertainties,
             interpretation_uncertainties=interpretation_uncertainties,
             system_limitations=system_limitations,
