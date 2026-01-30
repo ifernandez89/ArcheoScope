@@ -11,6 +11,10 @@ import numpy as np
 import os
 from pathlib import Path
 
+from .base_connector import SatelliteConnector, SatelliteData
+
+logger = logging.getLogger(__name__)
+
 # FIX CRÍTICO: Configurar PROJ_LIB ANTES de importar rasterio
 # PostgreSQL conflictúa con rasterio - forzar uso de PROJ de rasterio
 def _configure_proj():
@@ -51,9 +55,6 @@ except ImportError as e:
     STACKSTAC_AVAILABLE = False
     logger.warning(f"Import error: {e}")
 
-from .base_connector import SatelliteConnector, SatelliteData
-
-logger = logging.getLogger(__name__)
 
 
 class PlanetaryComputerConnector(SatelliteConnector):

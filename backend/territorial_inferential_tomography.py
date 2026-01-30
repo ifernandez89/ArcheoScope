@@ -94,11 +94,6 @@ class SystemTransparencyReport:
     decisions_made: List[str]
     hypotheses_discarded: List[str]
     
-    # Métricas cuantitativas de transparencia
-    hypotheses_evaluated: int = 0
-    hypotheses_validated: int = 0
-    hypotheses_rejected: int = 0
-    
     # Incertidumbres
     measurement_uncertainties: List[str]
     interpretation_uncertainties: List[str]
@@ -111,6 +106,11 @@ class SystemTransparencyReport:
     # Recomendaciones
     validation_recommendations: List[str]
     future_work_suggestions: List[str]
+
+    # Métricas cuantitativas de transparencia (con valores por defecto al final)
+    hypotheses_evaluated: int = 0
+    hypotheses_validated: int = 0
+    hypotheses_rejected: int = 0
 
 @dataclass
 class TerritorialInferentialTomographyResult:
