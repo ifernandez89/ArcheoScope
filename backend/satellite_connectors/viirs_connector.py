@@ -18,6 +18,7 @@ APLICACIONES ARQUEOLÓGICAS:
 import requests
 import numpy as np
 import logging
+import httpx
 from typing import Dict, Any, Optional, Tuple
 from datetime import datetime, timedelta
 import json
@@ -32,9 +33,9 @@ class VIIRSConnector:
         
         self.base_url = "https://appeears.earthdatacloud.nasa.gov/api/v1"
         self.product_mapping = {
-            'thermal': 'VNP21A1D.001',  # Land Surface Temperature Daily
-            'ndvi': 'VNP13A1.001',      # Vegetation Indices 16-Day
-            'fire': 'VNP14A1.001'       # Thermal Anomalies/Fire Daily
+            'thermal': 'VNP21A1D.002',  # Land Surface Temperature Daily (Day)
+            'ndvi': 'VNP13A1.002',      # Vegetation Indices 16-Day
+            'fire': 'VNP14A1.002'       # Thermal Anomalies/Fire Daily
         }
         
         # CRÍTICO: Leer credenciales desde BD encriptada
@@ -58,21 +59,35 @@ class VIIRSConnector:
             self.available = False
             logger.warning(f"⚠️ VIIRS: Error obteniendo credenciales: {e}")
     
+    async def _get_token(self, client: httpx.AsyncClient) -> Optional[str]:
+        """Obtener token de portador (Bearer) de AppEEARS."""
+        try:
+            url = f"{self.base_url}/login"
+            auth = httpx.BasicAuth(self.username, self.password)
+            
+            response = await client.post(url, auth=auth)
+            
+            if response.status_code == 200:
+                token_data = response.json()
+                return token_data.get('token')
+            else:
+                logger.error(f"❌ VIIRS: Error de autenticación ({response.status_code}): {response.text}")
+                return None
+        except Exception as e:
+            logger.error(f"❌ VIIRS: Error en login: {e}")
+            return None
+
     async def get_thermal_data(self, lat_min: float, lat_max: float, 
                               lon_min: float, lon_max: float,
-                              days_back: int = 7) -> Dict[str, Any]:
+                              days_back: int = 7) -> Any:
         """
         Obtener datos de temperatura superficial VIIRS.
-        
-        Usa NASA AppEEARS API con credenciales de BD.
+        Usa NASA AppEEARS API con token Bearer.
         """
-        
         if not self.available:
-            logger.info("ℹ️ VIIRS: Credenciales no disponibles")
-            return None
+            return self._get_thermal_estimate(lat_min, lat_max, lon_min, lon_max)
         
         try:
-            import httpx
             # Importar InstrumentMeasurement
             import sys
             from pathlib import Path
@@ -83,35 +98,42 @@ class VIIRSConnector:
             end_date = datetime.now() - timedelta(days=1)
             start_date = end_date - timedelta(days=days_back)
             
-            # Autenticación con NASA Earthdata
-            auth = httpx.BasicAuth(self.username, self.password)
-            
-            # VIIRS usa NASA AppEEARS API
-            url = f"{self.base_url}/task"
-            
-            # Crear tarea de extracción
-            task_params = {
-                "task_type": "point",
-                "task_name": f"viirs_thermal_{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                "params": {
-                    "dates": [{"startDate": start_date.strftime("%m-%d-%Y"), "endDate": end_date.strftime("%m-%d-%Y")}],
-                    "layers": [{"product": self.product_mapping['thermal'], "layer": "LST_Day_1km"}],
-                    "coordinates": [{"latitude": (lat_min + lat_max) / 2, "longitude": (lon_min + lon_max) / 2, "id": "point1"}]
-                }
-            }
-            
             async with httpx.AsyncClient(timeout=httpx.Timeout(30.0, connect=10.0), follow_redirects=True) as client:
-                # Crear tarea
+                # 1. Obtener Token (REQUERIDO por AppEEARS API)
+                token = await self._get_token(client)
+                if not token:
+                    logger.warning("⚠️ VIIRS: Falló obtención de token - Usando estimación")
+                    return self._get_thermal_estimate(lat_min, lat_max, lon_min, lon_max)
+                
+                # 2. Configurar Headers con Bearer Token
+                headers = {"Authorization": f"Bearer {token}"}
+                url = f"{self.base_url}/task"
+                
+                # Crear tarea de extracción
+                task_params = {
+                    "task_type": "point",
+                    "task_name": f"viirs_thermal_{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    "params": {
+                        "dates": [{"startDate": start_date.strftime("%m-%d-%Y"), "endDate": end_date.strftime("%m-%d-%Y")}],
+                        "layers": [{"product": self.product_mapping['thermal'], "layer": "LST_1KM"}],
+                        "coordinates": [{"latitude": (lat_min + lat_max) / 2, "longitude": (lon_min + lon_max) / 2, "id": "point1"}]
+                    }
+                }
+                
+                # Enviar petición con el token
                 try:
-                    response = await client.post(url, json=task_params, auth=auth)
+                    response = await client.post(url, json=task_params, headers=headers)
                     
-                    if response.status_code == 200:
-                        logger.info("✅ VIIRS: API respondió correctamente (Tarea creada)")
+                    if response.status_code in [200, 201, 202]:
+                        logger.info("✅ VIIRS: Tarea creada correctamente")
+                        return self._get_thermal_estimate(lat_min, lat_max, lon_min, lon_max)
+                    
+                    elif response.status_code == 400:
+                        logger.error(f"❌ VIIRS: 400 Bad Request - {response.text}")
                         return self._get_thermal_estimate(lat_min, lat_max, lon_min, lon_max)
                     
                     elif response.status_code == 403:
                         logger.warning("⚠️ VIIRS: 403 Forbidden - AppEEARS requiere autorización en el perfil de Earthdata")
-                        # Retornar estimación marcada como DEGRADED por permisos
                         center_lat = (lat_min + lat_max) / 2
                         temp_c = self._calculate_temp_estimate(center_lat)
                         
@@ -121,13 +143,9 @@ class VIIRSConnector:
                             value=temp_c,
                             unit="Celsius",
                             confidence=0.45,
-                            derivation_method="Location model (403 Forbidden - Permission Required in Earthdata profile)",
+                            derivation_method="Location model (403 Forbidden - Please authorize 'AppEEARS' in your NASA Earthdata profile)",
                             source="VIIRS (estimated)"
                         )
-                    
-                    elif response.status_code == 401:
-                        logger.error("❌ VIIRS: 401 Unauthorized - Credenciales inválidas")
-                        return InstrumentMeasurement.create_error("VIIRS", "thermal_surface", "Authentication failed (401)")
                     
                     else:
                         logger.warning(f"⚠️ VIIRS: HTTP {response.status_code} - Usando estimación")
