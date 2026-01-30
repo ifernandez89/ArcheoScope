@@ -142,7 +142,7 @@ def generate_response(question, hrm_model, temperature=0.3, top_k=20, mode="scie
         })
         
         # Ejecutar forward pass
-        _, hrm_outputs = hrm_model(carry, {
+        carry, hrm_outputs = hrm_model(carry, {
             "inputs": hrm_input_ids,
             "puzzle_identifiers": torch.zeros(1, dtype=torch.int32)
         })
@@ -158,13 +158,14 @@ def generate_response(question, hrm_model, temperature=0.3, top_k=20, mode="scie
             import matplotlib.pyplot as plt
             import numpy as np
             
-            # Extraer estado oculto representativo (Carry "z")
-            # carry es [batch, hidden_size] -> Reshape a [batch, 32, 16] para visualizar topología latente
-            # O mejor, usar el input latente que es [1, 64] para ver activación
-            
-            # Simulamos una actividad neuronal basada en el carry state determinista
-            # carry: [1, 512]
-            activity = carry[0].detach().cpu().numpy()
+            # Extraer estado oculto representativo (Carry "z_H")
+            # carry.inner_carry.z_H has shape [batch, seq_len, hidden_size]
+            if hasattr(carry, "inner_carry") and hasattr(carry.inner_carry, "z_H"):
+                # Usamos el primer token para ver la activación latente global
+                activity = carry.inner_carry.z_H[0, 0].detach().cpu().numpy()
+            else:
+                debug_log("⚠️ Estructura de carry inesperada, saltando visualización")
+                raise AttributeError("Unexpected carry structure")
             
             # Reshape a 16x32 para aspecto de "mapa"
             grid_h, grid_w = 16, 32
