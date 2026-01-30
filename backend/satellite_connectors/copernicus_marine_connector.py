@@ -228,56 +228,79 @@ class CopernicusMarineConnector:
         try:
             logger.info(f"🌊 Copernicus Marine: Obteniendo SST")
             
+            # Importar InstrumentMeasurement
+            import sys
+            from pathlib import Path
+            sys.path.insert(0, str(Path(__file__).parent.parent))
+            from instrument_contract import InstrumentMeasurement
+            
             dataset_id = "SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001"
             
             # Fecha reciente
             end_date = datetime.now() - timedelta(days=1)
             start_date = end_date - timedelta(days=1)
             
-            # Subset de datos (con credenciales explícitas)
-            data = self.copernicusmarine.subset(
-                dataset_id=dataset_id,
-                variables=["analysed_sst"],
-                minimum_longitude=lon_min,
-                maximum_longitude=lon_max,
-                minimum_latitude=lat_min,
-                maximum_latitude=lat_max,
-                start_datetime=start_date.strftime("%Y-%m-%d"),
-                end_datetime=end_date.strftime("%Y-%m-%d"),
-                username=self.username,
-                password=self.password
-            )
-            
-            if data:
-                sst = float(data["analysed_sst"].mean().item())
-                
-                logger.info(f"   ✅ SST: {sst:.1f}°C")
-                
-                # REAL data (API respondió exitosamente)
-                return create_real_data_response(
-                    value=sst,
-                    source="Copernicus Marine Global SST",
-                    confidence=0.9,
-                    sea_surface_temperature_celsius=sst,
-                    sea_surface_temperature_kelvin=sst + 273.15,
-                    dataset=dataset_id,
-                    resolution_km=5,
-                    acquisition_date=end_date.strftime("%Y%m%d"),
-                    unit="Celsius"
+            try:
+                # Subset de datos (con credenciales explícitas)
+                data = self.copernicusmarine.subset(
+                    dataset_id=dataset_id,
+                    variables=["analysed_sst"],
+                    minimum_longitude=lon_min,
+                    maximum_longitude=lon_max,
+                    minimum_latitude=lat_min,
+                    maximum_latitude=lat_max,
+                    start_datetime=start_date.strftime("%Y-%m-%d"),
+                    end_datetime=end_date.strftime("%Y-%m-%d"),
+                    username=self.username,
+                    password=self.password
                 )
+                
+                if data:
+                    sst_values = data["analysed_sst"].values
+                    # Verificar si todos los valores son nan (típico en tierra)
+                    if np.all(np.isnan(sst_values)):
+                        logger.info("ℹ️ Copernicus SST: Todos los píxeles son NaN (Región terrestre detectada)")
+                        return InstrumentMeasurement.create_no_data(
+                            instrument_name="Copernicus-SST",
+                            measurement_type="sea_surface_temperature",
+                            reason="Terrestrial region (no ocean data available)",
+                            source="Copernicus Marine"
+                        )
+                    
+                    sst = float(np.nanmean(sst_values))
+                    
+                    logger.info(f"   ✅ SST: {sst:.1f}°C")
+                    
+                    return InstrumentMeasurement.create_success(
+                        instrument_name="Copernicus-SST",
+                        measurement_type="sea_surface_temperature",
+                        value=sst,
+                        unit="Celsius",
+                        confidence=0.9,
+                        source="Copernicus Marine Global SST",
+                        acquisition_date=end_date.strftime("%Y-%m-%d"),
+                        metadata={"dataset": dataset_id, "resolution_km": 5}
+                    )
+                else:
+                    return InstrumentMeasurement.create_no_data("Copernicus-SST", "sea_surface_temperature", "No data returned from API")
             
-            else:
-                return None
+            except Exception as e:
+                error_msg = str(e)
+                if "Please check that the dataset exists" in error_msg or "SST_GLO" in error_msg:
+                    logger.info(f"ℹ️ Copernicus SST: No disponible para esta región (posiblemente terrestre)")
+                    return InstrumentMeasurement.create_no_data(
+                        instrument_name="Copernicus-SST",
+                        measurement_type="sea_surface_temperature",
+                        reason="Dataset not available for this region (likely land)",
+                        source="Copernicus Marine"
+                    )
+                else:
+                    raise e
         
         except Exception as e:
-            error_msg = str(e)
-            # Si es región terrestre o dataset no existe, retornar None silenciosamente
-            if "Please check that the dataset exists" in error_msg or "SST_GLO" in error_msg:
-                logger.info(f"ℹ️ Copernicus SST: No disponible para esta región (posiblemente terrestre)")
-                return None
-            else:
-                logger.error(f"❌ Copernicus Marine: Error obteniendo SST: {e}")
-                return None
+            logger.error(f"❌ Copernicus Marine Error: {e}")
+            from instrument_contract import InstrumentMeasurement
+            return InstrumentMeasurement.create_error("Copernicus-SST", "sea_surface_temperature", str(e))
     
     def _estimate_sea_ice(
         self,

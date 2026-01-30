@@ -205,10 +205,15 @@ class CredentialsManager:
             
             credentials = {}
             for row in rows:
-                key = row['credential_key']
-                encrypted_value = row['credential_value_encrypted']
-                decrypted_value = self.cipher.decrypt(encrypted_value.encode()).decode()
-                credentials[key] = decrypted_value
+                try:
+                    key = row['credential_key']
+                    encrypted_value = row['credential_value_encrypted']
+                    decrypted_value = self.cipher.decrypt(encrypted_value.encode()).decode()
+                    credentials[key] = decrypted_value
+                except Exception as e:
+                    error(f"[ERROR] Desencriptando credencial {service_name}.{key}: {e}")
+                    # Continuar con el resto de credenciales
+                    continue
             
             return credentials
             

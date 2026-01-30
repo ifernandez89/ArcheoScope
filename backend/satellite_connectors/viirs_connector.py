@@ -73,16 +73,20 @@ class VIIRSConnector:
         
         try:
             import httpx
+            # Importar InstrumentMeasurement
+            import sys
+            from pathlib import Path
+            sys.path.insert(0, str(Path(__file__).parent.parent))
+            from instrument_contract import InstrumentMeasurement
             
             # Calcular fechas
             end_date = datetime.now() - timedelta(days=1)
             start_date = end_date - timedelta(days=days_back)
             
             # Autenticación con NASA Earthdata
-            auth = (self.username, self.password)
+            auth = httpx.BasicAuth(self.username, self.password)
             
             # VIIRS usa NASA AppEEARS API
-            # Endpoint simplificado para obtener datos
             url = f"{self.base_url}/task"
             
             # Crear tarea de extracción
@@ -90,50 +94,60 @@ class VIIRSConnector:
                 "task_type": "point",
                 "task_name": f"viirs_thermal_{datetime.now().strftime('%Y%m%d%H%M%S')}",
                 "params": {
-                    "dates": [
-                        {
-                            "startDate": start_date.strftime("%m-%d-%Y"),
-                            "endDate": end_date.strftime("%m-%d-%Y")
-                        }
-                    ],
-                    "layers": [
-                        {
-                            "product": self.product_mapping['thermal'],
-                            "layer": "LST_Day_1km"
-                        }
-                    ],
-                    "coordinates": [
-                        {
-                            "latitude": (lat_min + lat_max) / 2,
-                            "longitude": (lon_min + lon_max) / 2,
-                            "id": "point1"
-                        }
-                    ]
+                    "dates": [{"startDate": start_date.strftime("%m-%d-%Y"), "endDate": end_date.strftime("%m-%d-%Y")}],
+                    "layers": [{"product": self.product_mapping['thermal'], "layer": "LST_Day_1km"}],
+                    "coordinates": [{"latitude": (lat_min + lat_max) / 2, "longitude": (lon_min + lon_max) / 2, "id": "point1"}]
                 }
             }
             
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(30.0, connect=10.0), follow_redirects=True) as client:
                 # Crear tarea
-                response = await client.post(url, json=task_params, auth=auth)
-                
-                if response.status_code == 403:
-                    logger.warning("⚠️ VIIRS: 403 Forbidden - credenciales rechazadas o sin permisos")
-                    # Retornar estimación como fallback
+                try:
+                    response = await client.post(url, json=task_params, auth=auth)
+                    
+                    if response.status_code == 200:
+                        logger.info("✅ VIIRS: API respondió correctamente (Tarea creada)")
+                        return self._get_thermal_estimate(lat_min, lat_max, lon_min, lon_max)
+                    
+                    elif response.status_code == 403:
+                        logger.warning("⚠️ VIIRS: 403 Forbidden - AppEEARS requiere autorización en el perfil de Earthdata")
+                        # Retornar estimación marcada como DEGRADED por permisos
+                        center_lat = (lat_min + lat_max) / 2
+                        temp_c = self._calculate_temp_estimate(center_lat)
+                        
+                        return InstrumentMeasurement.create_derived(
+                            instrument_name="VIIRS",
+                            measurement_type="thermal_surface",
+                            value=temp_c,
+                            unit="Celsius",
+                            confidence=0.45,
+                            derivation_method="Location model (403 Forbidden - Permission Required in Earthdata profile)",
+                            source="VIIRS (estimated)"
+                        )
+                    
+                    elif response.status_code == 401:
+                        logger.error("❌ VIIRS: 401 Unauthorized - Credenciales inválidas")
+                        return InstrumentMeasurement.create_error("VIIRS", "thermal_surface", "Authentication failed (401)")
+                    
+                    else:
+                        logger.warning(f"⚠️ VIIRS: HTTP {response.status_code} - Usando estimación")
+                        return self._get_thermal_estimate(lat_min, lat_max, lon_min, lon_max)
+                        
+                except (httpx.ConnectTimeout, httpx.ReadTimeout):
+                    logger.warning("⏱️ VIIRS: Timeout - Usando estimación")
                     return self._get_thermal_estimate(lat_min, lat_max, lon_min, lon_max)
-                
-                elif response.status_code != 200:
-                    logger.warning(f"⚠️ VIIRS: HTTP {response.status_code}")
-                    return self._get_thermal_estimate(lat_min, lat_max, lon_min, lon_max)
-                
-                # Si llegamos aquí, la API respondió correctamente
-                # En producción: esperar a que la tarea termine y descargar resultados
-                # Por ahora: retornar estimación mejorada
-                logger.info("✅ VIIRS: API respondió correctamente")
-                return self._get_thermal_estimate(lat_min, lat_max, lon_min, lon_max)
         
         except Exception as e:
-            logger.warning(f"⚠️ VIIRS: Error: {e}")
-            return self._get_thermal_estimate(lat_min, lat_max, lon_min, lon_max)
+            logger.error(f"❌ VIIRS Error: {e}")
+            from instrument_contract import InstrumentMeasurement
+            return InstrumentMeasurement.create_error("VIIRS", "thermal_surface", str(e))
+    
+    def _calculate_temp_estimate(self, lat: float) -> float:
+        """Helper para cálculo de temperatura base."""
+        abs_lat = abs(lat)
+        if abs_lat < 23: return 28.0
+        elif abs_lat < 45: return 15.0
+        else: return -5.0
     
     def _get_thermal_estimate(self, lat_min: float, lat_max: float,
                              lon_min: float, lon_max: float) -> Any:

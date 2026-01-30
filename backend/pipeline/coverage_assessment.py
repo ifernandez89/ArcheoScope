@@ -269,10 +269,11 @@ def separate_confidence_and_signal(
     signal_values = []
     for m in measurements:
         if isinstance(m, dict) and 'value' in m:
-            value = m.get('value', 0)
-            threshold = m.get('threshold', 1.0)
+            value = m.get('value')
+            threshold = m.get('threshold')
             
-            if threshold > 0:
+            # Asegurar que sean numéricos para evitar TypeError: unsupported operand type(s) for -: 'NoneType' and 'float'
+            if value is not None and threshold is not None and threshold > 0:
                 # Señal normalizada (cuánto se desvía del umbral)
                 signal_strength = abs(value - threshold) / threshold
                 signal_values.append(signal_strength)

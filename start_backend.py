@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script para iniciar el backend de ArcheoScope en puerto 8004
+Script para iniciar el backend de ArcheoScope en puerto 8003
 """
 
 import sys
@@ -23,7 +23,7 @@ try:
     from api.main import app
     
     print("✅ Módulos importados correctamente")
-    print("🚀 Iniciando servidor en puerto 8004...")
+    print("🚀 Iniciando servidor en puerto 8003...")
     
     uvicorn.run(app, host="0.0.0.0", port=8003, log_level="info")
     

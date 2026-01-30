@@ -87,7 +87,7 @@ class PALSARConnector:
                 'platform': 'ALOS-2',
                 'processingLevel': 'RTC_HI_RES',
                 'bbox': f"{lon_min},{lat_min},{lon_max},{lat_max}",
-                'start': (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d'),
+                'start': (datetime.now() - timedelta(days=365*5)).strftime('%Y-%m-%d'),
                 'end': datetime.now().strftime('%Y-%m-%d'),
                 'maxResults': 10,
                 'output': 'json'

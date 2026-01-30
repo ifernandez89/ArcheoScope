@@ -355,14 +355,14 @@ class RealDataIntegratorV2:
             try:
                 api_data = await asyncio.wait_for(
                     method(lat_min, lat_max, lon_min, lon_max),
-                    timeout=60.0  # 60 segundos por instrumento
+                    timeout=180.0  # 180 segundos por instrumento (permitir descargas lentas)
                 )
             except asyncio.TimeoutError:
-                self.log(f"[{instrument_name}] ⏰ Timeout después de 60s")
+                self.log(f"[{instrument_name}] ⏰ Timeout después de 180s")
                 return InstrumentResult.create_failed(
                     instrument_name=instrument_name,
                     measurement_type="timeout",
-                    reason="API_TIMEOUT_60S",
+                    reason="API_TIMEOUT_180S",
                     processing_time_s=time.time() - start_time
                 )
             

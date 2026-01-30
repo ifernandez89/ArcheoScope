@@ -579,11 +579,11 @@ class ScientificPipeline:
             if not isinstance(measurement, dict):
                 continue
             
-            value = measurement.get('value', 0.0)
-            threshold = measurement.get('threshold', 1.0)
+            value = measurement.get('value')
+            threshold = measurement.get('threshold')
             
-            # Calcular z-score local (simulado - en producción usar buffer real)
-            if threshold > 0:
+            # Asegurar que sean numéricos para evitar TypeError: unsupported operand type(s) for -: 'NoneType' and 'float'
+            if value is not None and threshold is not None and threshold > 0:
                 z_score = (value - threshold) / (threshold * 0.3)  # 30% std estimado
             else:
                 z_score = 0.0
