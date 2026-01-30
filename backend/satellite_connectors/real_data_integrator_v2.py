@@ -48,6 +48,8 @@ from .palsar_connector import PALSARConnector
 from .era5_connector import ERA5Connector
 from .chirps_connector import CHIRPSConnector
 
+logger = logging.getLogger(__name__)
+
 # NEW: Import SAR enhanced processing
 import sys
 from pathlib import Path
@@ -62,8 +64,6 @@ try:
 except ImportError as e:
     SAR_ENHANCED_AVAILABLE = False
     logger.warning(f"⚠️ SAR Enhanced Processing not available: {e}")
-
-logger = logging.getLogger(__name__)
 
 
 class RealDataIntegratorV2:
