@@ -120,9 +120,8 @@ def generate_response_ollama(prompt, temperature=0.3):
         debug_log(f"❌ Error con Ollama: {e}")
         # The original instruction had a problematic line here.
         # Reverting to the original behavior to maintain syntactic correctness.
-        return f"Error generando explicación narrativa: {e}"
 
-def generate_response(question, hrm_model, temperature=0.3, top_k=20, mode="scientific_strict"):
+def generate_response(question, hrm_model, temperature=0.3, top_k=20, mode="scientific_strict", visualize_path=None):
     debug_log(f"Analizando con HRM y Generando respuesta para: {question} [Modo: {mode}]")
     
     # 1. PASO DE RAZONAMIENTO JERÁRQUICO (HRM)
@@ -153,7 +152,42 @@ def generate_response(question, hrm_model, temperature=0.3, top_k=20, mode="scie
         debug_log(f"Paso de razonamiento jerárquico HRM completado (Deep Thinking Layers: {config_dict['H_layers']})")
         latent_context = "HRM Analysis: Estructura espacial verificada. Coherencia topológica alta."
 
-    # 2. GENERACIÓN DE RESPUESTA (OLLAMA / QWEN)
+    # 2. GENERACIÓN DE IMAGEN MENTAL (HEATMAP)
+    if visualize_path:
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            
+            # Extraer estado oculto representativo (Carry "z")
+            # carry es [batch, hidden_size] -> Reshape a [batch, 32, 16] para visualizar topología latente
+            # O mejor, usar el input latente que es [1, 64] para ver activación
+            
+            # Simulamos una actividad neuronal basada en el carry state determinista
+            # carry: [1, 512]
+            activity = carry[0].detach().cpu().numpy()
+            
+            # Reshape a 16x32 para aspecto de "mapa"
+            grid_h, grid_w = 16, 32
+            heatmap_data = activity[:grid_h*grid_w].reshape(grid_h, grid_w)
+            
+            # Normalizar
+            heatmap_data = (heatmap_data - heatmap_data.min()) / (heatmap_data.max() - heatmap_data.min() + 1e-8)
+            
+            plt.figure(figsize=(10, 5))
+            plt.imshow(heatmap_data, cmap='inferno', aspect='auto')
+            plt.title("HRM Neural Activation (Spatial Reasoning Layer)")
+            plt.colorbar(label="Activation Intensity")
+            plt.axis('off')
+            
+            # Guardar
+            plt.savefig(visualize_path, bbox_inches='tight', dpi=100)
+            plt.close()
+            debug_log(f"Visualización guardada en {visualize_path}")
+            
+        except Exception as e:
+            debug_log(f"⚠️ Error generando visualización: {e}")
+
+    # 3. GENERACIÓN DE RESPUESTA (OLLAMA / QWEN)
     # Prompt estructurado según el modo
     
     if mode == "scientific_strict":

@@ -4,10 +4,21 @@ Guardado de resultados TIMT en base de datos.
 """
 
 import logging
+import json
+import math
 from typing import Any
 from territorial_inferential_tomography import TerritorialInferentialTomographyResult
 
 logger = logging.getLogger(__name__)
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    """Calcular distancia en km entre dos puntos (Haversine)."""
+    R = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
 
 async def save_timt_result_to_db(db_pool, result: TerritorialInferentialTomographyResult, request_data: dict):
     """
@@ -34,8 +45,8 @@ async def save_timt_result_to_db(db_pool, result: TerritorialInferentialTomograp
                         center_lat, center_lon, region_name, analysis_objective,
                         analysis_radius_km, resolution_m,
                         territorial_coherence_score, scientific_rigor_score,
-                        analysis_timestamp
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                        analysis_timestamp, scientific_output
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
                     RETURNING id
                 """,
                     result.analysis_id,
@@ -51,7 +62,8 @@ async def save_timt_result_to_db(db_pool, result: TerritorialInferentialTomograp
                     request_data.get('resolution_m'),
                     result.territorial_coherence_score,
                     result.scientific_rigor_score,
-                    result.analysis_timestamp
+                    result.analysis_timestamp,
+                    json.dumps(result.scientific_output)
                 )
                 
                 logger.info(f"✅ TIMT analysis saved: ID={timt_id}")
@@ -76,9 +88,11 @@ async def save_timt_result_to_db(db_pool, result: TerritorialInferentialTomograp
                     tcp.geological_context.geological_age.value if tcp.geological_context else 'unknown',
                     f"fault_density_{tcp.geological_context.fault_density:.1f}" if tcp.geological_context else 'unknown',  # Usar fault_density en lugar de tectonic_context
                     len(tcp.hydrographic_features),
-                    'unknown',  # TODO: Extraer de water_availability_score
+                    f"{result.tomographic_profile.water_availability.settlement_viability:.2f}" if result.tomographic_profile.water_availability else 'unknown',
                     len(tcp.external_archaeological_sites),
-                    None,  # TODO: Calcular distancia al sitio más cercano
+                    min([calculate_distance((request_data.get('center_lat') or (result.territory_bounds.lat_min + result.territory_bounds.lat_max)/2),
+                                          (request_data.get('center_lon') or (result.territory_bounds.lon_min + result.territory_bounds.lon_max)/2),
+                                          s.latitude, s.longitude) for s in tcp.external_archaeological_sites]) if tcp.external_archaeological_sites else None,
                     len(tcp.known_human_traces),
                     tcp.preservation_potential.value,
                     tcp.historical_biome.value,

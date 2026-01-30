@@ -150,6 +150,9 @@ class TIMTAnalysisResponse(BaseModel):
     
     # Transparencia
     transparency_summary: Dict[str, Any]
+    
+    # Salida Científica (HRM)
+    scientific_output: Dict[str, Any] = Field(default_factory=dict)
 
 class TCPResponse(BaseModel):
     """Response del Contexto Territorial."""
@@ -274,7 +277,8 @@ async def analyze_territory_complete(request: TIMTAnalysisRequest):
                 "validation_recommendations_count": len(result.transparency_report.validation_recommendations),
                 "cannot_affirm": result.transparency_report.cannot_affirm[:3],  # Primeros 3
                 "can_infer": result.transparency_report.can_infer[:3]  # Primeros 3
-            }
+            },
+            scientific_output=result.scientific_output
         )
         
         logger.info(f"✅ TIMT analysis completed successfully: {result.analysis_id}")

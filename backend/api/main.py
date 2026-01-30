@@ -193,6 +193,14 @@ async def startup_event():
         logger.info("✅ Pool científico inicializado")
     except Exception as e:
         logger.warning(f"⚠️ Pool científico no disponible: {e}")
+        
+    # Inicializar pool para TIMT (NUEVO)
+    try:
+        from api.timt_endpoints import init_timt_db_pool
+        await init_timt_db_pool()
+        logger.info("✅ Pool TIMT inicializado")
+    except Exception as e:
+        logger.warning(f"⚠️ Pool TIMT no disponible: {e}")
     
     logger.info("✅ ArcheoScope iniciado completamente")
 

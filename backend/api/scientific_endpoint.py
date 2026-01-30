@@ -250,6 +250,80 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                         'success': False
                     })
             
+            # ============================================================================
+            # ANÁLISIS HRM (Razonamiento Jerárquico)
+            # ============================================================================
+            hrm_analysis = None
+            try:
+                # Importar runner dinámicamente si no está en top-level
+                from hrm import hrm_runner
+                
+                # Cargar modelo (debería estar cacheado o ser rápido si ya se cargó)
+                # NOTA: En producción ideal, esto se carga al inicio. Por ahora lo cargamos on-demand con cache interno.
+                # hrm_runner maneja su propia carga ligera.
+                if not hasattr(router, "hrm_model_instance"):
+                    print("[SCIENTIFIC_ENDPOINT] Inicializando HRM Model...", flush=True)
+                    router.hrm_model_instance = hrm_runner.load_models()
+                
+                # Construir consulta basada en datos TIMT
+                # Usamos la narrativa del ETP como input base + contexto
+                query = f"Analizar anomalía en {request.region_name}. "
+                if etp.narrative_explanation:
+                    query += f"Contexto: {etp.narrative_explanation}. "
+                query += f"ESS Superficial: {etp.ess_superficial:.2f}. "
+                
+                # Configurar ruta de visualización (Backend escribe en carpeta del Frontend)
+                # Asumimos estructura standard: backend/api/scientific_endpoint.py -> ... -> frontend/
+                frontend_dir = Path(__file__).parent.parent.parent / "frontend"
+                viz_dir = frontend_dir / "hrm_viz"
+                viz_dir.mkdir(exist_ok=True)
+                
+                timestamp_str = timt_result.analysis_timestamp.strftime("%Y%m%d_%H%M%S")
+                viz_filename = f"hrm_{timestamp_str}_{request.region_name[:5].replace(' ','_')}.png"
+                viz_path = viz_dir / viz_filename
+                
+                # URL relativa para el frontend (servido desde 'frontend/')
+                viz_url = f"/hrm_viz/{viz_filename}"
+                
+                # Ejecutar análisis con visualización
+                print(f"[SCIENTIFIC_ENDPOINT] Ejecutando HRM para: {query[:50]}...", flush=True)
+                hrm_json = hrm_runner.generate_response(
+                    query, 
+                    router.hrm_model_instance, 
+                    temperature=0.3, 
+                    mode="scientific_strict",
+                    visualize_path=str(viz_path)
+                )
+                
+                # Parsear resultado si es string (aunque generate_response devuelve string, 
+                # en strict mode intentamos que sea JSON válido dentro del texto)
+                try:
+                    # Intentar limpiar si viene con markdown
+                    cleaned = hrm_json.replace("```json", "").replace("```", "").strip()
+                    hrm_analysis = json.loads(cleaned)
+                    # Inyectar URL de visualización en el objeto JSON analizado
+                    hrm_analysis["visualizacion_neural"] = viz_url
+                except:
+                    # Si falla, structurar manualmente el texto
+                    hrm_analysis = {
+                        "analisis_morfologico": "Análisis textural realizado.",
+                        "hipotesis_antropica": hrm_json[:200] + "...",
+                        "hipotesis_natural_alternativa": "Ver detalle narrativo.", 
+                        "evidencia_requerida": "Validación de campo necesaria.",
+                        "nivel_incertidumbre": "Medio (No estructurado)",
+                        "raw_output": hrm_json,
+                        "visualizacion_neural": viz_url
+                    }
+                    
+                print("[SCIENTIFIC_ENDPOINT] ✅ Análisis HRM completado", flush=True)
+                
+            except Exception as e:
+                print(f"[SCIENTIFIC_ENDPOINT] ⚠️ Error en HRM Integration: {e}", flush=True)
+                hrm_analysis = {
+                    "error": str(e),
+                    "status": "failed"
+                }
+
             # Construir respuesta compatible con estructura científica
             result = {
                 'scientific_output': {
@@ -259,6 +333,7 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                     'confidence_interval': [0.5, 1.0],  # Intervalo de confianza basado en rigor científico
                     'recommended_action': 'field_verification' if etp.densidad_arqueologica_m3 > 0.5 else 'monitoring_passive',
                     'notes': etp.narrative_explanation,
+                    'hrm_analysis': hrm_analysis, # <--- NUEVO CAMPO HRM
                     'timestamp': timt_result.analysis_timestamp.isoformat(),
                     'coverage_raw': len([m for m in all_measurements if m['success']]) / len(all_measurements) if all_measurements else 0,
                     'coverage_effective': timt_result.scientific_rigor_score,  # Rigor científico como cobertura efectiva

@@ -26,6 +26,16 @@ from enum import Enum
 from territorial_context_profile import TerritorialContextProfileSystem, TerritorialContextProfile, AnalysisObjective
 from etp_generator import ETProfileGenerator
 from etp_core import EnvironmentalTomographicProfile, BoundingBox
+import os
+from pathlib import Path
+
+# HRM Imports
+try:
+    from hrm.hrm_runner import load_models as load_hrm_model, generate_response as generate_hrm_response
+    HRM_AVAILABLE = True
+except ImportError:
+    HRM_AVAILABLE = False
+    logger.warning("⚠️ HRM module not available")
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +139,9 @@ class TerritorialInferentialTomographyResult:
     # Métricas finales
     territorial_coherence_score: float = 0.0  # Coherencia territorial general
     scientific_rigor_score: float = 0.0      # Rigor científico del análisis
+    
+    # HRM Output
+    scientific_output: Dict[str, Any] = field(default_factory=dict)
 
 class TerritorialInferentialTomographyEngine:
     """Motor de Tomografía Territorial Inferencial - SISTEMA COMPLETO."""
@@ -144,6 +157,15 @@ class TerritorialInferentialTomographyEngine:
         # Sistemas componentes
         self.tcp_system = TerritorialContextProfileSystem()
         self.etp_generator = ETProfileGenerator(integrator_15_instruments)
+        
+        # Inicializar HRM si está disponible
+        self.hrm_model = None
+        if HRM_AVAILABLE:
+            try:
+                self.hrm_model = load_hrm_model()
+                logger.info("🧠 HRM Model loaded in TIMT Engine")
+            except Exception as e:
+                logger.error(f"❌ Failed to load HRM model: {e}")
         
         # Configuración del motor
         self.analysis_mode = AnalysisMode.HYPOTHESIS_DRIVEN  # NUEVO POR DEFECTO
@@ -247,6 +269,17 @@ class TerritorialInferentialTomographyEngine:
         scientific_rigor = self._calculate_scientific_rigor(tcp, etp, transparency_report)
         
         # ============================================================================
+        # CAPA EXTRA: HRM ANALYSIS (Neural Visualization)
+        # ============================================================================
+        
+        scientific_output = {}
+        if self.hrm_model:
+            logger.info("🧠 EJECUTANDO ANÁLISIS HRM (High Resolution Morphology)")
+            scientific_output = self._run_hrm_analysis(analysis_id, tcp, etp, hypothesis_validations)
+        else:
+            logger.warning("⚠️ HRM analysis skipped (model not available)")
+        
+        # ============================================================================
         # RESULTADO FINAL
         # ============================================================================
         
@@ -262,7 +295,8 @@ class TerritorialInferentialTomographyEngine:
             general_summary=summaries['general'],
             institutional_summary=summaries['institutional'],
             territorial_coherence_score=territorial_coherence,
-            scientific_rigor_score=scientific_rigor
+            scientific_rigor_score=scientific_rigor,
+            scientific_output=scientific_output
         )
         
         logger.info("🎉 ANÁLISIS TERRITORIAL INFERENCIAL TOMOGRÁFICO COMPLETADO")
@@ -609,3 +643,76 @@ CONFIANZA CIENTÍFICA: Sistema transparente con limitaciones documentadas.
             rigor_factors.append(0.8)  # Bonus por validación cruzada
         
         return np.mean(rigor_factors) if rigor_factors else 0.5
+
+    def _run_hrm_analysis(self, analysis_id: str, tcp: TerritorialContextProfile,
+                        etp: EnvironmentalTomographicProfile,
+                        validations: List[HypothesisValidation]) -> Dict[str, Any]:
+        """Ejecutar análisis HRM y generar visualización neural."""
+        
+        try:
+            # 1. Preparar pregunta para HRM
+            strongest_hypothesis = "No hypothesis"
+            if validations:
+                # Buscar la mejor validada
+                best = max(validations, key=lambda x: x.confidence_score)
+                strongest_hypothesis = f"{best.hypothesis_type} (confianza: {best.confidence_score:.2f})"
+            
+            question = (
+                f"Analizar coherencia territorial en {tcp.territory_bounds}. "
+                f"Contexto: {tcp.geological_context.dominant_lithology.value if tcp.geological_context else 'Unknown'}. "
+                f"ESS Volumétrico: {etp.ess_volumetrico:.3f}. "
+                f"Hipótesis principal: {strongest_hypothesis}."
+            )
+            
+            # 2. Configurar path de visualización
+            # Asegurar que el directorio existe
+            maps_dir = Path("anomaly_maps")
+            maps_dir.mkdir(exist_ok=True)
+            
+            filename = f"hrm_viz_{analysis_id}.png"
+            viz_path = maps_dir / filename
+            
+            # 3. Ejecutar HRM
+            response_json = generate_hrm_response(
+                question=question,
+                hrm_model=self.hrm_model,
+                temperature=0.3,
+                mode="scientific_strict",
+                visualize_path=str(viz_path)
+            )
+            
+            # 4. Procesar respuesta
+            # Si response_json es string (porque falló el parseo JSON en HRM u otro motivo), empaquetarlo
+            if isinstance(response_json, str):
+                result = {
+                    "raw_output": response_json,
+                    "analisis_morfologico": "Análisis textual generado.",
+                    "hipotesis_antropica": "Ver raw output.",
+                    "hipotesis_natural_alternativa": "Ver raw output.",
+                    "nivel_incertidumbre": "Indeterminado"
+                }
+            else:
+                result = response_json
+            
+            # 5. Agregar URL de visualización (será servida por /anomaly-map/{filename})
+            # El frontend espera 'visualizacion_neural'
+            # Usamos una URL relativa que el frontend pueda resolver
+            # Si el frontend está en otro puerto, podría necesitar la URL completa del backend
+            # Por ahora asumimos que el backend sirve esto en /anomaly-map/
+            
+            # Construir URL absoluta si es posible, o relativa
+            API_URL = os.getenv("VITE_API_URL", "http://localhost:8003")
+            result["visualizacion_neural"] = f"{API_URL}/anomaly-map/{filename}"
+            
+            logger.info(f"✅ HRM Analysis complete. Viz: {filename}")
+            
+            return {
+                "hrm_analysis": result
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Error in HRM analysis: {e}", exc_info=True)
+            return {
+                "error": str(e),
+                "hrm_analysis": {}
+            }

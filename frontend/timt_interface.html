@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -56,1042 +57,194 @@
         }
 
         .analysis-area {
-            document.getElementById('context_content').innerHTML = '';
-            document.getElementById('hypotheses_content').innerHTML = '';
-            document.getElementById('transparency_content').innerHTML = '';
-            document.getElementById('communication_content').textContent = 'Seleccione un nivel de comunicación para ver el resumen correspondiente.';
-            
-            // Reinicializar canvas
-            initializeTomogrcument.querySelector('.tab-content').firstChild);
-            
-            setTimeout(() => successDiv.remove(), 3000);
+            background: #0b0f14;
+            overflow-y: auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
-        function clearResults() {
-            currentAnalysis = null;
-            analysisStartTime = null;
-            
-            // Ocultar resultados
-            document.getElementById('results_overview').style.display = 'none';
-            document.getElementById('quick_metrics').style.display = 'none';
-            document.getElementById('welcome_message').style.display = stChild);
-            
-            setTimeout(() => errorDiv.remove(), 5000);
+        /* Controls */
+        .control-group {
+            margin-bottom: 1.5rem;
         }
 
-        function showSuccess(message) {
-            // Remover mensajes anteriores
-            document.querySelectorAll('.error, .success').forEach(el => el.remove());
-            
-            const successDiv = document.createElement('div');
-            successDiv.className = 'success';
-            successDiv.textContent = message;
-            
-            document.querySelector('.tab-content').insertBefore(successDiv, doementById('tcp_btn').disabled = false;
-            }
+        .control-label {
+            display: block;
+            font-size: 0.875rem;
+            color: #9ca3af;
+            margin-bottom: 0.5rem;
         }
 
-        function showError(message) {
-            // Remover mensajes anteriores
-            document.querySelectorAll('.error, .success').forEach(el => el.remove());
-            
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error';
-            errorDiv.textContent = message;
-            
-            document.querySelector('.tab-content').insertBefore(errorDiv, document.querySelector('.tab-content').firg');
-            const loadingText = loading.querySelector('p');
-            
-            if (show) {
-                loadingText.textContent = message;
-                loading.classList.add('active');
-                document.getElementById('analyze_btn').disabled = true;
-                document.getElementById('tcp_btn').disabled = true;
-            } else {
-                loading.classList.remove('active');
-                document.getElementById('analyze_btn').disabled = false;
-                document.getEl  const content = document.getElementById('communication_content');
-            if (window.communicationSummaries && window.communicationSummaries[level]) {
-                content.textContent = window.communicationSummaries[level];
-            } else {
-                content.textContent = 'Resumen no disponible para este nivel.';
-            }
+        .control-input {
+            width: 100%;
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
         }
 
-        function showLoading(show, message = 'Ejecutando análisis territorial inferencial...') {
-            const loading = document.getElementById('loadinEach(pane => {
-                pane.classList.remove('active');
-            });
-            document.getElementById(tabName).classList.add('active');
+        .control-input:focus {
+            outline: none;
+            border-color: #60a5fa;
         }
 
-        function switchCommunicationTab(level) {
-            // Actualizar tabs de comunicación
-            document.querySelectorAll('.comm-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelector(`[data-comm="${level}"]`).classList.add('active');
-
-            // Actualizar contenido
-          60a5fa';
-            ctx.font = '12px sans-serif';
-            ctx.fillText(`${title} - ESS: ${ess.toFixed(3)}`, 10, height - 10);
+        .coord-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
         }
 
-        function switchTab(tabName) {
-            // Actualizar tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-
-            // Actualizar contenido
-            document.querySelectorAll('.tab-pane').forte de anomalía
-                const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-                gradient.addColorStop(0, `rgba(96, 165, 250, ${ess})`);
-                gradient.addColorStop(1, 'rgba(96, 165, 250, 0)');
-                
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
-            // Información de la visualización
-            ctx.fillStyle = '#         const ess = result.etp_summary.ess_volumetrico;
-            const coherence = result.etp_summary.coherencia_3d;
-            
-            // Dibujar anomalías
-            const numAnomalies = Math.floor(ess * 10) + 1;
-            
-            for (let i = 0; i < numAnomalies; i++) {
-                const x = Math.random() * (width - 40) + 20;
-                const y = Math.random() * (height - 40) + 20;
-                const radius = (ess * 20) + Math.random() * 10;
-                
-                // Gradien      ctx.lineWidth = 1;
-            
-            for (let i = 0; i < width; i += 20) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, height);
-                ctx.stroke();
-            }
-            
-            for (let i = 0; i < height; i += 20) {
-                ctx.beginPath();
-                ctx.moveTo(0, i);
-                ctx.lineTo(width, i);
-                ctx.stroke();
-            }
-            
-            // Datos simulados basados en ESS
-   learRect(0, 0, canvas.width, canvas.height);
-                
-                // Dibujar visualización simulada
-                drawTomographyVisualization(ctx, canvas.width, canvas.height, result, canvasInfo.title);
-            });
-        }
-
-        function drawTomographyVisualization(ctx, width, height, result, title) {
-            // Fondo
-            ctx.fillStyle = '#0b0f14';
-            ctx.fillRect(0, 0, width, height);
-            
-            // Grid
-            ctx.strokeStyle = '#1f2937';
-              { id: 'xy_canvas', title: 'Vista Superior' },
-                { id: 'xz_canvas', title: 'Corte Longitudinal' },
-                { id: 'yz_canvas', title: 'Corte Latitudinal' },
-                { id: 'temporal_canvas', title: 'Análisis Temporal' }
-            ];
-
-            canvases.forEach(canvasInfo => {
-                const canvas = document.getElementById(canvasInfo.id);
-                const ctx = canvas.getContext('2d');
-                
-                // Limpiar canvas
-                ctx.c                <span class="context-label">Densidad Arqueológica</span>
-                    <span class="context-value">${result.etp_summary.densidad_arqueologica_m3.toFixed(6)} m³</span>
-                </div>
-            `;
-
-            // Actualizar visualizaciones tomográficas (simplificado)
-            updateTomographyVisualizations(result);
-        }
-
-        function updateTomographyVisualizations(result) {
-            // Simulación de visualizaciones tomográficas
-            const canvases = [
-        class="context-item">
-                    <span class="context-label">Coherencia 3D</span>
-                    <span class="context-value">${result.etp_summary.coherencia_3d.toFixed(3)}</span>
-                </div>
-                <div class="context-item">
-                    <span class="context-label">Persistencia Temporal</span>
-                    <span class="context-value">${result.etp_summary.persistencia_temporal.toFixed(3)}</span>
-                </div>
-                <div class="context-item">
-                   </div>
-                <div class="context-item">
-                    <span class="context-label">ESS Volumétrico</span>
-                    <span class="context-value">${result.etp_summary.ess_volumetrico.toFixed(3)}</span>
-                </div>
-                <div class="context-item">
-                    <span class="context-label">ESS Temporal</span>
-                    <span class="context-value">${result.etp_summary.ess_temporal.toFixed(3)}</span>
-                </div>
-                <div 
-            switchCommunicationTab('technical');
-        }
-
-        function displayTomographyResults(result) {
-            // Actualizar métricas tomográficas
-            const metricsContainer = document.getElementById('tomography_metrics');
-            
-            metricsContainer.innerHTML = `
-                <div class="context-item">
-                    <span class="context-label">ESS Superficial</span>
-                    <span class="context-value">${result.etp_summary.ess_superficial.toFixed(3)}</span>
-                     ).join('')}
-                </div>
-            `;
-        }
-
-        function displayCommunicationResults(result) {
-            // Guardar los resúmenes para cambio de tabs
-            window.communicationSummaries = {
-                technical: result.technical_summary,
-                academic: result.academic_summary,
-                general: result.general_summary,
-                institutional: result.institutional_summary
-            };
-
-            // Mostrar el técnico por defecto        <h4>🚫 Lo que NO puede afirmar</h4>
-                    ${result.transparency_summary.cannot_affirm.map(item => 
-                        `<div class="limitation-item">${item}</div>`
-                    ).join('')}
-                </div>
-
-                <div class="transparency-section">
-                    <h4>✅ Lo que SÍ puede inferir</h4>
-                    ${result.transparency_summary.can_infer.map(item => 
-                        `<div class="limitation-item" style="color: #22c55e;">${item}</div>`
-ificadas</span>
-                        <span class="context-value">${result.transparency_summary.system_limitations_count}</span>
-                    </div>
-                    <div class="context-item">
-                        <span class="context-label">Recomendaciones</span>
-                        <span class="context-value">${result.transparency_summary.validation_recommendations_count}</span>
-                    </div>
-                </div>
-
-                <div class="transparency-section">
-                             <div class="context-item">
-                        <span class="context-label">Hipótesis Descartadas</span>
-                        <span class="context-value">${result.transparency_summary.hypotheses_discarded_count}</span>
-                    </div>
-                </div>
-
-                <div class="transparency-section">
-                    <h4>⚠️ Limitaciones del Sistema</h4>
-                    <div class="context-item">
-                        <span class="context-label">Limitaciones Ident    <div class="context-item">
-                        <span class="context-label">Pasos Ejecutados</span>
-                        <span class="context-value">${result.transparency_summary.analysis_process_steps}</span>
-                    </div>
-                    <div class="context-item">
-                        <span class="context-label">Decisiones Tomadas</span>
-                        <span class="context-value">${result.transparency_summary.decisions_made_count}</span>
-                    </div>
-   >
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-            });
-
-            hypothesesContent.innerHTML = html;
-        }
-
-        function displayTransparencyResults(result) {
-            const transparencyContent = document.getElementById('transparency_content');
-            
-            transparencyContent.innerHTML = `
-                <div class="transparency-section">
-                    <h4>🔍 Proceso de Análisis</h4>
-                                       
-                        ${validation.contradictions.length > 0 ? `
-                            <div>
-                                <strong style="color: #ef4444; font-size: 0.875rem;">Contradicciones:</strong>
-                                <ul style="margin: 0.5rem 0; padding-left: 1rem; font-size: 0.875rem; color: #d1d5db;">
-                                    ${validation.contradictions.map(contradiction => `<li>${contradiction}</li>`).join('')}
-                                </ul                     <div style="margin-bottom: 0.5rem;">
-                                <strong style="color: #22c55e; font-size: 0.875rem;">Factores de Soporte:</strong>
-                                <ul style="margin: 0.5rem 0; padding-left: 1rem; font-size: 0.875rem; color: #d1d5db;">
-                                    ${validation.supporting_factors.map(factor => `<li>${factor}</li>`).join('')}
-                                </ul>
-                            </div>
-                        ` : ''}
-              <span class="context-label">Confianza</span>
-                                <span class="context-value">${validation.confidence_score.toFixed(3)}</span>
-                            </div>
-                        </div>
-                        <p style="font-size: 0.875rem; color: #d1d5db; margin-bottom: 1rem;">
-                            ${validation.explanation}
-                        </p>
-                        
-                        ${validation.supporting_factors.length > 0 ? `
-       
-                
-                html += `
-                    <div class="hypothesis-card">
-                        <div class="hypothesis-header">
-                            <span class="hypothesis-type">${validation.hypothesis_type}</span>
-                            <span class="evidence-level ${evidenceClass}">${validation.evidence_level}</span>
-                        </div>
-                        <div style="margin: 1rem 0;">
-                            <div class="context-item">
-                   on}
-                        </p>
-                    </div>
-                `;
-            });
-
-            html += '</div>';
-
-            contextContent.innerHTML = html;
-        }
-
-        function displayHypothesesResults(result) {
-            const hypothesesContent = document.getElementById('hypotheses_content');
-            
-            let html = '';
-
-            result.hypothesis_validations.forEach((validation, index) => {
-                const evidenceClass = `evidence-${validation.evidence_level}`;sis, index) => {
-                html += `
-                    <div class="hypothesis-card">
-                        <div class="hypothesis-header">
-                            <span class="hypothesis-type">${hypothesis.type}</span>
-                            <span class="context-value">${hypothesis.plausibility_score.toFixed(3)}</span>
-                        </div>
-                        <p style="font-size: 0.875rem; color: #d1d5db; margin-top: 0.5rem;">
-                            ${hypothesis.explanati          html += `
-                    <div class="context-item">
-                        <span class="context-label">${site.name}</span>
-                        <span class="context-value">${site.type} (${site.source})</span>
-                    </div>
-                `;
-            });
-
-            html += `
-                </div>
-
-                <div class="context-section">
-                    <h4>🧠 Hipótesis Territoriales</h4>
-            `;
-
-            result.territorial_hypotheses.forEach((hypothe    <div class="context-item">
-                        <span class="context-label">Característica ${index + 1}</span>
-                        <span class="context-value">${feature.type} (${feature.period})</span>
-                    </div>
-                `;
-            });
-
-            html += `
-                </div>
-
-                <div class="context-section">
-                    <h4>🏛️ Sitios Arqueológicos Externos</h4>
-            `;
-
-            result.external_sites.forEach((site, index) => {
-       class="context-item">
-                        <span class="context-label">Aptitud Arqueológica</span>
-                        <span class="context-value">${result.geological_context.archaeological_suitability.toFixed(3)}</span>
-                    </div>
-                </div>
-
-                <div class="context-section">
-                    <h4>💧 Características Hidrográficas</h4>
-            `;
-
-            result.hydrographic_features.forEach((feature, index) => {
-                html += `
-                  <div class="context-item">
-                        <span class="context-label">Litología Dominante</span>
-                        <span class="context-value">${result.geological_context.dominant_lithology}</span>
-                    </div>
-                    <div class="context-item">
-                        <span class="context-label">Edad Geológica</span>
-                        <span class="context-value">${result.geological_context.geological_age}</span>
-                    </div>
-                    <divn class="context-label">Trazas Identificadas</span>
-                        <span class="context-value">${result.tcp_summary.human_traces_count}</span>
-                    </div>
-                </div>
-            `;
-        }
-
-        function displayContextResultsFromTCP(result) {
-            const contextContent = document.getElementById('context_content');
-            
-            let html = `
-                <div class="context-section">
-                    <h4>🗿 Contexto Geológico</h4>
-                  t-section">
-                    <h4>🏛️ Validación Externa</h4>
-                    <div class="context-item">
-                        <span class="context-label">Sitios Arqueológicos</span>
-                        <span class="context-value">${result.tcp_summary.external_sites_count}</span>
-                    </div>
-                </div>
-
-                <div class="context-section">
-                    <h4>👥 Trazas Humanas</h4>
-                    <div class="context-item">
-                        <spacp_summary.geological_context}</span>
-                    </div>
-                </div>
-
-                <div class="context-section">
-                    <h4>💧 Contexto Hidrográfico</h4>
-                    <div class="context-item">
-                        <span class="context-label">Características Identificadas</span>
-                        <span class="context-value">${result.tcp_summary.hydrographic_features_count}</span>
-                    </div>
-                </div>
-
-                <div class="contex   displayContextResultsFromTCP(result);
-        }
-
-        function displayContextResults(result) {
-            const contextContent = document.getElementById('context_content');
-            
-            contextContent.innerHTML = `
-                <div class="context-section">
-                    <h4>🗿 Contexto Geológico</h4>
-                    <div class="context-item">
-                        <span class="context-label">Litología Dominante</span>
-                        <span class="context-value">${result.t                   <span class="context-value">${result.tcp_summary.preservation_potential}</span>
-                </div>
-            `;
-
-            // Llenar otras tabs
-            displayContextResults(result);
-            displayHypothesesResults(result);
-            displayTransparencyResults(result);
-            displayCommunicationResults(result);
-            displayTomographyResults(result);
-        }
-
-        function displayTCPResults(result) {
-            // Mostrar solo resultados de contexto
-         erísticas Hidrográficas</span>
-                    <span class="context-value">${result.tcp_summary.hydrographic_features_count}</span>
-                </div>
-                <div class="context-item">
-                    <span class="context-label">Sitios Externos</span>
-                    <span class="context-value">${result.tcp_summary.external_sites_count}</span>
-                </div>
-                <div class="context-item">
-                    <span class="context-label">Potencial Preservación</span>
- `${duration}s`;
-            }
-
-            // Resultados principales
-            const mainResults = document.getElementById('main_results');
-            mainResults.innerHTML = `
-                <div class="context-item">
-                    <span class="context-label">Contexto Geológico</span>
-                    <span class="context-value">${result.tcp_summary.geological_context}</span>
-                </div>
-                <div class="context-item">
-                    <span class="context-label">Caract           document.getElementById('analysis_objective_display').textContent = result.tcp_summary.analysis_objective;
-            document.getElementById('territory_coords').textContent = `[${getCoordinates().lat_min}, ${getCoordinates().lat_max}] x [${getCoordinates().lon_min}, ${getCoordinates().lon_max}]`;
-            
-            if (analysisStartTime) {
-                const duration = ((Date.now() - analysisStartTime) / 1000).toFixed(1);
-                document.getElementById('analysis_time').textContent = extContent = result.territorial_coherence_score.toFixed(3);
-            document.getElementById('rigor_score').textContent = result.scientific_rigor_score.toFixed(3);
-            document.getElementById('ess_volumetric').textContent = result.etp_summary.ess_volumetrico.toFixed(3);
-            document.getElementById('hypotheses_count').textContent = result.hypothesis_validations.length;
-
-            // Información del análisis
-            document.getElementById('analysis_id').textContent = result.analysis_id;
- getElementById('metric_coherence').textContent = result.territorial_coherence_score.toFixed(3);
-            document.getElementById('metric_rigor').textContent = result.scientific_rigor_score.toFixed(3);
-            document.getElementById('metric_ess').textContent = result.etp_summary.ess_volumetrico.toFixed(3);
-            document.getElementById('metric_3d').textContent = result.etp_summary.coherencia_3d.toFixed(3);
-
-            // Métricas rápidas
-            document.getElementById('coherence_score').tsolution) : null,
-                communication_level: document.getElementById('communication_level').value
-            };
-        }
-
-        function displayResults(result) {
-            // Mostrar resultados principales
-            document.getElementById('welcome_message').style.display = 'none';
-            document.getElementById('results_overview').style.display = 'block';
-            document.getElementById('quick_metrics').style.display = 'block';
-
-            // Métricas principales
-            document.ximas');
-                return null;
-            }
-
-            return { lat_min, lat_max, lon_min, lon_max };
-        }
-
-        function getAnalysisConfig() {
-            const resolution = document.getElementById('resolution').value;
-            
-            return {
-                analysis_objective: document.getElementById('analysis_objective').value,
-                analysis_radius_km: parseFloat(document.getElementById('analysis_radius').value),
-                resolution_m: resolution ? parseFloat(rex').value);
-            const lon_min = parseFloat(document.getElementById('lon_min').value);
-            const lon_max = parseFloat(document.getElementById('lon_max').value);
-
-            if (isNaN(lat_min) || isNaN(lat_max) || isNaN(lon_min) || isNaN(lon_max)) {
-                showError('Por favor ingrese coordenadas válidas');
-                return null;
-            }
-
-            if (lat_min >= lat_max || lon_min >= lon_max) {
-                showError('Las coordenadas mínimas deben ser menores que las má);
-                showSuccess('Contexto Territorial generado exitosamente');
-                
-            } catch (error) {
-                console.error('Error en TCP:', error);
-                showError(`Error en TCP: ${error.message}`);
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        function getCoordinates() {
-            const lat_min = parseFloat(document.getElementById('lat_min').value);
-            const lat_max = parseFloat(document.getElementById('lat_maify({
-                        ...coords,
-                        analysis_objective: config.analysis_objective,
-                        analysis_radius_km: config.analysis_radius_km
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                const result = await response.json();
-                
-                displayTCPResults(result);
-                switchTab('context'on generateTCP() {
-            const coords = getCoordinates();
-            if (!coords) return;
-
-            const config = getAnalysisConfig();
-            
-            showLoading(true, 'Generando Contexto Territorial...');
-            
-            try {
-                const response = await fetch(`${API_BASE}/timt/tcp`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.string }
-
-                const result = await response.json();
-                currentAnalysis = result;
-                
-                displayResults(result);
-                showSuccess('Análisis territorial completado exitosamente');
-                
-            } catch (error) {
-                console.error('Error en análisis:', error);
-                showError(`Error en análisis: ${error.message}`);
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        async functi
-                const response = await fetch(`${API_BASE}/timt/analyze`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        ...coords,
-                        ...config
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-               ght - 20);
-            
-            ctx.fillStyle = '#6b7280';
-            ctx.font = '14px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('Esperando análisis...', width / 2, height / 2);
-        }
-
-        async function analyzeTerritory() {
-            const coords = getCoordinates();
-            if (!coords) return;
-
-            const config = getAnalysisConfig();
-            
-            showLoading(true);
-            analysisStartTime = Date.now();
-            
-            try {s.width = canvas.offsetWidth;
-                canvas.height = canvas.offsetHeight;
-                
-                // Dibujar placeholder
-                drawPlaceholder(ctx, canvas.width, canvas.height);
-            });
-        }
-
-        function drawPlaceholder(ctx, width, height) {
-            ctx.fillStyle = '#1f2937';
-            ctx.fillRect(0, 0, width, height);
-            
-            ctx.strokeStyle = '#374151';
-            ctx.setLineDash([5, 5]);
-            ctx.strokeRect(10, 10, width - 20, heiion() {
-                    switchCommunicationTab(this.dataset.comm);
-                });
-            });
-        }
-
-        function initializeTomographyCanvases() {
-            const canvases = ['xy_canvas', 'xz_canvas', 'yz_canvas', 'temporal_canvas'];
-            
-            canvases.forEach(canvasId => {
-                const canvas = document.getElementById(canvasId);
-                const ctx = canvas.getContext('2d');
-                
-                // Ajustar tamaño del canvas
-                canvaer('click', generateTCP);
-            document.getElementById('clear_btn').addEventListener('click', clearResults);
-
-            // Tabs principales
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    switchTab(this.dataset.tab);
-                });
-            });
-
-            // Tabs de comunicación
-            document.querySelectorAll('.comm-tab').forEach(tab => {
-                tab.addEventListener('click', funct;
-
-        // Configuración de la API
-        const API_BASE = 'http://localhost:8003';
-
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeEventListeners();
-            initializeTomographyCanvases();
-        });
-
-        function initializeEventListeners() {
-            // Botones principales
-            document.getElementById('analyze_btn').addEventListener('click', analyzeTerritory);
-            document.getElementById('tcp_btn').addEventListen                  <button class="comm-tab" data-comm="institutional">Institucional</button>
-                    </div>
-                    <div class="comm-content" id="communication_content">
-                        Seleccione un nivel de comunicación para ver el resumen correspondiente.
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Estado global de la aplicación
-        let currentAnalysis = null;
-        let analysisStartTime = null-- Se llenará dinámicamente -->
-                    </div>
-                </div>
-
-                <!-- Tab: Comunicación -->
-                <div class="tab-pane" id="communication">
-                    <div class="communication-tabs">
-                        <button class="comm-tab active" data-comm="technical">Técnico</button>
-                        <button class="comm-tab" data-comm="academic">Académico</button>
-                        <button class="comm-tab" data-comm="general">General</button>
-      - Se llenará dinámicamente -->
-                    </div>
-                </div>
-
-                <!-- Tab: Hipótesis -->
-                <div class="tab-pane" id="hypotheses">
-                    <div id="hypotheses_content">
-                        <!-- Se llenará dinámicamente -->
-                    </div>
-                </div>
-
-                <!-- Tab: Transparencia -->
-                <div class="tab-pane" id="transparency">
-                    <div id="transparency_content">
-                        <!          </div>
-                    </div>
-
-                    <div class="context-section">
-                        <h4>📊 Métricas Tomográficas</h4>
-                        <div id="tomography_metrics">
-                            <!-- Se llenará dinámicamente -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab: Contexto -->
-                <div class="tab-pane" id="context">
-                    <div id="context_content">
-                        <!-as" id="xz_canvas"></canvas>
-                        </div>
-                        <div class="tomography-panel">
-                            <h4>📐 Corte Latitudinal (YZ)</h4>
-                            <canvas class="tomography-canvas" id="yz_canvas"></canvas>
-                        </div>
-                        <div class="tomography-panel">
-                            <h4>⏰ Análisis Temporal</h4>
-                            <canvas class="tomography-canvas" id="temporal_canvas"></canvas>
-                          <div class="tab-pane" id="tomography">
-                    <div class="tomography-container">
-                        <div class="tomography-panel">
-                            <h4>🗺️ Vista Superior (XY)</h4>
-                            <canvas class="tomography-canvas" id="xy_canvas"></canvas>
-                        </div>
-                        <div class="tomography-panel">
-                            <h4>📏 Corte Longitudinal (XZ)</h4>
-                            <canvas class="tomography-canv
-                                    Validación + Transparencia - Comunicación multinivel
-                                </div>
-                            </div>
-                            <p style="font-size: 0.875rem; color: #6b7280;">
-                                Configure las coordenadas y presione "Analizar Territorio Completo" para comenzar
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab: Tomografía -->
-    CP) - Hipótesis antes de medición
-                                </div>
-                                <div style="margin-bottom: 1rem;">
-                                    <strong style="color: #60a5fa;">🛰️ CAPA 1:</strong> 
-                                    Adquisición dirigida + Tomografía (ETP) - 15 instrumentos
-                                </div>
-                                <div style="margin-bottom: 2rem;">
-                                    <strong style="color: #60a5fa;">📋 CAPA 2:</strong>   Sistema revolucionario de Tomografía Territorial Inferencial que transforma 
-                                el análisis arqueológico mediante un flujo científico de 3 capas:
-                            </p>
-                            <div style="text-align: left; max-width: 600px; margin: 0 auto;">
-                                <div style="margin-bottom: 1rem;">
-                                    <strong style="color: #60a5fa;">🧩 CAPA 0:</strong> 
-                                    Contexto Territorial (T
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="welcome_message">
-                        <div style="text-align: center; padding: 4rem 2rem; color: #9ca3af;">
-                            <h2 style="color: #60a5fa; margin-bottom: 1rem;">
-                                🚀 Bienvenido al Sistema TIMT
-                            </h2>
-                            <p style="margin-bottom: 2rem; line-height: 1.6;">
-                                             <div class="context-item">
-                                <span class="context-label">Tiempo de Análisis</span>
-                                <span class="context-value" id="analysis_time">-</span>
-                            </div>
-                        </div>
-
-                        <div class="context-section">
-                            <h4>🎯 Resultados Principales</h4>
-                            <div id="main_results">
-                                <!-- Se llenará dinámicamente -->      <div class="context-item">
-                                <span class="context-label">Objetivo</span>
-                                <span class="context-value" id="analysis_objective_display">-</span>
-                            </div>
-                            <div class="context-item">
-                                <span class="context-label">Territorio</span>
-                                <span class="context-value" id="territory_coords">-</span>
-                            </div>
-                         <div class="metric-label">Coherencia 3D</div>
-                            </div>
-                        </div>
-
-                        <div class="context-section">
-                            <h4>📋 Resumen del Análisis</h4>
-                            <div class="context-item">
-                                <span class="context-label">ID del Análisis</span>
-                                <span class="context-value" id="analysis_id">-</span>
-                            </div>
-                                                <div class="metric-label">Rigor Científico</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-value" id="metric_ess">-</div>
-                                <div class="metric-label">ESS Volumétrico</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-value" id="metric_3d">-</div>
-                        <div id="results_overview" style="display: none;">
-                        <div class="metrics-grid">
-                            <div class="metric-card">
-                                <div class="metric-value" id="metric_coherence">-</div>
-                                <div class="metric-label">Coherencia Territorial</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-value" id="metric_rigor">-</div>
-      nt">
-                <!-- Tab: Resumen -->
-                <div class="tab-pane active" id="overview">
-                    <div class="loading" id="loading">
-                        <div class="spinner"></div>
-                        <p>Ejecutando análisis territorial inferencial...</p>
-                        <p style="font-size: 0.875rem; color: #9ca3af; margin-top: 0.5rem;">
-                            Esto puede tomar 30-60 segundos
-                        </p>
-                    </div>
-
-                "tab active" data-tab="overview">📊 Resumen</button>
-                <button class="tab" data-tab="tomography">🔬 Tomografía</button>
-                <button class="tab" data-tab="context">🧩 Contexto</button>
-                <button class="tab" data-tab="hypotheses">🧠 Hipótesis</button>
-                <button class="tab" data-tab="transparency">📋 Transparencia</button>
-                <button class="tab" data-tab="communication">📢 Comunicación</button>
-            </div>
-
-            <div class="tab-conte Volumétrico</span>
-                    <span class="context-value" id="ess_volumetric">-</span>
-                </div>
-                <div class="context-item">
-                    <span class="context-label">Hipótesis Validadas</span>
-                    <span class="context-value" id="hypotheses_count">-</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Área de Análisis -->
-        <div class="analysis-area">
-            <div class="analysis-tabs">
-                <button class= <div class="context-item">
-                    <span class="context-label">Coherencia Territorial</span>
-                    <span class="context-value" id="coherence_score">-</span>
-                </div>
-                <div class="context-item">
-                    <span class="context-label">Rigor Científico</span>
-                    <span class="context-value" id="rigor_score">-</span>
-                </div>
-                <div class="context-item">
-                    <span class="context-label">ESS
-                </button>
-                <button class="btn btn-secondary" id="tcp_btn" style="width: 100%; margin-bottom: 1rem;">
-                    Solo Contexto Territorial (TCP)
-                </button>
-                <button class="btn btn-secondary" id="clear_btn" style="width: 100%;">
-                    Limpiar Resultados
-                </button>
-            </div>
-
-            <div class="section" id="quick_metrics" style="display: none;">
-                <h3>📊 Métricas Rápidas</h3>
-               /option>
-                        <option value="academic">Académico</option>
-                        <option value="general">General</option>
-                        <option value="institutional">Institucional</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="section">
-                <h3>🚀 Análisis</h3>
-                <button class="btn btn-primary" id="analyze_btn" style="width: 100%; margin-bottom: 1rem;">
-                    Analizar Territorio Completon="1" max="50" value="10" step="0.1">
-                </div>
-                <div class="form-group">
-                    <label>Resolución (metros)</label>
-                    <input type="number" id="resolution" min="1" max="1000" value="30" step="1" placeholder="Auto si vacío">
-                </div>
-                <div class="form-group">
-                    <label>Nivel de Comunicación</label>
-                    <select id="communication_level">
-                        <option value="technical">Técnico<lysis_objective">
-                        <option value="exploratory">Exploratorio</option>
-                        <option value="validation">Validación</option>
-                        <option value="academic">Académico</option>
-                        <option value="monitoring">Monitoreo</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Radio de Análisis (km)</label>
-                    <input type="number" id="analysis_radius" mi0" placeholder="Ej: 31.130">
-                </div>
-                <div class="form-group">
-                    <label>Longitud Máxima</label>
-                    <input type="number" id="lon_max" step="0.0001" value="31.140" placeholder="Ej: 31.140">
-                </div>
-            </div>
-
-            <div class="section">
-                <h3>🎯 Configuración del Análisis</h3>
-                <div class="form-group">
-                    <label>Objetivo del Análisis</label>
-                    <select id="ana             <input type="number" id="lat_min" step="0.0001" value="29.970" placeholder="Ej: 29.970">
-                </div>
-                <div class="form-group">
-                    <label>Latitud Máxima</label>
-                    <input type="number" id="lat_max" step="0.0001" value="29.980" placeholder="Ej: 29.980">
-                </div>
-                <div class="form-group">
-                    <label>Longitud Mínima</label>
-                    <input type="number" id="lon_min" step="0.0001" value="31.13</head>
-<body>
-    <div class="header">
-        <h1>🚀 TIMT - Territorial Inferential Multi-domain Tomography</h1>
-        <div class="subtitle">Sistema revolucionario de análisis territorial arqueológico</div>
-    </div>
-
-    <div class="main-container">
-        <!-- Panel de Control -->
-        <div class="control-panel">
-            <div class="section">
-                <h3>📍 Coordenadas del Territorio</h3>
-                <div class="form-group">
-                    <label>Latitud Mínima</label>
-       
-            border-radius: 4px;
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
             transition: all 0.2s;
         }
 
-        .comm-tab.active {
-            background: #60a5fa;
+        .btn-primary {
+            background: #2563eb;
             color: white;
         }
 
-        .comm-content {
-            background: rgba(17, 24, 39, 0.6);
-            border: 1px solid #1f2937;
-            border-radius: 6px;
-            padding: 1rem;
-            font-size: 0.875rem;
-            line-height: 1.5;
-            color: #d1d5db;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-    </style>
-re {
-            content: "⚠️ ";
-            margin-right: 0.5rem;
+        .btn-primary:hover {
+            background: #1d4ed8;
         }
 
-        .communication-tabs {
+        .btn-secondary {
+            background: #374151;
+            color: white;
+            margin-top: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Tabs */
+        .tabs {
             display: flex;
-            margin-bottom: 1rem;
-            background: rgba(17, 24, 39, 0.8);
-            border-radius: 6px;
-            padding: 0.25rem;
-        }
-
-        .comm-tab {
-            flex: 1;
-            padding: 0.5rem 1rem;
-            background: transparent;
-            border: none;
-            color: #9ca3af;
-            cursor: pointer;
-            font-size: 0.75rem;  border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .transparency-section h4 {
-            color: #f59e0b;
-            font-size: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .limitation-item {
-            padding: 0.5rem 0;
-            color: #d1d5db;
-            font-size: 0.875rem;
+            background: #111827;
             border-bottom: 1px solid #1f2937;
         }
 
-        .limitation-item:last-child {
-            border-bottom: none;
+        .tab {
+            padding: 1rem 1.5rem;
+            color: #9ca3af;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-size: 0.875rem;
+            font-weight: 500;
         }
 
-        .limitation-item::befo;
-            border-radius: 6px;
-            padding: 1rem;
-            color: #ef4444;
-            margin-bottom: 1rem;
+        .tab:hover {
+            color: #d1d5db;
         }
 
-        .success {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            border-radius: 6px;
-            padding: 1rem;
-            color: #22c55e;
-            margin-bottom: 1rem;
+        .tab.active {
+            color: #60a5fa;
+            border-bottom-color: #60a5fa;
         }
 
-        .transparency-section {
-            background: rgba(17, 24, 39, 0.8);
-            border: 1px solid #1f2937;
-                 .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #1f2937;
-            border-top: 3px solid #60a5fa;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
+        .tab-content {
+            padding: 1.5rem;
+            flex: 1;
+            overflow-y: auto;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3)idence-strong {
-            background: rgba(34, 197, 94, 0.2);
-            color: #22c55e;
-        }
-
-        .evidence-moderate {
-            background: rgba(251, 191, 36, 0.2);
-            color: #fbbf24;
-        }
-
-        .evidence-weak {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-        }
-
-        .loading {
+        .tab-pane {
             display: none;
-            text-align: center;
-            padding: 2rem;
         }
 
-        .loading.active {
+        .tab-pane.active {
             display: block;
         }
 
- ttom: 1rem;
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: #1f2937;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #374151;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+            margin-top: 0.25rem;
+        }
+
+        .metric-sub {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        /* Context Items */
+        .context-section {
+            margin-bottom: 2rem;
+        }
+
+        .context-section h4 {
+            color: #e5e7eb;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #374151;
+            padding-bottom: 0.5rem;
+        }
+
+        .context-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: rgba(31, 41, 55, 0.5);
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .context-label {
+            color: #9ca3af;
+        }
+
+        .context-value {
+            color: #e5e7eb;
+            font-weight: 500;
+        }
+
+        /* Hypotheses */
+        .hypothesis-card {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
         }
 
         .hypothesis-header {
@@ -1102,251 +255,622 @@ re {
         }
 
         .hypothesis-type {
-            color: #60a5fa;
-            font-weight: 500;
-            text-transform: capitalize;
+            font-weight: 600;
+            color: #e5e7eb;
         }
 
         .evidence-level {
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
             font-size: 0.75rem;
-            font-weight: 500;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
         }
 
-        .evd #1f2937;
+        .evidence-strong {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
         }
 
-        .context-item:last-child {
-            border-bottom: none;
+        .evidence-moderate {
+            background: rgba(234, 179, 8, 0.2);
+            color: #facc15;
         }
 
-        .context-label {
+        .evidence-weak {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .evidence-insufficient {
+            background: rgba(107, 114, 128, 0.2);
             color: #d1d5db;
-            font-size: 0.875rem;
         }
 
-        .context-value {
-            color: #60a5fa;
-            font-size: 0.875rem;
-            font-weight: 500;
+        /* Canvases */
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
         }
 
-        .hypothesis-card {
-            background: rgba(17, 24, 39, 0.6);
-            border: 1px solid #1f2937;
-            border-radius: 6px;
-            padding: 1rem;
-            margin-bo        background: rgba(17, 24, 39, 0.8);
-            border: 1px solid #1f2937;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .context-section h4 {
-            color: #60a5fa;
-            font-size: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .context-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px soli#1f2937;
-            border-radius: 8px;
-            padding: 1rem;
+        .canvas-container {
+            background: #000;
+            border: 1px solid #374151;
+            border-radius: 0.5rem;
+            aspect-ratio: 1;
             position: relative;
         }
 
-        .tomography-panel h4 {
-            color: #60a5fa;
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        .tomography-canvas {
+        .canvas-container canvas {
             width: 100%;
-            height: calc(100% - 2rem);
-            background: #05080d;
-            border-radius: 4px;
-            border: 1px solid #1f2937;
+            height: 100%;
         }
 
-        .context-section {
-    ;
-            color: #60a5fa;
-            margin-bottom: 0.5rem;
-        }
-
-        .metric-label {
-            font-size: 0.875rem;
+        .canvas-label {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
             color: #9ca3af;
         }
 
-        .tomography-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 1rem;
-            height: 600px;
-            margin-bottom: 2rem;
-        }
-
-        .tomography-panel {
-            background: rgba(17, 24, 39, 0.8);
-            border: 1px solid      display: block;
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .metric-card {
-            background: rgba(17, 24, 39, 0.8);
-            border: 1px solid #1f2937;
-            border-radius: 8px;
-            padding: 1.5rem;
-            text-align: center;
-        }
-
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 700        transition: all 0.2s;
-        }
-
-        .tab.active {
-            color: #60a5fa;
-            border-bottom-color: #60a5fa;
-            background: rgba(96, 165, 250, 0.05);
-        }
-
-        .tab:hover:not(.active) {
-            color: #d1d5db;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .tab-content {
-            flex: 1;
-            padding: 2rem;
-            overflow-y: auto;
-        }
-
-        .tab-pane {
-            display: none;
-        }
-
-        .tab-pane.active {
-       btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .analysis-tabs {
-            display: flex;
-            background: #111827;
-            border-bottom: 1px solid #1f2937;
-        }
-
-        .tab {
-            padding: 1rem 1.5rem;
-            background: transparent;
-            border: none;
-            color: #9ca3af;
-            cursor: pointer;
-            font-size: 0.875rem;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-            background: #374151;
-            color: #d1d5db;
-        }
-
-        .btn-secondary:hover {
-            background: #4b5563;
-        }
-
-        .olid #374151;
-            border-radius: 6px;
-            color: #eaeef3;
-            font-size: 0.875rem;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #60a5fa;
-            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
-        }
-
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-    m;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #1f2937;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            color: #d1d5db;
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 0.75rem;
-            background: #1f2937;
-            border: 1px s80px);
-            gap: 1px;
-            background: #1f2937;
-        }
-
-        .control-panel {
-            background: #111827;
-            padding: 1.5rem;
-            overflow-y: auto;
-            border-right: 1px solid #1f2937;
-        }
-
-        .analysis-area {
-            background: #0b0f14;
+        /* Loading */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(11, 15, 20, 0.9);
             display: flex;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s;
         }
 
-        .section {
+        .loading-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #374151;
+            border-top-color: #60a5fa;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Communication Text */
+        .comm-text {
+            line-height: 1.6;
+            color: #d1d5db;
+            white-space: pre-wrap;
+            font-family: 'Consolas', monospace;
+            background: #111827;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #374151;
+        }
+
+        /* Transparency */
+        .transparency-section {
             margin-bottom: 2rem;
         }
 
-        .section h3 {
-            color: #60a5fa;
-            font-size: 1re
+        .limitation-item {
+            padding: 0.5rem;
+            border-left: 2px solid #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        /* Success/Error */
+        .error {
+            color: #f87171;
+            padding: 1rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+
+        .success {
+            color: #4ade80;
+            padding: 1rem;
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>TIMT Engine</h1>
+        <div class="subtitle">Territorial Inferential Multi-domain Tomography - Scientific Dashboard</div>
+    </div>
+
+    <div class="main-container">
+        <!-- Panel de Control -->
+        <div class="control-panel">
+            <div class="control-group">
+                <label class="control-label">Coordenadas del Territorio</label>
+                <div class="coord-grid">
+                    <input type="number" id="lat_min" class="control-input" placeholder="Lat Min" step="0.0001"
+                        value="29.9730">
+                    <input type="number" id="lat_max" class="control-input" placeholder="Lat Max" step="0.0001"
+                        value="29.9810">
+                    <input type="number" id="lon_min" class="control-input" placeholder="Lon Min" step="0.0001"
+                        value="31.1300">
+                    <input type="number" id="lon_max" class="control-input" placeholder="Lon Max" step="0.0001"
+                        value="31.1380">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Región / Nombre</label>
+                <input type="text" id="region_name" class="control-input" placeholder="Ej: Giza Plateau">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Objetivo del Análisis</label>
+                <select id="analysis_objective" class="control-input">
+                    <option value="exploratory">Exploratorio</option>
+                    <option value="validation">Validación</option>
+                    <option value="academic" selected>Investigación Académica</option>
+                    <option value="monitoring">Monitoreo</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <div class="coord-grid">
+                    <div>
+                        <label class="control-label">Radio (km)</label>
+                        <input type="number" id="analysis_radius" class="control-input" value="5" min="1" max="50">
+                    </div>
+                    <div>
+                        <label class="control-label">Resolución (m)</label>
+                        <input type="number" id="resolution" class="control-input" value="30" min="1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Nivel de Comunicación</label>
+                <select id="communication_level" class="control-input">
+                    <option value="technical">Técnico Especializado</option>
+                    <option value="academic">Académico</option>
+                    <option value="general">Público General</option>
+                    <option value="institutional">Institucional</option>
+                </select>
+            </div>
+
+            <button id="analyze_btn" class="btn btn-primary" onclick="runAnalysis()">
+                Ejecutar TIMT Completo
+            </button>
+            <button id="tcp_btn" class="btn btn-secondary" onclick="generateTCP()">
+                Solo Contexto (TCP)
+            </button>
+        </div>
+
+        <!-- Área de Análisis -->
+        <div class="analysis-area">
+            <div id="loading" class="loading-overlay">
+                <div class="spinner"></div>
+                <p style="margin-top: 1rem; color: #9ca3af; font-size: 0.875rem;">Procesando datos inferenciales...</p>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</div>
+                <div class="tab" data-tab="context" onclick="switchTab('context')">Contexto (TCP)</div>
+                <div class="tab" data-tab="tomography" onclick="switchTab('tomography')">Tomografía (ETP)</div>
+                <div class="tab" data-tab="hypotheses" onclick="switchTab('hypotheses')">Hipótesis</div>
+                <div class="tab" data-tab="hrm" onclick="switchTab('hrm')">Neural (HRM)</div>
+                <div class="tab" data-tab="transparency" onclick="switchTab('transparency')">Transparencia</div>
+                <div class="tab" data-tab="communication" onclick="switchTab('communication')">Reporte</div>
+            </div>
+
+            <div class="tab-content">
+                <!-- Welcome State -->
+                <div id="welcome_message" style="text-align: center; padding: 4rem; color: #4b5563;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🛰️</div>
+                    <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: #9ca3af;">Sistema TIMT Listo</h3>
+                    <p>Configure los parámetros y ejecute un análisis para comenzar.</p>
+                </div>
+
+                <!-- Dashboard Tab -->
+                <div id="dashboard" class="tab-pane active" style="display: none;">
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Coherencia Territorial</div>
+                            <div class="metric-value" id="metric_coherence">-</div>
+                            <div class="metric-sub">Índice Global</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Rigor Científico</div>
+                            <div class="metric-value" id="metric_rigor">-</div>
+                            <div class="metric-sub">Score de Validación</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">ESS Volumétrico</div>
+                            <div class="metric-value" id="metric_ess">-</div>
+                            <div class="metric-sub">Evidencia Sensorial</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Hipótesis Validadas</div>
+                            <div class="metric-value" id="metric_hypotheses">-</div>
+                            <div class="metric-sub">Fuerte/Moderada</div>
+                        </div>
+                    </div>
+
+                    <div id="dashboard_summary" class="context-section"></div>
+                </div>
+
+                <!-- Context Tab -->
+                <div id="context" class="tab-pane">
+                    <div id="context_content"></div>
+                </div>
+
+                <!-- Tomography Tab -->
+                <div id="tomography" class="tab-pane">
+                    <div style="display: grid; grid-template-columns: 200px 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div class="context-section" id="tomography_metrics"></div>
+                        <div class="canvas-grid">
+                            <div class="canvas-container">
+                                <div class="canvas-label">XY - Vista Superior</div>
+                                <canvas id="xy_canvas"></canvas>
+                            </div>
+                            <div class="canvas-container">
+                                <div class="canvas-label">XZ - Corte Longitudinal</div>
+                                <canvas id="xz_canvas"></canvas>
+                            </div>
+                            <div class="canvas-container">
+                                <div class="canvas-label">YZ - Corte Latitudinal</div>
+                                <canvas id="yz_canvas"></canvas>
+                            </div>
+                            <div class="canvas-container">
+                                <div class="canvas-label">Temporal - Heatmap</div>
+                                <canvas id="temporal_canvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hypotheses Tab -->
+                <div id="hypotheses" class="tab-pane">
+                    <div id="hypotheses_content"></div>
+                </div>
+
+                <!-- HRM Tab (New) -->
+                <div id="hrm" class="tab-pane">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <h4>Visualización Neural HRM</h4>
+                            <div id="hrm_visual_container" style="margin-top: 1rem; text-align: center;">
+                                <div
+                                    style="padding: 2rem; color: #6b7280; border: 1px dashed #374151; border-radius: 0.5rem;">
+                                    Ejecute un análisis completo para generar visualización neural.
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4>Análisis Morfológico de Alta Resolución</h4>
+                            <div id="hrm_text_content" class="comm-text" style="font-size: 0.8rem; margin-top: 1rem;">
+                                Esperando resultados...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transparency Tab -->
+                <div id="transparency" class="tab-pane">
+                    <div id="transparency_content"></div>
+                </div>
+
+                <!-- Communication Tab -->
+                <div id="communication" class="tab-pane">
+                    <div class="tabs" style="margin-bottom: 1rem; background: transparent; border: none;">
+                        <button class="btn btn-secondary comm-tab active" onclick="switchCommTab('technical')"
+                            style="width: auto; margin:0 0.5rem 0 0;">Técnico</button>
+                        <button class="btn btn-secondary comm-tab" onclick="switchCommTab('academic')"
+                            style="width: auto; margin:0 0.5rem 0 0;">Académico</button>
+                        <button class="btn btn-secondary comm-tab" onclick="switchCommTab('general')"
+                            style="width: auto; margin:0 0.5rem 0 0;">General</button>
+                        <button class="btn btn-secondary comm-tab" onclick="switchCommTab('institutional')"
+                            style="width: auto; margin:0 0.5rem 0 0;">Institucional</button>
+                    </div>
+                    <div id="communication_content" class="comm-text"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8003';
+        let currentAnalysis = null;
+
+        // UI Helpers
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+
+            document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+            const target = document.getElementById(tabName);
+            if (target) target.style.display = 'block';
+
+            // Special handling for welcome message
+            if (currentAnalysis) {
+                document.getElementById('welcome_message').style.display = 'none';
+            }
+        }
+
+        function switchCommTab(level) {
+            document.querySelectorAll('.comm-tab').forEach(t => t.classList.remove('btn-primary'));
+            document.querySelectorAll('.comm-tab').forEach(t => t.classList.add('btn-secondary'));
+            // This is a bit hacky for button styles, simply removing/adding classes
+            event.target.classList.remove('btn-secondary');
+            event.target.classList.add('btn-primary');
+
+            if (currentAnalysis) {
+                const summaryKey = `${level}_summary`;
+                const content = currentAnalysis[summaryKey] || 'Resumen no disponible.';
+                document.getElementById('communication_content').textContent = content;
+            }
+        }
+
+        function showLoading(show) {
+            const el = document.getElementById('loading');
+            el.className = show ? 'loading-overlay active' : 'loading-overlay';
+        }
+
+        function showError(msg) {
+            alert('Error: ' + msg); // Simple fallback
+        }
+
+        // Logic
+        async function runAnalysis() {
+            showLoading(true);
+            try {
+                const payload = {
+                    lat_min: parseFloat(document.getElementById('lat_min').value),
+                    lat_max: parseFloat(document.getElementById('lat_max').value),
+                    lon_min: parseFloat(document.getElementById('lon_min').value),
+                    lon_max: parseFloat(document.getElementById('lon_max').value),
+                    analysis_objective: document.getElementById('analysis_objective').value,
+                    analysis_radius_km: parseFloat(document.getElementById('analysis_radius').value),
+                    resolution_m: parseFloat(document.getElementById('resolution').value) || null,
+                    communication_level: document.getElementById('communication_level').value,
+                    region_name: document.getElementById('region_name').value || "Unknown Region"
+                };
+
+                const response = await fetch(`${API_BASE}/timt/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Error en el análisis');
+                }
+
+                const result = await response.json();
+                currentAnalysis = result;
+                renderResults(result);
+                switchTab('dashboard');
+
+            } catch (e) {
+                console.error(e);
+                showError(e.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function generateTCP() {
+            showLoading(true);
+            try {
+                const payload = {
+                    lat_min: parseFloat(document.getElementById('lat_min').value),
+                    lat_max: parseFloat(document.getElementById('lat_max').value),
+                    lon_min: parseFloat(document.getElementById('lon_min').value),
+                    lon_max: parseFloat(document.getElementById('lon_max').value),
+                    analysis_objective: document.getElementById('analysis_objective').value,
+                    analysis_radius_km: parseFloat(document.getElementById('analysis_radius').value)
+                };
+
+                const response = await fetch(`${API_BASE}/timt/tcp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error('Error generando TCP');
+
+                const result = await response.json();
+                // Map TCP response to partial full response structure for rendering
+                const partialResult = {
+                    tcp_summary: {
+                        geological_context: result.geological_context.dominant_lithology,
+                        hydrographic_features_count: result.hydrographic_features.length,
+                        external_sites_count: result.external_sites.length,
+                        human_traces_count: result.human_traces.length,
+                        hypotheses_count: result.territorial_hypotheses.length
+                    },
+                    // Stub other fields to avoid crash
+                    metric_coherence: 0, scientific_rigor: 0, ess_volumetric: 0,
+                    hypothesis_validations: []
+                };
+
+                // Render what we can
+                document.getElementById('context_content').innerHTML = `
+                    <div class="context-section">
+                        <h4>Contexto Geológico</h4>
+                        <div class="context-item"><span class="context-label">Litología</span><span class="context-value">${result.geological_context.dominant_lithology}</span></div>
+                        <div class="context-item"><span class="context-label">Edad</span><span class="context-value">${result.geological_context.geological_age}</span></div>
+                        <div class="context-item"><span class="context-label">Potencial Preservación</span><span class="context-value">${result.geological_context.preservation_potential}</span></div>
+                    </div>
+                    <div class="context-section">
+                         <h4>Hipótesis Territoriales Identificadas</h4>
+                         ${result.territorial_hypotheses.map(h => `
+                            <div class="hypothesis-card">
+                                <div class="hypothesis-header">
+                                    <span class="hypothesis-type">${h.type}</span>
+                                    <span class="context-value">${h.plausibility_score.toFixed(2)}</span>
+                                </div>
+                                <p style="font-size: 0.8rem; color:#9ca3af">${h.explanation}</p>
+                            </div>
+                         `).join('')}
+                    </div>
+                `;
+
+                currentAnalysis = null; // Partial only
+                switchTab('context');
+
+            } catch (e) {
+                console.error(e);
+                showError(e.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function renderResults(data) {
+            // Dashboard Metrics
+            document.getElementById('metric_coherence').textContent = data.territorial_coherence_score.toFixed(3);
+            document.getElementById('metric_rigor').textContent = data.scientific_rigor_score.toFixed(3);
+            document.getElementById('metric_ess').textContent = data.etp_summary ? data.etp_summary.ess_volumetrico.toFixed(3) : '-';
+
+            const validHypotheses = data.hypothesis_validations.filter(h => h.evidence_level === 'strong' || h.evidence_level === 'moderate').length;
+            document.getElementById('metric_hypotheses').textContent = validHypotheses;
+
+            // Context
+            const ctx = data.tcp_summary;
+            document.getElementById('context_content').innerHTML = `
+                <div class="context-section">
+                    <h4>Resumen Contextual (TCP)</h4>
+                    <div class="context-item"><span class="context-label">Geología Dominante</span><span class="context-value">${ctx.geological_context}</span></div>
+                    <div class="context-item"><span class="context-label">Características Hidrográficas</span><span class="context-value">${ctx.hydrographic_features_count}</span></div>
+                    <div class="context-item"><span class="context-label">Sitios Externos Conocidos</span><span class="context-value">${ctx.external_sites_count}</span></div>
+                    <div class="context-item"><span class="context-label">Trazas Humanas</span><span class="context-value">${ctx.human_traces_count}</span></div>
+                </div>
+            `;
+
+            // Hypotheses
+            const hypContainer = document.getElementById('hypotheses_content');
+            hypContainer.innerHTML = data.hypothesis_validations.map(h => `
+                <div class="hypothesis-card">
+                    <div class="hypothesis-header">
+                        <span class="hypothesis-type">${h.hypothesis_type}</span>
+                        <span class="evidence-level evidence-${h.evidence_level}">${h.evidence_level}</span>
+                    </div>
+                    <div class="context-item">
+                        <span class="context-label">Confianza</span>
+                        <span class="context-value">${h.confidence_score.toFixed(2)}</span>
+                    </div>
+                    <p style="margin-top:0.5rem; font-size:0.875rem; color:#d1d5db">${h.explanation}</p>
+                     ${h.supporting_factors.length ? `<div style="margin-top:0.5rem; font-size:0.8rem; color:#4ade80">✅ ${h.supporting_factors.join(', ')}</div>` : ''}
+                     ${h.contradictions.length ? `<div style="margin-top:0.5rem; font-size:0.8rem; color:#f87171">❌ ${h.contradictions.join(', ')}</div>` : ''}
+                </div>
+            `).join('');
+
+            // HRM Results
+            if (data.scientific_output && data.scientific_output.hrm_analysis) {
+                const hrm = data.scientific_output.hrm_analysis;
+
+                // Visual
+                const vizContainer = document.getElementById('hrm_visual_container');
+                if (hrm.visualizacion_neural) {
+                    vizContainer.innerHTML = `<img src="${hrm.visualizacion_neural}" style="max-width:100%; border-radius:0.5rem; border:1px solid #374151; cursor: pointer;" onclick="window.open(this.src, '_blank')">`;
+                    // Abrir automáticamente si es un análisis completo nuevo
+                    if (data.status === "success") {
+                        console.log("Auto-opening HRM visualization...");
+                        window.open(hrm.visualizacion_neural, '_blank');
+                    }
+                } else {
+                    vizContainer.innerHTML = `<div style="padding:2rem;">Sin visualización disponible</div>`;
+                }
+
+                // Text
+                const textContainer = document.getElementById('hrm_text_content');
+                if (hrm.raw_output) {
+                    textContainer.textContent = hrm.raw_output;
+                } else {
+                    textContainer.innerHTML = `
+                        <strong>Análisis Morfológico:</strong>\n${hrm.analisis_morfologico}\n\n
+                        <strong>Hipótesis Antrópica:</strong>\n${hrm.hipotesis_antropica}\n\n
+                        <strong>Incertidumbre:</strong> ${hrm.nivel_incertidumbre}
+                    `.replace(/\n/g, '<br>');
+                }
+            } else {
+                document.getElementById('hrm_text_content').textContent = "Análisis HRM no disponible en este resultado.";
+                document.getElementById('hrm_visual_container').innerHTML = "";
+            }
+
+            // Communication Default
+            document.getElementById('communication_content').textContent = data.technical_summary;
+
+            // Draw Dummy Tomography (Simulation)
+            drawTomographySimulation();
+        }
+
+        function drawTomographySimulation() {
+            // Simple visual placeholder for the canvases
+            const ids = ['xy_canvas', 'xz_canvas', 'yz_canvas', 'temporal_canvas'];
+            ids.forEach(id => {
+                const cvs = document.getElementById(id);
+                if (!cvs) return;
+                const ctx = cvs.getContext('2d');
+                cvs.width = cvs.offsetWidth;
+                cvs.height = cvs.offsetHeight;
+
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+                // Random heatmap-ish blobs
+                for (let i = 0; i < 5; i++) {
+                    const x = Math.random() * cvs.width;
+                    const y = Math.random() * cvs.height;
+                    const r = 20 + Math.random() * 50;
+
+                    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+                    g.addColorStop(0, 'rgba(96, 165, 250, 0.6)');
+                    g.addColorStop(1, 'rgba(0,0,0,0)');
+
+                    ctx.fillStyle = g;
+                    ctx.beginPath();
+                    ctx.arc(x, y, r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.strokeStyle = '#1f2937';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, cvs.height / 2); ctx.lineTo(cvs.width, cvs.height / 2);
+                ctx.moveTo(cvs.width / 2, 0); ctx.lineTo(cvs.width / 2, cvs.height);
+                ctx.stroke();
+            });
+        }
+
+        // Initial setup
+        drawTomographySimulation();
+    </script>
+</body>
+
+</html>
