@@ -118,10 +118,12 @@ def generate_response_ollama(prompt, temperature=0.3):
         return result.get("response", "").strip()
     except Exception as e:
         debug_log(f"❌ Error con Ollama: {e}")
+        # The original instruction had a problematic line here.
+        # Reverting to the original behavior to maintain syntactic correctness.
         return f"Error generando explicación narrativa: {e}"
 
-def generate_response(question, hrm_model, temperature=0.3, top_k=20):
-    debug_log(f"Analizando con HRM y Generando respuesta para: {question}")
+def generate_response(question, hrm_model, temperature=0.3, top_k=20, mode="scientific_strict"):
+    debug_log(f"Analizando con HRM y Generando respuesta para: {question} [Modo: {mode}]")
     
     # 1. PASO DE RAZONAMIENTO JERÁRQUICO (HRM)
     # Mapping determinista pregunta -> semilla visual/espacial (Maze latent space)
@@ -152,22 +154,45 @@ def generate_response(question, hrm_model, temperature=0.3, top_k=20):
         latent_context = "HRM Analysis: Estructura espacial verificada. Coherencia topológica alta."
 
     # 2. GENERACIÓN DE RESPUESTA (OLLAMA / QWEN)
-    # Prompt estructurado para Qwen
-    prompt = (
-        f"Contexto: análisis arqueológico por teledetección.\n"
-        f"Entrada técnica: {latent_context}\n"
-        f"Pregunta del usuario: {question}\n\n"
-        "Tarea: Como asistente arqueológico experto, genera una explicación técnica concisa.\n"
-        "Reglas:\n"
-        "1. NO inventes culturas ni sitios específicos si no se mencionan.\n"
-        "2. Enfócate en patrones geométricos y evidencia física (teledetección).\n"
-        "3. Mantén un tono científico riguroso.\n\n"
-        "Formato de respuesta:\n"
-        "- **Patrón detectado**: [Descripción geométrica]\n"
-        "- **Evidencia física**: [Firmas espectrales/térmicas probables]\n"
-        "- **Hipótesis espacial**: [Interpretación funcional cautelosa]\n"
-        "- **Nivel de confianza**: [Bajo/Medio/Alto basado en la ambigüedad]"
-    )
+    # Prompt estructurado según el modo
+    
+    if mode == "scientific_strict":
+        prompt = (
+            f"Contexto: ANÁLISIS CIENTÍFICO RIGUROSO DE TELEDETECCIÓN.\n"
+            f"Entrada técnica (Latente): {latent_context}\n"
+            f"Consulta: {question}\n\n"
+            "INSTRUCCIONES CRÍTICAS (MODO ESTRICTO):\n"
+            "1. PROHIBIDO mencionar culturas específicas (e.g. Maya, Inca, Egipcia) salvo que la consulta lo fuerce.\n"
+            "2. PROHIBIDO usar adjetivos subjetivos ('misterioso', 'increíble', 'antiguo').\n"
+            "3. OBLIGATORIO listar Hipótesis Alternativas (incluyendo causas naturales/geológicas).\n"
+            "4. OBLIGATORIO asignar Nivel de Incertidumbre explícito (Alto/Medio/Bajo).\n"
+            "5. Usa terminología técnica de teledetección (firmas espectrales, gradientes, topología).\n\n"
+            "FORMATO JSON OBLIGATORIO:\n"
+            "{\n"
+            "  \"analisis_morfologico\": \"...\",\n"
+            "  \"hipotesis_antropica\": \"...\",\n"
+            "  \"hipotesis_natural_alternativa\": \"...\",\n"
+            "  \"evidencia_requerida\": \"...\",\n"
+            "  \"nivel_incertidumbre\": \"...\"\n"
+            "}"
+        )
+    else:
+        # Modo estándar (más narrativo pero técnico)
+        prompt = (
+            f"Contexto: análisis arqueológico por teledetección.\n"
+            f"Entrada técnica: {latent_context}\n"
+            f"Pregunta del usuario: {question}\n\n"
+            "Tarea: Como asistente arqueológico experto, genera una explicación técnica concisa.\n"
+            "Reglas:\n"
+            "1. NO inventes culturas ni sitios específicos.\n"
+            "2. Enfócate en patrones geométricos y evidencia física.\n"
+            "3. Mantén un tono científico riguroso.\n\n"
+            "Formato de respuesta:\n"
+            "- **Patrón detectado**: [Descripción geométrica]\n"
+            "- **Evidencia física**: [Firmas espectrales/térmicas probables]\n"
+            "- **Hipótesis espacial**: [Interpretación funcional cautelosa]\n"
+            "- **Nivel de confianza**: [Bajo/Medio/Alto]"
+        )
 
     response_text = generate_response_ollama(prompt, temperature)
     return response_text
@@ -182,22 +207,39 @@ def main():
         
         question = sys.argv[1].strip()
         temperature = float(sys.argv[2]) if len(sys.argv) > 2 else 0.3
-        # top_k ignored in direct ollama call wrapper for now, but signature kept
+        # top_k ignored in calling wrapper
         
-        response_text = generate_response(question, hrm_model, temperature)
+        mode = "scientific_strict" # Default mode
+        if len(sys.argv) > 4:
+            mode = sys.argv[4]
+
+        response_text = generate_response(question, hrm_model, temperature, mode=mode)
         
+        # Intentar parsear JSON si estamos en modo estricto para salida limpia
+        if mode == "scientific_strict":
+            try:
+                # A veces el modelo pone markdown ```json ... ```
+                cleaned_resp = response_text.replace("```json", "").replace("```", "").strip()
+                response_json = json.loads(cleaned_resp)
+                final_response = response_json
+            except:
+                final_response = response_text # Fallback texto plano
+        else:
+            final_response = response_text
+
         print(json.dumps({
-            "response": response_text,
+            "response": final_response,
             "parameters": {
                 "temperature": temperature,
-                "model": OLLAMA_MODEL
+                "model": OLLAMA_MODEL,
+                "mode": mode
             }
         }, ensure_ascii=False))
         
     except Exception as e:
         print(json.dumps({
             "error": str(e),
-            "advice": "Verifica que Ollama esté corriendo (ollama serve) y tengas el modelo qwen2.5:3b-instruct."
+            "advice": "Verifica que Ollama esté corriendo."
         }, ensure_ascii=False))
 
 if __name__ == "__main__":
