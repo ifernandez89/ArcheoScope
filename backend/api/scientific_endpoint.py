@@ -12,6 +12,9 @@ from typing import Dict, List, Any, Optional
 import sys
 from pathlib import Path
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Añadir backend al path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -140,6 +143,25 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
     print(f"Bounds: [{request.lat_min}, {request.lat_max}] x [{request.lon_min}, {request.lon_max}]", flush=True)
     print("="*80 + "\n", flush=True)
     
+    # VALIDACIÓN DE COORDENADAS
+    if not (-90 <= request.lat_min <= 90) or not (-90 <= request.lat_max <= 90):
+        raise HTTPException(status_code=400, detail="Latitude must be between -90 and 90 degrees")
+    if not (-180 <= request.lon_min <= 180) or not (-180 <= request.lon_max <= 180):
+        raise HTTPException(status_code=400, detail="Longitude must be between -180 and 180 degrees")
+    if request.lat_min >= request.lat_max:
+        raise HTTPException(status_code=400, detail="lat_min must be less than lat_max")
+    if request.lon_min >= request.lon_max:
+        raise HTTPException(status_code=400, detail="lon_min must be less than lon_max")
+    
+    # Validación de área excesiva
+    from etp_core import BoundingBox
+    temp_bbox = BoundingBox(request.lat_min, request.lat_max, request.lon_min, request.lon_max)
+    if temp_bbox.area_km2 > 500: # 500 km2 es un límite razonable para el TIMT Engine
+        logger.warning(f"⚠️ Área excesiva: {temp_bbox.area_km2:.1f} km²")
+        # Por ahora solo advertimos, no bloqueamos a menos que sea realmente masivo
+    if temp_bbox.area_km2 > 5000:
+        raise HTTPException(status_code=400, detail=f"Area too large: {temp_bbox.area_km2:.1f} km². Max allowed is 5000 km²")
+    
     try:
         # Calcular centro
         center_lat = (request.lat_min + request.lat_max) / 2
@@ -257,6 +279,29 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                 'territorial_coherence_score': float(timt_result.territorial_coherence_score),
                 'scientific_rigor_score': float(timt_result.scientific_rigor_score),
                 'scientific_output': timt_result.scientific_output,
+                
+                # Mapa de anomalía (extraído para compatibilidad frontend)
+                'anomaly_map': timt_result.scientific_output.get('anomaly_map', {
+                    'path': '',
+                    'metadata': {}
+                }),
+                
+                # Visualización neural HRM (extraído para compatibilidad frontend)
+                'visualizacion_neural': timt_result.scientific_output.get('hrm_analysis', {}).get('visualizacion_neural', ''),
+                
+                # Resultados arqueológicos (estructura compatible frontend)
+                'archaeological_results': {
+                    'anomaly_score': float(etp.ess_superficial),
+                    'anthropic_probability': float(etp.densidad_arqueologica_m3),
+                    'confidence_interval': [
+                        max(0, float(etp.densidad_arqueologica_m3) - 0.15),
+                        min(1, float(etp.densidad_arqueologica_m3) + 0.15)
+                    ],
+                    'recommended_action': etp.get_archaeological_recommendation(),
+                    'classification': 'archaeological_candidate' if etp.densidad_arqueologica_m3 > 0.6 else 'uncertain',
+                    'priority': 'HIGH' if etp.densidad_arqueologica_m3 > 0.7 else 'NORMAL',
+                    'scientific_confidence': etp.get_confidence_level()
+                },
                 
                 # Contexto territorial (TCP)
                 'tcp_summary': {

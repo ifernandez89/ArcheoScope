@@ -610,7 +610,7 @@ class ETProfileGenerator:
         
         return temporal_data
     
-    def _calculate_surface_ess(self, surface_data: Dict[str, Any]) -> float:
+    def _calculate_surface_ess(self, surface_data: Dict[str, Any], quiet: bool = False) -> float:
         """
         Calcular ESS superficial tradicional.
         
@@ -619,23 +619,23 @@ class ETProfileGenerator:
         """
         
         if not surface_data:
-            logger.info(f"  ⚠️ Sin datos superficiales")
+            if not quiet:
+                logger.debug(f"  ⚠️ Sin datos superficiales")
             return 0.0
         
-        logger.info(f"  📊 Calculando ESS Superficial con {len(surface_data)} instrumentos...")
+        if not quiet:
+            logger.info(f"  📊 Calculando ESS Superficial con {len(surface_data)} instrumentos...")
+        else:
+            logger.debug(f"  📊 Calculando ESS Superficial con {len(surface_data)} instrumentos (quiet mode)")
         
         anomaly_scores = []
         
         for instrument, data in surface_data.items():
-            logger.debug(f"    🔍 Procesando {instrument}: {data}")
-            
             # Validar según tipo de sensor
             if not self._validate_sensor_data(instrument, data):
                 # Si es sensor opcional y falló, no penalizar
                 if self._is_optional_sensor(instrument):
-                    logger.info(f"    ⚠️ {instrument}: Opcional - no penaliza")
                     continue
-                logger.info(f"    ⚠️ {instrument}: No cumple criterios de validación")
                 continue
             
             # Normalizar valor según tipo de instrumento
@@ -645,10 +645,13 @@ class ETProfileGenerator:
             # Score ponderado por confianza
             weighted_score = normalized_score * confidence
             anomaly_scores.append(weighted_score)
-            logger.info(f"    ✅ {instrument}: valor={data['value']:.3f}, norm={normalized_score:.3f}, conf={confidence:.2f}, score={weighted_score:.3f}")
+            
+            if not quiet:
+                logger.info(f"    ✅ {instrument}: valor={data['value']:.3f}, norm={normalized_score:.3f}, conf={confidence:.2f}, score={weighted_score:.3f}")
         
         result = np.mean(anomaly_scores) if anomaly_scores else 0.0
-        logger.info(f"  📊 ESS Superficial: {result:.3f} ({len(anomaly_scores)}/{len(surface_data)} sensores válidos)")
+        if not quiet:
+            logger.info(f"  📊 ESS Superficial: {result:.3f} ({len(anomaly_scores)}/{len(surface_data)} sensores válidos)")
         return result
     
     def _calculate_instrumental_coverage(self, layered_data: Dict[float, Dict[str, Any]]) -> Dict[str, Any]:
@@ -817,8 +820,8 @@ class ETProfileGenerator:
         for i in range(len(depths) - 1):
             depth1, depth2 = depths[i], depths[i + 1]
             
-            layer1_ess = self._calculate_surface_ess(layered_data[depth1])
-            layer2_ess = self._calculate_surface_ess(layered_data[depth2])
+            layer1_ess = self._calculate_surface_ess(layered_data[depth1], quiet=True)
+            layer2_ess = self._calculate_surface_ess(layered_data[depth2], quiet=True)
             
             # Coherencia = similitud entre capas adyacentes
             if layer1_ess > 0 and layer2_ess > 0:

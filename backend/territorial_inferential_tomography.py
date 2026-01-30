@@ -28,6 +28,8 @@ from etp_generator import ETProfileGenerator
 from etp_core import EnvironmentalTomographicProfile, BoundingBox
 import os
 from pathlib import Path
+from anomaly_map_generator import AnomalyMapGenerator
+
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +37,12 @@ logger = logging.getLogger(__name__)
 try:
     from hrm.hrm_runner import load_models as load_hrm_model, generate_response as generate_hrm_response
     HRM_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     HRM_AVAILABLE = False
-    logger.warning("⚠️ HRM module not available")
+    logger.warning(f"⚠️ HRM module not available: {e}")
+except Exception as e:
+    HRM_AVAILABLE = False
+    logger.error(f"❌ Error importing HRM: {e}")
 
 
 class AnalysisMode(Enum):
@@ -173,8 +178,11 @@ class TerritorialInferentialTomographyEngine:
             except Exception as e:
                 logger.error(f"❌ Failed to load HRM model: {e}")
         
-        # Configuración del motor
-        self.analysis_mode = AnalysisMode.HYPOTHESIS_DRIVEN  # NUEVO POR DEFECTO
+        # Generador de mapas de anomalía
+        self.anomaly_map_generator = AnomalyMapGenerator()
+        
+        # Modo de análisis
+        self.analysis_mode = AnalysisMode.HYPOTHESIS_DRIVEN
         
         logger.info("🚀 Territorial Inferential Tomography Engine initialized")
         logger.info("🧩 MODO: Hypothesis-driven analysis (REVOLUCIÓN CONCEPTUAL)")
@@ -278,6 +286,11 @@ class TerritorialInferentialTomographyEngine:
         # CAPA EXTRA: HRM ANALYSIS (Neural Visualization) & Honest Metrics
         # ============================================================================
         
+        # ============================================================================
+        # CAPA EXTRA: VISUALIZACIONES (Anomaly Map & HRM)
+        # ============================================================================
+        
+        # HRM result
         hrm_result = {}
         if self.hrm_model:
             logger.info("🧠 EJECUTANDO ANÁLISIS HRM (High Resolution Morphology)")
@@ -285,6 +298,9 @@ class TerritorialInferentialTomographyEngine:
         else:
             logger.warning("⚠️ HRM analysis skipped (model not available)")
             
+        # Anomaly Map result
+        viz_result = self._handle_visualizations(analysis_id, lat_min, lat_max, lon_min, lon_max, tcp, etp)
+        
         # Construir Scientific Output con métricas de honestidad académica
         # Extraer instrumentos (esto es una simplificación, en producción vendría del batch)
         available_instr = tcp.instrumental_strategy.priority_instruments if tcp.instrumental_strategy else ["Sentinel-2", "Sentinel-1", "DEM", "ICESat-2"]
@@ -298,7 +314,8 @@ class TerritorialInferentialTomographyEngine:
             "available_instruments": available_instr,
             "instruments_measured": len([i for i in available_instr if i]), # Simplificación
             "coverage_raw": scientific_rigor, # Usar rigor como aproximación de cobertura raw
-            "hrm_analysis": hrm_result.get("hrm_analysis", {})
+            "hrm_analysis": hrm_result.get("hrm_analysis", {}),
+            "anomaly_map": viz_result.get("anomaly_map", {})
         }
         
         # ============================================================================
@@ -747,3 +764,77 @@ CONFIANZA CIENTÍFICA: Sistema transparente con limitaciones documentadas.
                 "error": str(e),
                 "hrm_analysis": {}
             }
+
+    def _handle_visualizations(self, analysis_id: str, lat_min: float, lat_max: float, 
+                              lon_min: float, lon_max: float, tcp: Any, etp: Any) -> Dict[str, Any]:
+        """Generar y preparar visualizaciones para el frontend."""
+        
+        logger.info("🗺️ Iniciando generación de visualizaciones...")
+        
+        anomaly_map_file = f"anomaly_map_{analysis_id}.png"
+        anomaly_map_path = Path("anomaly_maps") / anomaly_map_file
+        
+        # Preparar mediciones para el generador de mapas
+        map_measurements = {'instrumental_measurements': {}}
+        for depth, instruments in etp.visualization_data.get('instrument_data', {}).items():
+            for name, data in instruments.items():
+                if name not in map_measurements['instrumental_measurements']:
+                    map_measurements['instrumental_measurements'][name] = data
+        
+        result = {"anomaly_map": {}}
+        
+        try:
+            # Asegurar directorio
+            anomaly_map_path.parent.mkdir(exist_ok=True)
+            
+            # Generar mapa de anomalía
+            a_map = self.anomaly_map_generator.generate_anomaly_map(
+                measurements=map_measurements,
+                lat_min=lat_min,
+                lat_max=lat_max,
+                lon_min=lon_min,
+                lon_max=lon_max,
+                environment_type=tcp.historical_biome.value if tcp.historical_biome else 'temperate'
+            )
+            
+            # Exportar a PNG
+            self.anomaly_map_generator.export_to_png(a_map, str(anomaly_map_path))
+            
+            # URL y base64 para el frontend interactivo
+            API_URL = os.getenv("VITE_API_URL", "http://localhost:8003")
+            
+            result["anomaly_map"] = {
+                "path": f"{API_URL}/anomaly-map/{anomaly_map_file}",
+                "visualization_url": f"{API_URL}/anomaly-map/{anomaly_map_file}",
+                "analysis_id": analysis_id,
+                "layers_used": a_map.layers_used,
+                "resolution_m": float(a_map.resolution_m),
+                "environment_type": a_map.environment_type,
+                "fusion_weights": a_map.fusion_weights,
+                "metadata": a_map.metadata,
+                # Datos base64 para AnomalyMapViewer.js
+                "anomaly_map_base64": self._encode_array_for_frontend(a_map.anomaly_map),
+                "geometric_features_base64": self._encode_array_for_frontend(a_map.geometric_features)
+            }
+            logger.info("✅ Visualizaciones generadas exitosamente")
+            
+        except Exception as e:
+            logger.error(f"❌ Error en _handle_visualizations: {e}")
+            import traceback
+            traceback.print_exc()
+            
+        return result
+
+    def _encode_array_for_frontend(self, array: np.ndarray) -> str:
+        """Codificar array numpy en formato compatible con AnomalyMapViewer.js."""
+        import base64
+        
+        # Formato: "shape|dtype|base64_data"
+        shape_str = ",".join(map(str, array.shape))
+        dtype_str = str(array.dtype)
+        
+        # Convertir a bytes
+        bytes_data = array.tobytes()
+        b64_data = base64.b64encode(bytes_data).decode('utf-8')
+        
+        return f"{shape_str}|{dtype_str}|{b64_data}"
