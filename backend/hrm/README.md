@@ -49,6 +49,8 @@ For Ampere or earlier GPUs, install FlashAttention 2
 pip3 install flash-attn
 ```
 
+> **Nota para ArcheoScope**: Se ha implementado un fallback automático en `models/layers.py` que utiliza `F.scaled_dot_product_attention` de PyTorch si `flash-attn` no está disponible.
+
 ## Install Python Dependencies 🐍
 
 ```bash
