@@ -1,6 +1,6 @@
 // Configuración
 const CONFIG = {
-    API_BASE_URL: 'http://localhost:8002',
+    API_BASE_URL: 'http://localhost:8003',
     DEFAULT_CENTER: [41.8550, 12.5150], // Roma, Italia (Via Appia)
     DEFAULT_ZOOM: 13
 };

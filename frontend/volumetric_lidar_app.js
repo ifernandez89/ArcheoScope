@@ -5,8 +5,8 @@
 
 // Configuración adaptativa
 const CONFIG = {
-    API_BASE_URL: window.location.hostname === 'localhost' ? 'http://localhost:8002' : '/api',
-    VOLUMETRIC_API_URL: window.location.hostname === 'localhost' ? 'http://localhost:8002/volumetric' : '/api/volumetric',
+    API_BASE_URL: window.location.hostname === 'localhost' ? 'http://localhost:8003' : '/api',
+    VOLUMETRIC_API_URL: window.location.hostname === 'localhost' ? 'http://localhost:8003/volumetric' : '/api/volumetric',
     
     // Configuración visual adaptativa
     VISUAL: {

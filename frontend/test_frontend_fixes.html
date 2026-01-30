@@ -34,7 +34,7 @@
     <div class="test-section">
         <h2>✅ Fixes Applied:</h2>
         <ol>
-            <li><strong>API Port Mismatch Fixed:</strong> localhost:8003 → localhost:8002</li>
+            <li><strong>API Port Mismatch Fixed:</strong> localhost:8003 → localhost:8003</li>
             <li><strong>Missing File Reference Removed:</strong> professional_3d_viewer.js reference cleaned up</li>
             <li><strong>Syntax Error Fixed:</strong> Invalid object property name in professional_3d_viewer.js</li>
             <li><strong>Error Handling Enhanced:</strong> Better API error messages with correct port numbers</li>
@@ -97,8 +97,8 @@
                 const response = await fetch('archaeological_app.js');
                 const text = await response.text();
                 
-                if (text.includes('localhost:8002') && !text.includes('localhost:8003')) {
-                    addTest('API URL Configuration', 'pass', '✅ archaeological_app.js updated to port 8002');
+                if (text.includes('localhost:8003') && !text.includes('localhost:8003')) {
+                    addTest('API URL Configuration', 'pass', '✅ archaeological_app.js updated to port 8003');
                 } else {
                     addTest('API URL Configuration', 'fail', '❌ archaeological_app.js still contains port 8003 references');
                 }
@@ -110,8 +110,8 @@
                 const response = await fetch('archeoscope_interactive_map.js');
                 const text = await response.text();
                 
-                if (text.includes('localhost:8002') && !text.includes('localhost:8003')) {
-                    addTest('Interactive Map API', 'pass', '✅ archeoscope_interactive_map.js updated to port 8002');
+                if (text.includes('localhost:8003') && !text.includes('localhost:8003')) {
+                    addTest('Interactive Map API', 'pass', '✅ archeoscope_interactive_map.js updated to port 8003');
                 } else {
                     addTest('Interactive Map API', 'fail', '❌ archeoscope_interactive_map.js still contains port 8003 references');
                 }
