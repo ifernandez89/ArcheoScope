@@ -29,6 +29,8 @@ from etp_core import EnvironmentalTomographicProfile, BoundingBox
 import os
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
+
 # HRM Imports
 try:
     from hrm.hrm_runner import load_models as load_hrm_model, generate_response as generate_hrm_response
@@ -37,7 +39,6 @@ except ImportError:
     HRM_AVAILABLE = False
     logger.warning("⚠️ HRM module not available")
 
-logger = logging.getLogger(__name__)
 
 class AnalysisMode(Enum):
     """Modos de análisis territorial."""
