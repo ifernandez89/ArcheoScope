@@ -279,7 +279,9 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                     'coherencia_3d': float(etp.coherencia_3d),
                     'persistencia_temporal': float(etp.persistencia_temporal),
                     'densidad_arqueologica_m3': float(etp.densidad_arqueologica_m3),
-                    'confidence_level': 'medium',
+                    'layers_count': len(etp.xz_profile.layers) if etp.xz_profile else 0,
+                    'anomalies_count': len(etp.xy_profiles) if etp.xy_profiles else 0, # O usar una métrica real de anomalías detectadas
+                    'confidence_level': etp.get_confidence_level(),
                     'recommended_action': etp.get_archaeological_recommendation(),
                     'narrative_explanation': etp.narrative_explanation
                 },

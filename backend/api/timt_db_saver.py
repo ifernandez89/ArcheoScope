@@ -58,10 +58,10 @@ async def save_timt_result_to_db(db_pool, result: TerritorialInferentialTomograp
                     (result.territory_bounds.lon_min + result.territory_bounds.lon_max) / 2,
                     request_data.get('region_name', 'Unknown'),
                     result.territorial_context.analysis_objective.value,
-                    request_data.get('analysis_radius_km', 5.0),
-                    request_data.get('resolution_m'),
-                    result.territorial_coherence_score,
-                    result.scientific_rigor_score,
+                    float(request_data.get('analysis_radius_km', 5.0)),
+                    float(request_data.get('resolution_m') or 30),
+                    float(result.territorial_coherence_score),
+                    float(result.scientific_rigor_score),
                     result.analysis_timestamp,
                     json.dumps(result.scientific_output)
                 )
@@ -97,7 +97,7 @@ async def save_timt_result_to_db(db_pool, result: TerritorialInferentialTomograp
                     tcp.preservation_potential.value,
                     tcp.historical_biome.value,
                     tcp.instrumental_strategy.priority_instruments if tcp.instrumental_strategy else [],
-                    tcp.instrumental_strategy.recommended_resolution_m if tcp.instrumental_strategy else None
+                    float(tcp.instrumental_strategy.recommended_resolution_m) if tcp.instrumental_strategy and tcp.instrumental_strategy.recommended_resolution_m else None
                 )
                 
                 logger.info(f"✅ TCP saved: ID={tcp_id}")
@@ -122,15 +122,15 @@ async def save_timt_result_to_db(db_pool, result: TerritorialInferentialTomograp
                         tcp_id,
                         hypothesis.hypothesis_type,  # Ya es string, no .value
                         hypothesis.hypothesis_explanation,
-                        hypothesis.plausibility_score,
+                        float(hypothesis.plausibility_score),
                         hypothesis.recommended_instruments,
                         validation.overall_evidence_level.value if validation else 'insufficient',  # Usar overall_evidence_level
                         # Calcular scores de evidencia desde los atributos reales
-                        (validation.sensorial_evidence + validation.geological_evidence + 
+                        float((validation.sensorial_evidence + validation.geological_evidence + 
                          validation.hydrographic_evidence + validation.archaeological_evidence + 
-                         validation.human_traces_evidence) / 5.0 if validation else 0.0,  # Promedio como supporting
-                        len(validation.contradictions) / 10.0 if validation else 0.0,  # Contradicciones normalizadas
-                        validation.confidence_score if validation else 0.0,  # Usar confidence_score
+                         validation.human_traces_evidence) / 5.0) if validation else 0.0,  # Promedio como supporting
+                        float(len(validation.contradictions) / 10.0) if validation else 0.0,  # Contradicciones normalizadas
+                        float(validation.confidence_score) if validation else 0.0,  # Usar confidence_score
                         validation.validation_explanation if validation else ''
                     )
                 
@@ -151,17 +151,17 @@ async def save_timt_result_to_db(db_pool, result: TerritorialInferentialTomograp
                 """,
                     timt_id,
                     etp.territory_id,
-                    etp.resolution_m,
-                    etp.ess_superficial,
+                    float(etp.resolution_m),
+                    float(etp.ess_superficial),
                     0.0,  # ess_subsuperficial no existe en ETP
-                    etp.ess_volumetrico,
-                    etp.ess_temporal,
-                    etp.coherencia_3d,
-                    etp.persistencia_temporal,
-                    etp.densidad_arqueologica_m3,
-                    etp.geological_compatibility.gcs_score if etp.geological_compatibility else None,
-                    etp.water_availability.settlement_viability if etp.water_availability else None,
-                    etp.external_consistency.ecs_score if etp.external_consistency else None,
+                    float(etp.ess_volumetrico),
+                    float(etp.ess_temporal),
+                    float(etp.coherencia_3d),
+                    float(etp.persistencia_temporal),
+                    float(etp.densidad_arqueologica_m3),
+                    float(etp.geological_compatibility.gcs_score) if etp.geological_compatibility else None,
+                    float(etp.water_availability.settlement_viability) if etp.water_availability else None,
+                    float(etp.external_consistency.ecs_score) if etp.external_consistency else None,
                     etp.get_confidence_level(),
                     etp.get_archaeological_recommendation(),  # Usar método correcto
                     etp.narrative_explanation
@@ -187,17 +187,17 @@ async def save_timt_result_to_db(db_pool, result: TerritorialInferentialTomograp
                             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
                         """,
                             etp_id,
-                            anomaly.center_3d[0],
-                            anomaly.center_3d[1],
-                            anomaly.center_3d[2],
-                            volume_m3,
-                            depth_min,
-                            depth_max,
+                            float(anomaly.center_3d[0]),
+                            float(anomaly.center_3d[1]),
+                            float(anomaly.center_3d[2]),
+                            float(volume_m3),
+                            float(depth_min),
+                            float(depth_max),
                             'volumetric',  # Tipo genérico
                             anomaly.archaeological_type,
-                            anomaly.temporal_range[0],
-                            anomaly.temporal_range[1],
-                            anomaly.confidence,
+                            int(anomaly.temporal_range[0]),
+                            int(anomaly.temporal_range[1]),
+                            float(anomaly.confidence),
                             anomaly.instruments_supporting
                         )
                     

@@ -498,11 +498,11 @@ except Exception as e:
 # except ImportError as e:
 #     logger.error(f"❌ No se pudo cargar router Anomaly Visualization: {e}")
 #     import traceback
-    traceback.print_exc()
-except Exception as e:
-    logger.error(f"❌ Error inicializando Anomaly Visualization: {e}")
-    import traceback
-    traceback.print_exc()
+#     traceback.print_exc()
+# except Exception as e:
+#     logger.error(f"❌ Error inicializando Anomaly Visualization: {e}")
+#     import traceback
+#     traceback.print_exc()
 
 # ============================================================================
 # ENDPOINT /analyze PRINCIPAL (MANTENER PARA COMPATIBILIDAD)

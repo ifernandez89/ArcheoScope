@@ -528,194 +528,211 @@
                 </div>
             </div>
 
-            <div class="control-group">
-                <label class="control-label">Nivel de Comunicación</label>
-                <select id="communication_level" class="control-input">
-                    <option value="technical">Técnico Especializado</option>
-                    <option value="academic">Académico</option>
-                    <option value="general">Público General</option>
-                    <option value="institutional">Institucional</option>
-                </select>
-            </div>
-
-            <button id="analyze_btn" class="btn btn-primary" onclick="runAnalysis()">
-                Ejecutar TIMT Completo
-            </button>
-            <button id="tcp_btn" class="btn btn-secondary" onclick="generateTCP()">
-                Solo Contexto (TCP)
-            </button>
         </div>
 
-        <!-- Área de Análisis -->
-        <div class="analysis-area">
-            <div id="loading" class="loading-overlay">
-                <div class="spinner"></div>
-                <p style="margin-top: 1rem; color: #9ca3af; font-size: 0.875rem;">Procesando datos inferenciales...</p>
+        <div class="control-group" style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <input type="checkbox" id="auto_download" style="width: auto;">
+            <label for="auto_download" class="control-label"
+                style="margin-bottom: 0; cursor: pointer; color: #9ca3af; font-size: 0.85rem;">Auto-guardar imágenes del
+                análisis</label>
+        </div>
+
+        <button id="analyze_btn" class="btn btn-primary" onclick="runAnalysis()">
+            Ejecutar TIMT Completo
+        </button>
+        <button id="tcp_btn" class="btn btn-secondary" onclick="generateTCP()">
+            Solo Contexto (TCP)
+        </button>
+    </div>
+
+    <!-- Área de Análisis -->
+    <div class="analysis-area">
+        <div id="loading" class="loading-overlay">
+            <div class="spinner"></div>
+            <p style="margin-top: 1rem; color: #9ca3af; font-size: 0.875rem;">Procesando datos inferenciales...</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</div>
+            <div class="tab" data-tab="context" onclick="switchTab('context')">Contexto (TCP)</div>
+            <div class="tab" data-tab="tomography" onclick="switchTab('tomography')">Tomografía (ETP)</div>
+            <div class="tab" data-tab="hypotheses" onclick="switchTab('hypotheses')">Hipótesis</div>
+            <div class="tab" data-tab="hrm" onclick="switchTab('hrm')">Neural (HRM)</div>
+            <div class="tab" data-tab="transparency" onclick="switchTab('transparency')">Transparencia</div>
+            <div class="tab" data-tab="communication" onclick="switchTab('communication')">Reporte</div>
+        </div>
+
+        <div class="tab-content">
+            <!-- Welcome State -->
+            <div id="welcome_message" style="text-align: center; padding: 4rem; color: #4b5563;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🛰️</div>
+                <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: #9ca3af;">Sistema TIMT Listo</h3>
+                <p>Configure los parámetros y ejecute un análisis para comenzar.</p>
             </div>
 
-            <div class="tabs">
-                <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</div>
-                <div class="tab" data-tab="context" onclick="switchTab('context')">Contexto (TCP)</div>
-                <div class="tab" data-tab="tomography" onclick="switchTab('tomography')">Tomografía (ETP)</div>
-                <div class="tab" data-tab="hypotheses" onclick="switchTab('hypotheses')">Hipótesis</div>
-                <div class="tab" data-tab="hrm" onclick="switchTab('hrm')">Neural (HRM)</div>
-                <div class="tab" data-tab="transparency" onclick="switchTab('transparency')">Transparencia</div>
-                <div class="tab" data-tab="communication" onclick="switchTab('communication')">Reporte</div>
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-pane active" style="display: none;">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Coherencia Territorial</div>
+                        <div class="metric-value" id="metric_coherence">-</div>
+                        <div class="metric-sub">Índice Epistémico</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Rigor Científico</div>
+                        <div class="metric-value" id="metric_rigor">-</div>
+                        <div class="metric-sub">Metodología Determinística</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">ESS (Explanatory Strangeness)</div>
+                        <div class="metric-value" id="metric_ess">-</div>
+                        <div class="metric-sub">Rareza Estructural</div>
+                    </div>
+                    <div class="metric-card" id="coverage_card">
+                        <div class="metric-label">Cobertura Instrumental</div>
+                        <div class="metric-value" id="metric_coverage">-</div>
+                        <div class="metric-sub" id="metric_instr_count">0 / 0 instrumentos</div>
+                    </div>
+                </div>
+
+                <div class="dash-grid">
+                    <div class="dash-card">
+                        <div class="dash-title">Probabilidad de Origen Antropogénico</div>
+                        <div class="dash-status" id="origin_prob_label">Evaluando...</div>
+                        <div class="dash-desc" id="origin_prob_desc">Iniciando motor inferencial de 3 capas.</div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="dash-title">Actividad Antropogénica</div>
+                        <div class="dash-status" id="activity_prob_label">Pendiente</div>
+                        <div class="dash-desc" id="activity_prob_desc">Requiere validación cruzada de firmas
+                            temporales.</div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="dash-title">Anomalía Instrumental</div>
+                        <div class="dash-status" id="anomaly_label">No detectada</div>
+                        <div class="dash-desc" id="anomaly_desc">Convergencia sensorial en el territorio analizado.
+                        </div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="dash-title">Acción Recomendada</div>
+                        <div class="dash-status" style="color: #60a5fa;" id="recommendation_label">-</div>
+                        <div class="dash-desc" id="recommendation_desc">Supeditado a nivel de confianza inferencial.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dash-card" style="margin-top: 1.5rem;">
+                    <div class="dash-title">Instrumentos Intervinientes</div>
+                    <div class="instruments-list" id="dashboard_instruments"></div>
+                </div>
             </div>
 
-            <div class="tab-content">
-                <!-- Welcome State -->
-                <div id="welcome_message" style="text-align: center; padding: 4rem; color: #4b5563;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">🛰️</div>
-                    <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: #9ca3af;">Sistema TIMT Listo</h3>
-                    <p>Configure los parámetros y ejecute un análisis para comenzar.</p>
-                </div>
+            <!-- Context Tab -->
+            <div id="context" class="tab-pane">
+                <div id="context_content"></div>
+            </div>
 
-                <!-- Dashboard Tab -->
-                <div id="dashboard" class="tab-pane active" style="display: none;">
-                    <div class="metrics-grid">
-                        <div class="metric-card">
-                            <div class="metric-label">Coherencia Territorial</div>
-                            <div class="metric-value" id="metric_coherence">-</div>
-                            <div class="metric-sub">Índice Epistémico</div>
+            <!-- Tomography Tab -->
+            <div id="tomography" class="tab-pane">
+                <div style="display: grid; grid-template-columns: 200px 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="context-section" id="tomography_metrics"></div>
+                    <div class="canvas-grid">
+                        <div class="canvas-container">
+                            <div class="canvas-label">XY - Vista Superior</div>
+                            <canvas id="xy_canvas"></canvas>
                         </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Rigor Científico</div>
-                            <div class="metric-value" id="metric_rigor">-</div>
-                            <div class="metric-sub">Metodología Determinística</div>
+                        <div class="canvas-container">
+                            <div class="canvas-label">XZ - Corte Longitudinal</div>
+                            <canvas id="xz_canvas"></canvas>
                         </div>
-                        <div class="metric-card">
-                            <div class="metric-label">ESS (Explanatory Strangeness)</div>
-                            <div class="metric-value" id="metric_ess">-</div>
-                            <div class="metric-sub">Rareza Estructural</div>
+                        <div class="canvas-container">
+                            <div class="canvas-label">YZ - Corte Latitudinal</div>
+                            <canvas id="yz_canvas"></canvas>
                         </div>
-                        <div class="metric-card" id="coverage_card">
-                            <div class="metric-label">Cobertura Instrumental</div>
-                            <div class="metric-value" id="metric_coverage">-</div>
-                            <div class="metric-sub" id="metric_instr_count">0 / 0 instrumentos</div>
+                        <div class="canvas-container">
+                            <div class="canvas-label">Temporal - Heatmap</div>
+                            <canvas id="temporal_canvas"></canvas>
                         </div>
                     </div>
 
-                    <div class="dash-grid">
-                        <div class="dash-card">
-                            <div class="dash-title">Probabilidad de Origen Antropogénico</div>
-                            <div class="dash-status" id="origin_prob_label">Evaluando...</div>
-                            <div class="dash-desc" id="origin_prob_desc">Iniciando motor inferencial de 3 capas.</div>
-                        </div>
-                        <div class="dash-card">
-                            <div class="dash-title">Actividad Antropogénica</div>
-                            <div class="dash-status" id="activity_prob_label">Pendiente</div>
-                            <div class="dash-desc" id="activity_prob_desc">Requiere validación cruzada de firmas
-                                temporales.</div>
-                        </div>
-                        <div class="dash-card">
-                            <div class="dash-title">Anomalía Instrumental</div>
-                            <div class="dash-status" id="anomaly_label">No detectada</div>
-                            <div class="dash-desc" id="anomaly_desc">Convergencia sensorial en el territorio analizado.
-                            </div>
-                        </div>
-                        <div class="dash-card">
-                            <div class="dash-title">Acción Recomendada</div>
-                            <div class="dash-status" style="color: #60a5fa;" id="recommendation_label">-</div>
-                            <div class="dash-desc" id="recommendation_desc">Supeditado a nivel de confianza inferencial.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="dash-card" style="margin-top: 1.5rem;">
-                        <div class="dash-title">Instrumentos Intervinientes</div>
-                        <div class="instruments-list" id="dashboard_instruments"></div>
-                    </div>
-                </div>
-
-                <!-- Context Tab -->
-                <div id="context" class="tab-pane">
-                    <div id="context_content"></div>
-                </div>
-
-                <!-- Tomography Tab -->
-                <div id="tomography" class="tab-pane">
-                    <div style="display: grid; grid-template-columns: 200px 1fr; gap: 1rem; margin-bottom: 1rem;">
-                        <div class="context-section" id="tomography_metrics"></div>
-                        <div class="canvas-grid">
-                            <div class="canvas-container">
-                                <div class="canvas-label">XY - Vista Superior</div>
-                                <canvas id="xy_canvas"></canvas>
-                            </div>
-                            <div class="canvas-container">
-                                <div class="canvas-label">XZ - Corte Longitudinal</div>
-                                <canvas id="xz_canvas"></canvas>
-                            </div>
-                            <div class="canvas-container">
-                                <div class="canvas-label">YZ - Corte Latitudinal</div>
-                                <canvas id="yz_canvas"></canvas>
-                            </div>
-                            <div class="canvas-container">
-                                <div class="canvas-label">Temporal - Heatmap</div>
-                                <canvas id="temporal_canvas"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- NUEVO: Mapa de Anomalía Fusionado -->
-                        <div style="margin-top: 2rem;">
+                    <!-- NUEVO: Mapa de Anomalía Fusionado -->
+                    <div style="margin-top: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
                             <h4>Mapa de Anomalía Fundo (Fusión Multifuente)</h4>
-                            <div id="fused_anomaly_container" style="margin-top: 1rem; text-align: center;">
-                                <div
-                                    style="padding: 2rem; color: #6b7280; border: 1px dashed #374151; border-radius: 0.5rem;">
-                                    El mapa de anomalía se genera al completar el análisis.
-                                </div>
+                            <div id="anomaly_download_btn_container"></div>
+                        </div>
+                        <div id="fused_anomaly_container" style="margin-top: 1rem; text-align: center;">
+                            <div
+                                style="padding: 2rem; color: #6b7280; border: 1px dashed #374151; border-radius: 0.5rem;">
+                                El mapa de anomalía se genera al completar el análisis.
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Hypotheses Tab -->
-                <div id="hypotheses" class="tab-pane">
-                    <div id="hypotheses_content"></div>
-                </div>
-
-                <!-- HRM Tab (New) -->
-                <div id="hrm" class="tab-pane">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                        <div>
-                            <h4>Visualización Neural HRM</h4>
-                            <div id="hrm_visual_container" style="margin-top: 1rem; text-align: center;">
-                                <div
-                                    style="padding: 2rem; color: #6b7280; border: 1px dashed #374151; border-radius: 0.5rem;">
-                                    Ejecute un análisis completo para generar visualización neural.
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <h4>Análisis Morfológico de Alta Resolución</h4>
-                            <div id="hrm_text_content" class="comm-text" style="font-size: 0.8rem; margin-top: 1rem;">
-                                Esperando resultados...
-                            </div>
-                        </div>
+                    <!-- Visualización 3D -->
+                    <div
+                        style="margin-top: 2rem; padding: 1.5rem; background: rgba(37, 99, 235, 0.05); border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 0.5rem;">
+                        <h4>🏛️ Visualización 3D de Nube de Puntos</h4>
+                        <p style="font-size: 0.875rem; color: #9ca3af; margin: 0.5rem 0 1rem 0;">
+                            El motor ETP ha generado la reconstrucción volumétrica. Puede acceder al visor 3D
+                            especializado para explorar la estratigrafía inferencial.
+                        </p>
+                        <button id="open_3d_btn" class="btn btn-primary"
+                            style="width: auto; padding: 0.5rem 1rem; font-size: 0.875rem;" onclick="open3DViewer()">
+                            🧊 Abrir Visor 3D Lidar
+                        </button>
+                        <p id="3d_status_msg" style="font-size: 0.75rem; color: #4b5563; margin-top: 0.5rem;"></p>
                     </div>
-                </div>
-
-                <!-- Transparency Tab -->
-                <div id="transparency" class="tab-pane">
-                    <div id="transparency_content"></div>
-                </div>
-
-                <!-- Communication Tab -->
-                <div id="communication" class="tab-pane">
-                    <div class="tabs" style="margin-bottom: 1rem; background: transparent; border: none;">
-                        <button class="btn btn-secondary comm-tab active" onclick="switchCommTab('technical')"
-                            style="width: auto; margin:0 0.5rem 0 0;">Técnico</button>
-                        <button class="btn btn-secondary comm-tab" onclick="switchCommTab('academic')"
-                            style="width: auto; margin:0 0.5rem 0 0;">Académico</button>
-                        <button class="btn btn-secondary comm-tab" onclick="switchCommTab('general')"
-                            style="width: auto; margin:0 0.5rem 0 0;">General</button>
-                        <button class="btn btn-secondary comm-tab" onclick="switchCommTab('institutional')"
-                            style="width: auto; margin:0 0.5rem 0 0;">Institucional</button>
-                    </div>
-                    <div id="communication_content" class="comm-text"></div>
                 </div>
             </div>
+
+            <!-- Hypotheses Tab -->
+            <div id="hypotheses" class="tab-pane">
+                <div id="hypotheses_content"></div>
+            </div>
+
+            <!-- HRM Tab (New) -->
+            <div id="hrm" class="tab-pane">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <h4>Visualización Neural HRM</h4>
+                        <div id="hrm_visual_container" style="margin-top: 1rem; text-align: center;">
+                            <div
+                                style="padding: 2rem; color: #6b7280; border: 1px dashed #374151; border-radius: 0.5rem;">
+                                Ejecute un análisis completo para generar visualización neural.
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4>Análisis Morfológico de Alta Resolución</h4>
+                        <div id="hrm_text_content" class="comm-text" style="font-size: 0.8rem; margin-top: 1rem;">
+                            Esperando resultados...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transparency Tab -->
+            <div id="transparency" class="tab-pane">
+                <div id="transparency_content"></div>
+            </div>
+
+            <!-- Communication Tab -->
+            <div id="communication" class="tab-pane">
+                <div class="tabs" style="margin-bottom: 1rem; background: transparent; border: none;">
+                    <button class="btn btn-secondary comm-tab active" onclick="switchCommTab('technical')"
+                        style="width: auto; margin:0 0.5rem 0 0;">Técnico</button>
+                    <button class="btn btn-secondary comm-tab" onclick="switchCommTab('academic')"
+                        style="width: auto; margin:0 0.5rem 0 0;">Académico</button>
+                    <button class="btn btn-secondary comm-tab" onclick="switchCommTab('general')"
+                        style="width: auto; margin:0 0.5rem 0 0;">General</button>
+                    <button class="btn btn-secondary comm-tab" onclick="switchCommTab('institutional')"
+                        style="width: auto; margin:0 0.5rem 0 0;">Institucional</button>
+                </div>
+                <div id="communication_content" class="comm-text"></div>
+            </div>
         </div>
+    </div>
     </div>
 
     <script>
@@ -924,38 +941,43 @@
             // Instrumentos Tags
             const instrList = document.getElementById('dashboard_instruments');
             instrList.innerHTML = '';
-            const instruments = sc_out.available_instruments || ['Sentinel-2', 'Sentinel-1', 'DEM', 'ICESat-2'];
-            instruments.forEach(inst => {
+            const availableInstruments = scOutput.available_instruments || ['Sentinel-2', 'Sentinel-1', 'DEM', 'ICESat-2'];
+            availableInstruments.forEach(inst => {
                 const tag = document.createElement('span');
                 tag.className = 'instrument-tag';
                 tag.textContent = inst;
                 instrList.appendChild(tag);
             });
+            // 2. DASHBOARD
+            document.getElementById('metric_coherence').textContent = (data.territorial_coherence_score || 0).toFixed(2);
+            document.getElementById('metric_rigor').textContent = (data.scientific_rigor_score || 0).toFixed(2);
+            document.getElementById('metric_ess').textContent = (scOutput.anomaly_score || 0).toFixed(2);
 
-            // 4. TOMOGRAPHY (ETP)
+            document.getElementById('origin_prob_label').textContent = `${Math.round((scOutput.anthropic_probability || 0) * 100)}%`;
+            document.getElementById('activity_prob_label').textContent = scOutput.anthropic_activity_probability !== undefined ?
+                `${Math.round(scOutput.anthropic_activity_probability * 100)}%` : "N/A";
+            document.getElementById('recommendation_label').textContent = scOutput.recommended_action || "Pendiente";
 
-            // Render Fused Anomaly Map if available
-            const anomalyContainer = document.getElementById('fused_anomaly_container');
-            if (data.scientific_output && data.scientific_output.candidate_id) {
-                const mapUrl = `${API_BASE}/anomaly-map/${data.scientific_output.candidate_id}.png`;
-                anomalyContainer.innerHTML = `
-                    <div style="background: #111827; padding: 1rem; border-radius: 0.75rem; border: 1px solid #374151;">
-                        <img src="${mapUrl}" style="max-width: 100%; border-radius: 0.5rem; border: 1px solid #4b5563;" 
-                             onerror="this.parentElement.innerHTML='<p style=\"color:#9ca3af\">Mapa de anomalía no disponible para este candidato o aún generándose.</p>'">
-                        <p style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">Corte horizontal de convergencia multifuente (Resolución: ${etp.resolution_m || 30}m)</p>
-                    </div>
-                `;
+            // Dashboard Instrumental Metrics
+            const coverageData = scOutput.instrumental_coverage || {};
+            document.getElementById('metric_coverage').textContent = coverageData.percentage !== undefined ?
+                `${Math.round(coverageData.percentage)}%` : "0%";
+            document.getElementById('metric_instr_count').textContent = `${coverageData.successful || 0} / ${coverageData.total || 0} instrumentos`;
+
+            if (coverageData.percentage < 40) {
+                document.getElementById('coverage_card').style.background = "rgba(239, 68, 68, 0.1)";
+            } else {
+                document.getElementById('coverage_card').style.background = "rgba(17, 24, 39, 0.8)";
             }
 
-            drawTomographySimulation(etp);
+            drawTomographySimulation(data.etp_summary);
             document.getElementById('tomography_metrics').innerHTML = `
                 <h4>Métricas ETP</h4>
-                <div class="context-item"><span class="context-label">ID Territorio</span><span class="context-value" style="font-size:0.6rem">${etp.territory_id}</span></div>
-                <div class="context-item"><span class="context-label">ESS Sup.</span><span class="context-value">${(etp.ess_superficial || 0).toFixed(3)}</span></div>
-                <div class="context-item"><span class="context-label">ESS Vol.</span><span class="context-value">${(etp.ess_volumetrico || 0).toFixed(3)}</span></div>
-                <div class="context-item"><span class="context-label">Coherencia 3D</span><span class="context-value">${(etp.coherencia_3d || 0).toFixed(3)}</span></div>
-                <div class="context-item"><span class="context-label">Persistencia</span><span class="context-value">${(etp.persistencia_temporal || 0).toFixed(3)}</span></div>
-                <div class="context-item"><span class="context-label">Densidad Arq.</span><span class="context-value">${(etp.densidad_arqueologica_m3 || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">ID Territorio</span><span class="context-value" style="font-size:0.6rem">${data.etp_summary?.territory_id || 'N/A'}</span></div>
+                <div class="context-item"><span class="context-label">ESS Sup.</span><span class="context-value">${(data.etp_summary?.ess_superficial || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">ESS Vol.</span><span class="context-value">${(data.etp_summary?.ess_volumetrico || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">Coherencia 3D</span><span class="context-value">${(data.etp_summary?.coherencia_3d || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">Persistencia</span><span class="context-value">${(data.etp_summary?.persistencia_temporal || 0).toFixed(3)}</span></div>
             `;
 
             // 3. CONTEXT (TCP)
@@ -973,15 +995,40 @@
             `;
 
             // 4. TOMOGRAPHY (ETP)
+            const etpSumm = data.etp_summary || {};
             document.getElementById('tomography_metrics').innerHTML = `
                 <h4>Métricas ETP</h4>
-                <div class="context-item"><span class="context-label">ID Territorio</span><span class="context-value" style="font-size:0.6rem">${etp.territory_id}</span></div>
-                <div class="context-item"><span class="context-label">ESS Sup.</span><span class="context-value">${(etp.ess_superficial || 0).toFixed(3)}</span></div>
-                <div class="context-item"><span class="context-label">ESS Vol.</span><span class="context-value">${(etp.ess_volumetrico || 0).toFixed(3)}</span></div>
-                <div class="context-item"><span class="context-label">Coherencia 3D</span><span class="context-value">${(etp.coherencia_3d || 0).toFixed(3)}</span></div>
-                <div class="context-item"><span class="context-label">Persistencia</span><span class="context-value">${(etp.persistencia_temporal || 0).toFixed(3)}</span></div>
-                <div class="context-item"><span class="context-label">Densidad Arq.</span><span class="context-value">${(etp.densidad_arqueologica_m3 || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">ID Territorio</span><span class="context-value" style="font-size:0.6rem">${etpSumm.territory_id}</span></div>
+                <div class="context-item"><span class="context-label">Capas Tomográficas</span><span class="context-value">${etpSumm.layers_count || 0} cortes</span></div>
+                <div class="context-item"><span class="context-label">Anomalías Detectadas</span><span class="context-value">${etpSumm.anomalies_count || 0} objetivos</span></div>
+                <div class="context-item"><span class="context-label">ESS Sup.</span><span class="context-value">${(etpSumm.ess_superficial || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">ESS Vol.</span><span class="context-value">${(etpSumm.ess_volumetrico || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">Coherencia 3D</span><span class="context-value">${(etpSumm.coherencia_3d || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">Confianza</span><span class="context-value" style="color: #60a5fa">${etpSumm.confidence_level || 'Evaluando'}</span></div>
             `;
+
+            // Fused Anomaly Map
+            const fusedContainer = document.getElementById('fused_anomaly_container');
+            const downloadContainer = document.getElementById('anomaly_download_btn_container');
+            if (data.analysis_id) {
+                const mapUrl = `/anomaly-map/${data.analysis_id}.png`;
+                fusedContainer.innerHTML = `<img src="${mapUrl}" style="max-width:100%; border-radius:0.5rem; border:1px solid #374151; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); cursor: pointer;" onclick="window.open(this.src, '_blank')">`;
+
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = "btn btn-secondary";
+                downloadBtn.style.width = "auto";
+                downloadBtn.style.padding = "0.25rem 0.75rem";
+                downloadBtn.style.fontSize = "0.75rem";
+                downloadBtn.innerHTML = "💾 Guardar Mapa";
+                downloadBtn.onclick = () => downloadBlob(mapUrl, `anomaly_map_${data.analysis_id}.png`);
+                downloadContainer.innerHTML = '';
+                downloadContainer.appendChild(downloadBtn);
+
+                // Auto-download logic
+                if (document.getElementById('auto_download').checked) {
+                    downloadBlob(mapUrl, `anomaly_map_${data.analysis_id}.png`);
+                }
+            }
 
             // 5. HYPOTHESES
             const hypContainer = document.getElementById('hypotheses_content');
@@ -1083,6 +1130,30 @@
                 ctx.moveTo(cvs.width / 2, 0); ctx.lineTo(cvs.width / 2, cvs.height);
                 ctx.stroke();
             });
+        }
+        function open3DViewer() {
+            const latMin = document.getElementById('lat_min').value;
+            const latMax = document.getElementById('lat_max').value;
+            const lonMin = document.getElementById('lon_min').value;
+            const lonMax = document.getElementById('lon_max').value;
+
+            const url = `volumetric_lidar_viewer.html?lat_min=${latMin}&lat_max=${latMax}&lon_min=${lonMin}&lon_max=${lonMax}`;
+            window.open(url, '_blank');
+        }
+
+        async function downloadBlob(url, filename) {
+            try {
+                const resp = await fetch(url);
+                const blob = await resp.blob();
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (err) {
+                console.error("Error downloading blob:", err);
+            }
         }
 
         // Initial setup

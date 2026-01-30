@@ -160,11 +160,21 @@ def generate_response(question, hrm_model, temperature=0.3, top_k=20, mode="scie
             
             # Extraer estado oculto representativo (Carry "z_H")
             # carry.inner_carry.z_H has shape [batch, seq_len, hidden_size]
+            activity = None
+            
+            # Intentar acceso por atributo (Dataclass) - Preferido
             if hasattr(carry, "inner_carry") and hasattr(carry.inner_carry, "z_H"):
-                # Usamos el primer token para ver la activación latente global
                 activity = carry.inner_carry.z_H[0, 0].detach().cpu().numpy()
-            else:
-                debug_log("⚠️ Estructura de carry inesperada, saltando visualización")
+            # Intentar acceso por índice (Tuple) - Fallback si es un tuple/namedtuple
+            elif isinstance(carry, (tuple, list)) and len(carry) > 0:
+                inner = carry[0]
+                if hasattr(inner, "z_H"):
+                    activity = inner.z_H[0, 0].detach().cpu().numpy()
+                elif isinstance(inner, (tuple, list)) and len(inner) > 0:
+                    activity = inner[0][0, 0].detach().cpu().numpy()
+            
+            if activity is None:
+                debug_log(f"⚠️ Estructura de carry inesperada ({type(carry)}), saltando visualización")
                 raise AttributeError("Unexpected carry structure")
             
             # Reshape a 16x32 para aspecto de "mapa"

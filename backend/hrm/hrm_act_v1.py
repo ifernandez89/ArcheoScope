@@ -14,12 +14,24 @@ class HierarchicalReasoningModel_ACTV1InnerCarry:
     z_H: torch.Tensor
     z_L: torch.Tensor
 
+    def __iter__(self):
+        return iter((self.z_H, self.z_L))
+    
+    def __getitem__(self, idx):
+        return (self.z_H, self.z_L)[idx]
+
 @dataclass
 class HierarchicalReasoningModel_ACTV1Carry:
     inner_carry: HierarchicalReasoningModel_ACTV1InnerCarry
     steps: torch.Tensor
     halted: torch.Tensor
     current_data: Dict[str, torch.Tensor]
+
+    def __iter__(self):
+        return iter((self.inner_carry, self.steps, self.halted, self.current_data))
+    
+    def __getitem__(self, idx):
+        return (self.inner_carry, self.steps, self.halted, self.current_data)[idx]
 
 class HierarchicalReasoningModel_ACTV1Config(BaseModel):
     batch_size: int
