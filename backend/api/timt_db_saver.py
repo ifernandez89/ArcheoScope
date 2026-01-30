@@ -260,48 +260,53 @@ async def save_timt_result_to_db(db_pool, result: TerritorialInferentialTomograp
                 
                 logger.info(f"✅ Multilevel communication saved")
                 
-                # 8. Guardar TAMBIÉN en tabla antigua para compatibilidad con endpoints existentes
-                print("[BD] Guardando en tabla antigua para compatibilidad...", flush=True)
-                
-                # Generar candidate_id único basado en el analysis_id
-                candidate_id = f"TIMT_{result.analysis_id}"
-                
-                await conn.execute("""
-                    INSERT INTO archaeological_candidate_analyses (
-                        candidate_id, candidate_name, region,
-                        archaeological_probability, anomaly_score,
-                        result_type, recommended_action,
-                        environment_type, confidence_level,
-                        latitude, longitude,
-                        lat_min, lat_max, lon_min, lon_max,
-                        scientific_explanation, explanation_type
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-                """,
-                    candidate_id,
-                    request_data.get('region_name', 'Unknown'),
-                    f"TIMT Analysis {result.analysis_id}",
-                    result.tomographic_profile.densidad_arqueologica_m3,
-                    result.tomographic_profile.ess_superficial,
-                    'positive_candidate' if result.tomographic_profile.densidad_arqueologica_m3 > 0.5 else 'uncertain',
-                    result.tomographic_profile.get_archaeological_recommendation(),
-                    result.territorial_context.historical_biome.value,
-                    result.scientific_rigor_score,
-                    (result.territory_bounds.lat_min + result.territory_bounds.lat_max) / 2,
-                    (result.territory_bounds.lon_min + result.territory_bounds.lon_max) / 2,
-                    result.territory_bounds.lat_min,
-                    result.territory_bounds.lat_max,
-                    result.territory_bounds.lon_min,
-                    result.territory_bounds.lon_max,
-                    result.academic_summary[:1000] if result.academic_summary else '',
-                    'timt_analysis'
-                )
-                
-                logger.info(f"✅ Saved to legacy table for compatibility")
-                
                 logger.info(f"🎉 TIMT result completely saved to database: {result.analysis_id}")
                 
-                return timt_id
+    except Exception as e:
+        logger.error(f"❌ Error saving TIMT specific tables: {e}", exc_info=True)
+    
+    # 8. Guardar TAMBIÉN en tabla antigua para compatibilidad (FUERA DE LA TRANSACCIÓN ANTERIOR)
+    try:
+        async with db_pool.acquire() as conn:
+            logger.info("[BD] Guardando en tabla antigua para compatibilidad...")
+            
+            # Generar candidate_id único basado en el analysis_id
+            candidate_id = f"TIMT_{result.analysis_id}"
+            center_lat = (result.territory_bounds.lat_min + result.territory_bounds.lat_max) / 2
+            center_lon = (result.territory_bounds.lon_min + result.territory_bounds.lon_max) / 2
+            
+            await conn.execute("""
+                INSERT INTO archaeological_candidate_analyses (
+                    candidate_id, candidate_name, region,
+                    archaeological_probability, anomaly_score,
+                    result_type, recommended_action,
+                    environment_type, confidence_level,
+                    latitude, longitude,
+                    lat_min, lat_max, lon_min, lon_max,
+                    scientific_explanation, explanation_type
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+            """,
+                candidate_id,
+                request_data.get('region_name', 'Unknown'),
+                f"TIMT Analysis {result.analysis_id}",
+                float(result.tomographic_profile.densidad_arqueologica_m3),
+                float(result.tomographic_profile.ess_superficial),
+                'positive_candidate' if result.tomographic_profile.densidad_arqueologica_m3 > 0.5 else 'uncertain',
+                result.tomographic_profile.get_archaeological_recommendation(),
+                result.territorial_context.historical_biome.value,
+                float(result.scientific_rigor_score),
+                float(center_lat),
+                float(center_lon),
+                float(result.territory_bounds.lat_min),
+                float(result.territory_bounds.lat_max),
+                float(result.territory_bounds.lon_min),
+                float(result.territory_bounds.lon_max),
+                (result.academic_summary[:1000] if result.academic_summary else ''),
+                'timt_analysis'
+            )
+            logger.info(f"✅ Saved to legacy table for compatibility: {candidate_id}")
+            return True
                 
     except Exception as e:
-        logger.error(f"❌ Error saving TIMT result to DB: {e}", exc_info=True)
-        return None
+        logger.error(f"❌ Error saving to legacy table: {e}", exc_info=True)
+        return False

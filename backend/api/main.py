@@ -6,6 +6,7 @@ VERSIÓN LIMPIA - Solo endpoints funcionales y críticos.
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Dict, List, Any, Optional
 import sys
@@ -188,9 +189,10 @@ async def startup_event():
     
     # Inicializar pool para endpoint científico
     try:
-        from api.scientific_endpoint import init_db_pool
+        from api.scientific_endpoint import init_db_pool, initialize_timt_engine as init_scientific_timt
         await init_db_pool()
-        logger.info("✅ Pool científico inicializado")
+        init_scientific_timt() # NUEVO: Inicializar motor TIMT para el endpoint científico
+        logger.info("✅ Pool y Motor Científico inicializados")
     except Exception as e:
         logger.warning(f"⚠️ Pool científico no disponible: {e}")
         
@@ -464,6 +466,21 @@ except Exception as e:
     logger.error(f"❌ Error inicializando motor TIMT: {e}")
     import traceback
     traceback.print_exc()
+
+# ============================================================================
+# SERVIR ARCHIVOS ESTÁTICOS (ANOMALISM)
+# ============================================================================
+
+try:
+    # Asegurar que el directorio de mapas existe
+    maps_dir = Path("anomaly_maps")
+    if not maps_dir.exists():
+        maps_dir.mkdir(parents=True, exist_ok=True)
+        
+    app.mount("/anomaly-map", StaticFiles(directory="anomaly_maps"), name="anomaly-map")
+    logger.info("✅ Directorio anomaly_maps montado en /anomaly-map")
+except Exception as e:
+    logger.error(f"❌ Error montando static files: {e}")
 
 # ============================================================================
 # INCLUIR ROUTER ANOMALY VISUALIZATION (NUEVO)

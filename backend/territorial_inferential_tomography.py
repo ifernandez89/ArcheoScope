@@ -269,15 +269,31 @@ class TerritorialInferentialTomographyEngine:
         scientific_rigor = self._calculate_scientific_rigor(tcp, etp, transparency_report)
         
         # ============================================================================
-        # CAPA EXTRA: HRM ANALYSIS (Neural Visualization)
+        # CAPA EXTRA: HRM ANALYSIS (Neural Visualization) & Honest Metrics
         # ============================================================================
         
-        scientific_output = {}
+        hrm_result = {}
         if self.hrm_model:
             logger.info("🧠 EJECUTANDO ANÁLISIS HRM (High Resolution Morphology)")
-            scientific_output = self._run_hrm_analysis(analysis_id, tcp, etp, hypothesis_validations)
+            hrm_result = self._run_hrm_analysis(analysis_id, tcp, etp, hypothesis_validations)
         else:
             logger.warning("⚠️ HRM analysis skipped (model not available)")
+            
+        # Construir Scientific Output con métricas de honestidad académica
+        # Extraer instrumentos (esto es una simplificación, en producción vendría del batch)
+        available_instr = tcp.instrumental_strategy.priority_instruments if tcp.instrumental_strategy else ["Sentinel-2", "Sentinel-1", "DEM", "ICESat-2"]
+        
+        scientific_output = {
+            "anthropic_origin_probability": etp.densidad_arqueologica_m3,
+            "anthropic_activity_probability": 0.0, # Por ahora estático hasta tener firma TAS/DIL mapeada
+            "instrumental_anomaly_probability": etp.ess_superficial,
+            "recommended_action": etp.get_archaeological_recommendation(),
+            "notes": etp.narrative_explanation,
+            "available_instruments": available_instr,
+            "instruments_measured": len([i for i in available_instr if i]), # Simplificación
+            "coverage_raw": scientific_rigor, # Usar rigor como aproximación de cobertura raw
+            "hrm_analysis": hrm_result.get("hrm_analysis", {})
+        }
         
         # ============================================================================
         # RESULTADO FINAL

@@ -250,149 +250,38 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                         'success': False
                     })
             
-            # ============================================================================
-            # ANÁLISIS HRM (Razonamiento Jerárquico)
-            # ============================================================================
-            hrm_analysis = None
-            try:
-                # Importar runner dinámicamente si no está en top-level
-                from hrm import hrm_runner
-                
-                # Cargar modelo (debería estar cacheado o ser rápido si ya se cargó)
-                # NOTA: En producción ideal, esto se carga al inicio. Por ahora lo cargamos on-demand con cache interno.
-                # hrm_runner maneja su propia carga ligera.
-                if not hasattr(router, "hrm_model_instance"):
-                    print("[SCIENTIFIC_ENDPOINT] Inicializando HRM Model...", flush=True)
-                    router.hrm_model_instance = hrm_runner.load_models()
-                
-                # Construir consulta basada en datos TIMT
-                # Usamos la narrativa del ETP como input base + contexto
-                query = f"Analizar anomalía en {request.region_name}. "
-                if etp.narrative_explanation:
-                    query += f"Contexto: {etp.narrative_explanation}. "
-                query += f"ESS Superficial: {etp.ess_superficial:.2f}. "
-                
-                # Configurar ruta de visualización (Backend escribe en carpeta del Frontend)
-                # Asumimos estructura standard: backend/api/scientific_endpoint.py -> ... -> frontend/
-                frontend_dir = Path(__file__).parent.parent.parent / "frontend"
-                viz_dir = frontend_dir / "hrm_viz"
-                viz_dir.mkdir(exist_ok=True)
-                
-                timestamp_str = timt_result.analysis_timestamp.strftime("%Y%m%d_%H%M%S")
-                viz_filename = f"hrm_{timestamp_str}_{request.region_name[:5].replace(' ','_')}.png"
-                viz_path = viz_dir / viz_filename
-                
-                # URL relativa para el frontend (servido desde 'frontend/')
-                viz_url = f"/hrm_viz/{viz_filename}"
-                
-                # Ejecutar análisis con visualización
-                print(f"[SCIENTIFIC_ENDPOINT] Ejecutando HRM para: {query[:50]}...", flush=True)
-                hrm_json = hrm_runner.generate_response(
-                    query, 
-                    router.hrm_model_instance, 
-                    temperature=0.3, 
-                    mode="scientific_strict",
-                    visualize_path=str(viz_path)
-                )
-                
-                # Parsear resultado si es string (aunque generate_response devuelve string, 
-                # en strict mode intentamos que sea JSON válido dentro del texto)
-                try:
-                    # Intentar limpiar si viene con markdown
-                    cleaned = hrm_json.replace("```json", "").replace("```", "").strip()
-                    hrm_analysis = json.loads(cleaned)
-                    # Inyectar URL de visualización en el objeto JSON analizado
-                    hrm_analysis["visualizacion_neural"] = viz_url
-                except:
-                    # Si falla, structurar manualmente el texto
-                    hrm_analysis = {
-                        "analisis_morfologico": "Análisis textural realizado.",
-                        "hipotesis_antropica": hrm_json[:200] + "...",
-                        "hipotesis_natural_alternativa": "Ver detalle narrativo.", 
-                        "evidencia_requerida": "Validación de campo necesaria.",
-                        "nivel_incertidumbre": "Medio (No estructurado)",
-                        "raw_output": hrm_json,
-                        "visualizacion_neural": viz_url
-                    }
-                    
-                print("[SCIENTIFIC_ENDPOINT] ✅ Análisis HRM completado", flush=True)
-                
-            except Exception as e:
-                print(f"[SCIENTIFIC_ENDPOINT] ⚠️ Error en HRM Integration: {e}", flush=True)
-                hrm_analysis = {
-                    "error": str(e),
-                    "status": "failed"
-                }
-
-            # Construir respuesta compatible con estructura científica
+            # Construir respuesta compatible con estructura TIMT v2
             result = {
-                'scientific_output': {
-                    'candidate_id': request.candidate_id or f"{detected_region}_{center_lat:.4f}_{center_lon:.4f}",
-                    'anomaly_score': etp.ess_superficial,  # ESS superficial como anomaly score
-                    'anthropic_probability': etp.densidad_arqueologica_m3,  # Densidad arqueológica como probabilidad
-                    'confidence_interval': [0.5, 1.0],  # Intervalo de confianza basado en rigor científico
-                    'recommended_action': 'field_verification' if etp.densidad_arqueologica_m3 > 0.5 else 'monitoring_passive',
-                    'notes': etp.narrative_explanation,
-                    'hrm_analysis': hrm_analysis, # <--- NUEVO CAMPO HRM
-                    'timestamp': timt_result.analysis_timestamp.isoformat(),
-                    'coverage_raw': len([m for m in all_measurements if m['success']]) / len(all_measurements) if all_measurements else 0,
-                    'coverage_effective': timt_result.scientific_rigor_score,  # Rigor científico como cobertura efectiva
-                    'instruments_measured': len([m for m in all_measurements if m['success']]),
-                    'instruments_available': len(all_measurements),
-                    'candidate_type': 'positive_candidate' if etp.densidad_arqueologica_m3 > 0.5 else 'uncertain',
-                    'negative_reason': None,
-                    
-                    # Métricas separadas (origen vs actividad)
-                    'anthropic_origin_probability': etp.densidad_arqueologica_m3,
-                    'anthropic_activity_probability': 0.0,  # TODO: Extraer de ETP si disponible
-                    'instrumental_anomaly_probability': etp.ess_superficial,
-                    'model_confidence': 'high'  # Siempre alta (determinístico)
-                },
+                'analysis_id': timt_result.analysis_id,
+                'status': 'success',
+                'territorial_coherence_score': float(timt_result.territorial_coherence_score),
+                'scientific_rigor_score': float(timt_result.scientific_rigor_score),
+                'scientific_output': timt_result.scientific_output,
                 
                 # Contexto territorial (TCP)
-                'territorial_context': {
+                'tcp_summary': {
                     'tcp_id': timt_result.territorial_context.tcp_id,
                     'analysis_objective': timt_result.territorial_context.analysis_objective.value,
                     'preservation_potential': timt_result.territorial_context.preservation_potential.value,
-                    'geological_context': {
-                        'dominant_lithology': timt_result.territorial_context.geological_context.dominant_lithology.value if timt_result.territorial_context.geological_context else 'unknown',
-                        'geological_age': timt_result.territorial_context.geological_context.geological_age.value if timt_result.territorial_context.geological_context else 'unknown',
-                        'archaeological_suitability': timt_result.territorial_context.geological_context.archaeological_suitability if timt_result.territorial_context.geological_context else 0.5,
-                        'explanation': timt_result.territorial_context.geological_context.geological_explanation if timt_result.territorial_context.geological_context else ''
-                    },
+                    'hypotheses_count': len(timt_result.territorial_context.territorial_hypotheses),
+                    'geological_context': timt_result.territorial_context.geological_context.dominant_lithology.value if timt_result.territorial_context.geological_context else "unknown",
                     'hydrographic_features_count': len(timt_result.territorial_context.hydrographic_features),
                     'external_sites_count': len(timt_result.territorial_context.external_archaeological_sites),
-                    'human_traces_count': len(timt_result.territorial_context.known_human_traces),
-                    'territorial_hypotheses_count': len(timt_result.territorial_context.territorial_hypotheses)
+                    'human_traces_count': len(timt_result.territorial_context.known_human_traces)
                 },
                 
                 # Perfil tomográfico (ETP)
-                'tomographic_profile': {
+                'etp_summary': {
                     'territory_id': etp.territory_id,
-                    'ess_superficial': etp.ess_superficial,
-                    'ess_volumetrico': etp.ess_volumetrico,
-                    'ess_temporal': etp.ess_temporal,
-                    
-                    # NUEVO: Cobertura instrumental (separada de ESS)
-                    'instrumental_coverage': etp.instrumental_coverage,
-                    
-                    # SALTO EVOLUTIVO 1: Temporal Archaeological Signature (TAS)
-                    'tas_signature': etp.tas_signature.to_dict() if etp.tas_signature else None,
-                    
-                    # SALTO EVOLUTIVO 2: Deep Inference Layer (DIL)
-                    'dil_signature': etp.dil_signature.to_dict() if etp.dil_signature else None,
-                    
-                    'coherencia_3d': etp.coherencia_3d,
-                    'persistencia_temporal': etp.persistencia_temporal,
-                    'densidad_arqueologica_m3': etp.densidad_arqueologica_m3,
-                    'confidence_level': 'medium',  # Basado en rigor científico
-                    'recommended_action': 'field_verification' if etp.densidad_arqueologica_m3 > 0.5 else 'monitoring_passive',
-                    'narrative_explanation': etp.narrative_explanation,
-                    
-                    # Scores de compatibilidad (usando atributos REALES)
-                    'geological_compatibility_score': etp.geological_compatibility.gcs_score if etp.geological_compatibility else None,
-                    'water_availability_score': etp.water_availability.settlement_viability if etp.water_availability else None,
-                    'external_consistency_score': etp.external_consistency.ecs_score if etp.external_consistency else None
+                    'ess_superficial': float(etp.ess_superficial),
+                    'ess_volumetrico': float(etp.ess_volumetrico),
+                    'ess_temporal': float(etp.ess_temporal),
+                    'coherencia_3d': float(etp.coherencia_3d),
+                    'persistencia_temporal': float(etp.persistencia_temporal),
+                    'densidad_arqueologica_m3': float(etp.densidad_arqueologica_m3),
+                    'confidence_level': 'medium',
+                    'recommended_action': etp.get_archaeological_recommendation(),
+                    'narrative_explanation': etp.narrative_explanation
                 },
                 
                 # Validación de hipótesis
@@ -401,7 +290,7 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                         'hypothesis_id': hv.hypothesis_id,
                         'hypothesis_type': hv.hypothesis_type,
                         'evidence_level': hv.overall_evidence_level.value,
-                        'confidence_score': hv.confidence_score,
+                        'confidence_score': float(hv.confidence_score),
                         'supporting_factors': hv.supporting_factors,
                         'contradictions': hv.contradictions,
                         'explanation': hv.validation_explanation
@@ -409,27 +298,20 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                     for hv in timt_result.hypothesis_validations
                 ],
                 
-                # Métricas TIMT
-                'territorial_coherence_score': timt_result.territorial_coherence_score,
-                'scientific_rigor_score': timt_result.scientific_rigor_score,
+                # Reporte de transparencia
+                'transparency_summary': {
+                    'hypotheses_evaluated': timt_result.transparency_report.hypotheses_evaluated,
+                    'hypotheses_validated': timt_result.transparency_report.hypotheses_validated,
+                    'hypotheses_rejected': timt_result.transparency_report.hypotheses_rejected,
+                    'can_infer': timt_result.transparency_report.can_infer,
+                    'cannot_affirm': timt_result.transparency_report.cannot_affirm,
+                    'analysis_process_steps': len(timt_result.transparency_report.analysis_process_steps)
+                },
                 
-                # Comunicación multinivel
                 'technical_summary': timt_result.technical_summary,
                 'academic_summary': timt_result.academic_summary,
                 'general_summary': timt_result.general_summary,
                 'institutional_summary': timt_result.institutional_summary,
-                
-                # Mediciones instrumentales (TODOS: exitosos Y fallidos) - DATOS REALES
-                'instrumental_measurements': all_measurements,
-                
-                # Contexto ambiental
-                'environment_context': {
-                    'environment_type': timt_result.territorial_context.historical_biome.value,
-                    'confidence': 0.9,  # Alta confianza en clasificación ambiental
-                    'available_instruments': [m.get('instrument_name') for m in all_measurements if m.get('success')],
-                    'archaeological_visibility': timt_result.territorial_context.preservation_potential.value,
-                    'preservation_potential': timt_result.territorial_context.preservation_potential.value
-                },
                 
                 # Información de la solicitud
                 'request_info': {
@@ -445,7 +327,7 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                 }
             }
             
-            print("\n✅ Respuesta científica construida desde TIMT", flush=True)
+            print("\n✅ Respuesta científica construida desde TIMT Engine", flush=True)
             
         else:
             # Fallback: usar pipeline científico básico si TIMT no está disponible

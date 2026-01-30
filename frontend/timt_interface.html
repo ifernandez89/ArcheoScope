@@ -396,6 +396,83 @@
             border-radius: 0.375rem;
             margin-bottom: 1rem;
         }
+
+        /* Dashboard Specific V2 */
+        .dash-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .dash-card {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+
+        .dash-title {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .dash-status {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .dash-desc {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 800;
+            margin-top: 0.5rem;
+        }
+
+        .badge-detected {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .badge-uncertain {
+            background: rgba(107, 114, 128, 0.2);
+            color: #9ca3af;
+        }
+
+        .badge-high {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .instruments-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .instrument-tag {
+            background: #111827;
+            border: 1px solid #374151;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            color: #d1d5db;
+        }
     </style>
 </head>
 
@@ -500,26 +577,55 @@
                         <div class="metric-card">
                             <div class="metric-label">Coherencia Territorial</div>
                             <div class="metric-value" id="metric_coherence">-</div>
-                            <div class="metric-sub">Índice Global</div>
+                            <div class="metric-sub">Índice Epistémico</div>
                         </div>
                         <div class="metric-card">
                             <div class="metric-label">Rigor Científico</div>
                             <div class="metric-value" id="metric_rigor">-</div>
-                            <div class="metric-sub">Score de Validación</div>
+                            <div class="metric-sub">Metodología Determinística</div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-label">ESS Volumétrico</div>
+                            <div class="metric-label">ESS (Explanatory Strangeness)</div>
                             <div class="metric-value" id="metric_ess">-</div>
-                            <div class="metric-sub">Evidencia Sensorial</div>
+                            <div class="metric-sub">Rareza Estructural</div>
                         </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Hipótesis Validadas</div>
-                            <div class="metric-value" id="metric_hypotheses">-</div>
-                            <div class="metric-sub">Fuerte/Moderada</div>
+                        <div class="metric-card" id="coverage_card">
+                            <div class="metric-label">Cobertura Instrumental</div>
+                            <div class="metric-value" id="metric_coverage">-</div>
+                            <div class="metric-sub" id="metric_instr_count">0 / 0 instrumentos</div>
                         </div>
                     </div>
 
-                    <div id="dashboard_summary" class="context-section"></div>
+                    <div class="dash-grid">
+                        <div class="dash-card">
+                            <div class="dash-title">Probabilidad de Origen Antropogénico</div>
+                            <div class="dash-status" id="origin_prob_label">Evaluando...</div>
+                            <div class="dash-desc" id="origin_prob_desc">Iniciando motor inferencial de 3 capas.</div>
+                        </div>
+                        <div class="dash-card">
+                            <div class="dash-title">Actividad Antropogénica</div>
+                            <div class="dash-status" id="activity_prob_label">Pendiente</div>
+                            <div class="dash-desc" id="activity_prob_desc">Requiere validación cruzada de firmas
+                                temporales.</div>
+                        </div>
+                        <div class="dash-card">
+                            <div class="dash-title">Anomalía Instrumental</div>
+                            <div class="dash-status" id="anomaly_label">No detectada</div>
+                            <div class="dash-desc" id="anomaly_desc">Convergencia sensorial en el territorio analizado.
+                            </div>
+                        </div>
+                        <div class="dash-card">
+                            <div class="dash-title">Acción Recomendada</div>
+                            <div class="dash-status" style="color: #60a5fa;" id="recommendation_label">-</div>
+                            <div class="dash-desc" id="recommendation_desc">Supeditado a nivel de confianza inferencial.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dash-card" style="margin-top: 1.5rem;">
+                        <div class="dash-title">Instrumentos Intervinientes</div>
+                        <div class="instruments-list" id="dashboard_instruments"></div>
+                    </div>
                 </div>
 
                 <!-- Context Tab -->
@@ -547,6 +653,17 @@
                             <div class="canvas-container">
                                 <div class="canvas-label">Temporal - Heatmap</div>
                                 <canvas id="temporal_canvas"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- NUEVO: Mapa de Anomalía Fusionado -->
+                        <div style="margin-top: 2rem;">
+                            <h4>Mapa de Anomalía Fundo (Fusión Multifuente)</h4>
+                            <div id="fused_anomaly_container" style="margin-top: 1rem; text-align: center;">
+                                <div
+                                    style="padding: 2rem; color: #6b7280; border: 1px dashed #374151; border-radius: 0.5rem;">
+                                    El mapa de anomalía se genera al completar el análisis.
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -752,86 +869,186 @@
         }
 
         function renderResults(data) {
-            // Dashboard Metrics
-            document.getElementById('metric_coherence').textContent = data.territorial_coherence_score.toFixed(3);
-            document.getElementById('metric_rigor').textContent = data.scientific_rigor_score.toFixed(3);
-            document.getElementById('metric_ess').textContent = data.etp_summary ? data.etp_summary.ess_volumetrico.toFixed(3) : '-';
+            // 1. DASHBOARD - Metrics
+            document.getElementById('metric_coherence').textContent = (data.territorial_coherence_score || 0).toFixed(3);
+            document.getElementById('metric_rigor').textContent = (data.scientific_rigor_score || 0).toFixed(3);
 
-            const validHypotheses = data.hypothesis_validations.filter(h => h.evidence_level === 'strong' || h.evidence_level === 'moderate').length;
-            document.getElementById('metric_hypotheses').textContent = validHypotheses;
+            const etp = data.etp_summary || {};
+            document.getElementById('metric_ess').textContent = (etp.ess_volumetrico || 0).toFixed(3);
 
-            // Context
-            const ctx = data.tcp_summary;
+            // Extract instrumentation from scientific_output if available
+            const hrm = (data.scientific_output && data.scientific_output.hrm_analysis) || {};
+            const sc_out = data.scientific_output || {};
+
+            // Cobertura
+            const instr_measured = sc_out.instruments_measured || 0;
+            const instr_total = sc_out.available_instruments ? sc_out.available_instruments.length : 12;
+            const coverage_raw = (sc_out.coverage_raw || 0) * 100;
+
+            document.getElementById('metric_coverage').textContent = `${coverage_raw.toFixed(0)}%`;
+            document.getElementById('metric_instr_count').textContent = `${instr_measured} / ${instr_total} instrumentos`;
+
+            // 2. DASHBOARD - Logic & Semantic
+            // Origen Antropogénico
+            const originProb = sc_out.anthropic_origin_probability || 0;
+            const originLabel = document.getElementById('origin_prob_label');
+            const originDesc = document.getElementById('origin_prob_desc');
+
+            if (originProb > 0.7) {
+                originLabel.textContent = "Alta Probabilidad";
+                originDesc.textContent = "Evidencia convergente sugiere origen artificial/humano.";
+            } else if (originProb > 0.3) {
+                originLabel.textContent = "No concluyente";
+                originDesc.textContent = "La evidencia actual permite interpretaciones divergentes.";
+            } else {
+                originLabel.textContent = "Evaluación Limitada";
+                originDesc.textContent = "La cobertura instrumental actual no permite una inferencia robusta.";
+            }
+
+            // Anomalía Instrumental
+            const anomalyScore = sc_out.instrumental_anomaly_probability || 0;
+            const anomalyLabel = document.getElementById('anomaly_label');
+            const anomalyDesc = document.getElementById('anomaly_desc');
+            if (anomalyScore > 0.6) {
+                anomalyLabel.textContent = "Detectada (Alta)";
+                anomalyDesc.textContent = "Se detectaron anomalías físicas significativas en el registro instrumental.";
+            } else {
+                anomalyLabel.textContent = "Firma Estándar";
+                anomalyDesc.textContent = "No se detectan desviaciones críticas de la morfología esperada.";
+            }
+
+            // Recomendación
+            document.getElementById('recommendation_label').textContent = sc_out.recommended_action === 'monitoring_passive' ? "Monitoreo Pasivo" : "Verificación de Campo";
+            document.getElementById('recommendation_desc').textContent = sc_out.notes || "Acción determinada por rigor científico y cobertura efectiva.";
+
+            // Instrumentos Tags
+            const instrList = document.getElementById('dashboard_instruments');
+            instrList.innerHTML = '';
+            const instruments = sc_out.available_instruments || ['Sentinel-2', 'Sentinel-1', 'DEM', 'ICESat-2'];
+            instruments.forEach(inst => {
+                const tag = document.createElement('span');
+                tag.className = 'instrument-tag';
+                tag.textContent = inst;
+                instrList.appendChild(tag);
+            });
+
+            // 4. TOMOGRAPHY (ETP)
+
+            // Render Fused Anomaly Map if available
+            const anomalyContainer = document.getElementById('fused_anomaly_container');
+            if (data.scientific_output && data.scientific_output.candidate_id) {
+                const mapUrl = `${API_BASE}/anomaly-map/${data.scientific_output.candidate_id}.png`;
+                anomalyContainer.innerHTML = `
+                    <div style="background: #111827; padding: 1rem; border-radius: 0.75rem; border: 1px solid #374151;">
+                        <img src="${mapUrl}" style="max-width: 100%; border-radius: 0.5rem; border: 1px solid #4b5563;" 
+                             onerror="this.parentElement.innerHTML='<p style=\"color:#9ca3af\">Mapa de anomalía no disponible para este candidato o aún generándose.</p>'">
+                        <p style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">Corte horizontal de convergencia multifuente (Resolución: ${etp.resolution_m || 30}m)</p>
+                    </div>
+                `;
+            }
+
+            drawTomographySimulation(etp);
+            document.getElementById('tomography_metrics').innerHTML = `
+                <h4>Métricas ETP</h4>
+                <div class="context-item"><span class="context-label">ID Territorio</span><span class="context-value" style="font-size:0.6rem">${etp.territory_id}</span></div>
+                <div class="context-item"><span class="context-label">ESS Sup.</span><span class="context-value">${(etp.ess_superficial || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">ESS Vol.</span><span class="context-value">${(etp.ess_volumetrico || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">Coherencia 3D</span><span class="context-value">${(etp.coherencia_3d || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">Persistencia</span><span class="context-value">${(etp.persistencia_temporal || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">Densidad Arq.</span><span class="context-value">${(etp.densidad_arqueologica_m3 || 0).toFixed(3)}</span></div>
+            `;
+
+            // 3. CONTEXT (TCP)
+            const ctx = data.tcp_summary || {};
             document.getElementById('context_content').innerHTML = `
                 <div class="context-section">
-                    <h4>Resumen Contextual (TCP)</h4>
-                    <div class="context-item"><span class="context-label">Geología Dominante</span><span class="context-value">${ctx.geological_context}</span></div>
-                    <div class="context-item"><span class="context-label">Características Hidrográficas</span><span class="context-value">${ctx.hydrographic_features_count}</span></div>
-                    <div class="context-item"><span class="context-label">Sitios Externos Conocidos</span><span class="context-value">${ctx.external_sites_count}</span></div>
-                    <div class="context-item"><span class="context-label">Trazas Humanas</span><span class="context-value">${ctx.human_traces_count}</span></div>
+                    <h4>Perfil de Contexto Territorial (TCP)</h4>
+                    <div class="context-item"><span class="context-label">Litología Dominante</span><span class="context-value">${ctx.geological_context || 'No determinada'}</span></div>
+                    <div class="context-item"><span class="context-label">Potencial de Preservación</span><span class="context-value">${ctx.preservation_potential || 'Media'}</span></div>
+                    <div class="context-item"><span class="context-label">Sistemas Hidrográficos</span><span class="context-value">${ctx.hydrographic_features_count || 0} identificados</span></div>
+                    <div class="context-item"><span class="context-label">Sitios Arqueológicos Externos</span><span class="context-value">${ctx.external_sites_count || 0} conocidos</span></div>
+                    <div class="context-item"><span class="context-label">Trazas Humanas Registradas</span><span class="context-value">${ctx.human_traces_count || 0} elementos</span></div>
+                    <div class="context-item"><span class="context-label">Hipótesis Generadas</span><span class="context-value">${ctx.hypotheses_count || 0} vectores de análisis</span></div>
                 </div>
             `;
 
-            // Hypotheses
+            // 4. TOMOGRAPHY (ETP)
+            document.getElementById('tomography_metrics').innerHTML = `
+                <h4>Métricas ETP</h4>
+                <div class="context-item"><span class="context-label">ID Territorio</span><span class="context-value" style="font-size:0.6rem">${etp.territory_id}</span></div>
+                <div class="context-item"><span class="context-label">ESS Sup.</span><span class="context-value">${(etp.ess_superficial || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">ESS Vol.</span><span class="context-value">${(etp.ess_volumetrico || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">Coherencia 3D</span><span class="context-value">${(etp.coherencia_3d || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">Persistencia</span><span class="context-value">${(etp.persistencia_temporal || 0).toFixed(3)}</span></div>
+                <div class="context-item"><span class="context-label">Densidad Arq.</span><span class="context-value">${(etp.densidad_arqueologica_m3 || 0).toFixed(3)}</span></div>
+            `;
+
+            // 5. HYPOTHESES
             const hypContainer = document.getElementById('hypotheses_content');
-            hypContainer.innerHTML = data.hypothesis_validations.map(h => `
-                <div class="hypothesis-card">
-                    <div class="hypothesis-header">
-                        <span class="hypothesis-type">${h.hypothesis_type}</span>
-                        <span class="evidence-level evidence-${h.evidence_level}">${h.evidence_level}</span>
+            if (data.hypothesis_validations && data.hypothesis_validations.length) {
+                hypContainer.innerHTML = data.hypothesis_validations.map(h => `
+                    <div class="hypothesis-card">
+                        <div class="hypothesis-header">
+                            <span class="hypothesis-type">${h.hypothesis_type}</span>
+                            <span class="evidence-level evidence-${h.evidence_level}">${h.evidence_level}</span>
+                        </div>
+                        <p style="margin-top:0.5rem; font-size:0.875rem; color:#d1d5db">${h.explanation}</p>
+                        <div style="margin-top:0.5rem; font-size:0.75rem; color:#9ca3af">
+                            Confianza Inferencial: ${(h.confidence_score || 0).toFixed(2)}
+                        </div>
                     </div>
-                    <div class="context-item">
-                        <span class="context-label">Confianza</span>
-                        <span class="context-value">${h.confidence_score.toFixed(2)}</span>
-                    </div>
-                    <p style="margin-top:0.5rem; font-size:0.875rem; color:#d1d5db">${h.explanation}</p>
-                     ${h.supporting_factors.length ? `<div style="margin-top:0.5rem; font-size:0.8rem; color:#4ade80">✅ ${h.supporting_factors.join(', ')}</div>` : ''}
-                     ${h.contradictions.length ? `<div style="margin-top:0.5rem; font-size:0.8rem; color:#f87171">❌ ${h.contradictions.join(', ')}</div>` : ''}
-                </div>
-            `).join('');
-
-            // HRM Results
-            if (data.scientific_output && data.scientific_output.hrm_analysis) {
-                const hrm = data.scientific_output.hrm_analysis;
-
-                // Visual
-                const vizContainer = document.getElementById('hrm_visual_container');
-                if (hrm.visualizacion_neural) {
-                    vizContainer.innerHTML = `<img src="${hrm.visualizacion_neural}" style="max-width:100%; border-radius:0.5rem; border:1px solid #374151; cursor: pointer;" onclick="window.open(this.src, '_blank')">`;
-                    // Abrir automáticamente si es un análisis completo nuevo
-                    if (data.status === "success") {
-                        console.log("Auto-opening HRM visualization...");
-                        window.open(hrm.visualizacion_neural, '_blank');
-                    }
-                } else {
-                    vizContainer.innerHTML = `<div style="padding:2rem;">Sin visualización disponible</div>`;
-                }
-
-                // Text
-                const textContainer = document.getElementById('hrm_text_content');
-                if (hrm.raw_output) {
-                    textContainer.textContent = hrm.raw_output;
-                } else {
-                    textContainer.innerHTML = `
-                        <strong>Análisis Morfológico:</strong>\n${hrm.analisis_morfologico}\n\n
-                        <strong>Hipótesis Antrópica:</strong>\n${hrm.hipotesis_antropica}\n\n
-                        <strong>Incertidumbre:</strong> ${hrm.nivel_incertidumbre}
-                    `.replace(/\n/g, '<br>');
-                }
+                `).join('');
             } else {
-                document.getElementById('hrm_text_content').textContent = "Análisis HRM no disponible en este resultado.";
-                document.getElementById('hrm_visual_container').innerHTML = "";
+                hypContainer.innerHTML = '<div class="limitation-item" style="border-left-color: #9ca3af; background: rgba(156, 163, 175, 0.1);">Sin validaciones detalladas disponibles para este rango.</div>';
             }
 
-            // Communication Default
-            document.getElementById('communication_content').textContent = data.technical_summary;
+            // 6. TRANSPARENCY
+            const trans = data.transparency_summary || {};
+            document.getElementById('transparency_content').innerHTML = `
+                <div class="transparency-section">
+                    <h4>Declaración Epistémica</h4>
+                    <p style="font-size: 0.875rem; color: #9ca3af; margin-bottom: 1rem;">
+                        ArcheoScope opera bajo un modelo determinístico. Las limitaciones aquí expuestas son pilar fundamental del rigor científico del análisis.
+                    </p>
+                    
+                    <h5>Lo que el sistema NO puede afirmar:</h5>
+                    ${(trans.cannot_affirm || []).map(item => `<div class="limitation-item">${item}</div>`).join('') || '<p>No se declararon limitaciones críticas.</p>'}
+                    
+                    <h5 style="margin-top:1rem;">Inferencias permitidas con la cobertura actual:</h5>
+                    ${(trans.can_infer || []).map(item => `<div class="limitation-item" style="border-left-color: #2563eb; background: rgba(37, 99, 235, 0.1);">${item}</div>`).join('')}
+                    
+                    <div class="context-item" style="margin-top:1.5rem">
+                        <span class="context-label">Pasos de Procesamiento</span>
+                        <span class="context-value">${trans.analysis_process_steps || 0} fases completadas</span>
+                    </div>
+                </div>
+            `;
 
-            // Draw Dummy Tomography (Simulation)
+            // 7. HRM Results
+            if (data.scientific_output && data.scientific_output.hrm_analysis) {
+                const hrm_data = data.scientific_output.hrm_analysis;
+                const vizContainer = document.getElementById('hrm_visual_container');
+                if (hrm_data.visualizacion_neural) {
+                    vizContainer.innerHTML = `<img src="${hrm_data.visualizacion_neural}" style="max-width:100%; border-radius:0.5rem; border:1px solid #374151; cursor: pointer;" onclick="window.open(this.src, '_blank')">`;
+                    if (data.status === "success") {
+                        window.open(hrm_data.visualizacion_neural, '_blank');
+                    }
+                } else {
+                    vizContainer.innerHTML = `<div style="padding:2rem; color: #4b5563;">Sin visualización neural disponible.</div>`;
+                }
+
+                const textContainer = document.getElementById('hrm_text_content');
+                textContainer.innerHTML = (hrm_data.raw_output || hrm_data.analisis_morfologico || "Sin reporte textual.").replace(/\n/g, '<br>');
+            }
+
+            // 8. Communication
+            document.getElementById('communication_content').textContent = data.technical_summary || "Sin reporte de comunicación generado.";
+
+            // Finalize simulation
             drawTomographySimulation();
         }
 
         function drawTomographySimulation() {
-            // Simple visual placeholder for the canvases
             const ids = ['xy_canvas', 'xz_canvas', 'yz_canvas', 'temporal_canvas'];
             ids.forEach(id => {
                 const cvs = document.getElementById(id);
