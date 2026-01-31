@@ -76,6 +76,11 @@ class SRTMConnector:
         """
         Obtener datos de elevación SRTM.
         
+        PRECEDENCIA (de mayor a menor confianza):
+        1. OpenTopography (HIGH_RES) - datos reales LIDAR/SRTM
+        2. NASADEM (FALLBACK) - estimación geográfica
+        3. Copernicus (EMERGENCY) - último recurso
+        
         Args:
             resolution: '30m' (SRTM-GL1) o '90m' (SRTM-GL3)
         """
@@ -84,25 +89,56 @@ class SRTMConnector:
             # Intentar diferentes fuentes en orden de preferencia
             sources_to_try = [
                 ('opentopography', self._get_srtm_opentopography),
-                ('usgs_api', self._get_srtm_usgs_api),
-                ('earthdata', self._get_srtm_earthdata)
+                ('nasadem', self._get_srtm_usgs_api),
+                ('copernicus', self._get_srtm_earthdata)
             ]
             
             logger.info(f"🏔️ SRTM: Intentando {len(sources_to_try)} fuentes...")
+            
+            best_result = None
+            best_confidence = 0
             
             for source_name, source_func in sources_to_try:
                 try:
                     logger.info(f"   🔄 Intentando SRTM via {source_name}...")
                     result = await source_func(lat_min, lat_max, lon_min, lon_max, resolution)
+                    
                     if result:
-                        logger.info(f"   ✅ SRTM {source_name} exitoso")
-                        result['source'] = f'SRTM_{source_name}'
-                        return result
+                        # Determinar confianza basada en dem_status
+                        dem_status = result.get('dem_status', 'UNKNOWN')
+                        if dem_status == 'HIGH_RES':
+                            confidence = 1.0
+                        elif dem_status == 'FALLBACK_NASADEM':
+                            confidence = 0.5
+                        elif dem_status == 'FALLBACK_COPERNICUS':
+                            confidence = 0.3
+                        else:
+                            confidence = 0.1
+                        
+                        logger.info(f"   ✅ SRTM {source_name} exitoso (confidence={confidence:.2f})")
+                        
+                        # Si es HIGH_RES, usar inmediatamente (no buscar más)
+                        if dem_status == 'HIGH_RES':
+                            result['source'] = f'SRTM_{source_name}'
+                            logger.info(f"   🎯 HIGH_RES encontrado - deteniendo búsqueda")
+                            return result
+                        
+                        # Guardar mejor resultado hasta ahora
+                        if confidence > best_confidence:
+                            best_result = result
+                            best_confidence = confidence
+                            best_result['source'] = f'SRTM_{source_name}'
                     else:
                         logger.warning(f"   ⚠️ SRTM {source_name} devolvió None")
+                        
                 except Exception as e:
                     logger.error(f"   ❌ SRTM {source_name} falló: {e}")
                     continue
+            
+            # Retornar mejor resultado encontrado
+            if best_result:
+                logger.info(f"   🏆 Usando mejor resultado (confidence={best_confidence:.2f})")
+                return best_result
             
             logger.error("❌ SRTM: Todas las fuentes fallaron")
             return None

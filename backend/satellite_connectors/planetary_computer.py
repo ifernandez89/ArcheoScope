@@ -606,17 +606,56 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 'vv': vv
             }
             
-            # Calcular ratio VV/VH (indicador de rugosidad/compactación)
+            # CRÍTICO: Convertir a dB ANTES de calcular estadísticas
+            # Los valores raw están en escala lineal (DN), no en dB
             with np.errstate(divide='ignore', invalid='ignore'):
-                vv_vh_ratio = vv / vh
-                # FIX: Clamp de valores infinitos antes de usar/cachear
-                vv_vh_ratio = np.nan_to_num(vv_vh_ratio, nan=1.0, posinf=9999, neginf=-9999)
+                # Convertir a dB: 10 * log10(DN)
+                # Filtrar valores <= 0 antes de log
+                vv_valid = vv[vv > 0]
+                vh_valid = vh[vh > 0]
+                
+                if len(vv_valid) == 0 or len(vh_valid) == 0:
+                    log(f"[SAR] ERROR: No hay valores válidos (VV: {len(vv_valid)}, VH: {len(vh_valid)})")
+                    if log_file:
+                        log_file.close()
+                    return None
+                
+                # Convertir a dB
+                vv_db = 10 * np.log10(vv_valid)
+                vh_db = 10 * np.log10(vh_valid)
+                
+                # Log de estadísticas RAW para debugging
+                log(f"[SAR] RAW stats ANTES de dB:")
+                log(f"   VV: min={np.min(vv_valid):.2f}, max={np.max(vv_valid):.2f}, mean={np.mean(vv_valid):.2f}")
+                log(f"   VH: min={np.min(vh_valid):.2f}, max={np.max(vh_valid):.2f}, mean={np.mean(vh_valid):.2f}")
+                
+                log(f"[SAR] dB stats DESPUÉS de conversión:")
+                log(f"   VV: min={np.min(vv_db):.2f}, max={np.max(vv_db):.2f}, mean={np.mean(vv_db):.2f}")
+                log(f"   VH: min={np.min(vh_db):.2f}, max={np.max(vh_db):.2f}, mean={np.mean(vh_db):.2f}")
+                
+                # Usar percentile-based clipping (p5-p95) para robustez
+                vv_p5 = np.percentile(vv_db, 5)
+                vv_p95 = np.percentile(vv_db, 95)
+                vh_p5 = np.percentile(vh_db, 5)
+                vh_p95 = np.percentile(vh_db, 95)
+                
+                # Clip a rango razonable para SAR (-30 a 10 dB típico)
+                vv_db_clipped = np.clip(vv_db, max(-30, vv_p5), min(10, vv_p95))
+                vh_db_clipped = np.clip(vh_db, max(-35, vh_p5), min(5, vh_p95))
+                
+                log(f"[SAR] dB stats DESPUÉS de percentile clipping:")
+                log(f"   VV: min={np.min(vv_db_clipped):.2f}, max={np.max(vv_db_clipped):.2f}, mean={np.mean(vv_db_clipped):.2f}")
+                log(f"   VH: min={np.min(vh_db_clipped):.2f}, max={np.max(vv_db_clipped):.2f}, mean={np.mean(vh_db_clipped):.2f}")
+                
+                # Calcular ratio VV/VH en dB (diferencia en log scale)
+                vv_vh_ratio_db = vv_db_clipped - vh_db_clipped
+                vv_vh_ratio_db = np.clip(vv_vh_ratio_db, -20, 20)  # Ratio típico: -20 a 20 dB
             
-            # Clamp stats también
-            vv_mean_val = float(np.nan_to_num(np.nanmean(vv), nan=-20.0, posinf=100.0, neginf=-100.0))
-            vh_mean_val = float(np.nan_to_num(np.nanmean(vh), nan=-25.0, posinf=100.0, neginf=-100.0))
-            ratio_mean_val = float(np.nan_to_num(np.nanmean(vv_vh_ratio), nan=1.0, posinf=9999, neginf=-9999))
-            std_val = float(np.nan_to_num(np.nanstd(vv), nan=0.0, posinf=100.0, neginf=0.0))
+            # Calcular estadísticas finales
+            vv_mean_val = float(np.mean(vv_db_clipped))
+            vh_mean_val = float(np.mean(vh_db_clipped))
+            ratio_mean_val = float(np.mean(vv_vh_ratio_db))
+            std_val = float(np.std(vv_db_clipped))
             
             indices = {
                 'vv_mean': vv_mean_val,
@@ -625,7 +664,7 @@ class PlanetaryComputerConnector(SatelliteConnector):
                 'backscatter_std': std_val
             }
             
-            log(f"[SAR] Indices calculados: VV={indices['vv_mean']:.2f} dB")
+            log(f"[SAR] Indices calculados (dB): VV={indices['vv_mean']:.2f} dB, VH={indices['vh_mean']:.2f} dB, ratio={indices['vv_vh_ratio']:.2f} dB")
             
             # Detectar anomalías en backscatter
             anomaly_score, anomaly_confidence = self.detect_anomaly(vv)
