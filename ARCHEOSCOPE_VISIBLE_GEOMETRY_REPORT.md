@@ -28,18 +28,21 @@ These regions represent the true "Nazca Level" slates of Earth:
 - **Target:** `25.85°N, 39.65°E`
 - **Verdict:** **TYPE C - OBVIOUS FROM SPACE**
 - **Architecture:** The "Works of the Old Men" (Wheels/Kites) in lava stone. Extreme contrast.
+![Harrat Khaybar Wheels](assets/harrat_khaybar_wheels.png)
 - **DB UUID:** `030ea49b-a421-42d0-82e4-bcf04be2f76f`
 
 ### 🇲🇳 MONGOLIA: GOBI / ALTAI (97.9%)
 - **Target:** `47.30°N, 90.80°E`
 - **Verdict:** **TYPE C - OBVIOUS FROM SPACE**
 - **Architecture:** Massive rectangular enclosures and kilometric linear alignments in the high steppe.
+![Gobi Altai Enclosures](assets/gobi_altai_enclosures.png)
 - **DB UUID:** `9110f76d-8d0e-44a6-bf00-c75ff6db9d5f`
 
 ### 🇨🇱 CHILE: ATACAMA PEDREGOSO (97.5%)
 - **Target:** `22.95°S, 68.20°W`
 - **Verdict:** **TYPE C - OBVIOUS FROM SPACE**
 - **Architecture:** Sacred transit routes and giant geoglyphs on stable rocky slopes.
+![Atacama Geoglyphs](assets/atacama_geoglyphs.png)
 - **DB UUID:** `1e85dce6-1b5e-4bcb-8a21-fe9295ed12d6`
 
 ---
