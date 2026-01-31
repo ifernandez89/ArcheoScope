@@ -57,25 +57,24 @@ class SettlementDetector:
     def _get_simulation_data(self):
         """Retorna hotspots hidro/ruido según la región activa"""
         if self.region == "GIZA":
-            # GIZA EXTENDED SYSTEM (Ground Truth Hipotética)
-            hotspots = [
-                (29.95, 30.95), # SITE-A (Western Plateau Edge)
-                (29.40, 30.70), # SITE-B (Fayum Connector)
-                (29.60, 31.35)  # SITE-C (Southern Transit)
-            ]
-            # Hidrología (Nilo, Fayum, Wadis Activos + PALEOWADIS LOCALES)
-            hydro_sources = [
-                (29.95, 31.15), # Nilo/Giza Axis
-                (29.45, 30.60), # Lago Fayum (Borde N)
-                (30.40, 30.50), # Wadi Natrun Axis
-                # PALEOWADIS (Logística del Desierto) - Crítico para Site A/B/C
-                (29.95, 30.95), # Wadi Site A (Local catchment)
-                (29.40, 30.70), # Wadi Site B (Fayum connection)
-                (29.60, 31.35)  # Wadi Site C (Southern drainage)
-            ]
-            # Ajuste de física para Egipto (Más ortogonalidad, Agua crítica)
+            # ... (Lógica de Giza seleccionada)
+            hotspots = [(29.95, 30.95), (29.40, 30.70), (29.60, 31.35)]
+            hydro_sources = [(29.95, 31.15), (29.45, 30.60), (30.40, 30.50), (29.95, 30.95), (29.40, 30.70), (29.60, 31.35)]
             physics = {'hydro_decay': 12, 'noise_decay': 25}
-            
+        elif self.region == "ATACAMA":
+            # ATACAMA INTERIOR (Puna de Atacama / San Pedro System)
+            hotspots = [
+                (-23.00, -68.00), # Target Principal (Cerca de San Pedro / Oasis)
+                (-22.90, -68.20), # Nodo Altiplánico
+                (-23.15, -67.85)  # Paso Pre-Incaico
+            ]
+            hydro_sources = [
+                (-22.91, -68.20), # Oasis de San Pedro / Río Vilama
+                (-23.05, -67.95), # Bofedales de altura
+                (-23.30, -68.10)  # Salar de Atacama (Margen)
+            ]
+            # Física: Muy sensible al ruido (piedra seca), hidrología de oasis puntual
+            physics = {'hydro_decay': 20, 'noise_decay': 30}
         else: # RUB_AL_KHALI (Default)
             hotspots = [
                 (20.50, 51.00), # RAK-STL-01
@@ -131,11 +130,13 @@ class SettlementDetector:
         min_dist = min([np.sqrt((lat - flat)**2 + (lon - flon)**2) for flat, flon in hydro_sources])
         
         if min_dist < 0.02: 
-            # En GIZA, estar en el Paleowadi (seco) es BUENO (Ruta), en RAK (lago) es MALO (Inundación)
+            # En GIZA/ATACAMA, estar en la fuente es crítico
+            if self.region == "ATACAMA":
+                return 0.98 if min_dist < 0.01 else 0.4 # Oasis binario
             return 0.90 if self.region == "GIZA" else 0.2 
             
-        if 0.02 <= min_dist <= 0.10: return 0.95 # BORDE IDEAL AMPIADO (Nilo es ancho)
-        return max(0.1, 1.0 - min_dist * physics['hydro_decay'])
+        if 0.02 <= min_dist <= 0.10: return 0.95 # BORDE IDEAL AMPIADO
+        return max(0.05, 1.0 - min_dist * physics['hydro_decay'])
 
     def detect_settlement(self, lat: float, lon: float) -> SettlementResult:
         
