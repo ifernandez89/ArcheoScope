@@ -1,0 +1,14 @@
+[
+  {
+    "lat": 20.5,
+    "lon": 51.000000000000014,
+    "cross_score": 0.7946867626108408,
+    "interpretation": "NUCLEO DE ASENTAMIENTO DENSO",
+    "details": {
+      "prob_score": 0.8419070931346727,
+      "hydro_score": 0.8115239720718315,
+      "noise_score": 0.6665716826411955,
+      "is_proto_urban": false
+    }
+  }
+]
