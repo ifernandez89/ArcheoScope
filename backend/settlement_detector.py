@@ -73,54 +73,66 @@ class SettlementDetector:
             hotspots = [(40.50, 82.00), (40.35, 82.25), (40.65, 81.80)]
             hydro_sources = [(40.55, 81.95), (40.40, 82.10), (40.70, 81.70)]
             physics = {'hydro_decay': 15, 'noise_decay': 22}
-        elif self.region == "IRAN_CENTRAL":
-            # IRAN CENTRAL (Dasht-e Lut / Dasht-e Kavir)
+        elif self.region == "RAK_VISIBLE":
+            # RUB AL KHALI - VISIBLE MODE (High Contrast / Shadow)
             hotspots = [
-                (30.65, 57.70), # Shahdad Hub (Bronze Age)
-                (30.80, 58.20), # Desert Edge Outpost
-                (31.20, 56.50)  # Internal Basin Node
+                (19.92, 51.05), # RAK-VIS-01: Geoglyph/Kite
+                (20.31, 50.41), # RAK-VIS-02: Lithic Alignments
+                (19.65, 50.88)  # RAK-VIS-03: Elevated Node
             ]
-            hydro_sources = [
-                (30.60, 57.50), # Mountain Run-off / River
-                (30.70, 57.90), # Qanat Line Alpha
-                (31.00, 56.40)  # Terminal Oasis
-            ]
-            # Física: Muy sensible al ruido circular (pozos de Qanat) y ortogonal (Adobe)
-            physics = {'hydro_decay': 14, 'noise_decay': 28}
-        else: # RUB_AL_KHALI (Default)
+            hydro_sources = [] 
+            physics = {'hydro_decay': 0, 'noise_decay': 40} # Máxima sensibilidad a la forma
+        elif self.region == "HARRAT_KHAYBAR":
+            # THE NAZCA OF MIDDLE EAST (Lava Structures)
+            hotspots = [(25.85, 39.65), (25.86, 39.66)]
+            hydro_sources = []
+            physics = {'hydro_decay': 0, 'noise_decay': 45}
+        elif self.region == "TURGAI_STEPPE":
+            # KAZAKHSTAN GIANTS
+            hotspots = [(50.38, 65.27), (50.39, 65.28)]
+            hydro_sources = []
+            physics = {'hydro_decay': 0, 'noise_decay': 45}
+        elif self.region == "ATACAMA_PEDREGOSO":
+            # CHILE - VISIBLE STRUCTURES
+            hotspots = [(-22.95, -68.20), (-22.96, -68.21)]
+            hydro_sources = []
+            physics = {'hydro_decay': 0, 'noise_decay': 42}
+        else: # DEFAULT / RUB_AL_KHALI
             hotspots = [(20.50, 51.00), (20.62, 51.38), (20.18, 50.92), (20.48, 50.55)]
-            hydro_sources = [(20.52, 51.02), (20.64, 51.40), (20.15, 50.90), (20.50, 50.52)]
+            hydro_sources = [(20.52, 51.02), (20.64, 51.40)]
             physics = {'hydro_decay': 8, 'noise_decay': 20}
             
         return hotspots, hydro_sources, physics
 
     def analyze_architectural_noise(self, lat: float, lon: float) -> ArchitecturalSignature:
         """
-        Simula el análisis de ruido arquitectónico (muros, cimientos).
+        Simula el análisis de ruido arquitectónico/geométrico.
         """
         hotspots, _, physics = self._get_simulation_data()
         
         # Calcular distancia al hotspot más cercano
-        min_dist = min([np.sqrt((lat - hlat)**2 + (lon - hlon)**2) for hlat, hlon in hotspots])
+        min_dist = min([np.sqrt((lat - hlat)**2 + (lon - hlon)**2) for hlat, hlon in hotspots]) if hotspots else 1.0
         
         base_density = max(0.0, 1.0 - min_dist * physics['noise_decay']) 
-        if base_density < 0.1: base_density = 0.05
+        if base_density < 0.05: base_density = 0.02
         
         # Variabilidad realista
-        density = base_density * random.uniform(0.6, 1.0)
+        density = base_density * random.uniform(0.8, 1.0)
         
-        # Asentamientos = Alta entropía local + Ángulos rectos ocultos
-        orthogonality = random.uniform(0.1, 0.4) # Natural es bajo
-        if density > 0.6: 
-            # En EGIPTO/IRÁN la ortogonalidad y la planificación son mayores
-            boost = 0.5 if self.region in ["GIZA", "IRAN_CENTRAL"] else 0.3
-            orthogonality += random.uniform(0.2, boost)
-            
+        # Ortogonalidad (Premio a lo humano)
+        ortho_base = 0.1
+        if self.mode == SettlementMode.SURFACE_GEOMETRY_SCAN:
+            # En modo visible, si estamos cerca del hotspot, la geometría es extrema
+            if min_dist < 0.005: 
+                ortho_base = random.uniform(0.75, 0.88) # El nivel "Visible de Nazca"
+            elif min_dist < 0.02:
+                ortho_base = random.uniform(0.50, 0.70)
+        
         return ArchitecturalSignature(
             density_index=density,
-            entropy_score=random.uniform(0.5, 0.9), 
-            orthogonality_ratio=orthogonality,
-            linear_fragment_count=int(density * 50),
+            entropy_score=random.uniform(0.4, 0.7), 
+            orthogonality_ratio=ortho_base,
+            linear_fragment_count=int(density * 100),
             clustering_coefficient=random.uniform(0.7, 0.95)
         )
 
@@ -130,6 +142,10 @@ class SettlementDetector:
         """
         _, hydro_sources, physics = self._get_simulation_data()
         
+        # Manejo de regiones sin fuentes hídricas conocidas
+        if not hydro_sources:
+            return 0.05
+            
         # Distancia a fuente hídrica más cercana
         min_dist = min([np.sqrt((lat - flat)**2 + (lon - flon)**2) for flat, flon in hydro_sources])
         
@@ -195,9 +211,20 @@ class SettlementDetector:
 
         interp = "Ruido Natural"
         if final_score > 0.6: interp = "Posible Ocupación Estacional / Estructura Simple"
-        if is_geoglyph: interp = "🔍 ANOMALÍA GEOMÉTRICA SUPERFICIAL (GEOGLIFO?)"
-        if final_score > 0.8 and not is_geoglyph: interp = "NUCLEO DE ASENTAMIENTO DENSO"
-        if is_proto_urban and not is_geoglyph: interp = "🔥 CANDIDATO PROTO-URBANO / NODO REGIONAL"
+        
+        # Clasificación ArcheoScope A/B/C (Modo Visible)
+        if self.mode == SettlementMode.SURFACE_GEOMETRY_SCAN:
+            if final_score >= 0.92: 
+                interp = "🛰️ TYPE C: OBVIOUS FROM SPACE (Nazca Grade)"
+            elif final_score >= 0.85: 
+                interp = "👁️ TYPE B: HUMAN-CONFIRMABLE (Google Earth Style)"
+            elif final_score >= 0.70: 
+                interp = "🔍 TYPE A: ALGORITHM-VISIBLE (Subtle Shadow/Contrast)"
+            elif is_geoglyph:
+                interp = "🔍 ANOMALÍA GEOMÉTRICA SUPERFICIAL (GEOGLIFO?)"
+        else:
+            if final_score > 0.8: interp = "NUCLEO DE ASENTAMIENTO DENSO"
+            if is_proto_urban: interp = "🔥 CANDIDATO PROTO-URBANO / NODO REGIONAL"
 
         return SettlementResult(
             candidate_id=f"SURF-{int(lat*1000)}-{int(lon*1000)}",
