@@ -1,0 +1,62 @@
+[
+  {
+    "site_code": "SITE-A",
+    "name": "RAK-CORRIDOR EAST",
+    "coords": {
+      "lat": 20.62,
+      "lon": 51.38
+    },
+    "score": 0.7570090873359139,
+    "function": "Corridor / Bottleneck",
+    "metrics": {
+      "core_area_km2": 0.86,
+      "total_area_km2": 4.57,
+      "population": 3920
+    },
+    "chronology": {
+      "period": "Holocene Humid Period (Middle)",
+      "range": "-5500--4000 BC",
+      "confidence": 0.9
+    }
+  },
+  {
+    "site_code": "SITE-B",
+    "name": "PALEOLAKE NODE SOUTH",
+    "coords": {
+      "lat": 20.18,
+      "lon": 50.92
+    },
+    "score": 0.8551802833309006,
+    "function": "Secondary Habitation / Seasonal",
+    "metrics": {
+      "core_area_km2": 0.77,
+      "total_area_km2": 4.24,
+      "population": 3686
+    },
+    "chronology": {
+      "period": "Holocene Humid Period (Middle)",
+      "range": "-5500--4000 BC",
+      "confidence": 0.9
+    }
+  },
+  {
+    "site_code": "SITE-C",
+    "name": "TRANSIT HUB WEST",
+    "coords": {
+      "lat": 20.48,
+      "lon": 50.55
+    },
+    "score": 0.7349119952841638,
+    "function": "Transit Node / Intersection",
+    "metrics": {
+      "core_area_km2": 0.55,
+      "total_area_km2": 3.91,
+      "population": 3516
+    },
+    "chronology": {
+      "period": "Holocene Humid Period (Middle)",
+      "range": "-5500--4000 BC",
+      "confidence": 0.9
+    }
+  }
+]
