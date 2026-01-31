@@ -62,19 +62,24 @@ class SettlementDetector:
             hydro_sources = [(29.95, 31.15), (29.45, 30.60), (30.40, 30.50), (29.95, 30.95), (29.40, 30.70), (29.60, 31.35)]
             physics = {'hydro_decay': 12, 'noise_decay': 25}
         elif self.region == "ATACAMA":
-            # ATACAMA INTERIOR (Puna de Atacama / San Pedro System)
+            # ... (Lógica Atacama seleccionada)
+            hotspots = [(-23.00, -68.00), (-22.90, -68.20), (-23.15, -67.85)]
+            hydro_sources = [(-22.91, -68.20), (-23.05, -67.95), (-23.30, -68.10)]
+            physics = {'hydro_decay': 20, 'noise_decay': 30}
+        elif self.region == "TAKLAMAKAN":
+            # TAKLAMAKAN DESERT (Silk Road / Tarim Basin)
             hotspots = [
-                (-23.00, -68.00), # Target Principal (Cerca de San Pedro / Oasis)
-                (-22.90, -68.20), # Nodo Altiplánico
-                (-23.15, -67.85)  # Paso Pre-Incaico
+                (40.50, 82.00), # Target Principal (Kucha Hinterland)
+                (40.35, 82.25), # Silk Road Outpost
+                (40.65, 81.80)  # Abandoned Irrigation Hub
             ]
             hydro_sources = [
-                (-22.91, -68.20), # Oasis de San Pedro / Río Vilama
-                (-23.05, -67.95), # Bofedales de altura
-                (-23.30, -68.10)  # Salar de Atacama (Margen)
+                (40.55, 81.95), # Ancient Tarim River Branch
+                (40.40, 82.10), # Oasis system
+                (40.70, 81.70)  # Karez (subsurface canals) trace
             ]
-            # Física: Muy sensible al ruido (piedra seca), hidrología de oasis puntual
-            physics = {'hydro_decay': 20, 'noise_decay': 30}
+            # Física: Desierto de arena (SAR penetra dunas). Menos ortogonalidad (barro).
+            physics = {'hydro_decay': 15, 'noise_decay': 22}
         else: # RUB_AL_KHALI (Default)
             hotspots = [
                 (20.50, 51.00), # RAK-STL-01
@@ -133,9 +138,14 @@ class SettlementDetector:
             # En GIZA/ATACAMA, estar en la fuente es crítico
             if self.region == "ATACAMA":
                 return 0.98 if min_dist < 0.01 else 0.4 # Oasis binario
+            if self.region == "TAKLAMAKAN":
+                return 0.75 # Río activo (inundable en primavera)
             return 0.90 if self.region == "GIZA" else 0.2 
             
-        if 0.02 <= min_dist <= 0.10: return 0.95 # BORDE IDEAL AMPIADO
+        if 0.02 <= min_dist <= 0.12: 
+            # Borde ideal amplio para Taklamakan (zona de irrigación)
+            return 0.98 if self.region == "TAKLAMAKAN" else 0.95
+            
         return max(0.05, 1.0 - min_dist * physics['hydro_decay'])
 
     def detect_settlement(self, lat: float, lon: float) -> SettlementResult:
