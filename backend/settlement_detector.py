@@ -49,56 +49,93 @@ class SettlementDetector:
     Filosofía: Buscar "Clusters Feos" y "Ruido Ordenado".
     """
     
-    def __init__(self, mode: SettlementMode = SettlementMode.SETTLEMENT_PROBABILITY):
+    def __init__(self, mode: SettlementMode = SettlementMode.SETTLEMENT_PROBABILITY, region: str = "RUB_AL_KHALI"):
         self.mode = mode
-        print(f"🏘️ SettlementDetector inicializado en modo: {mode.value.upper()}")
+        self.region = region
+        print(f"🏘️ SettlementDetector inicializado | Modo: {mode.value.upper()} | Región: {region}")
+
+    def _get_simulation_data(self):
+        """Retorna hotspots hidro/ruido según la región activa"""
+        if self.region == "GIZA":
+            # GIZA EXTENDED SYSTEM (Ground Truth Hipotética)
+            hotspots = [
+                (29.95, 30.95), # SITE-A (Western Plateau Edge)
+                (29.40, 30.70), # SITE-B (Fayum Connector)
+                (29.60, 31.35)  # SITE-C (Southern Transit)
+            ]
+            # Hidrología (Nilo, Fayum, Wadis Activos + PALEOWADIS LOCALES)
+            hydro_sources = [
+                (29.95, 31.15), # Nilo/Giza Axis
+                (29.45, 30.60), # Lago Fayum (Borde N)
+                (30.40, 30.50), # Wadi Natrun Axis
+                # PALEOWADIS (Logística del Desierto) - Crítico para Site A/B/C
+                (29.95, 30.95), # Wadi Site A (Local catchment)
+                (29.40, 30.70), # Wadi Site B (Fayum connection)
+                (29.60, 31.35)  # Wadi Site C (Southern drainage)
+            ]
+            # Ajuste de física para Egipto (Más ortogonalidad, Agua crítica)
+            physics = {'hydro_decay': 12, 'noise_decay': 25}
+            
+        else: # RUB_AL_KHALI (Default)
+            hotspots = [
+                (20.50, 51.00), # RAK-STL-01
+                (20.62, 51.38), # SITE A
+                (20.18, 50.92), # SITE B
+                (20.48, 50.55)  # SITE C
+            ]
+            hydro_sources = [
+                (20.52, 51.02), (20.64, 51.40), 
+                (20.15, 50.90), (20.50, 50.52)
+            ]
+            physics = {'hydro_decay': 8, 'noise_decay': 20}
+            
+        return hotspots, hydro_sources, physics
 
     def analyze_architectural_noise(self, lat: float, lon: float) -> ArchitecturalSignature:
         """
         Simula el análisis de ruido arquitectónico (muros, cimientos).
-        En producción: Análisis de textura GLCM + detección de esquinas (Harris).
         """
-        # SIMULACIÓN DE DETECCIÓN DE "RUIDO HUMANO"
-        # Basado en la lat/lon para consistencia con el cluster anterior
+        hotspots, _, physics = self._get_simulation_data()
         
-        # Hipótesis: Cerca del cluster de geoglifos (20.5, 51.0), hay más ruido
-        dist_to_cluster = np.sqrt((lat - 20.5)**2 + (lon - 51.0)**2)
+        # Calcular distancia al hotspot más cercano
+        min_dist = min([np.sqrt((lat - hlat)**2 + (lon - hlon)**2) for hlat, hlon in hotspots])
         
-        base_density = max(0.0, 1.0 - dist_to_cluster * 10) # Cae rápido al alejarse
+        base_density = max(0.0, 1.0 - min_dist * physics['noise_decay']) 
+        if base_density < 0.1: base_density = 0.05
         
         # Variabilidad realista
         density = base_density * random.uniform(0.6, 1.0)
-        if density < 0.2: density = 0.05 # Ruido de fondo natural
         
         # Asentamientos = Alta entropía local + Ángulos rectos ocultos
         orthogonality = random.uniform(0.1, 0.4) # Natural es bajo
         if density > 0.6: 
-            orthogonality += random.uniform(0.2, 0.4) # Sube en asentamientos
+            # En EGIPTO la ortogonalidad es mayor (arquitectura faraónica/civil más rígida)
+            boost = 0.5 if self.region == "GIZA" else 0.3
+            orthogonality += random.uniform(0.2, boost)
             
         return ArchitecturalSignature(
             density_index=density,
-            entropy_score=random.uniform(0.5, 0.9), # Asentamientos son caóticos
+            entropy_score=random.uniform(0.5, 0.9), 
             orthogonality_ratio=orthogonality,
             linear_fragment_count=int(density * 50),
-            clustering_coefficient=random.uniform(0.7, 0.95) # Muy agrupado
+            clustering_coefficient=random.uniform(0.7, 0.95)
         )
 
     def analyze_hydro_strategic(self, lat: float, lon: float) -> float:
         """
-        Analiza valor estratégico del agua (Borde seguro vs Centro inundable).
+        Analiza valor estratégico del agua.
         """
-        # Simulación: El "borde" óptimo está ligeramente desplazado del centro del lago
-        # Asumimos lago fósil en 20.52, 51.02
-        dist_to_paleolake = np.sqrt((lat - 20.52)**2 + (lon - 51.02)**2)
+        _, hydro_sources, physics = self._get_simulation_data()
         
-        # Perfil tipo "Donut": 
-        # Centro (0km) = Malo (inundable)
-        # Borde (2-5km) = Óptimo (acceso + seguridad)
-        # Lejos (>10km) = Malo (sin agua)
+        # Distancia a fuente hídrica más cercana
+        min_dist = min([np.sqrt((lat - flat)**2 + (lon - flon)**2) for flat, flon in hydro_sources])
         
-        if dist_to_paleolake < 0.02: return 0.2 # Muy cerca/dentro
-        if 0.02 <= dist_to_paleolake <= 0.06: return 0.9 # BORDE IDEAL
-        return max(0.1, 1.0 - dist_to_paleolake * 10)
+        if min_dist < 0.02: 
+            # En GIZA, estar en el Paleowadi (seco) es BUENO (Ruta), en RAK (lago) es MALO (Inundación)
+            return 0.90 if self.region == "GIZA" else 0.2 
+            
+        if 0.02 <= min_dist <= 0.10: return 0.95 # BORDE IDEAL AMPIADO (Nilo es ancho)
+        return max(0.1, 1.0 - min_dist * physics['hydro_decay'])
 
     def detect_settlement(self, lat: float, lon: float) -> SettlementResult:
         
