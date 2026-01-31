@@ -609,13 +609,20 @@ class PlanetaryComputerConnector(SatelliteConnector):
             # Calcular ratio VV/VH (indicador de rugosidad/compactación)
             with np.errstate(divide='ignore', invalid='ignore'):
                 vv_vh_ratio = vv / vh
-                vv_vh_ratio = np.nan_to_num(vv_vh_ratio, nan=1.0)
+                # FIX: Clamp de valores infinitos antes de usar/cachear
+                vv_vh_ratio = np.nan_to_num(vv_vh_ratio, nan=1.0, posinf=9999, neginf=-9999)
+            
+            # Clamp stats también
+            vv_mean_val = float(np.nan_to_num(np.nanmean(vv), nan=-20.0, posinf=100.0, neginf=-100.0))
+            vh_mean_val = float(np.nan_to_num(np.nanmean(vh), nan=-25.0, posinf=100.0, neginf=-100.0))
+            ratio_mean_val = float(np.nan_to_num(np.nanmean(vv_vh_ratio), nan=1.0, posinf=9999, neginf=-9999))
+            std_val = float(np.nan_to_num(np.nanstd(vv), nan=0.0, posinf=100.0, neginf=0.0))
             
             indices = {
-                'vv_mean': float(np.nanmean(vv)),
-                'vh_mean': float(np.nanmean(vh)),
-                'vv_vh_ratio': float(np.nanmean(vv_vh_ratio)),
-                'backscatter_std': float(np.nanstd(vv))
+                'vv_mean': vv_mean_val,
+                'vh_mean': vh_mean_val,
+                'vv_vh_ratio': ratio_mean_val,
+                'backscatter_std': std_val
             }
             
             log(f"[SAR] Indices calculados: VV={indices['vv_mean']:.2f} dB")
@@ -639,36 +646,39 @@ class PlanetaryComputerConnector(SatelliteConnector):
             log(f"[SAR] Procesamiento completado en {processing_time:.2f}s")
             log(f"[SAR] EXITO TOTAL - Datos SAR obtenidos correctamente (confidence={final_confidence:.2f})")
             
-            # GUARDAR EN CACHE para evitar re-descargas
-            try:
-                from cache.sar_cache import get_sar_cache
-                sar_cache = get_sar_cache()
-                
-                # Obtener scene_id del item
-                scene_id = best_item.id if hasattr(best_item, 'id') else None
-                
-                saved = sar_cache.set(
-                    lat_min=lat_min,
-                    lat_max=lat_max,
-                    lon_min=lon_min,
-                    lon_max=lon_max,
-                    vv_mean=indices['vv_mean'],
-                    vh_mean=indices['vh_mean'],
-                    vv_vh_ratio=indices['vv_vh_ratio'],
-                    backscatter_std=indices['backscatter_std'],
-                    source='sentinel-1-rtc',
-                    acquisition_date=acquisition_date,
-                    resolution_m=resolution_m,
-                    scene_id=scene_id
-                )
-                
-                if saved:
-                    log(f"[SAR] Datos guardados en cache")
-                else:
-                    log(f"[SAR] No se pudo guardar en cache (no crítico)")
+            # GUARDAR EN CACHE - Solo si calidad es buena (no degradada)
+            if final_confidence >= 0.8:
+                try:
+                    from cache.sar_cache import get_sar_cache
+                    sar_cache = get_sar_cache()
                     
-            except Exception as e:
-                log(f"[SAR] Error guardando cache: {e} (no crítico)")
+                    # Obtener scene_id del item
+                    scene_id = best_item.id if hasattr(best_item, 'id') else None
+                    
+                    saved = sar_cache.set(
+                        lat_min=lat_min,
+                        lat_max=lat_max,
+                        lon_min=lon_min,
+                        lon_max=lon_max,
+                        vv_mean=indices['vv_mean'],
+                        vh_mean=indices['vh_mean'],
+                        vv_vh_ratio=indices['vv_vh_ratio'],
+                        backscatter_std=indices['backscatter_std'],
+                        source='sentinel-1-rtc',
+                        acquisition_date=acquisition_date,
+                        resolution_m=resolution_m,
+                        scene_id=scene_id
+                    )
+                    
+                    if saved:
+                        log(f"[SAR] Datos guardados en cache")
+                    else:
+                        log(f"[SAR] No se pudo guardar en cache (no crítico)")
+                        
+                except Exception as e:
+                    log(f"[SAR] Error guardando cache: {e} (no crítico)")
+            else:
+                log(f"[SAR] SKIP CACHE: Calidad degradada (confidence {final_confidence:.2f} < 0.8)")
             
             if log_file:
                 log_file.close()
@@ -760,11 +770,21 @@ class PlanetaryComputerConnector(SatelliteConnector):
             
             logger.info(f"Using Landsat scene from {acquisition_date.date()}")
             
-            # Cargar banda térmica (lwir11) usando rasterio (sin stackstac)
-            lwir_asset = best_item.assets.get('lwir11')
+            # Cargar banda térmica (B10/ST_B10/lwir11)
+            # FIX: Landsat 9 C2 usa ST_B10 o B10, no siempre lwir11
+            thermal_asset_names = ["ST_B10", "B10", "lwir11", "thermal"]
+            lwir_asset = None
+            asset_name_found = None
+            
+            for name in thermal_asset_names:
+                if name in best_item.assets:
+                    lwir_asset = best_item.assets[name]
+                    asset_name_found = name
+                    logger.info(f"✅ Found thermal asset: {name}")
+                    break
             
             if not lwir_asset:
-                logger.error("Asset lwir11 no encontrado")
+                logger.error(f"Asset térmico no encontrado. Buscado: {thermal_asset_names}. Disponibles: {list(best_item.assets.keys())}")
                 return None
             
             # Firmar URL

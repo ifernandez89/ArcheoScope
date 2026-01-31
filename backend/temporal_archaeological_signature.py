@@ -600,6 +600,21 @@ class TemporalArchaeologicalSignatureEngine:
             stress_frequency * weights['stress_frequency']
         )
         
+        # 🥈 PRIORIDAD MEDIA: Boost de confianza si senales son muy fuertes
+        if sar_coherence > 0.95:
+             logger.info(f"   🚀 SAR Coherence excepcional ({sar_coherence:.3f}) - Boost +0.15")
+             tas_score += 0.15
+             
+        if thermal_stability > 0.9:
+             logger.info(f"   🚀 Estabilidad térmica excepcional ({thermal_stability:.3f}) - Boost +0.10")
+             tas_score += 0.10
+             
+        # EXPERIMENTAL: Marcar zonas "no erosionadas + térmicamente estables"
+        # Si coherencia SAR > 0.8 (suelo estable) Y estabilidad térmica > 0.8 (masa constante)
+        if sar_coherence > 0.8 and thermal_stability > 0.8:
+            logger.info("   💎 DETECCIÓN EXPERIMENTAL: Zona Preservada (Estable+Coherente)")
+            tas_score += 0.10
+        
         return min(1.0, tas_score)
     
     def _interpret_tas(self, tas_score: float, ndvi_persistence: float,
