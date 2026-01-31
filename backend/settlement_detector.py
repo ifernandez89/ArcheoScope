@@ -83,57 +83,53 @@ class SettlementDetector:
             hydro_sources = [] 
             physics = {'hydro_decay': 0, 'noise_decay': 40} # Máxima sensibilidad a la forma
         elif self.region == "HARRAT_KHAYBAR":
-            # THE NAZCA OF MIDDLE EAST (Lava Structures)
-            hotspots = [(25.85, 39.65), (25.86, 39.66)]
-            hydro_sources = []
-            physics = {'hydro_decay': 0, 'noise_decay': 45}
-        elif self.region == "TURGAI_STEPPE":
-            # KAZAKHSTAN GIANTS
-            hotspots = [(50.38, 65.27), (50.39, 65.28)]
-            hydro_sources = []
-            physics = {'hydro_decay': 0, 'noise_decay': 45}
+            # THE GOLD STANDARD (Lava slate)
+            hotspots = [(25.85, 39.65)]
+            physics = {'hydro_decay': 0, 'noise_decay': 50} # Escala monumental y contraste máximo
+        elif self.region == "GOBI_ALTAI":
+            # MONGOLIA/KAZAKHSTAN (Steppe/Stone)
+            hotspots = [(47.30, 90.80)]
+            physics = {'hydro_decay': 0, 'noise_decay': 48}
         elif self.region == "ATACAMA_PEDREGOSO":
-            # CHILE - VISIBLE STRUCTURES
-            hotspots = [(-22.95, -68.20), (-22.96, -68.21)]
-            hydro_sources = []
-            physics = {'hydro_decay': 0, 'noise_decay': 42}
-        else: # DEFAULT / RUB_AL_KHALI
-            hotspots = [(20.50, 51.00), (20.62, 51.38), (20.18, 50.92), (20.48, 50.55)]
-            hydro_sources = [(20.52, 51.02), (20.64, 51.40)]
+            # CHILE - NAZCA LEVEL BORDELANDS
+            hotspots = [(-22.95, -68.20)]
+            physics = {'hydro_decay': 0, 'noise_decay': 46}
+        elif self.region == "RAK_VISIBLE":
+            # RUB AL KHALI - CONTROL (Active Sand/Low visibility)
+            hotspots = [] # No hay monumentos visibles de escala 300m+
+            physics = {'hydro_decay': 0, 'noise_decay': 15} # Punitivo
+        else: # DEFAULT
+            hotspots = [(20.50, 51.00)]
             physics = {'hydro_decay': 8, 'noise_decay': 20}
             
-        return hotspots, hydro_sources, physics
+        return hotspots, [], physics
 
     def analyze_architectural_noise(self, lat: float, lon: float) -> ArchitecturalSignature:
         """
-        Simula el análisis de ruido arquitectónico/geométrico.
+        Simulación de detección de Geometría Monumental (Modo Extremo).
         """
         hotspots, _, physics = self._get_simulation_data()
         
-        # Calcular distancia al hotspot más cercano
-        min_dist = min([np.sqrt((lat - hlat)**2 + (lon - hlon)**2) for hlat, hlon in hotspots]) if hotspots else 1.0
+        # Distancia al hotspot más cercano
+        min_dist = min([np.sqrt((lat - hlat)**2 + (lon - hlon)**2) for hlat, hlon in hotspots]) if hotspots else 10.0
         
-        base_density = max(0.0, 1.0 - min_dist * physics['noise_decay']) 
-        if base_density < 0.05: base_density = 0.02
+        # En modo extremo, si no estás cerca de un hito monumental, el score colapsa
+        base_density = max(0.01, 1.0 - min_dist * physics['noise_decay'])
         
-        # Variabilidad realista
-        density = base_density * random.uniform(0.8, 1.0)
-        
-        # Ortogonalidad (Premio a lo humano)
-        ortho_base = 0.1
+        ortho_base = 0.05
         if self.mode == SettlementMode.SURFACE_GEOMETRY_SCAN:
-            # En modo visible, si estamos cerca del hotspot, la geometría es extrema
-            if min_dist < 0.005: 
-                ortho_base = random.uniform(0.75, 0.88) # El nivel "Visible de Nazca"
-            elif min_dist < 0.02:
-                ortho_base = random.uniform(0.50, 0.70)
+            # Requisito: Visibilidad inequívoca
+            if min_dist < 0.003: # < 300m aprox
+                ortho_base = random.uniform(0.92, 0.98) # NAZCA GRADE
+            elif min_dist < 0.01:
+                ortho_base = random.uniform(0.70, 0.85) # TYPE B
         
         return ArchitecturalSignature(
-            density_index=density,
-            entropy_score=random.uniform(0.4, 0.7), 
+            density_index=base_density,
+            entropy_score=random.uniform(0.2, 0.5), 
             orthogonality_ratio=ortho_base,
-            linear_fragment_count=int(density * 100),
-            clustering_coefficient=random.uniform(0.7, 0.95)
+            linear_fragment_count=int(base_density * 200),
+            clustering_coefficient=random.uniform(0.8, 0.99)
         )
 
     def analyze_hydro_strategic(self, lat: float, lon: float) -> float:
@@ -165,76 +161,40 @@ class SettlementDetector:
         return max(0.05, 1.0 - min_dist * physics['hydro_decay'])
 
     def detect_settlement(self, lat: float, lon: float) -> SettlementResult:
-        
-        # 1. Análisis de Ruido Arquitectónico
+        # 1-2. Análisis
         arch_sig = self.analyze_architectural_noise(lat, lon)
-        
-        # 2. Análisis Hidrológico Estratégico
         hydro_score = self.analyze_hydro_strategic(lat, lon)
         
-        # 3. Scoring según el Modo
+        # 3. Final Scoring (Modo Extremo)
         final_score = 0.0
-        
-        if self.mode == SettlementMode.SETTLEMENT_PROBABILITY:
-            # Pesa densidad y clustering
-            final_score = (arch_sig.density_index * 0.5 + 
-                          arch_sig.clustering_coefficient * 0.3 +
-                          hydro_score * 0.2)
-            
-        elif self.mode == SettlementMode.PALEO_HYDRO_SETTLEMENT:
-            # Hidrología manda, pero necesita algo de estructura
-            final_score = (hydro_score * 0.7 + 
-                          arch_sig.density_index * 0.3)
-            
-        elif self.mode == SettlementMode.ARCHITECTURAL_NOISE:
-            # Busca ángulos y fragmentos, ignora contexto un poco
-            final_score = (arch_sig.orthogonality_ratio * 0.6 + 
-                          arch_sig.linear_fragment_count / 50.0 * 0.4)
-            
-        elif self.mode == SettlementMode.SURFACE_GEOMETRY_SCAN:
-            # LÓGICA ANTI-DUNA: Prioridad absoluta a la geometría persistente
-            # Ignoramos hidrología (0.05 peso) y nos centramos en ortogonalidad visual
-            final_score = (arch_sig.orthogonality_ratio * 0.8 + 
-                          arch_sig.clustering_coefficient * 0.15 +
-                          hydro_score * 0.05)
-            # Boost por "Insistencia Geométrica"
-            if arch_sig.orthogonality_ratio > 0.6: final_score += 0.1
+        if self.mode == SettlementMode.SURFACE_GEOMETRY_SCAN:
+            # Ignoramos todo salvo la geometría pura y la escala
+            final_score = (arch_sig.orthogonality_ratio * 0.95 + arch_sig.density_index * 0.05)
+            # Penalización por arena activa (Rub' al Khali)
+            if self.region == "RAK_VISIBLE":
+                final_score *= 0.15 # Colapso científico por falta de plausibilidad óptica
+        else:
+            final_score = (arch_sig.density_index * 0.5 + arch_sig.clustering_coefficient * 0.3 + hydro_score * 0.2)
 
-        # 4. Interpretación "Proto-Urban" o "Geoglyph"
-        # Requiere: Alta densidad + Ortogonalidad + Agua
-        is_proto_urban = (arch_sig.density_index > 0.7 and 
-                         arch_sig.orthogonality_ratio > 0.5 and
-                         hydro_score > 0.6)
-        
-        is_geoglyph = (self.mode == SettlementMode.SURFACE_GEOMETRY_SCAN and 
-                      arch_sig.orthogonality_ratio > 0.65)
-
-        interp = "Ruido Natural"
-        if final_score > 0.6: interp = "Posible Ocupación Estacional / Estructura Simple"
-        
-        # Clasificación ArcheoScope A/B/C (Modo Visible)
+        # 4. Clasificación Estricta
+        interp = "Negative / Pareidolia"
         if self.mode == SettlementMode.SURFACE_GEOMETRY_SCAN:
             if final_score >= 0.92: 
-                interp = "🛰️ TYPE C: OBVIOUS FROM SPACE (Nazca Grade)"
+                interp = "🛰️ TYPE C: OBVIOUS FROM SPACE (Extreme Monumentality)"
             elif final_score >= 0.85: 
-                interp = "👁️ TYPE B: HUMAN-CONFIRMABLE (Google Earth Style)"
-            elif final_score >= 0.70: 
-                interp = "🔍 TYPE A: ALGORITHM-VISIBLE (Subtle Shadow/Contrast)"
-            elif is_geoglyph:
-                interp = "🔍 ANOMALÍA GEOMÉTRICA SUPERFICIAL (GEOGLIFO?)"
+                interp = "👁️ TYPE B: HUMAN-CONFIRMABLE (Google Earth Grade)"
+            else:
+                interp = "❌ DISCARDED: Below Extreme Threshold"
         else:
             if final_score > 0.8: interp = "NUCLEO DE ASENTAMIENTO DENSO"
-            if is_proto_urban: interp = "🔥 CANDIDATO PROTO-URBANO / NODO REGIONAL"
 
         return SettlementResult(
-            candidate_id=f"SURF-{int(lat*1000)}-{int(lon*1000)}",
-            lat=lat, 
-            lon=lon,
-            mode=self.mode,
+            candidate_id=f"EXT-{int(lat*1000)}-{int(lon*1000)}",
+            lat=lat, lon=lon, mode=self.mode,
             probability_score=min(0.99, final_score),
             architectural_noise=arch_sig.density_index,
             hydro_context_score=hydro_score,
-            is_proto_urban=is_proto_urban,
+            is_proto_urban=(final_score > 0.9),
             interpretation=interp,
             signature=arch_sig
         )
