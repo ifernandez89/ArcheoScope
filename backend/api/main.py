@@ -468,6 +468,27 @@ except Exception as e:
     traceback.print_exc()
 
 # ============================================================================
+# INCLUIR ROUTER GEOGLYPH DETECTION (NUEVO)
+# ============================================================================
+
+try:
+    from api.geoglyph_endpoint import router as geoglyph_router
+    
+    app.include_router(
+        geoglyph_router,
+        tags=["Geoglyph Detection"]
+    )
+    logger.info("✅ Router Geoglyph Detection incluido en /geoglyph")
+except ImportError as e:
+    logger.error(f"❌ No se pudo cargar router Geoglyph: {e}")
+    import traceback
+    traceback.print_exc()
+except Exception as e:
+    logger.error(f"❌ Error inicializando Geoglyph Detection: {e}")
+    import traceback
+    traceback.print_exc()
+
+# ============================================================================
 # SERVIR ARCHIVOS ESTÁTICOS (ANOMALISM)
 # ============================================================================
 

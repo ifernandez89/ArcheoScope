@@ -1,0 +1,16 @@
+{
+  "zona": "Límite Arabia-Jordania",
+  "coordenadas": {
+    "lat": 29.5,
+    "lon": 37.5
+  },
+  "tipo": "unknown",
+  "cultural_score": 0.753,
+  "paper_level": false,
+  "orientacion": {
+    "azimuth": 315.0,
+    "eje_mayor_m": 150.0,
+    "aspect_ratio": 3.0
+  },
+  "timestamp": "20260131_133644"
+}
