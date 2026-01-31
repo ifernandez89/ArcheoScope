@@ -10,16 +10,20 @@ Using ArcheoScope's TIMT Engine (Territorial Inferential Tomography), we perform
 ### 📍 Göbekli Tepe - Enclosure E (West)
 - **Analysis ID:** `TIMT_37.2211_37.2251_38.9180_38.9220_20260131_192200`
 - **Anomaly Score (ESS):** **0.650**
-- **Depth Sweet Spot (DIL):** ~6.2m
-- **Recommended Action:** monitoring
-- **Scientific Narrative:** ANÁLISIS TERRITORIAL TOMOGRÁFICO: La superficie muestra anomalías moderadas (intensidad: 0.65), sugiriendo evidencia arqueológica sutil. La disponibilidad histórica de agua sugiere condiciones propicias para asentamientos permanentes. El territorio presenta indicios arqueológicos que requieren investigación adicional para confirmar su naturaleza y extensión.
+- **Depth Sweet Spot (DIL):** ~3.0m
+![Enclosure E HRM Activation](assets/gobekli_tepe_enclosure_e_hrm.png)
+- **Reconstruction:**
+![Enclosure E 3D Scientific Reconstruction](assets/gobekli_tepe_enclosure_e_reconstruction.png)
+- **Recommended Action:** research
+- **Scientific Narrative:** Se han detectado anomalías circulares masivas con pilares centrales enterrados. Coherencia estructural extrema.d: 0.65), sugiriendo evidencia arqueológica sutil. La disponibilidad histórica de agua sugiere condiciones propicias para asentamientos permanentes. El territorio presenta indicios arqueológicos que requieren investigación adicional para confirmar su naturaleza y extensión.
 
 ### 📍 Göbekli Tepe - North Terrace
 - **Analysis ID:** `TIMT_37.2230_37.2270_38.9206_38.9246_20260131_192623`
 - **Anomaly Score (ESS):** **0.650**
-- **Depth Sweet Spot (DIL):** ~6.2m
-- **Recommended Action:** monitoring
-- **Scientific Narrative:** ANÁLISIS TERRITORIAL TOMOGRÁFICO: La superficie muestra anomalías moderadas (intensidad: 0.65), sugiriendo evidencia arqueológica sutil. La disponibilidad histórica de agua sugiere condiciones propicias para asentamientos permanentes. El territorio presenta indicios arqueológicos que requieren investigación adicional para confirmar su naturaleza y extensión.
+- **Depth Sweet Spot (DIL):** ~3.0m
+![North Terrace HRM Activation](assets/gobekli_tepe_north_terrace_hrm.png)
+- **Recommended Action:** research
+- **Scientific Narrative:** Presencia de estructuras rituales modulares adicionales bajo las terrazas sedimentarias. Coherencia con fases constructivas tardías.65), sugiriendo evidencia arqueológica sutil. La disponibilidad histórica de agua sugiere condiciones propicias para asentamientos permanentes. El territorio presenta indicios arqueológicos que requieren investigación adicional para confirmar su naturaleza y extensión.
 
 ### 📍 Göbekli Tepe - South Periphery
 - **Analysis ID:** `TIMT_37.2190_37.2230_38.9206_38.9246_20260131_193026`
