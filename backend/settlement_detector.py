@@ -42,6 +42,7 @@ class SettlementResult:
     hydro_context_score: float     # Calidad del emplazamiento hídrico
     is_proto_urban: bool           # ¿Cumple criterios de complejidad?
     interpretation: str
+    signature: Optional[ArchitecturalSignature] = None # Firma detallada
 
 class SettlementDetector:
     """
@@ -67,30 +68,27 @@ class SettlementDetector:
             hydro_sources = [(-22.91, -68.20), (-23.05, -67.95), (-23.30, -68.10)]
             physics = {'hydro_decay': 20, 'noise_decay': 30}
         elif self.region == "TAKLAMAKAN":
-            # TAKLAMAKAN DESERT (Silk Road / Tarim Basin)
-            hotspots = [
-                (40.50, 82.00), # Target Principal (Kucha Hinterland)
-                (40.35, 82.25), # Silk Road Outpost
-                (40.65, 81.80)  # Abandoned Irrigation Hub
-            ]
-            hydro_sources = [
-                (40.55, 81.95), # Ancient Tarim River Branch
-                (40.40, 82.10), # Oasis system
-                (40.70, 81.70)  # Karez (subsurface canals) trace
-            ]
-            # Física: Desierto de arena (SAR penetra dunas). Menos ortogonalidad (barro).
+            # ... (Lógica Taklamakan seleccionada)
+            hotspots = [(40.50, 82.00), (40.35, 82.25), (40.65, 81.80)]
+            hydro_sources = [(40.55, 81.95), (40.40, 82.10), (40.70, 81.70)]
             physics = {'hydro_decay': 15, 'noise_decay': 22}
-        else: # RUB_AL_KHALI (Default)
+        elif self.region == "IRAN_CENTRAL":
+            # IRAN CENTRAL (Dasht-e Lut / Dasht-e Kavir)
             hotspots = [
-                (20.50, 51.00), # RAK-STL-01
-                (20.62, 51.38), # SITE A
-                (20.18, 50.92), # SITE B
-                (20.48, 50.55)  # SITE C
+                (30.65, 57.70), # Shahdad Hub (Bronze Age)
+                (30.80, 58.20), # Desert Edge Outpost
+                (31.20, 56.50)  # Internal Basin Node
             ]
             hydro_sources = [
-                (20.52, 51.02), (20.64, 51.40), 
-                (20.15, 50.90), (20.50, 50.52)
+                (30.60, 57.50), # Mountain Run-off / River
+                (30.70, 57.90), # Qanat Line Alpha
+                (31.00, 56.40)  # Terminal Oasis
             ]
+            # Física: Muy sensible al ruido circular (pozos de Qanat) y ortogonal (Adobe)
+            physics = {'hydro_decay': 14, 'noise_decay': 28}
+        else: # RUB_AL_KHALI (Default)
+            hotspots = [(20.50, 51.00), (20.62, 51.38), (20.18, 50.92), (20.48, 50.55)]
+            hydro_sources = [(20.52, 51.02), (20.64, 51.40), (20.15, 50.90), (20.50, 50.52)]
             physics = {'hydro_decay': 8, 'noise_decay': 20}
             
         return hotspots, hydro_sources, physics
@@ -113,8 +111,8 @@ class SettlementDetector:
         # Asentamientos = Alta entropía local + Ángulos rectos ocultos
         orthogonality = random.uniform(0.1, 0.4) # Natural es bajo
         if density > 0.6: 
-            # En EGIPTO la ortogonalidad es mayor (arquitectura faraónica/civil más rígida)
-            boost = 0.5 if self.region == "GIZA" else 0.3
+            # En EGIPTO/IRÁN la ortogonalidad y la planificación son mayores
+            boost = 0.5 if self.region in ["GIZA", "IRAN_CENTRAL"] else 0.3
             orthogonality += random.uniform(0.2, boost)
             
         return ArchitecturalSignature(
@@ -135,16 +133,17 @@ class SettlementDetector:
         min_dist = min([np.sqrt((lat - flat)**2 + (lon - flon)**2) for flat, flon in hydro_sources])
         
         if min_dist < 0.02: 
-            # En GIZA/ATACAMA, estar en la fuente es crítico
+            # En GIZA/ATACAMA/IRAN, estar en la fuente es crítico (Oasis/Qanat)
             if self.region == "ATACAMA":
                 return 0.98 if min_dist < 0.01 else 0.4 # Oasis binario
             if self.region == "TAKLAMAKAN":
-                return 0.75 # Río activo (inundable en primavera)
+                return 0.75 # Río activo (inundable)
+            if self.region == "IRAN_CENTRAL":
+                return 0.95 # Acceso directo a Qanat/Río
             return 0.90 if self.region == "GIZA" else 0.2 
             
         if 0.02 <= min_dist <= 0.12: 
-            # Borde ideal amplio para Taklamakan (zona de irrigación)
-            return 0.98 if self.region == "TAKLAMAKAN" else 0.95
+            return 0.98 if self.region in ["TAKLAMAKAN", "IRAN_CENTRAL"] else 0.95
             
         return max(0.05, 1.0 - min_dist * physics['hydro_decay'])
 
@@ -195,5 +194,6 @@ class SettlementDetector:
             architectural_noise=arch_sig.density_index,
             hydro_context_score=hydro_score,
             is_proto_urban=is_proto_urban,
-            interpretation=interp
+            interpretation=interp,
+            signature=arch_sig
         )
