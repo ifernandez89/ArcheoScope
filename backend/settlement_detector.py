@@ -21,6 +21,7 @@ class SettlementMode(Enum):
     SETTLEMENT_PROBABILITY = "settlement_probability" # Densidad, micro-anomalías
     PALEO_HYDRO_SETTLEMENT = "paleo_hydro_settlement" # Bordes de cuencas, confluencias
     ARCHITECTURAL_NOISE = "architectural_noise"       # Ángulos humanos, muros colapsados
+    SURFACE_GEOMETRY_SCAN = "surface_geometry_scan"   # Geoglifos, alineaciones superficiales
 
 @dataclass
 class ArchitecturalSignature:
@@ -173,24 +174,37 @@ class SettlementDetector:
             # Busca ángulos y fragmentos, ignora contexto un poco
             final_score = (arch_sig.orthogonality_ratio * 0.6 + 
                           arch_sig.linear_fragment_count / 50.0 * 0.4)
+            
+        elif self.mode == SettlementMode.SURFACE_GEOMETRY_SCAN:
+            # LÓGICA ANTI-DUNA: Prioridad absoluta a la geometría persistente
+            # Ignoramos hidrología (0.05 peso) y nos centramos en ortogonalidad visual
+            final_score = (arch_sig.orthogonality_ratio * 0.8 + 
+                          arch_sig.clustering_coefficient * 0.15 +
+                          hydro_score * 0.05)
+            # Boost por "Insistencia Geométrica"
+            if arch_sig.orthogonality_ratio > 0.6: final_score += 0.1
 
-        # 4. Interpretación "Proto-Urban"
+        # 4. Interpretación "Proto-Urban" o "Geoglyph"
         # Requiere: Alta densidad + Ortogonalidad + Agua
         is_proto_urban = (arch_sig.density_index > 0.7 and 
                          arch_sig.orthogonality_ratio > 0.5 and
                          hydro_score > 0.6)
+        
+        is_geoglyph = (self.mode == SettlementMode.SURFACE_GEOMETRY_SCAN and 
+                      arch_sig.orthogonality_ratio > 0.65)
 
         interp = "Ruido Natural"
-        if final_score > 0.6: interp = "Posible Ocupación Estacional"
-        if final_score > 0.8: interp = "NUCLEO DE ASENTAMIENTO DENSO"
-        if is_proto_urban: interp = "🔥 CANDIDATO PROTO-URBANO / NODO REGIONAL"
+        if final_score > 0.6: interp = "Posible Ocupación Estacional / Estructura Simple"
+        if is_geoglyph: interp = "🔍 ANOMALÍA GEOMÉTRICA SUPERFICIAL (GEOGLIFO?)"
+        if final_score > 0.8 and not is_geoglyph: interp = "NUCLEO DE ASENTAMIENTO DENSO"
+        if is_proto_urban and not is_geoglyph: interp = "🔥 CANDIDATO PROTO-URBANO / NODO REGIONAL"
 
         return SettlementResult(
-            candidate_id=f"STL-{int(lat*1000)}-{int(lon*1000)}",
+            candidate_id=f"SURF-{int(lat*1000)}-{int(lon*1000)}",
             lat=lat, 
             lon=lon,
             mode=self.mode,
-            probability_score=final_score,
+            probability_score=min(0.99, final_score),
             architectural_noise=arch_sig.density_index,
             hydro_context_score=hydro_score,
             is_proto_urban=is_proto_urban,
