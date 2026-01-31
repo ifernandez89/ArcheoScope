@@ -58,7 +58,7 @@ Todas las estructuras comparten la misma morfología (triángulo isósceles alar
 Encontrar 6 estructuras en un radio de ~10km es inusual para una zona "marginal". Sugiere un **punto focal** (waterhole, zona de caza estacional, o santuario).
 
 ### C. Implicaciones
-La presencia de este cluster valida la hipótesis de que las culturas del Neolítico/Edad del Bronce penetraron profundamente en el Desierto Central durante los periodos húmedos, dejando infraestructura de piedra duradera que hoy está semi-enterrada por dunas.
+La presencia de este cluster valida la hipótesis de una **explotación recurrente de corredores ecológicos internos durante ventanas climáticas húmedas** (Holoceno Medio). Esto reemplaza el modelo de "vacío absoluto" por uno de ocupación estacional ligada a la paleohidrología activa.
 
 ---
 

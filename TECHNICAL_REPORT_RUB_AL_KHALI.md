@@ -21,7 +21,7 @@ Traditional satellite archaeology relies heavily on visual inspection or simple 
 ## 2. State of the Art
 
 ### Current Landscape
-- **Kennedy & EAMENA:** Groundbreaking work in the Harrats (lava fields) but limited penetration into the deep sand desert.
+- **Kennedy & EAMENA:** Groundbreaking work in the Harrats (lava fields) but limited analysis of internal corridors within the deep sand domain.
 - **Manual Detection:** High accuracy but low scalability. Biased towards accessible margins.
 - **Automated Approaches:** Typically focused on distinct geometries (circles) in high-contrast environments (basalt), failing in sand/gravel transition zones.
 
@@ -71,7 +71,7 @@ Exact coordinates are withheld from the public domain to prevent looting. Data i
 
 ## 7. Conclusion
 
-ArcheoScope v2.0 has successfully identified a high-probability archaeological landscape in the margins of the Rub’ al Khali, a region previously considered devoid of such monumental architecture. The consistency of the "Pendant Type A" morphology suggests a widespread prehistoric tradition adapting to hyper-arid margins.
+ArcheoScope v2.0 has successfully identified a high-probability archaeological landscape in the margins of the Rub’ al Khali. The consistency of the "Pendant Type A" morphology suggests **recurrent exploitation of internal ecological corridors during humid climatic windows**, rather than sporadic deep desert penetration.
 
 ---
 *Authorized by ArcheoScope Automated System*
