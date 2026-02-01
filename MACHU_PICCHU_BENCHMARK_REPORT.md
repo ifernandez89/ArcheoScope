@@ -52,6 +52,10 @@ The following profile represents a lateral slice of the Machu Picchu ridge, disp
 - **Drainage Layer:** The system infers a technical fill layer (4m average) designed for hydraulic management.
 - **Support Walls:** Red indicators mark the inferred positions of subsurface retaining walls validated by topographic discontinuities.
 
+## 🏔️ 3D CONCEPTUAL MODEL (Andean Urbanism)
+This model conceptualizes the entire Machu Picchu ridge, visualizing the terraces (andenes), the urban core, and the invisible subsurface engineering layers validated by TIMT.
+![Machu Picchu 3D Conceptual Map](assets/machu_picchu_3d_conceptual.png)
+
 ---
 
 ## 🧪 SCIENTIFIC VERDICT: VALIDATED
