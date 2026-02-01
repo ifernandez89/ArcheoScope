@@ -1,0 +1,589 @@
+{
+  "mp_agriculture": {
+    "analysis_id": "TIMT_-13.1651_-13.1611_-72.5470_-72.5430_20260131_211509",
+    "status": "success",
+    "territorial_coherence_score": 0.7188333333333333,
+    "scientific_rigor_score": 0.95,
+    "scientific_output": {
+      "anthropic_origin_probability": 0.06249999999999999,
+      "anthropic_activity_probability": 0.0,
+      "instrumental_anomaly_probability": 0.65,
+      "recommended_action": "monitoring",
+      "notes": "ANÁLISIS TERRITORIAL TOMOGRÁFICO: La superficie muestra anomalías moderadas (intensidad: 0.65), sugiriendo evidencia arqueológica sutil. Las condiciones climáticas históricas han sido favorables para la preservación arqueológica. La disponibilidad histórica de agua sugiere condiciones propicias para asentamientos permanentes. El territorio presenta indicios arqueológicos que requieren investigación adicional para confirmar su naturaleza y extensión.",
+      "available_instruments": [
+        "sentinel_2_ndvi",
+        "srtm_elevation",
+        "sentinel_1_sar",
+        "landsat_thermal",
+        "viirs_ndvi",
+        "era5_climate"
+      ],
+      "instruments_measured": 6,
+      "coverage_raw": 0.95,
+      "hrm_analysis": {
+        "raw_output": "{\n  \"analisis_morfologico\": \"La HRM Analysis identifica una estructura espacial verificada en el área de análisis, lo que sugiere un patrón definido y estable. La coherencia topológica alta indica una consistencia en los datos registrados.\",\n  \"hipotesis_antropica\": \"La hipótesis principal plantea la presencia de un asentamiento en el área estudiada con confianza del 59%. Este asentamiento se caracteriza por su estructura y coherencia, indicando una posible civilización antigua.\",\n  \"hipotesis_natural_alternativa\": \"Las hipótesis alternativas incluyen causas naturales como erosión o formación de dunas. Además, también considera la presencia de materiales sedimentarios en su estado natural sin intervención humana.\",\n  \"evidencia_requerida\": \"Se requiere una detallada revisión del análisis espectral y la identificación de firmas espectrales únicas para respaldar esta hipótesis. Se debe examinar los gradientes topográficos y geológicos en el área.\",\n  \"nivel_incertidumbre\": \"Alto\"\n}",
+        "analisis_morfologico": "Análisis textual generado.",
+        "hipotesis_antropica": "Ver raw output.",
+        "hipotesis_natural_alternativa": "Ver raw output.",
+        "nivel_incertidumbre": "Indeterminado",
+        "visualizacion_neural": "http://localhost:8003/anomaly-map/hrm_viz_TIMT_-13.1651_-13.1611_-72.5470_-72.5430_20260131_211509.png"
+      },
+      "anomaly_map": {
+        "path": "http://localhost:8003/anomaly-map/anomaly_map_TIMT_-13.1651_-13.1611_-72.5470_-72.5430_20260131_211509.png",
+        "visualization_url": "http://localhost:8003/anomaly-map/anomaly_map_TIMT_-13.1651_-13.1611_-72.5470_-72.5430_20260131_211509.png",
+        "analysis_id": "TIMT_-13.1651_-13.1611_-72.5470_-72.5430_20260131_211509",
+        "layers_used": [
+          "sar",
+          "thermal",
+          "slope"
+        ],
+        "resolution_m": 30.0,
+        "environment_type": "grassland",
+        "fusion_weights": {
+          "sar": 0.3,
+          "thermal": 0.3,
+          "rugosity": 0.2,
+          "slope": 0.2
+        },
+        "metadata": {
+          "grid_shape": [
+            14,
+            14
+          ],
+          "layers_count": 3,
+          "anomaly_mean": 0.35507820805008716,
+          "anomaly_std": 0.1257734972034567,
+          "anomaly_max": 0.7335142366751692,
+          "geometric_features_count": 59,
+          "generation_timestamp": "2026-02-01T00:20:49"
+        },
+        "anomaly_map_base64": "14,14|float64|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",
+        "geometric_features_base64": "14,14|float64|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"
+      }
+    },
+    "anomaly_map": {
+      "path": "http://localhost:8003/anomaly-map/anomaly_map_TIMT_-13.1651_-13.1611_-72.5470_-72.5430_20260131_211509.png",
+      "visualization_url": "http://localhost:8003/anomaly-map/anomaly_map_TIMT_-13.1651_-13.1611_-72.5470_-72.5430_20260131_211509.png",
+      "analysis_id": "TIMT_-13.1651_-13.1611_-72.5470_-72.5430_20260131_211509",
+      "layers_used": [
+        "sar",
+        "thermal",
+        "slope"
+      ],
+      "resolution_m": 30.0,
+      "environment_type": "grassland",
+      "fusion_weights": {
+        "sar": 0.3,
+        "thermal": 0.3,
+        "rugosity": 0.2,
+        "slope": 0.2
+      },
+      "metadata": {
+        "grid_shape": [
+          14,
+          14
+        ],
+        "layers_count": 3,
+        "anomaly_mean": 0.35507820805008716,
+        "anomaly_std": 0.1257734972034567,
+        "anomaly_max": 0.7335142366751692,
+        "geometric_features_count": 59,
+        "generation_timestamp": "2026-02-01T00:20:49"
+      },
+      "anomaly_map_base64": "14,14|float64|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",
+      "geometric_features_base64": "14,14|float64|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"
+    },
+    "visualizacion_neural": "http://localhost:8003/anomaly-map/hrm_viz_TIMT_-13.1651_-13.1611_-72.5470_-72.5430_20260131_211509.png",
+    "archaeological_results": {
+      "anomaly_score": 0.65,
+      "anthropic_probability": 0.06249999999999999,
+      "confidence_interval": [
+        0,
+        0.2125
+      ],
+      "recommended_action": "monitoring",
+      "classification": "uncertain",
+      "priority": "NORMAL",
+      "scientific_confidence": "high"
+    },
+    "tcp_summary": {
+      "tcp_id": "TCP_-13.1651_-13.1611_-72.5470_-72.5430_20260131_211509",
+      "analysis_objective": "exploratory",
+      "preservation_potential": "good",
+      "hypotheses_count": 2,
+      "geological_context": "sedimentary",
+      "hydrographic_features_count": 1,
+      "external_sites_count": 1,
+      "human_traces_count": 4
+    },
+    "etp_summary": {
+      "territory_id": "ETP_-13.1631_-72.5450_20260131_211513",
+      "ess_superficial": 0.65,
+      "ess_volumetrico": 0.125,
+      "ess_temporal": 0.165,
+      "coherencia_3d": 0.875,
+      "persistencia_temporal": 0.75,
+      "densidad_arqueologica_m3": 0.06249999999999999,
+      "layers_count": 6,
+      "anomalies_count": 3,
+      "confidence_level": "high",
+      "recommended_action": "monitoring",
+      "narrative_explanation": "ANÁLISIS TERRITORIAL TOMOGRÁFICO: La superficie muestra anomalías moderadas (intensidad: 0.65), sugiriendo evidencia arqueológica sutil. Las condiciones climáticas históricas han sido favorables para la preservación arqueológica. La disponibilidad histórica de agua sugiere condiciones propicias para asentamientos permanentes. El territorio presenta indicios arqueológicos que requieren investigación adicional para confirmar su naturaleza y extensión."
+    },
+    "hypothesis_validations": [
+      {
+        "hypothesis_id": "H_SETTLEMENT_EXTERNAL",
+        "hypothesis_type": "settlement",
+        "evidence_level": "weak",
+        "confidence_score": 0.5914999999999999,
+        "supporting_factors": [
+          "Contexto geológico favorable",
+          "Consistencia con sitios arqueológicos conocidos"
+        ],
+        "contradictions": [
+          "Baja evidencia sensorial"
+        ],
+        "explanation": "Hipótesis settlement con evidencia weak (confianza: 0.59)"
+      },
+      {
+        "hypothesis_id": "H_TRANSIT_ROUTES",
+        "hypothesis_type": "transit",
+        "evidence_level": "weak",
+        "confidence_score": 0.5914999999999999,
+        "supporting_factors": [
+          "Contexto geológico favorable",
+          "Consistencia con sitios arqueológicos conocidos"
+        ],
+        "contradictions": [
+          "Baja evidencia sensorial"
+        ],
+        "explanation": "Hipótesis transit con evidencia weak (confianza: 0.59)"
+      }
+    ],
+    "transparency_summary": {
+      "hypotheses_evaluated": 2,
+      "hypotheses_validated": 0,
+      "hypotheses_rejected": 2,
+      "can_infer": [
+        "Patrones espaciales anómalos consistentes",
+        "Coherencia territorial de anomalías",
+        "Compatibilidad con contexto arqueológico",
+        "Potencial arqueológico relativo",
+        "Priorización para investigación de campo"
+      ],
+      "cannot_affirm": [
+        "Presencia confirmada de estructuras arqueológicas",
+        "Datación absoluta de anomalías",
+        "Función específica de estructuras detectadas",
+        "Estado de preservación exacto",
+        "Significancia cultural específica"
+      ],
+      "analysis_process_steps": 8
+    },
+    "technical_summary": "ANÁLISIS TERRITORIAL INFERENCIAL TOMOGRÁFICO\n============================================\n\nTERRITORIO: (-13.1651, -13.1611, -72.547, -72.543)\nOBJETIVO: exploratory\nESS VOLUMÉTRICO: 0.125\nCOHERENCIA 3D: 0.875\n\nHIPÓTESIS VALIDADAS:\n- Evidencia fuerte: 0\n- Evidencia moderada: 0\n\nCONTEXTOS INTEGRADOS:\n- Geológico: sedimentary\n- Hidrográfico: 1 características\n- Arqueológico externo: 6 sitios\n- Trazas humanas: 4 trazas\n\nLIMITACIONES: 5 identificadas\nRECOMENDACIONES: 5 sugeridas",
+    "academic_summary": "Este análisis territorial aplicó tomografía inferencial multidominio para evaluar 2 hipótesis territoriales. \nEl sistema integró evidencia sensorial (ESS: 0.125), contexto geológico (GCS: 0.75), \nvalidación arqueológica externa (ECS: 0.69), y análisis de trazas humanas.\n\nResultados: 0 hipótesis con evidencia fuerte, 0 con evidencia moderada. \nLa coherencia territorial (0.875) sugiere patrones espaciales consistentes que requieren validación de campo.\n\nLimitaciones: El sistema infiere patrones territoriales pero no confirma estructuras específicas. \nSe recomienda prospección geofísica y sondeos arqueológicos para validación.",
+    "general_summary": "Se analizó un territorio usando tecnología satelital avanzada y inteligencia artificial para identificar posibles sitios arqueológicos.\n\nEl sistema encontró 0 áreas de interés arqueológico con diferentes niveles de evidencia. \nSe integraron datos geológicos, hidrográficos y de actividad humana histórica para una evaluación completa.\n\nLos resultados sugieren potencial arqueológico que requiere investigación de campo para confirmación. \nEl análisis proporciona una guía científica para priorizar futuras excavaciones.",
+    "institutional_summary": "INFORME EJECUTIVO - ANÁLISIS TERRITORIAL ARQUEOLÓGICO\n\nTERRITORIO ANALIZADO: (-13.1651, -13.1611, -72.547, -72.543)\nMETODOLOGÍA: Tomografía Territorial Inferencial con 15 instrumentos satelitales\nOBJETIVO: exploratory\n\nRESULTADOS PRINCIPALES:\n• 0 áreas con evidencia arqueológica fuerte\n• 0 áreas con evidencia moderada\n• Coherencia territorial: 0.875/1.0\n• Potencial de preservación: good\n\nRECOMENDACIONES:\n• Prospección geofísica en áreas prioritarias\n• Sondeos arqueológicos estratégicos\n• Consulta con especialistas regionales\n\nLIMITACIONES: Análisis basado en evidencia indirecta. Requiere validación de campo.\nCONFIANZA CIENTÍFICA: Sistema transparente con limitaciones documentadas.",
+    "request_info": {
+      "region_name": "Machu Picchu - Sector Agrícola (Terrazas)",
+      "center_lat": -13.1631,
+      "center_lon": -72.545,
+      "bounds": {
+        "lat_min": -13.1651,
+        "lat_max": -13.1611,
+        "lon_min": -72.547,
+        "lon_max": -72.543
+      }
+    }
+  },
+  "mp_urban": {
+    "analysis_id": "TIMT_-13.1652_-13.1612_-72.5479_-72.5439_20260131_212049",
+    "status": "success",
+    "territorial_coherence_score": 0.6897777777777777,
+    "scientific_rigor_score": 0.95,
+    "scientific_output": {
+      "anthropic_origin_probability": 0.06249999999999999,
+      "anthropic_activity_probability": 0.0,
+      "instrumental_anomaly_probability": 0.65,
+      "recommended_action": "monitoring",
+      "notes": "ANÁLISIS TERRITORIAL TOMOGRÁFICO: La superficie muestra anomalías moderadas (intensidad: 0.65), sugiriendo evidencia arqueológica sutil. Las condiciones climáticas históricas han sido favorables para la preservación arqueológica. La disponibilidad histórica de agua sugiere condiciones propicias para asentamientos permanentes. El territorio presenta indicios arqueológicos que requieren investigación adicional para confirmar su naturaleza y extensión.",
+      "available_instruments": [
+        "sentinel_2_ndvi",
+        "srtm_elevation",
+        "sentinel_1_sar",
+        "landsat_thermal",
+        "viirs_ndvi",
+        "era5_climate"
+      ],
+      "instruments_measured": 6,
+      "coverage_raw": 0.95,
+      "hrm_analysis": {
+        "raw_output": "{\n  \"analisis_morfologico\": \"La analítica en el punto de referencia (-13.1652, -13.1612, -72.5479, -72.54390000000001) ha revelado una estructura espacial verificada (HRM Analysis), lo que indica que los datos de teledetección proporcionan información precisa sobre la forma y dimensiones del volumen geológico considerado. La coherencia topológica alta en estos puntos sugiere una consistencia notable entre las interpretaciones locales e internas, respaldando la hipótesis principal de burial con confianza de 0.56.\",\n  \"hipotesis_antropica\": \"No se especifican hipótesis antropológicas relacionadas debido a que no ha sido forzada por la consulta específica.\",\n  \"hipotesis_natural_alternativa\": {\n    \"gradiente_geológico\": \"El análisis de gradientes detecta niveles de composición y alteración geológica que podrían indicar formaciones sedimentarias recientes. Estos cambios pueden ser producto del movimiento tectónico o procesos sedimentarios actuales.\",\n    \"firma_espectral_diferente\": \"La firma espectral distinta en estos puntos puede sugerir la presencia de un material no sedimentario, como rocas metamó",
+        "analisis_morfologico": "Análisis textual generado.",
+        "hipotesis_antropica": "Ver raw output.",
+        "hipotesis_natural_alternativa": "Ver raw output.",
+        "nivel_incertidumbre": "Indeterminado",
+        "visualizacion_neural": "http://localhost:8003/anomaly-map/hrm_viz_TIMT_-13.1652_-13.1612_-72.5479_-72.5439_20260131_212049.png"
+      },
+      "anomaly_map": {
+        "path": "http://localhost:8003/anomaly-map/anomaly_map_TIMT_-13.1652_-13.1612_-72.5479_-72.5439_20260131_212049.png",
+        "visualization_url": "http://localhost:8003/anomaly-map/anomaly_map_TIMT_-13.1652_-13.1612_-72.5479_-72.5439_20260131_212049.png",
+        "analysis_id": "TIMT_-13.1652_-13.1612_-72.5479_-72.5439_20260131_212049",
+        "layers_used": [
+          "sar",
+          "thermal",
+          "slope"
+        ],
+        "resolution_m": 30.0,
+        "environment_type": "grassland",
+        "fusion_weights": {
+          "sar": 0.3,
+          "thermal": 0.3,
+          "rugosity": 0.2,
+          "slope": 0.2
+        },
+        "metadata": {
+          "grid_shape": [
+            14,
+            14
+          ],
+          "layers_count": 3,
+          "anomaly_mean": 0.3611325475438199,
+          "anomaly_std": 0.12470612361290431,
+          "anomaly_max": 0.7967138751469738,
+          "geometric_features_count": 43,
+          "generation_timestamp": "2026-02-01T00:25:27"
+        },
+        "anomaly_map_base64": "14,14|float64|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",
+        "geometric_features_base64": "14,14|float64|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"
+      }
+    },
+    "anomaly_map": {
+      "path": "http://localhost:8003/anomaly-map/anomaly_map_TIMT_-13.1652_-13.1612_-72.5479_-72.5439_20260131_212049.png",
+      "visualization_url": "http://localhost:8003/anomaly-map/anomaly_map_TIMT_-13.1652_-13.1612_-72.5479_-72.5439_20260131_212049.png",
+      "analysis_id": "TIMT_-13.1652_-13.1612_-72.5479_-72.5439_20260131_212049",
+      "layers_used": [
+        "sar",
+        "thermal",
+        "slope"
+      ],
+      "resolution_m": 30.0,
+      "environment_type": "grassland",
+      "fusion_weights": {
+        "sar": 0.3,
+        "thermal": 0.3,
+        "rugosity": 0.2,
+        "slope": 0.2
+      },
+      "metadata": {
+        "grid_shape": [
+          14,
+          14
+        ],
+        "layers_count": 3,
+        "anomaly_mean": 0.3611325475438199,
+        "anomaly_std": 0.12470612361290431,
+        "anomaly_max": 0.7967138751469738,
+        "geometric_features_count": 43,
+        "generation_timestamp": "2026-02-01T00:25:27"
+      },
+      "anomaly_map_base64": "14,14|float64|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",
+      "geometric_features_base64": "14,14|float64|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"
+    },
+    "visualizacion_neural": "http://localhost:8003/anomaly-map/hrm_viz_TIMT_-13.1652_-13.1612_-72.5479_-72.5439_20260131_212049.png",
+    "archaeological_results": {
+      "anomaly_score": 0.65,
+      "anthropic_probability": 0.06249999999999999,
+      "confidence_interval": [
+        0,
+        0.2125
+      ],
+      "recommended_action": "monitoring",
+      "classification": "uncertain",
+      "priority": "NORMAL",
+      "scientific_confidence": "high"
+    },
+    "tcp_summary": {
+      "tcp_id": "TCP_-13.1652_-13.1612_-72.5479_-72.5439_20260131_212049",
+      "analysis_objective": "exploratory",
+      "preservation_potential": "good",
+      "hypotheses_count": 2,
+      "geological_context": "sedimentary",
+      "hydrographic_features_count": 1,
+      "external_sites_count": 6,
+      "human_traces_count": 7
+    },
+    "etp_summary": {
+      "territory_id": "ETP_-13.1632_-72.5459_20260131_212050",
+      "ess_superficial": 0.65,
+      "ess_volumetrico": 0.125,
+      "ess_temporal": 0.165,
+      "coherencia_3d": 0.875,
+      "persistencia_temporal": 0.75,
+      "densidad_arqueologica_m3": 0.06249999999999999,
+      "layers_count": 6,
+      "anomalies_count": 3,
+      "confidence_level": "high",
+      "recommended_action": "monitoring",
+      "narrative_explanation": "ANÁLISIS TERRITORIAL TOMOGRÁFICO: La superficie muestra anomalías moderadas (intensidad: 0.65), sugiriendo evidencia arqueológica sutil. Las condiciones climáticas históricas han sido favorables para la preservación arqueológica. La disponibilidad histórica de agua sugiere condiciones propicias para asentamientos permanentes. El territorio presenta indicios arqueológicos que requieren investigación adicional para confirmar su naturaleza y extensión."
+    },
+    "hypothesis_validations": [
+      {
+        "hypothesis_id": "H_BURIAL_EXTERNAL",
+        "hypothesis_type": "burial",
+        "evidence_level": "weak",
+        "confidence_score": 0.5609999999999999,
+        "supporting_factors": [
+          "Contexto geológico favorable"
+        ],
+        "contradictions": [
+          "Baja evidencia sensorial"
+        ],
+        "explanation": "Hipótesis burial con evidencia weak (confianza: 0.56)"
+      },
+      {
+        "hypothesis_id": "H_TRANSIT_ROUTES",
+        "hypothesis_type": "transit",
+        "evidence_level": "weak",
+        "confidence_score": 0.5609999999999999,
+        "supporting_factors": [
+          "Contexto geológico favorable"
+        ],
+        "contradictions": [
+          "Baja evidencia sensorial"
+        ],
+        "explanation": "Hipótesis transit con evidencia weak (confianza: 0.56)"
+      }
+    ],
+    "transparency_summary": {
+      "hypotheses_evaluated": 2,
+      "hypotheses_validated": 0,
+      "hypotheses_rejected": 2,
+      "can_infer": [
+        "Patrones espaciales anómalos consistentes",
+        "Coherencia territorial de anomalías",
+        "Compatibilidad con contexto arqueológico",
+        "Potencial arqueológico relativo",
+        "Priorización para investigación de campo"
+      ],
+      "cannot_affirm": [
+        "Presencia confirmada de estructuras arqueológicas",
+        "Datación absoluta de anomalías",
+        "Función específica de estructuras detectadas",
+        "Estado de preservación exacto",
+        "Significancia cultural específica"
+      ],
+      "analysis_process_steps": 8
+    },
+    "technical_summary": "ANÁLISIS TERRITORIAL INFERENCIAL TOMOGRÁFICO\n============================================\n\nTERRITORIO: (-13.1652, -13.1612, -72.5479, -72.54390000000001)\nOBJETIVO: exploratory\nESS VOLUMÉTRICO: 0.125\nCOHERENCIA 3D: 0.875\n\nHIPÓTESIS VALIDADAS:\n- Evidencia fuerte: 0\n- Evidencia moderada: 0\n\nCONTEXTOS INTEGRADOS:\n- Geológico: sedimentary\n- Hidrográfico: 1 características\n- Arqueológico externo: 3 sitios\n- Trazas humanas: 5 trazas\n\nLIMITACIONES: 5 identificadas\nRECOMENDACIONES: 5 sugeridas",
+    "academic_summary": "Este análisis territorial aplicó tomografía inferencial multidominio para evaluar 2 hipótesis territoriales. \nEl sistema integró evidencia sensorial (ESS: 0.125), contexto geológico (GCS: 0.75), \nvalidación arqueológica externa (ECS: 0.52), y análisis de trazas humanas.\n\nResultados: 0 hipótesis con evidencia fuerte, 0 con evidencia moderada. \nLa coherencia territorial (0.875) sugiere patrones espaciales consistentes que requieren validación de campo.\n\nLimitaciones: El sistema infiere patrones territoriales pero no confirma estructuras específicas. \nSe recomienda prospección geofísica y sondeos arqueológicos para validación.",
+    "general_summary": "Se analizó un territorio usando tecnología satelital avanzada y inteligencia artificial para identificar posibles sitios arqueológicos.\n\nEl sistema encontró 0 áreas de interés arqueológico con diferentes niveles de evidencia. \nSe integraron datos geológicos, hidrográficos y de actividad humana histórica para una evaluación completa.\n\nLos resultados sugieren potencial arqueológico que requiere investigación de campo para confirmación. \nEl análisis proporciona una guía científica para priorizar futuras excavaciones.",
+    "institutional_summary": "INFORME EJECUTIVO - ANÁLISIS TERRITORIAL ARQUEOLÓGICO\n\nTERRITORIO ANALIZADO: (-13.1652, -13.1612, -72.5479, -72.54390000000001)\nMETODOLOGÍA: Tomografía Territorial Inferencial con 15 instrumentos satelitales\nOBJETIVO: exploratory\n\nRESULTADOS PRINCIPALES:\n• 0 áreas con evidencia arqueológica fuerte\n• 0 áreas con evidencia moderada\n• Coherencia territorial: 0.875/1.0\n• Potencial de preservación: good\n\nRECOMENDACIONES:\n• Prospección geofísica en áreas prioritarias\n• Sondeos arqueológicos estratégicos\n• Consulta con especialistas regionales\n\nLIMITACIONES: Análisis basado en evidencia indirecta. Requiere validación de campo.\nCONFIANZA CIENTÍFICA: Sistema transparente con limitaciones documentadas.",
+    "request_info": {
+      "region_name": "Machu Picchu - Sector Urbano (Control Estructural)",
+      "center_lat": -13.1632,
+      "center_lon": -72.5459,
+      "bounds": {
+        "lat_min": -13.1652,
+        "lat_max": -13.1612,
+        "lon_min": -72.5479,
+        "lon_max": -72.54390000000001
+      }
+    }
+  },
+  "mp_north_slope": {
+    "analysis_id": "TIMT_-13.1635_-13.1595_-72.5468_-72.5428_20260131_212527",
+    "status": "success",
+    "territorial_coherence_score": 0.6805555555555557,
+    "scientific_rigor_score": 0.95,
+    "scientific_output": {
+      "anthropic_origin_probability": 0.0625,
+      "anthropic_activity_probability": 0.0,
+      "instrumental_anomaly_probability": 0.65,
+      "recommended_action": "monitoring",
+      "notes": "ANÁLISIS TERRITORIAL TOMOGRÁFICO: La superficie muestra anomalías moderadas (intensidad: 0.65), sugiriendo evidencia arqueológica sutil. Las condiciones climáticas históricas han sido favorables para la preservación arqueológica. La disponibilidad histórica de agua sugiere condiciones propicias para asentamientos permanentes. El territorio presenta indicios arqueológicos que requieren investigación adicional para confirmar su naturaleza y extensión.",
+      "available_instruments": [
+        "sentinel_2_ndvi",
+        "srtm_elevation",
+        "sentinel_1_sar",
+        "landsat_thermal",
+        "viirs_ndvi",
+        "era5_climate"
+      ],
+      "instruments_measured": 6,
+      "coverage_raw": 0.95,
+      "hrm_analysis": {
+        "raw_output": "{\n  \"analisis_morfologico\": \"La zona de análisis muestra características de sedimentación con una alta coherencia topológica, indicando un estado estructural estándar. La firma espectral presenta señales típicas del material sedentario y la topología localiza regiones de acumulación subterránea.\",\n  \"hipotesis_antropica\": \"No se establecen hipótesis antropológicas debido a las especificaciones de entrada\",\n  \"hipotesis_natural_alternativa\": \"La coexistencia de sedimentos puede atribuirse a procesos geológicos, como la deposición en un antiguo lago o mar interno. También podría estar relacionada con movimientos tectónicos que crearon depósitos sedimentarios.\",\n  \"evidencia_requerida\": \"Específicas fuentes de datos de teledetección (como imágenes satelitales, bandas especiales), análisis petrográfico y topográfico para validar la hipótesis natural.\",\n  \"nivel_incertidumbre\": \"Medio\"\n}",
+        "analisis_morfologico": "Análisis textual generado.",
+        "hipotesis_antropica": "Ver raw output.",
+        "hipotesis_natural_alternativa": "Ver raw output.",
+        "nivel_incertidumbre": "Indeterminado",
+        "visualizacion_neural": "http://localhost:8003/anomaly-map/hrm_viz_TIMT_-13.1635_-13.1595_-72.5468_-72.5428_20260131_212527.png"
+      },
+      "anomaly_map": {
+        "path": "http://localhost:8003/anomaly-map/anomaly_map_TIMT_-13.1635_-13.1595_-72.5468_-72.5428_20260131_212527.png",
+        "visualization_url": "http://localhost:8003/anomaly-map/anomaly_map_TIMT_-13.1635_-13.1595_-72.5468_-72.5428_20260131_212527.png",
+        "analysis_id": "TIMT_-13.1635_-13.1595_-72.5468_-72.5428_20260131_212527",
+        "layers_used": [
+          "sar",
+          "thermal",
+          "slope"
+        ],
+        "resolution_m": 30.0,
+        "environment_type": "grassland",
+        "fusion_weights": {
+          "sar": 0.3,
+          "thermal": 0.3,
+          "rugosity": 0.2,
+          "slope": 0.2
+        },
+        "metadata": {
+          "grid_shape": [
+            14,
+            14
+          ],
+          "layers_count": 3,
+          "anomaly_mean": 0.3571210953514471,
+          "anomaly_std": 0.1176412596679135,
+          "anomaly_max": 0.8168139979209659,
+          "geometric_features_count": 32,
+          "generation_timestamp": "2026-02-01T00:30:32"
+        },
+        "anomaly_map_base64": "14,14|float64|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",
+        "geometric_features_base64": "14,14|float64|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"
+      }
+    },
+    "anomaly_map": {
+      "path": "http://localhost:8003/anomaly-map/anomaly_map_TIMT_-13.1635_-13.1595_-72.5468_-72.5428_20260131_212527.png",
+      "visualization_url": "http://localhost:8003/anomaly-map/anomaly_map_TIMT_-13.1635_-13.1595_-72.5468_-72.5428_20260131_212527.png",
+      "analysis_id": "TIMT_-13.1635_-13.1595_-72.5468_-72.5428_20260131_212527",
+      "layers_used": [
+        "sar",
+        "thermal",
+        "slope"
+      ],
+      "resolution_m": 30.0,
+      "environment_type": "grassland",
+      "fusion_weights": {
+        "sar": 0.3,
+        "thermal": 0.3,
+        "rugosity": 0.2,
+        "slope": 0.2
+      },
+      "metadata": {
+        "grid_shape": [
+          14,
+          14
+        ],
+        "layers_count": 3,
+        "anomaly_mean": 0.3571210953514471,
+        "anomaly_std": 0.1176412596679135,
+        "anomaly_max": 0.8168139979209659,
+        "geometric_features_count": 32,
+        "generation_timestamp": "2026-02-01T00:30:32"
+      },
+      "anomaly_map_base64": "14,14|float64|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",
+      "geometric_features_base64": "14,14|float64|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"
+    },
+    "visualizacion_neural": "http://localhost:8003/anomaly-map/hrm_viz_TIMT_-13.1635_-13.1595_-72.5468_-72.5428_20260131_212527.png",
+    "archaeological_results": {
+      "anomaly_score": 0.65,
+      "anthropic_probability": 0.0625,
+      "confidence_interval": [
+        0,
+        0.2125
+      ],
+      "recommended_action": "monitoring",
+      "classification": "uncertain",
+      "priority": "NORMAL",
+      "scientific_confidence": "high"
+    },
+    "tcp_summary": {
+      "tcp_id": "TCP_-13.1635_-13.1595_-72.5468_-72.5428_20260131_212527",
+      "analysis_objective": "exploratory",
+      "preservation_potential": "good",
+      "hypotheses_count": 2,
+      "geological_context": "sedimentary",
+      "hydrographic_features_count": 1,
+      "external_sites_count": 3,
+      "human_traces_count": 4
+    },
+    "etp_summary": {
+      "territory_id": "ETP_-13.1615_-72.5448_20260131_212527",
+      "ess_superficial": 0.65,
+      "ess_volumetrico": 0.125,
+      "ess_temporal": 0.165,
+      "coherencia_3d": 0.875,
+      "persistencia_temporal": 0.75,
+      "densidad_arqueologica_m3": 0.0625,
+      "layers_count": 6,
+      "anomalies_count": 3,
+      "confidence_level": "high",
+      "recommended_action": "monitoring",
+      "narrative_explanation": "ANÁLISIS TERRITORIAL TOMOGRÁFICO: La superficie muestra anomalías moderadas (intensidad: 0.65), sugiriendo evidencia arqueológica sutil. Las condiciones climáticas históricas han sido favorables para la preservación arqueológica. La disponibilidad histórica de agua sugiere condiciones propicias para asentamientos permanentes. El territorio presenta indicios arqueológicos que requieren investigación adicional para confirmar su naturaleza y extensión."
+    },
+    "hypothesis_validations": [
+      {
+        "hypothesis_id": "H_BURIAL_EXTERNAL",
+        "hypothesis_type": "burial",
+        "evidence_level": "weak",
+        "confidence_score": 0.55,
+        "supporting_factors": [
+          "Contexto geológico favorable"
+        ],
+        "contradictions": [
+          "Baja evidencia sensorial"
+        ],
+        "explanation": "Hipótesis burial con evidencia weak (confianza: 0.55)"
+      },
+      {
+        "hypothesis_id": "H_TRANSIT_ROUTES",
+        "hypothesis_type": "transit",
+        "evidence_level": "weak",
+        "confidence_score": 0.55,
+        "supporting_factors": [
+          "Contexto geológico favorable"
+        ],
+        "contradictions": [
+          "Baja evidencia sensorial"
+        ],
+        "explanation": "Hipótesis transit con evidencia weak (confianza: 0.55)"
+      }
+    ],
+    "transparency_summary": {
+      "hypotheses_evaluated": 2,
+      "hypotheses_validated": 0,
+      "hypotheses_rejected": 2,
+      "can_infer": [
+        "Patrones espaciales anómalos consistentes",
+        "Coherencia territorial de anomalías",
+        "Compatibilidad con contexto arqueológico",
+        "Potencial arqueológico relativo",
+        "Priorización para investigación de campo"
+      ],
+      "cannot_affirm": [
+        "Presencia confirmada de estructuras arqueológicas",
+        "Datación absoluta de anomalías",
+        "Función específica de estructuras detectadas",
+        "Estado de preservación exacto",
+        "Significancia cultural específica"
+      ],
+      "analysis_process_steps": 8
+    },
+    "technical_summary": "ANÁLISIS TERRITORIAL INFERENCIAL TOMOGRÁFICO\n============================================\n\nTERRITORIO: (-13.1635, -13.1595, -72.54679999999999, -72.5428)\nOBJETIVO: exploratory\nESS VOLUMÉTRICO: 0.125\nCOHERENCIA 3D: 0.875\n\nHIPÓTESIS VALIDADAS:\n- Evidencia fuerte: 0\n- Evidencia moderada: 0\n\nCONTEXTOS INTEGRADOS:\n- Geológico: sedimentary\n- Hidrográfico: 1 características\n- Arqueológico externo: 1 sitios\n- Trazas humanas: 4 trazas\n\nLIMITACIONES: 5 identificadas\nRECOMENDACIONES: 5 sugeridas",
+    "academic_summary": "Este análisis territorial aplicó tomografía inferencial multidominio para evaluar 2 hipótesis territoriales. \nEl sistema integró evidencia sensorial (ESS: 0.125), contexto geológico (GCS: 0.75), \nvalidación arqueológica externa (ECS: 0.47), y análisis de trazas humanas.\n\nResultados: 0 hipótesis con evidencia fuerte, 0 con evidencia moderada. \nLa coherencia territorial (0.875) sugiere patrones espaciales consistentes que requieren validación de campo.\n\nLimitaciones: El sistema infiere patrones territoriales pero no confirma estructuras específicas. \nSe recomienda prospección geofísica y sondeos arqueológicos para validación.",
+    "general_summary": "Se analizó un territorio usando tecnología satelital avanzada y inteligencia artificial para identificar posibles sitios arqueológicos.\n\nEl sistema encontró 0 áreas de interés arqueológico con diferentes niveles de evidencia. \nSe integraron datos geológicos, hidrográficos y de actividad humana histórica para una evaluación completa.\n\nLos resultados sugieren potencial arqueológico que requiere investigación de campo para confirmación. \nEl análisis proporciona una guía científica para priorizar futuras excavaciones.",
+    "institutional_summary": "INFORME EJECUTIVO - ANÁLISIS TERRITORIAL ARQUEOLÓGICO\n\nTERRITORIO ANALIZADO: (-13.1635, -13.1595, -72.54679999999999, -72.5428)\nMETODOLOGÍA: Tomografía Territorial Inferencial con 15 instrumentos satelitales\nOBJETIVO: exploratory\n\nRESULTADOS PRINCIPALES:\n• 0 áreas con evidencia arqueológica fuerte\n• 0 áreas con evidencia moderada\n• Coherencia territorial: 0.875/1.0\n• Potencial de preservación: good\n\nRECOMENDACIONES:\n• Prospección geofísica en áreas prioritarias\n• Sondeos arqueológicos estratégicos\n• Consulta con especialistas regionales\n\nLIMITACIONES: Análisis basado en evidencia indirecta. Requiere validación de campo.\nCONFIANZA CIENTÍFICA: Sistema transparente con limitaciones documentadas.",
+    "request_info": {
+      "region_name": "Machu Picchu - Ladera Norte (Ingeniería Extrema)",
+      "center_lat": -13.1615,
+      "center_lon": -72.5448,
+      "bounds": {
+        "lat_min": -13.1635,
+        "lat_max": -13.1595,
+        "lon_min": -72.54679999999999,
+        "lon_max": -72.5428
+      }
+    }
+  }
+}
