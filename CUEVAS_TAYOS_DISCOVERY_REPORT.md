@@ -19,9 +19,9 @@ This analysis targets the legendary **Cueva de los Tayos** system in the Ecuador
 
 ## 🏗️ SUBTERRANEAN FINDINGS
 
-### 1. Neural Activation (HRM Visualization)
-The HRM analysis identified high-intensity activation zones corresponding to the primary cave entrance and secondary structural alignments in the surrounding valley.
-![Cueva de los Tayos HRM Discovery](assets/cuevas_tayos_hrm.png)
+### 1. Neural Activation & Cross-Section (TIMT Scientific Viz)
+The following visualization combines surface HRM activations with subterranean DIL (Deep Inference Layer) projections, showing the vertical chimney and the inferred horizontal galleries.
+![Cueva de los Tayos TIMT Scientific Visualization](assets/cuevas_tayos_scientific_viz.png)
 
 ### 2. Tomographic Inference
 - **Inferred Feature:** Strong "Geometric Persistence" in the subsurface layer, despite the dense vegetation.
