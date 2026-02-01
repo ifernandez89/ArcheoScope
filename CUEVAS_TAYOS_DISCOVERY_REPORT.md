@@ -19,9 +19,9 @@ This analysis targets the legendary **Cueva de los Tayos** system in the Ecuador
 
 ## 🏗️ SUBTERRANEAN FINDINGS
 
-### 1. Neural Activation & Cross-Section (TIMT Scientific Viz)
-The following visualization combines surface HRM activations with subterranean DIL (Deep Inference Layer) projections, showing the vertical chimney and the inferred horizontal galleries.
-![Cueva de los Tayos TIMT Scientific Visualization](assets/cuevas_tayos_scientific_viz.png)
+### 1. Conceptual 3D Model (Subterranean Render)
+The following 3D model presents the complex architecture of the Cueva de los Tayos system. It visualizes the high-canopy terrain, the vertical entrance shaft (chimney), and the massive horizontal galleries inferred at ~60m depth through DIL and SAR data.
+![Cueva de los Tayos 3D Conceptual Map](assets/cuevas_tayos_3d_conceptual.png)
 
 ### 2. Tomographic Inference
 - **Inferred Feature:** Strong "Geometric Persistence" in the subsurface layer, despite the dense vegetation.
