@@ -21,10 +21,9 @@ This analysis targets the **Ħaġar Qim and Mnajdra** megalithic temples on the 
 The following profile represents a scientific section of the Ħaġar Qim temple area, displaying the interaction between the megalithic apses and the coastal globigerina bedrock.
 ![Malta Systemic Cross-Section](assets/malta_scientific_viz.png)
 
-### Key Insights from Scientific Profile:
-- **Apse Geometry:** The system identifies the characteristic "lozenge" or apse-shaped layouts of the Maltese temples as high-coherence anomalies.
-- **Solar Alignment:** A strong directional persistence (Firma TIMT) was detected, aligning with the sunrise during equinoxes, which validates the astronomical precision of the site.
-- **Stratigraphic Integrity:** The low ESS Volumetric score (0.098) indicates that the structures are heavily integrated into the surface weathered limestone.
+### 2. Conceptual 3D Model (Scientific Render)
+The following 3D conceptualization displays the megalithic apse structures of Ħaġar Qim, integrating solar alignment signatures and potential subsurface voids (Hypogeum candidates).
+![Malta 3D Conceptual Map](assets/malta_3d_conceptual.png)
 
 ---
 
