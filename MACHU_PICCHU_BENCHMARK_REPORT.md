@@ -43,6 +43,17 @@ The Machu Picchu benchmark confirms that ArcheoScope behaves as a **rigorous sci
 
 ---
 
+## 🏗️ SYSTEMIC CROSS-SECTION (Andean Engineering Model)
+The following profile represents a lateral slice of the Machu Picchu ridge, displaying the inferred interaction between Incan engineering and the granite host rock.
+![Machu Picchu Systemic Cross-Section](assets/machu_picchu_scientific_viz.png)
+
+### Key Insights from Scientific Profile:
+- **Terrace Geometry:** The "Andenes" are clearly identifiable as structural steps.
+- **Drainage Layer:** The system infers a technical fill layer (4m average) designed for hydraulic management.
+- **Support Walls:** Red indicators mark the inferred positions of subsurface retaining walls validated by topographic discontinuities.
+
+---
+
 ## 🧪 SCIENTIFIC VERDICT: VALIDATED
 Machu Picchu serves as the **Gold Standard** for ArcheoScope. The system's ability to consistently identify known architectural patterns with high "Slope Sensitivity" proves that the discovery of similar (though more eroded) patterns in Gunung Padang and the Zona del Silencio is mathematically sound.
 
