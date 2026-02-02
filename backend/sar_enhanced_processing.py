@@ -30,6 +30,21 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def despeckle_sar(img: np.ndarray, window_size: int = 5) -> np.ndarray:
+    """
+    Apply Lee Filter for SAR de-speckling.
+    This reduces granular noise while preserving edges.
+    """
+    img_mean = ndimage.uniform_filter(img, (window_size, window_size))
+    img_sqr_mean = ndimage.uniform_filter(img**2, (window_size, window_size))
+    img_variance = img_sqr_mean - img_mean**2
+
+    overall_variance = np.var(img)
+
+    img_weights = img_variance / (img_variance + overall_variance + 1e-10)
+    img_output = img_mean + img_weights * (img - img_mean)
+    return img_output
+
 
 def calculate_sar_texture(sar_data: np.ndarray, window_size: int = 3) -> Dict[str, float]:
     """
@@ -222,14 +237,17 @@ def process_sar_enhanced(sar_value: float, sar_data_2d: Optional[np.ndarray] = N
     
     # Si tenemos datos 2D, calcular derivados espaciales
     if sar_data_2d is not None and sar_data_2d.size > 0:
-        logger.info("   📊 SAR: Calculando derivados espaciales...")
+        logger.info("   📊 SAR: Aplicando De-speckling (Lee Filter) y calculando derivados...")
         
-        # Textura
-        result['sar_texture'] = calculate_sar_texture(sar_data_2d)
+        # 1. Aplicar De-speckling antes del análisis
+        sar_clean = despeckle_sar(sar_data_2d)
+        
+        # 2. Textura (sobre datos limpios)
+        result['sar_texture'] = calculate_sar_texture(sar_clean)
         logger.info(f"      Texture index: {result['sar_texture']['texture_index']:.3f}")
         
-        # Gradiente
-        result['sar_gradient'] = calculate_sar_gradient(sar_data_2d)
+        # 3. Gradiente
+        result['sar_gradient'] = calculate_sar_gradient(sar_clean)
         logger.info(f"      Gradient index: {result['sar_gradient']['gradient_index']:.3f}")
         
         # Anomalías locales

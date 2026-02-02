@@ -29,6 +29,7 @@ from territorial_inferential_tomography import (
     CommunicationLevel
 )
 from satellite_connectors.real_data_integrator_v2 import RealDataIntegratorV2
+from pipeline.universal_classifier_v2 import UniversalClassifierV2, UniversalMetrics, estimate_msf
 import asyncpg
 
 router = APIRouter()
@@ -272,6 +273,45 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                         'success': False
                     })
             
+            # ============================================================================
+            # APLICAR FRAMEWORK UNIVERSAL V2.0 (MODO CIENTÍFICO ESTRICTO)
+            # ============================================================================
+            
+            print("\n" + "-"*40, flush=True)
+            print("🔬 REGULACIÓN CIENTÍFICA: Aplicando Framework Universal v2.0", flush=True)
+            
+            # 1. Extraer métricas de invariantes
+            hrm_peaks = 0
+            if timt_result.scientific_output.get('hrm_analysis'):
+                hrm_peaks = timt_result.scientific_output['hrm_analysis'].get('peak_count', 0)
+                if hrm_peaks == 0:
+                    hrm_peaks = int(etp.ess_volumetrico * 200)
+            
+            # 2. Estimar MSF (Material Sensitivity Factor)
+            env_type = timt_result.territorial_context.historical_biome.value if timt_result.territorial_context.historical_biome else 'temperate'
+            geo_ctx = timt_result.territorial_context.geological_context.dominant_lithology.value if timt_result.territorial_context.geological_context else 'sedimentary'
+            msf = estimate_msf(env_type, geo_ctx)
+            
+            if "tierra apisonada" in etp.narrative_explanation.lower() or "adobe" in etp.narrative_explanation.lower():
+                msf = 0.75
+                print("  🧱 MSF Ajustado para Material Blando (0.75)", flush=True)
+            
+            # 3. Clasificar según Lógica Oficial
+            metrics = UniversalMetrics(
+                g1_geometry=float(etp.coherencia_3d),
+                g2_stratigraphy=float(etp.persistencia_temporal),
+                g3_anomaly=float(etp.ess_volumetrico),
+                g4_modularity=hrm_peaks,
+                msf=msf
+            )
+            
+            universal_classifier = UniversalClassifierV2()
+            classification_v2 = universal_classifier.classify(metrics)
+            
+            print(f"  📌 Veredicto Oficial: {classification_v2['veredicto']}", flush=True)
+            print(f"  📌 Es Antrópico: {classification_v2['is_anthropic']}", flush=True)
+            print("-"*40 + "\n", flush=True)
+
             # Construir respuesta compatible con estructura TIMT v2
             result = {
                 'analysis_id': timt_result.analysis_id,
@@ -279,6 +319,7 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                 'territorial_coherence_score': float(timt_result.territorial_coherence_score),
                 'scientific_rigor_score': float(timt_result.scientific_rigor_score),
                 'scientific_output': timt_result.scientific_output,
+                'official_classification': classification_v2,
                 
                 # Mapa de anomalía (extraído para compatibilidad frontend)
                 'anomaly_map': timt_result.scientific_output.get('anomaly_map', {
@@ -297,9 +338,9 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                         max(0, float(etp.densidad_arqueologica_m3) - 0.15),
                         min(1, float(etp.densidad_arqueologica_m3) + 0.15)
                     ],
-                    'recommended_action': etp.get_archaeological_recommendation(),
-                    'classification': 'archaeological_candidate' if etp.densidad_arqueologica_m3 > 0.6 else 'uncertain',
-                    'priority': 'HIGH' if etp.densidad_arqueologica_m3 > 0.7 else 'NORMAL',
+                    'recommended_action': "CONFIRMACIÓN DE ANOMALÍA ESTRUCTURAL (MATERIAL DEGRADABLE). PRIORIDAD ALTA." if classification_v2['veredicto'] == "ANTRÓPICO DE MATERIAL BLANDO (AMB)" else etp.get_archaeological_recommendation(),
+                    'classification': classification_v2['veredicto'],
+                    'priority': 'CRITICAL' if classification_v2['veredicto'] == "ANTRÓPICO DE MATERIAL BLANDO (AMB)" else ('HIGH' if etp.densidad_arqueologica_m3 > 0.7 else 'NORMAL'),
                     'scientific_confidence': etp.get_confidence_level()
                 },
                 

@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Tierra del Fuego (Sur Argentino)",
+    "coords": "-55.5440, -69.2662",
+    "ess_score": 0.525,
+    "geo_coherence": 0.8111200366210938,
+    "persistence": 0.75,
+    "hrm_peaks": 104,
+    "anthropic_prob": 0.026250000000000002,
+    "veredicto": "GEOLÓGICO/NATURAL",
+    "checks": {
+      "G1_Geometria": "FAILED",
+      "G2_Estratigrafia": "PASSED",
+      "G3_Anomalia": "FAILED",
+      "G4_Modularidad": "FAILED"
+    }
+  },
+  {
+    "name": "Monte Ararat (Turquia)",
+    "coords": "39.7036, 44.2975",
+    "ess_score": 0.4535403892066605,
+    "geo_coherence": 0.9417704652630028,
+    "persistence": 0.55,
+    "hrm_peaks": 107,
+    "anthropic_prob": 0.0,
+    "veredicto": "GEOLÓGICO/NATURAL",
+    "checks": {
+      "G1_Geometria": "PASSED",
+      "G2_Estratigrafia": "FAILED",
+      "G3_Anomalia": "FAILED",
+      "G4_Modularidad": "FAILED"
+    }
+  },
+  {
+    "name": "Gran Pirámide en Xi'an (China)",
+    "coords": "34.3828, 109.2753",
+    "ess_score": 0.4818017757234019,
+    "geo_coherence": 0.9247319812789241,
+    "persistence": 0.55,
+    "hrm_peaks": 136,
+    "anthropic_prob": 0.0,
+    "veredicto": "GEOLÓGICO/NATURAL",
+    "checks": {
+      "G1_Geometria": "PASSED",
+      "G2_Estratigrafia": "FAILED",
+      "G3_Anomalia": "FAILED",
+      "G4_Modularidad": "FAILED"
+    }
+  }
+]

@@ -95,10 +95,11 @@ Sistema científico de detección de persistencias espaciales mediante sensores 
     version="2.0.0-clean",
     openapi_tags=[
         {"name": "Status", "description": "Estado del sistema"},
-        {"name": "Scientific Analysis", "description": "Análisis científico completo"},
+        {"name": "Scientific Analysis", "description": "Análisis científico OFICIAL (Framework Universal v2.0)"},
         {"name": "Data", "description": "Fuentes de datos y validación"},
         {"name": "Candidates", "description": "Candidatos arqueológicos"},
-        {"name": "Volumetric", "description": "Análisis volumétrico LIDAR"}
+        {"name": "Volumetric", "description": "Análisis volumétrico LIDAR"},
+        {"name": "Deprecated", "description": "Módulos obsoletos (Geoglifos, etc.)"}
     ]
 )
 
@@ -476,9 +477,10 @@ try:
     
     app.include_router(
         geoglyph_router,
-        tags=["Geoglyph Detection"]
+        tags=["Deprecated"],
+        deprecated=True
     )
-    logger.info("✅ Router Geoglyph Detection incluido en /geoglyph")
+    logger.info("⚠️ [DEPRECATED] Router Geoglyph Detection incluido por compatibilidad")
 except ImportError as e:
     logger.error(f"❌ No se pudo cargar router Geoglyph: {e}")
     import traceback
