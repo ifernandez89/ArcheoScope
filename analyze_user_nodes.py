@@ -23,12 +23,12 @@ async def analyze_user_nodes():
         "G4_MODULARITY": 140      # HRM Peaks
     }
     
-    print(f"\n🚀 EJECUTANDO ANÁLISIS DE INVARIANTES: 3 NUEVOS NODOS")
+    print(f"\n🚀 EJECUTANDO ANÁLISIS DE INVARIANTES: {len(sitios)} NUEVOS NODOS")
     print(f"====================================================")
     
     async with httpx.AsyncClient(timeout=600.0) as client:
         for i, site in enumerate(sitios):
-            print(f"\n[{i+1}/3] Analizando {site['name']}...")
+            print(f"\n[{i+1}/{len(sitios)}] Analizando {site['name']}...")
             payload = {
                 "lat_min": site['lat'] - delta,
                 "lat_max": site['lat'] + delta,
