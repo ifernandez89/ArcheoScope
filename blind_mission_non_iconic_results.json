@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Poverty Point (Earthworks)",
+    "type": "Native American",
+    "geo_coherence": 0.9351064305198256,
+    "persistence": 0.55,
+    "ess_score": 0.5144669728226535,
+    "hrm_peaks": 147,
+    "sii_index": 0.8924417618105545,
+    "classification": "AMBIGUOUS"
+  },
+  {
+    "name": "Chan Chan (Adobe)",
+    "type": "Chimu City",
+    "geo_coherence": 0.8861547801208496,
+    "persistence": 0.75,
+    "ess_score": 0.65,
+    "hrm_peaks": 162,
+    "sii_index": 1.1911160850906373,
+    "classification": "HISA"
+  },
+  {
+    "name": "Great Zimbabwe (Stone)",
+    "type": "Sub-Saharan",
+    "geo_coherence": 0.8846685082729249,
+    "persistence": 0.55,
+    "ess_score": 0.5906198012642089,
+    "hrm_peaks": 132,
+    "sii_index": 0.8763767483844866,
+    "classification": "AMBIGUOUS"
+  },
+  {
+    "name": "L'Anse aux Meadows (Subtle)",
+    "type": "Viking Outpost",
+    "geo_coherence": 0.7671144739915401,
+    "persistence": 0.55,
+    "ess_score": 0.36577105201692,
+    "hrm_peaks": 120,
+    "sii_index": 0.6413755919054991,
+    "classification": "GEOLOGICAL"
+  },
+  {
+    "name": "Tlatelolco (Urban)",
+    "type": "Aztec Complex",
+    "geo_coherence": 0.9280470169743859,
+    "persistence": 0.75,
+    "ess_score": 0.47049843718159945,
+    "hrm_peaks": 134,
+    "sii_index": 1.0112692156424612,
+    "classification": "HISA"
+  },
+  {
+    "name": "Marajo Mounds (Earth)",
+    "type": "Amazonian",
+    "geo_coherence": 0.8479390765533448,
+    "persistence": 0.75,
+    "ess_score": 0.65,
+    "hrm_peaks": 145,
+    "sii_index": 1.1072043074150086,
+    "classification": "HISA"
+  },
+  {
+    "name": "Hattusa (Hittite)",
+    "type": "Anatolian",
+    "geo_coherence": 0.9364931621001336,
+    "persistence": 0.55,
+    "ess_score": 0.5023796562684829,
+    "hrm_peaks": 112,
+    "sii_index": 0.796403846665424,
+    "classification": "AMBIGUOUS"
+  },
+  {
+    "name": "Sahara Blind North",
+    "type": "NEG_CONTROL",
+    "geo_coherence": 0.8377464721353102,
+    "persistence": 0.55,
+    "ess_score": 0.46323941640593036,
+    "hrm_peaks": 129,
+    "sii_index": 0.7595499832562458,
+    "classification": "AMBIGUOUS"
+  },
+  {
+    "name": "Andes Blind Ridge",
+    "type": "NEG_CONTROL",
+    "geo_coherence": 0.8654889930114746,
+    "persistence": 0.75,
+    "ess_score": 0.65,
+    "hrm_peaks": 158,
+    "sii_index": 1.162616744758606,
+    "classification": "HISA"
+  },
+  {
+    "name": "Siberian Blind Plain",
+    "type": "NEG_CONTROL",
+    "geo_coherence": 0.8743131420389754,
+    "persistence": 0.55,
+    "ess_score": 0.3679602828232565,
+    "hrm_peaks": 72,
+    "sii_index": 0.6133379299378088,
+    "classification": "GEOLOGICAL"
+  }
+]
