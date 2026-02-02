@@ -282,10 +282,25 @@ class ERA5Connector:
                 "download_format": "unarchived"
             }
             
-            # Descargar datos
-            logger.info(f"📥 Descargando ERA5 {variable}...")
-            result = self.cds_client.retrieve(dataset, request)
-            result.download(tmp_path)
+            # Descargar datos con TIMEOUT (Evitar cuelgues de la API de Copernicus)
+            logger.info(f"📥 Descargando ERA5 {variable} (Timeout: 60s)...")
+            
+            def call_cds():
+                res = self.cds_client.retrieve(dataset, request)
+                res.download(tmp_path)
+                return True
+
+            from concurrent.futures import ThreadPoolExecutor
+            loop = asyncio.get_event_loop()
+            with ThreadPoolExecutor() as pool:
+                try:
+                    await asyncio.wait_for(
+                        loop.run_in_executor(pool, call_cds),
+                        timeout=60.0 # No podemos esperar más por clima
+                    )
+                except asyncio.TimeoutError:
+                    logger.warning(f"⚠️ ERA5 {variable} TIMEOUT - Saltando instrumento")
+                    return None
             
             # Verificar archivo
             if not os.path.exists(tmp_path) or os.path.getsize(tmp_path) == 0:

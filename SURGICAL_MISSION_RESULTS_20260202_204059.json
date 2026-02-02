@@ -1,0 +1,32 @@
+[
+  {
+    "id": "NODE_CHOLULA",
+    "name": "Gran Pirámide de Cholula (México)",
+    "g1_geometry": 0,
+    "g4_modularity": 0,
+    "msf": 1.0,
+    "veredicto": "ANTRÓPICO DE MATERIAL BLANDO (AMB)",
+    "anthropic": true,
+    "action": "CONFIRMACIÓN DE ANOMALÍA ESTRUCTURAL (MATERIAL DEGRADABLE). PRIORIDAD ALTA."
+  },
+  {
+    "id": "NODE_GUNUNG",
+    "name": "Gunung Padang (Indonesia)",
+    "g1_geometry": 0,
+    "g4_modularity": 0,
+    "msf": 1.0,
+    "veredicto": "GEOLÓGICO/NATURAL",
+    "anthropic": false,
+    "action": "monitoring"
+  },
+  {
+    "id": "NODE_NUBIA",
+    "name": "Montículo Nubia (Catarata 4, Sudán)",
+    "g1_geometry": 0,
+    "g4_modularity": 0,
+    "msf": 1.0,
+    "veredicto": "GEOLÓGICO/NATURAL",
+    "anthropic": false,
+    "action": "monitoring"
+  }
+]

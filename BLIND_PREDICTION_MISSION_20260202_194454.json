@@ -1,0 +1,74 @@
+[
+  {
+    "site_id": "BLIND_A",
+    "site_name": "Altiplano SE Tiwanaku (Perú/Bolivia)",
+    "coordinates": {
+      "lat": -16.95,
+      "lon": -68.6
+    },
+    "analysis_radius_km": 2.0,
+    "timestamp": "2026-02-02T22:44:47.642595",
+    "prediction_hypothesis": "CHI > 0.85 → 2 plataformas dominantes + 1 subordinada",
+    "material_expected": "AMB o híbrido (piedra + tierra)",
+    "context": "Meseta erosionada, cultura megalítica probada, terreno sedimentario",
+    "timt_analysis": {
+      "success": false,
+      "error": "HTTP 404"
+    },
+    "chi_estimation": {
+      "chi_score": 0.0,
+      "estimation_method": "TIMT_FAILED",
+      "confidence": "NONE"
+    },
+    "blind_protocol": true,
+    "interpretation_pending": true
+  },
+  {
+    "site_id": "BLIND_B",
+    "site_name": "Valle del Indo Rural (Pakistán)",
+    "coordinates": {
+      "lat": 30.6,
+      "lon": 72.9
+    },
+    "analysis_radius_km": 2.5,
+    "timestamp": "2026-02-02T22:44:50.147363",
+    "prediction_hypothesis": "CHI alto → reclasificación de tell a complejo planificado",
+    "material_expected": "Ladrillo cocido + adobe",
+    "context": "Tells catalogados como asentamientos, cultura urbana planificada",
+    "timt_analysis": {
+      "success": false,
+      "error": "HTTP 404"
+    },
+    "chi_estimation": {
+      "chi_score": 0.0,
+      "estimation_method": "TIMT_FAILED",
+      "confidence": "NONE"
+    },
+    "blind_protocol": true,
+    "interpretation_pending": true
+  },
+  {
+    "site_id": "BLIND_C",
+    "site_name": "Norte China Loess-Estepa (China)",
+    "coordinates": {
+      "lat": 35.2,
+      "lon": 108.8
+    },
+    "analysis_radius_km": 1.5,
+    "timestamp": "2026-02-02T22:44:52.549894",
+    "prediction_hypothesis": "CHI alto + AMB → sistema monumental no reconocido",
+    "material_expected": "AMB (loess apisonado)",
+    "context": "Material ultra blando, dinastías tempranas, ritual estatal",
+    "timt_analysis": {
+      "success": false,
+      "error": "HTTP 404"
+    },
+    "chi_estimation": {
+      "chi_score": 0.0,
+      "estimation_method": "TIMT_FAILED",
+      "confidence": "NONE"
+    },
+    "blind_protocol": true,
+    "interpretation_pending": true
+  }
+]
