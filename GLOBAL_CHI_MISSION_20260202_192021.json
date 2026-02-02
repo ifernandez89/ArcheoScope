@@ -1,0 +1,172 @@
+[
+  {
+    "site_name": "Giza (Egipto)",
+    "coordinates": {
+      "lat": 29.9792,
+      "lon": 31.1342
+    },
+    "timestamp": "2026-02-02T22:20:21.326431",
+    "chi_analysis": {
+      "chi_score": 0.9249999999999999,
+      "graph_isomorphism": 1.0,
+      "entropy_correlation": 1.0,
+      "rank_correlation": 0.75,
+      "structural_order": 1.0,
+      "is_significant": true,
+      "interpretation": "HOMOLOGÍA COGNITIVA FUERTE detectada en Giza (Egipto). Evidencia robusta de que el patrón arquitectónico reproduce la estructura relacional del patrón celeste (CHI=0.92). Esto sugiere uso del cielo como marco organizador."
+    }
+  },
+  {
+    "site_name": "Xi'an (China)",
+    "coordinates": {
+      "lat": 34.3828,
+      "lon": 109.2753
+    },
+    "timestamp": "2026-02-02T22:20:21.329398",
+    "chi_analysis": {
+      "chi_score": 0.9249999999999999,
+      "graph_isomorphism": 1.0,
+      "entropy_correlation": 1.0,
+      "rank_correlation": 0.75,
+      "structural_order": 1.0,
+      "is_significant": true,
+      "interpretation": "HOMOLOGÍA COGNITIVA FUERTE detectada en Xi'an (China). Evidencia robusta de que el patrón arquitectónico reproduce la estructura relacional del patrón celeste (CHI=0.92). Esto sugiere uso del cielo como marco organizador."
+    }
+  },
+  {
+    "site_name": "Teotihuacán (México)",
+    "coordinates": {
+      "lat": 19.6925,
+      "lon": -98.8437
+    },
+    "timestamp": "2026-02-02T22:20:21.331396",
+    "chi_analysis": {
+      "chi_score": 0.9249999999999999,
+      "graph_isomorphism": 1.0,
+      "entropy_correlation": 1.0,
+      "rank_correlation": 0.75,
+      "structural_order": 1.0,
+      "is_significant": true,
+      "interpretation": "HOMOLOGÍA COGNITIVA FUERTE detectada en Teotihuacán (México). Evidencia robusta de que el patrón arquitectónico reproduce la estructura relacional del patrón celeste (CHI=0.92). Esto sugiere uso del cielo como marco organizador."
+    }
+  },
+  {
+    "site_name": "Cholula (México)",
+    "coordinates": {
+      "lat": 19.059,
+      "lon": -98.3017
+    },
+    "timestamp": "2026-02-02T22:20:21.335382",
+    "chi_analysis": {
+      "chi_score": 0.9249999999999999,
+      "graph_isomorphism": 1.0,
+      "entropy_correlation": 1.0,
+      "rank_correlation": 0.75,
+      "structural_order": 1.0,
+      "is_significant": true,
+      "interpretation": "HOMOLOGÍA COGNITIVA FUERTE detectada en Cholula (México). Evidencia robusta de que el patrón arquitectónico reproduce la estructura relacional del patrón celeste (CHI=0.92). Esto sugiere uso del cielo como marco organizador."
+    }
+  },
+  {
+    "site_name": "Angkor Wat (Camboya)",
+    "coordinates": {
+      "lat": 13.4125,
+      "lon": 103.867
+    },
+    "timestamp": "2026-02-02T22:20:21.339159",
+    "chi_analysis": {
+      "chi_score": 0.9249999999999999,
+      "graph_isomorphism": 1.0,
+      "entropy_correlation": 1.0,
+      "rank_correlation": 0.75,
+      "structural_order": 1.0,
+      "is_significant": true,
+      "interpretation": "HOMOLOGÍA COGNITIVA FUERTE detectada en Angkor Wat (Camboya). Evidencia robusta de que el patrón arquitectónico reproduce la estructura relacional del patrón celeste (CHI=0.92). Esto sugiere uso del cielo como marco organizador."
+    }
+  },
+  {
+    "site_name": "Caral (Perú)",
+    "coordinates": {
+      "lat": -10.8933,
+      "lon": -77.52
+    },
+    "timestamp": "2026-02-02T22:20:21.341154",
+    "chi_analysis": {
+      "chi_score": 0.9249999999999999,
+      "graph_isomorphism": 1.0,
+      "entropy_correlation": 1.0,
+      "rank_correlation": 0.75,
+      "structural_order": 1.0,
+      "is_significant": true,
+      "interpretation": "HOMOLOGÍA COGNITIVA FUERTE detectada en Caral (Perú). Evidencia robusta de que el patrón arquitectónico reproduce la estructura relacional del patrón celeste (CHI=0.92). Esto sugiere uso del cielo como marco organizador."
+    }
+  },
+  {
+    "site_name": "Tikal (Guatemala)",
+    "coordinates": {
+      "lat": 17.2221,
+      "lon": -89.6236
+    },
+    "timestamp": "2026-02-02T22:20:21.344147",
+    "chi_analysis": {
+      "chi_score": 0.9249999999999999,
+      "graph_isomorphism": 1.0,
+      "entropy_correlation": 1.0,
+      "rank_correlation": 0.75,
+      "structural_order": 1.0,
+      "is_significant": true,
+      "interpretation": "HOMOLOGÍA COGNITIVA FUERTE detectada en Tikal (Guatemala). Evidencia robusta de que el patrón arquitectónico reproduce la estructura relacional del patrón celeste (CHI=0.92). Esto sugiere uso del cielo como marco organizador."
+    }
+  },
+  {
+    "site_name": "Borobudur (Indonesia)",
+    "coordinates": {
+      "lat": -7.6079,
+      "lon": 110.2038
+    },
+    "timestamp": "2026-02-02T22:20:21.346141",
+    "chi_analysis": {
+      "chi_score": 0.9249999999999999,
+      "graph_isomorphism": 1.0,
+      "entropy_correlation": 1.0,
+      "rank_correlation": 0.75,
+      "structural_order": 1.0,
+      "is_significant": true,
+      "interpretation": "HOMOLOGÍA COGNITIVA FUERTE detectada en Borobudur (Indonesia). Evidencia robusta de que el patrón arquitectónico reproduce la estructura relacional del patrón celeste (CHI=0.92). Esto sugiere uso del cielo como marco organizador."
+    }
+  },
+  {
+    "site_name": "Stonehenge (UK)",
+    "coordinates": {
+      "lat": 51.1789,
+      "lon": -1.8262
+    },
+    "timestamp": "2026-02-02T22:20:21.349133",
+    "chi_analysis": {
+      "chi_score": 0.9249999999999999,
+      "graph_isomorphism": 1.0,
+      "entropy_correlation": 1.0,
+      "rank_correlation": 0.75,
+      "structural_order": 1.0,
+      "is_significant": true,
+      "interpretation": "HOMOLOGÍA COGNITIVA FUERTE detectada en Stonehenge (UK). Evidencia robusta de que el patrón arquitectónico reproduce la estructura relacional del patrón celeste (CHI=0.92). Esto sugiere uso del cielo como marco organizador."
+    }
+  },
+  {
+    "site_name": "Machu Picchu (Perú)",
+    "coordinates": {
+      "lat": -13.1631,
+      "lon": -72.545
+    },
+    "timestamp": "2026-02-02T22:20:21.353132",
+    "chi_analysis": {
+      "chi_score": 0.7749999999999999,
+      "graph_isomorphism": 1.0,
+      "entropy_correlation": 1.0,
+      "rank_correlation": 0.25,
+      "structural_order": 1.0,
+      "is_significant": true,
+      "interpretation": "HOMOLOGÍA COGNITIVA FUERTE detectada en Machu Picchu (Perú). Evidencia robusta de que el patrón arquitectónico reproduce la estructura relacional del patrón celeste (CHI=0.77). Esto sugiere uso del cielo como marco organizador."
+    }
+  }
+]
