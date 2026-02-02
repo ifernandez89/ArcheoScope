@@ -59,3 +59,27 @@ The following sites serve as the immutable "Golden Tests" for system calibration
     *   `G2 (Persistence)`: **0.55** (Raw) -> **0.733** (Effective with MSF=0.75).
     *   `G4 (Modularity)`: **136 Peaks** (PASSED > 100) - Internal chambers/terracing detected via HRM.
 *   **Significance**: Validates the MSF logic. Without MSF, this site produces a false negative (Natural). With MSF, it is correctly identified as a critical anthropogenic structure.
+
+### 5.2 Golden STONE Test (Hard Material Reference)
+*   **Site**: **Pyramids of Giza (Egypt)** (Planned)
+*   **Type**: Stone / Limestone
+*   **Expected Verdict**: **ANTHROPIC_STONE**
+*   **Role**: Serves as the immutable control for "Hard Positive" detection. High Persistence (G2 > 0.9) expected without MSF correction.
+
+### 5.3 Golden NATURAL Test (Negative Reference)
+*   **Site**: **Mount Ararat (Turkey) / Tierra del Fuego (Argentina)**
+*   **Type**: Volcanic / Natural Terrain
+*   **Verdict**: **NATURAL** (Validated)
+*   **Metrics (Typical)**:
+    *   `G1`: Variable (can look geometric).
+    *   `G2`: **Low (< 0.6)** (Fails Persistence).
+    *   `G4`: **Low (< 50 Peaks)** (Lack of internal modularity).
+*   **Significance**: Proves the system does not hallucinate structures on natural mountains, providing a critical "Negative Bar" for calibration.
+
+## 6. Strategic Direction: The Reference Triangle
+Future validations MUST respect this triangular boundary:
+1.  **Positive Hard** (Giza)
+2.  **Positive Soft** (Xi'an - AMB)
+3.  **Negative Convincing** (Ararat/Tierra del Fuego)
+
+Any refactor that breaks one of these three vertices is considered a REGRESSION.
