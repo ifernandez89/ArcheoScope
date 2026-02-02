@@ -8,7 +8,7 @@ from datetime import datetime
 async def analyze_user_nodes():
     # 1. Definir los nuevos sitios proporcionados por el usuario
     sitios = [
-        {"name": "Gran Pirámide en Xi'an (China)", "lat": 34.3828, "lon": 109.2753}
+        {"lat": 43.9797, "lon": 18.1701, "name": "Piramide de Bosnia (Visoko)"}
     ]
     
     delta = 0.005 # ~1km2 (Mismo que en mission_statistical_global.py)
@@ -105,9 +105,9 @@ async def analyze_user_nodes():
                         "veredicto": veredicto,
                         "checks": {
                             "G1_Geometria": "PASSED" if g1 else "FAILED",
-                            "G2_Estratigrafia": "PASSED" if g2 else "FAILED",
-                            "G3_Anomalia": "PASSED" if g3 else "FAILED",
-                            "G4_Modularidad": "PASSED" if g4 else "FAILED"
+                            "G2_Estratigrafia": "PASSED" if g2_pass else "FAILED",
+                            "G3_Anomalia": "PASSED" if g3_pass else "FAILED",
+                            "G4_Modularidad": "PASSED" if g4_pass else "FAILED"
                         }
                     }
                     results.append(invariants)
