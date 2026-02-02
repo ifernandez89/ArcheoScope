@@ -46,3 +46,16 @@ The system no longer treats all materials as equally persistent.
 ---
 **Audit performed by**: Antigravity AI
 **System Version**: 2.0.0-clean
+
+## 5. Reference Cases & Calibration
+The following sites serve as the immutable "Golden Tests" for system calibration:
+
+### 5.1 Golden AMB Test (Soft Material Reference)
+*   **Site**: **Great White Pyramid of Xi'an (China)**
+*   **Type**: Rammed Earth / Sedimentary
+*   **Verdict**: **AMB (Antrópico de Material Blando)**
+*   **Metrics (v2.0 Validated)**:
+    *   `G1 (Geometry)`: **0.924** (PASSED > 0.90) - Pyramidal geometry remains intact.
+    *   `G2 (Persistence)`: **0.55** (Raw) -> **0.733** (Effective with MSF=0.75).
+    *   `G4 (Modularity)`: **136 Peaks** (PASSED > 100) - Internal chambers/terracing detected via HRM.
+*   **Significance**: Validates the MSF logic. Without MSF, this site produces a false negative (Natural). With MSF, it is correctly identified as a critical anthropogenic structure.

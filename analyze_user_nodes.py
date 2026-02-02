@@ -26,7 +26,19 @@ async def analyze_user_nodes():
     print(f"\n🚀 EJECUTANDO ANÁLISIS DE INVARIANTES: {len(sitios)} NUEVOS NODOS")
     print(f"====================================================")
     
-    async with httpx.AsyncClient(timeout=600.0) as client:
+    async def show_progress():
+        """Muestra un indicador de progreso mientras espera la respuesta."""
+        start_time = asyncio.get_event_loop().time()
+        spin_chars = "|/-\\"
+        idx = 0
+        while True:
+            elapsed = asyncio.get_event_loop().time() - start_time
+            sys.stdout.write(f"\r⏳ Procesando datos satelitales masivos... {spin_chars[idx]} [Tiempo transcurrido: {elapsed:.0f}s]")
+            sys.stdout.flush()
+            idx = (idx + 1) % len(spin_chars)
+            await asyncio.sleep(0.1)
+
+    async with httpx.AsyncClient(timeout=None) as client:  # Timeout infinito para procesos científicos largos
         for i, site in enumerate(sitios):
             print(f"\n[{i+1}/{len(sitios)}] Analizando {site['name']}...")
             payload = {
@@ -34,11 +46,17 @@ async def analyze_user_nodes():
                 "lat_max": site['lat'] + delta,
                 "lon_min": site['lon'] - delta,
                 "lon_max": site['lon'] + delta,
-                "region_name": f"USER_TEST_{site['name'].split()[0]}"
+                "region_name": f"USER_TEST_{site['name'].split()[0]}" # Revert to original region_name logic
             }
+            
+            # Iniciar spinner y request simultáneamente
+            spinner_task = asyncio.create_task(show_progress())
             
             try:
                 response = await client.post(url, json=payload)
+                spinner_task.cancel()  # Detener spinner
+                sys.stdout.write("\r✅ Análisis completado!                                          \n")
+                
                 if response.status_code == 200:
                     data = response.json()
                     
