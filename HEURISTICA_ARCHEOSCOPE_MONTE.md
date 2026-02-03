@@ -20,6 +20,14 @@ Para mantener el rigor de ArcheoScope, establecemos:
 
 ---
 
+## 2.1 EL AXIOMA DE LA PUERTA DE HIERRO
+Con los datos obtenidos en el Cáucaso (ECC-2), formalizamos la siguiente ley de auditoría:
+> **"Una anomalía HTAG-Nodal (ECC-2) no se define por la altura de su coherencia, sino por la nitidez de su ruptura. El orden territorial es, ante todo, la capacidad de definir dónde termina el sistema."**
+
+La lectura del Cáucaso (0.92 con caída dirigida al Este a 0.83) confirma que no estamos viendo geología, sino una **frontera lógica** impuesta sobre el terreno.
+
+---
+
 ## 🧭 3. EL PROTOCOLO "QUICK-HTAG" (Finalizado)
 Para la fase operativa en Eurasia (Eje Anatolia – Asia Central), el protocolo se reduce a <10 mediciones:
 
