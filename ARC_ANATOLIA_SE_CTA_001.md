@@ -5,10 +5,18 @@
 
 ### 1️⃣ IDENTIDAD FORMAL DEL CASO
 *   **Case ID:** ARC-ANATOLIA-SE-CTA-001
-*   **Clasificación:** Continuidad Territorial Absoluta (CTA)
-*   **Estado:** 🔒 SELLADO COMO ANOMALÍA PRINCIPAL
-*   **Fecha de Sellado:** 2026-02-03T11:05:00Z
-*   **Sistema:** ArcheoScope TIMT v2.x (ULTRA-LIVIANO Habilitado)
+*   **Clasificación:** HTAG-CTA (Continuidad Territorial Antrópica)
+*   **Estado:** 🔒 CASO CANÓNICO SELLADO (NO MÁS EXPLORACIÓN)
+*   **Fecha de Sellado:** 2026-02-03T13:05:00Z
+*   **Sistema:** ArcheoScope TIMT v2.x
+
+---
+
+### 1.1 NUEVA TAXONOMÍA TERRITORIAL (SISTEMA HTAG)
+Bajo este nuevo marco científico, se establecen las siguientes categorías jerárquicas:
+
+1.  **HTAG-CTA (Anatolia SE - Case 001):** El núcleo de coherencia territorial. Una meseta de planificación "blanda" (AMB) continua. Es la fuente del sistema.
+2.  **HTAG-NODAL-EXTERNO (Göbekli Tepe):** Manifestaciones simbólicas periféricas. Son "cristalizaciones" en piedra (material duro) que surgen como nodos aislados dependientes de la logística territorial de la CTA.
 
 ---
 
