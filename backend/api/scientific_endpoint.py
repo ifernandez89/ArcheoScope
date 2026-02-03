@@ -84,6 +84,7 @@ class ScientificAnalysisRequest(BaseModel):
     lon_max: float
     region_name: str
     candidate_id: Optional[str] = None
+    resolution_m: Optional[float] = 150.0
 
 @router.post("/analyze")
 async def analyze_scientific(request: ScientificAnalysisRequest):
@@ -237,7 +238,7 @@ async def analyze_scientific(request: ScientificAnalysisRequest):
                 lon_max=request.lon_max,
                 analysis_objective=AnalysisObjective.EXPLORATORY,
                 analysis_radius_km=5.0,
-                resolution_m=150.0,  # AJUSTE: 150m por defecto
+                resolution_m=request.resolution_m or 150.0,  # Resolución desde la solicitud
                 communication_level=CommunicationLevel.TECHNICAL
             )
             

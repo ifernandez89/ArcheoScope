@@ -43,7 +43,7 @@ class UniversalClassifierV2:
             "G1_GEOMETRY": 0.915,
             "G2_PERSISTENCE": 0.70,
             "G3_ANOMALY": 0.58,
-            "G4_MODULARITY": 140
+            "G4_MODULARITY": 120  # Ajuste v2.0: 120 es el punto de ruptura prospectivo
         }
     
     def classify(self, metrics: UniversalMetrics) -> Dict[str, Any]:
