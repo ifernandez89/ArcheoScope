@@ -1,0 +1,27 @@
+[
+  {
+    "dir": "CENTER",
+    "g1": 0.9448434384440559,
+    "veredicto": "ANTR\u00d3PICO DE MATERIAL BLANDO (AMB)"
+  },
+  {
+    "dir": "NORTH",
+    "g1": 0.852989829326883,
+    "veredicto": "GEOL\u00d3GICO/NATURAL"
+  },
+  {
+    "dir": "SOUTH",
+    "g1": 0.9368301976201078,
+    "veredicto": "ANTR\u00d3PICO DE MATERIAL BLANDO (AMB)"
+  },
+  {
+    "dir": "EAST",
+    "g1": 0.9046924494936512,
+    "veredicto": "GEOL\u00d3GICO/NATURAL"
+  },
+  {
+    "dir": "WEST",
+    "g1": 0.8909703085339812,
+    "veredicto": "GEOL\u00d3GICO/NATURAL"
+  }
+]
