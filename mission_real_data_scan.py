@@ -17,6 +17,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger("mission_real_data_scan")
 
 # STRICTLY REAL DATA SCAN - NO SYNTHETIC DATA ALLOWED
+# REORGANIZED: Small zones first, large zone (Puerto Rico) reduced 70% and moved to end
 SCAN_ZONES = [
     {
         "name": "Bermuda Node A (Re-scan)",
@@ -28,31 +29,31 @@ SCAN_ZONES = [
         "rationale": "Re-scanning with strict real-data-only policy"
     },
     {
-        "name": "Puerto Rico North Continental Slope",
-        "lat_min": 19.8,
-        "lat_max": 20.4,
-        "lon_min": -66.8,
-        "lon_max": -66.0,
-        "type": "SCIENTIFIC_PRIORITY",
-        "rationale": "Non-karst, volcanic+sedimentary, deep structural stability"
-    },
-    {
         "name": "SE Sargasso Sea Margin (Silent Zone)",
         "lat_min": 30.0,
-        "lat_max": 31.0,
+        "lat_max": 30.3,  # Reduced from 31.0 to 30.3 (70% reduction)
         "lon_min": -64.0,
-        "lon_max": -62.0,
+        "lon_max": -63.4,  # Reduced from -62.0 to -63.4 (70% reduction)
         "type": "SCIENTIFIC_PRIORITY",
         "rationale": "Ancient oceanic floor, slow sedimentation, minimal biological disturbance"
     },
     {
         "name": "Puerto Rico Trench Western Boundary",
         "lat_min": 20.0,
-        "lat_max": 20.5,
+        "lat_max": 20.15,  # Reduced from 20.5 to 20.15 (70% reduction)
         "lon_min": -68.2,
-        "lon_max": -67.5,
+        "lon_max": -67.99,  # Reduced from -67.5 to -67.99 (70% reduction)
         "type": "SCIENTIFIC_PRIORITY",
         "rationale": "Stable edge reference zone, multi-scale coherence test"
+    },
+    {
+        "name": "Puerto Rico North Continental Slope (Reduced)",
+        "lat_min": 19.8,
+        "lat_max": 19.98,  # Reduced from 20.4 to 19.98 (70% reduction)
+        "lon_min": -66.8,
+        "lon_max": -66.56,  # Reduced from -66.0 to -66.56 (70% reduction)
+        "type": "SCIENTIFIC_PRIORITY",
+        "rationale": "Non-karst, volcanic+sedimentary, deep structural stability (REDUCED FOR PERFORMANCE)"
     }
 ]
 
@@ -73,11 +74,25 @@ class RealDataScanner:
         print("\n" + "="*100)
         print("🛰️ ArcheoScope REAL DATA SCAN")
         print("   INTEGRITY MODE: Strict (No Synthetic Data)")
-        print("   Zones: 4")
+        print(f"   Zones: {len(SCAN_ZONES)}")
         print("="*100)
         
-        for zone in SCAN_ZONES:
+        total_start = datetime.now()
+        
+        for idx, zone in enumerate(SCAN_ZONES, 1):
+            print(f"\n🔄 Processing zone {idx}/{len(SCAN_ZONES)}")
             await self.scan_zone(zone)
+            
+            # Progress update
+            elapsed_total = (datetime.now() - total_start).total_seconds()
+            avg_time = elapsed_total / idx
+            remaining = (len(SCAN_ZONES) - idx) * avg_time
+            print(f"\n📊 Progress: {idx}/{len(SCAN_ZONES)} zones completed")
+            print(f"   Total elapsed: {elapsed_total/60:.1f} minutes")
+            print(f"   Estimated remaining: {remaining/60:.1f} minutes")
+        
+        total_elapsed = (datetime.now() - total_start).total_seconds()
+        print(f"\n✅ All zones scanned in {total_elapsed/60:.1f} minutes")
         
         # Generate honest report
         self._generate_real_data_report()
@@ -88,18 +103,42 @@ class RealDataScanner:
         print(f"   Type: {zone['type']}")
         print(f"   Rationale: {zone['rationale']}")
         print(f"   Bounds: [{zone['lat_min']:.3f}, {zone['lat_max']:.3f}] x [{zone['lon_min']:.3f}, {zone['lon_max']:.3f}]")
+        
+        # Calculate area
+        lat_range = zone['lat_max'] - zone['lat_min']
+        lon_range = zone['lon_max'] - zone['lon_min']
+        approx_area_km2 = lat_range * lon_range * 111 * 111  # Rough approximation
+        print(f"   Approximate Area: {approx_area_km2:.1f} km²")
         print("="*100)
         
+        start_time = datetime.now()
+        
         try:
-            # Run REAL TIMT analysis
-            result = await self.engine.analyze_territory(
-                lat_min=zone['lat_min'],
-                lat_max=zone['lat_max'],
-                lon_min=zone['lon_min'],
-                lon_max=zone['lon_max'],
-                analysis_objective=AnalysisObjective.VALIDATION,
-                resolution_m=50.0  # Good balance
-            )
+            print(f"⏳ Starting analysis at {start_time.strftime('%H:%M:%S')}...")
+            print(f"   Resolution: 50m")
+            print(f"   Expected grid size: ~{int(lat_range * 111000 / 50)} x {int(lon_range * 111000 / 50)} pixels")
+            print(f"   This may take several minutes for large areas...")
+            
+            # Run REAL TIMT analysis with timeout
+            try:
+                result = await asyncio.wait_for(
+                    self.engine.analyze_territory(
+                        lat_min=zone['lat_min'],
+                        lat_max=zone['lat_max'],
+                        lon_min=zone['lon_min'],
+                        lon_max=zone['lon_max'],
+                        analysis_objective=AnalysisObjective.VALIDATION,
+                        resolution_m=50.0  # Good balance
+                    ),
+                    timeout=600.0  # 10 minute timeout per zone
+                )
+            except asyncio.TimeoutError:
+                elapsed = (datetime.now() - start_time).total_seconds()
+                print(f"\n⏱️ TIMEOUT after {elapsed:.1f}s - Zone too large or data unavailable")
+                raise Exception(f"Analysis timeout after {elapsed:.1f}s")
+            
+            elapsed = (datetime.now() - start_time).total_seconds()
+            print(f"✅ Analysis completed in {elapsed:.1f}s")
             
             # Extract ONLY real measurements
             zone_result = {
@@ -107,15 +146,15 @@ class RealDataScanner:
                 'timt_result': {
                     'territorial_coherence': result.territorial_coherence_score,
                     'scientific_rigor': result.scientific_rigor_score,
-                    'hypotheses_validated': len([h for h in result.hypothesis_validations if h.validation_status == "VALIDATED"]),
+                    'hypotheses_validated': len([h for h in result.hypothesis_validations if h.overall_evidence_level in ["STRONG", "MODERATE"]]),
                     'analysis_id': result.analysis_id
                 },
                 'real_data_summary': {
-                    'etp_coherence_3d': result.tomographic_profile.coherence_3d if result.tomographic_profile else None,
+                    'etp_coherence_3d': result.tomographic_profile.coherencia_3d if result.tomographic_profile else None,
                     'etp_ess_superficial': result.tomographic_profile.ess_superficial if result.tomographic_profile else None,
                     'etp_ess_volumetrico': result.tomographic_profile.ess_volumetrico if result.tomographic_profile else None,
-                    'tas_score': result.tomographic_profile.tas_score if result.tomographic_profile else None,
-                    'dil_score': result.tomographic_profile.dil_score if result.tomographic_profile else None
+                    'tas_score': result.tomographic_profile.tas_signature.tas_score if result.tomographic_profile and result.tomographic_profile.tas_signature else None,
+                    'dil_score': result.tomographic_profile.dil_signature.dil_score if result.tomographic_profile and result.tomographic_profile.dil_signature else None
                 },
                 'context': {
                     'geological_type': result.territorial_context.geological_context.primary_type if result.territorial_context and result.territorial_context.geological_context else None,
@@ -126,7 +165,7 @@ class RealDataScanner:
             self.results.append(zone_result)
             
             # Print REAL measurements
-            print(f"\n✅ SCAN COMPLETE")
+            print(f"\n✅ SCAN COMPLETE (took {elapsed:.1f}s)")
             print(f"   🎯 Territorial Coherence (G1): {result.territorial_coherence_score:.3f}")
             print(f"   🔬 Scientific Rigor: {result.scientific_rigor_score:.3f}")
             print(f"   📊 3D Coherence (ETP): {zone_result['real_data_summary']['etp_coherence_3d']:.3f}" if zone_result['real_data_summary']['etp_coherence_3d'] else "   📊 3D Coherence: N/A")
@@ -134,7 +173,8 @@ class RealDataScanner:
             print(f"   🔬 DIL Score: {zone_result['real_data_summary']['dil_score']:.3f}" if zone_result['real_data_summary']['dil_score'] else "   🔬 DIL Score: N/A")
             
         except Exception as e:
-            print(f"\n❌ SCAN FAILED: {e}")
+            elapsed = (datetime.now() - start_time).total_seconds()
+            print(f"\n❌ SCAN FAILED after {elapsed:.1f}s: {e}")
             logger.error(f"Error scanning {zone['name']}: {e}", exc_info=True)
             
             zone_result = {
@@ -253,6 +293,13 @@ class RealDataScanner:
         print(f"📄 JSON Data Saved: {json_filename}")
 
 if __name__ == "__main__":
+    # Set UTF-8 encoding for Windows console
+    import sys
+    import io
+    if sys.platform == 'win32':
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    
     print("🚀 ArcheoScope Real Data Scanner - v2.0 (DATA INTEGRITY ENFORCED)")
     print("   Rule #1: NO SYNTHETIC DATA")
     print("   Rule #2: REAL INSTRUMENTS ONLY")

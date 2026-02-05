@@ -1,0 +1,54 @@
+[
+  {
+    "zone": {
+      "name": "Bermuda Node A (Re-scan)",
+      "lat_min": 26.57,
+      "lat_max": 26.58,
+      "lon_min": -78.83,
+      "lon_max": -78.82,
+      "type": "ORIGINAL_ANOMALY",
+      "rationale": "Re-scanning with strict real-data-only policy"
+    },
+    "status": "FAILED",
+    "error": "'GeologicalContext' object has no attribute 'primary_type'"
+  },
+  {
+    "zone": {
+      "name": "SE Sargasso Sea Margin (Silent Zone)",
+      "lat_min": 30.0,
+      "lat_max": 30.3,
+      "lon_min": -64.0,
+      "lon_max": -63.4,
+      "type": "SCIENTIFIC_PRIORITY",
+      "rationale": "Ancient oceanic floor, slow sedimentation, minimal biological disturbance"
+    },
+    "status": "FAILED",
+    "error": "'GeologicalContext' object has no attribute 'primary_type'"
+  },
+  {
+    "zone": {
+      "name": "Puerto Rico Trench Western Boundary",
+      "lat_min": 20.0,
+      "lat_max": 20.15,
+      "lon_min": -68.2,
+      "lon_max": -67.99,
+      "type": "SCIENTIFIC_PRIORITY",
+      "rationale": "Stable edge reference zone, multi-scale coherence test"
+    },
+    "status": "FAILED",
+    "error": "'GeologicalContext' object has no attribute 'primary_type'"
+  },
+  {
+    "zone": {
+      "name": "Puerto Rico North Continental Slope (Reduced)",
+      "lat_min": 19.8,
+      "lat_max": 19.98,
+      "lon_min": -66.8,
+      "lon_max": -66.56,
+      "type": "SCIENTIFIC_PRIORITY",
+      "rationale": "Non-karst, volcanic+sedimentary, deep structural stability (REDUCED FOR PERFORMANCE)"
+    },
+    "status": "FAILED",
+    "error": "'GeologicalContext' object has no attribute 'primary_type'"
+  }
+]
