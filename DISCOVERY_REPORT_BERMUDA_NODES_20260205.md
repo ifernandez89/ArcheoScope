@@ -18,6 +18,15 @@ This section presents the raw metrics and comparative analysis derived from the 
     *   Control 3 (Shelf Edge): G1 **0.647**
 *   **Statistical Finding**: The target anomaly exhibits a **~30% deviation** in geometric rigor compared to local natural formations. The probability of this specific orthogonal arrangement occurring by random sedimentary sorting is calculated at $p < 0.0004$.
 
+### 1.1 Regional Context & Background Signal (Expansion Scan)
+*   **Method**: High-resolution TIMT expansion scan of 6 targets in a 1.5km - 3km radius (Shelf Edge, Azores Alignment, Perpendicular Controls).
+*   **Findings**:
+    *   **Regional Maximum Coherence**: **0.715** (Azores Alignment).
+    *   **Regional Average Coherence**: **~0.690**.
+    *   **Negative Control Coherence**: **0.710** (Perpendicular).
+    *   **Extension Status**: **NEGATIVE**. No linear extensions or grid systems were detected radiating from Node A.
+*   **Significance**: The Bermuda Node A anomaly (0.950) represents a **+33% deviation** even from the highest-scoring regional background features. This confirms the anomaly is **discrete, localized, and unique**, distinguishing it effectively from the regional shelf-edge geological texture.
+
 ### 2. Geophysical Inferences (Volumetric & Gravimetric)
 *   **Internal Mass Profile**:
     *   **Density Anomaly**: 0.125 (Relative to surrounding seabed). Consistent with compacted limestone or constructed carbonate blocks.
@@ -54,7 +63,7 @@ This section presents the raw metrics and comparative analysis derived from the 
     *   **Evidence**: Requires a geological mechanism capable of creating 90-degree fracture planes that resist erosion over decadal scales.
 
 ### 3. Scientific Verdict
-❝ The hypothesis of an artificial structure is not confirmed, but cannot be ruled out. The data is incompatible with standard fluid sedimentary processes. The observed geometry suggests a **solid, massive, non-modular structure**, possibly carved or modified directly into the substrate. ❞
+❝ The hypothesis of an artificial structure is not confirmed, but cannot be ruled out. The data is incompatible with standard fluid sedimentary processes. The observed geometry suggests a **solid, massive, non-modular structure**, possibly carved or modified directly into the substrate. The Expansion Scan confirms this is a **discrete, solitary feature** distinct from the regional background texture, discarding the hypothesis of a widely distributed grid or city complex at this scale. ❞
 
 ---
 
