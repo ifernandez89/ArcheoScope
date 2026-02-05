@@ -1,7 +1,7 @@
 # ArcheoScope: Bermuda Node Scan Discovery Report
 **Date**: 2026-02-05
 **Mission ID**: TIMT-BERMUDA-REFUTATION-2026
-**Status**: PRELIMINARY DATA RELEASE
+**Status**: PRELIMINARY DATA RELEASE 1.1 (Post-Verification)
 
 ---
 
@@ -36,38 +36,42 @@ This section presents the raw metrics and comparative analysis derived from the 
 
 ---
 
-## 🧠 LAYER B: INTERPRETATIVE FRAMEWORK (The Hypothesis)
-*Note: This section proposes functional hypotheses to explain the Layer A data. These are open to revision.*
+## 🧠 LAYER B: INTERPRETATIVE FRAMEWORK (Refined Hypothesis)
+*Note: This section has been updated post-falsification verification (Mission ID: 2860dbdf).*
 
-### 1. Primary Functional Hypothesis
-The data is currently **incompatible** with standard geological models for the Bahamas Platform (sedimentary accretion or biological reef growth). 
-We propose the existence of a **Static Geometric Anomaly (SGA)** of undetermined origin. The structural properties (compacted density, orthogonality, persistence) are consistent with an artificial or semi-artificial modification of the bedrock, potentially a "lithified infrastructure" that has stabilized the local seabed.
+### 1. Discarded Hypotheses
+*   🔴 **H4: Modular Hollow Structure (Building/Temple)**
+    *   **Status**: **DISCARDED**.
+    *   **Evidence**: The Internal Modularity test failed (Regularity Score 0.372). There is no evidence of floors, chamfers, or regular internal voids. The structure is **solid**.
 
-### 2. Planetary Continuity Hypothesis (Speculative Context)
-Within the *Planetary Continuity Protocol*, this anomaly is classified as a **Candidate Type A Synchronization Node**. Its location and rigorous geometry align with the predicted global grid. However, assigning a specific function (e.g., "magnetic anchor") requires data not yet present in Layer A.
+### 2. Surviving Hypotheses (Ranked by Plausibility)
+*   🟢 **H1: Carved/Modified Substrate (Lithified Infrastructure)**
+    *   **Status**: **STRONG SUPPORT**.
+    *   **Evidence**: The "Hard Corners" verification (Verdict: HARD_CORNERS) confirms sharp edges incompatible with fluid erosion. The density anomaly (0.125) matches the surrounding bedrock, suggesting the anomaly is **shaped** from the local material rather than built *upon* it.
+    *   **Analogue**: Andean terraces, cyclopean platforms, rock-cut foundations.
+*   🟡 **H2: Rare Natural Formation (Geometric Geologic Anomaly)**
+    *   **Status**: **UNLIKELY BUT POSSIBLE**.
+    *   **Evidence**: Requires a geological mechanism capable of creating 90-degree fracture planes that resist erosion over decadal scales.
 
-### 3. Scientific Constraint
-We explicitly do not draw a definitive conclusion of "Ancient Civilization" or "Atlantis" based solely on remote sensing. The finding is stated strictly as: **An extensive, geometrically anomalous formation that requires in-situ verification.**
+### 3. Scientific Verdict
+❝ The hypothesis of an artificial structure is not confirmed, but cannot be ruled out. The data is incompatible with standard fluid sedimentary processes. The observed geometry suggests a **solid, massive, non-modular structure**, possibly carved or modified directly into the substrate. ❞
 
 ---
 
-## 🔮 FALSIFIABLE PREDICTIONS
-To transition this from "Anomaly" to "Confirmed Structure", the following predictions must be tested. If they fail, the Type A Hypothesis is refuted.
+## 🔮 NEXT STEPS: SURGICAL VALIDATION
+The investigation now shifts from "Is it artificial?" to "How was it shaped?".
 
-1.  **Prediction: Internal Modularity**
-    *   *Test*: GPR scans at <50cm resolution.
-    *   *Falsification*: If internal mass is random or solely stratigraphic layers, the hypothesis fails.
-    *   *Confirmation*: Internal voids or density changes must appear at regular, modular intervals (e.g., every $x$ meters).
+1.  **Edge Curvature Analysis**
+    *   *Objective*: Distinguish carving from erosion.
+    *   *Test*: Carved edges maintain constant curvature; eroded edges show variable curvature.
 
-2.  **Prediction: Magnetic Alignment**
-    *   *Test*: High-resolution magnetometry.
-    *   *Falsification*: If magnetic north of the structure aligns perfectly with current magnetic north or random drift.
-    *   *Confirmation*: Remanent magnetism should point to a specific past epoch (paleomagnetic dating) or align with a global geodetic grid rather than local geology.
+2.  **Local Partial Symmetry**
+    *   *Objective*: Identify local axes of order within the non-modular mass.
+    *   *Test*: Search for repeating angular relationships (local parallelism) rather than global symmetry.
 
-3.  **Prediction: Micro-Cornering**
-    *   *Test*: ROV visual inspection / micro-bathymetry.
-    *   *Falsification*: If corners are rounded by erosion >45 degrees relative to edges.
-    *   *Confirmation*: Presence of "hard corners" (near 90 degrees) surviving beneath the growth crust, indicating resistance to fluid erosion mechanics.
+3.  **Discontinuity Magnetometry**
+    *   *Objective*: Detect cut marks.
+    *   *Test*: Look for magnetic discontinuities at the "Hard Corners" which would indicate a break in the natural depositional magnetic grain.
 
 ---
 
