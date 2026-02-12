@@ -698,8 +698,8 @@ function ModelScene({
         </>
       ) : (
         <>
-          {console.log('🗿 Renderizando ModelViewer con modelo:', modelPath)}
-          <ModelViewer modelPath={modelPath} ref={modelRef} />
+          {console.log('🗿 Renderizando ModelViewer con modelo:', avatarModel)}
+          <ModelViewer modelPath={avatarModel} ref={modelRef} />
         </>
       )}
       
