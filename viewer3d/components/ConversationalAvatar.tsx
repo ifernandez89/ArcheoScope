@@ -44,7 +44,7 @@ export default function ConversationalAvatar({
 
     const llm = new LLMIntegration({
       baseUrl: 'http://localhost:11434',
-      model: 'mistral:7b', // Modelo chico recomendado
+      model: 'qwen2.5:1.7b', // Modelo ultra-ligero y rápido
       temperature: 0.7
     })
 
@@ -95,7 +95,7 @@ export default function ConversationalAvatar({
       // Verificar Ollama
       const llm = new LLMIntegration({
         baseUrl: 'http://localhost:11434',
-        model: 'mistral:7b'
+        model: 'qwen2.5:1.7b'
       })
 
       const available = await llm.checkAvailability()
