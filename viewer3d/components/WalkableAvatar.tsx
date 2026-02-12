@@ -123,18 +123,33 @@ export default function WalkableAvatar({
       
       console.log('🚶 Avatar cargado:', {
         animaciones: names,
+        totalAnimaciones: names.length,
         dimensiones: size,
         escala: scale,
         modelHeight,
         boxMin: box.min.y,
         boxMax: box.max.y
       })
+      
+      // Mostrar lista detallada de animaciones
+      if (names.length > 0) {
+        console.log('🎬 Animaciones disponibles:')
+        names.forEach((name, index) => {
+          console.log(`  ${index + 1}. ${name}`)
+        })
+      } else {
+        console.warn('⚠️ Este modelo NO tiene animaciones embebidas')
+        console.log('💡 Sugerencia: Usa Mixamo (https://www.mixamo.com/) para agregar animaciones')
+      }
     }
   }, [scene, names])
   
-  // Gestionar animaciones según estado
+  // Gestionar animaciones según estado con transiciones suaves
   useEffect(() => {
-    if (!actions || names.length === 0) return
+    if (!actions || names.length === 0) {
+      console.log('⚠️ No hay animaciones disponibles')
+      return
+    }
     
     // Buscar animaciones por nombre común
     const idleAnim = names.find(n => 
@@ -147,14 +162,30 @@ export default function WalkableAvatar({
       n.toLowerCase().includes('run')
     ) || names[1]
     
-    // Detener todas las animaciones
-    Object.values(actions).forEach(action => action?.stop())
+    console.log('🎬 Animaciones detectadas:', {
+      idle: idleAnim,
+      walk: walkAnim,
+      todas: names,
+      estado: state
+    })
     
-    // Reproducir animación según estado
+    // Transición suave entre animaciones
     if (state === 'walking' && walkAnim && actions[walkAnim]) {
-      actions[walkAnim]?.reset().fadeIn(0.2).play()
+      // Fade out idle
+      if (idleAnim && actions[idleAnim]) {
+        actions[idleAnim]?.fadeOut(0.3)
+      }
+      // Fade in walk
+      actions[walkAnim]?.reset().fadeIn(0.3).play()
+      console.log('🚶 Reproduciendo animación: Walk')
     } else if (state === 'idle' && idleAnim && actions[idleAnim]) {
-      actions[idleAnim]?.reset().fadeIn(0.2).play()
+      // Fade out walk
+      if (walkAnim && actions[walkAnim]) {
+        actions[walkAnim]?.fadeOut(0.3)
+      }
+      // Fade in idle
+      actions[idleAnim]?.reset().fadeIn(0.3).play()
+      console.log('🧍 Reproduciendo animación: Idle')
     }
     
   }, [state, actions, names])
