@@ -1,3 +1,0 @@
-python start_frontend.py /F
-
-python api/main.py   /B

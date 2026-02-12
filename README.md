@@ -1,274 +1,322 @@
-# 🔍 ArcheoScope - Archaeological Remote Sensing Engine
+# 🎨 Creador3D Ecosystem
 
-> **"Scientific detection of spatial persistences not explainable by current natural processes"**
+**Generación y visualización 3D experimental**
 
-[![Status](https://img.shields.io/badge/Status-Development-yellow)](https://github.com/ifernandez89/ArcheoScope)
-[![AI](https://img.shields.io/badge/AI-Ollama%20Optional-blue)](https://ollama.ai/)
-[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.11+-red)](https://python.org)
-
-## 🎯 **What is ArcheoScope?**
-
-ArcheoScope is a **scientific archaeological remote sensing engine** designed to detect spatial persistences that cannot be explained by current natural processes. It serves as a **hypothesis amplifier** for archaeologists to identify regions where existing explanations fail.
-
-### ✨ **Core Features**
-
-🤖 **Optional AI Integration** - Ollama with configurable models  
-🎯 **Strict Spatial Controls** - Realistic thresholds based on scientific principles  
-🔍 **Specific Indicators** - Traceable metrics linked to visible data  
-⚖️ **Epistemological Protection** - Automatic rejection of invalid analyses  
-🧩 **Priority Tiles** - Automatic subdivision into candidate zones  
-📡 **High-Resolution Layers** - Satellite data access with exact coordinates  
-🌐 **Scientific Interface** - Designed for archaeological research  
+Un ecosistema completo para crear, manipular y visualizar modelos 3D con una API REST moderna y un visualizador web interactivo.
 
 ---
 
-## 🎯 **Scientific Positioning**
+## 🚀 Quick Start
 
-> **"ArcheoScope does not seek hidden structures. It identifies regions where current natural process models fail to explain observed patterns, and indicates when results are not scientifically valid due to scale or context."**
-
-This is a **spatial hypothesis amplifier** that:
-- Identifies where current archaeological explanations fail
-- Provides priority tiles for detailed investigation
-- Offers high-resolution layers with exact coordinates
-- Maintains scientific honesty about limitations
-
----
-
-## 🚀 **Inicio Rápido**
-
-### **1. Prerrequisitos**
+### 1. Iniciar API Creador3D
 ```bash
-# Python 3.11+
-python --version
+python run_creador3d.py
+```
+API disponible en: `http://localhost:8004`
 
-# Ollama (opcional, para IA)
-# Instalar desde: https://ollama.ai/
-ollama pull qwen2.5:3b-instruct
+### 2. Iniciar Visualizador 3D
+```bash
+start_viewer3d.bat
+```
+Visualizador disponible en: `http://localhost:3000`
+
+---
+
+## 📦 Componentes del Ecosistema
+
+### 🎨 Creador3D API (Puerto 8004)
+API REST experimental para generación de modelos 3D.
+
+**Características**:
+- Generación desde parámetros geométricos
+- Generación desde clases morfológicas
+- Generación desde geometría custom
+- Export a PNG y OBJ
+- Reutiliza lógica de backend científico
+
+**Endpoints**:
+- `POST /generate/parameters` - Generar desde parámetros
+- `POST /generate/morphology` - Generar desde morfología
+- `POST /generate/custom` - Generar geometría custom
+- `GET /model/{filename}` - Descargar modelo
+- `GET /morphologies` - Listar clases disponibles
+
+**Documentación**: Ver `creador3d/README.md`
+
+---
+
+### 🌐 Visualizador 3D (Puerto 3000)
+Visualizador web interactivo con Next.js + React Three Fiber.
+
+**Características**:
+- Carga de modelos .glb/.gltf
+- Controles de órbita (rotar, zoom, pan)
+- Auto-rotación con toggle
+- Iluminación profesional
+- Sombras y reflejos realistas
+- UI moderna y responsive
+
+**Controles**:
+- Click izquierdo + arrastrar: Rotar
+- Click derecho + arrastrar: Mover cámara
+- Scroll: Zoom
+- Click en modelo: Toggle auto-rotación
+
+**Documentación**: Ver `viewer3d/README.md`
+
+---
+
+### 🏛️ Backend Core
+Core mínimo del backend para soporte de Creador3D.
+
+**Componentes**:
+- `culturally_constrained_mig.py` - Motor de inferencia geométrica
+- `morphological_repository.py` - Repositorio de clases morfológicas
+- `geometric_inference_engine.py` - Engine de inferencia
+
+**Clases Morfológicas**:
+1. MOAI (Rapa Nui)
+2. SPHINX (Egipto)
+3. EGYPTIAN_STATUE (Egipto)
+4. COLOSSUS (Egipto)
+5. PYRAMID_MESOAMERICAN (Mesoamérica)
+6. TEMPLE_PLATFORM (Mesoamérica)
+7. STELA_MAYA (Mesoamérica)
+
+---
+
+## 🎯 Casos de Uso
+
+### 1. Generar Modelo desde Parámetros
+```bash
+curl -X POST http://localhost:8004/generate/parameters \
+  -H "Content-Type: application/json" \
+  -d '{
+    "height_m": 30,
+    "width_m": 50,
+    "shape_type": "pyramid",
+    "color": "#D4A574"
+  }'
 ```
 
-### **2. Instalación**
+### 2. Generar Modelo desde Morfología
 ```bash
-# Clonar repositorio
-git clone https://github.com/ifernandez89/ArcheoScope.git
-cd ArcheoScope
-
-# Instalar dependencias básicas
-pip install fastapi uvicorn numpy scipy requests
-
-# Iniciar sistema
-python demo_server.py
+curl -X POST http://localhost:8004/generate/morphology \
+  -H "Content-Type: application/json" \
+  -d '{
+    "morphological_class": "moai",
+    "scale_factor": 1.5
+  }'
 ```
 
-### **3. Acceso**
-- **Frontend:** Abrir `frontend/index.html` en navegador
-- **API:** http://localhost:8001
-- **Docs:** http://localhost:8001/docs
+### 3. Visualizar Modelo
+1. Genera un modelo con la API
+2. Obtén el nombre del archivo del response
+3. Abre el visualizador: `http://localhost:3000`
+4. El modelo se carga automáticamente
 
 ---
 
-## 🔬 **Cómo Funciona**
+## 📁 Estructura del Proyecto
 
-### **Análisis Multi-Escala Inteligente**
-
-| Área | Modo | Comportamiento |
-|------|------|----------------|
-| ≤ 10 km² | 🎯 **Científico Fino** | Máxima resolución, resultados publicables |
-| 10-100 km² | 🔬 **Analítico** | Válido con limitaciones claras |
-| > 100 km² | 🚨 **RECHAZADO** | Área demasiado grande, análisis inválido |
-
-### **Indicadores Específicos Detectados**
-- 🔴 **Contradicciones Físicas:** Gradiente anómalo de velocidad, desequilibrio térmico
-- 🟡 **Anomalías Estadísticas:** Desacople velocidad-topografía, inconsistencias
-- 🟢 **Regiones Consistentes:** Comportamiento glaciológico esperado
-- 🧩 **Tiles Prioritarios:** Zonas candidatas automáticas para estudio detallado
-- 📡 **Capas Alta Resolución:** Datos satelitales exportables con coordenadas exactas
+```
+creador3d-ecosystem/
+├── creador3d/              # API experimental
+│   ├── __init__.py
+│   ├── api_creador3d.py   # API FastAPI
+│   └── README.md          # Documentación
+│
+├── viewer3d/              # Visualizador 3D
+│   ├── app/               # Next.js App Router
+│   ├── components/        # Componentes React
+│   ├── public/            # Archivos estáticos
+│   └── README.md          # Documentación
+│
+├── backend/               # Core mínimo
+│   ├── culturally_constrained_mig.py
+│   ├── morphological_repository.py
+│   └── geometric_inference_engine.py
+│
+├── models_3d/             # Modelos 3D de entrada
+│   └── warrior.glb        # Modelo de prueba
+│
+├── creador3d_models/      # Modelos generados
+│   ├── *.png              # Renders
+│   └── *.obj              # Geometría 3D
+│
+├── run_creador3d.py       # Iniciar API
+├── start_viewer3d.bat     # Iniciar visualizador
+├── test_creador3d.py      # Tests de la API
+└── README.md              # Este archivo
+```
 
 ---
 
-## 📊 **Ejemplo de Uso**
+## 🔧 Instalación
 
-```python
-# Análisis vía API
-import requests
+### Requisitos
+- Python 3.8+
+- Node.js 18+
+- npm o yarn
 
-response = requests.post('http://localhost:8001/analyze', json={
-    "lat_min": -75.1, "lat_max": -75.0,
-    "lon_min": -109.1, "lon_max": -109.0,
-    "region_name": "Región Test"
+### Backend (Creador3D API)
+```bash
+pip install fastapi uvicorn trimesh matplotlib numpy pydantic
+```
+
+### Frontend (Visualizador 3D)
+```bash
+cd viewer3d
+npm install
+```
+
+---
+
+## 🧪 Testing
+
+### Test de la API
+```bash
+python test_creador3d.py
+```
+
+### Test Manual
+```bash
+# 1. Iniciar API
+python run_creador3d.py
+
+# 2. Verificar status
+curl http://localhost:8004/status
+
+# 3. Generar modelo de prueba
+curl -X POST http://localhost:8004/generate/morphology \
+  -H "Content-Type: application/json" \
+  -d '{"morphological_class": "moai", "scale_factor": 1.0}'
+```
+
+---
+
+## 🎨 Tecnologías
+
+### Backend
+- **FastAPI**: Framework web moderno
+- **Trimesh**: Procesamiento de geometría 3D
+- **Matplotlib**: Rendering de imágenes
+- **NumPy**: Cálculos numéricos
+
+### Frontend
+- **Next.js 14**: Framework React
+- **React Three Fiber**: React renderer para Three.js
+- **@react-three/drei**: Helpers 3D
+- **Three.js**: Motor 3D WebGL
+- **TypeScript**: Type safety
+
+---
+
+## 📚 Documentación
+
+### APIs
+- **Creador3D API**: `creador3d/README.md`
+- **Visualizador 3D**: `viewer3d/README.md`
+
+### Swagger UI
+- API Docs: `http://localhost:8004/docs`
+- ReDoc: `http://localhost:8004/redoc`
+
+---
+
+## 🔗 Integración
+
+### Cargar Modelos en el Visualizador
+
+**Desde archivo local**:
+```tsx
+<ModelViewer modelPath="/warrior.glb" />
+```
+
+**Desde Creador3D API**:
+```tsx
+<ModelViewer modelPath="http://localhost:8004/model/moai.glb" />
+```
+
+**Workflow completo**:
+```javascript
+// 1. Generar modelo
+const response = await fetch('http://localhost:8004/generate/morphology', {
+  method: 'POST',
+  body: JSON.stringify({ morphological_class: 'moai' })
 })
 
-result = response.json()
-print(f"IA Disponible: {result['ai_explanations']['ai_available']}")
-print(f"Modo: {result['ai_explanations']['spatial_context']['analysis_mode']}")
-print(f"Explicación: {result['ai_explanations']['explanation']}")
-```
+const result = await response.json()
 
-**Salida Esperada:**
-```
-IA Disponible: True
-Modo: fine
-Explicación: En esta región delimitada, las anomalías detectadas sugieren 
-procesos de lubricación basal heterogénea que podrían estar influenciados 
-por variaciones en la topografía del lecho rocoso no capturadas por los 
-modelos estándar de flujo de hielo.
+// 2. Cargar en visualizador
+const modelPath = `http://localhost:8004/model/${result.obj_filename}`
 ```
 
 ---
 
-## 🛡️ **Protecciones Científicas**
+## 🚀 Roadmap
 
-### **Control Automático de Área**
-```javascript
-// El sistema automáticamente:
-if (area > 100_km²) {
-    mostrar_advertencia_critica();
-    ofrecer_reduccion_automatica();
-    rechazar_analisis();
-}
-```
+### Corto Plazo
+- [ ] Selector de modelos en visualizador
+- [ ] Panel de control de iluminación
+- [ ] Captura de screenshots
+- [ ] Más tipos de formas (cilindros, esferas)
 
-### **Comunicación Honesta**
-- ⚠️ Advertencias claras sobre limitaciones espaciales
-- 📊 Indicadores específicos vinculados a métricas reales  
-- 🎯 Tono probabilístico, no determinista
-- 🔍 Transparencia total en metodología
+### Mediano Plazo
+- [ ] Galería de modelos con thumbnails
+- [ ] Comparación lado a lado
+- [ ] Mediciones y anotaciones
+- [ ] Texturas procedurales
+- [ ] Batch generation
 
----
-
-## 🏗️ **Arquitectura**
-
-```
-ArcheoScope/
-├── 🖥️  Backend (Python + FastAPI)
-│   ├── demo_server.py          # Servidor principal
-│   ├── ai/ollama_assistant.py  # Integración IA
-│   ├── analysis/comparator.py  # Análisis multi-capa
-│   └── rules/physics_rules.py  # Reglas glaciológicas
-│
-├── 🌐 Frontend (JavaScript + Leaflet)
-│   ├── index.html              # Interfaz principal
-│   └── simple_app.js           # Lógica científica
-│
-└── 📚 Documentación
-    ├── README.md               # Este archivo
-    └── SYSTEM_DOCUMENTATION.md # Documentación completa
-```
+### Largo Plazo
+- [ ] Editor 3D interactivo
+- [ ] Generación desde descripción textual (IA)
+- [ ] Export a más formatos (STL, FBX, GLTF)
+- [ ] AR/VR support
+- [ ] Colaboración en tiempo real
 
 ---
 
-## 🎮 **Interfaz de Usuario**
+## 🤝 Contribuir
 
-### **Controles Principales**
-- 🗺️ **Selección de Región:** Coordenadas o selección en mapa
-- 🔍 **Botón INVESTIGAR:** Ejecuta análisis completo
-- 🎯 **Zoom Científico:** Optimización automática de área
-- 🛰️ **Inspección Satelital:** Vista detallada de regiones críticas
+Este es un proyecto experimental. Para contribuir:
 
-### **Paneles Informativos**
-- 📊 **Resumen de Análisis:** Métricas principales y modo de análisis
-- 🎯 **Indicadores Específicos:** Anomalías detectadas con severidad
-- 🤖 **Explicación IA:** Interpretación contextualizada (si disponible)
-- ⚙️ **Estado del Sistema:** Disponibilidad de IA y componentes
+1. Fork el repositorio
+2. Crea una rama para tu feature
+3. Implementa y prueba
+4. Crea un pull request
 
 ---
 
-## 🔧 **Configuración Avanzada**
+## 📄 Licencia
 
-### **Parámetros Espaciales**
-```python
-# En simple_app.js
-spatialThresholds = {
-    fine: 10,        # km² - Análisis científico fino
-    medium: 100,     # km² - Análisis con limitaciones
-    exploratory: 100 # km² - Umbral de rechazo
-}
-```
-
-### **Configuración IA**
-```python
-# En demo_server.py
-ollama_config = {
-    "model": "qwen2.5:3b-instruct",
-    "timeout": 60,
-    "temperature": 0.3,
-    "num_predict": 150
-}
-```
+MIT License - Ver LICENSE para más detalles
 
 ---
 
-## 📈 **Casos de Uso**
+## 🎯 Filosofía del Proyecto
 
-### **1. Investigación Glaciológica**
-- Detección de procesos subglaciales no modelados
-- Identificación de heterogeneidades basales
-- Validación de modelos físicos existentes
+**Separación de Responsabilidades**:
+- Creador3D: Experimentación libre sin restricciones
+- Backend Core: Lógica científica reutilizable
+- Visualizador: Presentación profesional
 
-### **2. Análisis de Datos Satelitales**
-- Procesamiento de datos MODIS/Landsat
-- Detección de anomalías en velocidad de hielo
-- Análisis de coherencia multi-temporal
-
-### **3. Educación Científica**
-- Herramienta didáctica para glaciología
-- Demostración de principios físicos
-- Entrenamiento en análisis espacial
+**Principios**:
+- Código modular y mantenible
+- APIs REST bien documentadas
+- Performance optimizado
+- Experiencia de usuario fluida
 
 ---
 
-## 🤝 **Contribuir**
+## 📞 Soporte
 
-### **Áreas de Desarrollo**
-- 🔬 **Algoritmos:** Mejoras en detección de anomalías
-- 🤖 **IA:** Optimización de prompts científicos
-- 🌐 **Interfaz:** Nuevas funcionalidades de visualización
-- 📊 **Datos:** Integración con fuentes reales
-
-### **Proceso de Contribución**
-1. Fork del repositorio
-2. Crear rama feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit cambios (`git commit -m 'feat: nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Crear Pull Request
+Para preguntas o issues:
+- Revisa la documentación en `creador3d/README.md` y `viewer3d/README.md`
+- Abre un issue en GitHub
+- Consulta los ejemplos en `test_creador3d.py`
 
 ---
 
-## 📜 **Licencia**
-
-Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para detalles.
-
----
-
-## 🙏 **Agradecimientos**
-
-- **Kiro AI** - Asistencia excepcional en desarrollo
-- **Comunidad Ollama** - IA local accesible
-- **Leaflet** - Mapas interactivos científicos
-- **FastAPI** - Framework web moderno
-
----
-
-## 📞 **Contacto**
-
-- **Issues:** [GitHub Issues](https://github.com/ifernandez89/ArcheoScope/issues)
-- **Discusiones:** [GitHub Discussions](https://github.com/ifernandez89/ArcheoScope/discussions)
-- **Email:** [Contacto del proyecto]
-
----
-
-## 🏆 **Estado del Proyecto**
-
-✅ **Completado:** IA integrada, control espacial, indicadores específicos  
-🚧 **En desarrollo:** Integración datos reales, algoritmos avanzados  
-📋 **Planeado:** Exportación científica, validación de campo  
-
----
-
-*"La ciencia avanza no solo descubriendo lo que sabemos, sino reconociendo honestamente lo que no sabemos."*
-
-**ArcheoScope - Donde la arqueología encuentra la inteligencia artificial responsable** 🏺🤖
-
----
-
-[![Made with ❤️ and 🧠](https://img.shields.io/badge/Made%20with-❤️%20and%20🧠-red)](https://github.com/ifernandez89/ArcheoScope)
+**¡Disfruta creando y visualizando modelos 3D!** 🎨✨
