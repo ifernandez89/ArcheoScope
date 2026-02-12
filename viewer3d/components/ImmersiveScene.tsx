@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, PointerLockControls, Html } from '@react-three/drei'
+import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei'
 import * as THREE from 'three'
 import Globe3D from './Globe3D'
 import ModelViewer from './ModelViewer'
@@ -25,7 +25,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
   const [avatarModel, setAvatarModel] = useState<string>('/warrior.glb')
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(null)
   const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
-  const [movementMode, setMovementMode] = useState<'orbit' | 'firstPerson' | 'avatar'>('orbit')
+  const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('orbit')
   const [solarSimulation, setSolarSimulation] = useState(true)
 
   // Manejar click en sitio arqueológico
@@ -83,8 +83,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
   // Toggle entre modos de movimiento
   const toggleMovementMode = () => {
     setMovementMode(prev => {
-      if (prev === 'orbit') return 'firstPerson'
-      if (prev === 'firstPerson') return 'avatar'
+      if (prev === 'orbit') return 'avatar'
       return 'orbit'
     })
   }
@@ -234,9 +233,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
               padding: '12px 24px',
               background: movementMode === 'avatar' 
                 ? 'rgba(139, 92, 246, 0.9)'
-                : movementMode === 'firstPerson' 
-                  ? 'rgba(234, 179, 8, 0.9)' 
-                  : 'rgba(34, 197, 94, 0.9)',
+                : 'rgba(34, 197, 94, 0.9)',
               border: '1px solid rgba(255,255,255,0.3)',
               borderRadius: '8px',
               color: 'white',
@@ -252,21 +249,15 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
             onMouseEnter={(e) => {
               e.currentTarget.style.background = movementMode === 'avatar'
                 ? 'rgba(139, 92, 246, 1)'
-                : movementMode === 'firstPerson' 
-                  ? 'rgba(234, 179, 8, 1)' 
-                  : 'rgba(34, 197, 94, 1)'
+                : 'rgba(34, 197, 94, 1)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = movementMode === 'avatar'
                 ? 'rgba(139, 92, 246, 0.9)'
-                : movementMode === 'firstPerson' 
-                  ? 'rgba(234, 179, 8, 0.9)' 
-                  : 'rgba(34, 197, 94, 0.9)'
+                : 'rgba(34, 197, 94, 0.9)'
             }}
           >
-            {movementMode === 'orbit' && '🔄 Modo Órbita'}
-            {movementMode === 'firstPerson' && '👁️ Primera Persona'}
-            {movementMode === 'avatar' && '🚶 Modo Avatar'}
+            {movementMode === 'orbit' ? '🚶 Modo Exploración' : '🔄 Modo Órbita'}
           </button>
 
           {/* Selector de Avatar (solo en modo avatar) - DESPUÉS del botón */}
@@ -334,30 +325,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
       )}
 
       {/* Instrucciones de movimiento */}
-      {mode === 'model' && movementMode === 'firstPerson' && (
-        <div style={{
-          position: 'absolute',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1001,
-          background: 'rgba(0, 0, 0, 0.8)',
-          backdropFilter: 'blur(10px)',
-          padding: '12px 24px',
-          borderRadius: '8px',
-          border: '1px solid rgba(255,255,255,0.2)',
-          color: 'white',
-          fontSize: '12px',
-          display: 'flex',
-          gap: '20px'
-        }}>
-          <span>🖱️ Click para activar</span>
-          <span>W/A/S/D - Mover</span>
-          <span>Mouse - Mirar</span>
-          <span>ESC - Salir</span>
-        </div>
-      )}
-      
       {mode === 'model' && movementMode === 'avatar' && (
         <div style={{
           position: 'absolute',
@@ -468,7 +435,7 @@ function ModelScene({
   avatarModel: string
   onModelLoaded?: (model: THREE.Object3D) => void
   onCameraReady?: (camera: THREE.Camera) => void
-  movementMode: 'orbit' | 'firstPerson' | 'avatar'
+  movementMode: 'orbit' | 'avatar'
   location?: { lat: number, lon: number } | null
   site?: ArchaeologicalSite | null
   solarSimulation: boolean
@@ -513,8 +480,6 @@ function ModelScene({
           zoomSpeed={0.8}
           target={[0, 1, 0]}
         />
-      ) : movementMode === 'firstPerson' ? (
-        <FirstPersonControls />
       ) : null}
       {/* En modo avatar, la cámara es controlada por WalkableAvatar */}
 
@@ -523,14 +488,14 @@ function ModelScene({
         <SolarSimulation lat={location.lat} lon={location.lon} />
       ) : (
         <>
-          <ambientLight intensity={0.7} />
-          <hemisphereLight args={['#87ceeb', '#5a4a3a', 0.8]} />
+          <ambientLight intensity={1.2} />
+          <hemisphereLight args={['#ffffff', '#8b7355', 1.0]} />
           <directionalLight
             position={[10, 15, 5]}
-            intensity={2.0}
+            intensity={2.5}
             castShadow
-            shadow-mapSize-width={4096}
-            shadow-mapSize-height={4096}
+            shadow-mapSize-width={2048}
+            shadow-mapSize-height={2048}
             shadow-camera-far={50}
             shadow-camera-left={-20}
             shadow-camera-right={20}
@@ -538,8 +503,9 @@ function ModelScene({
             shadow-camera-bottom={-20}
             shadow-bias={-0.0001}
           />
-          <pointLight position={[-10, 8, -5]} intensity={0.6} color="#ffa500" />
-          <pointLight position={[10, 5, 10]} intensity={0.4} color="#ffffff" />
+          <pointLight position={[-10, 8, -5]} intensity={1.0} color="#ffa500" />
+          <pointLight position={[10, 5, 10]} intensity={0.8} color="#ffffff" />
+          <pointLight position={[0, 10, 0]} intensity={0.6} color="#ffffff" />
         </>
       )}
 
@@ -570,19 +536,16 @@ function ModelScene({
         <WalkableAvatar 
           modelPath={avatarModel}
           terrainRef={terrainRef}
+          onModelChange={() => {
+            // Forzar re-render cuando cambia el modelo
+            console.log('🔄 Modelo cambiado a:', avatarModel)
+          }}
         />
       ) : (
         <ModelViewer modelPath={modelPath} ref={modelRef} />
       )}
       
-      {/* Colisiones básicas (solo en primera persona) */}
-      {movementMode === 'firstPerson' && (
-        <BasicCollisions 
-          terrainRef={terrainRef}
-          obstacles={obstacles}
-          enabled={true}
-        />
-      )}
+      {/* Colisiones básicas ya no son necesarias, WalkableAvatar las maneja */}
       
       {/* Info del sitio */}
       {site && (
@@ -597,61 +560,6 @@ function ModelScene({
       <CinematicZoom />
     </Canvas>
   )
-}
-
-// Controles de primera persona con PointerLock
-function FirstPersonControls() {
-  const { camera } = useThree()
-  const moveSpeed = 0.15
-  const keys = useRef<{ [key: string]: boolean }>({})
-  const velocity = useRef(new THREE.Vector3())
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      keys.current[e.key.toLowerCase()] = true
-    }
-    const handleKeyUp = (e: KeyboardEvent) => {
-      keys.current[e.key.toLowerCase()] = false
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    window.addEventListener('keyup', handleKeyUp)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('keyup', handleKeyUp)
-    }
-  }, [])
-
-  useFrame(() => {
-    const direction = new THREE.Vector3()
-    const right = new THREE.Vector3()
-
-    camera.getWorldDirection(direction)
-    direction.y = 0  // Mantener movimiento en plano horizontal
-    direction.normalize()
-    
-    right.crossVectors(camera.up, direction).normalize()
-
-    velocity.current.set(0, 0, 0)
-
-    if (keys.current['w']) {
-      velocity.current.addScaledVector(direction, moveSpeed)
-    }
-    if (keys.current['s']) {
-      velocity.current.addScaledVector(direction, -moveSpeed)
-    }
-    if (keys.current['a']) {
-      velocity.current.addScaledVector(right, moveSpeed)
-    }
-    if (keys.current['d']) {
-      velocity.current.addScaledVector(right, -moveSpeed)
-    }
-
-    camera.position.add(velocity.current)
-  })
-
-  return <PointerLockControls />
 }
 
 // Zoom cinematográfico

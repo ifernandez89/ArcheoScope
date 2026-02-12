@@ -9,12 +9,14 @@ interface WalkableAvatarProps {
   modelPath: string
   terrainRef?: React.RefObject<THREE.Mesh>
   onPositionChange?: (position: THREE.Vector3) => void
+  onModelChange?: () => void
 }
 
 export default function WalkableAvatar({ 
   modelPath, 
   terrainRef,
-  onPositionChange 
+  onPositionChange,
+  onModelChange
 }: WalkableAvatarProps) {
   const group = useRef<THREE.Group>(null)
   const { scene, animations } = useGLTF(modelPath)
@@ -24,10 +26,17 @@ export default function WalkableAvatar({
   // Estado del avatar
   const [state, setState] = useState<'idle' | 'walking'>('idle')
   const velocity = useRef(new THREE.Vector3())
-  const moveSpeed = 3.0
-  const rotationSpeed = 5.0
+  const moveSpeed = 5.0  // Aumentado para movimiento más visible
+  const rotationSpeed = 8.0  // Aumentado para rotación más rápida
   const keys = useRef<{ [key: string]: boolean }>({})
   const raycaster = useRef(new THREE.Raycaster())
+  
+  // Notificar cambio de modelo
+  useEffect(() => {
+    if (onModelChange) {
+      onModelChange()
+    }
+  }, [modelPath, onModelChange])
   
   // Configurar controles de teclado
   useEffect(() => {
@@ -171,6 +180,12 @@ export default function WalkableAvatar({
         targetRotation,
         rotationSpeed * delta
       )
+      
+      console.log('🚶 Moviendo:', {
+        position: group.current.position,
+        direction: moveDirection,
+        velocity: velocity.current
+      })
     }
     
     // Mantener avatar pegado al terreno
