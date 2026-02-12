@@ -63,10 +63,10 @@ ollama list
 
 # Debería mostrar:
 # NAME                ID              SIZE      MODIFIED
-# qwen2.5:1.7b        abc123def       1.0 GB    2 minutes ago
+# qwen3:1.7b          abc123def       1.4 GB    2 minutes ago
 
 # Probar el modelo
-ollama run qwen2.5:1.7b "Hola, ¿cómo estás?"
+ollama run qwen3:1.7b "Hola, ¿cómo estás?"
 ```
 
 ---
