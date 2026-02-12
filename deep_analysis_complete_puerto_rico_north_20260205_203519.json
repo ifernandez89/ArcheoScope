@@ -1,0 +1,138 @@
+{
+  "zone": "Puerto Rico North Continental Slope",
+  "zone_key": "puerto_rico_north",
+  "start_time": "2026-02-05T20:09:25.698976",
+  "phases": {
+    "phase_a_temporal": {
+      "status": "success",
+      "zone": "Puerto Rico North Continental Slope",
+      "results": {
+        "phase_lag_days": 0.0,
+        "damping": {
+          "factor": 1.0,
+          "peak_reduction": 0.0,
+          "target_variance": 50.020641771439294,
+          "control_variance": 50.020641771439294
+        },
+        "seasonal_extremes": {
+          "summer_stability": 0.0,
+          "winter_stability": 0.0,
+          "seasonal_amplitude": 13.623025435073636
+        },
+        "extreme_events": [],
+        "post_event_recovery": {
+          "avg_recovery_days": 0.0,
+          "baseline_return_rate": 1.0,
+          "recovery_events_analyzed": 0
+        },
+        "thermal_inertia_score": 0.0,
+        "interpretation": "COMPORTAMIENTO TÉRMICO NORMAL: Consistente con procesos naturales dinámicos"
+      }
+    },
+    "phase_b_sar": {
+      "status": "success",
+      "zone": "Puerto Rico North Continental Slope",
+      "results": {
+        "polarization_analysis": {
+          "vv_vh_ratio": 0.6049729026782453,
+          "divergence_score": 0.18397999922069083,
+          "vv_stability": 0.8119841892433315,
+          "vh_stability": 0.8869831186642837
+        },
+        "speckle_persistence": {
+          "persistence_score": 0.0,
+          "texture_stability": 0.9902316559216314
+        },
+        "phase_decorrelation": {
+          "rate": -0.006103450913368859,
+          "decay_factor": 1.0061221149221944,
+          "half_life_days": 999.0
+        },
+        "multi_angle_geometry": {
+          "angular_consistency": 0.9098864762705138,
+          "rigidity_score": 0.9289454604425753,
+          "geometric_stability": 0.8452349116495848
+        },
+        "stratification": {
+          "index": 0.37542303496228696,
+          "estimated_layers": 1,
+          "confidence": 0.9902316559216314
+        },
+        "behavior_score": 0.6447539891038475,
+        "structural_interpretation": "ESTRUCTURA MODERADAMENTE RÍGIDA: Alguna coherencia estructural presente, requiere análisis adicional."
+      }
+    },
+    "phase_c_icesat2": {
+      "status": "success",
+      "zone": "Puerto Rico North Continental Slope",
+      "results": {
+        "status": "no_coverage",
+        "surface_microvariations": {
+          "std_deviation_cm": 0.0,
+          "tidal_correlation": 0.0,
+          "pressure_correlation": 0.0
+        },
+        "rigidity_indicators": {
+          "water_response_anomaly": false,
+          "vertical_stability": 0.0
+        },
+        "interpretation": "ICESat-2 no coverage in region - No ATL06 granules found - limited orbital coverage (expected)"
+      }
+    },
+    "phase_d_multiscale": {
+      "status": "success",
+      "zone": "Puerto Rico North Continental Slope",
+      "results": {
+        "zone_name": "Puerto Rico North Continental Slope",
+        "scales_analyzed": [
+          50,
+          100,
+          250,
+          500
+        ],
+        "results_by_scale": {
+          "50": {
+            "resolution_m": 50,
+            "coherence_3d": 0.8863450162855959,
+            "ess_superficial": 0.4363200325711916,
+            "ess_volumetrico": 0.11365498371440416,
+            "tas_score": 1.0,
+            "territorial_coherence": 0.6925808932317145,
+            "scientific_rigor": 0.8875
+          },
+          "100": {
+            "resolution_m": 100,
+            "coherence_3d": 0.8863450162855959,
+            "ess_superficial": 0.4363200325711916,
+            "ess_volumetrico": 0.11365498371440416,
+            "tas_score": 0.9907977692214204,
+            "territorial_coherence": 0.6523586710094923,
+            "scientific_rigor": 0.95
+          },
+          "250": {
+            "resolution_m": 250,
+            "coherence_3d": 0.8863450162855959,
+            "ess_superficial": 0.4363200325711916,
+            "ess_volumetrico": 0.11365498371440416,
+            "tas_score": 0.9913335275657892,
+            "territorial_coherence": 0.6528031154539368,
+            "scientific_rigor": 0.8875
+          },
+          "500": null
+        },
+        "scale_invariance": {
+          "invariance_score": 0.9949633784595888,
+          "coherence_decay_rate": 1.1280240581211635e-15,
+          "tas_stability": 0.9957826307204776,
+          "g1_stability": 0.9811429462172307,
+          "coherence_at_50m": 0.8863450162855959,
+          "coherence_at_500m": 0.8863450162855959
+        },
+        "interpretation": "INVARIANCIA DE ESCALA ANÓMALA: La coherencia NO decae significativamente con la escala. Esto es ALTAMENTE INUSUAL en formaciones naturales, que típicamente pierden coherencia al reducir resolución. Sugiere estructura integrada con organización multi-escala."
+      }
+    }
+  },
+  "end_time": "2026-02-05T20:35:19.079490",
+  "duration_seconds": 1553.380514,
+  "duration_minutes": 25.88967523333333
+}

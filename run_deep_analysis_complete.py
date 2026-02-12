@@ -361,14 +361,45 @@ async def main():
     """
     
     import sys
+    import argparse
     
     # Parsear argumentos de línea de comandos
-    skip_phase_d = '--skip-phase-d' in sys.argv
-    zone_key = 'puerto_rico_north'  # Default
+    parser = argparse.ArgumentParser(description='Deep Analysis Complete')
+    parser.add_argument('--lat', type=float, help='Latitud central')
+    parser.add_argument('--lon', type=float, help='Longitud central')
+    parser.add_argument('--region_name', type=str, default='Custom_Location', help='Nombre de la región')
+    parser.add_argument('--skip-phase-d', action='store_true', help='Omitir Phase D')
+    parser.add_argument('--zone', type=str, choices=list(PRIORITY_ZONES.keys()), help='Zona predefinida')
     
-    # Buscar argumento de zona
+    args, unknown = parser.parse_known_args()
+    
+    skip_phase_d = args.skip_phase_d
+    zone_key = args.zone or 'puerto_rico_north'
+    
+    # Si se proporcionan coordenadas custom, crear zona temporal
+    if args.lat is not None and args.lon is not None:
+        # Crear bbox de ~20km alrededor del punto
+        lat_delta = 0.09  # ~10km
+        lon_delta = 0.12  # ~10km
+        
+        zone_key = 'custom_location'
+        PRIORITY_ZONES[zone_key] = {
+            'name': args.region_name,
+            'lat_min': args.lat - lat_delta,
+            'lat_max': args.lat + lat_delta,
+            'lon_min': args.lon - lon_delta,
+            'lon_max': args.lon + lon_delta,
+            'priority': 99,
+            'custom': True
+        }
+        
+        print(f"\n🎯 Usando coordenadas custom:")
+        print(f"   Centro: {args.lat:.6f}, {args.lon:.6f}")
+        print(f"   Bbox: [{args.lat - lat_delta:.2f}, {args.lat + lat_delta:.2f}] x [{args.lon - lon_delta:.2f}, {args.lon + lon_delta:.2f}]")
+    
+    # Buscar argumento de zona (legacy support)
     for arg in sys.argv[1:]:
-        if arg in PRIORITY_ZONES:
+        if arg in PRIORITY_ZONES and not args.zone:
             zone_key = arg
     
     if skip_phase_d:

@@ -24,6 +24,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
 from satellite_connectors.modis_lst_connector import MODISLSTConnector
+from satellite_connectors.modis_lst_time_series import MODISLSTTimeSeries
 from satellite_connectors.planetary_computer import PlanetaryComputerConnector
 
 class DeepTemporalAnalyzer:
@@ -33,6 +34,7 @@ class DeepTemporalAnalyzer:
     
     def __init__(self):
         self.modis = MODISLSTConnector()
+        self.modis_ts = MODISLSTTimeSeries(self.modis)
         self.pc = PlanetaryComputerConnector()
         
     async def analyze_thermal_phase_shift(
@@ -367,46 +369,63 @@ class DeepTemporalAnalyzer:
         Obtener serie temporal diaria desde MODIS LST
         
         ESTRATEGIA:
-        1. Intentar obtener datos reales de MODIS (requiere múltiples llamadas)
+        1. Intentar obtener datos reales de MODIS (con cache)
         2. Si falla o toma mucho tiempo, usar modelo basado en ubicación
+        
+        OPTIMIZACIÓN:
+        - Usa MOD11A2 (8-day composite) en vez de daily
+        - Reduce requests de 1825 a ~228 (91% menos)
+        - Cache local para evitar re-descargas
         """
         
         print(f"   📡 Obteniendo serie térmica para ({lat:.4f}, {lon:.4f})...")
         
-        # OPCIÓN 1: Intentar MODIS real (comentado por ahora - requiere múltiples llamadas)
-        # Para implementación completa, necesitaríamos:
-        # - Iterar sobre cada día en el rango de años
-        # - Hacer request a MODIS por cada día
-        # - Esto tomaría horas para 5 años (1825 días)
-        
-        # OPCIÓN 2: Usar modelo basado en ubicación (rápido, razonable)
-        days = years * 365
-        series = []
-        
-        from datetime import datetime, timedelta
-        start_date = datetime.now() - timedelta(days=days)
-        
-        for day in range(days):
-            current_date = start_date + timedelta(days=day)
-            month = current_date.month
+        try:
+            # Intentar obtener datos reales con el nuevo módulo
+            result = await self.modis_ts.get_daily_thermal_series(
+                lat=lat,
+                lon=lon,
+                years=years,
+                use_cache=True
+            )
             
-            # Obtener LST estimada para este día
-            lst_day, lst_night = self.modis._estimate_lst(lat, lon, month)
+            print(f"   ✅ Serie térmica obtenida: {len(result['series'])} días")
+            print(f"   📊 Datos reales: {result['real_data_count']} ({result['real_data_count']/result['total_days']*100:.1f}%)")
             
-            # Usar temperatura promedio día-noche
-            lst_avg = (lst_day + lst_night) / 2
+            return result['series']
             
-            # Convertir Kelvin a Celsius
-            lst_celsius = lst_avg - 273.15
+        except Exception as e:
+            print(f"   ⚠️ Error obteniendo datos MODIS reales: {e}")
+            print(f"   📊 Fallback a modelo basado en ubicación")
             
-            # Añadir variación diaria pequeña
-            daily_variation = np.random.normal(0, 1.5)
+            # Fallback a modelo (código original)
+            days = years * 365
+            series = []
             
-            series.append(lst_celsius + daily_variation)
-        
-        print(f"   ✅ Serie térmica generada: {len(series)} días")
-        
-        return series
+            from datetime import datetime, timedelta
+            start_date = datetime.now() - timedelta(days=days)
+            
+            for day in range(days):
+                current_date = start_date + timedelta(days=day)
+                month = current_date.month
+                
+                # Obtener LST estimada para este día
+                lst_day, lst_night = self.modis._estimate_lst(lat, lon, month)
+                
+                # Usar temperatura promedio día-noche
+                lst_avg = (lst_day + lst_night) / 2
+                
+                # Convertir Kelvin a Celsius
+                lst_celsius = lst_avg - 273.15
+                
+                # Añadir variación diaria pequeña
+                daily_variation = np.random.normal(0, 1.5)
+                
+                series.append(lst_celsius + daily_variation)
+            
+            print(f"   ✅ Serie térmica generada (modelo): {len(series)} días")
+            
+            return series
 
 
 async def main():

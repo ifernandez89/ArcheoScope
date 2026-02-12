@@ -469,7 +469,29 @@ except Exception as e:
     traceback.print_exc()
 
 # ============================================================================
-# INCLUIR ROUTER GEOGLYPH DETECTION (NUEVO)
+# INCLUIR ROUTER GEOMETRIC INFERENCE 3D (MIG NIVEL 3)
+# ============================================================================
+
+try:
+    from api.geometric_inference_endpoint import router as geometric_router
+    
+    app.include_router(
+        geometric_router,
+        prefix="/api",
+        tags=["Geometric Inference 3D"]
+    )
+    logger.info("✅ Router Geometric Inference 3D incluido (MIG Nivel 3)")
+except ImportError as e:
+    logger.error(f"❌ No se pudo cargar router Geometric Inference: {e}")
+    import traceback
+    traceback.print_exc()
+except Exception as e:
+    logger.error(f"❌ Error inicializando Geometric Inference: {e}")
+    import traceback
+    traceback.print_exc()
+
+# ============================================================================
+# INCLUIR ROUTER GEOGLYPH DETECTION (DEPRECATED)
 # ============================================================================
 
 try:
