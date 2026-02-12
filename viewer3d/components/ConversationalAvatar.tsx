@@ -31,12 +31,15 @@ export default function ConversationalAvatar({
   const [isThinking, setIsThinking] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [voiceEnabled, setVoiceEnabled] = useState(true)
   
   // Referencias a sistemas
   const brainRef = useRef<AvatarBrain | null>(null)
   const bodyRef = useRef<AvatarBody | null>(null)
   const gazeRef = useRef<IntelligentGaze | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const speechSynthesisRef = useRef<SpeechSynthesis | null>(null)
 
   // Inicializar sistemas
   useEffect(() => {
@@ -74,11 +77,22 @@ export default function ConversationalAvatar({
     gazeRef.current = gaze
     gaze.start()
 
+    // Inicializar Speech Synthesis
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      speechSynthesisRef.current = window.speechSynthesis
+    }
+
+    // Conectar automáticamente
+    autoConnect(llm)
+
     console.log('🗿 Avatar conversacional inicializado')
 
     return () => {
       body.stopPresence()
       gaze.stop()
+      if (speechSynthesisRef.current) {
+        speechSynthesisRef.current.cancel()
+      }
     }
   }, [model, camera])
 
@@ -86,6 +100,58 @@ export default function ConversationalAvatar({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Conectar automáticamente
+  const autoConnect = async (llm: LLMIntegration) => {
+    const available = await llm.checkAvailability()
+    if (available) {
+      setIsConnected(true)
+      console.log('✅ Ollama conectado automáticamente')
+      
+      // Mensaje de bienvenida
+      const welcomeMsg: Message = {
+        id: Date.now().toString(),
+        role: 'avatar',
+        content: 'Saludos, viajero. Soy un Moai ancestral de Rapa Nui. ¿Qué te trae ante mí?',
+        emotion: 'neutral',
+        timestamp: new Date()
+      }
+      setMessages([welcomeMsg])
+    } else {
+      console.warn('⚠️ Ollama no disponible. Inicia: ollama serve')
+    }
+  }
+
+  // Función para hablar con TTS
+  const speak = (text: string) => {
+    if (!voiceEnabled || !speechSynthesisRef.current) return
+
+    // Cancelar cualquier speech anterior
+    speechSynthesisRef.current.cancel()
+
+    const utterance = new SpeechSynthesisUtterance(text)
+    
+    // Configurar voz (buscar voz en español si está disponible)
+    const voices = speechSynthesisRef.current.getVoices()
+    const spanishVoice = voices.find(voice => 
+      voice.lang.startsWith('es') || voice.lang.startsWith('spa')
+    )
+    
+    if (spanishVoice) {
+      utterance.voice = spanishVoice
+    }
+    
+    // Configurar parámetros para voz ancestral
+    utterance.rate = 0.85 // Más lento, contemplativo
+    utterance.pitch = 0.8 // Más grave
+    utterance.volume = 0.9
+
+    utterance.onstart = () => setIsSpeaking(true)
+    utterance.onend = () => setIsSpeaking(false)
+    utterance.onerror = () => setIsSpeaking(false)
+
+    speechSynthesisRef.current.speak(utterance)
+  }
 
   // Conectar/desconectar
   const handleToggleConnection = async () => {
@@ -115,10 +181,17 @@ export default function ConversationalAvatar({
         timestamp: new Date()
       }
       setMessages([welcomeMsg])
+      
+      if (voiceEnabled) {
+        speak(welcomeMsg.content)
+      }
     } else {
       setIsConnected(false)
       brainRef.current.reset()
       setMessages([])
+      if (speechSynthesisRef.current) {
+        speechSynthesisRef.current.cancel()
+      }
     }
   }
 
@@ -153,6 +226,11 @@ export default function ConversationalAvatar({
         timestamp: new Date()
       }
       setMessages(prev => [...prev, avatarMessage])
+
+      // Hablar la respuesta
+      if (voiceEnabled) {
+        speak(response.text)
+      }
 
       // Callback opcional
       if (onResponse) {
@@ -192,34 +270,65 @@ export default function ConversationalAvatar({
 
   return (
     <>
-      {/* Botón flotante */}
+      {/* Botón flotante con indicador de estado */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: 'fixed',
           bottom: '20px',
           right: '20px',
-          width: '60px',
-          height: '60px',
+          width: '70px',
+          height: '70px',
           borderRadius: '50%',
           background: isConnected 
-            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-            : 'linear-gradient(135deg, #999 0%, #666 100%)',
-          border: 'none',
+            ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+            : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+          border: '3px solid rgba(255,255,255,0.3)',
           color: 'white',
-          fontSize: '28px',
+          fontSize: '32px',
           cursor: 'pointer',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          boxShadow: isConnected 
+            ? '0 4px 20px rgba(16, 185, 129, 0.5)'
+            : '0 4px 20px rgba(239, 68, 68, 0.5)',
           zIndex: 1000,
-          transition: 'transform 0.2s',
+          transition: 'all 0.3s ease',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          position: 'relative'
         }}
         onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        title={isConnected ? '🗿 Moai Conectado' : '🗿 Moai Desconectado'}
       >
         🗿
+        {/* Indicador de voz */}
+        {isSpeaking && (
+          <div style={{
+            position: 'absolute',
+            top: '-5px',
+            right: '-5px',
+            width: '20px',
+            height: '20px',
+            borderRadius: '50%',
+            background: '#fbbf24',
+            animation: 'pulse 1s infinite'
+          }}>
+            🔊
+          </div>
+        )}
+        {/* Indicador de conexión */}
+        <div style={{
+          position: 'absolute',
+          bottom: '5px',
+          right: '5px',
+          width: '12px',
+          height: '12px',
+          borderRadius: '50%',
+          background: isConnected ? '#10b981' : '#ef4444',
+          border: '2px solid white',
+          boxShadow: '0 0 10px rgba(0,0,0,0.3)'
+        }} />
       </button>
 
       {/* Panel conversacional */}
@@ -258,26 +367,59 @@ export default function ConversationalAvatar({
               </h3>
               <div style={{
                 fontSize: '11px',
-                color: isConnected ? '#4ade80' : '#ef4444',
-                marginTop: '3px'
+                color: isConnected ? '#10b981' : '#ef4444',
+                marginTop: '3px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
               }}>
-                {isConnected ? '● Conectado' : '● Desconectado'}
+                <span style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: isConnected ? '#10b981' : '#ef4444',
+                  display: 'inline-block',
+                  animation: isConnected ? 'pulse 2s infinite' : 'none'
+                }} />
+                {isConnected ? 'Ollama Activo' : 'Ollama Desconectado'}
               </div>
             </div>
-            <button
-              onClick={handleToggleConnection}
-              style={{
-                padding: '6px 12px',
-                background: isConnected ? 'rgba(239, 68, 68, 0.2)' : 'rgba(74, 222, 128, 0.2)',
-                border: isConnected ? '1px solid #ef4444' : '1px solid #4ade80',
-                borderRadius: '6px',
-                color: 'white',
-                fontSize: '12px',
-                cursor: 'pointer'
-              }}
-            >
-              {isConnected ? 'Desconectar' : 'Conectar'}
-            </button>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* Toggle de voz */}
+              <button
+                onClick={() => setVoiceEnabled(!voiceEnabled)}
+                style={{
+                  padding: '6px 10px',
+                  background: voiceEnabled ? 'rgba(16, 185, 129, 0.2)' : 'rgba(107, 114, 128, 0.2)',
+                  border: voiceEnabled ? '1px solid #10b981' : '1px solid #6b7280',
+                  borderRadius: '6px',
+                  color: 'white',
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                title={voiceEnabled ? 'Voz activada' : 'Voz desactivada'}
+              >
+                {voiceEnabled ? '🔊' : '🔇'}
+              </button>
+              {/* Botón de reconectar (solo si está desconectado) */}
+              {!isConnected && (
+                <button
+                  onClick={handleToggleConnection}
+                  style={{
+                    padding: '6px 12px',
+                    background: 'rgba(16, 185, 129, 0.2)',
+                    border: '1px solid #10b981',
+                    borderRadius: '6px',
+                    color: 'white',
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Reconectar
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Estado emocional */}
@@ -315,7 +457,7 @@ export default function ConversationalAvatar({
               }}>
                 {isConnected 
                   ? 'El Moai aguarda tus palabras...' 
-                  : 'Conecta para comenzar la conversación'}
+                  : 'Inicia Ollama para hablar con el Moai:\n\nollama serve'}
               </div>
             )}
 
@@ -430,6 +572,16 @@ export default function ConversationalAvatar({
             }
             .thinking {
               animation: thinking 1.5s infinite;
+            }
+            @keyframes pulse {
+              0%, 100% { 
+                opacity: 1;
+                transform: scale(1);
+              }
+              50% { 
+                opacity: 0.7;
+                transform: scale(1.1);
+              }
             }
           `}</style>
         </div>

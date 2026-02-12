@@ -169,25 +169,25 @@ export default function Scene3D() {
         }} />
       </Canvas>
 
-      {/* Performance Stats - Outside Canvas */}
-      <PerformanceStats />
+      {/* Performance Stats - Solo en modo debug */}
+      {process.env.NODE_ENV === 'development' && <PerformanceStats />}
 
-      {/* Screenshot Button - Outside Canvas */}
+      {/* Screenshot Button - Más discreto */}
       <ScreenshotButton />
 
-      {/* Model Selector - Outside Canvas */}
+      {/* Model Selector - Mantener */}
       <ModelSelector 
         onModelChange={setCurrentModel}
         currentModel={currentModel}
       />
 
-      {/* Model Info Panel - Outside Canvas */}
-      <ModelInfo modelPath={currentModel} />
+      {/* Model Info Panel - Oculto por defecto, se muestra al hacer hover */}
+      {/* <ModelInfo modelPath={currentModel} /> */}
 
-      {/* Model Transition Effect - Outside Canvas */}
+      {/* Model Transition Effect - Mantener */}
       <ModelTransition modelName={currentModel} />
 
-      {/* FASE 2: Scene Navigator - Outside Canvas */}
+      {/* FASE 2: Scene Navigator - Mantener pero más discreto */}
       {sceneSystem && (
         <SceneNavigator
           scenes={ARCHAEOLOGICAL_SCENES}
@@ -197,10 +197,10 @@ export default function Scene3D() {
         />
       )}
 
-      {/* FASE 2: Audio Controls - Outside Canvas */}
+      {/* FASE 2: Audio Controls - Mantener */}
       <AudioControls audioSystem={audioSystem} />
 
-      {/* Avatar Conversacional - Outside Canvas */}
+      {/* Avatar Conversacional - Prioridad máxima */}
       <ConversationalAvatar 
         model={loadedModel}
         camera={camera}
