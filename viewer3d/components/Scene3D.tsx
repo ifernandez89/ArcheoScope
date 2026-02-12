@@ -4,21 +4,21 @@ import { useState, useEffect } from 'react'
 import ImmersiveScene from './ImmersiveScene'
 import PerformanceStats from './PerformanceStats'
 import ConversationalAvatar from './ConversationalAvatar'
-import { AudioSystem } from '@/core/audio'
+// import { AudioSystem } from '@/core/audio'  // Deshabilitado para GitHub Pages
 import * as THREE from 'three'
 
 export default function Scene3D() {
-  const [audioSystem, setAudioSystem] = useState<AudioSystem | null>(null)
+  // const [audioSystem, setAudioSystem] = useState<AudioSystem | null>(null)  // Deshabilitado
   const [loadedModel, setLoadedModel] = useState<THREE.Object3D | null>(null)
   const [camera, setCamera] = useState<THREE.Camera | null>(null)
 
   // Inicializar sistemas
   useEffect(() => {
-    const audio = new AudioSystem()
-    setAudioSystem(audio)
+    // const audio = new AudioSystem()  // Deshabilitado
+    // setAudioSystem(audio)  // Deshabilitado
 
     return () => {
-      audio.dispose()
+      // audio.dispose()  // Deshabilitado
     }
   }, [])
 

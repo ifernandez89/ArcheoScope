@@ -62,8 +62,10 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
   })
 
   // Manejar click en el globo
-  const handleClick = (event: THREE.Event) => {
-    event.stopPropagation()
+  const handleClick = (event: any) => {
+    if (event.stopPropagation) {
+      event.stopPropagation()
+    }
     
     if (!globeRef.current || !onLocationClick) return
 

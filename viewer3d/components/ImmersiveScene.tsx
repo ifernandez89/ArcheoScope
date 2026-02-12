@@ -395,7 +395,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
 // Componente de estrellas mejorado - versión simplificada sin bufferAttribute manual
 function Stars() {
   const starsGeometry = useMemo(() => {
-    console.log('🌟 Generando geometría de estrellas...')
     const geometry = new THREE.BufferGeometry()
     const count = 15000
     const positions = new Float32Array(count * 3)
@@ -417,7 +416,6 @@ function Stars() {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
     
-    console.log('✅ Estrellas generadas:', count)
     return geometry
   }, [])
   
@@ -433,7 +431,6 @@ function Stars() {
     })
   }, [])
   
-  console.log('⭐ Renderizando componente Stars')
   return <points geometry={starsGeometry} material={starsMaterial} />
 }
 
@@ -654,12 +651,7 @@ function ModelScene({
       </mesh>
 
       {/* Estrellas (solo en modo nocturno) */}
-      {!solarSimulation && (
-        <>
-          {console.log('🌙 Modo nocturno activado - Renderizando estrellas')}
-          <Stars />
-        </>
-      )}
+      {!solarSimulation && <Stars />}
 
       {/* Niebla atmosférica: clara de día, oscura de noche */}
       <fog attach="fog" args={[solarSimulation ? '#6b8ba7' : '#0a0a1a', 40, 120]} />
@@ -682,25 +674,18 @@ function ModelScene({
       <EnvironmentElements />
 
       {/* Modelo 3D o Avatar según modo */}
-      {console.log('🎯 Evaluando modo de renderizado:', { movementMode, avatarModel, modelPath })}
       {movementMode === 'avatar' ? (
-        <>
-          {console.log('👤 Renderizando WalkableAvatar con modelo:', avatarModel)}
-          <WalkableAvatar 
-            key={avatarModel}  // Key para forzar re-mount cuando cambia el modelo
-            modelPath={avatarModel}
-            terrainRef={terrainRef}
-            onModelChange={() => {
-              // Forzar re-render cuando cambia el modelo
-              console.log('🔄 Modelo cambiado a:', avatarModel)
-            }}
-          />
-        </>
+        <WalkableAvatar 
+          key={avatarModel}  // Key para forzar re-mount cuando cambia el modelo
+          modelPath={avatarModel}
+          terrainRef={terrainRef}
+          onModelChange={() => {
+            // Forzar re-render cuando cambia el modelo
+            console.log('🔄 Modelo cambiado a:', avatarModel)
+          }}
+        />
       ) : (
-        <>
-          {console.log('🗿 Renderizando ModelViewer con modelo:', avatarModel)}
-          <ModelViewer modelPath={avatarModel} ref={modelRef} />
-        </>
+        <ModelViewer modelPath={avatarModel} ref={modelRef} />
       )}
       
       {/* Colisiones básicas ya no son necesarias, WalkableAvatar las maneja */}

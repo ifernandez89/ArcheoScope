@@ -1,6 +1,8 @@
 // Global State Management with Zustand
 import { create } from 'zustand'
-import type { CameraMode } from '@/core/types'
+// import type { CameraMode } from '@/core/types'  // Deshabilitado para GitHub Pages
+
+type CameraModeType = 'orbit' | 'free' | 'cinematic'  // Definición local
 
 interface SceneState {
   // Model state
@@ -9,7 +11,7 @@ interface SceneState {
   loadingProgress: number
   
   // Camera state
-  cameraMode: CameraMode['type']
+  cameraMode: CameraModeType
   autoRotate: boolean
   
   // Animation state
@@ -29,7 +31,7 @@ interface SceneState {
   setCurrentModel: (model: string | null) => void
   setModelLoading: (loading: boolean) => void
   setLoadingProgress: (progress: number) => void
-  setCameraMode: (mode: CameraMode['type']) => void
+  setCameraMode: (mode: CameraModeType) => void
   setAutoRotate: (rotate: boolean) => void
   setCurrentAnimation: (index: number) => void
   setAnimationPlaying: (playing: boolean) => void
@@ -45,7 +47,7 @@ export const useSceneStore = create<SceneState>((set) => ({
   currentModel: null,
   modelLoading: false,
   loadingProgress: 0,
-  cameraMode: 'orbital',
+  cameraMode: 'orbit',
   autoRotate: false,  // Desactivado por defecto - el modelo se mantiene vertical
   currentAnimation: 0,
   animationPlaying: false,

@@ -6,7 +6,7 @@ import { AvatarBody, IntelligentGaze } from '@/ai/avatar-body'
 import { OpenRouterIntegration, OPENROUTER_MODELS } from '@/ai/openrouter-integration'
 import { AIAnimator } from '@/ai/animator'
 import { ExpressionSystem } from '@/ai/expression-system'
-import { ProximityDetector } from '@/systems/proximity-detector'
+// import { ProximityDetector } from '@/systems/proximity-detector' // Disabled for static build
 
 interface Message {
   id: string
@@ -41,7 +41,7 @@ export default function ConversationalAvatar({
   const brainRef = useRef<AvatarBrain | null>(null)
   const bodyRef = useRef<AvatarBody | null>(null)
   const gazeRef = useRef<IntelligentGaze | null>(null)
-  const proximityRef = useRef<ProximityDetector | null>(null)
+  // const proximityRef = useRef<ProximityDetector | null>(null) // Disabled for static build
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const speechSynthesisRef = useRef<SpeechSynthesis | null>(null)
 
@@ -113,38 +113,38 @@ export default function ConversationalAvatar({
           speechSynthesisRef.current = window.speechSynthesis
         }
 
-        // Inicializar detector de proximidad
-        if (model && camera) {
-          const proximity = new ProximityDetector(camera, model, {
-            activationDistance: 5,
-            greetingDistance: 3,
-            onEnterProximity: () => {
-              console.log('👋 Usuario entró en zona de proximidad')
-              setShowProximityIndicator(true)
-            },
-            onExitProximity: () => {
-              console.log('👋 Usuario salió de zona de proximidad')
-              setShowProximityIndicator(false)
-            },
-            onGreetingDistance: () => {
-              console.log('🗿 Usuario cerca - Saludo automático')
-              handleAutoGreeting()
-            }
-          })
-          proximityRef.current = proximity
-          proximity.start()
+        // Proximity detector disabled for static build
+        // if (model && camera) {
+        //   const proximity = new ProximityDetector(camera, model, {
+        //     activationDistance: 5,
+        //     greetingDistance: 3,
+        //     onEnterProximity: () => {
+        //       console.log('👋 Usuario entró en zona de proximidad')
+        //       setShowProximityIndicator(true)
+        //     },
+        //     onExitProximity: () => {
+        //       console.log('👋 Usuario salió de zona de proximidad')
+        //       setShowProximityIndicator(false)
+        //     },
+        //     onGreetingDistance: () => {
+        //       console.log('🗿 Usuario cerca - Saludo automático')
+        //       handleAutoGreeting()
+        //     }
+        //   })
+        //   proximityRef.current = proximity
+        //   proximity.start()
 
-          // Actualizar distancia cada frame
-          const updateDistance = () => {
-            if (proximityRef.current && isMounted) {
-              setProximityDistance(proximityRef.current.getCurrentDistance())
-            }
-            if (isMounted) {
-              requestAnimationFrame(updateDistance)
-            }
-          }
-          updateDistance()
-        }
+        //   // Actualizar distancia cada frame
+        //   const updateDistance = () => {
+        //     if (proximityRef.current && isMounted) {
+        //       setProximityDistance(proximityRef.current.getCurrentDistance())
+        //     }
+        //     if (isMounted) {
+        //       requestAnimationFrame(updateDistance)
+        //     }
+        //   }
+        //   updateDistance()
+        // }
 
         // Conectar automáticamente
         await autoConnect(llm as any)
@@ -178,9 +178,9 @@ export default function ConversationalAvatar({
       if (gazeRef.current) {
         gazeRef.current.stop()
       }
-      if (proximityRef.current) {
-        proximityRef.current.stop()
-      }
+      // if (proximityRef.current) {
+      //   proximityRef.current.stop()
+      // }
       if (speechSynthesisRef.current) {
         speechSynthesisRef.current.cancel()
       }
