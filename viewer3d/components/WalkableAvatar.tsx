@@ -48,6 +48,16 @@ export default function WalkableAvatar({
       onModelChange()
     }
     console.log('🎭 Tipo de avatar:', avatarType)
+    
+    // Resetear posición del avatar al cambiar modelo
+    if (group.current) {
+      group.current.position.set(0, 0, 0)
+      group.current.rotation.set(0, 0, 0)
+    }
+    
+    // Resetear timer de idle para forzar reposicionamiento de cámara
+    idleTimer.current = 2.0  // Forzar reposicionamiento inmediato
+    
   }, [modelPath, onModelChange, avatarType])
   
   // Configurar controles de teclado
@@ -351,16 +361,23 @@ export default function WalkableAvatar({
     const cameraZ = group.current.position.z - Math.cos(avatarRotation) * cameraDistance
     const cameraY = group.current.position.y + cameraHeight
     
-    // Velocidad de seguimiento: más rápida cuando se mueve, más lenta cuando está quieto
-    const followSpeed = isMoving ? 8 * delta : 3 * delta
-    
-    // Si ha estado quieto por más de 1 segundo, reposicionar cámara más agresivamente
-    const repositionSpeed = idleTimer.current > 1.0 ? 10 * delta : followSpeed
+    // Velocidad de seguimiento adaptativa
+    let followSpeed
+    if (idleTimer.current > 1.0) {
+      // Si ha estado quieto >1 seg, reposicionar agresivamente
+      followSpeed = 15 * delta
+    } else if (isMoving) {
+      // Cuando se mueve, seguimiento rápido
+      followSpeed = 10 * delta
+    } else {
+      // Transición suave cuando acaba de detenerse
+      followSpeed = 5 * delta
+    }
     
     // Suavizar movimiento de cámara
     camera.position.lerp(
       new THREE.Vector3(cameraX, cameraY, cameraZ),
-      repositionSpeed
+      followSpeed
     )
     
     // Siempre mirar al avatar (un poco arriba del centro)

@@ -382,6 +382,47 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
   )
 }
 
+// Componente de estrellas mejorado - versión simplificada sin bufferAttribute manual
+function Stars() {
+  const starsGeometry = useMemo(() => {
+    const geometry = new THREE.BufferGeometry()
+    const count = 15000
+    const positions = new Float32Array(count * 3)
+    const colors = new Float32Array(count * 3)
+    
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3
+      positions[i3] = (Math.random() - 0.5) * 2000
+      positions[i3 + 1] = (Math.random() - 0.5) * 2000
+      positions[i3 + 2] = (Math.random() - 0.5) * 2000
+      
+      const color = new THREE.Color()
+      color.setHSL(Math.random() * 0.2 + 0.5, 0.3, 0.8 + Math.random() * 0.2)
+      colors[i3] = color.r
+      colors[i3 + 1] = color.g
+      colors[i3 + 2] = color.b
+    }
+    
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    
+    return geometry
+  }, [])
+  
+  const starsMaterial = useMemo(() => {
+    return new THREE.PointsMaterial({
+      size: 2,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.8,
+      sizeAttenuation: true,
+      depthWrite: false
+    })
+  }, [])
+  
+  return <points geometry={starsGeometry} material={starsMaterial} />
+}
+
 // Escena del globo
 function GlobeScene({ 
   onLocationClick,
@@ -487,7 +528,8 @@ function ModelScene({
       {/* Iluminación mejorada con bounce light */}
       {solarSimulation && location ? (
         <SolarSimulation lat={location.lat} lon={location.lon} />
-      ) : (
+      ) : solarSimulation ? (
+        // Modo día sin simulación solar
         <>
           <ambientLight intensity={1.5} />
           <hemisphereLight args={['#ffffff', '#8b7355', 1.2]} />
@@ -508,20 +550,45 @@ function ModelScene({
           <pointLight position={[10, 5, 10]} intensity={1.0} color="#ffffff" />
           <pointLight position={[0, 12, 0]} intensity={0.8} color="#ffffff" />
         </>
+      ) : (
+        // Modo noche 🌙
+        <>
+          <ambientLight intensity={0.3} color="#4a5a8a" />
+          <hemisphereLight args={['#1a1a3a', '#0a0a1a', 0.4]} />
+          <directionalLight
+            position={[10, 20, 5]}
+            intensity={0.8}
+            color="#b0c4de"
+            castShadow
+            shadow-mapSize-width={2048}
+            shadow-mapSize-height={2048}
+            shadow-camera-far={50}
+            shadow-camera-left={-20}
+            shadow-camera-right={20}
+            shadow-camera-top={20}
+            shadow-camera-bottom={-20}
+            shadow-bias={-0.0001}
+          />
+          <pointLight position={[0, 2, 3]} intensity={2.0} color="#ff8c00" distance={15} decay={2} />
+          <pointLight position={[-5, 3, -5]} intensity={1.5} color="#ff6600" distance={12} decay={2} />
+        </>
       )}
 
-      {/* Cielo más profundo y realista */}
+      {/* Cielo dinámico: día o noche según simulación solar */}
       <mesh>
         <sphereGeometry args={[500, 32, 32]} />
         <meshBasicMaterial 
-          color="#4a7ba7" 
+          color={solarSimulation ? "#4a7ba7" : "#0a0a1a"}
           side={THREE.BackSide}
           fog={false}
         />
       </mesh>
 
-      {/* Niebla atmosférica suave */}
-      <fog attach="fog" args={['#6b8ba7', 40, 120]} />
+      {/* Estrellas (solo en modo nocturno) */}
+      {!solarSimulation && <Stars />}
+
+      {/* Niebla atmosférica: clara de día, oscura de noche */}
+      <fog attach="fog" args={[solarSimulation ? '#6b8ba7' : '#0a0a1a', 40, 120]} />
 
       {/* Terreno volcánico con textura procedural */}
       <VolcanicTerrain location={location} ref={terrainRef} />
@@ -638,47 +705,6 @@ function EnvironmentElements() {
       ))}
     </group>
   )
-}
-
-// Componente de estrellas mejorado - versión simplificada sin bufferAttribute manual
-function Stars() {
-  const starsGeometry = useMemo(() => {
-    const geometry = new THREE.BufferGeometry()
-    const count = 15000
-    const positions = new Float32Array(count * 3)
-    const colors = new Float32Array(count * 3)
-    
-    for (let i = 0; i < count; i++) {
-      const i3 = i * 3
-      positions[i3] = (Math.random() - 0.5) * 2000
-      positions[i3 + 1] = (Math.random() - 0.5) * 2000
-      positions[i3 + 2] = (Math.random() - 0.5) * 2000
-      
-      const color = new THREE.Color()
-      color.setHSL(Math.random() * 0.2 + 0.5, 0.3, 0.8 + Math.random() * 0.2)
-      colors[i3] = color.r
-      colors[i3 + 1] = color.g
-      colors[i3 + 2] = color.b
-    }
-    
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-    
-    return geometry
-  }, [])
-  
-  const starsMaterial = useMemo(() => {
-    return new THREE.PointsMaterial({
-      size: 2,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.8,
-      sizeAttenuation: true,
-      depthWrite: false
-    })
-  }, [])
-  
-  return <points geometry={starsGeometry} material={starsMaterial} />
 }
 
 // Capturar cámara
