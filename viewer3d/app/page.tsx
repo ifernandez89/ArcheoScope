@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import UI from '@/components/UI'
+import HelpPanel from '@/components/HelpPanel'
 
 // Importar Scene3D dinámicamente para evitar SSR issues con Three.js
 const Scene3D = dynamic(() => import('@/components/Scene3D'), {
@@ -37,6 +38,7 @@ export default function Home() {
     <main>
       <Scene3D />
       <UI />
+      <HelpPanel />
     </main>
   )
 }

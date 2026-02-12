@@ -46,15 +46,26 @@ API REST experimental para generación de modelos 3D.
 ---
 
 ### 🌐 Visualizador 3D (Puerto 3000)
-Visualizador web interactivo con Next.js + React Three Fiber.
+Visualizador web interactivo con Next.js + React Three Fiber + Core Engine.
 
 **Características**:
-- Carga de modelos .glb/.gltf
-- Controles de órbita (rotar, zoom, pan)
+- **Core Engine Profesional**: Runtime completo para experiencias 3D
+- Carga de modelos .glb/.gltf con progreso
+- Sistema de cámara avanzado (orbital + cinematográfico)
+- Iluminación dinámica con simulación de hora del día
+- Sistema de eventos (click, hover, proximity)
+- Timeline interno para eventos temporales
+- Postprocessing (Bloom, SSAO)
+- Estado global con Zustand
 - Auto-rotación con toggle
-- Iluminación profesional
 - Sombras y reflejos realistas
 - UI moderna y responsive
+
+**Arquitectura**:
+- **CAPA 1**: Core Engine (loader, camera, lighting, events, timeline)
+- **CAPA 2**: Motor de Experiencias (scenes, transitions)
+- **CAPA 3**: Motor IA (próximamente)
+- **CAPA 4**: Motor Astronómico + Geoespacial (próximamente)
 
 **Controles**:
 - Click izquierdo + arrastrar: Rotar
@@ -62,7 +73,9 @@ Visualizador web interactivo con Next.js + React Three Fiber.
 - Scroll: Zoom
 - Click en modelo: Toggle auto-rotación
 
-**Documentación**: Ver `viewer3d/README.md`
+**Documentación**: 
+- Ver `viewer3d/README.md`
+- Ver `viewer3d/CORE_ENGINE.md` (arquitectura completa)
 
 ---
 
@@ -129,8 +142,12 @@ creador3d-ecosystem/
 ├── viewer3d/              # Visualizador 3D
 │   ├── app/               # Next.js App Router
 │   ├── components/        # Componentes React
+│   ├── core/              # Core Engine (runtime)
+│   ├── experience/        # Motor de Experiencias
+│   ├── store/             # Estado global (Zustand)
 │   ├── public/            # Archivos estáticos
-│   └── README.md          # Documentación
+│   ├── README.md          # Documentación
+│   └── CORE_ENGINE.md     # Arquitectura del Core Engine
 │
 ├── backend/               # Core mínimo
 │   ├── culturally_constrained_mig.py
@@ -207,8 +224,11 @@ curl -X POST http://localhost:8004/generate/morphology \
 - **Next.js 14**: Framework React
 - **React Three Fiber**: React renderer para Three.js
 - **@react-three/drei**: Helpers 3D
+- **@react-three/postprocessing**: Efectos visuales
 - **Three.js**: Motor 3D WebGL
+- **Zustand**: Estado global
 - **TypeScript**: Type safety
+- **Core Engine**: Runtime profesional para experiencias 3D
 
 ---
 
@@ -217,6 +237,7 @@ curl -X POST http://localhost:8004/generate/morphology \
 ### APIs
 - **Creador3D API**: `creador3d/README.md`
 - **Visualizador 3D**: `viewer3d/README.md`
+- **Core Engine**: `viewer3d/CORE_ENGINE.md` (arquitectura completa)
 
 ### Swagger UI
 - API Docs: `http://localhost:8004/docs`
@@ -257,12 +278,21 @@ const modelPath = `http://localhost:8004/model/${result.obj_filename}`
 ## 🚀 Roadmap
 
 ### Corto Plazo
+- [x] Core Engine profesional (FASE 1 completa)
+- [x] Sistema de iluminación dinámica
+- [x] Sistema de eventos y timeline
+- [x] Postprocessing (Bloom, SSAO)
 - [ ] Selector de modelos en visualizador
-- [ ] Panel de control de iluminación
+- [ ] Panel de control de iluminación avanzado
 - [ ] Captura de screenshots
 - [ ] Más tipos de formas (cilindros, esferas)
 
 ### Mediano Plazo
+- [ ] FASE 2: Motor de Experiencias completo
+  - [ ] Sistema de escenas multi-escena
+  - [ ] Audio reactivo
+  - [ ] Texto contextual 3D
+  - [ ] Narrativa temporal
 - [ ] Galería de modelos con thumbnails
 - [ ] Comparación lado a lado
 - [ ] Mediciones y anotaciones
@@ -270,6 +300,16 @@ const modelPath = `http://localhost:8004/model/${result.obj_filename}`
 - [ ] Batch generation
 
 ### Largo Plazo
+- [ ] FASE 3: Motor IA
+  - [ ] Animaciones procedurales
+  - [ ] Movimiento reactivo al usuario
+  - [ ] Micro-expresiones
+  - [ ] Control por LLM
+- [ ] FASE 4: Motor Astronómico + Geoespacial
+  - [ ] Mapa 3D global (Cesium)
+  - [ ] Simulación solar real
+  - [ ] Alineamientos astronómicos
+  - [ ] Coordenadas geoespaciales
 - [ ] Editor 3D interactivo
 - [ ] Generación desde descripción textual (IA)
 - [ ] Export a más formatos (STL, FBX, GLTF)
