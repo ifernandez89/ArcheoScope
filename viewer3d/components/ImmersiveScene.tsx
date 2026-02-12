@@ -28,6 +28,16 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
   const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('orbit')
   const [solarSimulation, setSolarSimulation] = useState(true)
 
+  // Debug: Log cuando cambia el avatarModel
+  useEffect(() => {
+    console.log('🎭 Avatar Model cambiado a:', avatarModel)
+  }, [avatarModel])
+
+  // Debug: Log cuando cambia el movementMode
+  useEffect(() => {
+    console.log('🎮 Movement Mode cambiado a:', movementMode)
+  }, [movementMode])
+
   // Manejar click en sitio arqueológico
   const handleSiteClick = async (site: ArchaeologicalSite) => {
     console.log(`🏛️ Sitio seleccionado: ${site.name}`)
@@ -385,6 +395,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
 // Componente de estrellas mejorado - versión simplificada sin bufferAttribute manual
 function Stars() {
   const starsGeometry = useMemo(() => {
+    console.log('🌟 Generando geometría de estrellas...')
     const geometry = new THREE.BufferGeometry()
     const count = 15000
     const positions = new Float32Array(count * 3)
@@ -406,20 +417,23 @@ function Stars() {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
     
+    console.log('✅ Estrellas generadas:', count)
     return geometry
   }, [])
   
   const starsMaterial = useMemo(() => {
     return new THREE.PointsMaterial({
-      size: 2,
+      size: 3,  // Aumentado de 2 a 3 para mejor visibilidad
       vertexColors: true,
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.9,  // Aumentado de 0.8 a 0.9
       sizeAttenuation: true,
-      depthWrite: false
+      depthWrite: false,
+      blending: THREE.AdditiveBlending  // Añadido para efecto de brillo
     })
   }, [])
   
+  console.log('⭐ Renderizando componente Stars')
   return <points geometry={starsGeometry} material={starsMaterial} />
 }
 
@@ -585,7 +599,12 @@ function ModelScene({
       </mesh>
 
       {/* Estrellas (solo en modo nocturno) */}
-      {!solarSimulation && <Stars />}
+      {!solarSimulation && (
+        <>
+          {console.log('🌙 Modo nocturno activado - Renderizando estrellas')}
+          <Stars />
+        </>
+      )}
 
       {/* Niebla atmosférica: clara de día, oscura de noche */}
       <fog attach="fog" args={[solarSimulation ? '#6b8ba7' : '#0a0a1a', 40, 120]} />
