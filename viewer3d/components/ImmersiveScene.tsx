@@ -488,11 +488,11 @@ function ModelScene({
         <SolarSimulation lat={location.lat} lon={location.lon} />
       ) : (
         <>
-          <ambientLight intensity={1.2} />
-          <hemisphereLight args={['#ffffff', '#8b7355', 1.0]} />
+          <ambientLight intensity={1.5} />
+          <hemisphereLight args={['#ffffff', '#8b7355', 1.2]} />
           <directionalLight
             position={[10, 15, 5]}
-            intensity={2.5}
+            intensity={3.0}
             castShadow
             shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
@@ -503,9 +503,9 @@ function ModelScene({
             shadow-camera-bottom={-20}
             shadow-bias={-0.0001}
           />
-          <pointLight position={[-10, 8, -5]} intensity={1.0} color="#ffa500" />
-          <pointLight position={[10, 5, 10]} intensity={0.8} color="#ffffff" />
-          <pointLight position={[0, 10, 0]} intensity={0.6} color="#ffffff" />
+          <pointLight position={[-10, 8, -5]} intensity={1.2} color="#ffa500" />
+          <pointLight position={[10, 5, 10]} intensity={1.0} color="#ffffff" />
+          <pointLight position={[0, 12, 0]} intensity={0.8} color="#ffffff" />
         </>
       )}
 

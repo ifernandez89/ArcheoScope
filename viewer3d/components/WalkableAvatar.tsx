@@ -82,11 +82,41 @@ export default function WalkableAvatar({
       
       scene.rotation.set(0, 0, 0)
 
-      // Habilitar sombras
+      // Habilitar sombras y configurar materiales para reaccionar a luz
       scene.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh
           child.castShadow = true
           child.receiveShadow = true
+          
+          // Asegurar que el material reaccione a la luz
+          if (mesh.material) {
+            const material = mesh.material as THREE.Material
+            
+            // Si es MeshBasicMaterial, convertir a MeshStandardMaterial
+            if ((material as any).type === 'MeshBasicMaterial') {
+              const basicMat = material as THREE.MeshBasicMaterial
+              const standardMat = new THREE.MeshStandardMaterial({
+                color: basicMat.color,
+                map: basicMat.map,
+                roughness: 0.7,
+                metalness: 0.1
+              })
+              mesh.material = standardMat
+              console.log('🔄 Convertido a MeshStandardMaterial')
+            }
+            
+            // Si ya es MeshStandardMaterial, ajustar propiedades
+            if ((material as any).type === 'MeshStandardMaterial') {
+              const stdMat = material as THREE.MeshStandardMaterial
+              if (stdMat.roughness === undefined) stdMat.roughness = 0.7
+              if (stdMat.metalness === undefined) stdMat.metalness = 0.1
+              stdMat.needsUpdate = true
+            }
+            
+            // Forzar actualización del material
+            (material as any).needsUpdate = true
+          }
         }
       })
       
@@ -239,6 +269,23 @@ export default function WalkableAvatar({
   return (
     <group ref={group} position={[0, 0, 0]}>
       <primitive object={scene} />
+      
+      {/* Luz que sigue al avatar para asegurar visibilidad */}
+      <spotLight
+        position={[0, 5, 0]}
+        intensity={3.0}
+        angle={Math.PI / 3}
+        penumbra={0.5}
+        distance={15}
+        decay={1}
+        color="#ffffff"
+      />
+      
+      {/* Luz de relleno desde arriba */}
+      <pointLight position={[0, 4, 0]} intensity={2.0} color="#ffffff" distance={10} />
+      
+      {/* Luz frontal */}
+      <pointLight position={[0, 2, 3]} intensity={1.5} color="#ffd700" distance={8} />
     </group>
   )
 }
