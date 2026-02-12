@@ -1,8 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { useFrame, useLoader } from '@react-three/fiber'
-import { Sphere } from '@react-three/drei'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 interface Globe3DProps {
@@ -82,13 +81,13 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
     <group>
       {/* Globo terráqueo */}
       {earthTexture && (
-        <Sphere
+        <mesh
           ref={globeRef}
-          args={[5, 128, 128]}
           onClick={handleClick}
           onPointerOver={() => document.body.style.cursor = 'pointer'}
           onPointerOut={() => document.body.style.cursor = 'default'}
         >
+          <sphereGeometry args={[5, 128, 128]} />
           <meshStandardMaterial
             map={earthTexture}
             roughness={0.7}
@@ -96,18 +95,19 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
             emissive="#0a1929"
             emissiveIntensity={0.2}
           />
-        </Sphere>
+        </mesh>
       )}
 
       {/* Atmósfera (glow effect) */}
-      <Sphere args={[5.15, 64, 64]}>
+      <mesh>
+        <sphereGeometry args={[5.15, 64, 64]} />
         <meshBasicMaterial
           color="#4a90e2"
           transparent
           opacity={0.15}
           side={THREE.BackSide}
         />
-      </Sphere>
+      </mesh>
 
       {/* Marcador de ubicación */}
       {markerPosition && (
