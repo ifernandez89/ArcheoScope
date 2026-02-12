@@ -14,12 +14,18 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
   const markerRef = useRef<THREE.Mesh>(null)
   const [isRotating, setIsRotating] = useState(true)
   const [earthTexture, setEarthTexture] = useState<THREE.Texture | null>(null)
+  const [isReady, setIsReady] = useState(false)
 
   // Cargar texturas reales desde archivos locales
   useEffect(() => {
     const loader = new THREE.TextureLoader()
     
-    // Cargar textura principal de la Tierra (8K)
+    // Primero establecer una textura procedural por defecto
+    const proceduralTexture = createProceduralEarthTexture()
+    setEarthTexture(proceduralTexture)
+    setIsReady(true)
+    
+    // Luego intentar cargar la textura real
     loader.load(
       '/textures/earth_8k.jpg',
       (texture) => {
@@ -28,8 +34,8 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
       },
       undefined,
       (error) => {
-        console.error('❌ Error cargando textura real, usando fallback procedural')
-        setEarthTexture(createProceduralEarthTexture())
+        console.warn('⚠️ No se pudo cargar textura 8K, usando textura procedural')
+        // Ya tenemos la textura procedural establecida
       }
     )
   }, [])
@@ -77,6 +83,11 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
     onLocationClick(lat, lon)
   }
 
+  // No renderizar hasta que la textura esté lista
+  if (!isReady || !earthTexture) {
+    return null
+  }
+
   return (
     <group>
       {/* Globo terráqueo */}
@@ -87,9 +98,9 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
         onPointerOut={() => document.body.style.cursor = 'default'}
       >
         <sphereGeometry args={[5, 128, 128]} />
-        <meshBasicMaterial
-          map={earthTexture || undefined}
-          color={earthTexture ? '#ffffff' : '#1e3a5f'}
+        <meshBasicMaterial 
+          map={earthTexture} 
+          toneMapped={false}
         />
       </mesh>
 
@@ -108,10 +119,12 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
       {markerPosition && (
         <mesh ref={markerRef}>
           <sphereGeometry args={[0.08, 16, 16]} />
-          <meshBasicMaterial
+          <meshStandardMaterial
             color="#ff0000"
             emissive="#ff0000"
             emissiveIntensity={2}
+            metalness={0}
+            roughness={0.5}
           />
         </mesh>
       )}

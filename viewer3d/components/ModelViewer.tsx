@@ -1,7 +1,7 @@
 'use client'
 
 import { useGLTF, useAnimations } from '@react-three/drei'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, forwardRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useSceneStore } from '@/store/scene-store'
@@ -10,10 +10,14 @@ interface ModelViewerProps {
   modelPath: string
 }
 
-export default function ModelViewer({ modelPath }: ModelViewerProps) {
+const ModelViewer = forwardRef<THREE.Group, ModelViewerProps>(
+  function ModelViewer({ modelPath }, ref) {
   const group = useRef<THREE.Group>(null)
   const { scene, animations } = useGLTF(modelPath)
   const { actions, names } = useAnimations(animations, group)
+  
+  // Usar ref externo si se proporciona, sino usar interno
+  const actualRef = (ref as React.RefObject<THREE.Group>) || group
   
   const autoRotate = useSceneStore((state) => state.autoRotate)
   const setAutoRotate = useSceneStore((state) => state.setAutoRotate)
@@ -30,14 +34,15 @@ export default function ModelViewer({ modelPath }: ModelViewerProps) {
     }
   }, [actions, names, currentAnimation, setAnimationPlaying])
 
-  // Auto-rotación suave (solo si no hay animación activa)
+  // Auto-rotación suave SOLO en eje Y (horizontal) si está activada
   useFrame((state, delta) => {
-    if (group.current && autoRotate && names.length === 0) {
-      group.current.rotation.y += delta * 0.3
+    if (actualRef.current && autoRotate && names.length === 0) {
+      // Solo rotar en el eje Y para mantener el modelo vertical
+      actualRef.current.rotation.y += delta * 0.3
     }
   })
 
-  // Centrar y escalar el modelo
+  // Centrar y escalar el modelo, manteniéndolo vertical
   useEffect(() => {
     if (scene) {
       // Calcular bounding box
@@ -45,15 +50,18 @@ export default function ModelViewer({ modelPath }: ModelViewerProps) {
       const center = box.getCenter(new THREE.Vector3())
       const size = box.getSize(new THREE.Vector3())
 
-      // Centrar
+      // Centrar horizontalmente, pero mantener base en el suelo
       scene.position.x = -center.x
-      scene.position.y = -center.y
+      scene.position.y = -box.min.y  // Base pegada al suelo (y=0)
       scene.position.z = -center.z
 
       // Escalar para que quepa en la vista
       const maxDim = Math.max(size.x, size.y, size.z)
       const scale = 2 / maxDim
       scene.scale.setScalar(scale)
+      
+      // Asegurar que el modelo esté completamente vertical (sin rotación en X o Z)
+      scene.rotation.set(0, 0, 0)
 
       // Enable shadows y fix materials
       scene.traverse((child) => {
@@ -108,18 +116,25 @@ export default function ModelViewer({ modelPath }: ModelViewerProps) {
     }
   }, [scene, names])
 
-  // Toggle auto-rotate con click
+  // Toggle auto-rotate con click (desactivado por defecto)
   const handleClick = () => {
     setAutoRotate(!autoRotate)
-    console.log('🔄 Auto-rotación:', !autoRotate ? 'ON' : 'OFF')
+    console.log('🔄 Auto-rotación horizontal:', !autoRotate ? 'ON' : 'OFF')
   }
 
   return (
-    <group ref={group} onClick={handleClick}>
+    <group 
+      ref={actualRef} 
+      onClick={handleClick}
+      // Mantener el grupo siempre vertical
+      rotation={[0, 0, 0]}
+    >
       <primitive object={scene} />
     </group>
   )
-}
+})
+
+export default ModelViewer
 
 // Precargar el modelo
 useGLTF.preload('/warrior.glb')

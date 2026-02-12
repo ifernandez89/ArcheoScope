@@ -46,7 +46,7 @@ export const useSceneStore = create<SceneState>((set) => ({
   modelLoading: false,
   loadingProgress: 0,
   cameraMode: 'orbital',
-  autoRotate: true,
+  autoRotate: false,  // Desactivado por defecto - el modelo se mantiene vertical
   currentAnimation: 0,
   animationPlaying: false,
   timelineActive: false,

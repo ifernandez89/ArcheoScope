@@ -49,87 +49,135 @@ export default function ConversationalAvatar({
   useEffect(() => {
     if (!model || !camera) return
 
-    // USAR OPENROUTER en lugar de Ollama
-    const openrouterApiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || ''
-    const openrouterModel = process.env.NEXT_PUBLIC_OPENROUTER_MODEL || 'arcee-ai/trinity-mini:free'
-    
-    const llm = new OpenRouterIntegration({
-      apiKey: openrouterApiKey,
-      model: openrouterModel,
-      temperature: 0.7,
-      maxTokens: 300
-    })
+    let isMounted = true
 
-    const animator = new AIAnimator()
-    const expressions = new ExpressionSystem()
-
-    // Crear cerebro con personalidad
-    const brain = new AvatarBrain(MOAI_PERSONALITY, llm as any)
-    brainRef.current = brain
-
-    // Crear cuerpo con presencia
-    const body = new AvatarBody(model, animator, expressions, {
-      enableBreathing: true,
-      enableBlinking: true,
-      enableGaze: true,
-      enableSubtleMovement: true,
-      breathingIntensity: 0.015,
-      blinkFrequency: 4
-    })
-    bodyRef.current = body
-
-    // Iniciar presencia
-    body.startPresence()
-
-    // Crear mirada inteligente
-    const gaze = new IntelligentGaze(body, camera)
-    gazeRef.current = gaze
-    gaze.start()
-
-    // Inicializar Speech Synthesis
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      speechSynthesisRef.current = window.speechSynthesis
-    }
-
-    // Inicializar detector de proximidad
-    if (model && camera) {
-      const proximity = new ProximityDetector(camera, model, {
-        activationDistance: 5,
-        greetingDistance: 3,
-        onEnterProximity: () => {
-          console.log('👋 Usuario entró en zona de proximidad')
-          setShowProximityIndicator(true)
-        },
-        onExitProximity: () => {
-          console.log('👋 Usuario salió de zona de proximidad')
-          setShowProximityIndicator(false)
-        },
-        onGreetingDistance: () => {
-          console.log('🗿 Usuario cerca - Saludo automático')
-          handleAutoGreeting()
+    // Función para inicializar el avatar con la API key desde BD
+    const initializeAvatar = async () => {
+      try {
+        // Obtener API key desde la base de datos (encriptada)
+        console.log('🔐 Obteniendo API key desde base de datos...')
+        const response = await fetch('http://127.0.0.1:8000/api/credentials/openrouter/api_key')
+        
+        if (!response.ok) {
+          throw new Error('No se pudo obtener la API key desde la BD')
         }
-      })
-      proximityRef.current = proximity
-      proximity.start()
 
-      // Actualizar distancia cada frame
-      const updateDistance = () => {
-        if (proximityRef.current) {
-          setProximityDistance(proximityRef.current.getCurrentDistance())
+        const data = await response.json()
+        
+        if (!data.success || !data.value) {
+          throw new Error('API key no disponible en la base de datos')
         }
-        requestAnimationFrame(updateDistance)
+
+        const openrouterApiKey = data.value
+        const openrouterModel = process.env.NEXT_PUBLIC_OPENROUTER_MODEL || 'arcee-ai/trinity-mini:free'
+        
+        console.log('✅ API key obtenida desde BD')
+        
+        if (!isMounted) return
+
+        const llm = new OpenRouterIntegration({
+          apiKey: openrouterApiKey,
+          model: openrouterModel,
+          temperature: 0.7,
+          maxTokens: 300
+        })
+
+        const animator = new AIAnimator()
+        const expressions = new ExpressionSystem()
+
+        // Crear cerebro con personalidad
+        const brain = new AvatarBrain(MOAI_PERSONALITY, llm as any)
+        brainRef.current = brain
+
+        // Crear cuerpo con presencia
+        const body = new AvatarBody(model, animator, expressions, {
+          enableBreathing: true,
+          enableBlinking: true,
+          enableGaze: true,
+          enableSubtleMovement: true,
+          breathingIntensity: 0.015,
+          blinkFrequency: 4
+        })
+        bodyRef.current = body
+
+        // Iniciar presencia
+        body.startPresence()
+
+        // Crear mirada inteligente
+        const gaze = new IntelligentGaze(body, camera)
+        gazeRef.current = gaze
+        gaze.start()
+
+        // Inicializar Speech Synthesis
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+          speechSynthesisRef.current = window.speechSynthesis
+        }
+
+        // Inicializar detector de proximidad
+        if (model && camera) {
+          const proximity = new ProximityDetector(camera, model, {
+            activationDistance: 5,
+            greetingDistance: 3,
+            onEnterProximity: () => {
+              console.log('👋 Usuario entró en zona de proximidad')
+              setShowProximityIndicator(true)
+            },
+            onExitProximity: () => {
+              console.log('👋 Usuario salió de zona de proximidad')
+              setShowProximityIndicator(false)
+            },
+            onGreetingDistance: () => {
+              console.log('🗿 Usuario cerca - Saludo automático')
+              handleAutoGreeting()
+            }
+          })
+          proximityRef.current = proximity
+          proximity.start()
+
+          // Actualizar distancia cada frame
+          const updateDistance = () => {
+            if (proximityRef.current && isMounted) {
+              setProximityDistance(proximityRef.current.getCurrentDistance())
+            }
+            if (isMounted) {
+              requestAnimationFrame(updateDistance)
+            }
+          }
+          updateDistance()
+        }
+
+        // Conectar automáticamente
+        await autoConnect(llm as any)
+
+        console.log('🗿 Avatar conversacional inicializado con OpenRouter desde BD')
+        
+      } catch (error) {
+        console.error('❌ Error inicializando avatar:', error)
+        setIsConnected(false)
+        
+        // Mostrar mensaje al usuario
+        const errorMsg: Message = {
+          id: Date.now().toString(),
+          role: 'avatar',
+          content: 'No se pudo conectar con el sistema. Verifica que la API key esté configurada en la base de datos.',
+          emotion: 'confused',
+          timestamp: new Date()
+        }
+        setMessages([errorMsg])
       }
-      updateDistance()
     }
 
-    // Conectar automáticamente
-    autoConnect(llm as any)
-
-    console.log('🗿 Avatar conversacional inicializado con OpenRouter')
+    // Inicializar de forma asíncrona
+    initializeAvatar()
 
     return () => {
-      body.stopPresence()
-      gaze.stop()
+      isMounted = false
+      if (bodyRef.current) {
+        bodyRef.current.stopPresence()
+      }
+      if (gazeRef.current) {
+        gazeRef.current.stop()
+      }
       if (proximityRef.current) {
         proximityRef.current.stop()
       }
@@ -335,35 +383,53 @@ export default function ConversationalAvatar({
     if (!brainRef.current) return
 
     if (!isConnected) {
-      // Verificar OpenRouter
-      const openrouterApiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || ''
-      const openrouterModel = process.env.NEXT_PUBLIC_OPENROUTER_MODEL || 'arcee-ai/trinity-mini:free'
-      
-      const llm = new OpenRouterIntegration({
-        apiKey: openrouterApiKey,
-        model: openrouterModel
-      })
+      try {
+        // Obtener API key desde la base de datos
+        console.log('🔐 Obteniendo API key desde BD para reconexión...')
+        const response = await fetch('http://127.0.0.1:8000/api/credentials/openrouter/api_key')
+        
+        if (!response.ok) {
+          throw new Error('No se pudo obtener la API key desde la BD')
+        }
 
-      const available = await llm.checkAvailability()
-      if (!available) {
-        alert('OpenRouter no está disponible. Verifica la API key en las variables de entorno:\n\nNEXT_PUBLIC_OPENROUTER_API_KEY')
-        return
-      }
+        const data = await response.json()
+        
+        if (!data.success || !data.value) {
+          throw new Error('API key no disponible')
+        }
 
-      setIsConnected(true)
-      
-      // Mensaje de bienvenida
-      const welcomeMsg: Message = {
-        id: Date.now().toString(),
-        role: 'avatar',
-        content: 'Saludos, viajero. Soy un Moai ancestral de Rapa Nui. ¿Qué te trae ante mí?',
-        emotion: 'neutral',
-        timestamp: new Date()
-      }
-      setMessages([welcomeMsg])
-      
-      if (voiceEnabled) {
-        speak(welcomeMsg.content)
+        const openrouterApiKey = data.value
+        const openrouterModel = process.env.NEXT_PUBLIC_OPENROUTER_MODEL || 'arcee-ai/trinity-mini:free'
+        
+        const llm = new OpenRouterIntegration({
+          apiKey: openrouterApiKey,
+          model: openrouterModel
+        })
+
+        const available = await llm.checkAvailability()
+        if (!available) {
+          alert('OpenRouter no está disponible. Verifica la conexión.')
+          return
+        }
+
+        setIsConnected(true)
+        
+        // Mensaje de bienvenida
+        const welcomeMsg: Message = {
+          id: Date.now().toString(),
+          role: 'avatar',
+          content: 'Saludos, viajero. Soy un Moai ancestral de Rapa Nui. ¿Qué te trae ante mí?',
+          emotion: 'neutral',
+          timestamp: new Date()
+        }
+        setMessages([welcomeMsg])
+        
+        if (voiceEnabled) {
+          speak(welcomeMsg.content)
+        }
+      } catch (error) {
+        console.error('❌ Error al reconectar:', error)
+        alert('No se pudo conectar. Verifica que la API key esté configurada en la base de datos.')
       }
     } else {
       setIsConnected(false)
@@ -660,7 +726,7 @@ export default function ConversationalAvatar({
               }}>
                 {isConnected 
                   ? 'El Moai aguarda tus palabras...' 
-                  : 'Configura NEXT_PUBLIC_OPENROUTER_API_KEY para hablar con el Moai'}
+                  : 'Conectando con el Moai ancestral...'}
               </div>
             )}
 

@@ -83,10 +83,12 @@ function SiteMarker({ site, radius, isHovered, onHover, onUnhover, onClick }: Si
         }}
       >
         <sphereGeometry args={[0.05, 16, 16]} />
-        <meshBasicMaterial
+        <meshStandardMaterial
           color={isHovered ? '#fbbf24' : '#ef4444'}
           emissive={isHovered ? '#fbbf24' : '#ef4444'}
           emissiveIntensity={2}
+          metalness={0}
+          roughness={0.5}
         />
       </mesh>
       

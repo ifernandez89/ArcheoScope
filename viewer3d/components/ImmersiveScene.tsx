@@ -1,12 +1,17 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, PointerLockControls, Html } from '@react-three/drei'
 import * as THREE from 'three'
 import Globe3D from './Globe3D'
 import ModelViewer from './ModelViewer'
 import SiteMarkers from './SiteMarkers'
+import CoordinateInput from './CoordinateInput'
+import LocationInfo from './LocationInfo'
+import VolcanicTerrain from './VolcanicTerrain'
+import BasicCollisions from './BasicCollisions'
+import WalkableAvatar from './WalkableAvatar'
 import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
 
 interface ImmersiveSceneProps {
@@ -15,11 +20,12 @@ interface ImmersiveSceneProps {
 }
 
 export default function ImmersiveScene({ onModelLoaded, onCameraReady }: ImmersiveSceneProps) {
-  const [mode, setMode] = useState<'globe' | 'transition' | 'model'>('globe')
+  const [mode, setMode] = useState<'globe' | 'transition' | 'model' | 'exploration'>('globe')
   const [selectedModel, setSelectedModel] = useState<string>('/moai.glb')
+  const [avatarModel, setAvatarModel] = useState<string>('/warrior.glb')
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(null)
   const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
-  const [movementMode, setMovementMode] = useState<'orbit' | 'firstPerson'>('orbit')
+  const [movementMode, setMovementMode] = useState<'orbit' | 'firstPerson' | 'avatar'>('orbit')
   const [solarSimulation, setSolarSimulation] = useState(true)
 
   // Manejar click en sitio arqueológico
@@ -74,13 +80,31 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
     setSelectedSite(null)
   }
 
-  // Toggle entre modo órbita y primera persona
+  // Toggle entre modos de movimiento
   const toggleMovementMode = () => {
-    setMovementMode(prev => prev === 'orbit' ? 'firstPerson' : 'orbit')
+    setMovementMode(prev => {
+      if (prev === 'orbit') return 'firstPerson'
+      if (prev === 'firstPerson') return 'avatar'
+      return 'orbit'
+    })
   }
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      {/* Input de coordenadas */}
+      <CoordinateInput 
+        onCoordinateSubmit={handleLocationClick}
+        currentLocation={selectedLocation}
+      />
+
+      {/* Información de ubicación */}
+      {mode === 'model' && (
+        <LocationInfo 
+          location={selectedLocation}
+          site={selectedSite}
+        />
+      )}
+
       {/* Indicador de transición cinematográfica */}
       {mode === 'transition' && (
         <div style={{
@@ -208,9 +232,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
             onClick={toggleMovementMode}
             style={{
               padding: '12px 24px',
-              background: movementMode === 'firstPerson' 
-                ? 'rgba(234, 179, 8, 0.9)' 
-                : 'rgba(34, 197, 94, 0.9)',
+              background: movementMode === 'avatar' 
+                ? 'rgba(139, 92, 246, 0.9)'
+                : movementMode === 'firstPerson' 
+                  ? 'rgba(234, 179, 8, 0.9)' 
+                  : 'rgba(34, 197, 94, 0.9)',
               border: '1px solid rgba(255,255,255,0.3)',
               borderRadius: '8px',
               color: 'white',
@@ -224,22 +250,90 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
               boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = movementMode === 'firstPerson' 
-                ? 'rgba(234, 179, 8, 1)' 
-                : 'rgba(34, 197, 94, 1)'
+              e.currentTarget.style.background = movementMode === 'avatar'
+                ? 'rgba(139, 92, 246, 1)'
+                : movementMode === 'firstPerson' 
+                  ? 'rgba(234, 179, 8, 1)' 
+                  : 'rgba(34, 197, 94, 1)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = movementMode === 'firstPerson' 
-                ? 'rgba(234, 179, 8, 0.9)' 
-                : 'rgba(34, 197, 94, 0.9)'
+              e.currentTarget.style.background = movementMode === 'avatar'
+                ? 'rgba(139, 92, 246, 0.9)'
+                : movementMode === 'firstPerson' 
+                  ? 'rgba(234, 179, 8, 0.9)' 
+                  : 'rgba(34, 197, 94, 0.9)'
             }}
           >
-            {movementMode === 'orbit' ? '🎮 Modo Primera Persona' : '🔄 Modo Órbita'}
+            {movementMode === 'orbit' && '🔄 Modo Órbita'}
+            {movementMode === 'firstPerson' && '👁️ Primera Persona'}
+            {movementMode === 'avatar' && '🚶 Modo Avatar'}
           </button>
+
+          {/* Selector de Avatar (solo en modo avatar) - DESPUÉS del botón */}
+          {movementMode === 'avatar' && (
+            <div style={{
+              background: 'rgba(0, 0, 0, 0.8)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '8px',
+              padding: '12px',
+              border: '1px solid rgba(255,255,255,0.2)'
+            }}>
+              <div style={{
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: '11px',
+                marginBottom: '8px',
+                fontWeight: 'bold'
+              }}>
+                Seleccionar Avatar:
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {[
+                  { name: 'Warrior', path: '/warrior.glb', icon: '⚔️' },
+                  { name: 'Moai', path: '/moai.glb', icon: '🗿' },
+                  { name: 'Sphinx', path: '/sphinx.glb', icon: '🦁' }
+                ].map((model) => (
+                  <button
+                    key={model.path}
+                    onClick={() => setAvatarModel(model.path)}
+                    style={{
+                      padding: '8px 12px',
+                      background: avatarModel === model.path 
+                        ? 'rgba(139, 92, 246, 0.9)' 
+                        : 'rgba(255,255,255,0.1)',
+                      border: avatarModel === model.path
+                        ? '2px solid rgba(139, 92, 246, 1)'
+                        : '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: '6px',
+                      color: 'white',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (avatarModel !== model.path) {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.15)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (avatarModel !== model.path) {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+                      }
+                    }}
+                  >
+                    <span>{model.icon}</span>
+                    <span>{model.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Instrucciones de movimiento en primera persona */}
+      {/* Instrucciones de movimiento */}
       {mode === 'model' && movementMode === 'firstPerson' && (
         <div style={{
           position: 'absolute',
@@ -263,6 +357,28 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
           <span>ESC - Salir</span>
         </div>
       )}
+      
+      {mode === 'model' && movementMode === 'avatar' && (
+        <div style={{
+          position: 'absolute',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1001,
+          background: 'rgba(0, 0, 0, 0.8)',
+          backdropFilter: 'blur(10px)',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          border: '1px solid rgba(255,255,255,0.2)',
+          color: 'white',
+          fontSize: '12px',
+          display: 'flex',
+          gap: '20px'
+        }}>
+          <span>🚶 W/A/S/D - Caminar</span>
+          <span>Mouse - Rotar cámara</span>
+        </div>
+      )}
 
       {/* Escena 3D */}
       {mode === 'globe' ? (
@@ -274,6 +390,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
       ) : mode === 'model' ? (
         <ModelScene 
           modelPath={selectedModel}
+          avatarModel={avatarModel}
           onModelLoaded={onModelLoaded}
           onCameraReady={onCameraReady}
           movementMode={movementMode}
@@ -339,6 +456,7 @@ function GlobeScene({
 // Escena del modelo con zoom cinematográfico
 function ModelScene({ 
   modelPath, 
+  avatarModel,
   onModelLoaded, 
   onCameraReady,
   movementMode,
@@ -347,66 +465,124 @@ function ModelScene({
   solarSimulation
 }: { 
   modelPath: string
+  avatarModel: string
   onModelLoaded?: (model: THREE.Object3D) => void
   onCameraReady?: (camera: THREE.Camera) => void
-  movementMode: 'orbit' | 'firstPerson'
+  movementMode: 'orbit' | 'firstPerson' | 'avatar'
   location?: { lat: number, lon: number } | null
   site?: ArchaeologicalSite | null
   solarSimulation: boolean
 }) {
+  const terrainRef = useRef<THREE.Mesh>(null)
+  const modelRef = useRef<THREE.Group>(null)
+  const [obstacles, setObstacles] = useState<THREE.Object3D[]>([])
+  
+  // Actualizar obstáculos cuando el modelo cargue
+  useEffect(() => {
+    if (modelRef.current) {
+      setObstacles([modelRef.current])
+    }
+  }, [modelRef.current])
+  
   return (
     <Canvas
       shadows
-      camera={{ position: [5, 3, 5], fov: 50 }}
+      camera={{ position: [8, 4, 8], fov: 60 }}
       gl={{ 
         antialias: true,
-        alpha: true,
-        powerPreference: 'high-performance'
+        alpha: false,
+        powerPreference: 'high-performance',
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: 1.2
       }}
     >
-      <PerspectiveCamera makeDefault position={[5, 3, 5]} fov={50} />
+      <PerspectiveCamera makeDefault position={[8, 4, 8]} fov={60} />
       
       {/* Controles según modo */}
       {movementMode === 'orbit' ? (
         <OrbitControls
           enableDamping
-          dampingFactor={0.05}
-          minDistance={2}
-          maxDistance={20}
-          maxPolarAngle={Math.PI / 2}
+          dampingFactor={0.08}
+          minDistance={3}
+          maxDistance={30}
+          minPolarAngle={Math.PI / 8}
+          maxPolarAngle={Math.PI / 2.2}
+          enablePan={true}
+          panSpeed={0.8}
+          rotateSpeed={0.6}
+          zoomSpeed={0.8}
+          target={[0, 1, 0]}
         />
-      ) : (
+      ) : movementMode === 'firstPerson' ? (
         <FirstPersonControls />
-      )}
+      ) : null}
+      {/* En modo avatar, la cámara es controlada por WalkableAvatar */}
 
-      {/* Iluminación con simulación solar */}
+      {/* Iluminación mejorada con bounce light */}
       {solarSimulation && location ? (
         <SolarSimulation lat={location.lat} lon={location.lon} />
       ) : (
         <>
-          <ambientLight intensity={0.4} />
+          <ambientLight intensity={0.7} />
+          <hemisphereLight args={['#87ceeb', '#5a4a3a', 0.8]} />
           <directionalLight
-            position={[10, 10, 5]}
-            intensity={1.2}
+            position={[10, 15, 5]}
+            intensity={2.0}
             castShadow
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
+            shadow-mapSize-width={4096}
+            shadow-mapSize-height={4096}
+            shadow-camera-far={50}
+            shadow-camera-left={-20}
+            shadow-camera-right={20}
+            shadow-camera-top={20}
+            shadow-camera-bottom={-20}
+            shadow-bias={-0.0001}
           />
-          <pointLight position={[-10, -10, -5]} intensity={0.3} color="#4a90e2" />
-          <hemisphereLight args={['#87ceeb', '#654321', 0.3]} />
+          <pointLight position={[-10, 8, -5]} intensity={0.6} color="#ffa500" />
+          <pointLight position={[10, 5, 10]} intensity={0.4} color="#ffffff" />
         </>
       )}
 
-      {/* Suelo para primera persona */}
-      {movementMode === 'firstPerson' && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
-          <planeGeometry args={[50, 50]} />
-          <meshBasicMaterial color="#3a3a3a" />
-        </mesh>
-      )}
+      {/* Cielo más profundo y realista */}
+      <mesh>
+        <sphereGeometry args={[500, 32, 32]} />
+        <meshBasicMaterial 
+          color="#4a7ba7" 
+          side={THREE.BackSide}
+          fog={false}
+        />
+      </mesh>
 
-      {/* Modelo 3D */}
-      <ModelViewer modelPath={modelPath} />
+      {/* Niebla atmosférica suave */}
+      <fog attach="fog" args={['#6b8ba7', 40, 120]} />
+
+      {/* Terreno volcánico con textura procedural */}
+      <VolcanicTerrain location={location} ref={terrainRef} />
+
+      {/* Elementos decorativos del entorno */}
+      <EnvironmentElements />
+
+      {/* Grid REMOVIDO - solo en modo debug si es necesario */}
+      {/* <gridHelper args={[200, 100]} /> */}
+
+      {/* Modelo 3D o Avatar según modo */}
+      {movementMode === 'avatar' ? (
+        <WalkableAvatar 
+          modelPath={avatarModel}
+          terrainRef={terrainRef}
+        />
+      ) : (
+        <ModelViewer modelPath={modelPath} ref={modelRef} />
+      )}
+      
+      {/* Colisiones básicas (solo en primera persona) */}
+      {movementMode === 'firstPerson' && (
+        <BasicCollisions 
+          terrainRef={terrainRef}
+          obstacles={obstacles}
+          enabled={true}
+        />
+      )}
       
       {/* Info del sitio */}
       {site && (
@@ -423,11 +599,12 @@ function ModelScene({
   )
 }
 
-// Controles de primera persona
+// Controles de primera persona con PointerLock
 function FirstPersonControls() {
-  const { camera, gl } = useThree()
-  const moveSpeed = 0.1
+  const { camera } = useThree()
+  const moveSpeed = 0.15
   const keys = useRef<{ [key: string]: boolean }>({})
+  const velocity = useRef(new THREE.Vector3())
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -451,20 +628,27 @@ function FirstPersonControls() {
     const right = new THREE.Vector3()
 
     camera.getWorldDirection(direction)
+    direction.y = 0  // Mantener movimiento en plano horizontal
+    direction.normalize()
+    
     right.crossVectors(camera.up, direction).normalize()
 
+    velocity.current.set(0, 0, 0)
+
     if (keys.current['w']) {
-      camera.position.addScaledVector(direction, moveSpeed)
+      velocity.current.addScaledVector(direction, moveSpeed)
     }
     if (keys.current['s']) {
-      camera.position.addScaledVector(direction, -moveSpeed)
+      velocity.current.addScaledVector(direction, -moveSpeed)
     }
     if (keys.current['a']) {
-      camera.position.addScaledVector(right, moveSpeed)
+      velocity.current.addScaledVector(right, moveSpeed)
     }
     if (keys.current['d']) {
-      camera.position.addScaledVector(right, -moveSpeed)
+      velocity.current.addScaledVector(right, -moveSpeed)
     }
+
+    camera.position.add(velocity.current)
   })
 
   return <PointerLockControls />
@@ -493,44 +677,99 @@ function CinematicZoom() {
   return null
 }
 
-// Componente de estrellas mejorado
+// Elementos decorativos del entorno - FIJOS AL SUELO
+function EnvironmentElements() {
+  const rocksPositions = useMemo(() => {
+    const positions = []
+    for (let i = 0; i < 25; i++) {
+      const angle = (i / 25) * Math.PI * 2
+      const radius = 12 + Math.random() * 25
+      const x = Math.cos(angle) * radius + (Math.random() - 0.5) * 8
+      const z = Math.sin(angle) * radius + (Math.random() - 0.5) * 8
+      const scale = 0.2 + Math.random() * 0.5
+      positions.push({ x, z, scale, rotation: Math.random() * Math.PI * 2 })
+    }
+    return positions
+  }, [])
+
+  return (
+    <group>
+      {/* Rocas volcánicas - PEGADAS AL SUELO */}
+      {rocksPositions.map((pos, i) => (
+        <mesh 
+          key={i}
+          position={[pos.x, 0, pos.z]}  // y=0 para estar en el suelo
+          rotation={[0, pos.rotation, 0]}
+          castShadow
+          receiveShadow
+        >
+          <dodecahedronGeometry args={[pos.scale, 0]} />
+          <meshStandardMaterial 
+            color="#3a2a1a" 
+            roughness={0.95}
+            metalness={0.05}
+          />
+        </mesh>
+      ))}
+
+      {/* Arbustos - PEGADOS AL SUELO */}
+      {rocksPositions.slice(0, 12).map((pos, i) => (
+        <mesh 
+          key={`bush-${i}`}
+          position={[pos.x * 0.6, 0, pos.z * 0.6]}  // y=0 para estar en el suelo
+          castShadow
+        >
+          <sphereGeometry args={[pos.scale * 0.6, 8, 8]} />
+          <meshStandardMaterial 
+            color="#4a5a2a" 
+            roughness={1}
+            metalness={0}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+// Componente de estrellas mejorado - versión simplificada sin bufferAttribute manual
 function Stars() {
-  const starsRef = useRef<THREE.Points>(null)
-  
-  useEffect(() => {
-    if (!starsRef.current) return
-    
+  const starsGeometry = useMemo(() => {
     const geometry = new THREE.BufferGeometry()
-    const vertices = []
-    const colors = []
+    const count = 15000
+    const positions = new Float32Array(count * 3)
+    const colors = new Float32Array(count * 3)
     
-    for (let i = 0; i < 15000; i++) {
-      const x = (Math.random() - 0.5) * 2000
-      const y = (Math.random() - 0.5) * 2000
-      const z = (Math.random() - 0.5) * 2000
-      vertices.push(x, y, z)
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3
+      positions[i3] = (Math.random() - 0.5) * 2000
+      positions[i3 + 1] = (Math.random() - 0.5) * 2000
+      positions[i3 + 2] = (Math.random() - 0.5) * 2000
       
-      // Colores variados para las estrellas
       const color = new THREE.Color()
       color.setHSL(Math.random() * 0.2 + 0.5, 0.3, 0.8 + Math.random() * 0.2)
-      colors.push(color.r, color.g, color.b)
+      colors[i3] = color.r
+      colors[i3 + 1] = color.g
+      colors[i3 + 2] = color.b
     }
     
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
-    starsRef.current.geometry = geometry
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    
+    return geometry
   }, [])
   
-  return (
-    <points ref={starsRef}>
-      <pointsMaterial
-        size={2}
-        vertexColors
-        transparent
-        opacity={0.8}
-      />
-    </points>
-  )
+  const starsMaterial = useMemo(() => {
+    return new THREE.PointsMaterial({
+      size: 2,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.8,
+      sizeAttenuation: true,
+      depthWrite: false
+    })
+  }, [])
+  
+  return <points geometry={starsGeometry} material={starsMaterial} />
 }
 
 // Capturar cámara

@@ -513,6 +513,23 @@ except Exception as e:
     traceback.print_exc()
 
 # ============================================================================
+# INCLUIR ROUTER DE CREDENCIALES (INTERNO)
+# ============================================================================
+
+try:
+    from api.credentials_endpoint import router as credentials_router
+    
+    app.include_router(
+        credentials_router,
+        tags=["Credentials"]
+    )
+    logger.info("✅ Router de Credenciales incluido")
+except ImportError as e:
+    logger.error(f"❌ No se pudo cargar router de Credenciales: {e}")
+except Exception as e:
+    logger.error(f"❌ Error inicializando router de Credenciales: {e}")
+
+# ============================================================================
 # SERVIR ARCHIVOS ESTÁTICOS (ANOMALISM)
 # ============================================================================
 
