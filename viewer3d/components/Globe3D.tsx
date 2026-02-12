@@ -1,8 +1,8 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Sphere, useTexture } from '@react-three/drei'
+import { Sphere } from '@react-three/drei'
 import * as THREE from 'three'
 
 interface Globe3DProps {
@@ -12,43 +12,77 @@ interface Globe3DProps {
 export default function Globe3D({ onLocationClick }: Globe3DProps) {
   const globeRef = useRef<THREE.Mesh>(null)
   const [isRotating, setIsRotating] = useState(true)
+  const [earthTexture, setEarthTexture] = useState<THREE.Texture | null>(null)
 
-  // Cargar texturas de la Tierra (usando texturas públicas)
-  // En producción, usar texturas de mejor calidad
-  const earthTexture = useTexture('/earth-texture.jpg', (texture) => {
-    // Fallback: crear textura procedural si no existe
-    if (!texture) {
-      const canvas = document.createElement('canvas')
-      canvas.width = 2048
-      canvas.height = 1024
-      const ctx = canvas.getContext('2d')!
+  // Crear textura procedural de la Tierra
+  useEffect(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 2048
+    canvas.height = 1024
+    const ctx = canvas.getContext('2d')!
+    
+    // Gradiente azul para océanos
+    const gradient = ctx.createLinearGradient(0, 0, 0, 1024)
+    gradient.addColorStop(0, '#1e3a8a')
+    gradient.addColorStop(0.5, '#2563eb')
+    gradient.addColorStop(1, '#1e3a8a')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, 2048, 1024)
+    
+    // Agregar "continentes" simples
+    ctx.fillStyle = '#22c55e'
+    ctx.globalAlpha = 0.7
+    
+    // Simular continentes con formas aleatorias
+    const continents = [
+      // América
+      { x: 400, y: 400, size: 150 },
+      { x: 450, y: 500, size: 120 },
+      { x: 500, y: 600, size: 100 },
+      // Europa/África
+      { x: 1000, y: 350, size: 100 },
+      { x: 1050, y: 500, size: 130 },
+      { x: 1100, y: 650, size: 110 },
+      // Asia
+      { x: 1400, y: 300, size: 180 },
+      { x: 1500, y: 450, size: 150 },
+      { x: 1600, y: 550, size: 120 },
+      // Oceanía
+      { x: 1700, y: 700, size: 80 },
+      { x: 1800, y: 750, size: 60 }
+    ]
+    
+    continents.forEach(({ x, y, size }) => {
+      ctx.beginPath()
+      ctx.arc(x, y, size, 0, Math.PI * 2)
+      ctx.fill()
       
-      // Gradiente azul para océanos
-      const gradient = ctx.createLinearGradient(0, 0, 0, 1024)
-      gradient.addColorStop(0, '#1e3a8a')
-      gradient.addColorStop(0.5, '#2563eb')
-      gradient.addColorStop(1, '#1e3a8a')
-      ctx.fillStyle = gradient
-      ctx.fillRect(0, 0, 2048, 1024)
-      
-      // Agregar "continentes" simples
-      ctx.fillStyle = '#22c55e'
-      ctx.globalAlpha = 0.7
-      
-      // Simular continentes con formas aleatorias
-      for (let i = 0; i < 50; i++) {
-        const x = Math.random() * 2048
-        const y = Math.random() * 1024
-        const size = Math.random() * 200 + 50
+      // Agregar variación
+      for (let i = 0; i < 3; i++) {
+        const offsetX = (Math.random() - 0.5) * size
+        const offsetY = (Math.random() - 0.5) * size
+        const subSize = size * (0.5 + Math.random() * 0.5)
         ctx.beginPath()
-        ctx.arc(x, y, size, 0, Math.PI * 2)
+        ctx.arc(x + offsetX, y + offsetY, subSize, 0, Math.PI * 2)
         ctx.fill()
       }
-      
-      return new THREE.CanvasTexture(canvas)
+    })
+    
+    // Agregar nubes/atmósfera
+    ctx.fillStyle = '#ffffff'
+    ctx.globalAlpha = 0.2
+    for (let i = 0; i < 100; i++) {
+      const x = Math.random() * 2048
+      const y = Math.random() * 1024
+      const size = Math.random() * 50 + 20
+      ctx.beginPath()
+      ctx.arc(x, y, size, 0, Math.PI * 2)
+      ctx.fill()
     }
-    return texture
-  })
+    
+    const texture = new THREE.CanvasTexture(canvas)
+    setEarthTexture(texture)
+  }, [])
 
   // Rotación automática del globo
   useFrame((state, delta) => {
@@ -82,19 +116,21 @@ export default function Globe3D({ onLocationClick }: Globe3DProps) {
   return (
     <group>
       {/* Globo terráqueo */}
-      <Sphere
-        ref={globeRef}
-        args={[5, 64, 64]}
-        onClick={handleClick}
-        onPointerOver={() => document.body.style.cursor = 'pointer'}
-        onPointerOut={() => document.body.style.cursor = 'default'}
-      >
-        <meshStandardMaterial
-          map={earthTexture}
-          roughness={0.8}
-          metalness={0.2}
-        />
-      </Sphere>
+      {earthTexture && (
+        <Sphere
+          ref={globeRef}
+          args={[5, 64, 64]}
+          onClick={handleClick}
+          onPointerOver={() => document.body.style.cursor = 'pointer'}
+          onPointerOut={() => document.body.style.cursor = 'default'}
+        >
+          <meshStandardMaterial
+            map={earthTexture}
+            roughness={0.8}
+            metalness={0.2}
+          />
+        </Sphere>
+      )}
 
       {/* Atmósfera (glow effect) */}
       <Sphere args={[5.1, 64, 64]}>
