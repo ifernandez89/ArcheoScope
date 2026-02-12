@@ -425,6 +425,8 @@ export default function WalkableAvatar({
   )
 }
 
+import { getAssetPath } from '@/lib/paths'
+
 // Precargar modelos comunes
-useGLTF.preload('/warrior.glb')
-useGLTF.preload('/moai.glb')
+useGLTF.preload(getAssetPath('/warrior.glb'))
+useGLTF.preload(getAssetPath('/moai.glb'))

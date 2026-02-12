@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { getAssetPath } from '@/lib/paths'
 
 interface Globe3DProps {
   onLocationClick?: (lat: number, lon: number) => void
@@ -27,7 +28,7 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
     
     // Luego intentar cargar la textura real
     loader.load(
-      '/textures/earth_8k.jpg',
+      getAssetPath('/textures/earth_8k.jpg'),
       (texture) => {
         console.log('✅ Textura real 8K cargada exitosamente!')
         setEarthTexture(texture)

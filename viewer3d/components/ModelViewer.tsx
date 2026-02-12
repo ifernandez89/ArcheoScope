@@ -136,5 +136,7 @@ const ModelViewer = forwardRef<THREE.Group, ModelViewerProps>(
 
 export default ModelViewer
 
+import { getAssetPath } from '@/lib/paths'
+
 // Precargar el modelo
-useGLTF.preload('/warrior.glb')
+useGLTF.preload(getAssetPath('/warrior.glb'))

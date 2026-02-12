@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { getAssetPath } from '@/lib/paths'
 
 interface Model {
   id: string
@@ -13,25 +14,25 @@ const AVAILABLE_MODELS: Model[] = [
   {
     id: 'warrior',
     name: 'Warrior',
-    path: '/warrior.glb',
+    path: getAssetPath('/warrior.glb'),
     thumbnail: '⚔️'
   },
   {
     id: 'moai',
     name: 'Moai (Rapa Nui)',
-    path: '/moai.glb',
+    path: getAssetPath('/moai.glb'),
     thumbnail: '🗿'
   },
   {
     id: 'sphinx',
     name: 'Sphinx',
-    path: '/sphinx.glb',
+    path: getAssetPath('/sphinx.glb'),
     thumbnail: '🦁'
   },
   {
     id: 'sphinxWithBase',
     name: 'Sphinx con Base',
-    path: '/sphinxWithBase.glb',
+    path: getAssetPath('/sphinxWithBase.glb'),
     thumbnail: '🏛️'
   }
 ]

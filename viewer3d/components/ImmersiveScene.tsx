@@ -13,6 +13,7 @@ import VolcanicTerrain from './VolcanicTerrain'
 import BasicCollisions from './BasicCollisions'
 import WalkableAvatar from './WalkableAvatar'
 import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
+import { getAssetPath } from '@/lib/paths'
 
 interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
@@ -21,8 +22,8 @@ interface ImmersiveSceneProps {
 
 export default function ImmersiveScene({ onModelLoaded, onCameraReady }: ImmersiveSceneProps) {
   const [mode, setMode] = useState<'globe' | 'transition' | 'model' | 'exploration'>('globe')
-  const [selectedModel, setSelectedModel] = useState<string>('/moai.glb')
-  const [avatarModel, setAvatarModel] = useState<string>('/warrior.glb')
+  const [selectedModel, setSelectedModel] = useState<string>(getAssetPath('/moai.glb'))
+  const [avatarModel, setAvatarModel] = useState<string>(getAssetPath('/warrior.glb'))
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(null)
   const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
   const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('orbit')
@@ -67,7 +68,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
     console.log(`🌍 Iniciando teletransporte a: lat=${lat.toFixed(4)}, lon=${lon.toFixed(4)}`)
     
     setSelectedLocation({ lat, lon })
-    setSelectedModel('/moai.glb')
+    setSelectedModel(getAssetPath('/moai.glb'))
     setSelectedSite(null)
     setMode('transition')
     
@@ -289,9 +290,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {[
-                  { name: 'Warrior', path: '/warrior.glb', icon: '⚔️' },
-                  { name: 'Moai', path: '/moai.glb', icon: '🗿' },
-                  { name: 'Sphinx', path: '/sphinx.glb', icon: '🦁' }
+                  { name: 'Warrior', path: getAssetPath('/warrior.glb'), icon: '⚔️' },
+                  { name: 'Moai', path: getAssetPath('/moai.glb'), icon: '🗿' },
+                  { name: 'Sphinx', path: getAssetPath('/sphinx.glb'), icon: '🦁' }
                 ].map((model) => (
                   <button
                     key={model.path}
