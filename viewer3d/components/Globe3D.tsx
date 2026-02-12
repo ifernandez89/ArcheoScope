@@ -80,23 +80,18 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
   return (
     <group>
       {/* Globo terráqueo */}
-      {earthTexture && (
-        <mesh
-          ref={globeRef}
-          onClick={handleClick}
-          onPointerOver={() => document.body.style.cursor = 'pointer'}
-          onPointerOut={() => document.body.style.cursor = 'default'}
-        >
-          <sphereGeometry args={[5, 128, 128]} />
-          <meshStandardMaterial
-            map={earthTexture}
-            roughness={0.7}
-            metalness={0.1}
-            emissive="#0a1929"
-            emissiveIntensity={0.2}
-          />
-        </mesh>
-      )}
+      <mesh
+        ref={globeRef}
+        onClick={handleClick}
+        onPointerOver={() => document.body.style.cursor = 'pointer'}
+        onPointerOut={() => document.body.style.cursor = 'default'}
+      >
+        <sphereGeometry args={[5, 128, 128]} />
+        <meshBasicMaterial
+          map={earthTexture || undefined}
+          color={earthTexture ? '#ffffff' : '#1e3a5f'}
+        />
+      </mesh>
 
       {/* Atmósfera (glow effect) */}
       <mesh>
