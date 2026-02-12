@@ -359,7 +359,14 @@ export default function WalkableAvatar({
     const avatarRotation = group.current.rotation.y
     const cameraX = group.current.position.x - Math.sin(avatarRotation) * cameraDistance
     const cameraZ = group.current.position.z - Math.cos(avatarRotation) * cameraDistance
-    const cameraY = group.current.position.y + cameraHeight
+    let cameraY = group.current.position.y + cameraHeight
+    
+    // Camera bob (oscilación al caminar) para sensación de movimiento
+    if (isMoving) {
+      const bobSpeed = 8  // Velocidad de oscilación
+      const bobAmount = 0.08  // Amplitud de oscilación (sutil)
+      cameraY += Math.sin(timeAccumulator.current * bobSpeed) * bobAmount
+    }
     
     // Velocidad de seguimiento adaptativa
     let followSpeed

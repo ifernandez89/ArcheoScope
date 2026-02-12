@@ -437,6 +437,61 @@ function Stars() {
   return <points geometry={starsGeometry} material={starsMaterial} />
 }
 
+// Partículas ambientales sutiles para sensación de movimiento
+function AmbientParticles() {
+  const particlesRef = useRef<THREE.Points>(null)
+  
+  const particlesGeometry = useMemo(() => {
+    const geometry = new THREE.BufferGeometry()
+    const count = 500  // Pocas partículas, muy sutiles
+    const positions = new Float32Array(count * 3)
+    
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3
+      // Distribuir en un área amplia alrededor del jugador
+      positions[i3] = (Math.random() - 0.5) * 100
+      positions[i3 + 1] = Math.random() * 10 + 1  // Entre 1 y 11 metros de altura
+      positions[i3 + 2] = (Math.random() - 0.5) * 100
+    }
+    
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    return geometry
+  }, [])
+  
+  const particlesMaterial = useMemo(() => {
+    return new THREE.PointsMaterial({
+      size: 0.3,
+      color: '#ffffff',
+      transparent: true,
+      opacity: 0.15,  // Muy sutil
+      sizeAttenuation: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    })
+  }, [])
+  
+  // Animación sutil de flotación
+  useFrame((state) => {
+    if (particlesRef.current) {
+      const positions = particlesRef.current.geometry.attributes.position.array as Float32Array
+      
+      for (let i = 0; i < positions.length; i += 3) {
+        // Movimiento vertical lento
+        positions[i + 1] += Math.sin(state.clock.elapsedTime + i) * 0.001
+        
+        // Si la partícula baja mucho, resetearla arriba
+        if (positions[i + 1] < 0.5) {
+          positions[i + 1] = 11
+        }
+      }
+      
+      particlesRef.current.geometry.attributes.position.needsUpdate = true
+    }
+  })
+  
+  return <points ref={particlesRef} geometry={particlesGeometry} material={particlesMaterial} />
+}
+
 // Escena del globo
 function GlobeScene({ 
   onLocationClick,
@@ -612,11 +667,19 @@ function ModelScene({
       {/* Terreno volcánico con textura procedural */}
       <VolcanicTerrain location={location} ref={terrainRef} />
 
+      {/* Grid sutil para referencia de movimiento */}
+      <gridHelper 
+        args={[200, 100, '#3a3a3a', '#2a2a2a']} 
+        position={[0, 0.01, 0]}
+        material-opacity={0.15}
+        material-transparent={true}
+      />
+
+      {/* Partículas ambientales sutiles */}
+      <AmbientParticles />
+
       {/* Elementos decorativos del entorno */}
       <EnvironmentElements />
-
-      {/* Grid REMOVIDO - solo en modo debug si es necesario */}
-      {/* <gridHelper args={[200, 100]} /> */}
 
       {/* Modelo 3D o Avatar según modo */}
       {movementMode === 'avatar' ? (
