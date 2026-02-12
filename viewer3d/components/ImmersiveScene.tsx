@@ -267,7 +267,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
                 : 'rgba(34, 197, 94, 0.9)'
             }}
           >
-            {movementMode === 'orbit' ? '🚶 Modo Exploración' : '🔄 Modo Órbita'}
+            {movementMode === 'avatar' ? '🚶 Modo: Exploración' : '🔄 Modo: Órbita'}
           </button>
 
           {/* Selector de Avatar (solo en modo avatar) - DESPUÉS del botón */}
@@ -682,6 +682,7 @@ function ModelScene({
       <EnvironmentElements />
 
       {/* Modelo 3D o Avatar según modo */}
+      {console.log('🎯 Evaluando modo de renderizado:', { movementMode, avatarModel, modelPath })}
       {movementMode === 'avatar' ? (
         <>
           {console.log('👤 Renderizando WalkableAvatar con modelo:', avatarModel)}
