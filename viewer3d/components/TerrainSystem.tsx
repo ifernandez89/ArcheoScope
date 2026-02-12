@@ -53,10 +53,8 @@ export default function TerrainSystem({
       receiveShadow
     >
       <planeGeometry args={[size, size, resolution, resolution]} />
-      <meshStandardMaterial
+      <meshBasicMaterial
         color="#4a5d3f"
-        roughness={0.9}
-        metalness={0.1}
         wireframe={false}
       />
     </mesh>

@@ -55,11 +55,27 @@ export default function ModelViewer({ modelPath }: ModelViewerProps) {
       const scale = 2 / maxDim
       scene.scale.setScalar(scale)
 
-      // Enable shadows
+      // Enable shadows y fix materials
       scene.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh
           child.castShadow = true
           child.receiveShadow = true
+          
+          // Fix material uniforms
+          if (mesh.material) {
+            const material = mesh.material as THREE.Material
+            if ((material as any).needsUpdate !== undefined) {
+              (material as any).needsUpdate = true
+            }
+            
+            // Si es MeshStandardMaterial, asegurar que tenga valores por defecto
+            if ((material as any).type === 'MeshStandardMaterial') {
+              const stdMat = material as THREE.MeshStandardMaterial
+              if (stdMat.roughness === undefined) stdMat.roughness = 0.5
+              if (stdMat.metalness === undefined) stdMat.metalness = 0.5
+            }
+          }
         }
       })
 
