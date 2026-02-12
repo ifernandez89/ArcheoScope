@@ -30,6 +30,7 @@ export default function WalkableAvatar({
   const rotationSpeed = 8.0  // Aumentado para rotación más rápida
   const keys = useRef<{ [key: string]: boolean }>({})
   const raycaster = useRef(new THREE.Raycaster())
+  const idleTimer = useRef(0)  // Timer para detectar cuando está quieto
   
   // Notificar cambio de modelo
   useEffect(() => {
@@ -207,6 +208,13 @@ export default function WalkableAvatar({
     // Actualizar estado
     setState(isMoving ? 'walking' : 'idle')
     
+    // Incrementar timer cuando está quieto
+    if (!isMoving) {
+      idleTimer.current += delta
+    } else {
+      idleTimer.current = 0
+    }
+    
     // Aplicar movimiento
     if (isMoving) {
       moveDirection.normalize()
@@ -253,21 +261,35 @@ export default function WalkableAvatar({
     group.current.position.z = Math.max(-worldLimit, Math.min(worldLimit, group.current.position.z))
     
     // Actualizar posición de la cámara para seguir al avatar
-    const cameraOffset = new THREE.Vector3(0, 2, 5)
-    const targetCameraPos = group.current.position.clone().add(
-      cameraOffset.applyQuaternion(
-        new THREE.Quaternion().setFromEuler(
-          new THREE.Euler(0, group.current.rotation.y, 0)
-        )
-      )
+    // Cámara en tercera persona detrás del avatar
+    const cameraDistance = 6  // Distancia de la cámara
+    const cameraHeight = 3    // Altura de la cámara
+    
+    // Calcular posición de cámara detrás del avatar
+    const avatarRotation = group.current.rotation.y
+    const cameraX = group.current.position.x - Math.sin(avatarRotation) * cameraDistance
+    const cameraZ = group.current.position.z - Math.cos(avatarRotation) * cameraDistance
+    const cameraY = group.current.position.y + cameraHeight
+    
+    // Velocidad de seguimiento: más rápida cuando se mueve, más lenta cuando está quieto
+    const followSpeed = isMoving ? 8 * delta : 3 * delta
+    
+    // Si ha estado quieto por más de 1 segundo, reposicionar cámara más agresivamente
+    const repositionSpeed = idleTimer.current > 1.0 ? 10 * delta : followSpeed
+    
+    // Suavizar movimiento de cámara
+    camera.position.lerp(
+      new THREE.Vector3(cameraX, cameraY, cameraZ),
+      repositionSpeed
     )
     
-    camera.position.lerp(targetCameraPos, 3 * delta)
-    camera.lookAt(
+    // Siempre mirar al avatar (un poco arriba del centro)
+    const lookAtTarget = new THREE.Vector3(
       group.current.position.x,
-      group.current.position.y + 1,
+      group.current.position.y + 1.5,
       group.current.position.z
     )
+    camera.lookAt(lookAtTarget)
     
     // Notificar cambio de posición
     if (onPositionChange) {
