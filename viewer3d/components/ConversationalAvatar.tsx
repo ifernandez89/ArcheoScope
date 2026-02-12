@@ -6,6 +6,7 @@ import { AvatarBody, IntelligentGaze } from '@/ai/avatar-body'
 import { OpenRouterIntegration, OPENROUTER_MODELS } from '@/ai/openrouter-integration'
 import { AIAnimator } from '@/ai/animator'
 import { ExpressionSystem } from '@/ai/expression-system'
+import { ProximityDetector } from '@/systems/proximity-detector'
 
 interface Message {
   id: string
@@ -33,11 +34,14 @@ export default function ConversationalAvatar({
   const [isOpen, setIsOpen] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(true)
+  const [proximityDistance, setProximityDistance] = useState<number | null>(null)
+  const [showProximityIndicator, setShowProximityIndicator] = useState(false)
   
   // Referencias a sistemas
   const brainRef = useRef<AvatarBrain | null>(null)
   const bodyRef = useRef<AvatarBody | null>(null)
   const gazeRef = useRef<IntelligentGaze | null>(null)
+  const proximityRef = useRef<ProximityDetector | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const speechSynthesisRef = useRef<SpeechSynthesis | null>(null)
 
@@ -87,6 +91,37 @@ export default function ConversationalAvatar({
       speechSynthesisRef.current = window.speechSynthesis
     }
 
+    // Inicializar detector de proximidad
+    if (model && camera) {
+      const proximity = new ProximityDetector(camera, model, {
+        activationDistance: 5,
+        greetingDistance: 3,
+        onEnterProximity: () => {
+          console.log('👋 Usuario entró en zona de proximidad')
+          setShowProximityIndicator(true)
+        },
+        onExitProximity: () => {
+          console.log('👋 Usuario salió de zona de proximidad')
+          setShowProximityIndicator(false)
+        },
+        onGreetingDistance: () => {
+          console.log('🗿 Usuario cerca - Saludo automático')
+          handleAutoGreeting()
+        }
+      })
+      proximityRef.current = proximity
+      proximity.start()
+
+      // Actualizar distancia cada frame
+      const updateDistance = () => {
+        if (proximityRef.current) {
+          setProximityDistance(proximityRef.current.getCurrentDistance())
+        }
+        requestAnimationFrame(updateDistance)
+      }
+      updateDistance()
+    }
+
     // Conectar automáticamente
     autoConnect(llm as any)
 
@@ -95,6 +130,9 @@ export default function ConversationalAvatar({
     return () => {
       body.stopPresence()
       gaze.stop()
+      if (proximityRef.current) {
+        proximityRef.current.stop()
+      }
       if (speechSynthesisRef.current) {
         speechSynthesisRef.current.cancel()
       }
@@ -124,6 +162,47 @@ export default function ConversationalAvatar({
       setMessages([welcomeMsg])
     } else {
       console.warn('⚠️ OpenRouter no disponible. Verifica la API key.')
+    }
+  }
+
+  // Saludo automático cuando el usuario se acerca
+  const handleAutoGreeting = async () => {
+    if (!isConnected || !brainRef.current || !bodyRef.current) return
+
+    // Evitar múltiples saludos
+    if (messages.some(m => m.content.includes('acercas') || m.content.includes('bienvenido'))) {
+      return
+    }
+
+    console.log('🗿 Generando saludo automático...')
+
+    try {
+      // Generar saludo contextual
+      const greetingPrompt = 'Un viajero se acerca a ti. Salúdalo brevemente de forma ancestral y misteriosa.'
+      const response = await brainRef.current.processMessage(greetingPrompt)
+
+      // Ejecutar respuesta física
+      await bodyRef.current.executeResponse(response)
+
+      // Agregar saludo a mensajes
+      const greetingMsg: Message = {
+        id: Date.now().toString(),
+        role: 'avatar',
+        content: response.text,
+        emotion: response.emotion,
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, greetingMsg])
+
+      // Hablar el saludo
+      if (voiceEnabled) {
+        speak(response.text)
+      }
+
+      // Abrir chat automáticamente
+      setIsOpen(true)
+    } catch (error) {
+      console.error('Error en saludo automático:', error)
     }
   }
 
@@ -384,19 +463,24 @@ export default function ConversationalAvatar({
           background: isConnected 
             ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
             : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-          border: '3px solid rgba(255,255,255,0.3)',
+          border: showProximityIndicator 
+            ? '3px solid #fbbf24'
+            : '3px solid rgba(255,255,255,0.3)',
           color: 'white',
           fontSize: '32px',
           cursor: 'pointer',
-          boxShadow: isConnected 
-            ? '0 4px 20px rgba(16, 185, 129, 0.5)'
-            : '0 4px 20px rgba(239, 68, 68, 0.5)',
+          boxShadow: showProximityIndicator
+            ? '0 4px 30px rgba(251, 191, 36, 0.8), 0 0 20px rgba(251, 191, 36, 0.5)'
+            : isConnected 
+              ? '0 4px 20px rgba(16, 185, 129, 0.5)'
+              : '0 4px 20px rgba(239, 68, 68, 0.5)',
           zIndex: 1000,
           transition: 'all 0.3s ease',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          position: 'relative'
+          position: 'relative',
+          animation: showProximityIndicator ? 'pulse-proximity 2s infinite' : 'none'
         }}
         onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -430,6 +514,24 @@ export default function ConversationalAvatar({
           border: '2px solid white',
           boxShadow: '0 0 10px rgba(0,0,0,0.3)'
         }} />
+        {/* Indicador de proximidad */}
+        {showProximityIndicator && proximityDistance !== null && (
+          <div style={{
+            position: 'absolute',
+            top: '-30px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(251, 191, 36, 0.9)',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '10px',
+            fontWeight: 'bold',
+            whiteSpace: 'nowrap'
+          }}>
+            {proximityDistance.toFixed(1)}m
+          </div>
+        )}
       </button>
 
       {/* Panel conversacional */}
@@ -682,6 +784,16 @@ export default function ConversationalAvatar({
               50% { 
                 opacity: 0.7;
                 transform: scale(1.1);
+              }
+            }
+            @keyframes pulse-proximity {
+              0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 4px 30px rgba(251, 191, 36, 0.8), 0 0 20px rgba(251, 191, 36, 0.5);
+              }
+              50% { 
+                transform: scale(1.05);
+                box-shadow: 0 4px 40px rgba(251, 191, 36, 1), 0 0 30px rgba(251, 191, 36, 0.8);
               }
             }
           `}</style>

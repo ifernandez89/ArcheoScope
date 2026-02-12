@@ -20,8 +20,8 @@ export default function UI() {
         top: 0,
         left: 0,
         right: 0,
-        padding: '1.5rem 2rem',
-        background: 'rgba(10, 10, 10, 0.8)',
+        padding: '0.75rem 1.5rem',
+        background: 'rgba(10, 10, 10, 0.7)',
         backdropFilter: 'blur(10px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         zIndex: 1000,
@@ -31,7 +31,7 @@ export default function UI() {
       }}>
         <div>
           <h1 style={{
-            fontSize: '1.5rem',
+            fontSize: '1.1rem',
             fontWeight: 'bold',
             margin: 0,
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -41,13 +41,6 @@ export default function UI() {
           }}>
             🏛️ ArcheoScope 3D Viewer
           </h1>
-          <p style={{
-            fontSize: '0.875rem',
-            color: '#888',
-            margin: '0.25rem 0 0 0'
-          }}>
-            Visualizador interactivo de modelos 3D
-          </p>
         </div>
         
         {/* Control Panel movido aquí */}
