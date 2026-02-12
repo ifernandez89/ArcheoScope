@@ -6,7 +6,8 @@ import { OrbitControls, PerspectiveCamera, PointerLockControls, Html } from '@re
 import * as THREE from 'three'
 import Globe3D from './Globe3D'
 import ModelViewer from './ModelViewer'
-import SiteMarkers, { ArchaeologicalSite } from './SiteMarkers'
+import SiteMarkers from './SiteMarkers'
+import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
 
 interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
@@ -24,6 +25,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
   // Manejar click en sitio arqueológico
   const handleSiteClick = async (site: ArchaeologicalSite) => {
     console.log(`🏛️ Sitio seleccionado: ${site.name}`)
+    
+    // Actualizar contexto del avatar
+    AvatarEngine.setContext({
+      siteName: site.name,
+      culture: site.culture,
+      period: site.period,
+      location: { lat: site.lat, lon: site.lon }
+    })
     
     setSelectedLocation({ lat: site.lat, lon: site.lon })
     setSelectedModel(site.model)
