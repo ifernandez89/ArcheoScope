@@ -545,7 +545,6 @@ export default function ConversationalAvatar({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          position: 'relative',
           animation: showProximityIndicator ? 'pulse-proximity 2s infinite' : 'none'
         }}
         onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
