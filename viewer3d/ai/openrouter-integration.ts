@@ -146,6 +146,7 @@ export class OpenRouterIntegration {
 // Modelos recomendados de OpenRouter
 export const OPENROUTER_MODELS = {
   // Modelos GRATUITOS (excelentes para testing)
+  ARCEE_TRINITY_MINI: 'arcee-ai/trinity-mini:free', // ✅ FUNCIONA - Rápido y bueno
   QWEN_2_5_7B_FREE: 'qwen/qwen-2.5-7b-instruct:free',
   QWEN_3_CODER_FREE: 'qwen/qwen3-coder:free',
   LLAMA_3_1_8B_FREE: 'meta-llama/llama-3.1-8b-instruct:free',
@@ -160,7 +161,7 @@ export const OPENROUTER_MODELS = {
 
 // Configuración recomendada para el Moai
 export const MOAI_OPENROUTER_CONFIG: Partial<OpenRouterConfig> = {
-  model: OPENROUTER_MODELS.QWEN_2_5_7B_FREE, // Gratis y bueno
+  model: OPENROUTER_MODELS.ARCEE_TRINITY_MINI, // Gratis y funciona bien
   temperature: 0.7,
   maxTokens: 300 // Respuestas breves y contemplativas
 }

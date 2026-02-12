@@ -46,12 +46,12 @@ export default function ConversationalAvatar({
     if (!model || !camera) return
 
     // USAR OPENROUTER en lugar de Ollama
-    // TODO: Obtener API key desde backend (encriptada en BD)
     const openrouterApiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || ''
+    const openrouterModel = process.env.NEXT_PUBLIC_OPENROUTER_MODEL || 'arcee-ai/trinity-mini:free'
     
     const llm = new OpenRouterIntegration({
       apiKey: openrouterApiKey,
-      model: OPENROUTER_MODELS.QWEN_2_5_7B_FREE, // Modelo gratuito
+      model: openrouterModel,
       temperature: 0.7,
       maxTokens: 300
     })
@@ -258,9 +258,11 @@ export default function ConversationalAvatar({
     if (!isConnected) {
       // Verificar OpenRouter
       const openrouterApiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || ''
+      const openrouterModel = process.env.NEXT_PUBLIC_OPENROUTER_MODEL || 'arcee-ai/trinity-mini:free'
+      
       const llm = new OpenRouterIntegration({
         apiKey: openrouterApiKey,
-        model: OPENROUTER_MODELS.QWEN_2_5_7B_FREE
+        model: openrouterModel
       })
 
       const available = await llm.checkAvailability()
