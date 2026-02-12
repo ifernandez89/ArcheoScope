@@ -12,6 +12,14 @@ interface WalkableAvatarProps {
   onModelChange?: () => void
 }
 
+// Detectar tipo de avatar según el path
+function getAvatarType(modelPath: string): 'humanoid' | 'statue' | 'creature' {
+  if (modelPath.includes('warrior')) return 'humanoid'
+  if (modelPath.includes('moai')) return 'statue'
+  if (modelPath.includes('sphinx')) return 'creature'
+  return 'humanoid'
+}
+
 export default function WalkableAvatar({ 
   modelPath, 
   terrainRef,
@@ -31,13 +39,16 @@ export default function WalkableAvatar({
   const keys = useRef<{ [key: string]: boolean }>({})
   const raycaster = useRef(new THREE.Raycaster())
   const idleTimer = useRef(0)  // Timer para detectar cuando está quieto
+  const timeAccumulator = useRef(0)  // Para animaciones procedurales
+  const avatarType = getAvatarType(modelPath)
   
   // Notificar cambio de modelo
   useEffect(() => {
     if (onModelChange) {
       onModelChange()
     }
-  }, [modelPath, onModelChange])
+    console.log('🎭 Tipo de avatar:', avatarType)
+  }, [modelPath, onModelChange, avatarType])
   
   // Configurar controles de teclado
   useEffect(() => {
@@ -145,9 +156,15 @@ export default function WalkableAvatar({
   }, [scene, names])
   
   // Gestionar animaciones según estado con transiciones suaves
+  // Solo para avatares humanoides con rig
   useEffect(() => {
+    if (avatarType !== 'humanoid') {
+      console.log(`🎭 Avatar tipo "${avatarType}" usa animación procedural, no rig`)
+      return
+    }
+    
     if (!actions || names.length === 0) {
-      console.log('⚠️ No hay animaciones disponibles')
+      console.log('⚠️ No hay animaciones disponibles para este humanoide')
       return
     }
     
@@ -188,7 +205,7 @@ export default function WalkableAvatar({
       console.log('🧍 Reproduciendo animación: Idle')
     }
     
-  }, [state, actions, names])
+  }, [state, actions, names, avatarType])
   
   // Loop de movimiento
   useFrame((_, delta) => {
@@ -257,6 +274,7 @@ export default function WalkableAvatar({
         direction: moveDirection,
         velocity: velocity.current,
         rotation: group.current.rotation.y,
+        tipo: avatarType,
         keys: {
           w: keys.current['w'],
           a: keys.current['a'],
@@ -265,6 +283,37 @@ export default function WalkableAvatar({
         }
       })
     }
+    
+    // Animaciones procedurales según tipo de avatar
+    timeAccumulator.current += delta
+    
+    if (avatarType === 'statue') {
+      // 🗿 MOAI: Deslizamiento místico con oscilación vertical
+      if (isMoving) {
+        // Oscilación sutil al moverse
+        group.current.position.y += Math.sin(timeAccumulator.current * 3) * 0.015
+        // Leve inclinación hacia adelante
+        group.current.rotation.x = Math.sin(timeAccumulator.current * 2) * 0.03
+      } else {
+        // Respiración sutil cuando está quieto
+        group.current.position.y += Math.sin(timeAccumulator.current * 1.5) * 0.005
+        // Volver a posición vertical
+        group.current.rotation.x *= 0.95
+      }
+    } else if (avatarType === 'creature') {
+      // 🦁 SPHINX: Movimiento con peso, majestuoso
+      if (isMoving) {
+        // Balanceo lateral al caminar
+        group.current.rotation.z = Math.sin(timeAccumulator.current * 2.5) * 0.05
+        // Inclinación hacia adelante con peso
+        group.current.rotation.x = 0.08
+      } else {
+        // Volver a posición neutral suavemente
+        group.current.rotation.z *= 0.9
+        group.current.rotation.x *= 0.9
+      }
+    }
+    // humanoid usa animaciones normales (si las tiene)
     
     // Mantener avatar pegado al terreno
     if (terrainRef?.current) {

@@ -42,19 +42,73 @@ Si tu modelo NO tiene animaciones:
    - ✅ Without Skin (si quieres solo animaciones)
 5. Reemplaza tu modelo en `/public/`
 
+## 🎭 Tipos de Avatares y Movimiento
+
+### Sistema de Detección Automática
+
+El sistema detecta automáticamente el tipo de avatar y aplica el movimiento apropiado:
+
+#### 🗿 Estatua (Moai)
+**Estilo**: Deslizamiento místico
+- ✅ Se desplaza suavemente sin caminar
+- ✅ Oscilación vertical sutil al moverse (0.015 unidades)
+- ✅ Leve inclinación hacia adelante
+- ✅ "Respiración" cuando está quieto (0.005 unidades)
+- ✅ No requiere animaciones de rig
+
+**Animación Procedural**:
+```javascript
+// Oscilación al moverse
+position.y += Math.sin(time * 3) * 0.015
+rotation.x = Math.sin(time * 2) * 0.03
+
+// Respiración quieto
+position.y += Math.sin(time * 1.5) * 0.005
+```
+
+#### 🦁 Criatura (Sphinx)
+**Estilo**: Movimiento con peso majestuoso
+- ✅ Balanceo lateral al caminar
+- ✅ Inclinación con peso hacia adelante
+- ✅ Retorno suave a posición neutral
+- ✅ No requiere animaciones de rig
+
+**Animación Procedural**:
+```javascript
+// Balanceo al moverse
+rotation.z = Math.sin(time * 2.5) * 0.05
+rotation.x = 0.08
+
+// Volver a neutral
+rotation.z *= 0.9
+rotation.x *= 0.9
+```
+
+#### ⚔️ Humanoide (Warrior)
+**Estilo**: Caminar normal con animaciones
+- ✅ Usa animaciones de rig (Idle/Walk)
+- ✅ Transiciones suaves fadeIn/fadeOut
+- ✅ Requiere modelo con animaciones embebidas
+
 ## 📁 Modelos Actuales
 
 ### `/public/warrior.glb`
+- Tipo: 🗡️ Humanoide
 - Estado: ❓ Verificar animaciones
-- Uso: Avatar principal
+- Uso: Avatar principal con rig
+- Requiere: Idle + Walk animations
 
 ### `/public/moai.glb`
-- Estado: ❓ Verificar animaciones
-- Uso: Modelo estático (probablemente sin animaciones)
+- Tipo: 🗿 Estatua
+- Estado: ✅ Funciona sin animaciones
+- Uso: Deslizamiento místico
+- Animación: Procedural (oscilación)
 
 ### `/public/sphinx.glb`
-- Estado: ❓ Verificar animaciones
-- Uso: Avatar alternativo
+- Tipo: 🦁 Criatura
+- Estado: ✅ Funciona sin animaciones
+- Uso: Movimiento majestuoso
+- Animación: Procedural (balanceo)
 
 ## 🎮 Cómo Funcionan las Animaciones
 
