@@ -13,7 +13,9 @@ import ModelTransition from './ModelTransition'
 import ModelInfo from './ModelInfo'
 import SceneNavigator from './SceneNavigator'
 import AudioControls from './AudioControls'
+import ConversationalAvatar from './ConversationalAvatar'
 import { useSceneStore } from '@/store/scene-store'
+import { useThree } from '@react-three/fiber'
 import { SceneSystem } from '@/experience/scene-system'
 import { AudioSystem } from '@/core/audio'
 import { ARCHAEOLOGICAL_SCENES } from '@/data/scenes'
@@ -30,6 +32,10 @@ export default function Scene3D() {
   const [currentSceneId, setCurrentSceneId] = useState<string | null>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [useSceneMode, setUseSceneMode] = useState(false)
+  
+  // Referencias para Avatar
+  const [loadedModel, setLoadedModel] = useState<THREE.Object3D | null>(null)
+  const [camera, setCamera] = useState<THREE.Camera | null>(null)
 
   // Inicializar sistemas
   useEffect(() => {
@@ -137,6 +143,8 @@ export default function Scene3D() {
         {/* Modelo 3D con Suspense para carga asíncrona */}
         <Suspense fallback={<LoadingSpinner />}>
           <ModelViewer key={currentModel} modelPath={currentModel} />
+          <ModelCapture onModelLoaded={setLoadedModel} />
+          <CameraCapture onCameraReady={setCamera} />
         </Suspense>
 
         {/* Postprocessing Effects */}
@@ -191,6 +199,12 @@ export default function Scene3D() {
 
       {/* FASE 2: Audio Controls - Outside Canvas */}
       <AudioControls audioSystem={audioSystem} />
+
+      {/* Avatar Conversacional - Outside Canvas */}
+      <ConversationalAvatar 
+        model={loadedModel}
+        camera={camera}
+      />
     </div>
   )
 }
@@ -207,5 +221,36 @@ function EngineInitializer({ onEngineReady }: { onEngineReady: (engine: any) => 
     }
   }, [engine, onEngineReady])
 
+  return null
+}
+
+// Helper to capture loaded model
+function ModelCapture({ onModelLoaded }: { onModelLoaded: (model: THREE.Object3D) => void }) {
+  const { scene } = useThree()
+  
+  useEffect(() => {
+    // Buscar el modelo cargado en la escena
+    const model = scene.children.find(child => 
+      child.type === 'Group' && child.children.length > 0
+    )
+    
+    if (model) {
+      onModelLoaded(model)
+    }
+  }, [scene, onModelLoaded])
+  
+  return null
+}
+
+// Helper to capture camera
+function CameraCapture({ onCameraReady }: { onCameraReady: (camera: THREE.Camera) => void }) {
+  const { camera } = useThree()
+  
+  useEffect(() => {
+    if (camera) {
+      onCameraReady(camera)
+    }
+  }, [camera, onCameraReady])
+  
   return null
 }
