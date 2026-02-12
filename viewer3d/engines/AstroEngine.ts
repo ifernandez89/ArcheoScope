@@ -153,8 +153,8 @@ export class AstroEngine {
    * Obtener fase lunar (simplificado)
    */
   getMoonPhase(date: Date): number {
-    const year = date.getFullYear()
-    const month = date.getMonth() + 1
+    let year = date.getFullYear()
+    let month = date.getMonth() + 1
     const day = date.getDate()
     
     let c = 0
@@ -163,8 +163,8 @@ export class AstroEngine {
     let b = 0
     
     if (month < 3) {
-      const year2 = year - 1
-      const month2 = month + 12
+      year = year - 1
+      month = month + 12
     }
     
     ++month
