@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { AvatarBrain, MOAI_PERSONALITY, type AvatarResponse } from '@/ai/avatar-brain'
 import { AvatarBody, IntelligentGaze } from '@/ai/avatar-body'
-import { LLMIntegration } from '@/ai/llm-integration'
+import { OpenRouterIntegration, OPENROUTER_MODELS } from '@/ai/openrouter-integration'
 import { AIAnimator } from '@/ai/animator'
 import { ExpressionSystem } from '@/ai/expression-system'
 
@@ -45,17 +45,22 @@ export default function ConversationalAvatar({
   useEffect(() => {
     if (!model || !camera) return
 
-    const llm = new LLMIntegration({
-      baseUrl: 'http://localhost:11434',
-      model: 'qwen3:1.7b', // Modelo ultra-ligero y rápido
-      temperature: 0.7
+    // USAR OPENROUTER en lugar de Ollama
+    // TODO: Obtener API key desde backend (encriptada en BD)
+    const openrouterApiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || ''
+    
+    const llm = new OpenRouterIntegration({
+      apiKey: openrouterApiKey,
+      model: OPENROUTER_MODELS.QWEN_2_5_7B_FREE, // Modelo gratuito
+      temperature: 0.7,
+      maxTokens: 300
     })
 
     const animator = new AIAnimator()
     const expressions = new ExpressionSystem()
 
     // Crear cerebro con personalidad
-    const brain = new AvatarBrain(MOAI_PERSONALITY, llm)
+    const brain = new AvatarBrain(MOAI_PERSONALITY, llm as any)
     brainRef.current = brain
 
     // Crear cuerpo con presencia
@@ -83,9 +88,9 @@ export default function ConversationalAvatar({
     }
 
     // Conectar automáticamente
-    autoConnect(llm)
+    autoConnect(llm as any)
 
-    console.log('🗿 Avatar conversacional inicializado')
+    console.log('🗿 Avatar conversacional inicializado con OpenRouter')
 
     return () => {
       body.stopPresence()
@@ -102,11 +107,11 @@ export default function ConversationalAvatar({
   }, [messages])
 
   // Conectar automáticamente
-  const autoConnect = async (llm: LLMIntegration) => {
+  const autoConnect = async (llm: any) => {
     const available = await llm.checkAvailability()
     if (available) {
       setIsConnected(true)
-      console.log('✅ Ollama conectado automáticamente')
+      console.log('✅ OpenRouter conectado automáticamente')
       
       // Mensaje de bienvenida
       const welcomeMsg: Message = {
@@ -118,7 +123,7 @@ export default function ConversationalAvatar({
       }
       setMessages([welcomeMsg])
     } else {
-      console.warn('⚠️ Ollama no disponible. Inicia: ollama serve')
+      console.warn('⚠️ OpenRouter no disponible. Verifica la API key.')
     }
   }
 
@@ -251,15 +256,16 @@ export default function ConversationalAvatar({
     if (!brainRef.current) return
 
     if (!isConnected) {
-      // Verificar Ollama
-      const llm = new LLMIntegration({
-        baseUrl: 'http://localhost:11434',
-        model: 'qwen3:1.7b'
+      // Verificar OpenRouter
+      const openrouterApiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || ''
+      const llm = new OpenRouterIntegration({
+        apiKey: openrouterApiKey,
+        model: OPENROUTER_MODELS.QWEN_2_5_7B_FREE
       })
 
       const available = await llm.checkAvailability()
       if (!available) {
-        alert('Ollama no está disponible. Asegúrate de que esté corriendo:\n\nollama serve')
+        alert('OpenRouter no está disponible. Verifica la API key en las variables de entorno:\n\nNEXT_PUBLIC_OPENROUTER_API_KEY')
         return
       }
 
@@ -474,7 +480,7 @@ export default function ConversationalAvatar({
                   display: 'inline-block',
                   animation: isConnected ? 'pulse 2s infinite' : 'none'
                 }} />
-                {isConnected ? 'Ollama Activo' : 'Ollama Desconectado'}
+                {isConnected ? 'OpenRouter Activo' : 'OpenRouter Desconectado'}
               </div>
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -550,7 +556,7 @@ export default function ConversationalAvatar({
               }}>
                 {isConnected 
                   ? 'El Moai aguarda tus palabras...' 
-                  : 'Inicia Ollama para hablar con el Moai:\n\nollama serve'}
+                  : 'Configura NEXT_PUBLIC_OPENROUTER_API_KEY para hablar con el Moai'}
               </div>
             )}
 
