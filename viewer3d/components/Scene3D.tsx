@@ -14,6 +14,7 @@ import ModelInfo from './ModelInfo'
 import SceneNavigator from './SceneNavigator'
 import AudioControls from './AudioControls'
 import ConversationalAvatar from './ConversationalAvatar'
+import RoadmapPanel from './RoadmapPanel'
 import { useSceneStore } from '@/store/scene-store'
 import { useThree } from '@react-three/fiber'
 import { SceneSystem } from '@/experience/scene-system'
@@ -205,6 +206,9 @@ export default function Scene3D() {
         model={loadedModel}
         camera={camera}
       />
+
+      {/* Roadmap Panel - Mostrar visión del proyecto */}
+      <RoadmapPanel />
     </div>
   )
 }
