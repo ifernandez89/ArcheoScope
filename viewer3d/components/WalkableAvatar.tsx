@@ -42,6 +42,13 @@ export default function WalkableAvatar({
   const timeAccumulator = useRef(0)  // Para animaciones procedurales
   const avatarType = getAvatarType(modelPath)
   
+  // Estado de salto
+  const isJumping = useRef(false)
+  const verticalVelocity = useRef(0)
+  const jumpForce = 8.0  // Fuerza del salto
+  const gravity = -20.0  // Gravedad
+  const groundLevel = useRef(0)  // Nivel del suelo
+  
   // Notificar cambio de modelo
   useEffect(() => {
     if (onModelChange) {
@@ -63,7 +70,15 @@ export default function WalkableAvatar({
   // Configurar controles de teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      keys.current[e.key.toLowerCase()] = true
+      const key = e.key.toLowerCase()
+      keys.current[key] = true
+      
+      // Detectar salto con barra espaciadora
+      if (e.code === 'Space' && !isJumping.current) {
+        isJumping.current = true
+        verticalVelocity.current = jumpForce
+        console.log('🦘 ¡Salto activado!')
+      }
     }
     const handleKeyUp = (e: KeyboardEvent) => {
       keys.current[e.key.toLowerCase()] = false
@@ -292,6 +307,26 @@ export default function WalkableAvatar({
           d: keys.current['d']
         }
       })
+    }
+    
+    // Física de salto
+    if (isJumping.current) {
+      // Aplicar gravedad
+      verticalVelocity.current += gravity * delta
+      
+      // Aplicar velocidad vertical
+      group.current.position.y += verticalVelocity.current * delta
+      
+      // Detectar aterrizaje
+      if (group.current.position.y <= groundLevel.current) {
+        group.current.position.y = groundLevel.current
+        isJumping.current = false
+        verticalVelocity.current = 0
+        console.log('🎯 Aterrizaje completado')
+      }
+    } else {
+      // Guardar nivel del suelo cuando está en tierra
+      groundLevel.current = group.current.position.y
     }
     
     // Animaciones procedurales según tipo de avatar

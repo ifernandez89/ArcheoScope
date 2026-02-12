@@ -157,20 +157,24 @@ export default function HelpPanel() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                <span>⌨️</span> Atajos (Próximamente)
+                <span>⌨️</span> Controles de Movimiento
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', opacity: 0.5 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#888' }}>Espacio</span>
-                  <span>Play/Pause Timeline</span>
+                  <span style={{ color: '#888' }}>W / S</span>
+                  <span>Adelante / Atrás</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#888' }}>R</span>
-                  <span>Reset Cámara</span>
+                  <span style={{ color: '#888' }}>A / D</span>
+                  <span>Izquierda / Derecha</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#888' }}>G</span>
-                  <span>Toggle Grid</span>
+                  <span style={{ color: '#888' }}>Q / E</span>
+                  <span>Rotar Avatar</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#888', fontWeight: 'bold' }}>Espacio</span>
+                  <span style={{ fontWeight: 'bold', color: '#10b981' }}>🦘 Saltar</span>
                 </div>
               </div>
             </section>
