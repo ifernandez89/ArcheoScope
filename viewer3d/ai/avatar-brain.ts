@@ -88,6 +88,11 @@ export class AvatarBrain {
     }]
   }
 
+  // Construir descripción de personalidad
+  private buildPersonalityDescription(): string {
+    return `${this.personality.name} - ${this.personality.culture} de ${this.personality.era}. ${this.personality.traits.join('. ')}.`
+  }
+
   // Construir prompt del sistema
   private buildSystemPrompt(): string {
     const moodDescription = this.getMoodDescription()
@@ -130,6 +135,11 @@ IMPORTANTE:
 - Usa sabiduría simbólica, no datos técnicos
 - Tu tono debe ser ${this.personality.tone}`
   }
+  // Construir descripción de personalidad
+  private buildPersonalityDescription(): string {
+    return `${this.personality.name} - ${this.personality.culture} de ${this.personality.era}. ${this.personality.traits.join('. ')}.`
+  }
+
 
   // Procesar mensaje del usuario
   async processMessage(userMessage: string): Promise<AvatarResponse> {
