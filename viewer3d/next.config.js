@@ -1,8 +1,10 @@
 /** @type {import('next').NextConfig} */
+const isProd = process.env.NODE_ENV === 'production';
+
 const nextConfig = {
   output: 'export',
-  basePath: '/ArcheoScope',
-  assetPrefix: '/ArcheoScope/',
+  basePath: isProd ? '/ArcheoScope' : '',
+  assetPrefix: isProd ? '/ArcheoScope/' : '',
   reactStrictMode: true,
   images: {
     unoptimized: true,
