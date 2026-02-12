@@ -26,12 +26,10 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: viewer3d/package-lock.json
     
     - name: Install dependencies
       working-directory: ./viewer3d
-      run: npm ci
+      run: npm install
     
     - name: Build Next.js
       working-directory: ./viewer3d
