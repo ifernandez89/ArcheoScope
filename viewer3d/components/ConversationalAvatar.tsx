@@ -122,29 +122,31 @@ export default function ConversationalAvatar({
     }
   }
 
-  // Función para hablar con TTS
+  // Función para hablar con TTS mejorado
   const speak = (text: string) => {
     if (!voiceEnabled || !speechSynthesisRef.current) return
 
     // Cancelar cualquier speech anterior
     speechSynthesisRef.current.cancel()
 
-    const utterance = new SpeechSynthesisUtterance(text)
+    // Preprocesar texto para mejor prosodia
+    const processedText = preprocessTextForSpeech(text)
+
+    const utterance = new SpeechSynthesisUtterance(processedText)
     
-    // Configurar voz (buscar voz en español si está disponible)
+    // Buscar la mejor voz disponible
     const voices = speechSynthesisRef.current.getVoices()
-    const spanishVoice = voices.find(voice => 
-      voice.lang.startsWith('es') || voice.lang.startsWith('spa')
-    )
+    const bestVoice = selectBestVoice(voices)
     
-    if (spanishVoice) {
-      utterance.voice = spanishVoice
+    if (bestVoice) {
+      utterance.voice = bestVoice
+      console.log(`🎙️ Usando voz: ${bestVoice.name} (${bestVoice.lang})`)
     }
     
-    // Configurar parámetros para voz ancestral
-    utterance.rate = 0.85 // Más lento, contemplativo
-    utterance.pitch = 0.8 // Más grave
-    utterance.volume = 0.9
+    // Configurar parámetros para voz más natural y ancestral
+    utterance.rate = 0.9 // Ligeramente más lento pero no tanto
+    utterance.pitch = 0.85 // Grave pero no demasiado
+    utterance.volume = 1.0 // Volumen completo
 
     utterance.onstart = () => setIsSpeaking(true)
     utterance.onend = () => setIsSpeaking(false)
@@ -152,6 +154,97 @@ export default function ConversationalAvatar({
 
     speechSynthesisRef.current.speak(utterance)
   }
+
+  // Seleccionar la mejor voz disponible
+  const selectBestVoice = (voices: SpeechSynthesisVoice[]) => {
+    // Prioridad de voces (de mejor a peor calidad)
+    const voicePriority = [
+      // Voces premium de Google (si están disponibles)
+      'Google español',
+      'Google español de Estados Unidos',
+      'Google español de España',
+      'Google español de México',
+      // Voces de Microsoft (buena calidad)
+      'Microsoft Helena - Spanish (Spain)',
+      'Microsoft Pablo - Spanish (Spain)',
+      'Microsoft Sabina - Spanish (Mexico)',
+      'Microsoft Raul - Spanish (Mexico)',
+      // Voces de Apple (macOS/iOS)
+      'Monica',
+      'Jorge',
+      'Juan',
+      'Diego',
+      'Paulina',
+      // Voces genéricas en español
+      'Spanish',
+      'es-ES',
+      'es-MX',
+      'es-US'
+    ]
+
+    // Buscar por prioridad
+    for (const priorityName of voicePriority) {
+      const voice = voices.find(v => 
+        v.name.includes(priorityName) || 
+        v.lang.includes(priorityName)
+      )
+      if (voice) return voice
+    }
+
+    // Fallback: cualquier voz en español
+    const spanishVoice = voices.find(voice => 
+      voice.lang.startsWith('es') || 
+      voice.lang.includes('spa') ||
+      voice.name.toLowerCase().includes('spanish') ||
+      voice.name.toLowerCase().includes('español')
+    )
+
+    return spanishVoice || voices[0] // Última opción: primera voz disponible
+  }
+
+  // Preprocesar texto para mejor prosodia
+  const preprocessTextForSpeech = (text: string): string => {
+    let processed = text
+
+    // Agregar pausas naturales después de puntuación
+    processed = processed.replace(/\./g, '... ') // Pausa larga después de punto
+    processed = processed.replace(/,/g, ', ') // Pausa corta después de coma
+    processed = processed.replace(/;/g, '; ') // Pausa media después de punto y coma
+    processed = processed.replace(/:/g, ': ') // Pausa después de dos puntos
+    
+    // Agregar énfasis en palabras clave (usando SSML-like markup que algunos engines entienden)
+    const emphasisWords = ['ancestral', 'piedra', 'viento', 'mar', 'tiempo', 'sabiduría', 'misterio']
+    emphasisWords.forEach(word => {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi')
+      processed = processed.replace(regex, ` ${word} `) // Espacio extra para énfasis
+    })
+
+    // Limpiar espacios múltiples
+    processed = processed.replace(/\s+/g, ' ').trim()
+
+    return processed
+  }
+
+  // Cargar voces cuando estén disponibles
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      // Las voces se cargan de forma asíncrona
+      const loadVoices = () => {
+        const voices = window.speechSynthesis.getVoices()
+        if (voices.length > 0) {
+          console.log('🎙️ Voces disponibles:', voices.map(v => `${v.name} (${v.lang})`))
+        }
+      }
+
+      // Cargar voces inmediatamente
+      loadVoices()
+
+      // Y también cuando cambien (algunos navegadores lo necesitan)
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = loadVoices
+      }
+    }
+  }, [])
 
   // Conectar/desconectar
   const handleToggleConnection = async () => {
