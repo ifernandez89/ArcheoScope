@@ -50,27 +50,78 @@ export default function UI() {
           </p>
         </div>
         
-        <button
-          onClick={() => setShowInfo(!showInfo)}
-          style={{
-            padding: '0.5rem 1rem',
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '6px',
-            color: '#fff',
-            cursor: 'pointer',
+        {/* Control Panel movido aquí */}
+        <div style={{
+          padding: '1rem',
+          background: 'rgba(10, 10, 10, 0.9)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '12px',
+          fontSize: '0.875rem',
+          color: '#fff',
+          minWidth: '200px'
+        }}>
+          <h3 style={{
             fontSize: '0.875rem',
-            transition: 'all 0.2s'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
-          }}
-        >
-          {showInfo ? '❌ Ocultar Info' : 'ℹ️ Mostrar Info'}
-        </button>
+            fontWeight: 'bold',
+            marginBottom: '1rem',
+            color: '#fff'
+          }}>
+            ⚙️ Controles
+          </h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {/* Auto Rotate Toggle */}
+            <label style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              cursor: 'pointer'
+            }}>
+              <span style={{ fontSize: '0.75rem' }}>🔄 Auto-Rotación</span>
+              <input
+                type="checkbox"
+                checked={autoRotate}
+                onChange={(e) => setAutoRotate(e.target.checked)}
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  cursor: 'pointer'
+                }}
+              />
+            </label>
+
+            {/* Grid Toggle */}
+            <label style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              cursor: 'pointer'
+            }}>
+              <span style={{ fontSize: '0.75rem' }}>📐 Grid</span>
+              <input
+                type="checkbox"
+                checked={showGrid}
+                onChange={toggleGrid}
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  cursor: 'pointer'
+                }}
+              />
+            </label>
+
+            {/* Camera Mode */}
+            <div style={{ 
+              paddingTop: '0.75rem',
+              borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
+              <div style={{ fontSize: '0.75rem', marginBottom: '0.5rem', color: '#888' }}>
+                📷 Cámara: {cameraMode}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Panel de información */}
@@ -168,83 +219,6 @@ export default function UI() {
           </div>
         </div>
       )}
-
-      {/* Control Panel */}
-      <div style={{
-        position: 'fixed',
-        top: '6rem',
-        right: '2rem',
-        padding: '1rem',
-        background: 'rgba(10, 10, 10, 0.9)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: '12px',
-        fontSize: '0.875rem',
-        color: '#fff',
-        zIndex: 1000,
-        minWidth: '200px'
-      }}>
-        <h3 style={{
-          fontSize: '0.875rem',
-          fontWeight: 'bold',
-          marginBottom: '1rem',
-          color: '#fff'
-        }}>
-          ⚙️ Controles
-        </h3>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {/* Auto Rotate Toggle */}
-          <label style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            cursor: 'pointer'
-          }}>
-            <span style={{ fontSize: '0.75rem' }}>🔄 Auto-Rotación</span>
-            <input
-              type="checkbox"
-              checked={autoRotate}
-              onChange={(e) => setAutoRotate(e.target.checked)}
-              style={{
-                width: '16px',
-                height: '16px',
-                cursor: 'pointer'
-              }}
-            />
-          </label>
-
-          {/* Grid Toggle */}
-          <label style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            cursor: 'pointer'
-          }}>
-            <span style={{ fontSize: '0.75rem' }}>📐 Grid</span>
-            <input
-              type="checkbox"
-              checked={showGrid}
-              onChange={toggleGrid}
-              style={{
-                width: '16px',
-                height: '16px',
-                cursor: 'pointer'
-              }}
-            />
-          </label>
-
-          {/* Camera Mode */}
-          <div style={{ 
-            paddingTop: '0.75rem',
-            borderTop: '1px solid rgba(255, 255, 255, 0.1)'
-          }}>
-            <div style={{ fontSize: '0.75rem', marginBottom: '0.5rem', color: '#888' }}>
-              📷 Cámara: {cameraMode}
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Stats badge */}
       <div style={{
