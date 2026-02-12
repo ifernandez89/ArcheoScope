@@ -683,16 +683,23 @@ function ModelScene({
 
       {/* Modelo 3D o Avatar según modo */}
       {movementMode === 'avatar' ? (
-        <WalkableAvatar 
-          modelPath={avatarModel}
-          terrainRef={terrainRef}
-          onModelChange={() => {
-            // Forzar re-render cuando cambia el modelo
-            console.log('🔄 Modelo cambiado a:', avatarModel)
-          }}
-        />
+        <>
+          {console.log('👤 Renderizando WalkableAvatar con modelo:', avatarModel)}
+          <WalkableAvatar 
+            key={avatarModel}  // Key para forzar re-mount cuando cambia el modelo
+            modelPath={avatarModel}
+            terrainRef={terrainRef}
+            onModelChange={() => {
+              // Forzar re-render cuando cambia el modelo
+              console.log('🔄 Modelo cambiado a:', avatarModel)
+            }}
+          />
+        </>
       ) : (
-        <ModelViewer modelPath={modelPath} ref={modelRef} />
+        <>
+          {console.log('🗿 Renderizando ModelViewer con modelo:', modelPath)}
+          <ModelViewer modelPath={modelPath} ref={modelRef} />
+        </>
       )}
       
       {/* Colisiones básicas ya no son necesarias, WalkableAvatar las maneja */}
