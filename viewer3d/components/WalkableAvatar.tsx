@@ -162,36 +162,46 @@ export default function WalkableAvatar({
   useFrame((_, delta) => {
     if (!group.current) return
     
-    // Calcular dirección de movimiento
+    // Calcular dirección de movimiento basada en el AVATAR, no en la cámara
     const moveDirection = new THREE.Vector3()
-    const forward = new THREE.Vector3()
-    const right = new THREE.Vector3()
     
-    // Obtener dirección de la cámara (solo en plano XZ)
-    camera.getWorldDirection(forward)
-    forward.y = 0
-    forward.normalize()
+    // Obtener la dirección frontal del avatar (hacia donde mira)
+    // Por defecto, los modelos miran hacia -Z en Three.js
+    const avatarForward = new THREE.Vector3(0, 0, 1)  // Cambiado de -1 a 1
+    avatarForward.applyQuaternion(group.current.quaternion)
+    avatarForward.y = 0
+    avatarForward.normalize()
     
-    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize()
+    // Calcular dirección derecha del avatar
+    const avatarRight = new THREE.Vector3()
+    avatarRight.crossVectors(avatarForward, new THREE.Vector3(0, 1, 0)).normalize()
     
     // Input de teclado
     let isMoving = false
     
     if (keys.current['w']) {
-      moveDirection.add(forward)
+      moveDirection.add(avatarForward)  // Adelante
       isMoving = true
     }
     if (keys.current['s']) {
-      moveDirection.sub(forward)
+      moveDirection.sub(avatarForward)  // Atrás
       isMoving = true
     }
     if (keys.current['a']) {
-      moveDirection.add(right)
+      moveDirection.sub(avatarRight)  // Izquierda (strafe)
       isMoving = true
     }
     if (keys.current['d']) {
-      moveDirection.sub(right)
+      moveDirection.add(avatarRight)  // Derecha (strafe)
       isMoving = true
+    }
+    
+    // Rotación del avatar con Q/E
+    if (keys.current['q']) {
+      group.current.rotation.y += 2.0 * delta  // Rotar izquierda
+    }
+    if (keys.current['e']) {
+      group.current.rotation.y -= 2.0 * delta  // Rotar derecha
     }
     
     // Actualizar estado
@@ -203,18 +213,17 @@ export default function WalkableAvatar({
       velocity.current.copy(moveDirection.multiplyScalar(moveSpeed * delta))
       group.current.position.add(velocity.current)
       
-      // Rotar avatar hacia dirección de movimiento
-      const targetRotation = Math.atan2(moveDirection.x, moveDirection.z)
-      group.current.rotation.y = THREE.MathUtils.lerp(
-        group.current.rotation.y,
-        targetRotation,
-        rotationSpeed * delta
-      )
-      
       console.log('🚶 Moviendo:', {
         position: group.current.position,
         direction: moveDirection,
-        velocity: velocity.current
+        velocity: velocity.current,
+        rotation: group.current.rotation.y,
+        keys: {
+          w: keys.current['w'],
+          a: keys.current['a'],
+          s: keys.current['s'],
+          d: keys.current['d']
+        }
       })
     }
     

@@ -342,8 +342,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
           display: 'flex',
           gap: '20px'
         }}>
-          <span>🚶 W/A/S/D - Caminar</span>
-          <span>Mouse - Rotar cámara</span>
+          <span>🚶 W/S - Adelante/Atrás</span>
+          <span>A/D - Izquierda/Derecha</span>
+          <span>Q/E - Rotar</span>
         </div>
       )}
 
