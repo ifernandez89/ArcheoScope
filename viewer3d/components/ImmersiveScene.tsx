@@ -25,9 +25,10 @@ import { getAssetPath } from '@/lib/paths'
 interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
   onCameraReady?: (camera: THREE.Camera) => void
+  onModeChange?: (mode: 'globe' | 'transition' | 'model' | 'exploration') => void
 }
 
-export default function ImmersiveScene({ onModelLoaded, onCameraReady }: ImmersiveSceneProps) {
+export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange }: ImmersiveSceneProps) {
   const [mode, setMode] = useState<'globe' | 'transition' | 'model' | 'exploration'>('globe')
   const [selectedModel, setSelectedModel] = useState<string>(getAssetPath('/moai.glb'))
   const [avatarModel, setAvatarModel] = useState<string>(getAssetPath('/warrior.glb'))
@@ -35,11 +36,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
   const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
   const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('orbit')
   const [solarSimulation, setSolarSimulation] = useState(true)
-  const [usePhysicalSky, setUsePhysicalSky] = useState(true)
-  const [useProceduralTerrain, setUseProceduralTerrain] = useState(false)
-  const [useCinematicLighting, setUseCinematicLighting] = useState(true)
-  const [useWater, setUseWater] = useState(false)
-  const [usePostProcessing, setUsePostProcessing] = useState(true)
+  const [showLocationInfo, setShowLocationInfo] = useState(false)
+
+  // Notificar cambios de modo al padre
+  useEffect(() => {
+    if (onModeChange) {
+      onModeChange(mode)
+    }
+  }, [mode, onModeChange])
 
   // Debug: Log cuando cambia el avatarModel
   useEffect(() => {
@@ -119,8 +123,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
         currentLocation={selectedLocation}
       />
 
-      {/* Información de ubicación */}
-      {mode === 'model' && (
+      {/* Información de ubicación (desplegable) */}
+      {mode === 'model' && showLocationInfo && (
         <LocationInfo 
           location={selectedLocation}
           site={selectedSite}
@@ -283,163 +287,85 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
             {movementMode === 'avatar' ? '🚶 Modo: Exploración' : '🔄 Modo: Órbita'}
           </button>
 
-          {/* Controles avanzados */}
+          {/* Botón para mostrar/ocultar información de ubicación */}
           <button
-            onClick={() => setUsePhysicalSky(!usePhysicalSky)}
+            onClick={() => setShowLocationInfo(!showLocationInfo)}
             style={{
-              padding: '10px 20px',
-              background: usePhysicalSky 
-                ? 'rgba(59, 130, 246, 0.9)'
-                : 'rgba(75, 85, 99, 0.9)',
+              padding: '12px 24px',
+              background: showLocationInfo ? 'rgba(102, 126, 234, 0.9)' : 'rgba(75, 85, 99, 0.7)',
               border: '1px solid rgba(255,255,255,0.3)',
               borderRadius: '8px',
               color: 'white',
-              fontSize: '13px',
+              fontSize: '14px',
+              fontWeight: 'bold',
               cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
               transition: 'all 0.2s',
               boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
             }}
-          >
-            {usePhysicalSky ? '🌤️ Cielo Físico' : '🌫️ Cielo Básico'}
-          </button>
-
-          <button
-            onClick={() => setUseProceduralTerrain(!useProceduralTerrain)}
-            style={{
-              padding: '10px 20px',
-              background: useProceduralTerrain 
-                ? 'rgba(34, 197, 94, 0.9)'
-                : 'rgba(75, 85, 99, 0.9)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '13px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = showLocationInfo 
+                ? 'rgba(102, 126, 234, 1)' 
+                : 'rgba(75, 85, 99, 0.9)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = showLocationInfo 
+                ? 'rgba(102, 126, 234, 0.9)' 
+                : 'rgba(75, 85, 99, 0.7)'
             }}
           >
-            {useProceduralTerrain ? '⛰️ Terreno Procedural' : '🌋 Terreno Volcánico'}
+            📍 {showLocationInfo ? 'Ocultar Info' : 'Mostrar Info'}
           </button>
 
-          <button
-            onClick={() => setUseCinematicLighting(!useCinematicLighting)}
-            style={{
-              padding: '10px 20px',
-              background: useCinematicLighting 
-                ? 'rgba(251, 191, 36, 0.9)'
-                : 'rgba(75, 85, 99, 0.9)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '13px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-            }}
-          >
-            {useCinematicLighting ? '🎬 Luz Cinematográfica' : '💡 Luz Básica'}
-          </button>
-
-          <button
-            onClick={() => setUseWater(!useWater)}
-            style={{
-              padding: '10px 20px',
-              background: useWater 
-                ? 'rgba(59, 130, 246, 0.9)'
-                : 'rgba(75, 85, 99, 0.9)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '13px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-            }}
-          >
-            {useWater ? '🌊 Agua' : '🏜️ Sin Agua'}
-          </button>
-
-          <button
-            onClick={() => setUsePostProcessing(!usePostProcessing)}
-            style={{
-              padding: '10px 20px',
-              background: usePostProcessing 
-                ? 'rgba(236, 72, 153, 0.9)'
-                : 'rgba(75, 85, 99, 0.9)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '13px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-            }}
-          >
-            {usePostProcessing ? '✨ Post-FX' : '🎞️ Sin FX'}
-          </button>
-
-          {/* Selector de Avatar (solo en modo avatar) - DESPUÉS del botón */}
+          {/* Selector de Avatar (solo en modo avatar) - SIN recuadro negro */}
           {movementMode === 'avatar' && (
-            <div style={{
-              background: 'rgba(0, 0, 0, 0.8)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '8px',
-              padding: '12px',
-              border: '1px solid rgba(255,255,255,0.2)'
-            }}>
-              <div style={{
-                color: 'rgba(255,255,255,0.7)',
-                fontSize: '11px',
-                marginBottom: '8px',
-                fontWeight: 'bold'
-              }}>
-                Seleccionar Avatar:
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {[
-                  { name: 'Warrior', path: getAssetPath('/warrior.glb'), icon: '⚔️' },
-                  { name: 'Moai', path: getAssetPath('/moai.glb'), icon: '🗿' },
-                  { name: 'Sphinx', path: getAssetPath('/sphinx.glb'), icon: '🦁' },
-                  { name: 'OVNI', path: getAssetPath('/ovni.glb'), icon: '🛸' }
-                ].map((model) => (
-                  <button
-                    key={model.path}
-                    onClick={() => setAvatarModel(model.path)}
-                    style={{
-                      padding: '8px 12px',
-                      background: avatarModel === model.path 
-                        ? 'rgba(139, 92, 246, 0.9)' 
-                        : 'rgba(255,255,255,0.1)',
-                      border: avatarModel === model.path
-                        ? '2px solid rgba(139, 92, 246, 1)'
-                        : '1px solid rgba(255,255,255,0.2)',
-                      borderRadius: '6px',
-                      color: 'white',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (avatarModel !== model.path) {
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.15)'
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (avatarModel !== model.path) {
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
-                      }
-                    }}
-                  >
-                    <span>{model.icon}</span>
-                    <span>{model.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            <>
+              {[
+                { name: 'Warrior', path: getAssetPath('/warrior.glb'), icon: '⚔️' },
+                { name: 'Moai', path: getAssetPath('/moai.glb'), icon: '🗿' },
+                { name: 'Sphinx', path: getAssetPath('/sphinx.glb'), icon: '🦁' },
+                { name: 'OVNI', path: getAssetPath('/ovni.glb'), icon: '🛸' }
+              ].map((model) => (
+                <button
+                  key={model.path}
+                  onClick={() => setAvatarModel(model.path)}
+                  style={{
+                    padding: '12px 24px',
+                    background: avatarModel === model.path 
+                      ? 'rgba(139, 92, 246, 0.9)' 
+                      : 'rgba(75, 85, 99, 0.7)',
+                    border: avatarModel === model.path
+                      ? '2px solid rgba(139, 92, 246, 1)'
+                      : '1px solid rgba(255,255,255,0.3)',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (avatarModel !== model.path) {
+                      e.currentTarget.style.background = 'rgba(75, 85, 99, 0.9)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (avatarModel !== model.path) {
+                      e.currentTarget.style.background = 'rgba(75, 85, 99, 0.7)'
+                    }
+                  }}
+                >
+                  <span>{model.icon}</span>
+                  <span>{model.name}</span>
+                </button>
+              ))}
+            </>
           )}
         </div>
       )}
@@ -485,11 +411,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
           location={selectedLocation}
           site={selectedSite}
           solarSimulation={solarSimulation}
-          usePhysicalSky={usePhysicalSky}
-          useProceduralTerrain={useProceduralTerrain}
-          useCinematicLighting={useCinematicLighting}
-          useWater={useWater}
-          usePostProcessing={usePostProcessing}
         />
       ) : null}
 
@@ -652,12 +573,7 @@ function ModelScene({
   movementMode,
   location,
   site,
-  solarSimulation,
-  usePhysicalSky,
-  useProceduralTerrain,
-  useCinematicLighting,
-  useWater,
-  usePostProcessing
+  solarSimulation
 }: { 
   modelPath: string
   avatarModel: string
@@ -667,11 +583,6 @@ function ModelScene({
   location?: { lat: number, lon: number } | null
   site?: ArchaeologicalSite | null
   solarSimulation: boolean
-  usePhysicalSky: boolean
-  useProceduralTerrain: boolean
-  useCinematicLighting: boolean
-  useWater: boolean
-  usePostProcessing: boolean
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -716,64 +627,13 @@ function ModelScene({
       ) : null}
       {/* En modo avatar, la cámara es controlada por WalkableAvatar */}
 
-      {/* Iluminación: cinematográfica o básica */}
-      {useCinematicLighting ? (
-        <CinematicLighting
-          sunPosition={[10, 15, 5]}
-          sunIntensity={solarSimulation ? 2.5 : 0.8}
-          hemisphereIntensity={solarSimulation ? 1.0 : 0.4}
-          enableShadows={true}
-        />
-      ) : (
-        // Iluminación básica original
-        <>
-          {solarSimulation && location ? (
-            <SolarSimulation lat={location.lat} lon={location.lon} />
-          ) : solarSimulation ? (
-            <>
-              <ambientLight intensity={1.5} />
-              <hemisphereLight args={['#ffffff', '#8b7355', 1.2]} />
-              <directionalLight
-                position={[10, 15, 5]}
-                intensity={3.0}
-                castShadow
-                shadow-mapSize-width={2048}
-                shadow-mapSize-height={2048}
-                shadow-camera-far={50}
-                shadow-camera-left={-20}
-                shadow-camera-right={20}
-                shadow-camera-top={20}
-                shadow-camera-bottom={-20}
-                shadow-bias={-0.0001}
-              />
-              <pointLight position={[-10, 8, -5]} intensity={1.2} color="#ffa500" />
-              <pointLight position={[10, 5, 10]} intensity={1.0} color="#ffffff" />
-              <pointLight position={[0, 12, 0]} intensity={0.8} color="#ffffff" />
-            </>
-          ) : (
-            <>
-              <ambientLight intensity={0.3} color="#4a5a8a" />
-              <hemisphereLight args={['#1a1a3a', '#0a0a1a', 0.4]} />
-              <directionalLight
-                position={[10, 20, 5]}
-                intensity={0.8}
-                color="#b0c4de"
-                castShadow
-                shadow-mapSize-width={2048}
-                shadow-mapSize-height={2048}
-                shadow-camera-far={50}
-                shadow-camera-left={-20}
-                shadow-camera-right={20}
-                shadow-camera-top={20}
-                shadow-camera-bottom={-20}
-                shadow-bias={-0.0001}
-              />
-              <pointLight position={[0, 2, 3]} intensity={2.0} color="#ff8c00" distance={15} decay={2} />
-              <pointLight position={[-5, 3, -5]} intensity={1.5} color="#ff6600" distance={12} decay={2} />
-            </>
-          )}
-        </>
-      )}
+      {/* Iluminación cinematográfica siempre activa */}
+      <CinematicLighting
+        sunPosition={[10, 15, 5]}
+        sunIntensity={solarSimulation ? 2.5 : 0.8}
+        hemisphereIntensity={solarSimulation ? 1.0 : 0.4}
+        enableShadows={true}
+      />
 
       {/* Movimiento ambiental sutil */}
       <AmbientMotion
@@ -782,8 +642,8 @@ function ModelScene({
         intensity={0.5}
       />
 
-      {/* Cielo dinámico: físico o básico según configuración */}
-      {usePhysicalSky && solarSimulation ? (
+      {/* Cielo: físico solo de día, oscuro con estrellas de noche */}
+      {solarSimulation ? (
         <PhysicalSky
           sunPosition={new THREE.Vector3(10, 15, 5).normalize()}
           turbidity={2}
@@ -795,14 +655,14 @@ function ModelScene({
         <mesh>
           <sphereGeometry args={[500, 32, 32]} />
           <meshBasicMaterial 
-            color={solarSimulation ? "#4a7ba7" : "#0a0a1a"}
+            color="#0a0a1a"
             side={THREE.BackSide}
             fog={false}
           />
         </mesh>
       )}
 
-      {/* Estrellas (solo en modo nocturno) */}
+      {/* Estrellas solo en modo nocturno */}
       {!solarSimulation && <Stars />}
 
       {/* Niebla volumétrica */}
@@ -811,26 +671,15 @@ function ModelScene({
         density={solarSimulation ? 0.008 : 0.015}
       />
 
-      {/* Terreno: procedural o volcánico */}
-      {useProceduralTerrain ? (
-        <ProceduralTerrain
-          size={200}
-          segments={128}
-          heightScale={15}
-          seed={42}
-        />
-      ) : (
-        <VolcanicTerrain location={location} ref={terrainRef} />
-      )}
+      {/* Terreno volcánico siempre activo */}
+      <VolcanicTerrain location={location} ref={terrainRef} />
 
-      {/* Agua minimalista */}
-      {useWater && (
-        <MinimalistWater
-          position={[0, -0.5, 0]}
-          size={150}
-          color="#1e3a5f"
-        />
-      )}
+      {/* Agua minimalista siempre activa */}
+      <MinimalistWater
+        position={[0, -0.5, 0]}
+        size={150}
+        color="#1e3a5f"
+      />
 
       {/* Grid sutil para referencia de movimiento */}
       <gridHelper 
@@ -842,9 +691,6 @@ function ModelScene({
 
       {/* Partículas ambientales sutiles */}
       <AmbientParticles />
-
-      {/* Elementos decorativos del entorno */}
-      <EnvironmentElements />
 
       {/* Modelo 3D o Avatar según modo */}
       {movementMode === 'avatar' ? (
@@ -875,15 +721,13 @@ function ModelScene({
       {/* Zoom cinematográfico al entrar */}
       <CinematicZoom />
 
-      {/* Post-processing sutil */}
-      {usePostProcessing && (
-        <SubtlePostProcessing
-          enableBloom={true}
-          enableVignette={true}
-          bloomIntensity={0.3}
-          vignetteIntensity={0.4}
-        />
-      )}
+      {/* Post-processing siempre activo */}
+      <SubtlePostProcessing
+        enableBloom={true}
+        enableVignette={true}
+        bloomIntensity={0.3}
+        vignetteIntensity={0.4}
+      />
     </Canvas>
   )
 }

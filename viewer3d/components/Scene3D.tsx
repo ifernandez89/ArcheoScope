@@ -11,6 +11,7 @@ export default function Scene3D() {
   // const [audioSystem, setAudioSystem] = useState<AudioSystem | null>(null)  // Deshabilitado
   const [loadedModel, setLoadedModel] = useState<THREE.Object3D | null>(null)
   const [camera, setCamera] = useState<THREE.Camera | null>(null)
+  const [showPerformance, setShowPerformance] = useState(true)
 
   // Inicializar sistemas
   useEffect(() => {
@@ -28,10 +29,14 @@ export default function Scene3D() {
       <ImmersiveScene
         onModelLoaded={setLoadedModel}
         onCameraReady={setCamera}
+        onModeChange={(mode) => {
+          // Mostrar performance solo en modo globo
+          setShowPerformance(mode === 'globe')
+        }}
       />
 
-      {/* Performance Stats - Solo en desarrollo */}
-      {process.env.NODE_ENV === 'development' && <PerformanceStats />}
+      {/* Performance Stats - Solo en modo globo y desarrollo */}
+      {process.env.NODE_ENV === 'development' && showPerformance && <PerformanceStats />}
 
       {/* Avatar Conversacional */}
       <ConversationalAvatar 

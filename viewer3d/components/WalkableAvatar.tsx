@@ -13,10 +13,11 @@ interface WalkableAvatarProps {
 }
 
 // Detectar tipo de avatar según el path
-function getAvatarType(modelPath: string): 'humanoid' | 'statue' | 'creature' {
+function getAvatarType(modelPath: string): 'humanoid' | 'statue' | 'creature' | 'flying' {
   if (modelPath.includes('warrior')) return 'humanoid'
   if (modelPath.includes('moai')) return 'statue'
   if (modelPath.includes('sphinx')) return 'creature'
+  if (modelPath.includes('ovni') || modelPath.includes('ufo')) return 'flying'
   return 'humanoid'
 }
 
@@ -45,9 +46,10 @@ export default function WalkableAvatar({
   // Estado de salto
   const isJumping = useRef(false)
   const verticalVelocity = useRef(0)
-  const jumpForce = 8.0  // Fuerza del salto
-  const gravity = -20.0  // Gravedad
+  const jumpForce = 10.0  // Aumentado para salto más visible
+  const gravity = -25.0  // Aumentado para caída más natural
   const groundLevel = useRef(0)  // Nivel del suelo
+  const flyingHeight = 5.0  // Altura de vuelo para el OVNI (aumentada)
   
   // Notificar cambio de modelo
   useEffect(() => {
@@ -73,8 +75,8 @@ export default function WalkableAvatar({
       const key = e.key.toLowerCase()
       keys.current[key] = true
       
-      // Detectar salto con barra espaciadora
-      if (e.code === 'Space' && !isJumping.current) {
+      // Detectar salto con barra espaciadora (solo si NO es OVNI)
+      if (e.code === 'Space' && !isJumping.current && avatarType !== 'flying') {
         isJumping.current = true
         verticalVelocity.current = jumpForce
         console.log('🦘 ¡Salto activado!')
@@ -309,30 +311,74 @@ export default function WalkableAvatar({
       })
     }
     
-    // Física de salto
-    if (isJumping.current) {
-      // Aplicar gravedad
-      verticalVelocity.current += gravity * delta
-      
-      // Aplicar velocidad vertical
-      group.current.position.y += verticalVelocity.current * delta
-      
-      // Detectar aterrizaje
-      if (group.current.position.y <= groundLevel.current) {
-        group.current.position.y = groundLevel.current
-        isJumping.current = false
-        verticalVelocity.current = 0
-        console.log('🎯 Aterrizaje completado')
+    // Física de salto (solo para avatares terrestres)
+    if (avatarType !== 'flying') {
+      if (isJumping.current) {
+        // Aplicar gravedad
+        verticalVelocity.current += gravity * delta
+        
+        // Aplicar velocidad vertical
+        group.current.position.y += verticalVelocity.current * delta
+        
+        // Detectar aterrizaje
+        if (group.current.position.y <= groundLevel.current) {
+          group.current.position.y = groundLevel.current
+          isJumping.current = false
+          verticalVelocity.current = 0
+          console.log('🎯 Aterrizaje completado')
+        }
+      } else {
+        // Guardar nivel del suelo cuando está en tierra
+        groundLevel.current = group.current.position.y
       }
-    } else {
-      // Guardar nivel del suelo cuando está en tierra
-      groundLevel.current = group.current.position.y
     }
     
     // Animaciones procedurales según tipo de avatar
     timeAccumulator.current += delta
     
-    if (avatarType === 'statue') {
+    if (avatarType === 'flying') {
+      // 🛸 OVNI: Vuelo flotante con oscilación suave
+      // Mantener altura de vuelo constante sobre el terreno
+      let targetHeight = flyingHeight
+      
+      if (terrainRef?.current) {
+        raycaster.current.set(
+          new THREE.Vector3(
+            group.current.position.x,
+            group.current.position.y + 10,
+            group.current.position.z
+          ),
+          new THREE.Vector3(0, -1, 0)
+        )
+        
+        const intersects = raycaster.current.intersectObject(terrainRef.current, true)
+        
+        if (intersects.length > 0) {
+          const groundHeight = intersects[0].point.y
+          targetHeight = groundHeight + flyingHeight
+        }
+      }
+      
+      // Suavizar transición a altura objetivo
+      group.current.position.y += (targetHeight - group.current.position.y) * 5 * delta
+      
+      // Oscilación vertical suave (flotación)
+      group.current.position.y += Math.sin(timeAccumulator.current * 2) * 0.02
+      
+      // Inclinación sutil según dirección de movimiento
+      if (isMoving) {
+        // Inclinación hacia adelante al moverse
+        const tiltAmount = 0.15
+        group.current.rotation.x = Math.sin(timeAccumulator.current * 3) * 0.05 + tiltAmount
+        // Balanceo lateral
+        group.current.rotation.z = Math.sin(timeAccumulator.current * 2.5) * 0.08
+      } else {
+        // Volver a posición horizontal suavemente
+        group.current.rotation.x *= 0.95
+        group.current.rotation.z *= 0.95
+      }
+      
+    } else if (avatarType === 'statue') {
       // 🗿 MOAI: Deslizamiento místico con oscilación vertical
       if (isMoving) {
         // Oscilación sutil al moverse
@@ -360,8 +406,8 @@ export default function WalkableAvatar({
     }
     // humanoid usa animaciones normales (si las tiene)
     
-    // Mantener avatar pegado al terreno
-    if (terrainRef?.current) {
+    // Mantener avatar pegado al terreno (solo avatares terrestres)
+    if (avatarType !== 'flying' && terrainRef?.current) {
       raycaster.current.set(
         new THREE.Vector3(
           group.current.position.x,
@@ -465,3 +511,5 @@ import { getAssetPath } from '@/lib/paths'
 // Precargar modelos comunes
 useGLTF.preload(getAssetPath('/warrior.glb'))
 useGLTF.preload(getAssetPath('/moai.glb'))
+useGLTF.preload(getAssetPath('/sphinx.glb'))
+useGLTF.preload(getAssetPath('/ovni.glb'))
