@@ -622,6 +622,18 @@ function ModelScene({
         onSolarUpdate={onSolarUpdate}
       />
 
+      {/* Iluminación cinematográfica para mejor visibilidad */}
+      <CinematicLighting
+        sunIntensity={2.5}
+        hemisphereIntensity={1.2}
+        sunPosition={[
+          solarDirection.x * 50,
+          Math.max(solarDirection.y * 50, 10),
+          solarDirection.z * 50
+        ]}
+        enableShadows={true}
+      />
+
       {/* Cielo dinámico - cambia entre día y noche */}
       <DynamicSky isDay={isDay} />
 

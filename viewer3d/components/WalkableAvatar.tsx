@@ -496,22 +496,30 @@ export default function WalkableAvatar({
         {/* Sin efectos cósmicos, solo el modelo */}
         {!showCosmicEffects && <primitive object={scene} />}
         
-        {/* Luz que sigue al avatar para asegurar visibilidad */}
+        {/* Iluminación mejorada para visibilidad del avatar */}
+        {/* Luz principal desde arriba */}
         <spotLight
-          position={[0, 5, 0]}
-          intensity={3.0}
-          angle={Math.PI / 3}
-          penumbra={0.5}
-          distance={15}
-          decay={1}
+          position={[0, 8, 0]}
+          intensity={8.0}
+          angle={Math.PI / 2.5}
+          penumbra={0.3}
+          distance={20}
+          decay={1.5}
           color="#ffffff"
+          castShadow
         />
         
-        {/* Luz de relleno desde arriba */}
-        <pointLight position={[0, 4, 0]} intensity={2.0} color="#ffffff" distance={10} />
+        {/* Luz de relleno desde arriba-atrás */}
+        <pointLight position={[0, 6, -4]} intensity={5.0} color="#ffffff" distance={15} />
         
-        {/* Luz frontal */}
-        <pointLight position={[0, 2, 3]} intensity={1.5} color="#ffd700" distance={8} />
+        {/* Luz frontal cálida */}
+        <pointLight position={[0, 3, 5]} intensity={4.0} color="#ffe8d0" distance={12} />
+        
+        {/* Luz lateral izquierda */}
+        <pointLight position={[-4, 3, 0]} intensity={3.0} color="#e0f0ff" distance={10} />
+        
+        {/* Luz lateral derecha */}
+        <pointLight position={[4, 3, 0]} intensity={3.0} color="#ffe8d0" distance={10} />
       </group>
     </>
   )
