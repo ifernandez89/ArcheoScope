@@ -89,8 +89,8 @@ export default function SolarTrajectory({
       const trajectoryMaterial = new THREE.LineBasicMaterial({
         color: 0xffd700,
         transparent: true,
-        opacity: 0.3,
-        linewidth: 2
+        opacity: 0.15, // Reducido de 0.3 a 0.15 (50% más sutil)
+        linewidth: 1 // Reducido de 2 a 1
       })
       const trajectoryLine = new THREE.Line(trajectoryGeometry, trajectoryMaterial)
       trajectoryLine.name = 'SolarTrajectory'
@@ -109,7 +109,7 @@ export default function SolarTrajectory({
     const sunMarkerMaterial = new THREE.MeshBasicMaterial({
       color: 0xffaa00,
       transparent: true,
-      opacity: 0.8
+      opacity: 0.5 // Reducido de 0.8 a 0.5 (más sutil)
     })
     const sunMarker = new THREE.Mesh(sunMarkerGeometry, sunMarkerMaterial)
     sunMarker.position.set(currentX, currentY, currentZ)
@@ -122,7 +122,7 @@ export default function SolarTrajectory({
     const cardinalMaterial = new THREE.LineBasicMaterial({
       color: 0x4a90e2,
       transparent: true,
-      opacity: 0.2,
+      opacity: 0.08, // Reducido de 0.2 a 0.08 (ultra sutil)
       linewidth: 1
     })
     
@@ -158,8 +158,8 @@ export default function SolarTrajectory({
     const axialMaterial = new THREE.LineBasicMaterial({
       color: 0x00ff88,
       transparent: true,
-      opacity: 0.25,
-      linewidth: 2
+      opacity: 0.12, // Reducido de 0.25 a 0.12 (más sutil)
+      linewidth: 1 // Reducido de 2 a 1
     })
     const axialLine = new THREE.Line(axialGeometry, axialMaterial)
     axialLine.rotation.z = axialTilt
@@ -206,22 +206,34 @@ export default function SolarTrajectory({
     }
   }, [solarAltitude, solarAzimuth, declination, latitude, visible])
   
-  // Animar opacidad según hora del día
+  // Animar opacidad según hora del día (revelación gradual)
   useFrame((state) => {
     if (!groupRef.current) return
     
-    const targetOpacity = isDay && visible ? 1 : 0
+    const time = state.clock.elapsedTime
+    
+    // Revelación sutil: las líneas aparecen y desaparecen lentamente
+    const revealCycle = Math.sin(time * 0.1) * 0.5 + 0.5 // Ciclo lento 0-1
+    const targetOpacity = isDay && visible ? revealCycle * 0.3 : 0 // Máximo 30% de opacidad
     
     groupRef.current.children.forEach(child => {
       if (child instanceof THREE.Line) {
         const material = child.material as THREE.LineBasicMaterial
-        material.opacity += (targetOpacity * 0.3 - material.opacity) * 0.05
+        const baseName = child.name
+        
+        // Diferentes velocidades de revelación según el elemento
+        let multiplier = 1
+        if (baseName === 'SolarTrajectory') multiplier = 0.8
+        if (baseName === 'NorthSouth' || baseName === 'EastWest') multiplier = 0.4
+        if (baseName === 'EarthAxis') multiplier = 0.6
+        
+        material.opacity += (targetOpacity * multiplier - material.opacity) * 0.02
       } else if (child instanceof THREE.Mesh && child.name === 'CurrentSunPosition') {
         const material = child.material as THREE.MeshBasicMaterial
-        material.opacity += (targetOpacity * 0.8 - material.opacity) * 0.05
+        material.opacity += (targetOpacity * 0.5 - material.opacity) * 0.05
         
-        // Pulso sutil
-        const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.1 + 1
+        // Pulso muy sutil
+        const pulse = Math.sin(state.clock.elapsedTime * 1.5) * 0.08 + 1
         child.scale.setScalar(pulse)
       }
     })

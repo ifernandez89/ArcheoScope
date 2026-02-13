@@ -21,7 +21,7 @@ export default function DynamicSky({ isDay = true, sunPosition }: DynamicSkyProp
   // Geometría de estrellas
   const starsGeometry = useMemo(() => {
     const geometry = new THREE.BufferGeometry()
-    const count = 15000
+    const count = 10000 // Reducido de 15000 a 10000 (33% menos densidad)
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
     const sizes = new Float32Array(count) // Tamaños variables
@@ -42,8 +42,8 @@ export default function DynamicSky({ isDay = true, sunPosition }: DynamicSkyProp
       colors[i3 + 1] = color.g
       colors[i3 + 2] = color.b
       
-      // Tamaños variables (algunas estrellas más grandes, la mayoría pequeñas)
-      sizes[i] = Math.random() < 0.1 ? Math.random() * 3 + 2 : Math.random() * 1.5 + 0.5
+      // Tamaños variables (algunas estrellas más grandes, la mayoría muy pequeñas)
+      sizes[i] = Math.random() < 0.05 ? Math.random() * 2 + 1 : Math.random() * 0.8 + 0.3
     }
     
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
@@ -75,7 +75,7 @@ export default function DynamicSky({ isDay = true, sunPosition }: DynamicSkyProp
     texture.needsUpdate = true
     
     return new THREE.PointsMaterial({
-      size: 2, // Tamaño base (será multiplicado por el atributo size)
+      size: 1.2, // Reducido de 2 a 1.2 (40% más pequeñas)
       vertexColors: true,
       transparent: true,
       opacity: 0,  // Empezar invisible
@@ -99,9 +99,9 @@ export default function DynamicSky({ isDay = true, sunPosition }: DynamicSkyProp
         skyMaterial.color.lerp(new THREE.Color('#87ceeb'), 0.05)
         starsMat.opacity += (0 - starsMat.opacity) * 0.05
       } else {
-        // Noche: cielo negro, con estrellas
+        // Noche: cielo negro, con estrellas más sutiles
         skyMaterial.color.lerp(new THREE.Color('#000814'), 0.05)
-        starsMat.opacity += (0.9 - starsMat.opacity) * 0.05
+        starsMat.opacity += (0.6 - starsMat.opacity) * 0.05 // Reducido de 0.9 a 0.6
       }
     }
   })

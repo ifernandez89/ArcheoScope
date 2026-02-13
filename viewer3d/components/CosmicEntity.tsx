@@ -122,8 +122,8 @@ export default function CosmicEntity({
       positions[5] = solarPoint.z
       geometry.attributes.position.needsUpdate = true
       
-      // Opacidad según hora del día (más visible al amanecer/atardecer)
-      const targetOpacity = isDay ? 0.15 : 0.05
+      // Opacidad según hora del día (más sutil, revelación gradual)
+      const targetOpacity = isDay ? 0.08 : 0.03 // Reducido de 0.15/0.05 a 0.08/0.03
       material.opacity += (targetOpacity - material.opacity) * 0.02
       
       // Color según altura solar
@@ -156,9 +156,9 @@ export default function CosmicEntity({
       const baseScale = 1 + pulse * 0.1
       aura.scale.setScalar(baseScale)
       
-      // Opacidad según alineación con el sol
+      // Opacidad según alineación con el sol (más sutil)
       const alignment = Math.max(0, solarDirection.y)
-      const targetOpacity = isDay ? alignment * 0.08 : 0.02
+      const targetOpacity = isDay ? alignment * 0.04 : 0.01 // Reducido de 0.08 a 0.04
       material.opacity += (targetOpacity - material.opacity) * 0.02
       
       // Color según hora
