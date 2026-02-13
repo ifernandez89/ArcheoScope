@@ -15,6 +15,10 @@ import WalkableAvatar from './WalkableAvatar'
 import PhysicalSky from './PhysicalSky'
 import VolumetricFog from './VolumetricFog'
 import ProceduralTerrain from './ProceduralTerrain'
+import CinematicLighting from './CinematicLighting'
+import MinimalistWater from './MinimalistWater'
+import AmbientMotion from './AmbientMotion'
+import SubtlePostProcessing from './SubtlePostProcessing'
 import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
 import { getAssetPath } from '@/lib/paths'
 
@@ -33,6 +37,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
   const [solarSimulation, setSolarSimulation] = useState(true)
   const [usePhysicalSky, setUsePhysicalSky] = useState(true)
   const [useProceduralTerrain, setUseProceduralTerrain] = useState(false)
+  const [useCinematicLighting, setUseCinematicLighting] = useState(true)
+  const [useWater, setUseWater] = useState(false)
+  const [usePostProcessing, setUsePostProcessing] = useState(true)
 
   // Debug: Log cuando cambia el avatarModel
   useEffect(() => {
@@ -315,6 +322,63 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
             {useProceduralTerrain ? '⛰️ Terreno Procedural' : '🌋 Terreno Volcánico'}
           </button>
 
+          <button
+            onClick={() => setUseCinematicLighting(!useCinematicLighting)}
+            style={{
+              padding: '10px 20px',
+              background: useCinematicLighting 
+                ? 'rgba(251, 191, 36, 0.9)'
+                : 'rgba(75, 85, 99, 0.9)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '8px',
+              color: 'white',
+              fontSize: '13px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+            }}
+          >
+            {useCinematicLighting ? '🎬 Luz Cinematográfica' : '💡 Luz Básica'}
+          </button>
+
+          <button
+            onClick={() => setUseWater(!useWater)}
+            style={{
+              padding: '10px 20px',
+              background: useWater 
+                ? 'rgba(59, 130, 246, 0.9)'
+                : 'rgba(75, 85, 99, 0.9)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '8px',
+              color: 'white',
+              fontSize: '13px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+            }}
+          >
+            {useWater ? '🌊 Agua' : '🏜️ Sin Agua'}
+          </button>
+
+          <button
+            onClick={() => setUsePostProcessing(!usePostProcessing)}
+            style={{
+              padding: '10px 20px',
+              background: usePostProcessing 
+                ? 'rgba(236, 72, 153, 0.9)'
+                : 'rgba(75, 85, 99, 0.9)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '8px',
+              color: 'white',
+              fontSize: '13px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+            }}
+          >
+            {usePostProcessing ? '✨ Post-FX' : '🎞️ Sin FX'}
+          </button>
+
           {/* Selector de Avatar (solo en modo avatar) - DESPUÉS del botón */}
           {movementMode === 'avatar' && (
             <div style={{
@@ -336,7 +400,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
                 {[
                   { name: 'Warrior', path: getAssetPath('/warrior.glb'), icon: '⚔️' },
                   { name: 'Moai', path: getAssetPath('/moai.glb'), icon: '🗿' },
-                  { name: 'Sphinx', path: getAssetPath('/sphinx.glb'), icon: '🦁' }
+                  { name: 'Sphinx', path: getAssetPath('/sphinx.glb'), icon: '🦁' },
+                  { name: 'OVNI', path: getAssetPath('/ovni.glb'), icon: '🛸' }
                 ].map((model) => (
                   <button
                     key={model.path}
@@ -422,6 +487,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
           solarSimulation={solarSimulation}
           usePhysicalSky={usePhysicalSky}
           useProceduralTerrain={useProceduralTerrain}
+          useCinematicLighting={useCinematicLighting}
+          useWater={useWater}
+          usePostProcessing={usePostProcessing}
         />
       ) : null}
 
@@ -586,7 +654,10 @@ function ModelScene({
   site,
   solarSimulation,
   usePhysicalSky,
-  useProceduralTerrain
+  useProceduralTerrain,
+  useCinematicLighting,
+  useWater,
+  usePostProcessing
 }: { 
   modelPath: string
   avatarModel: string
@@ -598,6 +669,9 @@ function ModelScene({
   solarSimulation: boolean
   usePhysicalSky: boolean
   useProceduralTerrain: boolean
+  useCinematicLighting: boolean
+  useWater: boolean
+  usePostProcessing: boolean
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -642,54 +716,71 @@ function ModelScene({
       ) : null}
       {/* En modo avatar, la cámara es controlada por WalkableAvatar */}
 
-      {/* Iluminación mejorada con bounce light */}
-      {solarSimulation && location ? (
-        <SolarSimulation lat={location.lat} lon={location.lon} />
-      ) : solarSimulation ? (
-        // Modo día sin simulación solar
-        <>
-          <ambientLight intensity={1.5} />
-          <hemisphereLight args={['#ffffff', '#8b7355', 1.2]} />
-          <directionalLight
-            position={[10, 15, 5]}
-            intensity={3.0}
-            castShadow
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
-            shadow-camera-far={50}
-            shadow-camera-left={-20}
-            shadow-camera-right={20}
-            shadow-camera-top={20}
-            shadow-camera-bottom={-20}
-            shadow-bias={-0.0001}
-          />
-          <pointLight position={[-10, 8, -5]} intensity={1.2} color="#ffa500" />
-          <pointLight position={[10, 5, 10]} intensity={1.0} color="#ffffff" />
-          <pointLight position={[0, 12, 0]} intensity={0.8} color="#ffffff" />
-        </>
+      {/* Iluminación: cinematográfica o básica */}
+      {useCinematicLighting ? (
+        <CinematicLighting
+          sunPosition={[10, 15, 5]}
+          sunIntensity={solarSimulation ? 2.5 : 0.8}
+          hemisphereIntensity={solarSimulation ? 1.0 : 0.4}
+          enableShadows={true}
+        />
       ) : (
-        // Modo noche 🌙
+        // Iluminación básica original
         <>
-          <ambientLight intensity={0.3} color="#4a5a8a" />
-          <hemisphereLight args={['#1a1a3a', '#0a0a1a', 0.4]} />
-          <directionalLight
-            position={[10, 20, 5]}
-            intensity={0.8}
-            color="#b0c4de"
-            castShadow
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
-            shadow-camera-far={50}
-            shadow-camera-left={-20}
-            shadow-camera-right={20}
-            shadow-camera-top={20}
-            shadow-camera-bottom={-20}
-            shadow-bias={-0.0001}
-          />
-          <pointLight position={[0, 2, 3]} intensity={2.0} color="#ff8c00" distance={15} decay={2} />
-          <pointLight position={[-5, 3, -5]} intensity={1.5} color="#ff6600" distance={12} decay={2} />
+          {solarSimulation && location ? (
+            <SolarSimulation lat={location.lat} lon={location.lon} />
+          ) : solarSimulation ? (
+            <>
+              <ambientLight intensity={1.5} />
+              <hemisphereLight args={['#ffffff', '#8b7355', 1.2]} />
+              <directionalLight
+                position={[10, 15, 5]}
+                intensity={3.0}
+                castShadow
+                shadow-mapSize-width={2048}
+                shadow-mapSize-height={2048}
+                shadow-camera-far={50}
+                shadow-camera-left={-20}
+                shadow-camera-right={20}
+                shadow-camera-top={20}
+                shadow-camera-bottom={-20}
+                shadow-bias={-0.0001}
+              />
+              <pointLight position={[-10, 8, -5]} intensity={1.2} color="#ffa500" />
+              <pointLight position={[10, 5, 10]} intensity={1.0} color="#ffffff" />
+              <pointLight position={[0, 12, 0]} intensity={0.8} color="#ffffff" />
+            </>
+          ) : (
+            <>
+              <ambientLight intensity={0.3} color="#4a5a8a" />
+              <hemisphereLight args={['#1a1a3a', '#0a0a1a', 0.4]} />
+              <directionalLight
+                position={[10, 20, 5]}
+                intensity={0.8}
+                color="#b0c4de"
+                castShadow
+                shadow-mapSize-width={2048}
+                shadow-mapSize-height={2048}
+                shadow-camera-far={50}
+                shadow-camera-left={-20}
+                shadow-camera-right={20}
+                shadow-camera-top={20}
+                shadow-camera-bottom={-20}
+                shadow-bias={-0.0001}
+              />
+              <pointLight position={[0, 2, 3]} intensity={2.0} color="#ff8c00" distance={15} decay={2} />
+              <pointLight position={[-5, 3, -5]} intensity={1.5} color="#ff6600" distance={12} decay={2} />
+            </>
+          )}
         </>
       )}
+
+      {/* Movimiento ambiental sutil */}
+      <AmbientMotion
+        enableCameraBreathing={movementMode === 'orbit'}
+        enableLightOscillation={true}
+        intensity={0.5}
+      />
 
       {/* Cielo dinámico: físico o básico según configuración */}
       {usePhysicalSky && solarSimulation ? (
@@ -730,6 +821,15 @@ function ModelScene({
         />
       ) : (
         <VolcanicTerrain location={location} ref={terrainRef} />
+      )}
+
+      {/* Agua minimalista */}
+      {useWater && (
+        <MinimalistWater
+          position={[0, -0.5, 0]}
+          size={150}
+          color="#1e3a5f"
+        />
       )}
 
       {/* Grid sutil para referencia de movimiento */}
@@ -774,6 +874,16 @@ function ModelScene({
       
       {/* Zoom cinematográfico al entrar */}
       <CinematicZoom />
+
+      {/* Post-processing sutil */}
+      {usePostProcessing && (
+        <SubtlePostProcessing
+          enableBloom={true}
+          enableVignette={true}
+          bloomIntensity={0.3}
+          vignetteIntensity={0.4}
+        />
+      )}
     </Canvas>
   )
 }
