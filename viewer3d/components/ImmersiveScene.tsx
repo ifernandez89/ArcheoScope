@@ -12,6 +12,9 @@ import LocationInfo from './LocationInfo'
 import VolcanicTerrain from './VolcanicTerrain'
 import BasicCollisions from './BasicCollisions'
 import WalkableAvatar from './WalkableAvatar'
+import PhysicalSky from './PhysicalSky'
+import VolumetricFog from './VolumetricFog'
+import ProceduralTerrain from './ProceduralTerrain'
 import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
 import { getAssetPath } from '@/lib/paths'
 
@@ -28,6 +31,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
   const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
   const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('orbit')
   const [solarSimulation, setSolarSimulation] = useState(true)
+  const [usePhysicalSky, setUsePhysicalSky] = useState(true)
+  const [useProceduralTerrain, setUseProceduralTerrain] = useState(false)
 
   // Debug: Log cuando cambia el avatarModel
   useEffect(() => {
@@ -271,6 +276,45 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
             {movementMode === 'avatar' ? '🚶 Modo: Exploración' : '🔄 Modo: Órbita'}
           </button>
 
+          {/* Controles avanzados */}
+          <button
+            onClick={() => setUsePhysicalSky(!usePhysicalSky)}
+            style={{
+              padding: '10px 20px',
+              background: usePhysicalSky 
+                ? 'rgba(59, 130, 246, 0.9)'
+                : 'rgba(75, 85, 99, 0.9)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '8px',
+              color: 'white',
+              fontSize: '13px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+            }}
+          >
+            {usePhysicalSky ? '🌤️ Cielo Físico' : '🌫️ Cielo Básico'}
+          </button>
+
+          <button
+            onClick={() => setUseProceduralTerrain(!useProceduralTerrain)}
+            style={{
+              padding: '10px 20px',
+              background: useProceduralTerrain 
+                ? 'rgba(34, 197, 94, 0.9)'
+                : 'rgba(75, 85, 99, 0.9)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '8px',
+              color: 'white',
+              fontSize: '13px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+            }}
+          >
+            {useProceduralTerrain ? '⛰️ Terreno Procedural' : '🌋 Terreno Volcánico'}
+          </button>
+
           {/* Selector de Avatar (solo en modo avatar) - DESPUÉS del botón */}
           {movementMode === 'avatar' && (
             <div style={{
@@ -376,6 +420,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady }: Immersi
           location={selectedLocation}
           site={selectedSite}
           solarSimulation={solarSimulation}
+          usePhysicalSky={usePhysicalSky}
+          useProceduralTerrain={useProceduralTerrain}
         />
       ) : null}
 
@@ -538,7 +584,9 @@ function ModelScene({
   movementMode,
   location,
   site,
-  solarSimulation
+  solarSimulation,
+  usePhysicalSky,
+  useProceduralTerrain
 }: { 
   modelPath: string
   avatarModel: string
@@ -548,6 +596,8 @@ function ModelScene({
   location?: { lat: number, lon: number } | null
   site?: ArchaeologicalSite | null
   solarSimulation: boolean
+  usePhysicalSky: boolean
+  useProceduralTerrain: boolean
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -641,24 +691,46 @@ function ModelScene({
         </>
       )}
 
-      {/* Cielo dinámico: día o noche según simulación solar */}
-      <mesh>
-        <sphereGeometry args={[500, 32, 32]} />
-        <meshBasicMaterial 
-          color={solarSimulation ? "#4a7ba7" : "#0a0a1a"}
-          side={THREE.BackSide}
-          fog={false}
+      {/* Cielo dinámico: físico o básico según configuración */}
+      {usePhysicalSky && solarSimulation ? (
+        <PhysicalSky
+          sunPosition={new THREE.Vector3(10, 15, 5).normalize()}
+          turbidity={2}
+          rayleigh={1}
+          mieCoefficient={0.005}
+          mieDirectionalG={0.8}
         />
-      </mesh>
+      ) : (
+        <mesh>
+          <sphereGeometry args={[500, 32, 32]} />
+          <meshBasicMaterial 
+            color={solarSimulation ? "#4a7ba7" : "#0a0a1a"}
+            side={THREE.BackSide}
+            fog={false}
+          />
+        </mesh>
+      )}
 
       {/* Estrellas (solo en modo nocturno) */}
       {!solarSimulation && <Stars />}
 
-      {/* Niebla atmosférica: clara de día, oscura de noche */}
-      <fog attach="fog" args={[solarSimulation ? '#6b8ba7' : '#0a0a1a', 40, 120]} />
+      {/* Niebla volumétrica */}
+      <VolumetricFog
+        color={solarSimulation ? '#87ceeb' : '#0a0a1a'}
+        density={solarSimulation ? 0.008 : 0.015}
+      />
 
-      {/* Terreno volcánico con textura procedural */}
-      <VolcanicTerrain location={location} ref={terrainRef} />
+      {/* Terreno: procedural o volcánico */}
+      {useProceduralTerrain ? (
+        <ProceduralTerrain
+          size={200}
+          segments={128}
+          heightScale={15}
+          seed={42}
+        />
+      ) : (
+        <VolcanicTerrain location={location} ref={terrainRef} />
+      )}
 
       {/* Grid sutil para referencia de movimiento */}
       <gridHelper 
