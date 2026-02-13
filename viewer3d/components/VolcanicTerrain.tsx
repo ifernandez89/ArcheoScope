@@ -193,11 +193,11 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
         // Paletas de colores según tipo de terreno
         vec3 darkColor, mediumColor, lightColor, depthColor;
         
-        if (colorType == 0) { // volcanic
-          darkColor = vec3(0.25, 0.15, 0.1);
-          mediumColor = vec3(0.35, 0.25, 0.15);
-          lightColor = vec3(0.45, 0.35, 0.25);
-          depthColor = vec3(0.2, 0.12, 0.08);
+        if (colorType == 0) { // volcanic - MÁS VERDE
+          darkColor = vec3(0.15, 0.25, 0.12);   // Verde oscuro
+          mediumColor = vec3(0.25, 0.40, 0.20);  // Verde medio
+          lightColor = vec3(0.35, 0.50, 0.28);   // Verde claro
+          depthColor = vec3(0.10, 0.18, 0.08);   // Verde muy oscuro
         } else if (colorType == 1) { // volcanic-red (Isla de Pascua)
           darkColor = vec3(0.3, 0.12, 0.08);
           mediumColor = vec3(0.4, 0.2, 0.12);
@@ -208,11 +208,11 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
           mediumColor = vec3(0.3, 0.28, 0.2);
           lightColor = vec3(0.4, 0.38, 0.3);
           depthColor = vec3(0.15, 0.13, 0.08);
-        } else if (colorType == 3) { // tropical
-          darkColor = vec3(0.2, 0.25, 0.15);
-          mediumColor = vec3(0.3, 0.35, 0.2);
-          lightColor = vec3(0.4, 0.45, 0.3);
-          depthColor = vec3(0.15, 0.2, 0.1);
+        } else if (colorType == 3) { // tropical - MÁS VERDE VIBRANTE
+          darkColor = vec3(0.12, 0.30, 0.15);    // Verde bosque oscuro
+          mediumColor = vec3(0.20, 0.45, 0.22);  // Verde bosque medio
+          lightColor = vec3(0.30, 0.55, 0.30);   // Verde bosque claro
+          depthColor = vec3(0.08, 0.22, 0.10);   // Verde muy oscuro
         } else { // desert
           darkColor = vec3(0.35, 0.3, 0.2);
           mediumColor = vec3(0.45, 0.4, 0.3);

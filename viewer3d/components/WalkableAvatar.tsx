@@ -497,7 +497,7 @@ export default function WalkableAvatar({
         {!showCosmicEffects && <primitive object={scene} />}
         
         {/* Iluminación mejorada para visibilidad del avatar */}
-        {/* Luz principal desde arriba */}
+        {/* Luz principal desde arriba con sombras */}
         <spotLight
           position={[0, 8, 0]}
           intensity={8.0}
@@ -507,6 +507,11 @@ export default function WalkableAvatar({
           decay={1.5}
           color="#ffffff"
           castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          shadow-camera-near={0.5}
+          shadow-camera-far={25}
+          shadow-bias={-0.0001}
         />
         
         {/* Luz de relleno desde arriba-atrás */}

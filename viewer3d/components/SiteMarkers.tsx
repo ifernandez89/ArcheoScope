@@ -57,8 +57,8 @@ function SiteMarker({ site, radius, isHovered, onHover, onUnhover, onClick }: Si
   
   useFrame((state) => {
     if (markerRef.current) {
-      const scale = isHovered ? 1.5 : 1
-      const pulseScale = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.1
+      const scale = isHovered ? 1.8 : 1
+      const pulseScale = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.05
       markerRef.current.scale.setScalar(scale * pulseScale)
     }
   })
@@ -82,13 +82,15 @@ function SiteMarker({ site, radius, isHovered, onHover, onUnhover, onClick }: Si
           onUnhover()
         }}
       >
-        <sphereGeometry args={[0.05, 16, 16]} />
+        <sphereGeometry args={[0.02, 12, 12]} />
         <meshStandardMaterial
           color={isHovered ? '#fbbf24' : '#ef4444'}
           emissive={isHovered ? '#fbbf24' : '#ef4444'}
-          emissiveIntensity={2}
+          emissiveIntensity={isHovered ? 0.8 : 0.3}
           metalness={0}
           roughness={0.5}
+          transparent={true}
+          opacity={isHovered ? 1.0 : 0.6}
         />
       </mesh>
       

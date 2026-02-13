@@ -674,6 +674,9 @@ function ModelScene({
       {/* Partículas ambientales sutiles */}
       <AmbientParticles />
 
+      {/* Elementos del entorno: rocas y vegetación - dinámicos según ubicación */}
+      <EnvironmentElements location={location} />
+
       {/* Modelo 3D o Avatar según modo */}
       {movementMode === 'avatar' ? (
         <WalkableAvatar 
@@ -736,56 +739,285 @@ function CinematicZoom() {
   return null
 }
 
-// Elementos decorativos del entorno - FIJOS AL SUELO
-function EnvironmentElements() {
-  const rocksPositions = useMemo(() => {
-    const positions = []
-    for (let i = 0; i < 25; i++) {
-      const angle = (i / 25) * Math.PI * 2
-      const radius = 12 + Math.random() * 25
-      const x = Math.cos(angle) * radius + (Math.random() - 0.5) * 8
-      const z = Math.sin(angle) * radius + (Math.random() - 0.5) * 8
-      const scale = 0.2 + Math.random() * 0.5
-      positions.push({ x, z, scale, rotation: Math.random() * Math.PI * 2 })
+// Elementos decorativos del entorno - DINÁMICOS según ubicación
+function EnvironmentElements({ location }: { location?: { lat: number, lon: number } | null }) {
+  // Generar seed basado en coordenadas para consistencia
+  const seed = useMemo(() => {
+    if (!location) return 0
+    return Math.floor(location.lat * 1000 + location.lon * 1000)
+  }, [location?.lat, location?.lon])
+  
+  // Determinar bioma según ubicación
+  const biome = useMemo(() => {
+    if (!location) return 'temperate'
+    const absLat = Math.abs(location.lat)
+    
+    if (absLat < 10) return 'tropical'
+    if (absLat > 20 && absLat < 35) return 'desert'
+    if (absLat > 60) return 'arctic'
+    return 'temperate'
+  }, [location])
+  
+  // Generar posiciones aleatorias basadas en seed
+  const elements = useMemo(() => {
+    const random = (index: number) => {
+      const x = Math.sin(seed + index * 12.9898) * 43758.5453
+      return x - Math.floor(x)
     }
-    return positions
-  }, [])
+    
+    // Cantidad según bioma
+    const counts: Record<string, Record<string, number>> = {
+      tropical: { trees: 15, bushes: 20, rocks: 10, palms: 8, flowers: 25 },
+      temperate: { trees: 12, bushes: 15, rocks: 15, logs: 5, flowers: 15 },
+      desert: { trees: 3, bushes: 5, rocks: 25, cacti: 12, crystals: 8 },
+      arctic: { trees: 5, bushes: 8, rocks: 30, crystals: 5, flowers: 5 }
+    }
+    
+    const count = counts[biome] || counts.temperate
+    
+    const items: any[] = []
+    let index = 0
+    
+    // Generar árboles
+    for (let i = 0; i < count.trees; i++) {
+      const angle = random(index++) * Math.PI * 2
+      const radius = 15 + random(index++) * 30
+      const x = Math.cos(angle) * radius + (random(index++) - 0.5) * 10
+      const z = Math.sin(angle) * radius + (random(index++) - 0.5) * 10
+      const height = 1.5 + random(index++) * 2.0
+      items.push({ type: 'tree', x, z, height, rotation: random(index++) * Math.PI * 2 })
+    }
+    
+    // Generar arbustos
+    for (let i = 0; i < count.bushes; i++) {
+      const angle = random(index++) * Math.PI * 2
+      const radius = 10 + random(index++) * 35
+      const x = Math.cos(angle) * radius + (random(index++) - 0.5) * 8
+      const z = Math.sin(angle) * radius + (random(index++) - 0.5) * 8
+      const scale = 0.3 + random(index++) * 0.5
+      items.push({ type: 'bush', x, z, scale })
+    }
+    
+    // Generar rocas
+    for (let i = 0; i < count.rocks; i++) {
+      const angle = random(index++) * Math.PI * 2
+      const radius = 12 + random(index++) * 35
+      const x = Math.cos(angle) * radius + (random(index++) - 0.5) * 10
+      const z = Math.sin(angle) * radius + (random(index++) - 0.5) * 10
+      const scale = 0.2 + random(index++) * 0.6
+      items.push({ type: 'rock', x, z, scale, rotation: random(index++) * Math.PI * 2 })
+    }
+    
+    // Elementos específicos por bioma
+    if (biome === 'tropical' && count.palms) {
+      for (let i = 0; i < count.palms; i++) {
+        const angle = random(index++) * Math.PI * 2
+        const radius = 18 + random(index++) * 25
+        const x = Math.cos(angle) * radius
+        const z = Math.sin(angle) * radius
+        const height = 2.5 + random(index++) * 1.5
+        items.push({ type: 'palm', x, z, height })
+      }
+    }
+    
+    if (biome === 'desert' && count.cacti) {
+      for (let i = 0; i < count.cacti; i++) {
+        const angle = random(index++) * Math.PI * 2
+        const radius = 15 + random(index++) * 30
+        const x = Math.cos(angle) * radius
+        const z = Math.sin(angle) * radius
+        const height = 1.0 + random(index++) * 2.0
+        items.push({ type: 'cactus', x, z, height })
+      }
+    }
+    
+    if (biome === 'temperate' && count.logs) {
+      for (let i = 0; i < count.logs; i++) {
+        const angle = random(index++) * Math.PI * 2
+        const radius = 20 + random(index++) * 25
+        const x = Math.cos(angle) * radius
+        const z = Math.sin(angle) * radius
+        items.push({ type: 'log', x, z, rotation: random(index++) * Math.PI * 2 })
+      }
+    }
+    
+    if (count.flowers) {
+      for (let i = 0; i < count.flowers; i++) {
+        const angle = random(index++) * Math.PI * 2
+        const radius = 8 + random(index++) * 35
+        const x = Math.cos(angle) * radius + (random(index++) - 0.5) * 5
+        const z = Math.sin(angle) * radius + (random(index++) - 0.5) * 5
+        const scale = 0.1 + random(index++) * 0.15
+        const colorIndex = Math.floor(random(index++) * 4)
+        items.push({ type: 'flower', x, z, scale, colorIndex })
+      }
+    }
+    
+    if (count.crystals) {
+      for (let i = 0; i < count.crystals; i++) {
+        const angle = random(index++) * Math.PI * 2
+        const radius = 20 + random(index++) * 25
+        const x = Math.cos(angle) * radius
+        const z = Math.sin(angle) * radius
+        const scale = 0.3 + random(index++) * 0.5
+        items.push({ type: 'crystal', x, z, scale, rotation: random(index++) * Math.PI })
+      }
+    }
+    
+    return items
+  }, [seed, biome])
 
   return (
     <group>
-      {/* Rocas volcánicas - PEGADAS AL SUELO */}
-      {rocksPositions.map((pos, i) => (
-        <mesh 
-          key={i}
-          position={[pos.x, 0, pos.z]}  // y=0 para estar en el suelo
-          rotation={[0, pos.rotation, 0]}
-          castShadow
-          receiveShadow
-        >
-          <dodecahedronGeometry args={[pos.scale, 0]} />
-          <meshStandardMaterial 
-            color="#3a2a1a" 
-            roughness={0.95}
-            metalness={0.05}
-          />
-        </mesh>
-      ))}
-
-      {/* Arbustos - PEGADOS AL SUELO */}
-      {rocksPositions.slice(0, 12).map((pos, i) => (
-        <mesh 
-          key={`bush-${i}`}
-          position={[pos.x * 0.6, 0, pos.z * 0.6]}  // y=0 para estar en el suelo
-          castShadow
-        >
-          <sphereGeometry args={[pos.scale * 0.6, 8, 8]} />
-          <meshStandardMaterial 
-            color="#4a5a2a" 
-            roughness={1}
-            metalness={0}
-          />
-        </mesh>
-      ))}
+      {elements.map((item, i) => {
+        switch (item.type) {
+          case 'tree':
+            return (
+              <group key={`tree-${i}`} position={[item.x, 0, item.z]}>
+                {/* Tronco */}
+                <mesh position={[0, item.height, 0]} castShadow receiveShadow>
+                  <cylinderGeometry args={[0.15 * item.height, 0.2 * item.height, item.height * 2, 8]} />
+                  <meshStandardMaterial color="#4a3520" roughness={0.95} />
+                </mesh>
+                {/* Copa */}
+                <mesh position={[0, item.height * 2 + item.height * 1.25, 0]} castShadow receiveShadow>
+                  <coneGeometry args={[item.height * 1.2, item.height * 2.5, 8]} />
+                  <meshStandardMaterial color="#2d5016" roughness={0.8} />
+                </mesh>
+              </group>
+            )
+          
+          case 'palm':
+            return (
+              <group key={`palm-${i}`} position={[item.x, 0, item.z]}>
+                {/* Tronco curvo */}
+                <mesh position={[0, item.height * 1.5, 0]} castShadow receiveShadow>
+                  <cylinderGeometry args={[0.12, 0.15, item.height * 3, 8]} />
+                  <meshStandardMaterial color="#8b6f47" roughness={0.9} />
+                </mesh>
+                {/* Hojas (4 direcciones) */}
+                {[0, 1, 2, 3].map(dir => (
+                  <mesh 
+                    key={dir}
+                    position={[
+                      Math.cos(dir * Math.PI / 2) * 0.5,
+                      item.height * 3,
+                      Math.sin(dir * Math.PI / 2) * 0.5
+                    ]}
+                    rotation={[Math.PI / 6, dir * Math.PI / 2, 0]}
+                    castShadow
+                  >
+                    <boxGeometry args={[0.3, 2, 0.1]} />
+                    <meshStandardMaterial color="#2d5016" roughness={0.7} />
+                  </mesh>
+                ))}
+              </group>
+            )
+          
+          case 'cactus':
+            return (
+              <group key={`cactus-${i}`} position={[item.x, 0, item.z]}>
+                {/* Cuerpo principal */}
+                <mesh position={[0, item.height, 0]} castShadow receiveShadow>
+                  <cylinderGeometry args={[0.2, 0.25, item.height * 2, 8]} />
+                  <meshStandardMaterial color="#3a5a2a" roughness={0.8} />
+                </mesh>
+                {/* Brazos laterales */}
+                <mesh position={[-0.4, item.height * 0.8, 0]} rotation={[0, 0, Math.PI / 4]} castShadow>
+                  <cylinderGeometry args={[0.15, 0.18, item.height * 0.8, 6]} />
+                  <meshStandardMaterial color="#3a5a2a" roughness={0.8} />
+                </mesh>
+              </group>
+            )
+          
+          case 'bush':
+            return (
+              <mesh 
+                key={`bush-${i}`}
+                position={[item.x, item.scale * 0.4, item.z]}
+                castShadow
+                receiveShadow
+              >
+                <sphereGeometry args={[item.scale, 8, 8]} />
+                <meshStandardMaterial color="#2d5016" roughness={0.9} />
+              </mesh>
+            )
+          
+          case 'rock':
+            return (
+              <mesh 
+                key={`rock-${i}`}
+                position={[item.x, 0, item.z]}
+                rotation={[0, item.rotation, 0]}
+                castShadow
+                receiveShadow
+              >
+                <dodecahedronGeometry args={[item.scale, 0]} />
+                <meshStandardMaterial color="#3a2a1a" roughness={0.95} metalness={0.05} />
+              </mesh>
+            )
+          
+          case 'log':
+            return (
+              <mesh 
+                key={`log-${i}`}
+                position={[item.x, 0.2, item.z]}
+                rotation={[Math.PI / 2, 0, item.rotation]}
+                castShadow
+                receiveShadow
+              >
+                <cylinderGeometry args={[0.3, 0.35, 2, 8]} />
+                <meshStandardMaterial color="#4a3520" roughness={0.95} />
+              </mesh>
+            )
+          
+          case 'flower':
+            const flowerColors = ['#ff6b9d', '#ffd93d', '#a8e6cf', '#c7b3ff']
+            return (
+              <group key={`flower-${i}`} position={[item.x, 0, item.z]}>
+                {/* Tallo */}
+                <mesh position={[0, item.scale * 2, 0]}>
+                  <cylinderGeometry args={[0.02, 0.02, item.scale * 4, 4]} />
+                  <meshStandardMaterial color="#2d5016" />
+                </mesh>
+                {/* Flor */}
+                <mesh position={[0, item.scale * 4, 0]} castShadow>
+                  <sphereGeometry args={[item.scale, 6, 6]} />
+                  <meshStandardMaterial 
+                    color={flowerColors[item.colorIndex]} 
+                    emissive={flowerColors[item.colorIndex]}
+                    emissiveIntensity={0.2}
+                  />
+                </mesh>
+              </group>
+            )
+          
+          case 'crystal':
+            return (
+              <mesh 
+                key={`crystal-${i}`}
+                position={[item.x, item.scale * 0.8, item.z]}
+                rotation={[0, item.rotation, 0]}
+                castShadow
+                receiveShadow
+              >
+                <coneGeometry args={[item.scale * 0.5, item.scale * 1.5, 6]} />
+                <meshStandardMaterial 
+                  color="#88ccff" 
+                  metalness={0.3}
+                  roughness={0.2}
+                  transparent={true}
+                  opacity={0.8}
+                  emissive="#88ccff"
+                  emissiveIntensity={0.3}
+                />
+              </mesh>
+            )
+          
+          default:
+            return null
+        }
+      })}
     </group>
   )
 }
