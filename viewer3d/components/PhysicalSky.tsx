@@ -143,7 +143,7 @@ export default function PhysicalSky({
   })
 
   return (
-    <mesh ref={skyRef} scale={[450000, 450000, 450000]}>
+    <mesh ref={skyRef} scale={[450000, 450000, 450000]} name="PhysicalSky">
       <sphereGeometry args={[1, 32, 15]} />
       <shaderMaterial
         fragmentShader={skyShader.fragmentShader}

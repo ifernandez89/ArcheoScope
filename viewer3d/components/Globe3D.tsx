@@ -70,13 +70,30 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
     
     if (!globeRef.current || !onLocationClick) return
 
-    // Obtener punto de intersección
-    const point = event.point
+    // Obtener punto de intersección en coordenadas mundiales
+    const point = event.point.clone()
     
-    // Convertir punto 3D a lat/lon
+    // Aplicar la rotación inversa del globo para obtener coordenadas locales
+    const inverseMatrix = new THREE.Matrix4()
+    inverseMatrix.copy(globeRef.current.matrixWorld).invert()
+    point.applyMatrix4(inverseMatrix)
+    
+    // Convertir punto 3D a lat/lon (inverso de latLonToVector3)
     const radius = 5
+    
+    // Latitud desde Y
     const lat = Math.asin(point.y / radius) * (180 / Math.PI)
-    const lon = Math.atan2(point.x, point.z) * (180 / Math.PI)
+    
+    // Longitud desde X y Z (debe coincidir con latLonToVector3)
+    // En latLonToVector3: x = -radius * sin(phi) * cos(theta), z = radius * sin(phi) * sin(theta)
+    // donde theta = (lon + 180) * PI/180
+    // Entonces: atan2(z, -x) = atan2(sin(theta), cos(theta)) = theta
+    const theta = Math.atan2(point.z, -point.x) * (180 / Math.PI)
+    let lon = theta - 180
+    
+    // Normalizar a rango -180 a 180
+    if (lon > 180) lon -= 360
+    if (lon < -180) lon += 360
     
     console.log(`🌍 Click en globo: lat=${lat.toFixed(4)}, lon=${lon.toFixed(4)}`)
     

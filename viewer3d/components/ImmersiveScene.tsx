@@ -12,13 +12,14 @@ import LocationInfo from './LocationInfo'
 import VolcanicTerrain from './VolcanicTerrain'
 import BasicCollisions from './BasicCollisions'
 import WalkableAvatar from './WalkableAvatar'
-import PhysicalSky from './PhysicalSky'
+import DynamicSky from './DynamicSky'
 import VolumetricFog from './VolumetricFog'
 import ProceduralTerrain from './ProceduralTerrain'
 import CinematicLighting from './CinematicLighting'
 import MinimalistWater from './MinimalistWater'
 import AmbientMotion from './AmbientMotion'
 import SubtlePostProcessing from './SubtlePostProcessing'
+import AstronomicalWorld from './AstronomicalWorld'
 import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
 import { getAssetPath } from '@/lib/paths'
 
@@ -35,8 +36,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(null)
   const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
   const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('orbit')
-  const [solarSimulation, setSolarSimulation] = useState(true)
   const [showLocationInfo, setShowLocationInfo] = useState(false)
+  const [showGeometryField, setShowGeometryField] = useState(true) // Activado por defecto
+  const [isDay, setIsDay] = useState(true) // Estado día/noche
 
   // Notificar cambios de modo al padre
   useEffect(() => {
@@ -222,39 +224,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           </button>
 
           <button
-            onClick={() => setSolarSimulation(!solarSimulation)}
-            style={{
-              padding: '12px 24px',
-              background: solarSimulation 
-                ? 'rgba(251, 191, 36, 0.9)' 
-                : 'rgba(75, 85, 99, 0.9)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = solarSimulation 
-                ? 'rgba(251, 191, 36, 1)' 
-                : 'rgba(75, 85, 99, 1)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = solarSimulation 
-                ? 'rgba(251, 191, 36, 0.9)' 
-                : 'rgba(75, 85, 99, 0.9)'
-            }}
-          >
-            {solarSimulation ? '☀️ Simulación Solar ON' : '🌙 Simulación Solar OFF'}
-          </button>
-
-          <button
             onClick={toggleMovementMode}
             style={{
               padding: '12px 24px',
@@ -410,7 +379,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           movementMode={movementMode}
           location={selectedLocation}
           site={selectedSite}
-          solarSimulation={solarSimulation}
+          showGeometryField={showGeometryField}
+          isDay={isDay}
+          onDayNightChange={setIsDay}
         />
       ) : null}
 
@@ -467,7 +438,7 @@ function Stars() {
     })
   }, [])
   
-  return <points geometry={starsGeometry} material={starsMaterial} />
+  return <points name="Stars" geometry={starsGeometry} material={starsMaterial} />
 }
 
 // Partículas ambientales sutiles para sensación de movimiento
@@ -573,7 +544,9 @@ function ModelScene({
   movementMode,
   location,
   site,
-  solarSimulation
+  showGeometryField,
+  isDay,
+  onDayNightChange
 }: { 
   modelPath: string
   avatarModel: string
@@ -582,7 +555,9 @@ function ModelScene({
   movementMode: 'orbit' | 'avatar'
   location?: { lat: number, lon: number } | null
   site?: ArchaeologicalSite | null
-  solarSimulation: boolean
+  showGeometryField: boolean
+  isDay: boolean
+  onDayNightChange: (isDay: boolean) => void
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -627,48 +602,21 @@ function ModelScene({
       ) : null}
       {/* En modo avatar, la cámara es controlada por WalkableAvatar */}
 
-      {/* Iluminación cinematográfica siempre activa */}
-      <CinematicLighting
-        sunPosition={[10, 15, 5]}
-        sunIntensity={solarSimulation ? 2.5 : 0.8}
-        hemisphereIntensity={solarSimulation ? 1.0 : 0.4}
-        enableShadows={true}
+      {/* Sistema astronómico-geométrico vivo */}
+      <AstronomicalWorld
+        location={location}
+        enabled={true}
+        showGeometry={showGeometryField}
+        onDayNightChange={onDayNightChange}
       />
 
-      {/* Movimiento ambiental sutil */}
-      <AmbientMotion
-        enableCameraBreathing={movementMode === 'orbit'}
-        enableLightOscillation={true}
-        intensity={0.5}
-      />
+      {/* Cielo dinámico - cambia entre día y noche */}
+      <DynamicSky isDay={isDay} />
 
-      {/* Cielo: físico solo de día, oscuro con estrellas de noche */}
-      {solarSimulation ? (
-        <PhysicalSky
-          sunPosition={new THREE.Vector3(10, 15, 5).normalize()}
-          turbidity={2}
-          rayleigh={1}
-          mieCoefficient={0.005}
-          mieDirectionalG={0.8}
-        />
-      ) : (
-        <mesh>
-          <sphereGeometry args={[500, 32, 32]} />
-          <meshBasicMaterial 
-            color="#0a0a1a"
-            side={THREE.BackSide}
-            fog={false}
-          />
-        </mesh>
-      )}
-
-      {/* Estrellas solo en modo nocturno */}
-      {!solarSimulation && <Stars />}
-
-      {/* Niebla volumétrica */}
+      {/* Niebla volumétrica - color controlado por sistema astronómico */}
       <VolumetricFog
-        color={solarSimulation ? '#87ceeb' : '#0a0a1a'}
-        density={solarSimulation ? 0.008 : 0.015}
+        color='#87ceeb'
+        density={0.008}
       />
 
       {/* Terreno volcánico siempre activo */}
