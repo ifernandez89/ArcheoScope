@@ -4,12 +4,16 @@ import { useRef, useEffect, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useGLTF, useAnimations } from '@react-three/drei'
 import * as THREE from 'three'
+import CosmicEntity from './CosmicEntity'
 
 interface WalkableAvatarProps {
   modelPath: string
   terrainRef?: React.RefObject<THREE.Mesh>
   onPositionChange?: (position: THREE.Vector3) => void
   onModelChange?: () => void
+  solarDirection?: { x: number, y: number, z: number }
+  isDay?: boolean
+  showCosmicEffects?: boolean
 }
 
 // Detectar tipo de avatar según el path
@@ -25,12 +29,18 @@ export default function WalkableAvatar({
   modelPath, 
   terrainRef,
   onPositionChange,
-  onModelChange
+  onModelChange,
+  solarDirection = { x: 0, y: 1, z: 0 },
+  isDay = true,
+  showCosmicEffects = true  // Reactivado
 }: WalkableAvatarProps) {
   const group = useRef<THREE.Group>(null)
   const { scene, animations } = useGLTF(modelPath)
   const { actions, names } = useAnimations(animations, group)
   const { camera } = useThree()
+  
+  // Convertir solarDirection de objeto plano a Vector3
+  const solarDirectionVec3 = new THREE.Vector3(solarDirection.x, solarDirection.y, solarDirection.z)
   
   // Estado del avatar
   const [state, setState] = useState<'idle' | 'walking'>('idle')
@@ -39,6 +49,12 @@ export default function WalkableAvatar({
   const rotationSpeed = 8.0  // Aumentado para rotación más rápida
   const keys = useRef<{ [key: string]: boolean }>({})
   const raycaster = useRef(new THREE.Raycaster())
+  
+  // Configurar raycaster para que solo detecte capa 0 (terreno)
+  // Ignorar capa 1 (efectos visuales)
+  useEffect(() => {
+    raycaster.current.layers.set(0)
+  }, [])
   const idleTimer = useRef(0)  // Timer para detectar cuando está quieto
   const timeAccumulator = useRef(0)  // Para animaciones procedurales
   const avatarType = getAvatarType(modelPath)
@@ -51,11 +67,8 @@ export default function WalkableAvatar({
   const groundLevel = useRef(0)  // Nivel del suelo
   const flyingHeight = 5.0  // Altura de vuelo para el OVNI (aumentada)
   
-  // Notificar cambio de modelo
+  // Resetear avatar al cambiar modelo
   useEffect(() => {
-    if (onModelChange) {
-      onModelChange()
-    }
     console.log('🎭 Tipo de avatar:', avatarType)
     
     // Resetear posición del avatar al cambiar modelo
@@ -67,7 +80,7 @@ export default function WalkableAvatar({
     // Resetear timer de idle para forzar reposicionamiento de cámara
     idleTimer.current = 2.0  // Forzar reposicionamiento inmediato
     
-  }, [modelPath, onModelChange, avatarType])
+  }, [modelPath, avatarType])
   
   // Configurar controles de teclado
   useEffect(() => {
@@ -79,7 +92,6 @@ export default function WalkableAvatar({
       if (e.code === 'Space' && !isJumping.current && avatarType !== 'flying') {
         isJumping.current = true
         verticalVelocity.current = jumpForce
-        console.log('🦘 ¡Salto activado!')
       }
     }
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -93,7 +105,7 @@ export default function WalkableAvatar({
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [])
+  }, [avatarType])
   
   // Configurar modelo
   useEffect(() => {
@@ -295,20 +307,6 @@ export default function WalkableAvatar({
       moveDirection.normalize()
       velocity.current.copy(moveDirection.multiplyScalar(moveSpeed * delta))
       group.current.position.add(velocity.current)
-      
-      console.log('🚶 Moviendo:', {
-        position: group.current.position,
-        direction: moveDirection,
-        velocity: velocity.current,
-        rotation: group.current.rotation.y,
-        tipo: avatarType,
-        keys: {
-          w: keys.current['w'],
-          a: keys.current['a'],
-          s: keys.current['s'],
-          d: keys.current['d']
-        }
-      })
     }
     
     // Física de salto (solo para avatares terrestres)
@@ -367,15 +365,15 @@ export default function WalkableAvatar({
       
       // Inclinación sutil según dirección de movimiento
       if (isMoving) {
-        // Inclinación hacia adelante al moverse
-        const tiltAmount = 0.15
-        group.current.rotation.x = Math.sin(timeAccumulator.current * 3) * 0.05 + tiltAmount
-        // Balanceo lateral
-        group.current.rotation.z = Math.sin(timeAccumulator.current * 2.5) * 0.08
+        // Inclinación MUY sutil hacia adelante al moverse
+        const targetX = Math.sin(timeAccumulator.current * 3) * 0.02 + 0.05
+        const targetZ = Math.sin(timeAccumulator.current * 2.5) * 0.03
+        group.current.rotation.x += (targetX - group.current.rotation.x) * 0.1
+        group.current.rotation.z += (targetZ - group.current.rotation.z) * 0.1
       } else {
-        // Volver a posición horizontal suavemente
-        group.current.rotation.x *= 0.95
-        group.current.rotation.z *= 0.95
+        // Volver a posición horizontal rápidamente
+        group.current.rotation.x *= 0.85
+        group.current.rotation.z *= 0.85
       }
       
     } else if (avatarType === 'statue') {
@@ -483,26 +481,39 @@ export default function WalkableAvatar({
   })
   
   return (
-    <group ref={group} position={[0, 0, 0]}>
-      <primitive object={scene} />
-      
-      {/* Luz que sigue al avatar para asegurar visibilidad */}
-      <spotLight
-        position={[0, 5, 0]}
-        intensity={3.0}
-        angle={Math.PI / 3}
-        penumbra={0.5}
-        distance={15}
-        decay={1}
-        color="#ffffff"
-      />
-      
-      {/* Luz de relleno desde arriba */}
-      <pointLight position={[0, 4, 0]} intensity={2.0} color="#ffffff" distance={10} />
-      
-      {/* Luz frontal */}
-      <pointLight position={[0, 2, 3]} intensity={1.5} color="#ffd700" distance={8} />
-    </group>
+    <>
+      <group ref={group} position={[0, 0, 0]}>
+        {/* Efectos cósmicos envolviendo el avatar */}
+        {showCosmicEffects && (
+          <CosmicEntity
+            solarDirection={solarDirectionVec3}
+            isDay={isDay}
+          >
+            <primitive object={scene} />
+          </CosmicEntity>
+        )}
+        
+        {/* Sin efectos cósmicos, solo el modelo */}
+        {!showCosmicEffects && <primitive object={scene} />}
+        
+        {/* Luz que sigue al avatar para asegurar visibilidad */}
+        <spotLight
+          position={[0, 5, 0]}
+          intensity={3.0}
+          angle={Math.PI / 3}
+          penumbra={0.5}
+          distance={15}
+          decay={1}
+          color="#ffffff"
+        />
+        
+        {/* Luz de relleno desde arriba */}
+        <pointLight position={[0, 4, 0]} intensity={2.0} color="#ffffff" distance={10} />
+        
+        {/* Luz frontal */}
+        <pointLight position={[0, 2, 3]} intensity={1.5} color="#ffd700" distance={8} />
+      </group>
+    </>
   )
 }
 

@@ -18,6 +18,7 @@ import ProceduralTerrain from './ProceduralTerrain'
 import CinematicLighting from './CinematicLighting'
 import MinimalistWater from './MinimalistWater'
 import AmbientMotion from './AmbientMotion'
+import SolarTrajectory from './SolarTrajectory'
 import SubtlePostProcessing from './SubtlePostProcessing'
 import AstronomicalWorld from './AstronomicalWorld'
 import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
@@ -39,6 +40,12 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [showLocationInfo, setShowLocationInfo] = useState(false)
   const [showGeometryField, setShowGeometryField] = useState(true) // Activado por defecto
   const [isDay, setIsDay] = useState(true) // Estado día/noche
+  const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // Dirección del sol como objeto plano
+  const [solarState, setSolarState] = useState({
+    altitude: 0,
+    azimuth: 0,
+    declination: 0
+  })
 
   // Notificar cambios de modo al padre
   useEffect(() => {
@@ -47,15 +54,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     }
   }, [mode, onModeChange])
 
-  // Debug: Log cuando cambia el avatarModel
-  useEffect(() => {
-    console.log('🎭 Avatar Model cambiado a:', avatarModel)
-  }, [avatarModel])
 
-  // Debug: Log cuando cambia el movementMode
-  useEffect(() => {
-    console.log('🎮 Movement Mode cambiado a:', movementMode)
-  }, [movementMode])
 
   // Manejar click en sitio arqueológico
   const handleSiteClick = async (site: ArchaeologicalSite) => {
@@ -382,6 +381,12 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           showGeometryField={showGeometryField}
           isDay={isDay}
           onDayNightChange={setIsDay}
+          solarDirection={solarDirection}
+          solarState={solarState}
+          onSolarUpdate={(direction, altitude, azimuth, declination) => {
+            setSolarDirection(direction)
+            setSolarState({ altitude, azimuth, declination })
+          }}
         />
       ) : null}
 
@@ -546,7 +551,10 @@ function ModelScene({
   site,
   showGeometryField,
   isDay,
-  onDayNightChange
+  onDayNightChange,
+  solarDirection,
+  solarState,
+  onSolarUpdate
 }: { 
   modelPath: string
   avatarModel: string
@@ -558,6 +566,9 @@ function ModelScene({
   showGeometryField: boolean
   isDay: boolean
   onDayNightChange: (isDay: boolean) => void
+  solarDirection: { x: number, y: number, z: number }
+  solarState: { altitude: number, azimuth: number, declination: number }
+  onSolarUpdate: (direction: { x: number, y: number, z: number }, altitude: number, azimuth: number, declination: number) => void
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -608,10 +619,21 @@ function ModelScene({
         enabled={true}
         showGeometry={showGeometryField}
         onDayNightChange={onDayNightChange}
+        onSolarUpdate={onSolarUpdate}
       />
 
       {/* Cielo dinámico - cambia entre día y noche */}
       <DynamicSky isDay={isDay} />
+
+      {/* Trayectoria solar del día */}
+      <SolarTrajectory
+        solarAltitude={solarState.altitude}
+        solarAzimuth={solarState.azimuth}
+        declination={solarState.declination}
+        latitude={(location?.lat || 0) * Math.PI / 180}
+        isDay={isDay}
+        visible={true}
+      />
 
       {/* Niebla volumétrica - color controlado por sistema astronómico */}
       <VolumetricFog
@@ -646,10 +668,9 @@ function ModelScene({
           key={avatarModel}  // Key para forzar re-mount cuando cambia el modelo
           modelPath={avatarModel}
           terrainRef={terrainRef}
-          onModelChange={() => {
-            // Forzar re-render cuando cambia el modelo
-            console.log('🔄 Modelo cambiado a:', avatarModel)
-          }}
+          solarDirection={solarDirection}
+          isDay={isDay}
+          showCosmicEffects={true}
         />
       ) : (
         <ModelViewer modelPath={avatarModel} ref={modelRef} />

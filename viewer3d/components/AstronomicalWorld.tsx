@@ -17,6 +17,7 @@ interface AstronomicalWorldProps {
   showGeometry?: boolean
   onStateChange?: (state: any) => void
   onDayNightChange?: (isDay: boolean) => void
+  onSolarUpdate?: (direction: { x: number, y: number, z: number }, altitude: number, azimuth: number, declination: number) => void
 }
 
 export default function AstronomicalWorld({
@@ -24,7 +25,8 @@ export default function AstronomicalWorld({
   enabled = true,
   showGeometry = false,
   onStateChange,
-  onDayNightChange
+  onDayNightChange,
+  onSolarUpdate
 }: AstronomicalWorldProps) {
   const { scene, camera } = useThree()
   
@@ -233,6 +235,16 @@ export default function AstronomicalWorld({
     // Notificar cambio de día/noche
     if (onDayNightChange) {
       onDayNightChange(solarState.isDay)
+    }
+    
+    // Notificar dirección solar
+    if (onSolarUpdate) {
+      onSolarUpdate(
+        { x: solarState.sunDirection.x, y: solarState.sunDirection.y, z: solarState.sunDirection.z },
+        solarState.solarAltitude,
+        solarState.solarAzimuth,
+        solarState.declination
+      )
     }
     
     // Notificar cambios de estado

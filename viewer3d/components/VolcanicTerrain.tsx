@@ -15,6 +15,65 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
   // Usar ref externo si se proporciona, sino usar interno
   const actualRef = (ref as React.RefObject<THREE.Mesh>) || meshRef
   
+  // Detectar si las coordenadas están en océano abierto
+  const isInOcean = useMemo(() => {
+    if (!location) return false
+    
+    const { lat, lon } = location
+    
+    // Océano Pacífico - la mayor parte del planeta
+    // Longitud entre -180 y -70 (excluyendo costas de América)
+    if (lon < -70) {
+      // Excluir costa oeste de América del Norte (lat > 30, lon > -130)
+      if (lat > 30 && lon > -130) return false
+      
+      // Excluir costa oeste de América del Sur (lat < -10, lon > -85)
+      if (lat < -10 && lon > -85) return false
+      
+      // Excluir costa de Chile (lat < -15, lon > -75)
+      if (lat < -15 && lon > -75) return false
+      
+      // Excluir Alaska (lat > 50, lon > -170)
+      if (lat > 50 && lon > -170) return false
+      
+      // Todo lo demás en esta longitud es océano Pacífico
+      return true
+    }
+    
+    // Océano Pacífico occidental (Asia-Oceanía)
+    // Longitud entre 100 y 180
+    if (lon > 100) {
+      // Excluir Australia (lat < -10, lon < 155)
+      if (lat < -10 && lat > -45 && lon < 155) return false
+      
+      // Excluir Asia (lat > 0, lon < 140)
+      if (lat > 0 && lon < 140) return false
+      
+      // Todo lo demás es océano
+      return true
+    }
+    
+    // Océano Atlántico central
+    if (lon > -50 && lon < -10) {
+      // Excluir costas de África y América del Sur
+      if (Math.abs(lat) > 40) return false
+      if (lat > 10 && lon > -30) return false // África
+      if (lat < -5 && lon < -30) return false // Brasil
+      return true
+    }
+    
+    // Océano Índico
+    if (lon > 40 && lon < 100) {
+      // Excluir África (lon < 55, lat > -35)
+      if (lon < 55 && lat > -35) return false
+      // Excluir India (lat > 5, lon < 80)
+      if (lat > 5 && lon < 80) return false
+      return true
+    }
+    
+    return false
+  }, [location])
+  
   // Generar geometría con relieve procedural basado en coordenadas
   const geometry = useMemo(() => {
     const geo = new THREE.PlaneGeometry(200, 200, 100, 100)
@@ -29,19 +88,19 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
     }
     
     // Determinar tipo de terreno según latitud
-    let amplitudeFactor = 1.0
-    let roughnessFactor = 1.0
+    let amplitudeFactor = 1.5  // Aumentado de 1.0 a 1.5 (más relieve por defecto)
+    let roughnessFactor = 1.2  // Aumentado de 1.0 a 1.2 (más rugoso por defecto)
     
     if (location) {
       const absLat = Math.abs(location.lat)
       
       // Terreno más montañoso cerca de zonas volcánicas conocidas
       if ((absLat > 10 && absLat < 30) || (absLat > 60)) {
-        amplitudeFactor = 1.8  // Más montañoso
-        roughnessFactor = 1.5
+        amplitudeFactor = 2.0  // Más montañoso
+        roughnessFactor = 1.8
       } else if (absLat < 10) {
-        amplitudeFactor = 0.6  // Más plano (tropical)
-        roughnessFactor = 0.8
+        amplitudeFactor = 1.2  // Más relieve que antes (era 0.6)
+        roughnessFactor = 1.0
       }
       
       // Isla de Pascua - muy volcánico
@@ -213,6 +272,11 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
       material.uniforms.time.value = state.clock.elapsedTime
     }
   })
+  
+  // No renderizar terreno si está en océano abierto
+  if (isInOcean) {
+    return null
+  }
   
   return (
     <mesh 

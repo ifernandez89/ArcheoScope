@@ -1,245 +1,159 @@
-# 📋 Changelog - ArcheoScope
+# Changelog - ArcheoScope 3D Viewer
 
-Todos los cambios notables de este proyecto serán documentados en este archivo.
+## [2024-02-13] - Sistema Astronómico-Sonoro Completo + Mejoras Visuales
 
-El formato está basado en [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+### ✨ Nuevas Características
 
----
+#### Sistema Astronómico Vivo
+- **Motor Solar Real**: Cálculo astronómico preciso basado en fecha, hora y ubicación GPS
+  - Usa UTC + ajuste de longitud para tiempo solar local
+  - Calcula declinación solar, altura y azimut en tiempo real
+  - Transiciones suaves entre día y noche
 
-## [2.1.0] - 2026-01-22 🎯 **ICONOS VISUALES DE ANOMALÍAS + SELECCIÓN INTERACTIVA**
+- **Trayectoria Solar Visualizada**:
+  - Arco dorado mostrando el recorrido completo del sol durante el día
+  - Posición actual del sol con esfera pulsante
+  - Ejes cardinales (Norte-Sur, Este-Oeste) en azul sutil
+  - Eje axial terrestre inclinado 23.44° en verde
+  - Todos los elementos en capa 1 (no interfieren con movimiento)
 
-### 🎯 **NUEVAS FUNCIONALIDADES PRINCIPALES**
-- **ICONOS VISUALES DE ANOMALÍAS EN MAPA**: Implementación completa de iconos (📏⭕🔲🏛️🔍) que aparecen directamente en el mapa de lupa arqueológica
-- **SELECCIÓN INTERACTIVA EN MAPA**: Sistema completo de selección con 3 modos (Click/Pin, Área/Cuadro, Múltiple)
-- **DETECCIÓN AUTOMÁTICA DE TIPOS**: Sistema inteligente que clasifica anomalías por geometría (lineales, circulares, rectangulares, complejas)
-- **VISUALIZACIÓN INTERACTIVA**: Iconos animados con efectos hover, popups informativos y niveles de confianza
+- **Iluminación Estacional**:
+  - Color de luz cambia según hora del día (amanecer naranja → mediodía blanco → atardecer naranja)
+  - Intensidad dinámica basada en altura solar
+  - Niebla volumétrica que responde al ciclo día/noche
 
-### 🎯 **Sistema de Selección Interactiva**
-- **Modo Click (🎯)**: Colocar pins individuales con análisis automático de 1km²
-- **Modo Área (🔲)**: Dibujar rectángulos de selección con dimensiones calculadas
-- **Modo Múltiple (📍)**: Selecciones múltiples para análisis comparativo
-- **Ctrl+Click**: Inspección de píxel (funcionalidad original mantenida)
-- **Popups informativos**: Coordenadas, dimensiones y botones de análisis directo
+- **Cielo Dinámico Mejorado**:
+  - Estrellas con textura circular suave (no más cuadrados pixelados)
+  - Tamaños variables (90% pequeñas, 10% grandes)
+  - Colores sutiles azul-blanco con bajo saturación
+  - Efecto de brillo suave con gradiente radial
 
-### ✨ **Mejoras de UX**
-- **Panel de controles limpio**: Eliminados botones duplicados y reorganizado
-- **Scroll mejorado en lupa arqueológica**: Barra de scroll personalizada y altura fija calculada
-- **Animaciones suaves**: Efectos de pulso, hover y transiciones en iconos de anomalías
-- **Colores distintivos**: Cada tipo de anomalía tiene color único para fácil identificación
-- **Posicionamiento inteligente**: Iconos distribuidos automáticamente alrededor del área analizada
-- **Feedback visual inmediato**: Confirmación de selecciones y acciones
+- **Sistema de Sonido Atmosférico**:
+  - Dron armónico procedural que cambia con la altura solar (80Hz noche → 240Hz día)
+  - Viento ambiental dinámico con variación lenta
+  - Sin melodías reconocibles - solo textura sonora espacial
+  - El mundo "respira" con el cosmos
 
-### 🔧 **Implementación Técnica**
-- Función `addAnomalyIconsToMap()` para crear iconos visuales
-- Función `detectAnomalyTypes()` para clasificación automática de anomalías
-- Integración con sistema de 16 instrumentos arqueológicos existente
-- CSS personalizado para iconos con animaciones y efectos
+- **Efectos Cósmicos en Avatares**:
+  - Aura dorada sutil que pulsa alrededor de cada entidad
+  - Eje visual conectando avatar con el sol
+  - Efectos en capa 1 (invisibles para raycaster)
 
-### 📊 **Criterios de Detección**
-- **Lineales (📏)**: SAR/Rugosidad >30% - Calzadas, muros, canales
-- **Circulares (⭕)**: DEM/Térmico >25% - Plazas, fosos, túmulos
-- **Rectangulares (🔲)**: NDVI/LiDAR >20% - Edificios, terrazas, campos
-- **Complejas (🏛️)**: Múltiples tipos + >40% promedio - Sistemas urbanos
-- **General (🔍)**: >15% promedio - Anomalía arqueológica general
+#### Mejoras de Movimiento
+- **Sistema de Capas Three.js**:
+  - Capa 0: Terreno (detectado por raycaster)
+  - Capa 1: Efectos visuales (ignorados por raycaster)
+  - Movimiento fluido sin bloqueos por efectos visuales
 
-### 🎯 **Cumplimiento de Requisitos**
-- ✅ Iconos visibles EN EL MAPA (como solicitó el usuario)
-- ✅ Diferenciación por tipos geométricos
-- ✅ Información educativa inmediata
-- ✅ Scroll funcional en todas las secciones
-- ✅ Puerto único 8001 mantenido
+- **Avatares Mejorados**:
+  - Warrior: Animaciones de rig si están disponibles
+  - Moai: Deslizamiento místico con oscilación vertical
+  - Sphinx: Movimiento majestuoso con peso
+  - OVNI: Vuelo flotante a 5m de altura con inclinación sutil (reducida 70%)
 
----
+#### Detección Inteligente de Océano
+- **Terreno Volcánico Condicional**:
+  - Detecta automáticamente si las coordenadas están en océano abierto
+  - Océano Pacífico (lon < -70 y lon > 100)
+  - Océano Atlántico central
+  - Océano Índico
+  - Excluye costas de continentes e islas principales
+  - Solo muestra agua en ubicaciones oceánicas
 
-## [1.1.0] - 2026-01-22 🚀 **INSTRUMENTAL ARQUEOLÓGICO MEJORADO**
+#### Sitios Arqueológicos Expandidos
+- **10 Sitios Famosos**:
+  - Machu Picchu, Pirámides de Giza, Stonehenge, Petra, Angkor Wat
+  - Chichén Itzá, Coliseo Romano, Acrópolis, Teotihuacán, Moai (Isla de Pascua)
 
-### ✨ **NUEVAS CARACTERÍSTICAS PRINCIPALES**
+- **Descubrimientos ArcheoScope**:
+  - Anomalía Patagonia (-45.2°, -71.5°)
+  - Estructura Anatolia (37.2°, 38.9°)
+  - Anomalía Puerto Rico (18.3°, -66.5°)
+  - Formación Amazonas (-3.1°, -60.0°)
 
-#### 🛰️ **5 Instrumentos Arqueológicos de Alto Valor Agregado**
-- **OpenTopography DEM** - Micro-relieve crítico (1-30m) para terrazas y depresiones
-- **ASF DAAC PALSAR** - SAR banda L para penetración bajo vegetación densa  
-- **ICESat-2 ATL08** - Perfiles láser de precisión centimétrica
-- **GEDI** - Estructura 3D de vegetación para alteraciones del dosel
-- **SMAP** - Humedad del suelo para detectar drenaje anómalo
+- **Panel Scrolleable**: Barra lateral para acceder a todos los sitios
 
-#### 📊 **Sistema Instrumental Completo**
-- **Total: 10 instrumentos** (5 base + 5 mejorados)
-- **0 redundancias** - cada instrumento aporta capacidad única
-- **Cobertura completa** - desde centimétrica hasta regional
-- **Integración automática** con sistema de análisis existente
+### 🐛 Correcciones
 
-#### 🔧 **Nuevos Endpoints API**
-- `/instruments/status` - Estado completo de instrumentos
-- `/instruments/archaeological-value` - Matriz de valor arqueológico
-- `/status/detailed` - Incluye estado de APIs mejoradas
+#### Coordenadas y Navegación
+- **Longitud Corregida en Argentina**: Ahora muestra correctamente -60° (antes mostraba positivo)
+  - Usa transformación de matriz inversa para cálculo preciso
+  - Click en globo devuelve coordenadas GPS reales
 
-### 🎯 **CAPACIDADES ARQUEOLÓGICAS NUEVAS**
+#### Interfaz Visual
+- **Círculo de Horizonte Invisible**: Opacidad 0 (antes 0.15)
+- **Proyección de Sombra Invisible**: Forzada a opacidad 0 en todo momento
+- **Terreno Volcánico Mejorado**:
+  - Amplitud base aumentada 50% (1.0 → 1.5)
+  - Rugosidad aumentada 20% (1.0 → 1.2)
+  - Zonas tropicales ahora tienen relieve visible (0.6 → 1.2)
 
-#### **Micro-Topografía (OpenTopography)**
-- Detecta alteraciones de 1-2 metros
-- Terrazas, canales, montículos artificiales
+#### Rotación de OVNI
+- **Inclinación Reducida**: De 0.15 a 0.05 (70% menos)
+- **Balanceo Lateral Reducido**: De 0.08 a 0.03 (62% menos)
+- **Interpolación Suave**: Cambio de asignación directa a lerp
+- **Reset Agresivo**: Factor 0.85 en lugar de 0.95
 
-#### **Penetración Vegetal Avanzada (PALSAR L-band)**
-- Ve estructuras bajo dosel denso amazónico
-- Esencial para arqueología tropical
+#### Problemas Técnicos Resueltos
+- **Error de Serialización Next.js**: 
+  - Cambio de `THREE.Vector3` a objetos planos `{ x, y, z }` en estado
+  - Conversión a Vector3 solo dentro de componentes que lo necesitan
+  
+- **Error de TypeScript con Refs**:
+  - Cambio de `useRef` a `useState` para objetos 3D mutables
+  - Soluciona "Cannot assign to 'current' because it is a read-only property"
 
-#### **Precisión Centimétrica (ICESat-2)**
-- Validación láser de alta precisión
-- Confirmación definitiva de anomalías
+- **Loop Infinito de Re-renders**:
+  - Eliminado callback `onModelChange` que causaba renders infinitos
+  - Logs de debug removidos para mejor performance
 
-#### **Análisis 3D Vegetal (GEDI)**
-- Alteraciones del dosel forestal
-- Claros y senderos antiguos
+### 🎨 Mejoras de Experiencia
 
-#### **Hidrología Histórica (SMAP)**
-- Sistemas de drenaje antiguos
-- Patrones de irrigación prehistóricos
+#### Controles
+- W/A/S/D: Movimiento del avatar
+- Q/E: Rotación del avatar
+- Espacio: Salto (avatares terrestres)
+- Cámara tercera persona con seguimiento suave
 
-### 📚 **DOCUMENTACIÓN COMPLETA**
-- `ARCHEOSCOPE_INSTRUMENTAL_COMPLETE.md` - Especificaciones técnicas completas
-- Matriz de capacidades arqueológicas por instrumento
-- Estrategia de detección multi-nivel integrada
+#### Visual
+- Post-processing sutil (bloom + viñeta)
+- Partículas ambientales flotantes
+- Agua minimalista siempre visible
+- Grid sutil para referencia de movimiento
 
-### 🚀 **ESTADO: LISTO PARA PRUEBAS AVANZADAS**
-- ✅ 10 APIs configuradas y documentadas
-- ✅ Integración completa con sistema existente
-- ✅ Modo sintético realista operacional
-- 🔄 Listo para activación de APIs reales
+#### Performance
+- Raycaster optimizado (solo capa 0)
+- Efectos visuales en capa separada
+- Geometrías con LOD apropiado
+- Materiales optimizados para reaccionar a luz
 
----
+### 🔧 Cambios Técnicos
 
-## [2.0.0] - 2026-01-20 🎉 **VERSIÓN MAYOR - INSTRUMENTO CIENTÍFICO REAL**
+#### Arquitectura
+- `AstronomicalWorld.tsx`: Sistema astronómico integrado
+- `SolarEngine.ts`: Cálculos solares precisos
+- `SeasonalLight.ts`: Iluminación dinámica
+- `SkyEngine.ts`: Cielo procedural
+- `AtmosphericSound.ts`: Sistema de audio espacial
+- `SolarTrajectory.tsx`: Visualización de trayectoria solar
+- `CosmicEntity.tsx`: Efectos cósmicos en avatares
 
-### 🚀 **Added - Nuevas Funcionalidades**
-- **IA Real Integrada:** Ollama + qwen2.5:3b-instruct ejecutándose localmente
-- **Control Espacial Estricto:** Umbrales realistas (≤10km² fino, ≤100km² medio, >100km² rechazado)
-- **Indicadores Específicos:** Métricas trazables vinculadas a datos visibles
-- **Protección Epistemológica:** Rechazo automático de áreas científicamente inválidas
-- **Reducción Automática de Área:** Botón "REDUCIR ÁREA AUTOMÁTICAMENTE"
-- **Asistencia Activa:** Sugerencias de subregiones y zoom científico
-- **Contexto Espacial IA:** Prompts adaptados según escala de análisis
-- **Visualización Científica:** Modos exploratorio, analítico y científico fino
+#### Optimizaciones
+- Sistema de capas para raycasting selectivo
+- Estado serializable para Next.js SSR
+- Refs mutables con useState para objetos 3D
+- Detección de océano con memoización
 
-### 🔧 **Changed - Cambios Importantes**
-- **Umbrales Espaciales:** De 1M/50K/50K km² a 10/100/100 km² (realistas)
-- **Posicionamiento:** De "detector" a "amplificador de hipótesis espaciales"
-- **Comunicación:** De optimista a honesta sobre limitaciones
-- **IA Prompts:** De genéricos a contextualizados por escala espacial
-- **Interfaz:** De dashboard a instrumento científico
+### 📝 Notas
 
-### 🛡️ **Security - Protecciones Científicas**
-- **Validación Automática:** Rechazo de áreas >100km² por pérdida semántica
-- **Advertencias Críticas:** Comunicación clara de limitaciones espaciales
-- **Trazabilidad:** Cada indicador vinculado a métricas específicas
-- **Transparencia:** Metodología explícita y reproducible
-
-### 🐛 **Fixed - Correcciones**
-- **Timeout IA:** Aumentado a 60s para modelos locales
-- **Parsing JSON:** Mejorado manejo de requests complejos
-- **Visualización:** Estabilidad en capas de mapa
-- **Responsividad:** Mejor manejo de áreas grandes
-
----
-
-## [1.0.0] - 2026-01-20 **VERSIÓN INICIAL**
-
-### 🚀 **Added - Funcionalidades Base**
-- **Backend FastAPI:** Servidor científico con análisis multi-capa
-- **Frontend Leaflet:** Interfaz web interactiva con mapas
-- **Análisis Estadístico:** Comparación de capas glaciológicas
-- **Reglas Físicas:** Evaluación de principios glaciológicos
-- **Datos Sintéticos:** Generación de datos de demostración
-- **API RESTful:** Endpoints `/status` y `/analyze`
-- **Visualización:** Mapas con anomalías y contradicciones
-
-### 🔧 **Technical Stack**
-- **Backend:** Python 3.11+ + FastAPI + NumPy + SciPy
-- **Frontend:** HTML5 + JavaScript ES6 + Leaflet
-- **IA:** Preparado para integración futura
-- **Datos:** Sintéticos con estructura real
+- El sistema astronómico usa la fecha/hora/ubicación real del usuario
+- Los efectos cósmicos son sutiles y contemplativos, no intrusivos
+- El sonido atmosférico es procedural, sin loops reconocibles
+- La detección de océano es aproximada, puede requerir ajustes para islas pequeñas
 
 ---
 
-## [0.1.0] - 2026-01-19 **PROTOTIPO INICIAL**
-
-### 🚀 **Added - Concepto Base**
-- **Estructura del Proyecto:** Organización backend/frontend
-- **Documentación Inicial:** Visión y roadmap
-- **Configuración Git:** Repositorio y estructura de commits
-- **Dependencias Base:** Requirements y configuración
-
----
-
-## 🔮 **Roadmap Futuro**
-
-### **[2.1.0] - Próxima Versión Menor**
-- [ ] Integración con datos reales (MODIS, Landsat)
-- [ ] Exportación de resultados científicos (JSON, CSV, GeoTIFF)
-- [ ] Algoritmos de clustering más sofisticados (DBSCAN mejorado)
-- [ ] Validación con datos de campo
-
-### **[3.0.0] - Próxima Versión Mayor**
-- [ ] Análisis temporal multi-año
-- [ ] Machine Learning para detección de patrones
-- [ ] Colaboración multi-usuario
-- [ ] Integración con bases de datos glaciológicas
-
----
-
-## 📊 **Métricas de Desarrollo**
-
-### **Commits por Versión**
-- **v2.0.0:** 15+ commits con mejoras críticas
-- **v1.0.0:** 10+ commits de funcionalidad base
-- **v0.1.0:** 5+ commits de configuración inicial
-
-### **Líneas de Código**
-- **Backend:** ~1,500 líneas (Python)
-- **Frontend:** ~1,200 líneas (JavaScript/HTML/CSS)
-- **Documentación:** ~500 líneas (Markdown)
-- **Total:** ~3,200 líneas
-
-### **Funcionalidades Implementadas**
-- ✅ **IA Real:** 100% funcional con Ollama
-- ✅ **Control Espacial:** 100% con umbrales realistas
-- ✅ **Indicadores:** 100% específicos y trazables
-- ✅ **Protecciones:** 100% epistemológicamente sólidas
-- ✅ **Interfaz:** 100% científicamente responsable
-
----
-
-## 🏷️ **Convenciones de Versionado**
-
-### **Formato:** `MAJOR.MINOR.PATCH`
-- **MAJOR:** Cambios incompatibles en API o filosofía del sistema
-- **MINOR:** Nuevas funcionalidades compatibles hacia atrás
-- **PATCH:** Correcciones de bugs compatibles
-
-### **Tipos de Commits**
-- `feat:` Nueva funcionalidad
-- `fix:` Corrección de bug
-- `docs:` Cambios en documentación
-- `style:` Cambios de formato (no afectan código)
-- `refactor:` Refactorización de código
-- `test:` Agregar o modificar tests
-- `chore:` Cambios en build o herramientas auxiliares
-
----
-
-## 🙏 **Contribuidores**
-
-### **Desarrollo Principal**
-- **Desarrollador Principal:** [Usuario GitHub]
-- **Asistente IA:** Kiro AI (colaboración excepcional)
-
-### **Agradecimientos Especiales**
-- **Comunidad Ollama:** Por IA local accesible
-- **Equipo FastAPI:** Por framework web moderno
-- **Proyecto Leaflet:** Por mapas científicos interactivos
-
----
-
-*Mantener este changelog actualizado es parte del compromiso con la transparencia científica del proyecto.*
-
-**ArcheoScope - Evolución Documentada** 📋🏺
+**Versión**: 0.2.0  
+**Fecha**: 13 de Febrero, 2026  
+**Build**: Producción optimizada  
+**Estado**: ✅ Estable

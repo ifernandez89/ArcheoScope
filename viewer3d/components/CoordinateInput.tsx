@@ -36,14 +36,25 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
     setIsOpen(false)
   }
 
-  // Coordenadas de sitios famosos
+  // Coordenadas de sitios famosos + descubrimientos ArcheoScope
   const famousSites = [
-    { name: 'Machu Picchu', lat: -13.1631, lon: -72.5450 },
-    { name: 'Pirámides de Giza', lat: 29.9792, lon: 31.1342 },
-    { name: 'Stonehenge', lat: 51.1789, lon: -1.8262 },
-    { name: 'Isla de Pascua', lat: -27.1127, lon: -109.3497 },
-    { name: 'Angkor Wat', lat: 13.4125, lon: 103.8670 },
-    { name: 'Petra', lat: 30.3285, lon: 35.4444 },
+    // Sitios arqueológicos mundialmente famosos
+    { name: 'Machu Picchu, Perú', lat: -13.1631, lon: -72.5450, category: 'famous' },
+    { name: 'Pirámides de Giza, Egipto', lat: 29.9792, lon: 31.1342, category: 'famous' },
+    { name: 'Stonehenge, Inglaterra', lat: 51.1789, lon: -1.8262, category: 'famous' },
+    { name: 'Isla de Pascua, Chile', lat: -27.1127, lon: -109.3497, category: 'famous' },
+    { name: 'Angkor Wat, Camboya', lat: 13.4125, lon: 103.8670, category: 'famous' },
+    { name: 'Petra, Jordania', lat: 30.3285, lon: 35.4444, category: 'famous' },
+    { name: 'Göbekli Tepe, Turquía', lat: 37.2233, lon: 38.9225, category: 'famous' },
+    { name: 'Teotihuacán, México', lat: 19.6925, lon: -98.8438, category: 'famous' },
+    { name: 'Chichén Itzá, México', lat: 20.6843, lon: -88.5678, category: 'famous' },
+    { name: 'Acrópolis de Atenas, Grecia', lat: 37.9715, lon: 23.7267, category: 'famous' },
+    
+    // Descubrimientos ArcheoScope
+    { name: '🔍 Anomalía Patagonia', lat: -50.5, lon: -72.0, category: 'discovery' },
+    { name: '🔍 Zona Anatolia (cerca Göbekli)', lat: 37.5, lon: 39.2, category: 'discovery' },
+    { name: '🔍 Anomalía Puerto Rico', lat: 18.2, lon: -66.5, category: 'discovery' },
+    { name: '🔍 Desierto Anatolia Norte', lat: 38.0, lon: 38.5, category: 'discovery' },
   ]
 
   return (
@@ -84,18 +95,28 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
           right: '20px',
           zIndex: 1000,
           width: '350px',
+          maxHeight: 'calc(100vh - 100px)', // Altura máxima para permitir scroll
           background: 'rgba(0, 0, 0, 0.95)',
           backdropFilter: 'blur(10px)',
           borderRadius: '12px',
           padding: '20px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-          border: '1px solid rgba(255,255,255,0.1)'
+          border: '1px solid rgba(255,255,255,0.1)',
+          overflowY: 'auto', // Scroll vertical
+          overflowX: 'hidden'
         }}>
           <h3 style={{
             margin: '0 0 15px 0',
             color: 'white',
             fontSize: '18px',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            position: 'sticky',
+            top: '-20px',
+            background: 'rgba(0, 0, 0, 0.95)',
+            paddingTop: '20px',
+            paddingBottom: '10px',
+            marginTop: '-20px',
+            zIndex: 1
           }}>
             Ingresar Coordenadas
           </h3>
@@ -199,14 +220,15 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
               marginBottom: '10px',
               fontWeight: 'bold'
             }}>
-              Sitios Arqueológicos Famosos:
+              🏛️ Sitios Arqueológicos Famosos:
             </div>
             <div style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '6px'
+              gap: '6px',
+              marginBottom: '20px'
             }}>
-              {famousSites.map((site) => (
+              {famousSites.filter(s => s.category === 'famous').map((site) => (
                 <button
                   key={site.name}
                   onClick={() => {
@@ -218,19 +240,65 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
                     background: 'rgba(255,255,255,0.05)',
                     border: '1px solid rgba(255,255,255,0.1)',
                     borderRadius: '6px',
-                    color: 'rgba(255,255,255,0.8)',
-                    fontSize: '12px',
+                    color: 'white',
                     cursor: 'pointer',
+                    fontSize: '13px',
                     textAlign: 'left',
                     transition: 'all 0.2s'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+                    e.currentTarget.style.background = 'rgba(102, 126, 234, 0.2)'
                     e.currentTarget.style.borderColor = 'rgba(102, 126, 234, 0.5)'
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
                     e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+                  }}
+                >
+                  {site.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Descubrimientos ArcheoScope */}
+            <div style={{
+              color: 'rgba(255,200,100,0.8)',
+              fontSize: '12px',
+              marginBottom: '10px',
+              fontWeight: 'bold'
+            }}>
+              🔍 Descubrimientos ArcheoScope:
+            </div>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px'
+            }}>
+              {famousSites.filter(s => s.category === 'discovery').map((site) => (
+                <button
+                  key={site.name}
+                  onClick={() => {
+                    setLat(site.lat.toFixed(4))
+                    setLon(site.lon.toFixed(4))
+                  }}
+                  style={{
+                    padding: '8px 12px',
+                    background: 'rgba(255,200,100,0.05)',
+                    border: '1px solid rgba(255,200,100,0.2)',
+                    borderRadius: '6px',
+                    color: '#ffc864',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    textAlign: 'left',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,200,100,0.15)'
+                    e.currentTarget.style.borderColor = 'rgba(255,200,100,0.5)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,200,100,0.05)'
+                    e.currentTarget.style.borderColor = 'rgba(255,200,100,0.2)'
                   }}
                 >
                   {site.name}
@@ -258,6 +326,27 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
           </button>
         </div>
       )}
+      
+      {/* Estilos para scrollbar personalizada */}
+      <style jsx>{`
+        div::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        div::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 4px;
+        }
+        
+        div::-webkit-scrollbar-thumb {
+          background: rgba(102, 126, 234, 0.5);
+          border-radius: 4px;
+        }
+        
+        div::-webkit-scrollbar-thumb:hover {
+          background: rgba(102, 126, 234, 0.8);
+        }
+      `}</style>
     </>
   )
 }
