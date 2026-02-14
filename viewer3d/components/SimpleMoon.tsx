@@ -18,6 +18,12 @@ import { getAssetPath } from '@/lib/paths'
  * - Distancia: 12 radios terrestres (reinterpretación visual honesta)
  * - Inclinación orbital: ~5° (real)
  * 
+ * VELOCIDAD ORBITAL PROPORCIONAL:
+ * - Luna: 27.3 días para orbitar la Tierra
+ * - Tierra: 365 días para orbitar el Sol
+ * - Proporción: 365/27.3 = 13.4x más rápida
+ * - Velocidad Luna: 0.67 (13.4x más que Tierra que va a 0.05)
+ * 
  * TIDAL LOCKING (Bloqueo por marea):
  * - La Luna rota exactamente al mismo ritmo que orbita
  * - Velocidad de rotación = Velocidad orbital
@@ -42,8 +48,9 @@ export default function SimpleMoon() {
     if (moonRef.current) {
       const time = state.clock.elapsedTime
       
-      // Parámetros orbitales - CONFIGURACIÓN ORIGINAL QUE FUNCIONABA
-      const orbitSpeed = 0.08 // Velocidad orbital (más lenta, más realista)
+      // Parámetros orbitales - VELOCIDAD PROPORCIONAL REAL
+      // Luna: 27.3 días vs Tierra: 365 días = 13.4x más rápida
+      const orbitSpeed = 0.67 // 13.4x más rápida que la Tierra (0.05 * 13.4)
       const orbitRadius = 12 // Distancia emocional coherente (12 radios terrestres)
       const orbitalInclination = 5 * (Math.PI / 180) // Inclinación real de 5°
       

@@ -88,13 +88,39 @@ export default function Venus({
         />
       </mesh>
       
-      {/* Atmósfera densa - Muy tenue */}
+      {/* Atmósfera densa - Capa 1 (más cercana) */}
       <mesh ref={atmosphereRef} scale={1.05}>
         <sphereGeometry args={[venusRadius, 32, 32]} />
-        <meshBasicMaterial
+        <meshStandardMaterial
           color="#f5e6d3"
           transparent
-          opacity={0.3}
+          opacity={0.4}
+          roughness={0.8}
+          metalness={0.0}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      
+      {/* Atmósfera densa - Capa 2 (exterior brillante) */}
+      <mesh scale={1.08}>
+        <sphereGeometry args={[venusRadius, 32, 32]} />
+        <meshBasicMaterial
+          color="#fff5e6"
+          transparent
+          opacity={0.25}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          side={THREE.BackSide}
+        />
+      </mesh>
+      
+      {/* Atmósfera densa - Capa 3 (glow exterior) */}
+      <mesh scale={1.12}>
+        <sphereGeometry args={[venusRadius, 24, 24]} />
+        <meshBasicMaterial
+          color="#ffe4b3"
+          transparent
+          opacity={0.15}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           side={THREE.BackSide}
