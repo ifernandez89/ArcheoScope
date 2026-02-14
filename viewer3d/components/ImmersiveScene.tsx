@@ -543,7 +543,7 @@ function GlobeScene({
         enableDamping
         dampingFactor={0.05}
         minDistance={8}
-        maxDistance={300} // Aumentado para ver todo el sistema (Marte a 152)
+        maxDistance={450} // Aumentado para ver órbita completa de Marte (304 unidades)
         autoRotate={false}
       />
       

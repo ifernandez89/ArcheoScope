@@ -57,7 +57,7 @@ export default function Sun() {
   // Sol en el origen (0,0,0)
   // Tierra orbita a 100 unidades del Sol
   const earthRadius = 1
-  const sunRadius = earthRadius * 15      // Comprimido (real sería 109)
+  const sunRadius = earthRadius * 46.56   // 40% más grande que 33.26
   
   // Posición del Sol - EN EL CENTRO
   const sunPosition: [number, number, number] = [0, 0, 0]
