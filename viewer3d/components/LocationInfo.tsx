@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { detectBiome, type BiomeInfo } from '@/utils/biome-detector'
 
 interface LocationInfoProps {
   location: { lat: number, lon: number } | null
@@ -13,6 +14,7 @@ export default function LocationInfo({ location, site }: LocationInfoProps) {
     climate: string
     terrain: string
     archaeology: string
+    biome?: BiomeInfo
   } | null>(null)
 
   useEffect(() => {
@@ -21,6 +23,9 @@ export default function LocationInfo({ location, site }: LocationInfoProps) {
       return
     }
 
+    // Detectar bioma
+    const biome = detectBiome(location.lat, location.lon)
+    
     // Determinar información contextual basada en coordenadas
     const { lat, lon } = location
     
@@ -81,7 +86,7 @@ export default function LocationInfo({ location, site }: LocationInfoProps) {
       }
     }
 
-    setInfo({ region, climate, terrain, archaeology })
+    setInfo({ region, climate, terrain, archaeology, biome })
   }, [location])
 
   if (!location || !info) return null
@@ -172,6 +177,43 @@ export default function LocationInfo({ location, site }: LocationInfoProps) {
           </div>
           <div>{info.archaeology}</div>
         </div>
+
+        {info.biome && (
+          <div style={{
+            marginTop: '8px',
+            padding: '12px',
+            background: info.biome.type === 'ice' 
+              ? 'rgba(184, 212, 232, 0.15)' 
+              : 'rgba(139, 92, 46, 0.15)',
+            borderRadius: '8px',
+            border: info.biome.type === 'ice'
+              ? '1px solid rgba(184, 212, 232, 0.3)'
+              : '1px solid rgba(139, 92, 46, 0.3)'
+          }}>
+            <div style={{ 
+              color: info.biome.type === 'ice' ? '#b8d4e8' : '#fbbf24', 
+              fontWeight: 'bold', 
+              marginBottom: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              {info.biome.type === 'ice' ? '❄️' : '🌋'} Bioma: {info.biome.name}
+            </div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginBottom: '6px' }}>
+              {info.biome.description}
+            </div>
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px', 
+              fontSize: '11px',
+              color: 'rgba(255,255,255,0.6)'
+            }}>
+              <span>🌡️ {info.biome.temperature}°C</span>
+              <span>💧 {info.biome.humidity}%</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -12,9 +12,10 @@ import * as THREE from 'three'
 interface DynamicSkyProps {
   isDay?: boolean
   sunPosition?: THREE.Vector3
+  skyColor?: string
 }
 
-export default function DynamicSky({ isDay = true, sunPosition }: DynamicSkyProps) {
+export default function DynamicSky({ isDay = true, sunPosition, skyColor = '#87ceeb' }: DynamicSkyProps) {
   const skyRef = useRef<THREE.Mesh>(null)
   const starsRef = useRef<THREE.Points>(null)
   
@@ -95,8 +96,8 @@ export default function DynamicSky({ isDay = true, sunPosition }: DynamicSkyProp
       const starsMat = starsRef.current.material as THREE.PointsMaterial
       
       if (isDay) {
-        // Día: cielo azul, sin estrellas
-        skyMaterial.color.lerp(new THREE.Color('#87ceeb'), 0.05)
+        // Día: cielo con color personalizado, sin estrellas
+        skyMaterial.color.lerp(new THREE.Color(skyColor), 0.05)
         starsMat.opacity += (0 - starsMat.opacity) * 0.05
       } else {
         // Noche: cielo negro, con estrellas más sutiles
@@ -112,7 +113,7 @@ export default function DynamicSky({ isDay = true, sunPosition }: DynamicSkyProp
       <mesh ref={skyRef}>
         <sphereGeometry args={[500, 32, 32]} />
         <meshBasicMaterial 
-          color="#87ceeb"
+          color={skyColor}
           side={THREE.BackSide}
           fog={false}
         />

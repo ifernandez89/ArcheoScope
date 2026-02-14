@@ -10,8 +10,12 @@ import SiteMarkers from './SiteMarkers'
 import CoordinateInput from './CoordinateInput'
 import LocationInfo from './LocationInfo'
 import VolcanicTerrain from './VolcanicTerrain'
+import IceTerrain from './IceTerrain'
+import SnowParticles from './SnowParticles'
+import IceLighting from './IceLighting'
 import BasicCollisions from './BasicCollisions'
 import WalkableAvatar from './WalkableAvatar'
+import { detectBiome, getSkyColorForBiome, getFogColorForBiome } from '@/utils/biome-detector'
 import DynamicSky from './DynamicSky'
 import VolumetricFog from './VolumetricFog'
 import ProceduralTerrain from './ProceduralTerrain'
@@ -574,6 +578,26 @@ function ModelScene({
   const modelRef = useRef<THREE.Group>(null)
   const [obstacles, setObstacles] = useState<THREE.Object3D[]>([])
   
+  // Detectar bioma basado en ubicación
+  const biome = useMemo(() => {
+    if (!location) return { type: 'default' as const, name: 'Genérico', description: '', temperature: 20, humidity: 50 }
+    return detectBiome(location.lat, location.lon)
+  }, [location])
+  
+  const isIceBiome = biome.type === 'ice'
+  
+  // Colores dinámicos según bioma
+  const skyColor = useMemo(() => getSkyColorForBiome(biome.type, isDay), [biome.type, isDay])
+  const fogColor = useMemo(() => getFogColorForBiome(biome.type), [biome.type])
+  
+  // Log del bioma detectado
+  useEffect(() => {
+    if (location) {
+      console.log(`🌍 Bioma detectado: ${biome.name} (${biome.type})`)
+      console.log(`   Temperatura: ${biome.temperature}°C, Humedad: ${biome.humidity}%`)
+    }
+  }, [biome, location])
+  
   // Actualizar obstáculos cuando el modelo cargue
   useEffect(() => {
     if (modelRef.current) {
@@ -622,20 +646,31 @@ function ModelScene({
         onSolarUpdate={onSolarUpdate}
       />
 
-      {/* Iluminación cinematográfica para mejor visibilidad */}
-      <CinematicLighting
-        sunIntensity={2.5}
-        hemisphereIntensity={1.2}
-        sunPosition={[
-          solarDirection.x * 50,
-          Math.max(solarDirection.y * 50, 10),
-          solarDirection.z * 50
-        ]}
-        enableShadows={true}
-      />
+      {/* Iluminación cinematográfica - adaptada al bioma */}
+      {isIceBiome ? (
+        <IceLighting
+          sunPosition={[
+            solarDirection.x * 50,
+            Math.max(solarDirection.y * 50, 10),
+            solarDirection.z * 50
+          ]}
+          enableShadows={true}
+        />
+      ) : (
+        <CinematicLighting
+          sunIntensity={2.5}
+          hemisphereIntensity={1.2}
+          sunPosition={[
+            solarDirection.x * 50,
+            Math.max(solarDirection.y * 50, 10),
+            solarDirection.z * 50
+          ]}
+          enableShadows={true}
+        />
+      )}
 
-      {/* Cielo dinámico - cambia entre día y noche */}
-      <DynamicSky isDay={isDay} />
+      {/* Cielo dinámico - color adaptado al bioma */}
+      <DynamicSky isDay={isDay} skyColor={skyColor} />
 
       {/* Trayectoria solar del día */}
       <SolarTrajectory
@@ -647,21 +682,27 @@ function ModelScene({
         visible={true}
       />
 
-      {/* Niebla volumétrica - color controlado por sistema astronómico */}
+      {/* Niebla volumétrica - color adaptado al bioma */}
       <VolumetricFog
-        color='#87ceeb'
-        density={0.008}
+        color={fogColor}
+        density={isIceBiome ? 0.012 : 0.008}
       />
 
-      {/* Terreno volcánico siempre activo */}
-      <VolcanicTerrain location={location} ref={terrainRef} />
+      {/* Terreno - adaptado al bioma */}
+      {isIceBiome ? (
+        <IceTerrain location={location} ref={terrainRef} />
+      ) : (
+        <VolcanicTerrain location={location} ref={terrainRef} />
+      )}
 
-      {/* Agua minimalista siempre activa */}
-      <MinimalistWater
-        position={[0, -0.5, 0]}
-        size={150}
-        color="#1e3a5f"
-      />
+      {/* Agua minimalista - solo en biomas no helados */}
+      {!isIceBiome && (
+        <MinimalistWater
+          position={[0, -0.5, 0]}
+          size={150}
+          color="#1e3a5f"
+        />
+      )}
 
       {/* Grid sutil para referencia de movimiento */}
       <gridHelper 
@@ -671,8 +712,8 @@ function ModelScene({
         material-transparent={true}
       />
 
-      {/* Partículas ambientales sutiles */}
-      <AmbientParticles />
+      {/* Partículas ambientales - nieve en biomas helados */}
+      {isIceBiome ? <SnowParticles /> : <AmbientParticles />}
 
       {/* Elementos del entorno: rocas y vegetación - dinámicos según ubicación */}
       <EnvironmentElements location={location} />

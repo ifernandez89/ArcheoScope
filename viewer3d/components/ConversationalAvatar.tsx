@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { AvatarBrain, MOAI_PERSONALITY, type AvatarResponse } from '@/ai/avatar-brain'
 import { AvatarBody, IntelligentGaze } from '@/ai/avatar-body'
 import { OpenRouterIntegration, OPENROUTER_MODELS } from '@/ai/openrouter-integration'
+import { OllamaIntegration, OLLAMA_MODELS } from '@/ai/ollama-integration'
 import { AIAnimator } from '@/ai/animator'
 import { ExpressionSystem } from '@/ai/expression-system'
 // import { ProximityDetector } from '@/systems/proximity-detector' // Disabled for static build
@@ -54,33 +55,52 @@ export default function ConversationalAvatar({
     // Función para inicializar el avatar con la API key desde BD
     const initializeAvatar = async () => {
       try {
-        // Obtener API key desde la base de datos (encriptada)
-        console.log('🔐 Obteniendo API key desde base de datos...')
-        const response = await fetch('http://127.0.0.1:8000/api/credentials/openrouter/api_key')
-        
-        if (!response.ok) {
-          throw new Error('No se pudo obtener la API key desde la BD')
-        }
+        const llmProvider = process.env.NEXT_PUBLIC_LLM_PROVIDER || 'openrouter'
+        let llm: any
 
-        const data = await response.json()
-        
-        if (!data.success || !data.value) {
-          throw new Error('API key no disponible en la base de datos')
-        }
+        if (llmProvider === 'ollama') {
+          // Usar Ollama (local)
+          console.log('🦙 Inicializando con Ollama...')
+          const ollamaBaseUrl = process.env.NEXT_PUBLIC_OLLAMA_BASE_URL || 'http://localhost:11434'
+          const ollamaModel = process.env.NEXT_PUBLIC_OLLAMA_MODEL || 'gemma2:2b'
+          
+          llm = new OllamaIntegration({
+            baseUrl: ollamaBaseUrl,
+            model: ollamaModel,
+            temperature: 0.7,
+            maxTokens: 300
+          })
 
-        const openrouterApiKey = data.value
-        const openrouterModel = process.env.NEXT_PUBLIC_OPENROUTER_MODEL || 'arcee-ai/trinity-mini:free'
-        
-        console.log('✅ API key obtenida desde BD')
+          console.log(`✅ Ollama configurado: ${ollamaModel}`)
+        } else {
+          // Usar OpenRouter (API)
+          console.log('🔐 Obteniendo API key desde base de datos...')
+          const response = await fetch('http://127.0.0.1:8000/api/credentials/openrouter/api_key')
+          
+          if (!response.ok) {
+            throw new Error('No se pudo obtener la API key desde la BD')
+          }
+
+          const data = await response.json()
+          
+          if (!data.success || !data.value) {
+            throw new Error('API key no disponible en la base de datos')
+          }
+
+          const openrouterApiKey = data.value
+          const openrouterModel = process.env.NEXT_PUBLIC_OPENROUTER_MODEL || 'arcee-ai/trinity-mini:free'
+          
+          console.log('✅ API key obtenida desde BD')
+          
+          llm = new OpenRouterIntegration({
+            apiKey: openrouterApiKey,
+            model: openrouterModel,
+            temperature: 0.7,
+            maxTokens: 300
+          })
+        }
         
         if (!isMounted) return
-
-        const llm = new OpenRouterIntegration({
-          apiKey: openrouterApiKey,
-          model: openrouterModel,
-          temperature: 0.7,
-          maxTokens: 300
-        })
 
         const animator = new AIAnimator()
         const expressions = new ExpressionSystem()
@@ -147,9 +167,9 @@ export default function ConversationalAvatar({
         // }
 
         // Conectar automáticamente
-        await autoConnect(llm as any)
+        await autoConnect(llm as any, llmProvider)
 
-        console.log('🗿 Avatar conversacional inicializado con OpenRouter desde BD')
+        console.log(`🗿 Avatar conversacional inicializado con ${llmProvider === 'ollama' ? 'Ollama' : 'OpenRouter'}`)
         
       } catch (error) {
         console.error('❌ Error inicializando avatar:', error)
@@ -159,7 +179,7 @@ export default function ConversationalAvatar({
         const errorMsg: Message = {
           id: Date.now().toString(),
           role: 'avatar',
-          content: 'No se pudo conectar con el sistema. Verifica que la API key esté configurada en la base de datos.',
+          content: 'No se pudo conectar con el sistema. Verifica la configuración.',
           emotion: 'confused',
           timestamp: new Date()
         }
@@ -193,11 +213,11 @@ export default function ConversationalAvatar({
   }, [messages])
 
   // Conectar automáticamente
-  const autoConnect = async (llm: any) => {
+  const autoConnect = async (llm: any, provider: string = 'openrouter') => {
     const available = await llm.checkAvailability()
     if (available) {
       setIsConnected(true)
-      console.log('✅ OpenRouter conectado automáticamente')
+      console.log(`✅ ${provider === 'ollama' ? 'Ollama' : 'OpenRouter'} conectado automáticamente`)
       
       // Mensaje de bienvenida
       const welcomeMsg: Message = {
@@ -209,7 +229,7 @@ export default function ConversationalAvatar({
       }
       setMessages([welcomeMsg])
     } else {
-      console.warn('⚠️ OpenRouter no disponible. Verifica la API key.')
+      console.warn(`⚠️ ${provider === 'ollama' ? 'Ollama' : 'OpenRouter'} no disponible. Verifica la configuración.`)
     }
   }
 
@@ -384,31 +404,45 @@ export default function ConversationalAvatar({
 
     if (!isConnected) {
       try {
-        // Obtener API key desde la base de datos
-        console.log('🔐 Obteniendo API key desde BD para reconexión...')
-        const response = await fetch('http://127.0.0.1:8000/api/credentials/openrouter/api_key')
-        
-        if (!response.ok) {
-          throw new Error('No se pudo obtener la API key desde la BD')
-        }
+        const llmProvider = process.env.NEXT_PUBLIC_LLM_PROVIDER || 'openrouter'
+        let llm: any
 
-        const data = await response.json()
-        
-        if (!data.success || !data.value) {
-          throw new Error('API key no disponible')
-        }
+        if (llmProvider === 'ollama') {
+          // Usar Ollama
+          const ollamaBaseUrl = process.env.NEXT_PUBLIC_OLLAMA_BASE_URL || 'http://localhost:11434'
+          const ollamaModel = process.env.NEXT_PUBLIC_OLLAMA_MODEL || 'gemma2:2b'
+          
+          llm = new OllamaIntegration({
+            baseUrl: ollamaBaseUrl,
+            model: ollamaModel
+          })
+        } else {
+          // Usar OpenRouter
+          console.log('🔐 Obteniendo API key desde BD para reconexión...')
+          const response = await fetch('http://127.0.0.1:8000/api/credentials/openrouter/api_key')
+          
+          if (!response.ok) {
+            throw new Error('No se pudo obtener la API key desde la BD')
+          }
 
-        const openrouterApiKey = data.value
-        const openrouterModel = process.env.NEXT_PUBLIC_OPENROUTER_MODEL || 'arcee-ai/trinity-mini:free'
-        
-        const llm = new OpenRouterIntegration({
-          apiKey: openrouterApiKey,
-          model: openrouterModel
-        })
+          const data = await response.json()
+          
+          if (!data.success || !data.value) {
+            throw new Error('API key no disponible')
+          }
+
+          const openrouterApiKey = data.value
+          const openrouterModel = process.env.NEXT_PUBLIC_OPENROUTER_MODEL || 'arcee-ai/trinity-mini:free'
+          
+          llm = new OpenRouterIntegration({
+            apiKey: openrouterApiKey,
+            model: openrouterModel
+          })
+        }
 
         const available = await llm.checkAvailability()
         if (!available) {
-          alert('OpenRouter no está disponible. Verifica la conexión.')
+          alert(`${llmProvider === 'ollama' ? 'Ollama' : 'OpenRouter'} no está disponible. Verifica la conexión.`)
           return
         }
 
@@ -429,7 +463,7 @@ export default function ConversationalAvatar({
         }
       } catch (error) {
         console.error('❌ Error al reconectar:', error)
-        alert('No se pudo conectar. Verifica que la API key esté configurada en la base de datos.')
+        alert('No se pudo conectar. Verifica la configuración.')
       }
     } else {
       setIsConnected(false)
@@ -649,7 +683,10 @@ export default function ConversationalAvatar({
                   display: 'inline-block',
                   animation: isConnected ? 'pulse 2s infinite' : 'none'
                 }} />
-                {isConnected ? 'OpenRouter Activo' : 'OpenRouter Desconectado'}
+                {isConnected 
+                  ? `${(process.env.NEXT_PUBLIC_LLM_PROVIDER || 'openrouter') === 'ollama' ? 'Ollama' : 'OpenRouter'} Activo`
+                  : `${(process.env.NEXT_PUBLIC_LLM_PROVIDER || 'openrouter') === 'ollama' ? 'Ollama' : 'OpenRouter'} Desconectado`
+                }
               </div>
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
