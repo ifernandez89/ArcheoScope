@@ -1,12 +1,27 @@
 /**
- * Shader del Sol - Plasma turbulento con estructura procedural
+ * Shader del Sol - Plasma turbulento procedural con comportamiento orgánico
  * 
- * CARACTERÍSTICAS:
- * - Noise fractal 3D animado
+ * CARACTERÍSTICAS MEJORADAS:
+ * - FBM (Fractal Brownian Motion) multi-octava
+ * - Simplex 3D Noise para turbulencia natural
+ * - Distorsión UV dinámica (plasma fluyendo)
+ * - Variación térmica con pulsos de calor
+ * - Micro displacement radial (vibración térmica)
+ * - Flujos tangenciales (movimiento lateral)
+ * - Granulación celular (Voronoi)
  * - Alto contraste (zonas oscuras + brillos intensos)
- * - Granulación visible
- * - Bordes irregulares
- * - Movimiento lento y turbulento
+ * - Limb darkening realista
+ * - Emisión térmica variable
+ * 
+ * FILOSOFÍA:
+ * No es una textura estática. Es comportamiento matemático.
+ * El Sol respira, fluye, pulsa. Como plasma real.
+ * 
+ * TÉCNICAS:
+ * - Vertex Shader: Displacement + flujos tangenciales
+ * - Fragment Shader: FBM + distorsión UV + variación térmica
+ * - Ruido procedural: Simplex 3D + Voronoi
+ * - Colorimetría: Gradiente térmico realista
  */
 
 export const sunVertexShader = `
@@ -42,16 +57,29 @@ export const sunVertexShader = `
     // Posición base
     vec3 pos = position;
     
-    // PROTUBERANCIAS EN EL BORDE - Clave para el efecto de fuego
+    // 🌊 MICRO DISPLACEMENT RADIAL - Vibración térmica sutil
+    vec3 thermalCoord = position * 5.0 + vec3(time * 0.05, time * 0.04, time * 0.03);
+    float thermalVibration = noise(thermalCoord) * 0.02;
+    
+    // 🔥 PROTUBERANCIAS EN EL BORDE - Clave para el efecto de fuego
     vec3 noiseCoord = position * 3.0 + vec3(time * 0.03, time * 0.025, 0.0);
     float displacement = noise(noiseCoord) * 0.5 + noise(noiseCoord * 2.0) * 0.25;
+    
+    // 🌡️ FLUJOS TANGENCIALES - Movimiento lateral en la superficie
+    vec3 flowCoord = position * 4.0 + vec3(time * 0.04, -time * 0.035, 0.0);
+    float tangentialFlow = noise(flowCoord) * 0.15;
     
     // Solo en el borde (basado en la normal)
     float edgeFactor = pow(1.0 - abs(dot(normalize(position), vec3(0.0, 1.0, 0.0))), 2.0);
     displacement *= edgeFactor * 0.15; // Protuberancias sutiles
+    tangentialFlow *= edgeFactor * 0.08;
     
-    // Aplicar desplazamiento
-    pos += normal * displacement;
+    // Aplicar desplazamiento combinado
+    pos += normal * (displacement + thermalVibration);
+    
+    // Desplazamiento tangencial (perpendicular a la normal)
+    vec3 tangent = normalize(cross(normal, vec3(0.0, 1.0, 0.0)));
+    pos += tangent * tangentialFlow;
     
     vPosition = pos;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
@@ -178,34 +206,51 @@ export const sunFragmentShader = `
   }
   
   void main() {
-    // Textura base del Sol
-    vec4 texColor = texture2D(sunTexture, vUv);
+    // 🌊 DISTORSIÓN UV DINÁMICA - Plasma fluyendo
+    vec2 distortedUV = vUv;
+    vec3 distortCoord = vPosition * 2.0 + vec3(time * 0.02, time * 0.015, 0.0);
+    float distortX = snoise(distortCoord) * 0.03;
+    float distortY = snoise(distortCoord + vec3(100.0, 0.0, 0.0)) * 0.03;
+    distortedUV += vec2(distortX, distortY);
+    
+    // Textura base del Sol con UV distorsionada
+    vec4 texColor = texture2D(sunTexture, distortedUV);
     
     // Distancia desde el centro (para gradiente radial)
     vec2 center = vec2(0.5, 0.5);
     float dist = distance(vUv, center);
     
-    // 1️⃣ MANCHAS SOLARES GRANDES - Zonas oscuras definidas
-    vec3 spotCoord = vPosition * 1.5 + vec3(time * 0.008, time * 0.006, 0.0);
+    // 1️⃣ MANCHAS SOLARES GRANDES - Zonas oscuras definidas (más lentas)
+    vec3 spotCoord = vPosition * 1.5 + vec3(time * 0.005, time * 0.004, 0.0);
     float spots = snoise(spotCoord);
     float darkSpots = smoothstep(0.2, 0.5, spots);
     
-    // 2️⃣ FLUJOS TURBULENTOS - Patrones de convección
-    vec3 flowCoord = vPosition * 2.5 + vec3(time * 0.015, time * 0.012, time * 0.01);
+    // 2️⃣ FLUJOS TURBULENTOS - Patrones de convección (más complejos)
+    vec3 flowCoord = vPosition * 2.5 + vec3(time * 0.012, time * 0.01, time * 0.008);
     float flows = fbm(flowCoord);
     
-    // 3️⃣ GRANULACIÓN CELULAR - Textura fina
-    vec2 cellCoord = vUv * 12.0 + vec2(time * 0.008, time * 0.006);
+    // 🔥 FLUJOS SECUNDARIOS - Turbulencia adicional
+    vec3 flowCoord2 = vPosition * 3.5 + vec3(time * 0.018, -time * 0.015, 0.0);
+    float flows2 = fbm(flowCoord2) * 0.5;
+    flows = flows * 0.7 + flows2 * 0.3;
+    
+    // 3️⃣ GRANULACIÓN CELULAR - Textura fina (más dinámica)
+    vec2 cellCoord = vUv * 12.0 + vec2(time * 0.006, time * 0.005);
     vec2 cells = voronoi(cellCoord);
     float cellPattern = smoothstep(0.05, 0.25, cells.x);
     
-    // 4️⃣ REGIONES ACTIVAS BRILLANTES - Zonas calientes
-    vec3 activeCoord = vPosition * 2.0 + vec3(time * 0.01, time * 0.008, 0.0);
+    // 4️⃣ REGIONES ACTIVAS BRILLANTES - Zonas calientes (más variación)
+    vec3 activeCoord = vPosition * 2.0 + vec3(time * 0.008, time * 0.007, 0.0);
     float activeZones = smoothstep(0.4, 0.75, snoise(activeCoord));
     
-    // 5️⃣ COMBINAR CAPAS
+    // 🌡️ VARIACIÓN TÉRMICA - Pulsos de calor
+    vec3 thermalCoord = vPosition * 1.2 + vec3(time * 0.01, 0.0, time * 0.01);
+    float thermalPulse = snoise(thermalCoord) * 0.5 + 0.5;
+    
+    // 5️⃣ COMBINAR CAPAS CON VARIACIÓN TÉRMICA
     float activity = flows * 0.35 + cellPattern * 0.25 + activeZones * 0.4;
     activity *= darkSpots; // Las manchas oscuras reducen la actividad
+    activity = mix(activity, activity * thermalPulse, 0.3); // Modulación térmica
     
     // ALTO CONTRASTE
     float brightness = smoothstep(-0.1, 1.0, activity);
@@ -214,34 +259,34 @@ export const sunFragmentShader = `
     float limbDarkening = smoothstep(1.0, 0.15, dist * 2.0);
     brightness *= limbDarkening;
     
-    // 6️⃣ COLORIMETRÍA DE FUEGO INTENSO - MÁS BRILLANTE
-    vec3 deepShadow = vec3(0.2, 0.08, 0.0);      // Menos negro, más visible
-    vec3 darkOrange = vec3(0.6, 0.25, 0.05);     // Más brillante
-    vec3 midOrange = vec3(1.0, 0.55, 0.15);      // Más brillante
-    vec3 brightYellow = vec3(1.0, 0.9, 0.4);     // Más brillante
-    vec3 hotWhite = vec3(1.0, 0.98, 0.9);        // Blanco más cálido
+    // 6️⃣ COLORIMETRÍA DE FUEGO INTENSO - Gradiente térmico
+    vec3 deepShadow = vec3(0.2, 0.08, 0.0);      // Manchas oscuras
+    vec3 darkOrange = vec3(0.6, 0.25, 0.05);     // Zonas frías
+    vec3 midOrange = vec3(1.0, 0.55, 0.15);      // Temperatura media
+    vec3 brightYellow = vec3(1.0, 0.9, 0.4);     // Zonas calientes
+    vec3 hotWhite = vec3(1.0, 0.98, 0.9);        // Regiones muy calientes
     
     vec3 solarColor;
     if(brightness < 0.2) {
-      // Manchas oscuras profundas
       solarColor = mix(deepShadow, darkOrange, brightness / 0.2);
     } else if(brightness < 0.5) {
-      // Zonas medias
       solarColor = mix(darkOrange, midOrange, (brightness - 0.2) / 0.3);
     } else if(brightness < 0.75) {
-      // Zonas activas
       solarColor = mix(midOrange, brightYellow, (brightness - 0.5) / 0.25);
     } else {
-      // Regiones muy calientes
       solarColor = mix(brightYellow, hotWhite, (brightness - 0.75) / 0.25);
     }
     
     // Mezclar con textura original (mínimo)
     vec3 finalColor = mix(solarColor, texColor.rgb, 0.15);
     
-    // Emisión intensa en zonas brillantes
+    // 🔥 EMISIÓN TÉRMICA - Zonas brillantes emiten más
     float emission = pow(brightness, 1.5) * intensity;
     finalColor *= (1.0 + emission * 3.0);
+    
+    // ✨ VARIACIÓN DE BRILLO - Pulsaciones sutiles
+    float brightnessVariation = sin(time * 0.5 + brightness * 10.0) * 0.05 + 1.0;
+    finalColor *= brightnessVariation;
     
     gl_FragColor = vec4(finalColor, 1.0);
   }
