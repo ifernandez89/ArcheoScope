@@ -42,7 +42,7 @@ export default function SimpleMoon() {
     if (moonRef.current) {
       const time = state.clock.elapsedTime
       
-      // Parámetros orbitales
+      // Parámetros orbitales - CONFIGURACIÓN ORIGINAL QUE FUNCIONABA
       const orbitSpeed = 0.08 // Velocidad orbital (más lenta, más realista)
       const orbitRadius = 12 // Distancia emocional coherente (12 radios terrestres)
       const orbitalInclination = 5 * (Math.PI / 180) // Inclinación real de 5°
@@ -57,14 +57,7 @@ export default function SimpleMoon() {
       
       // 🌙 TIDAL LOCKING (Bloqueo por marea)
       // La Luna rota exactamente al mismo ritmo que orbita
-      // Velocidad de rotación = Velocidad orbital
-      // Si avanza θ en órbita, rota θ sobre su eje
-      // Resultado: siempre vemos la misma cara (los mismos cráteres)
       moonRef.current.rotation.y = orbitAngle
-      
-      // Ajuste fino: orientar correctamente hacia la Tierra
-      // El signo positivo hace que la cara visible apunte hacia la Tierra
-      // Si se ve al revés, cambiar a -orbitAngle
     }
   })
   
