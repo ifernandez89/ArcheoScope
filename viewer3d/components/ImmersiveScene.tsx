@@ -15,6 +15,23 @@ import SnowParticles from './SnowParticles'
 import IceLighting from './IceLighting'
 import BasicCollisions from './BasicCollisions'
 import WalkableAvatar from './WalkableAvatar'
+import SolarSystemIntegrated from './SolarSystemIntegrated'
+import SimpleMoon from './SimpleMoon'
+import Sun from './Sun'
+import Mercury from './Mercury'
+import Venus from './Venus'
+import Mars from './Mars'
+import PlanetaryOrbits from './PlanetaryOrbits'
+import EarthOrbitWrapper from './EarthOrbitWrapper'
+import LunarOrbitLine from './LunarOrbitLine'
+import { 
+  useNarrativeZoom
+  // LunarOrbit, 
+  // OrbitalPlane, 
+  // SimpleSun, 
+  // EarthOrbit, 
+  // EclipticPlane 
+} from './NarrativeZoom'
 import { detectBiome, getSkyColorForBiome, getFogColorForBiome } from '@/utils/biome-detector'
 import DynamicSky from './DynamicSky'
 import VolumetricFog from './VolumetricFog'
@@ -437,13 +454,13 @@ function Stars() {
   
   const starsMaterial = useMemo(() => {
     return new THREE.PointsMaterial({
-      size: 3,  // Aumentado de 2 a 3 para mejor visibilidad
+      size: 1.5,  // Reducido de 3 a 1.5 para evitar píxeles grandes
       vertexColors: true,
       transparent: true,
-      opacity: 0.9,  // Aumentado de 0.8 a 0.9
+      opacity: 0.8,  // Reducido de 0.9 a 0.8
       sizeAttenuation: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending  // Añadido para efecto de brillo
+      blending: THREE.AdditiveBlending
     })
   }, [])
   
@@ -525,22 +542,94 @@ function GlobeScene({
         enableDamping
         dampingFactor={0.05}
         minDistance={8}
-        maxDistance={30}
+        maxDistance={300} // Aumentado para ver todo el sistema (Marte a 152)
         autoRotate={false}
       />
       
-      {/* Estrellas de fondo */}
-      <Stars />
-      
-      {/* Globo terráqueo con marcador */}
-      <Globe3D 
+      {/* Sistema de Zoom Narrativo */}
+      <NarrativeZoomContent 
         onLocationClick={onLocationClick}
         markerPosition={markerPosition}
       />
       
-      {/* Marcadores de sitios arqueológicos */}
-      <SiteMarkers onSiteClick={onSiteClick} />
+      {/* Marcadores de sitios arqueológicos - Temporalmente deshabilitados */}
+      {/* <SiteMarkers onSiteClick={onSiteClick} /> */}
     </Canvas>
+  )
+}
+
+// Contenido que responde al zoom narrativo
+function NarrativeZoomContent({ 
+  onLocationClick,
+  markerPosition
+}: {
+  onLocationClick: (lat: number, lon: number) => void
+  markerPosition?: { lat: number, lon: number } | null
+}) {
+  const zoomState = useNarrativeZoom()
+  
+  // Determinar qué elementos mostrar según el nivel
+  const showLunarOrbit = false // Oculta la órbita lunar
+  const showOrbitalPlane = zoomState.level === 'orbital' || zoomState.level === 'solar' || zoomState.level === 'sistema'
+  const showSun = false // Sol ahora es independiente, siempre visible
+  const showEarthOrbit = zoomState.level === 'solar' || zoomState.level === 'sistema'
+  const showEclipticPlane = zoomState.level === 'sistema'
+  
+  // Mostrar órbitas y planetas SIEMPRE (para visualizar el sistema)
+  const showOrbits = true // SIEMPRE visible
+  const showMercury = true // SIEMPRE visible
+  const showVenus = true // SIEMPRE visible
+  const showMars = true // SIEMPRE visible
+  
+  // Log del nivel actual (solo para debug)
+  useFrame(() => {
+    if (Math.random() < 0.01) { // Log ocasional para no saturar
+      console.log(`🔭 Zoom: ${zoomState.level} | Distancia: ${zoomState.cameraDistance.toFixed(1)} | Escala: ${zoomState.scaleMode}`)
+    }
+  })
+  
+  return (
+    <>
+      {/* Estrellas de fondo - más densas en niveles profundos */}
+      <Stars />
+      
+      {/* Nivel 1: Contexto Orbital - DESHABILITADO TEMPORALMENTE */}
+      {/* <LunarOrbit visible={showLunarOrbit} /> */}
+      {/* <OrbitalPlane visible={showOrbitalPlane} radius={15} /> */}
+      
+      {/* Nivel 2: Aparición Solar - DESHABILITADO TEMPORALMENTE */}
+      {/* <SimpleSun visible={showSun} scaleMode={zoomState.scaleMode} /> */}
+      {/* <EarthOrbit visible={showEarthOrbit} /> */}
+      
+      {/* Órbitas planetarias visibles */}
+      <PlanetaryOrbits visible={showOrbits} />
+      
+      {/* Tierra orbitando alrededor del Sol (con Luna) */}
+      <EarthOrbitWrapper>
+        {/* Globo terráqueo con marcador */}
+        <Globe3D 
+          onLocationClick={onLocationClick}
+          markerPosition={markerPosition}
+        />
+        
+        {/* Órbita de la Luna (relativa a la Tierra) */}
+        <LunarOrbitLine />
+        
+        {/* Luna orbitando la Tierra */}
+        <SimpleMoon />
+      </EarthOrbitWrapper>
+      
+      {/* Sol en el centro */}
+      <Sun />
+      
+      {/* Nivel 2-3: Planetas interiores - Presencia discreta */}
+      <Mercury earthRadius={1} visible={showMercury} />
+      <Venus earthRadius={1} visible={showVenus} />
+      <Mars earthRadius={1} visible={showMars} />
+      
+      {/* Nivel 3: Sistema Interno - DESHABILITADO TEMPORALMENTE */}
+      {/* <EclipticPlane visible={showEclipticPlane} /> */}
+    </>
   )
 }
 
