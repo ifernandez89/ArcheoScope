@@ -53,16 +53,16 @@ export default function PlanetaryOrbits({ visible = true }: { visible?: boolean 
       {/* NO mostrar órbita de la Luna aquí - está en coordenadas de la Tierra */}
       
       {/* Órbita de Mercurio */}
-      <Orbit radius={39} color="#9c9c9c" opacity={0.35} segments={128} />
+      <Orbit radius={78} color="#9c9c9c" opacity={0.35} segments={128} />
       
       {/* Órbita de Venus */}
-      <Orbit radius={72} color="#f5e6d3" opacity={0.35} segments={128} />
+      <Orbit radius={144} color="#f5e6d3" opacity={0.35} segments={128} />
       
       {/* Órbita de la Tierra (referencia) */}
-      <Orbit radius={100} color="#4a9eff" opacity={0.45} segments={128} />
+      <Orbit radius={200} color="#4a9eff" opacity={0.45} segments={128} />
       
       {/* Órbita de Marte */}
-      <Orbit radius={152} color="#c97a5f" opacity={0.35} segments={128} />
+      <Orbit radius={304} color="#c97a5f" opacity={0.35} segments={128} />
     </group>
   )
 }

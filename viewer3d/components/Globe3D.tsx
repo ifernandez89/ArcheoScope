@@ -13,10 +13,13 @@ interface Globe3DProps {
 export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProps) {
   const globeRef = useRef<THREE.Mesh>(null)
   const cloudsRef = useRef<THREE.Mesh>(null)
+  const nightLightsRef = useRef<THREE.Mesh>(null)
   const markerRef = useRef<THREE.Mesh>(null)
   const [isRotating, setIsRotating] = useState(true)
   const [earthTexture, setEarthTexture] = useState<THREE.Texture | null>(null)
   const [cloudsTexture, setCloudsTexture] = useState<THREE.Texture | null>(null)
+  const [specularTexture, setSpecularTexture] = useState<THREE.Texture | null>(null)
+  const [nightTexture, setNightTexture] = useState<THREE.Texture | null>(null)
   const [isReady, setIsReady] = useState(false)
 
   // Cargar texturas reales desde archivos locales
@@ -54,6 +57,22 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
         console.warn('⚠️ No se pudo cargar textura de nubes')
       }
     )
+    
+    // Cargar mapa especular (reflejos en océanos) - Crear proceduralmente si no existe
+    // Por ahora usaremos la textura de la Tierra invertida como especular
+    
+    // Cargar mapa nocturno (luces de ciudades)
+    loader.load(
+      getAssetPath('/textures/earth_night_8k.jpg'),
+      (texture) => {
+        console.log('🌃 Mapa nocturno cargado exitosamente!')
+        setNightTexture(texture)
+      },
+      undefined,
+      (error) => {
+        console.warn('⚠️ No se pudo cargar mapa nocturno')
+      }
+    )
   }, [])
 
   // Actualizar posición del marcador
@@ -73,6 +92,11 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
     // Nubes rotan más rápido que la Tierra
     if (cloudsRef.current && isRotating) {
       cloudsRef.current.rotation.y += delta * 0.06
+    }
+    
+    // Luces nocturnas siguen la rotación de la Tierra
+    if (nightLightsRef.current && globeRef.current) {
+      nightLightsRef.current.rotation.copy(globeRef.current.rotation)
     }
     
     // Pulsar marcador
@@ -130,7 +154,7 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
 
   return (
     <group>
-      {/* Globo terráqueo */}
+      {/* Globo terráqueo con reflejos especulares */}
       <mesh
         ref={globeRef}
         onClick={handleClick}
@@ -138,11 +162,26 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
         onPointerOut={() => document.body.style.cursor = 'default'}
       >
         <sphereGeometry args={[5, 128, 128]} />
-        <meshBasicMaterial 
-          map={earthTexture} 
-          toneMapped={false}
+        <meshStandardMaterial 
+          map={earthTexture}
+          roughness={0.7}
+          metalness={0.2}
         />
       </mesh>
+
+      {/* Luces nocturnas (ciudades) - Más visible */}
+      {nightTexture && (
+        <mesh ref={nightLightsRef}>
+          <sphereGeometry args={[5.01, 128, 128]} />
+          <meshBasicMaterial
+            map={nightTexture}
+            transparent
+            opacity={0.45}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
 
       {/* Capa de nubes */}
       {cloudsTexture && (

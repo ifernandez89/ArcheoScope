@@ -37,9 +37,10 @@ export default function Mars({ earthRadius, visible = true }: MarsProps) {
   })
   
   // SISTEMA HÍBRIDO PROFESIONAL
-  // Proporciones orbitales REALES (Tierra = 100)
-  const marsRadius = earthRadius * 0.53   // Tamaño real proporcional
-  const marsDistance = 152                // Órbita real proporcional (1.52 UA)
+  // Proporciones orbitales REALES (Tierra = 200)
+  // Tamaños ajustados: Marte = mitad de la Tierra actual
+  const marsRadius = earthRadius * 0.5    // Mitad de la Tierra
+  const marsDistance = 304                // Órbita proporcional (1.52 × 200)
   const marsSpeed = 0.53                  // Velocidad proporcional (más lento)
   
   // Animación orbital

@@ -40,9 +40,10 @@ export default function Venus({
   })
   
   // SISTEMA HÍBRIDO PROFESIONAL
-  // Proporciones orbitales REALES (Tierra = 100)
-  const venusRadius = earthRadius * 0.95  // Tamaño real proporcional
-  const venusDistance = 72                // Órbita real proporcional (0.72 UA)
+  // Proporciones orbitales REALES (Tierra = 200)
+  // Tamaños ajustados: Venus casi igual a la Tierra
+  const venusRadius = earthRadius * 0.95  // 95% de la Tierra
+  const venusDistance = 144               // Órbita proporcional (0.72 × 200)
   const venusSpeed = 1.62                 // Velocidad proporcional
   
   // Animación orbital

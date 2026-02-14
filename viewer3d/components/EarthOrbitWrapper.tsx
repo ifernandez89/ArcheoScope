@@ -15,7 +15,7 @@ export default function EarthOrbitWrapper({ children }: { children: React.ReactN
     if (orbitGroupRef.current) {
       const time = state.clock.elapsedTime
       const earthOrbitSpeed = 1.0 // Velocidad de referencia
-      const earthOrbitDistance = 100 // Distancia al Sol
+      const earthOrbitDistance = 200 // Distancia al Sol (ajustada para Sol grande)
       const orbitAngle = time * earthOrbitSpeed * 0.05
       
       // Posición orbital de la Tierra alrededor del Sol (en el centro)

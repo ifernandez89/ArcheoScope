@@ -37,9 +37,10 @@ export default function Mercury({
   })
   
   // SISTEMA HÍBRIDO PROFESIONAL
-  // Proporciones orbitales REALES (Tierra = 100)
-  const mercuryRadius = earthRadius * 0.38  // Tamaño real proporcional
-  const mercuryDistance = 39                // Órbita real proporcional (0.39 UA)
+  // Proporciones orbitales REALES (Tierra = 200)
+  // Ajustado para que Mercurio no esté tan cerca del Sol grande
+  const mercuryRadius = earthRadius * 0.38  // 38% de la Tierra
+  const mercuryDistance = 78                // Órbita proporcional (0.39 × 200)
   const mercurySpeed = 4.15                 // El más rápido
   
   // Animación orbital
