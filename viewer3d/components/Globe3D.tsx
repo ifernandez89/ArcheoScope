@@ -12,9 +12,11 @@ interface Globe3DProps {
 
 export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProps) {
   const globeRef = useRef<THREE.Mesh>(null)
+  const cloudsRef = useRef<THREE.Mesh>(null)
   const markerRef = useRef<THREE.Mesh>(null)
   const [isRotating, setIsRotating] = useState(true)
   const [earthTexture, setEarthTexture] = useState<THREE.Texture | null>(null)
+  const [cloudsTexture, setCloudsTexture] = useState<THREE.Texture | null>(null)
   const [isReady, setIsReady] = useState(false)
 
   // Cargar texturas reales desde archivos locales
@@ -39,6 +41,19 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
         // Ya tenemos la textura procedural establecida
       }
     )
+    
+    // Cargar textura de nubes
+    loader.load(
+      getAssetPath('/textures/8k_earth_clouds.jpg'),
+      (texture) => {
+        console.log('☁️ Textura de nubes cargada exitosamente!')
+        setCloudsTexture(texture)
+      },
+      undefined,
+      (error) => {
+        console.warn('⚠️ No se pudo cargar textura de nubes')
+      }
+    )
   }, [])
 
   // Actualizar posición del marcador
@@ -53,6 +68,11 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
   useFrame((state, delta) => {
     if (globeRef.current && isRotating) {
       globeRef.current.rotation.y += delta * 0.05
+    }
+    
+    // Nubes rotan más rápido que la Tierra
+    if (cloudsRef.current && isRotating) {
+      cloudsRef.current.rotation.y += delta * 0.06
     }
     
     // Pulsar marcador
@@ -124,14 +144,29 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
         />
       </mesh>
 
+      {/* Capa de nubes */}
+      {cloudsTexture && (
+        <mesh ref={cloudsRef}>
+          <sphereGeometry args={[5.08, 128, 128]} />
+          <meshStandardMaterial
+            map={cloudsTexture}
+            transparent
+            opacity={0.4}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+
       {/* Atmósfera (glow effect) */}
       <mesh>
-        <sphereGeometry args={[5.15, 64, 64]} />
+        <sphereGeometry args={[5.2, 64, 64]} />
         <meshBasicMaterial
           color="#4a90e2"
           transparent
-          opacity={0.15}
+          opacity={0.2}
           side={THREE.BackSide}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
         />
       </mesh>
 
