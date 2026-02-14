@@ -24,6 +24,7 @@ import Mars from './Mars'
 import PlanetaryOrbits from './PlanetaryOrbits'
 import EarthOrbitWrapper from './EarthOrbitWrapper'
 import LunarOrbitLine from './LunarOrbitLine'
+import MilkyWayBackground from './MilkyWayBackground'
 import { 
   useNarrativeZoom
   // LunarOrbit, 
@@ -590,7 +591,10 @@ function NarrativeZoomContent({
   
   return (
     <>
-      {/* Estrellas de fondo - más densas en niveles profundos */}
+      {/* Fondo de la Vía Láctea - Esfera envolvente con textura */}
+      <MilkyWayBackground />
+      
+      {/* Estrellas procedurales - más densas en niveles profundos */}
       <Stars />
       
       {/* Nivel 1: Contexto Orbital - DESHABILITADO TEMPORALMENTE */}
