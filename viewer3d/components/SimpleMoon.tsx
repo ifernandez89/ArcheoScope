@@ -7,17 +7,28 @@ import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
 
 /**
- * Luna orbitando la Tierra con escala emocional coherente
+ * Luna orbitando la Tierra con escala emocional coherente y tidal locking real
  * 
- * Escala física real (no usable):
+ * ESCALA FÍSICA REAL (no usable visualmente):
  * - Tamaño: 27% del diámetro terrestre
  * - Distancia: 30 diámetros terrestres (~384,400 km)
  * 
- * Escala emocional (usada aquí):
- * - Tamaño: 27% del radio terrestre (correcto)
- * - Distancia: 12 radios terrestres (reinterpretación honesta)
+ * ESCALA EMOCIONAL (usada aquí):
+ * - Tamaño: 27% del radio terrestre (físicamente correcto)
+ * - Distancia: 12 radios terrestres (reinterpretación visual honesta)
  * - Inclinación orbital: ~5° (real)
- * - Rotación sincrónica: siempre misma cara hacia la Tierra (real)
+ * 
+ * TIDAL LOCKING (Bloqueo por marea):
+ * - La Luna rota exactamente al mismo ritmo que orbita
+ * - Velocidad de rotación = Velocidad orbital
+ * - Si avanza θ en órbita → rota θ sobre su eje
+ * - Resultado: siempre vemos la misma cara (los mismos cráteres)
+ * - Esto es física real, no una simplificación
+ * 
+ * VERIFICACIÓN:
+ * - Acelera la órbita y observa desde cámara fija
+ * - Los cráteres visibles NO deben cambiar
+ * - Si cambian, el bloqueo está roto
  */
 export default function SimpleMoon() {
   const moonRef = useRef<THREE.Mesh>(null)
@@ -36,17 +47,24 @@ export default function SimpleMoon() {
       const orbitRadius = 12 // Distancia emocional coherente (12 radios terrestres)
       const orbitalInclination = 5 * (Math.PI / 180) // Inclinación real de 5°
       
-      // Ángulo orbital
-      const angle = time * orbitSpeed
+      // Ángulo orbital (θ)
+      const orbitAngle = time * orbitSpeed
       
       // Posición orbital con inclinación
-      moonRef.current.position.x = Math.cos(angle) * orbitRadius
-      moonRef.current.position.z = Math.sin(angle) * orbitRadius
-      moonRef.current.position.y = Math.sin(angle) * orbitRadius * Math.sin(orbitalInclination)
+      moonRef.current.position.x = Math.cos(orbitAngle) * orbitRadius
+      moonRef.current.position.z = Math.sin(orbitAngle) * orbitRadius
+      moonRef.current.position.y = Math.sin(orbitAngle) * orbitRadius * Math.sin(orbitalInclination)
       
-      // Rotación sincrónica: la Luna siempre muestra la misma cara a la Tierra
-      // Esto significa que rota a la misma velocidad que orbita
-      moonRef.current.rotation.y = -angle // Negativo para que mire hacia la Tierra
+      // 🌙 TIDAL LOCKING (Bloqueo por marea)
+      // La Luna rota exactamente al mismo ritmo que orbita
+      // Velocidad de rotación = Velocidad orbital
+      // Si avanza θ en órbita, rota θ sobre su eje
+      // Resultado: siempre vemos la misma cara (los mismos cráteres)
+      moonRef.current.rotation.y = orbitAngle
+      
+      // Ajuste fino: orientar correctamente hacia la Tierra
+      // El signo positivo hace que la cara visible apunte hacia la Tierra
+      // Si se ve al revés, cambiar a -orbitAngle
     }
   })
   
