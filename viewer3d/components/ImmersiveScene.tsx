@@ -15,6 +15,8 @@ import SnowParticles from './SnowParticles'
 import IceLighting from './IceLighting'
 import BasicCollisions from './BasicCollisions'
 import WalkableAvatar from './WalkableAvatar'
+import SolarSystemIntegrated from './SolarSystemIntegrated'
+import SimpleMoon from './SimpleMoon'
 import { detectBiome, getSkyColorForBiome, getFogColorForBiome } from '@/utils/biome-detector'
 import DynamicSky from './DynamicSky'
 import VolumetricFog from './VolumetricFog'
@@ -538,8 +540,17 @@ function GlobeScene({
         markerPosition={markerPosition}
       />
       
-      {/* Marcadores de sitios arqueológicos */}
-      <SiteMarkers onSiteClick={onSiteClick} />
+      {/* Luna simple orbitando */}
+      <SimpleMoon />
+      
+      {/* Sistema Solar Integrado - DESHABILITADO TEMPORALMENTE */}
+      {/* <SolarSystemIntegrated
+        latitude={0}
+        longitude={0}
+      /> */}
+      
+      {/* Marcadores de sitios arqueológicos - Temporalmente deshabilitados */}
+      {/* <SiteMarkers onSiteClick={onSiteClick} /> */}
     </Canvas>
   )
 }
