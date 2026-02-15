@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import * as Astronomy from 'astronomy-engine'
 
@@ -10,10 +10,10 @@ import * as Astronomy from 'astronomy-engine'
  */
 
 export default function RealisticLunarOrbit() {
-  const lineRef = useRef<THREE.Line | null>(null)
+  const [isReady, setIsReady] = useState(false)
   
-  useEffect(() => {
-    // Calcular órbita completa de la Luna (27.3 días)
+  // Calcular puntos de la órbita
+  const orbitPoints = useMemo(() => {
     const points: THREE.Vector3[] = []
     const startDate = new Date()
     const lunarPeriod = 27.3 // días
@@ -36,21 +36,33 @@ export default function RealisticLunarOrbit() {
       ))
     }
     
-    // Crear geometría y material
-    const geometry = new THREE.BufferGeometry().setFromPoints(points)
-    const material = new THREE.LineBasicMaterial({
-      color: '#FFFFFF',
-      transparent: true,
-      opacity: 0.3,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
-    })
-    
-    // Crear línea
-    lineRef.current = new THREE.Line(geometry, material)
+    return points
   }, [])
   
+  useEffect(() => {
+    setIsReady(true)
+  }, [])
+  
+  if (!isReady || orbitPoints.length === 0) {
+    return null
+  }
+  
   return (
-    <primitive object={lineRef.current || new THREE.Line()} />
+    <line>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={orbitPoints.length}
+          array={new Float32Array(orbitPoints.flatMap(p => [p.x, p.y, p.z]))}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <lineBasicMaterial
+        color="#FFFFFF"
+        transparent
+        opacity={0.4}
+        depthWrite={false}
+      />
+    </line>
   )
 }
