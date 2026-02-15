@@ -60,9 +60,15 @@ models_3d/planetasTexturas/2k_*.jpg → viewer3d/public/textures/8k_*.jpg
   - `earth_clouds_8k.jpg` (nubes)
   - `earth_night_8k.jpg` (luces nocturnas)
 
+### Tidal Locking Lunar Corregido
+- Ajustada orientación de la Luna para mostrar la cara correcta hacia la Tierra
+- Rotación optimizada para textura 2K (sin rotación adicional después de lookAt)
+- La Luna ahora muestra correctamente el "Mare Imbrium" y cráteres visibles desde la Tierra
+
 ## 📁 Archivos Modificados
 
 - `viewer3d/components/Globe3D.tsx` - Rutas de texturas y opacidad nightmap
+- `viewer3d/components/RealisticSolarSystem.tsx` - Tidal locking lunar corregido
 - `viewer3d/public/textures/*` - Texturas reemplazadas con versiones 2K
 
 ## 🚀 Deployment
@@ -71,9 +77,11 @@ Las texturas optimizadas están listas para deployment en GitHub Pages con:
 - Carga más rápida
 - Menor ancho de banda
 - Mejor experiencia de usuario
+- Tidal locking lunar científicamente correcto
 
 ---
 
 **Fecha:** 15 de febrero de 2026
 **Optimización:** Texturas 8K/4K → 2K
 **Reducción total:** 84.7% (97.41 MB → 14.88 MB)
+**Correcciones:** Tidal locking lunar, rutas de texturas, opacidad nightmap

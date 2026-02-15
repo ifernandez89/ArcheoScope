@@ -103,16 +103,17 @@ export default function RealisticSolarSystem({
       
       // 🌙 TIDAL LOCKING (Bloqueo por marea)
       // La Luna siempre muestra la misma cara hacia la Tierra
-      // Calcular vector desde la Luna hacia la Tierra (centro en 0,0,0)
-      const moonPos = new THREE.Vector3(positions.moon.x, positions.moon.y, positions.moon.z)
+      // Resetear rotación antes de aplicar lookAt
+      moonMeshRef.current.rotation.set(0, 0, 0)
       
-      // Hacer que la Luna mire hacia el centro (Tierra)
+      // Hacer que la Luna mire hacia el centro (Tierra en 0,0,0)
       // lookAt hace que el eje -Z apunte hacia el objetivo
       moonMeshRef.current.lookAt(0, 0, 0)
       
       // Ajuste de rotación para que la cara correcta de la textura mire hacia la Tierra
-      // Rotar 180° en Y para que la cara frontal de la textura apunte hacia la Tierra
-      moonMeshRef.current.rotateY(Math.PI)
+      // La textura 2K puede tener orientación diferente, ajustamos con rotación en Y
+      // Probamos sin rotación adicional primero para ver la orientación base
+      moonMeshRef.current.rotateY(0) // Sin rotación adicional - cara frontal hacia Tierra
     }
   })
   
