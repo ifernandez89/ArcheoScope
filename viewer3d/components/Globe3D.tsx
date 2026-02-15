@@ -47,7 +47,7 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
     
     // Cargar textura de nubes
     loader.load(
-      getAssetPath('/textures/8k_earth_clouds.jpg'),
+      getAssetPath('/textures/earth_clouds_8k.jpg'),
       (texture) => {
         console.log('☁️ Textura de nubes cargada exitosamente!')
         setCloudsTexture(texture)
@@ -169,14 +169,14 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
         />
       </mesh>
 
-      {/* Luces nocturnas (ciudades) - Más visible */}
+      {/* Luces nocturnas (ciudades) - Opacidad reducida */}
       {nightTexture && (
         <mesh ref={nightLightsRef}>
           <sphereGeometry args={[5.01, 128, 128]} />
           <meshBasicMaterial
             map={nightTexture}
             transparent
-            opacity={0.45}
+            opacity={0.22}
             blending={THREE.AdditiveBlending}
             depthWrite={false}
           />
