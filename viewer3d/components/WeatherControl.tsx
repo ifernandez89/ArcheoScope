@@ -10,6 +10,7 @@ export interface WeatherState {
   wind: boolean
   fog: boolean
   storm: boolean
+  lightning: boolean
   tornado: boolean
 }
 
@@ -27,6 +28,7 @@ export default function WeatherControl({ onWeatherChange }: WeatherControlProps)
     wind: false,
     fog: false,
     storm: false,
+    lightning: false,
     tornado: false
   })
 
@@ -47,6 +49,7 @@ export default function WeatherControl({ onWeatherChange }: WeatherControlProps)
         newWeather.rainHeavy = true
         newWeather.rainLight = false
         newWeather.rainModerate = false
+        newWeather.lightning = true // Activar rayos con tormenta
       }
     }
     // Para otros efectos, solo toggle
@@ -213,6 +216,13 @@ export default function WeatherControl({ onWeatherChange }: WeatherControlProps)
             onChange={() => handleToggle('storm')}
             icon="⚡"
             label="Tormenta Eléctrica"
+          />
+
+          <WeatherCheckbox 
+            checked={weather.lightning} 
+            onChange={() => handleToggle('lightning')}
+            icon="⚡"
+            label="Rayos"
           />
 
           <WeatherCheckbox 

@@ -664,14 +664,14 @@ function ModelScene({
         stormDarkness={weather.storm || weather.tornado ? 0.6 : 0} 
       />
 
-      {/* Trayectoria solar del día */}
+      {/* Trayectoria solar del día - OCULTA */}
       <SolarTrajectory
         solarAltitude={solarState.altitude}
         solarAzimuth={solarState.azimuth}
         declination={solarState.declination}
         latitude={(location?.lat || 0) * Math.PI / 180}
         isDay={isDay}
-        visible={true}
+        visible={false}
       />
 
       {/* Niebla volumétrica - color adaptado al bioma */}
@@ -738,7 +738,8 @@ function ModelScene({
         )}
         
         {/* Fenómenos extremos */}
-        {weather.storm && <LightningEffect enabled={true} intensity={1} />}
+        {weather.storm && <LightningEffect enabled={true} intensity={1} showVisualBolts={true} />}
+        {weather.lightning && !weather.storm && <LightningEffect enabled={true} intensity={0.8} showVisualBolts={true} />}
         {weather.tornado && <TornadoEffect position={[20, 0, 20]} intensity={0.8} height={40} />}
         
         {/* Nieve automática solo en biomas helados si no hay clima manual activo */}
