@@ -94,14 +94,18 @@ export function detectBiome(lat: number, lon: number): BiomeInfo {
     }
   }
   
-  // Cinturón de Fuego del Pacífico - Andes
-  if (lat < -10 && lat > -45 && lon > -80 && lon < -65) {
-    return {
-      type: 'volcanic',
-      name: 'Andes Volcánicos',
-      description: 'Cadena volcánica andina',
-      temperature: 15,
-      humidity: 50
+  // Cinturón de Fuego del Pacífico - Andes (solo zonas muy volcánicas)
+  // Excluir Machu Picchu y zonas arqueológicas
+  if (lat < -15 && lat > -45 && lon > -80 && lon < -65) {
+    // Excluir Machu Picchu (lat -13.16, lon -72.54)
+    if (!(lat > -14 && lat < -12 && lon > -73 && lon < -71)) {
+      return {
+        type: 'volcanic',
+        name: 'Andes Volcánicos',
+        description: 'Cadena volcánica andina',
+        temperature: 15,
+        humidity: 50
+      }
     }
   }
   
@@ -174,9 +178,9 @@ export function getSkyColorForBiome(biome: BiomeType, isDay: boolean): string {
     case 'ice':
       return '#b8d4e8' // Azul pálido helado
     case 'volcanic':
-      return '#ff8c42' // Naranja volcánico
+      return '#d4a574' // Marrón-naranja suave (menos intenso)
     case 'desert':
-      return '#ffd89b' // Amarillo desértico
+      return '#e8d4b8' // Amarillo desértico suave
     case 'ocean':
       return '#4a90e2' // Azul océano
     case 'forest':
