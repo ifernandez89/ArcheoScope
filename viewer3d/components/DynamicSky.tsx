@@ -13,9 +13,10 @@ interface DynamicSkyProps {
   isDay?: boolean
   sunPosition?: THREE.Vector3
   skyColor?: string
+  stormDarkness?: number // 0-1, oscurecimiento por tormenta
 }
 
-export default function DynamicSky({ isDay = true, sunPosition, skyColor = '#87ceeb' }: DynamicSkyProps) {
+export default function DynamicSky({ isDay = true, sunPosition, skyColor = '#87ceeb', stormDarkness = 0 }: DynamicSkyProps) {
   const skyRef = useRef<THREE.Mesh>(null)
   const starsRef = useRef<THREE.Points>(null)
   
@@ -97,7 +98,11 @@ export default function DynamicSky({ isDay = true, sunPosition, skyColor = '#87c
       
       if (isDay) {
         // Día: cielo con color personalizado, sin estrellas
-        skyMaterial.color.lerp(new THREE.Color(skyColor), 0.05)
+        // Oscurecer durante tormentas
+        const baseColor = new THREE.Color(skyColor)
+        const darkColor = new THREE.Color('#3a3a3a')
+        const targetColor = baseColor.clone().lerp(darkColor, stormDarkness)
+        skyMaterial.color.lerp(targetColor, 0.05)
         starsMat.opacity += (0 - starsMat.opacity) * 0.05
       } else {
         // Noche: cielo negro, con estrellas más sutiles

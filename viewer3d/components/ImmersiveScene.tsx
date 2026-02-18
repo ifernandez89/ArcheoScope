@@ -658,7 +658,11 @@ function ModelScene({
       )}
 
       {/* Cielo dinámico - color adaptado al bioma */}
-      <DynamicSky isDay={isDay} skyColor={skyColor} />
+      <DynamicSky 
+        isDay={isDay} 
+        skyColor={skyColor} 
+        stormDarkness={weather.storm || weather.tornado ? 0.6 : 0} 
+      />
 
       {/* Trayectoria solar del día */}
       <SolarTrajectory
