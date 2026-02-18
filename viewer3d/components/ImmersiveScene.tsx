@@ -13,7 +13,12 @@ import VolcanicTerrain from './VolcanicTerrain'
 import IceTerrain from './IceTerrain'
 import SnowParticles from './SnowParticles'
 import RainParticles from './RainParticles'
-import WeatherControl from './WeatherControl'
+import WeatherControl, { type WeatherState } from './WeatherControl'
+import WindEffect, { WindParticles } from './weather/WindEffect'
+import LightningEffect from './weather/LightningEffect'
+import DynamicFog, { FogParticles } from './weather/DynamicFog'
+import TornadoEffect from './weather/TornadoEffect'
+import WeatherManager from './weather/WeatherManager'
 import IceLighting from './IceLighting'
 import BasicCollisions from './BasicCollisions'
 import WalkableAvatar from './WalkableAvatar'
@@ -67,11 +72,15 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [showLocationInfo, setShowLocationInfo] = useState(false)
   const [showGeometryField, setShowGeometryField] = useState(true) // Activado por defecto
   const [isDay, setIsDay] = useState(true) // Estado día/noche
-  const [weather, setWeather] = useState({ 
+  const [weather, setWeather] = useState<WeatherState>({ 
     snow: false, 
     rainLight: false,
     rainModerate: false,
-    rainHeavy: false
+    rainHeavy: false,
+    wind: false,
+    fog: false,
+    storm: false,
+    tornado: false
   }) // Estado del clima
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // Dirección del sol como objeto plano
   const [solarState, setSolarState] = useState({
@@ -551,12 +560,7 @@ function ModelScene({
   solarDirection: { x: number, y: number, z: number }
   solarState: { altitude: number, azimuth: number, declination: number }
   onSolarUpdate: (direction: { x: number, y: number, z: number }, altitude: number, azimuth: number, declination: number) => void
-  weather: { 
-    snow: boolean
-    rainLight: boolean
-    rainModerate: boolean
-    rainHeavy: boolean
-  }
+  weather: WeatherState
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -696,16 +700,47 @@ function ModelScene({
         material-transparent={true}
       />
 
-      {/* Partículas ambientales - sistema de clima controlable */}
-      {weather.snow && <SnowParticles />}
-      {weather.rainLight && <RainParticles intensity="light" />}
-      {weather.rainModerate && <RainParticles intensity="moderate" />}
-      {weather.rainHeavy && <RainParticles intensity="heavy" />}
-      {/* Nieve automática solo en biomas helados si no hay clima manual activo */}
-      {!weather.snow && !weather.rainLight && !weather.rainModerate && !weather.rainHeavy && isIceBiome && (
-        <SnowParticles />
-      )}
-      {/* AmbientParticles removidas - escena limpia por defecto */}
+      {/* Sistema climático completo */}
+      <WeatherManager
+        config={{
+          state: weather.storm ? 'storm' : weather.rainHeavy || weather.rainModerate || weather.rainLight ? 'rain' : weather.snow ? 'snow' : 'clear',
+          intensity: weather.rainHeavy ? 1 : weather.rainModerate ? 0.6 : weather.rainLight ? 0.3 : 0.5,
+          windStrength: weather.wind ? 0.7 : 0,
+          fogDensity: weather.fog ? 0.8 : 0,
+          lightningFrequency: weather.storm ? 12 : 0,
+          transitionSpeed: 0.5
+        }}
+      >
+        {/* Precipitación */}
+        {weather.snow && <SnowParticles />}
+        {weather.rainLight && <RainParticles intensity="light" />}
+        {weather.rainModerate && <RainParticles intensity="moderate" />}
+        {weather.rainHeavy && <RainParticles intensity="heavy" />}
+        
+        {/* Efectos atmosféricos */}
+        {weather.wind && (
+          <>
+            <WindEffect strength={0.7} direction={[1, 0, 0.5]} gustFrequency={0.5} />
+            <WindParticles strength={0.7} />
+          </>
+        )}
+        
+        {weather.fog && (
+          <>
+            <DynamicFog density={0.8} color="#b0b0b0" animated={true} />
+            <FogParticles density={0.8} />
+          </>
+        )}
+        
+        {/* Fenómenos extremos */}
+        {weather.storm && <LightningEffect enabled={true} intensity={1} />}
+        {weather.tornado && <TornadoEffect position={[20, 0, 20]} intensity={0.8} height={40} />}
+        
+        {/* Nieve automática solo en biomas helados si no hay clima manual activo */}
+        {!weather.snow && !weather.rainLight && !weather.rainModerate && !weather.rainHeavy && isIceBiome && (
+          <SnowParticles />
+        )}
+      </WeatherManager>
 
       {/* Elementos del entorno: rocas y vegetación - dinámicos según ubicación */}
       <EnvironmentElements location={location} />
