@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei'
+import { OrbitControls, PerspectiveCamera, Html, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import Globe3D from './Globe3D'
 import ModelViewer from './ModelViewer'
@@ -52,9 +52,10 @@ interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
   onCameraReady?: (camera: THREE.Camera) => void
   onModeChange?: (mode: 'globe' | 'transition' | 'model' | 'exploration') => void
+  spaceUfoActive?: boolean
 }
 
-export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange }: ImmersiveSceneProps) {
+export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false }: ImmersiveSceneProps) {
   const [mode, setMode] = useState<'globe' | 'transition' | 'model' | 'exploration'>('globe')
   const [selectedModel, setSelectedModel] = useState<string>(getAssetPath('/moai.glb'))
   const [avatarModel, setAvatarModel] = useState<string>(getAssetPath('/warrior.glb'))
@@ -392,6 +393,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onLocationClick={handleLocationClick}
           onSiteClick={handleSiteClick}
           markerPosition={selectedLocation}
+          spaceUfoActive={spaceUfoActive}
         />
       ) : mode === 'model' ? (
         <ModelScene 
@@ -487,16 +489,21 @@ function AmbientParticles() {
 function GlobeScene({ 
   onLocationClick,
   onSiteClick,
-  markerPosition
+  markerPosition,
+  spaceUfoActive = false
 }: { 
   onLocationClick: (lat: number, lon: number) => void
   onSiteClick: (site: ArchaeologicalSite) => void
   markerPosition?: { lat: number, lon: number } | null
+  spaceUfoActive?: boolean
 }) {
   return (
     <Canvas
       camera={{ position: [0, 0, 15], fov: 50 }}
-      style={{ background: '#000' }}
+      style={{ 
+        background: '#000',
+        cursor: spaceUfoActive ? 'none' : 'default' // Ocultar cursor cuando OVNI está activo
+      }}
     >
       <PerspectiveCamera makeDefault position={[0, 0, 15]} fov={50} />
       <OrbitControls
@@ -512,6 +519,11 @@ function GlobeScene({
         onLocationClick={onLocationClick}
         markerPosition={markerPosition}
       />
+      
+      {/* OVNI Espacial controlado por mouse */}
+      {spaceUfoActive && (
+        <SpaceUfo />
+      )}
       
       {/* Marcadores de sitios arqueológicos - Temporalmente deshabilitados */}
       {/* <SiteMarkers onSiteClick={onSiteClick} /> */}
@@ -1193,5 +1205,124 @@ function SiteInfo({ site }: { site: ArchaeologicalSite }) {
         {site.description}
       </div>
     </Html>
+  )
+}
+
+
+// OVNI Espacial controlado por mouse
+function SpaceUfo() {
+  const ufoRef = useRef<THREE.Group>(null)
+  const sunLightRef = useRef<THREE.DirectionalLight>(null)
+  const { camera, size, scene: threeScene } = useThree()
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  
+  // Cargar modelo del OVNI
+  const { scene } = useGLTF(getAssetPath('/ovni.glb'))
+  
+  // Capturar movimiento del mouse
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      // Convertir coordenadas del mouse a coordenadas normalizadas (-1 a 1)
+      setMousePosition({
+        x: (event.clientX / size.width) * 2 - 1,
+        y: -(event.clientY / size.height) * 2 + 1
+      })
+    }
+    
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [size])
+  
+  // Actualizar posición del OVNI para seguir el mouse
+  useFrame(() => {
+    if (!ufoRef.current) return
+    
+    // Crear un raycaster desde la cámara hacia la posición del mouse
+    const raycaster = new THREE.Raycaster()
+    raycaster.setFromCamera(new THREE.Vector2(mousePosition.x, mousePosition.y), camera)
+    
+    // Calcular punto en el espacio a una distancia fija de la cámara
+    const distance = 10 // Distancia desde la cámara
+    const targetPosition = raycaster.ray.origin.clone().add(
+      raycaster.ray.direction.multiplyScalar(distance)
+    )
+    
+    // Suavizar movimiento del OVNI hacia la posición objetivo
+    ufoRef.current.position.lerp(targetPosition, 0.1)
+    
+    // Hacer que el OVNI mire hacia donde se mueve
+    if (raycaster.ray.direction.length() > 0) {
+      const lookAtPos = ufoRef.current.position.clone().add(raycaster.ray.direction)
+      ufoRef.current.lookAt(lookAtPos)
+    }
+    
+    // Calcular escala basada en distancia a planetas REALES en la escena
+    let minDistance = Infinity
+    const ufoPosition = ufoRef.current.position
+    
+    // Buscar todos los meshes de planetas en la escena
+    threeScene.traverse((object) => {
+      // Buscar objetos que sean planetas (tienen geometría de esfera)
+      if (object instanceof THREE.Mesh && object.geometry instanceof THREE.SphereGeometry) {
+        // Calcular distancia al OVNI
+        const dist = ufoPosition.distanceTo(object.getWorldPosition(new THREE.Vector3()))
+        if (dist < minDistance) {
+          minDistance = dist
+        }
+      }
+    })
+    
+    // Calcular escala: 
+    // OVNI con tamaño base 3 veces Mercurio (0.38 * 3 = 1.14)
+    // - Lejos de planetas (>50 unidades): escala 1.14 (3 veces Mercurio)
+    // - Cerca de planetas (<5 unidades): escala 0.0285 (40 veces más pequeño)
+    const maxDistance = 50 // Distancia donde empieza a reducirse
+    const minDistanceThreshold = 5 // Distancia mínima donde alcanza el tamaño mínimo
+    
+    const normalScale = 1.14 // 3 veces el tamaño de Mercurio (0.38 * 3)
+    const minScale = 0.0285 // 40 veces más pequeño (1.14 / 40)
+    
+    let targetScale = normalScale // Escala normal
+    if (minDistance < maxDistance) {
+      // Interpolación suave entre escala normal y escala mínima
+      const t = Math.max(0, Math.min(1, (maxDistance - minDistance) / (maxDistance - minDistanceThreshold)))
+      targetScale = normalScale - (t * (normalScale - minScale))
+    }
+    
+    // Suavizar cambio de escala
+    const currentScale = ufoRef.current.scale.x
+    const newScale = currentScale + (targetScale - currentScale) * 0.05
+    ufoRef.current.scale.setScalar(newScale)
+    
+    // Actualizar luz del Sol para que apunte desde el Sol (0,0,0) hacia el OVNI
+    if (sunLightRef.current) {
+      const sunPosition = new THREE.Vector3(0, 0, 0)
+      const ufoPos = ufoRef.current.position.clone()
+      const direction = ufoPos.sub(sunPosition).normalize()
+      
+      // Posicionar la luz en dirección opuesta al OVNI (desde el Sol)
+      const lightDistance = 50
+      sunLightRef.current.position.copy(direction.multiplyScalar(-lightDistance))
+    }
+  })
+  
+  return (
+    <group ref={ufoRef} position={[0, 0, 10]}>
+      <primitive object={scene} scale={1.14} />
+      
+      {/* Iluminación del Sol */}
+      <directionalLight 
+        ref={sunLightRef}
+        intensity={2.5} 
+        color="#fff5e6"
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+      />
+      
+      {/* Luces de relleno */}
+      <ambientLight intensity={0.2} />
+      <pointLight position={[10, 10, 10]} intensity={0.3} color="#ffffff" />
+    </group>
   )
 }

@@ -14,6 +14,8 @@ interface WalkableAvatarProps {
   solarDirection?: { x: number, y: number, z: number }
   isDay?: boolean
   showCosmicEffects?: boolean
+  disableCameraControl?: boolean // Nuevo prop para deshabilitar control de cámara
+  initialPosition?: [number, number, number] // Posición inicial
 }
 
 // Detectar tipo de avatar según el path
@@ -32,9 +34,12 @@ export default function WalkableAvatar({
   onModelChange,
   solarDirection = { x: 0, y: 1, z: 0 },
   isDay = true,
-  showCosmicEffects = true  // Reactivado
+  showCosmicEffects = true,  // Reactivado
+  disableCameraControl = false, // Por defecto controla la cámara
+  initialPosition = [0, 0, 0] // Posición inicial por defecto
 }: WalkableAvatarProps) {
   const group = useRef<THREE.Group>(null)
+  const sunLightRef = useRef<THREE.DirectionalLight>(null)
   const { scene, animations } = useGLTF(modelPath)
   const { actions, names } = useAnimations(animations, group)
   const { camera } = useThree()
@@ -73,14 +78,14 @@ export default function WalkableAvatar({
     
     // Resetear posición del avatar al cambiar modelo
     if (group.current) {
-      group.current.position.set(0, 0, 0)
+      group.current.position.set(initialPosition[0], initialPosition[1], initialPosition[2])
       group.current.rotation.set(0, 0, 0)
     }
     
     // Resetear timer de idle para forzar reposicionamiento de cámara
     idleTimer.current = 2.0  // Forzar reposicionamiento inmediato
     
-  }, [modelPath, avatarType])
+  }, [modelPath, avatarType, initialPosition])
   
   // Configurar controles de teclado
   useEffect(() => {
@@ -268,19 +273,19 @@ export default function WalkableAvatar({
     let isMoving = false
     
     if (keys.current['w']) {
-      moveDirection.add(avatarForward)  // Adelante
+      moveDirection.sub(avatarForward)  // Atrás (invertido para que W retroceda)
       isMoving = true
     }
     if (keys.current['s']) {
-      moveDirection.sub(avatarForward)  // Atrás
+      moveDirection.add(avatarForward)  // Adelante (invertido para que S avance)
       isMoving = true
     }
     if (keys.current['a']) {
-      moveDirection.sub(avatarRight)  // Izquierda (strafe)
+      moveDirection.add(avatarRight)  // Derecha (invertido)
       isMoving = true
     }
     if (keys.current['d']) {
-      moveDirection.add(avatarRight)  // Derecha (strafe)
+      moveDirection.sub(avatarRight)  // Izquierda (invertido)
       isMoving = true
     }
     
@@ -429,50 +434,64 @@ export default function WalkableAvatar({
     group.current.position.x = Math.max(-worldLimit, Math.min(worldLimit, group.current.position.x))
     group.current.position.z = Math.max(-worldLimit, Math.min(worldLimit, group.current.position.z))
     
-    // Actualizar posición de la cámara para seguir al avatar
-    // Cámara en tercera persona detrás del avatar
-    const cameraDistance = 6  // Distancia de la cámara
-    const cameraHeight = 3    // Altura de la cámara
-    
-    // Calcular posición de cámara detrás del avatar
-    const avatarRotation = group.current.rotation.y
-    const cameraX = group.current.position.x - Math.sin(avatarRotation) * cameraDistance
-    const cameraZ = group.current.position.z - Math.cos(avatarRotation) * cameraDistance
-    let cameraY = group.current.position.y + cameraHeight
-    
-    // Camera bob (oscilación al caminar) para sensación de movimiento
-    if (isMoving) {
-      const bobSpeed = 8  // Velocidad de oscilación
-      const bobAmount = 0.08  // Amplitud de oscilación (sutil)
-      cameraY += Math.sin(timeAccumulator.current * bobSpeed) * bobAmount
+    // Actualizar posición de la cámara para seguir al avatar (solo si no está deshabilitado)
+    if (!disableCameraControl) {
+      // Cámara en tercera persona detrás del avatar
+      const cameraDistance = 6  // Distancia de la cámara
+      const cameraHeight = 3    // Altura de la cámara
+      
+      // Calcular posición de cámara detrás del avatar
+      const avatarRotation = group.current.rotation.y
+      const cameraX = group.current.position.x - Math.sin(avatarRotation) * cameraDistance
+      const cameraZ = group.current.position.z - Math.cos(avatarRotation) * cameraDistance
+      let cameraY = group.current.position.y + cameraHeight
+      
+      // Camera bob (oscilación al caminar) para sensación de movimiento
+      if (isMoving) {
+        const bobSpeed = 8  // Velocidad de oscilación
+        const bobAmount = 0.08  // Amplitud de oscilación (sutil)
+        cameraY += Math.sin(timeAccumulator.current * bobSpeed) * bobAmount
+      }
+      
+      // Velocidad de seguimiento adaptativa
+      let followSpeed
+      if (idleTimer.current > 1.0) {
+        // Si ha estado quieto >1 seg, reposicionar agresivamente
+        followSpeed = 15 * delta
+      } else if (isMoving) {
+        // Cuando se mueve, seguimiento rápido
+        followSpeed = 10 * delta
+      } else {
+        // Transición suave cuando acaba de detenerse
+        followSpeed = 5 * delta
+      }
+      
+      // Suavizar movimiento de cámara
+      camera.position.lerp(
+        new THREE.Vector3(cameraX, cameraY, cameraZ),
+        followSpeed
+      )
+      
+      // Siempre mirar al avatar (un poco arriba del centro)
+      const lookAtTarget = new THREE.Vector3(
+        group.current.position.x,
+        group.current.position.y + 1.5,
+        group.current.position.z
+      )
+      camera.lookAt(lookAtTarget)
     }
     
-    // Velocidad de seguimiento adaptativa
-    let followSpeed
-    if (idleTimer.current > 1.0) {
-      // Si ha estado quieto >1 seg, reposicionar agresivamente
-      followSpeed = 15 * delta
-    } else if (isMoving) {
-      // Cuando se mueve, seguimiento rápido
-      followSpeed = 10 * delta
-    } else {
-      // Transición suave cuando acaba de detenerse
-      followSpeed = 5 * delta
+    // Actualizar luz del Sol en el espacio para que apunte desde el Sol (0,0,0) hacia el OVNI
+    if (disableCameraControl && sunLightRef.current && group.current) {
+      // Calcular dirección desde el Sol hacia el OVNI
+      const sunPosition = new THREE.Vector3(0, 0, 0)
+      const ufoPosition = group.current.position.clone()
+      const direction = ufoPosition.sub(sunPosition).normalize()
+      
+      // Posicionar la luz en dirección opuesta al OVNI (desde el Sol)
+      const lightDistance = 50
+      sunLightRef.current.position.copy(direction.multiplyScalar(-lightDistance))
     }
-    
-    // Suavizar movimiento de cámara
-    camera.position.lerp(
-      new THREE.Vector3(cameraX, cameraY, cameraZ),
-      followSpeed
-    )
-    
-    // Siempre mirar al avatar (un poco arriba del centro)
-    const lookAtTarget = new THREE.Vector3(
-      group.current.position.x,
-      group.current.position.y + 1.5,
-      group.current.position.z
-    )
-    camera.lookAt(lookAtTarget)
     
     // Notificar cambio de posición
     if (onPositionChange) {
@@ -483,8 +502,8 @@ export default function WalkableAvatar({
   return (
     <>
       <group ref={group} position={[0, 0, 0]}>
-        {/* Efectos cósmicos envolviendo el avatar */}
-        {showCosmicEffects && (
+        {/* Efectos cósmicos envolviendo el avatar (solo en Tierra, no en espacio) */}
+        {showCosmicEffects && !disableCameraControl && (
           <CosmicEntity
             solarDirection={solarDirectionVec3}
             isDay={isDay}
@@ -494,37 +513,60 @@ export default function WalkableAvatar({
         )}
         
         {/* Sin efectos cósmicos, solo el modelo */}
-        {!showCosmicEffects && <primitive object={scene} />}
+        {(!showCosmicEffects || disableCameraControl) && <primitive object={scene} />}
         
-        {/* Iluminación mejorada para visibilidad del avatar */}
-        {/* Luz principal desde arriba con sombras */}
-        <spotLight
-          position={[0, 8, 0]}
-          intensity={8.0}
-          angle={Math.PI / 2.5}
-          penumbra={0.3}
-          distance={20}
-          decay={1.5}
-          color="#ffffff"
-          castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-          shadow-camera-near={0.5}
-          shadow-camera-far={25}
-          shadow-bias={-0.0001}
-        />
+        {/* Iluminación mejorada para OVNI en el espacio */}
+        {disableCameraControl && (
+          <>
+            {/* Luz del Sol - Direccional que simula la luz solar */}
+            <directionalLight 
+              ref={sunLightRef}
+              intensity={2.5} 
+              color="#fff5e6"
+              castShadow
+              shadow-mapSize-width={1024}
+              shadow-mapSize-height={1024}
+            />
+            
+            {/* Luces de relleno suaves para visibilidad */}
+            <ambientLight intensity={0.2} />
+            <pointLight position={[10, 10, 10]} intensity={0.3} color="#ffffff" />
+          </>
+        )}
         
-        {/* Luz de relleno desde arriba-atrás */}
-        <pointLight position={[0, 6, -4]} intensity={5.0} color="#ffffff" distance={15} />
-        
-        {/* Luz frontal cálida */}
-        <pointLight position={[0, 3, 5]} intensity={4.0} color="#ffe8d0" distance={12} />
-        
-        {/* Luz lateral izquierda */}
-        <pointLight position={[-4, 3, 0]} intensity={3.0} color="#e0f0ff" distance={10} />
-        
-        {/* Luz lateral derecha */}
-        <pointLight position={[4, 3, 0]} intensity={3.0} color="#ffe8d0" distance={10} />
+        {/* Iluminación mejorada para visibilidad del avatar en Tierra */}
+        {!disableCameraControl && (
+          <>
+            {/* Luz principal desde arriba con sombras */}
+            <spotLight
+              position={[0, 8, 0]}
+              intensity={8.0}
+              angle={Math.PI / 2.5}
+              penumbra={0.3}
+              distance={20}
+              decay={1.5}
+              color="#ffffff"
+              castShadow
+              shadow-mapSize-width={2048}
+              shadow-mapSize-height={2048}
+              shadow-camera-near={0.5}
+              shadow-camera-far={25}
+              shadow-bias={-0.0001}
+            />
+            
+            {/* Luz de relleno desde arriba-atrás */}
+            <pointLight position={[0, 6, -4]} intensity={5.0} color="#ffffff" distance={15} />
+            
+            {/* Luz frontal cálida */}
+            <pointLight position={[0, 3, 5]} intensity={4.0} color="#ffe8d0" distance={12} />
+            
+            {/* Luz lateral izquierda */}
+            <pointLight position={[-4, 3, 0]} intensity={3.0} color="#e0f0ff" distance={10} />
+            
+            {/* Luz lateral derecha */}
+            <pointLight position={[4, 3, 0]} intensity={3.0} color="#ffe8d0" distance={10} />
+          </>
+        )}
       </group>
     </>
   )
