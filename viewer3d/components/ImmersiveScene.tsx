@@ -696,12 +696,13 @@ function ModelScene({
         />
       )}
 
-      {/* Grid sutil para referencia de movimiento */}
+      {/* Grid sutil para referencia de movimiento - OCULTO */}
       <gridHelper 
         args={[200, 100, '#3a3a3a', '#2a2a2a']} 
         position={[0, 0.01, 0]}
-        material-opacity={0.15}
+        material-opacity={0}
         material-transparent={true}
+        visible={false}
       />
 
       {/* Sistema climático completo */}

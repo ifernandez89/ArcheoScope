@@ -197,18 +197,6 @@ export default function TornadoEffect({
       {/* Polvo en la base (falda de debris) */}
       <points ref={dustParticlesRef} geometry={dustGeometry} material={dustMaterial} />
       
-      {/* Núcleo oscuro central con forma cónica */}
-      <mesh position={position} rotation={[0, timeRef.current * 0.5, 0]}>
-        <cylinderGeometry args={[1, 3, height, 16, 20, true]} />
-        <meshBasicMaterial
-          color="#2a2a2a"
-          transparent
-          opacity={0.4}
-          side={THREE.DoubleSide}
-          blending={THREE.NormalBlending}
-        />
-      </mesh>
-      
       {/* Flash interno ocasional */}
       {Math.sin(timeRef.current * 10) > 0.95 && (
         <pointLight
