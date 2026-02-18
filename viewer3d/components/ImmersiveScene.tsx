@@ -12,6 +12,8 @@ import LocationInfo from './LocationInfo'
 import VolcanicTerrain from './VolcanicTerrain'
 import IceTerrain from './IceTerrain'
 import SnowParticles from './SnowParticles'
+import RainParticles from './RainParticles'
+import WeatherControl from './WeatherControl'
 import IceLighting from './IceLighting'
 import BasicCollisions from './BasicCollisions'
 import WalkableAvatar from './WalkableAvatar'
@@ -65,6 +67,12 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [showLocationInfo, setShowLocationInfo] = useState(false)
   const [showGeometryField, setShowGeometryField] = useState(true) // Activado por defecto
   const [isDay, setIsDay] = useState(true) // Estado día/noche
+  const [weather, setWeather] = useState({ 
+    snow: false, 
+    rainLight: false,
+    rainModerate: false,
+    rainHeavy: false
+  }) // Estado del clima
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // Dirección del sol como objeto plano
   const [solarState, setSolarState] = useState({
     altitude: 0,
@@ -364,8 +372,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             setSolarDirection(direction)
             setSolarState({ altitude, azimuth, declination })
           }}
+          weather={weather}
         />
       ) : null}
+
+      {/* Control de clima */}
+      {mode === 'model' && (
+        <WeatherControl onWeatherChange={setWeather} />
+      )}
 
       <style jsx>{`
         @keyframes fadeIn {
@@ -521,7 +535,8 @@ function ModelScene({
   onDayNightChange,
   solarDirection,
   solarState,
-  onSolarUpdate
+  onSolarUpdate,
+  weather
 }: { 
   modelPath: string
   avatarModel: string
@@ -536,6 +551,12 @@ function ModelScene({
   solarDirection: { x: number, y: number, z: number }
   solarState: { altitude: number, azimuth: number, declination: number }
   onSolarUpdate: (direction: { x: number, y: number, z: number }, altitude: number, azimuth: number, declination: number) => void
+  weather: { 
+    snow: boolean
+    rainLight: boolean
+    rainModerate: boolean
+    rainHeavy: boolean
+  }
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -675,8 +696,16 @@ function ModelScene({
         material-transparent={true}
       />
 
-      {/* Partículas ambientales - nieve en biomas helados */}
-      {isIceBiome ? <SnowParticles /> : <AmbientParticles />}
+      {/* Partículas ambientales - sistema de clima controlable */}
+      {weather.snow && <SnowParticles />}
+      {weather.rainLight && <RainParticles intensity="light" />}
+      {weather.rainModerate && <RainParticles intensity="moderate" />}
+      {weather.rainHeavy && <RainParticles intensity="heavy" />}
+      {/* Nieve automática solo en biomas helados si no hay clima manual activo */}
+      {!weather.snow && !weather.rainLight && !weather.rainModerate && !weather.rainHeavy && isIceBiome && (
+        <SnowParticles />
+      )}
+      {/* AmbientParticles removidas - escena limpia por defecto */}
 
       {/* Elementos del entorno: rocas y vegetación - dinámicos según ubicación */}
       <EnvironmentElements location={location} />

@@ -70,14 +70,14 @@ export default function WalkableAvatar({
   const jumpForce = 10.0  // Aumentado para salto más visible
   const gravity = -25.0  // Aumentado para caída más natural
   const groundLevel = useRef(0)  // Nivel del suelo
-  const flyingHeight = 5.0  // Altura de vuelo para el OVNI (aumentada)
+  const flyingHeight = 10.0  // Altura de vuelo para el OVNI (2x la original)
   
   // Resetear avatar al cambiar modelo
   useEffect(() => {
     console.log('🎭 Tipo de avatar:', avatarType)
     
-    // Resetear posición del avatar al cambiar modelo
-    if (group.current) {
+    // Solo resetear posición al montar el componente inicialmente
+    if (group.current && group.current.position.length() === 0) {
       group.current.position.set(initialPosition[0], initialPosition[1], initialPosition[2])
       group.current.rotation.set(0, 0, 0)
     }
@@ -85,7 +85,7 @@ export default function WalkableAvatar({
     // Resetear timer de idle para forzar reposicionamiento de cámara
     idleTimer.current = 2.0  // Forzar reposicionamiento inmediato
     
-  }, [modelPath, avatarType, initialPosition])
+  }, [modelPath, avatarType]) // Removido initialPosition de las dependencias
   
   // Configurar controles de teclado
   useEffect(() => {
@@ -273,19 +273,19 @@ export default function WalkableAvatar({
     let isMoving = false
     
     if (keys.current['w']) {
-      moveDirection.sub(avatarForward)  // Atrás (invertido para que W retroceda)
+      moveDirection.add(avatarForward)  // Adelante
       isMoving = true
     }
     if (keys.current['s']) {
-      moveDirection.add(avatarForward)  // Adelante (invertido para que S avance)
+      moveDirection.sub(avatarForward)  // Atrás
       isMoving = true
     }
     if (keys.current['a']) {
-      moveDirection.add(avatarRight)  // Derecha (invertido)
+      moveDirection.sub(avatarRight)  // Izquierda
       isMoving = true
     }
     if (keys.current['d']) {
-      moveDirection.sub(avatarRight)  // Izquierda (invertido)
+      moveDirection.add(avatarRight)  // Derecha
       isMoving = true
     }
     
