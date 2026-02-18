@@ -341,7 +341,7 @@ export default function WalkableAvatar({
     
     if (avatarType === 'flying') {
       // 🛸 OVNI: Vuelo flotante con oscilación suave
-      // Mantener altura de vuelo constante sobre el terreno
+      // Calcular altura objetivo sobre el terreno
       let targetHeight = flyingHeight
       
       if (terrainRef?.current) {
@@ -362,11 +362,12 @@ export default function WalkableAvatar({
         }
       }
       
-      // Suavizar transición a altura objetivo
-      group.current.position.y += (targetHeight - group.current.position.y) * 5 * delta
+      // Agregar oscilación a la altura objetivo (no a la posición actual)
+      const oscillation = Math.sin(timeAccumulator.current * 2) * 0.15
+      const finalTargetHeight = targetHeight + oscillation
       
-      // Oscilación vertical suave (flotación)
-      group.current.position.y += Math.sin(timeAccumulator.current * 2) * 0.02
+      // Suavizar transición a altura objetivo (con oscilación incluida)
+      group.current.position.y += (finalTargetHeight - group.current.position.y) * 8 * delta
       
       // Inclinación sutil según dirección de movimiento
       if (isMoving) {
