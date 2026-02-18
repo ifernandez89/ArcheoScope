@@ -664,14 +664,14 @@ function ModelScene({
         stormDarkness={weather.storm || weather.tornado ? 0.6 : 0} 
       />
 
-      {/* Trayectoria solar del día - OCULTA */}
+      {/* Trayectoria solar del día - líneas ultra sutiles */}
       <SolarTrajectory
         solarAltitude={solarState.altitude}
         solarAzimuth={solarState.azimuth}
         declination={solarState.declination}
         latitude={(location?.lat || 0) * Math.PI / 180}
         isDay={isDay}
-        visible={false}
+        visible={true}
       />
 
       {/* Niebla volumétrica - color adaptado al bioma */}
