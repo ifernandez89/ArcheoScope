@@ -277,7 +277,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                 : 'rgba(34, 197, 94, 0.9)'
             }}
           >
-            {movementMode === 'avatar' ? '🚶 Modo: Exploración' : '🔄 Modo: Órbita'}
+            {movementMode === 'avatar' ? '🛸 Modo: OVNI' : '🔄 Modo: Órbita'}
           </button>
 
           {/* Botón para mostrar/ocultar información de ubicación */}
@@ -311,55 +311,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           >
             📍 {showLocationInfo ? 'Ocultar Info' : 'Mostrar Info'}
           </button>
-
-          {/* Selector de Avatar (solo en modo avatar) - SIN recuadro negro */}
-          {movementMode === 'avatar' && (
-            <>
-              {[
-                { name: 'Warrior', path: getAssetPath('/warrior.glb'), icon: '⚔️' },
-                { name: 'Moai', path: getAssetPath('/moai.glb'), icon: '🗿' },
-                { name: 'Sphinx', path: getAssetPath('/sphinx.glb'), icon: '🦁' },
-                { name: 'OVNI', path: getAssetPath('/ovni.glb'), icon: '🛸' }
-              ].map((model) => (
-                <button
-                  key={model.path}
-                  onClick={() => setAvatarModel(model.path)}
-                  style={{
-                    padding: '12px 24px',
-                    background: avatarModel === model.path 
-                      ? 'rgba(139, 92, 246, 0.9)' 
-                      : 'rgba(75, 85, 99, 0.7)',
-                    border: avatarModel === model.path
-                      ? '2px solid rgba(139, 92, 246, 1)'
-                      : '1px solid rgba(255,255,255,0.3)',
-                    borderRadius: '8px',
-                    color: 'white',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    transition: 'all 0.2s',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (avatarModel !== model.path) {
-                      e.currentTarget.style.background = 'rgba(75, 85, 99, 0.9)'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (avatarModel !== model.path) {
-                      e.currentTarget.style.background = 'rgba(75, 85, 99, 0.7)'
-                    }
-                  }}
-                >
-                  <span>{model.icon}</span>
-                  <span>{model.name}</span>
-                </button>
-              ))}
-            </>
-          )}
         </div>
       )}
 
