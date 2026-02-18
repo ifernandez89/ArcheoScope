@@ -502,8 +502,8 @@ export default function WalkableAvatar({
   return (
     <>
       <group ref={group} position={[0, 0, 0]}>
-        {/* Efectos cósmicos envolviendo el avatar (solo en Tierra, no en espacio) */}
-        {showCosmicEffects && !disableCameraControl && (
+        {/* Efectos cósmicos envolviendo el avatar (solo en Tierra, no en espacio, y NO para OVNI) */}
+        {showCosmicEffects && !disableCameraControl && avatarType !== 'flying' && (
           <CosmicEntity
             solarDirection={solarDirectionVec3}
             isDay={isDay}
@@ -513,7 +513,7 @@ export default function WalkableAvatar({
         )}
         
         {/* Sin efectos cósmicos, solo el modelo */}
-        {(!showCosmicEffects || disableCameraControl) && <primitive object={scene} />}
+        {(!showCosmicEffects || disableCameraControl || avatarType === 'flying') && <primitive object={scene} />}
         
         {/* Iluminación mejorada para OVNI en el espacio */}
         {disableCameraControl && (
