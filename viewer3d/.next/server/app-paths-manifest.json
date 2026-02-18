@@ -1,3 +1,6 @@
 {
-  "/page": "app/page.js"
+  "/_not-found": "app/_not-found.js",
+  "/api/openrouter-key/route": "app/api/openrouter-key/route.js",
+  "/page": "app/page.js",
+  "/realistic-solar/page": "app/realistic-solar/page.js"
 }

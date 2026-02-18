@@ -171,7 +171,7 @@ export function MeasurementTool() {
       
       {/* Línea de medición */}
       {points.length > 1 && (
-        <line ref={lineRef}>
+        <line>
           <bufferGeometry>
             <bufferAttribute
               attach="attributes-position"

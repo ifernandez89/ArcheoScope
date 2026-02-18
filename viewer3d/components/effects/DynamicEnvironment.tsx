@@ -106,9 +106,7 @@ export function DynamicEnvironment({
       
       {/* Luz hemisférica */}
       <hemisphereLight
-        skyColor={skyColor}
-        groundColor={new THREE.Color(0x444444)}
-        intensity={isNight ? 0.1 : 0.5}
+        args={[skyColor, new THREE.Color(0x444444), isNight ? 0.1 : 0.5]}
       />
     </group>
   )

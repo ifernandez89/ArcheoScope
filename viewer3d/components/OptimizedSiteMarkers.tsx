@@ -132,7 +132,7 @@ export default function OptimizedSiteMarkers({
   })
 
   // Manejar clicks
-  const handleClick = (event: THREE.Event<MouseEvent>) => {
+  const handleClick = (event: any) => {
     event.stopPropagation()
     
     if (hoveredIndex !== null && hoveredIndex < sites.length) {

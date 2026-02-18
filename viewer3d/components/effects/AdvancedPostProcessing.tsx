@@ -1,5 +1,6 @@
 import { EffectComposer, Bloom, DepthOfField, SSAO, ChromaticAberration, Vignette } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
+import * as THREE from 'three'
 
 interface AdvancedPostProcessingProps {
   enableBloom?: boolean
@@ -80,7 +81,9 @@ export function AdvancedPostProcessing({
         
         {enableChromaticAberration && (
           <ChromaticAberration
-            offset={[0.001, 0.001]}
+            offset={new THREE.Vector2(0.001, 0.001)}
+            radialModulation={false}
+            modulationOffset={0}
             blendFunction={BlendFunction.NORMAL}
           />
         )}

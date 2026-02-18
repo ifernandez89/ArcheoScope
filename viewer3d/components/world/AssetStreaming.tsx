@@ -140,7 +140,8 @@ export function AssetStreaming({
   // Cargar asset individual
   const loadAsset = async (asset: StreamedAsset) => {
     try {
-      const gltf = await useGLTF.preload(asset.url)
+      const gltf: any = await useGLTF.preload(asset.url)
+      if (!gltf) return
       const model = gltf.scene.clone()
       
       model.position.copy(asset.position)

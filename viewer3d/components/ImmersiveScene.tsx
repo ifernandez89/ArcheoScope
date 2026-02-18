@@ -80,6 +80,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     wind: false,
     fog: false,
     storm: false,
+    lightning: false,
     tornado: false
   }) // Estado del clima
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // Dirección del sol como objeto plano

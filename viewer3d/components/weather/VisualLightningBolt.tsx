@@ -142,11 +142,11 @@ export default function VisualLightningBolt({
   return (
     <group ref={groupRef}>
       {/* Rayo principal */}
-      <line geometry={mainGeometry} material={material} />
+      <primitive object={new THREE.Line(mainGeometry, material)} />
       
       {/* Ramificaciones */}
       {branchGeometries.map((geo, i) => (
-        <line key={i} geometry={geo} material={branchMaterial} />
+        <primitive key={i} object={new THREE.Line(geo, branchMaterial)} />
       ))}
       
       {/* Glow adicional en el punto de impacto */}
