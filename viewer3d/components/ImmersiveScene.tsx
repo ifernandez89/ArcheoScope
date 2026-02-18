@@ -600,10 +600,10 @@ function ModelScene({
       ) : null}
       {/* En modo avatar, la cámara es controlada por WalkableAvatar */}
 
-      {/* Sistema astronómico-geométrico vivo */}
+      {/* Sistema astronómico-geométrico vivo - DESHABILITADO en modo avatar */}
       <AstronomicalWorld
         location={location}
-        enabled={true}
+        enabled={movementMode === 'orbit'}  // Solo activo en modo órbita
         showGeometry={showGeometryField}
         onDayNightChange={onDayNightChange}
         onSolarUpdate={onSolarUpdate}
@@ -706,8 +706,8 @@ function ModelScene({
       <CameraCapture onReady={onCameraReady} />
       <ModelCapture onLoaded={onModelLoaded} />
       
-      {/* Zoom cinematográfico al entrar */}
-      <CinematicZoom />
+      {/* Zoom cinematográfico al entrar - SOLO en modo órbita */}
+      {movementMode === 'orbit' && <CinematicZoom />}
 
       {/* Post-processing siempre activo */}
       <SubtlePostProcessing
@@ -720,15 +720,16 @@ function ModelScene({
   )
 }
 
-// Zoom cinematográfico
+// Zoom cinematográfico - SOLO en modo órbita
 function CinematicZoom() {
   const { camera } = useThree()
   const startPos = useRef(new THREE.Vector3(15, 10, 15))
   const targetPos = useRef(new THREE.Vector3(5, 3, 5))
   const progress = useRef(0)
+  const [isActive, setIsActive] = useState(true)
 
   useFrame((state, delta) => {
-    if (progress.current < 1) {
+    if (progress.current < 1 && isActive) {
       progress.current += delta * 0.5
       const t = Math.min(progress.current, 1)
       
