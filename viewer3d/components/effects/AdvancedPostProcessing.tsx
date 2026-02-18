@@ -17,7 +17,7 @@ interface AdvancedPostProcessingProps {
 export function AdvancedPostProcessing({
   enableBloom = true,
   enableDOF = false,
-  enableSSAO = true,
+  enableSSAO = false,
   enableVignette = true,
   enableChromaticAberration = false,
   quality = 'medium'
@@ -28,78 +28,63 @@ export function AdvancedPostProcessing({
     low: {
       bloomLuminanceThreshold: 1.0,
       bloomIntensity: 0.5,
-      ssaoSamples: 8,
-      ssaoRadius: 5,
       dofBokehScale: 1
     },
     medium: {
       bloomLuminanceThreshold: 0.9,
       bloomIntensity: 1.0,
-      ssaoSamples: 16,
-      ssaoRadius: 10,
       dofBokehScale: 2
     },
     high: {
       bloomLuminanceThreshold: 0.8,
       bloomIntensity: 1.5,
-      ssaoSamples: 32,
-      ssaoRadius: 15,
       dofBokehScale: 3
     }
   }
   
   const settings = qualitySettings[quality]
   
+  // Si no hay efectos habilitados, no renderizar nada
+  if (!enableBloom && !enableDOF && !enableVignette && !enableChromaticAberration) {
+    return null
+  }
+  
   return (
     <EffectComposer multisampling={quality === 'high' ? 8 : 4}>
-      {/* Bloom - Resplandor realista */}
-      {enableBloom && (
-        <Bloom
-          luminanceThreshold={settings.bloomLuminanceThreshold}
-          luminanceSmoothing={0.9}
-          intensity={settings.bloomIntensity}
-          blendFunction={BlendFunction.ADD}
-        />
-      )}
-      
-      {/* SSAO - Oclusión ambiental */}
-      {enableSSAO && (
-        <SSAO
-          samples={settings.ssaoSamples}
-          radius={settings.ssaoRadius}
-          intensity={30}
-          luminanceInfluence={0.6}
-          color="black"
-          blendFunction={BlendFunction.MULTIPLY}
-        />
-      )}
-      
-      {/* Depth of Field - Profundidad de campo */}
-      {enableDOF && (
-        <DepthOfField
-          focusDistance={0.01}
-          focalLength={0.05}
-          bokehScale={settings.dofBokehScale}
-          height={480}
-        />
-      )}
-      
-      {/* Vignette - Viñeta sutil */}
-      {enableVignette && (
-        <Vignette
-          offset={0.3}
-          darkness={0.5}
-          blendFunction={BlendFunction.NORMAL}
-        />
-      )}
-      
-      {/* Chromatic Aberration - Aberración cromática */}
-      {enableChromaticAberration && (
-        <ChromaticAberration
-          offset={[0.001, 0.001]}
-          blendFunction={BlendFunction.NORMAL}
-        />
-      )}
+      <>
+        {enableBloom && (
+          <Bloom
+            luminanceThreshold={settings.bloomLuminanceThreshold}
+            luminanceSmoothing={0.9}
+            intensity={settings.bloomIntensity}
+            blendFunction={BlendFunction.ADD}
+          />
+        )}
+        
+        {enableDOF && (
+          <DepthOfField
+            focusDistance={0.01}
+            focalLength={0.05}
+            bokehScale={settings.dofBokehScale}
+            height={480}
+          />
+        )}
+        
+        {enableVignette && (
+          <Vignette
+            offset={0.3}
+            darkness={0.5}
+            blendFunction={BlendFunction.NORMAL}
+          />
+        )}
+        
+        {enableChromaticAberration && (
+          <ChromaticAberration
+            offset={[0.001, 0.001]}
+            blendFunction={BlendFunction.NORMAL}
+          />
+        )}
+      </>
     </EffectComposer>
   )
 }
@@ -111,7 +96,7 @@ export function ArchaeologicalPreset() {
   return (
     <AdvancedPostProcessing
       enableBloom={true}
-      enableSSAO={true}
+      enableSSAO={false}
       enableVignette={true}
       enableDOF={false}
       enableChromaticAberration={false}
