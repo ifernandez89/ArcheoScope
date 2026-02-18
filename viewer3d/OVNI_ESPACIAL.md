@@ -10,7 +10,7 @@ Sistema de OVNI espacial controlado por mouse que navega por el sistema solar co
 - **Control por mouse**: El OVNI sigue el cursor del mouse en tiempo real
 - **Cursor oculto**: El cursor desaparece cuando el OVNI está activo para inmersión total
 - **Movimiento suave**: Interpolación suave (lerp) para movimiento natural
-- **Orientación dinámica**: El OVNI mira hacia la dirección de movimiento
+- **Rotación propia**: El UAP (cubo) rota lentamente sobre su eje Y (0.01 rad/frame)
 
 ### Escala Dinámica Inteligente
 - **Tamaño base**: 3 veces el tamaño de Mercurio (1.14 unidades)
@@ -87,6 +87,15 @@ minDistance = 5     // Tamaño mínimo alcanzado
 - **Rama main**: ✅ Listo para desplegar
 - **GitHub Pages**: Compatible con build estático
 
+## 🎨 Modelo 3D
+
+### UAP (Unidentified Aerial Phenomenon)
+- **Archivo**: `uap.glb` (cubo)
+- **Ubicación**: `/public/uap.glb`
+- **Escala base**: 1.14 (3x Mercurio)
+- **Rotación**: 0.01 rad/frame sobre eje Y
+- **Características**: Geometría cúbica con rotación constante y suave
+
 ## 📝 Notas de Desarrollo
 
 ### Correcciones Realizadas
@@ -95,15 +104,18 @@ minDistance = 5     // Tamaño mínimo alcanzado
 3. ✅ Tidal locking lunar corregido
 4. ✅ Texturas 2K optimizadas
 5. ✅ Detección de planetas en tiempo real (no posiciones fijas)
+6. ✅ Modelo cambiado de ovni.glb a uap.glb (cubo)
+7. ✅ Rotación propia implementada (sin lookAt)
 
 ### Decisiones de Diseño
 - **Sin panel de teclas**: Control solo por mouse para simplicidad
 - **Escala visible**: 3x Mercurio para visibilidad óptima
 - **Reducción dramática**: 40x para efecto impactante cerca de planetas
 - **Cursor oculto**: Mayor inmersión en la experiencia
+- **Rotación propia**: El UAP mantiene su rotación independiente sin mirar hacia el movimiento
 
 ---
 
-**Fecha**: 17 de febrero de 2026
-**Versión**: 1.0.0
+**Fecha**: 18 de febrero de 2026
+**Versión**: 1.1.0
 **Estado**: Producción
