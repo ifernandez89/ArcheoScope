@@ -6,6 +6,7 @@ import { useRef, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { WorldCore } from '@/engines/WorldCore'
+import { loggers } from '@/core/Logger'
 
 export interface UseLODOptions {
   distances?: number[]
@@ -139,7 +140,7 @@ export function useLODStats() {
  * function MyTree({ position }: { position: [number, number, number] }) {
  *   const { level, distance } = useLOD(position, {
  *     distances: [30, 80, 200],
- *     onLevelChange: (level) => console.log('LOD changed to', level)
+ *     onLevelChange: (level) => loggers.performance.debug('LOD changed to', level)
  *   })
  * 
  *   return (

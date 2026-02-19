@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import * as THREE from 'three'
+import { loggers } from '@/core/Logger'
 
 /**
  * Hook para cargar texturas de forma segura
@@ -18,7 +19,7 @@ export function useTexture(path: string): THREE.Texture | null {
       },
       undefined,
       (error) => {
-        console.warn(`No se pudo cargar textura: ${path}`)
+        loggers.world.warn(`No se pudo cargar textura: ${path}`)
         setTexture(null)
       }
     )

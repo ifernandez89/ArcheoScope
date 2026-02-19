@@ -39,6 +39,7 @@ import ProceduralTerrain from './ProceduralTerrain'
 import AmbientMotion from './AmbientMotion'
 import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
 import { getAssetPath } from '@/lib/paths'
+import { loggers } from '@/core/Logger'
 
 // 🎮 SISTEMAS DE PERFORMANCE
 import EngineIntegration from './EngineIntegration'
@@ -99,7 +100,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
 
   // Manejar click en sitio arqueológico
   const handleSiteClick = async (site: ArchaeologicalSite) => {
-    console.log(`🏛️ Sitio seleccionado: ${site.name}`)
+    loggers.world.info(`Sitio seleccionado: ${site.name}`)
     
     // Actualizar contexto del avatar
     AvatarEngine.setContext({
@@ -118,12 +119,12 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     
     setMode('model')
     
-    console.log('✅ Teletransporte a sitio arqueológico completado')
+    loggers.world.info('Teletransporte a sitio arqueológico completado')
   }
 
   // Manejar click en ubicación del globo
   const handleLocationClick = async (lat: number, lon: number) => {
-    console.log(`🌍 Iniciando teletransporte a: lat=${lat.toFixed(4)}, lon=${lon.toFixed(4)}`)
+    loggers.world.info(`Iniciando teletransporte a: lat=${lat.toFixed(4)}, lon=${lon.toFixed(4)}`)
     
     setSelectedLocation({ lat, lon })
     setSelectedModel(getAssetPath('/moai.glb'))
@@ -136,8 +137,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // Cambiar a modo modelo
     setMode('model')
     
-    console.log('✅ Teletransporte completado')
-    console.log('📍 Coordenadas exactas:', { lat, lon })
+    loggers.world.info('Teletransporte completado', { lat, lon })
   }
 
   // Volver al globo
@@ -583,8 +583,10 @@ function ModelScene({
   // Log del bioma detectado
   useEffect(() => {
     if (location) {
-      console.log(`🌍 Bioma detectado: ${biome.name} (${biome.type})`)
-      console.log(`   Temperatura: ${biome.temperature}°C, Humedad: ${biome.humidity}%`)
+      loggers.world.info(`Bioma detectado: ${biome.name} (${biome.type})`, {
+        temperatura: biome.temperature,
+        humedad: biome.humidity
+      })
     }
   }, [biome, location])
   
@@ -1112,7 +1114,7 @@ function SolarSimulation({ lat, lon }: { lat: number, lon: number }) {
     
     lightRef.current.color.set(sunColor)
     
-    console.log('☀️ Simulación solar:', {
+    loggers.world.debug('Simulación solar:', {
       lat: lat.toFixed(2),
       lon: lon.toFixed(2),
       altitude: altitude.toFixed(2),

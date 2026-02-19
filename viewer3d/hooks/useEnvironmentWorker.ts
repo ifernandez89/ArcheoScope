@@ -9,6 +9,7 @@ import type {
   BiomeData, 
   EnvironmentData 
 } from '@/workers/environment.worker'
+import { loggers } from '@/core/Logger'
 
 export function useEnvironmentWorker() {
   const workerRef = useRef<Worker | null>(null)
@@ -28,7 +29,7 @@ export function useEnvironmentWorker() {
       const { type, data, error } = event.data
 
       if (type === 'error') {
-        console.error('Worker error:', error)
+        loggers.world.error('Worker error:', error)
         setIsProcessing(false)
         return
       }

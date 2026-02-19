@@ -5,6 +5,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useGLTF, useAnimations } from '@react-three/drei'
 import * as THREE from 'three'
 import CosmicEntity from './CosmicEntity'
+import { loggers } from '@/core/Logger'
 
 interface WalkableAvatarProps {
   modelPath: string
@@ -74,7 +75,7 @@ export default function WalkableAvatar({
   
   // Resetear avatar al cambiar modelo
   useEffect(() => {
-    console.log('🎭 Tipo de avatar:', avatarType)
+    loggers.avatar.debug('Tipo de avatar:', avatarType)
     
     // Solo resetear posición al montar el componente inicialmente
     if (group.current && group.current.position.length() === 0) {
@@ -97,6 +98,7 @@ export default function WalkableAvatar({
       if (e.code === 'Space' && !isJumping.current && avatarType !== 'flying') {
         isJumping.current = true
         verticalVelocity.current = jumpForce
+        loggers.avatar.debug('Salto iniciado')
       }
     }
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -159,7 +161,7 @@ export default function WalkableAvatar({
                 metalness: 0.1
               })
               mesh.material = standardMat
-              console.log('🔄 Convertido a MeshStandardMaterial')
+              loggers.avatar.debug('Material convertido a MeshStandardMaterial')
             }
             
             // Si ya es MeshStandardMaterial, ajustar propiedades
@@ -176,7 +178,7 @@ export default function WalkableAvatar({
         }
       })
       
-      console.log('🚶 Avatar cargado:', {
+      loggers.avatar.info('Avatar cargado:', {
         animaciones: names,
         totalAnimaciones: names.length,
         dimensiones: size,
@@ -188,13 +190,9 @@ export default function WalkableAvatar({
       
       // Mostrar lista detallada de animaciones
       if (names.length > 0) {
-        console.log('🎬 Animaciones disponibles:')
-        names.forEach((name, index) => {
-          console.log(`  ${index + 1}. ${name}`)
-        })
+        loggers.avatar.debug('Animaciones disponibles:', names)
       } else {
-        console.warn('⚠️ Este modelo NO tiene animaciones embebidas')
-        console.log('💡 Sugerencia: Usa Mixamo (https://www.mixamo.com/) para agregar animaciones')
+        loggers.avatar.warn('Este modelo NO tiene animaciones embebidas. Sugerencia: Usa Mixamo (https://www.mixamo.com/)')
       }
     }
   }, [scene, names])
@@ -203,12 +201,12 @@ export default function WalkableAvatar({
   // Solo para avatares humanoides con rig
   useEffect(() => {
     if (avatarType !== 'humanoid') {
-      console.log(`🎭 Avatar tipo "${avatarType}" usa animación procedural, no rig`)
+      loggers.avatar.debug(`Avatar tipo "${avatarType}" usa animación procedural, no rig`)
       return
     }
     
     if (!actions || names.length === 0) {
-      console.log('⚠️ No hay animaciones disponibles para este humanoide')
+      loggers.avatar.warn('No hay animaciones disponibles para este humanoide')
       return
     }
     
@@ -223,7 +221,7 @@ export default function WalkableAvatar({
       n.toLowerCase().includes('run')
     ) || names[1]
     
-    console.log('🎬 Animaciones detectadas:', {
+    loggers.avatar.debug('Animaciones detectadas:', {
       idle: idleAnim,
       walk: walkAnim,
       todas: names,
@@ -238,7 +236,7 @@ export default function WalkableAvatar({
       }
       // Fade in walk
       actions[walkAnim]?.reset().fadeIn(0.3).play()
-      console.log('🚶 Reproduciendo animación: Walk')
+      loggers.avatar.debug('Reproduciendo animación: Walk')
     } else if (state === 'idle' && idleAnim && actions[idleAnim]) {
       // Fade out walk
       if (walkAnim && actions[walkAnim]) {
@@ -246,7 +244,7 @@ export default function WalkableAvatar({
       }
       // Fade in idle
       actions[idleAnim]?.reset().fadeIn(0.3).play()
-      console.log('🧍 Reproduciendo animación: Idle')
+      loggers.avatar.debug('Reproduciendo animación: Idle')
     }
     
   }, [state, actions, names, avatarType])
@@ -328,7 +326,7 @@ export default function WalkableAvatar({
           group.current.position.y = groundLevel.current
           isJumping.current = false
           verticalVelocity.current = 0
-          console.log('🎯 Aterrizaje completado')
+          loggers.avatar.debug('Aterrizaje completado')
         }
       } else {
         // Guardar nivel del suelo cuando está en tierra

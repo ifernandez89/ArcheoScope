@@ -5,6 +5,8 @@
  * Si LOW es fluido y HIGH no → problema en pipeline gráfico
  */
 
+import { loggers } from '@/core/Logger'
+
 export type QualityPreset = 'LOW' | 'MEDIUM' | 'HIGH' | 'ULTRA'
 
 export interface GraphicsConfig {
@@ -170,7 +172,7 @@ export class GraphicsPresetManager {
   private config: GraphicsConfig = GRAPHICS_PRESETS.MEDIUM
   
   private constructor() {
-    console.log('🎨 GraphicsPresetManager: Inicializado')
+    loggers.performance.info('GraphicsPresetManager inicializado')
     this.detectOptimalPreset()
   }
   
@@ -200,7 +202,7 @@ export class GraphicsPresetManager {
         ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
         : 'Unknown'
       
-      console.log('🎮 GPU detectada:', renderer)
+      loggers.performance.info('GPU detectada:', renderer)
       
       // Heurística simple
       const rendererStr = String(renderer).toLowerCase()
@@ -214,7 +216,7 @@ export class GraphicsPresetManager {
         this.setPreset('MEDIUM')
       }
     } catch (error) {
-      console.warn('⚠️ No se pudo detectar GPU, usando preset MEDIUM')
+      loggers.performance.warn('No se pudo detectar GPU, usando preset MEDIUM')
       this.setPreset('MEDIUM')
     }
   }
@@ -226,8 +228,7 @@ export class GraphicsPresetManager {
     this.currentPreset = preset
     this.config = GRAPHICS_PRESETS[preset]
     
-    console.log(`🎨 Graphics preset: ${preset}`)
-    console.log('Config:', this.config)
+    loggers.performance.info(`Graphics preset: ${preset}`, this.config)
   }
   
   /**
@@ -249,7 +250,7 @@ export class GraphicsPresetManager {
    */
   setCustomConfig(config: Partial<GraphicsConfig>): void {
     this.config = { ...this.config, ...config }
-    console.log('🎨 Custom config aplicada')
+    loggers.performance.info('Custom config aplicada')
   }
 }
 

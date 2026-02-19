@@ -6,6 +6,7 @@
  */
 
 import * as THREE from 'three'
+import { loggers } from '@/core/Logger'
 
 export interface InstanceConfig {
   geometry: THREE.BufferGeometry
@@ -37,7 +38,7 @@ export class InstanceManager {
   }
   
   private constructor() {
-    console.log('🎨 InstanceManager: Inicializado')
+    loggers.performance.info('InstanceManager inicializado')
   }
   
   static getInstance(): InstanceManager {
@@ -55,7 +56,7 @@ export class InstanceManager {
     config: InstanceConfig
   ): THREE.InstancedMesh {
     if (this.instancedMeshes.has(id)) {
-      console.warn(`InstanceManager: ${id} ya existe`)
+      loggers.performance.warn(`InstanceManager: ${id} ya existe`)
       return this.instancedMeshes.get(id)!
     }
     
@@ -88,7 +89,7 @@ export class InstanceManager {
     this.stats.totalTypes++
     this.stats.drawCalls++
     
-    console.log(`✅ InstanceManager: Creado ${id} (${config.count} instancias)`)
+    loggers.performance.debug(`InstanceManager: Creado ${id} (${config.count} instancias)`)
     
     return mesh
   }
@@ -103,12 +104,12 @@ export class InstanceManager {
   ): void {
     const mesh = this.instancedMeshes.get(id)
     if (!mesh) {
-      console.warn(`InstanceManager: ${id} no existe`)
+      loggers.performance.warn(`InstanceManager: ${id} no existe`)
       return
     }
     
     if (index >= mesh.count) {
-      console.warn(`InstanceManager: índice ${index} fuera de rango`)
+      loggers.performance.warn(`InstanceManager: índice ${index} fuera de rango`)
       return
     }
     
@@ -142,7 +143,7 @@ export class InstanceManager {
   ): void {
     const mesh = this.instancedMeshes.get(id)
     if (!mesh) {
-      console.warn(`InstanceManager: ${id} no existe`)
+      loggers.performance.warn(`InstanceManager: ${id} no existe`)
       return
     }
     
@@ -224,7 +225,7 @@ export class InstanceManager {
       this.stats.totalTypes--
       this.stats.drawCalls--
       
-      console.log(`🗑️ InstanceManager: Eliminado ${id}`)
+      loggers.performance.debug(`InstanceManager: Eliminado ${id}`)
     }
   }
   
@@ -250,7 +251,7 @@ export class InstanceManager {
       savedDrawCalls: 0
     }
     
-    console.log('🧹 InstanceManager: Limpiado')
+    loggers.performance.info('InstanceManager limpiado')
   }
 }
 

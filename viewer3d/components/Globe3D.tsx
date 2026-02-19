@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
+import { loggers } from '@/core/Logger'
 
 interface Globe3DProps {
   onLocationClick?: (lat: number, lon: number) => void
@@ -35,12 +36,12 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
     loader.load(
       getAssetPath('/textures/earth_8k.jpg'),
       (texture) => {
-        console.log('✅ Textura real 8K cargada exitosamente!')
+        loggers.world.info('Textura real 8K cargada exitosamente')
         setEarthTexture(texture)
       },
       undefined,
       (error) => {
-        console.warn('⚠️ No se pudo cargar textura 8K, usando textura procedural')
+        loggers.world.warn('No se pudo cargar textura 8K, usando textura procedural')
         // Ya tenemos la textura procedural establecida
       }
     )
@@ -49,12 +50,12 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
     loader.load(
       getAssetPath('/textures/earth_clouds_8k.jpg'),
       (texture) => {
-        console.log('☁️ Textura de nubes cargada exitosamente!')
+        loggers.world.info('Textura de nubes cargada exitosamente')
         setCloudsTexture(texture)
       },
       undefined,
       (error) => {
-        console.warn('⚠️ No se pudo cargar textura de nubes')
+        loggers.world.warn('No se pudo cargar textura de nubes')
       }
     )
     
@@ -65,12 +66,12 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
     loader.load(
       getAssetPath('/textures/earth_night_8k.jpg'),
       (texture) => {
-        console.log('🌃 Mapa nocturno cargado exitosamente!')
+        loggers.world.info('Mapa nocturno cargado exitosamente')
         setNightTexture(texture)
       },
       undefined,
       (error) => {
-        console.warn('⚠️ No se pudo cargar mapa nocturno')
+        loggers.world.warn('No se pudo cargar mapa nocturno')
       }
     )
   }, [])
@@ -139,7 +140,7 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
     if (lon > 180) lon -= 360
     if (lon < -180) lon += 360
     
-    console.log(`🌍 Click en globo: lat=${lat.toFixed(4)}, lon=${lon.toFixed(4)}`)
+    loggers.world.info(`Click en globo: lat=${lat.toFixed(4)}, lon=${lon.toFixed(4)}`)
     
     // Detener rotación al hacer click
     setIsRotating(false)

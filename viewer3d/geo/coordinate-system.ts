@@ -2,6 +2,7 @@
 // Conversión entre coordenadas geográficas y 3D
 
 import * as THREE from 'three'
+import { loggers } from '@/core/Logger'
 
 export interface GeographicCoordinates {
   latitude: number  // -90 a 90
@@ -152,7 +153,7 @@ export class LocationManager {
   // Registrar sitio
   registerSite(site: ArchaeologicalSite): void {
     this.sites.set(site.id, site)
-    console.log(`📍 Sitio registrado: ${site.name}`)
+    loggers.world.info(`Sitio registrado: ${site.name}`)
   }
 
   // Registrar múltiples sitios
@@ -259,7 +260,7 @@ export class TeleportSystem {
   // Teletransportar con animación
   async teleport(config: TeleportConfig): Promise<void> {
     if (this.isActive) {
-      console.warn('⚠️ Teletransporte ya en progreso')
+      loggers.world.warn('Teletransporte ya en progreso')
       return
     }
 

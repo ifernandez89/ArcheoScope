@@ -31,10 +31,7 @@ export default function AvatarLayer({
     <group name="avatar-layer">
       <Suspense fallback={null}>
         <WalkableAvatar
-          modelUrl={modelUrl}
-          avatarType={avatarType}
-          camera={camera}
-          onAvatarReady={onAvatarReady}
+          modelPath={modelUrl}
         />
       </Suspense>
     </group>

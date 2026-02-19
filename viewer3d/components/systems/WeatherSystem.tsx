@@ -16,6 +16,7 @@ import TornadoEffect from '../weather/TornadoEffect'
 import WeatherManager from '../weather/WeatherManager'
 import type { WeatherState } from '../WeatherControl'
 import { getClimateAudio } from '@/systems/ClimateAudioSystem'
+import { loggers } from '@/core/Logger'
 
 interface WeatherSystemProps {
   weather: WeatherState
@@ -38,7 +39,7 @@ export default function WeatherSystem({ weather, isIceBiome }: WeatherSystemProp
   const biome = isIceBiome ? 'ice' : 'default'
   
   // Log para debug
-  console.log('🌬️ WeatherSystem:', { 
+  loggers.weather.debug('WeatherSystem state:', { 
     wind: weather.wind, 
     biome,
     weatherState 
@@ -95,13 +96,10 @@ export default function WeatherSystem({ weather, isIceBiome }: WeatherSystemProp
       
       {/* Nubes atmosféricas */}
       {weather.clouds && (
-        <>
-          {console.log('☁️ Renderizando LightClouds desde WeatherSystem')}
-          <LightClouds 
-            opacity={0.9} 
-            stormMode={weather.storm || weather.lightning}
-          />
-        </>
+        <LightClouds 
+          opacity={0.9} 
+          stormMode={weather.storm || weather.lightning}
+        />
       )}
       
       {/* Fenómenos extremos */}

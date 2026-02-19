@@ -17,6 +17,7 @@ import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { globalWind } from './RealisticWind'
 import { getAssetPath } from '@/lib/paths'
+import { loggers } from '@/core/Logger'
 
 interface CloudSkyProps {
   enabled?: boolean
@@ -36,7 +37,7 @@ export default function CloudSky({
   stormMode = false
 }: CloudSkyProps) {
   
-  console.log('☁️ CloudSky renderizado:', { enabled, opacity, height, radius, stormMode })
+  loggers.weather.debug('CloudSky renderizado:', { enabled, opacity, height, radius, stormMode })
   const meshRef = useRef<THREE.Mesh>(null)
   const { camera } = useThree()
   
@@ -114,7 +115,7 @@ export default function CloudSky({
     texture.wrapS = THREE.RepeatWrapping
     texture.wrapT = THREE.ClampToEdgeWrapping
     
-    console.log(`☁️ Textura de nubes esponjosas creada: ${stormMode ? 'TORMENTA (oscuras)' : 'normales (blancas)'}`)
+    loggers.weather.debug(`Textura de nubes esponjosas creada: ${stormMode ? 'TORMENTA (oscuras)' : 'normales (blancas)'}`)
     return texture
   }, [stormMode])
   
@@ -145,17 +146,6 @@ export default function CloudSky({
     // Seguir cámara (sky dome siempre centrado en cámara)
     meshRef.current.position.copy(camera.position)
     meshRef.current.position.y = camera.position.y + height // Cambié a + para que esté arriba
-    
-    // Debug: verificar que el mesh está visible
-    if (state.clock.elapsedTime % 5 < delta) {
-      console.log('☁️ CloudSky mesh:', {
-        visible: meshRef.current.visible,
-        cameraPos: camera.position,
-        meshPos: meshRef.current.position,
-        opacity: (meshRef.current.material as THREE.MeshBasicMaterial).opacity,
-        renderOrder: meshRef.current.renderOrder
-      })
-    }
     
     // Rotar según dirección del viento (muy lento)
     const windDirection = globalWind.direction

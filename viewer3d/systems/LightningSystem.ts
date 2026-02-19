@@ -8,6 +8,8 @@
  * 4. Variabilidad para evitar repetición
  */
 
+import { loggers } from '@/core/Logger'
+
 type LightningConfig = {
   minDistance: number
   maxDistance: number
@@ -45,7 +47,7 @@ class LightningManager {
     this.masterGain.gain.value = 0.7
     this.masterGain.connect(this.context.destination)
     
-    console.log('⚡ LightningSystem inicializado')
+    loggers.weather.info('LightningSystem inicializado')
   }
   
   /**
@@ -59,7 +61,7 @@ class LightningManager {
     
     this.scheduleNextStrike()
     
-    console.log('⚡ Rayos activados:', this.config)
+    loggers.weather.info('Rayos activados:', this.config)
   }
   
   /**
@@ -71,7 +73,7 @@ class LightningManager {
       clearTimeout(this.intervalId)
       this.intervalId = null
     }
-    console.log('⚡ Rayos desactivados')
+    loggers.weather.info('Rayos desactivados')
   }
   
   /**
@@ -140,7 +142,7 @@ class LightningManager {
     // Sonido con delay
     this.playThunderSound(strike)
     
-    console.log(`⚡ Rayo: ${distance.toFixed(0)}m, intensidad: ${intensity.toFixed(2)}`)
+    loggers.weather.debug(`Rayo: ${distance.toFixed(0)}m, intensidad: ${intensity.toFixed(2)}`)
   }
   
   /**
@@ -351,7 +353,7 @@ class LightningManager {
     if (this.context) {
       this.context.close()
     }
-    console.log('⚡ LightningSystem disposed')
+    loggers.weather.info('LightningSystem disposed')
   }
 }
 

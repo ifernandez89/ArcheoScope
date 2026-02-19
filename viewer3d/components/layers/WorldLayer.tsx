@@ -54,16 +54,18 @@ export default function WorldLayer({
   
   if (!showTerrain || !location) return null
   
+  // Generar seed basado en ubicación para consistencia
+  const seed = useMemo(() => {
+    return Math.floor(location.lat * 1000 + location.lon * 1000)
+  }, [location])
+  
   return (
     <group name="world-layer">
       <ProceduralTerrain
-        location={location}
         size={100}
         segments={64}
         heightScale={isIceBiome ? 8 : 12}
-        color={terrainConfig.color}
-        roughness={terrainConfig.roughness}
-        metalness={terrainConfig.metalness}
+        seed={seed}
       />
     </group>
   )
