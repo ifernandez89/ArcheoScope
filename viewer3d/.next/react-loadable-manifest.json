@@ -1,1 +1,44 @@
-{}
+{
+  "app\\page.tsx -> @/components/Scene3D": {
+    "id": 1932,
+    "files": [
+      "static/chunks/three.815c5b8d93734097.js",
+      "static/chunks/react-three.994f8dbb8dcd66d9.js",
+      "static/chunks/engines.f7a40adf576cab2b.js",
+      "static/chunks/vendor-55591b3032203042.js",
+      "static/chunks/696.cd56f23f25efb537.js",
+      "static/chunks/160.66715af8923c7fc8.js"
+    ]
+  },
+  "app\\realistic-solar\\page.tsx -> @/components/RealisticSolarSystemScene": {
+    "id": 6982,
+    "files": [
+      "static/chunks/three.815c5b8d93734097.js",
+      "static/chunks/react-three.994f8dbb8dcd66d9.js",
+      "static/chunks/vendor-55591b3032203042.js",
+      "static/chunks/696.cd56f23f25efb537.js",
+      "static/chunks/982.c805409f0462423d.js"
+    ]
+  },
+  "utils\\lazy-systems.ts -> @/components/ProceduralTerrain": {
+    "id": 8851,
+    "files": [
+      "static/chunks/851.0b64110526323343.js"
+    ]
+  },
+  "utils\\lazy-systems.ts -> @/components/systems/PostProcessingSystem": {
+    "id": 1437,
+    "files": [
+      "static/chunks/react-three.994f8dbb8dcd66d9.js",
+      "static/chunks/vendor-55591b3032203042.js",
+      "static/chunks/437.2520b2eb5f33f403.js"
+    ]
+  },
+  "utils\\lazy-systems.ts -> @/components/systems/WeatherSystem": {
+    "id": 5528,
+    "files": [
+      "static/chunks/vendor-55591b3032203042.js",
+      "static/chunks/528.3a99993dfb7e990f.js"
+    ]
+  }
+}

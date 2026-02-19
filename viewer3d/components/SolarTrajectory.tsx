@@ -206,35 +206,20 @@ export default function SolarTrajectory({
     }
   }, [solarAltitude, solarAzimuth, declination, latitude, visible])
   
-  // Animar opacidad según hora del día (revelación gradual)
+  // Mantener opacidad en 0 (invisible)
   useFrame((state) => {
     if (!groupRef.current) return
     
-    const time = state.clock.elapsedTime
-    
-    // Revelación sutil: las líneas aparecen y desaparecen lentamente
-    const revealCycle = Math.sin(time * 0.1) * 0.5 + 0.5 // Ciclo lento 0-1
-    const targetOpacity = 0 // Siempre invisible
-    
+    // Mantener todas las líneas invisibles
     groupRef.current.children.forEach(child => {
       if (child instanceof THREE.Line) {
         const material = child.material as THREE.LineBasicMaterial
-        const baseName = child.name
-        
-        // Diferentes velocidades de revelación según el elemento
-        let multiplier = 1
-        if (baseName === 'SolarTrajectory') multiplier = 0.8
-        if (baseName === 'NorthSouth' || baseName === 'EastWest') multiplier = 0.4
-        if (baseName === 'EarthAxis') multiplier = 0.6
-        
-        material.opacity += (targetOpacity * multiplier - material.opacity) * 0.02
+        material.opacity = 0 // Forzar invisible
+        material.visible = false // Doble seguridad
       } else if (child instanceof THREE.Mesh && child.name === 'CurrentSunPosition') {
         const material = child.material as THREE.MeshBasicMaterial
-        material.opacity += (targetOpacity * 0.5 - material.opacity) * 0.05
-        
-        // Pulso muy sutil
-        const pulse = Math.sin(state.clock.elapsedTime * 1.5) * 0.08 + 1
-        child.scale.setScalar(pulse)
+        material.opacity = 0 // Forzar invisible
+        material.visible = false // Doble seguridad
       }
     })
   })

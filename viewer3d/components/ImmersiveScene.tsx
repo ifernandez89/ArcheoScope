@@ -11,15 +11,7 @@ import CoordinateInput from './CoordinateInput'
 import LocationInfo from './LocationInfo'
 import VolcanicTerrain from './VolcanicTerrain'
 import IceTerrain from './IceTerrain'
-import SnowParticles from './SnowParticles'
-import RainParticles from './RainParticles'
 import WeatherControl, { type WeatherState } from './WeatherControl'
-import WindEffect, { WindParticles } from './weather/WindEffect'
-import LightningEffect from './weather/LightningEffect'
-import DynamicFog, { FogParticles } from './weather/DynamicFog'
-import TornadoEffect from './weather/TornadoEffect'
-import WeatherManager from './weather/WeatherManager'
-import IceLighting from './IceLighting'
 import BasicCollisions from './BasicCollisions'
 import WalkableAvatar from './WalkableAvatar'
 import SolarSystemIntegrated from './SolarSystemIntegrated'
@@ -43,17 +35,22 @@ import {
   // EclipticPlane 
 } from './NarrativeZoom'
 import { detectBiome, getSkyColorForBiome, getFogColorForBiome } from '@/utils/biome-detector'
-import DynamicSky from './DynamicSky'
-import VolumetricFog from './VolumetricFog'
 import ProceduralTerrain from './ProceduralTerrain'
-import CinematicLighting from './CinematicLighting'
-import MinimalistWater from './MinimalistWater'
 import AmbientMotion from './AmbientMotion'
-import SolarTrajectory from './SolarTrajectory'
-import SubtlePostProcessing from './SubtlePostProcessing'
-import AstronomicalWorld from './AstronomicalWorld'
 import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
 import { getAssetPath } from '@/lib/paths'
+
+// 🎮 SISTEMAS DE PERFORMANCE
+import EngineIntegration from './EngineIntegration'
+
+// 🔥 SISTEMAS MODULARES LAZY-LOADED
+import {
+  LightingSystem,
+  WeatherSystem,
+  EnvironmentSystem,
+  PostProcessingSystem,
+  AstronomicalSystem
+} from '@/utils/lazy-systems'
 
 interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
@@ -81,7 +78,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     fog: false,
     storm: false,
     lightning: false,
-    tornado: false
+    tornado: false,
+    clouds: false
   }) // Estado del clima
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // Dirección del sol como objeto plano
   const [solarState, setSolarState] = useState({
@@ -480,6 +478,9 @@ function GlobeScene({
         cursor: spaceUfoActive ? 'none' : 'default' // Ocultar cursor cuando OVNI está activo
       }}
     >
+      {/* 🎮 SISTEMAS DE PERFORMANCE - ÚNICO useFrame */}
+      <EngineIntegration />
+      
       <PerspectiveCamera makeDefault position={[0, 0, 15]} fov={50} />
       <OrbitControls
         enableDamping
@@ -606,6 +607,9 @@ function ModelScene({
         toneMappingExposure: 1.2
       }}
     >
+      {/* 🎮 SISTEMAS DE PERFORMANCE - ÚNICO useFrame */}
+      <EngineIntegration />
+      
       <PerspectiveCamera makeDefault position={[8, 4, 8]} fov={60} />
       
       {/* Controles según modo */}
@@ -627,74 +631,44 @@ function ModelScene({
       {/* En modo avatar, la cámara es controlada por WalkableAvatar */}
 
       {/* Sistema astronómico-geométrico vivo - DESHABILITADO en modo avatar */}
-      <AstronomicalWorld
+      <AstronomicalSystem
         location={location}
-        enabled={movementMode === 'orbit'}  // Solo activo en modo órbita
+        enabled={movementMode === 'orbit'}
         showGeometry={showGeometryField}
         onDayNightChange={onDayNightChange}
         onSolarUpdate={onSolarUpdate}
+        solarState={solarState}
+        isDay={isDay}
+        showTrajectory={true}
       />
 
       {/* Iluminación cinematográfica - adaptada al bioma */}
-      {isIceBiome ? (
-        <IceLighting
-          sunPosition={[
-            solarDirection.x * 50,
-            Math.max(solarDirection.y * 50, 10),
-            solarDirection.z * 50
-          ]}
-          enableShadows={true}
-        />
-      ) : (
-        <CinematicLighting
-          sunIntensity={2.5}
-          hemisphereIntensity={1.2}
-          sunPosition={[
-            solarDirection.x * 50,
-            Math.max(solarDirection.y * 50, 10),
-            solarDirection.z * 50
-          ]}
-          enableShadows={true}
-        />
-      )}
-
-      {/* Cielo dinámico - color adaptado al bioma */}
-      <DynamicSky 
-        isDay={isDay} 
-        skyColor={skyColor} 
-        stormDarkness={weather.storm || weather.tornado ? 0.6 : 0} 
+      <LightingSystem
+        biomeType={biome.type}
+        solarDirection={solarDirection}
+        enableShadows={true}
+        sunIntensity={2.5}
+        hemisphereIntensity={1.2}
       />
 
-      {/* Trayectoria solar del día - líneas ultra sutiles */}
-      <SolarTrajectory
-        solarAltitude={solarState.altitude}
-        solarAzimuth={solarState.azimuth}
-        declination={solarState.declination}
-        latitude={(location?.lat || 0) * Math.PI / 180}
+      {/* Sistema de entorno (cielo, niebla, agua) */}
+      <EnvironmentSystem
         isDay={isDay}
-        visible={true}
+        skyColor={skyColor}
+        fogColor={fogColor}
+        stormDarkness={weather.storm || weather.tornado ? 0.6 : 0}
+        fogDensity={isIceBiome ? 0.012 : 0.008}
+        showWater={!isIceBiome}
+        waterPosition={[0, -0.5, 0]}
+        waterSize={150}
+        waterColor="#1e3a5f"
       />
 
-      {/* Niebla volumétrica - color adaptado al bioma */}
-      <VolumetricFog
-        color={fogColor}
-        density={isIceBiome ? 0.012 : 0.008}
-      />
-
-      {/* Terreno - adaptado al bioma */}
+      {/* Terreno - adaptado al bioma (no lazy porque necesita ref) */}
       {isIceBiome ? (
         <IceTerrain location={location} ref={terrainRef} />
       ) : (
         <VolcanicTerrain location={location} ref={terrainRef} />
-      )}
-
-      {/* Agua minimalista - solo en biomas no helados */}
-      {!isIceBiome && (
-        <MinimalistWater
-          position={[0, -0.5, 0]}
-          size={150}
-          color="#1e3a5f"
-        />
       )}
 
       {/* Grid sutil para referencia de movimiento - OCULTO */}
@@ -707,47 +681,7 @@ function ModelScene({
       />
 
       {/* Sistema climático completo */}
-      <WeatherManager
-        config={{
-          state: weather.storm ? 'storm' : weather.rainHeavy || weather.rainModerate || weather.rainLight ? 'rain' : weather.snow ? 'snow' : 'clear',
-          intensity: weather.rainHeavy ? 1 : weather.rainModerate ? 0.6 : weather.rainLight ? 0.3 : 0.5,
-          windStrength: weather.wind ? 0.7 : 0,
-          fogDensity: weather.fog ? 0.8 : 0,
-          lightningFrequency: weather.storm ? 12 : 0,
-          transitionSpeed: 0.5
-        }}
-      >
-        {/* Precipitación */}
-        {weather.snow && <SnowParticles />}
-        {weather.rainLight && <RainParticles intensity="light" />}
-        {weather.rainModerate && <RainParticles intensity="moderate" />}
-        {weather.rainHeavy && <RainParticles intensity="heavy" />}
-        
-        {/* Efectos atmosféricos */}
-        {weather.wind && (
-          <>
-            <WindEffect strength={0.7} direction={[1, 0, 0.5]} gustFrequency={0.5} />
-            <WindParticles strength={0.7} />
-          </>
-        )}
-        
-        {weather.fog && (
-          <>
-            <DynamicFog density={0.8} color="#b0b0b0" animated={true} />
-            <FogParticles density={0.8} />
-          </>
-        )}
-        
-        {/* Fenómenos extremos */}
-        {weather.storm && <LightningEffect enabled={true} intensity={1} showVisualBolts={true} />}
-        {weather.lightning && !weather.storm && <LightningEffect enabled={true} intensity={0.8} showVisualBolts={true} />}
-        {weather.tornado && <TornadoEffect position={[20, 0, 20]} intensity={0.8} height={40} />}
-        
-        {/* Nieve automática solo en biomas helados si no hay clima manual activo */}
-        {!weather.snow && !weather.rainLight && !weather.rainModerate && !weather.rainHeavy && isIceBiome && (
-          <SnowParticles />
-        )}
-      </WeatherManager>
+      <WeatherSystem weather={weather} isIceBiome={isIceBiome} />
 
       {/* Elementos del entorno: rocas y vegetación - dinámicos según ubicación */}
       <EnvironmentElements location={location} />
@@ -780,8 +714,8 @@ function ModelScene({
       {/* Zoom cinematográfico al entrar - SOLO en modo órbita */}
       {movementMode === 'orbit' && <CinematicZoom />}
 
-      {/* Post-processing siempre activo */}
-      <SubtlePostProcessing
+      {/* Post-processing modular */}
+      <PostProcessingSystem
         enableBloom={true}
         enableVignette={true}
         bloomIntensity={0.3}

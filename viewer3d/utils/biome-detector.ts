@@ -25,6 +25,18 @@ export function detectBiome(lat: number, lon: number): BiomeInfo {
     }
   }
   
+  // Islandia (lat entre 63-67, lon entre -25 y -13)
+  // IMPORTANTE: Evaluar ANTES de Groenlandia porque está dentro de su rango
+  if (lat > 63 && lat < 67 && lon > -25 && lon < -13) {
+    return {
+      type: 'ice',
+      name: 'Islandia',
+      description: 'Glaciares volcánicos',
+      temperature: -5,
+      humidity: 70
+    }
+  }
+  
   // Groenlandia (lat > 60, lon entre -73 y -12)
   if (lat > 60 && lon > -73 && lon < -12) {
     return {
@@ -33,17 +45,6 @@ export function detectBiome(lat: number, lon: number): BiomeInfo {
       description: 'Capa de hielo continental',
       temperature: -20,
       humidity: 30
-    }
-  }
-  
-  // Islandia (lat entre 63-67, lon entre -25 y -13)
-  if (lat > 63 && lat < 67 && lon > -25 && lon < -13) {
-    return {
-      type: 'ice',
-      name: 'Islandia',
-      description: 'Glaciares volcánicos',
-      temperature: -5,
-      humidity: 70
     }
   }
   
@@ -94,6 +95,19 @@ export function detectBiome(lat: number, lon: number): BiomeInfo {
     }
   }
   
+  // DESIERTO - Regiones áridas
+  // Atacama (lat entre -27 y -18, lon entre -71 y -68)
+  // IMPORTANTE: Evaluar ANTES de Andes Volcánicos porque está dentro de su rango
+  if (lat > -27 && lat < -18 && lon > -71 && lon < -68) {
+    return {
+      type: 'desert',
+      name: 'Atacama',
+      description: 'Desierto más árido del mundo',
+      temperature: 20,
+      humidity: 5
+    }
+  }
+  
   // Cinturón de Fuego del Pacífico - Andes (solo zonas muy volcánicas)
   // Excluir Machu Picchu y zonas arqueológicas
   if (lat < -15 && lat > -45 && lon > -80 && lon < -65) {
@@ -129,17 +143,6 @@ export function detectBiome(lat: number, lon: number): BiomeInfo {
       description: 'Desierto cálido',
       temperature: 35,
       humidity: 10
-    }
-  }
-  
-  // Atacama (lat entre -27 y -18, lon entre -71 y -68)
-  if (lat > -27 && lat < -18 && lon > -71 && lon < -68) {
-    return {
-      type: 'desert',
-      name: 'Atacama',
-      description: 'Desierto más árido del mundo',
-      temperature: 20,
-      humidity: 5
     }
   }
   

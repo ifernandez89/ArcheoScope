@@ -3,6 +3,10 @@
  * Arquitectura limpia y escalable
  */
 
+// Core Engine
+export { default as EngineCore } from './EngineCore'
+export type { EngineSystem } from './EngineCore'
+
 export { default as GeoEngine } from './GeoEngine'
 export { default as WorldEngine } from './WorldEngine'
 export { default as ArcheoEngine } from './ArcheoEngine'
@@ -17,6 +21,21 @@ export { SkyEngine } from './SkyEngine'
 export { GeometryField } from './GeometryField'
 export { AtmosphericSound } from './AtmosphericSound'
 
+// WorldCore - Núcleo modular del mundo
+export { WorldCore } from './WorldCore'
+export type { 
+  WorldConfig, 
+  WorldMetrics,
+  TimeState,
+  SpatialObject,
+  QueryResult,
+  LODLevel,
+  LODObject,
+  Chunk,
+  StreamingStats,
+  SaveData
+} from './WorldCore'
+
 export type { ArchaeologicalSite } from './ArcheoEngine'
 export type { Emotion, Gesture, AvatarState, ConversationContext } from './AvatarEngine'
 export type { SolarPosition } from './AstroEngine'
@@ -27,4 +46,3 @@ export type { SeasonalState } from './SeasonalLight'
 export type { MotionState } from './MicroMotion'
 export type { SkyState } from './SkyEngine'
 export type { SoundState } from './AtmosphericSound'
-

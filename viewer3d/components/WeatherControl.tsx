@@ -12,6 +12,7 @@ export interface WeatherState {
   storm: boolean
   lightning: boolean
   tornado: boolean
+  clouds: boolean
 }
 
 interface WeatherControlProps {
@@ -29,7 +30,8 @@ export default function WeatherControl({ onWeatherChange }: WeatherControlProps)
     fog: false,
     storm: false,
     lightning: false,
-    tornado: false
+    tornado: false,
+    clouds: false
   })
 
   const handleToggle = (type: keyof WeatherState) => {
@@ -198,6 +200,13 @@ export default function WeatherControl({ onWeatherChange }: WeatherControlProps)
             onChange={() => handleToggle('fog')}
             icon="🌫️"
             label="Niebla"
+          />
+
+          <WeatherCheckbox 
+            checked={weather.clouds} 
+            onChange={() => handleToggle('clouds')}
+            icon="☁️"
+            label="Nubes"
           />
 
           {/* Fenómenos Extremos */}

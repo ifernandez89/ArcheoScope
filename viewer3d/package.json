@@ -6,27 +6,38 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "analyze": "cross-env ANALYZE=true next build",
+    "analyze:server": "cross-env ANALYZE=true BUNDLE_ANALYZE=server next build",
+    "analyze:browser": "cross-env ANALYZE=true BUNDLE_ANALYZE=browser next build"
   },
   "dependencies": {
-    "@react-three/drei": "^9.96.0",
-    "@react-three/fiber": "^8.15.16",
-    "@react-three/postprocessing": "^2.19.1",
+    "@react-three/drei": "^9.114.3",
+    "@react-three/fiber": "^8.17.10",
+    "@react-three/postprocessing": "^2.16.3",
     "astronomy-engine": "^2.1.19",
     "leva": "^0.9.35",
-    "next": "14.1.0",
+    "next": "^14.2.35",
     "postprocessing": "^6.38.2",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "simplex-noise": "^4.0.3",
-    "three": "^0.161.0",
+    "three": "^0.170.0",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^14.2.35",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/three": "^0.161.0",
-    "typescript": "^5"
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/ui": "^4.0.18",
+    "cross-env": "^10.1.0",
+    "typescript": "^5",
+    "vitest": "^4.0.18"
   }
 }

@@ -1,27 +1,41 @@
 'use client'
 
-import { useState } from 'react'
-import RealisticSolarSystemScene from '@/components/RealisticSolarSystemScene'
+import dynamic from 'next/dynamic'
 
 /**
  * Página de prueba para el Sistema Solar Realista
  * 
  * Acceso: http://localhost:3000/realistic-solar
+ * 
+ * ⚡ OPTIMIZACIÓN: Dynamic import para NO cargar en bundle inicial
  */
-export default function RealisticSolarPage() {
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(null)
-  
-  const handleLocationClick = (lat: number, lon: number) => {
-    console.log(`🌍 Click en: lat=${lat.toFixed(4)}, lon=${lon.toFixed(4)}`)
-    setSelectedLocation({ lat, lon })
+
+// Dynamic import - NO se carga hasta que se accede a esta página
+const RealisticSolarSystemScene = dynamic(
+  () => import('@/components/RealisticSolarSystemScene'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div style={{
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#000',
+        color: '#fff',
+        fontSize: '24px'
+      }}>
+        🌍 Cargando Sistema Solar...
+      </div>
+    )
   }
-  
+)
+
+export default function RealisticSolarPage() {
   return (
     <main style={{ width: '100vw', height: '100vh', margin: 0, padding: 0 }}>
-      <RealisticSolarSystemScene 
-        onLocationClick={handleLocationClick}
-        markerPosition={selectedLocation}
-      />
+      <RealisticSolarSystemScene />
     </main>
   )
 }
