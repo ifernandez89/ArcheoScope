@@ -5,6 +5,8 @@
  * Inspirado en arquitecturas ECS y motores de juegos.
  */
 
+import { loggers } from './Logger'
+
 type EventCallback = (data?: any) => void
 
 interface EventSubscription {
@@ -101,7 +103,7 @@ class EventBus {
         try {
           sub.callback(data)
         } catch (error) {
-          console.error(`Error en evento "${event}":`, error)
+          loggers.engine.error(`Error en evento "${event}":`, error)
         }
       })
     }

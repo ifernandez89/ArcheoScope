@@ -6,6 +6,7 @@
  */
 
 import eventBus, { EVENTS } from './EventBus'
+import { loggers } from './Logger'
 
 export interface System {
   name: string
@@ -42,7 +43,7 @@ class EngineLoop {
     // Verificar que no exista ya
     const exists = this.systems.find(s => s.name === system.name)
     if (exists) {
-      console.warn(`Sistema "${system.name}" ya está registrado`)
+      loggers.engine.warn(`Sistema "${system.name}" ya está registrado`)
       return
     }
     
@@ -53,9 +54,7 @@ class EngineLoop {
     
     eventBus.emit(EVENTS.ENGINE.SYSTEM_REGISTER, { system: system.name })
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🎮 Sistema registrado: ${system.name} (prioridad: ${system.priority})`)
-    }
+    loggers.engine.debug(`Sistema registrado: ${system.name} (prioridad: ${system.priority})`)
   }
   
   /**
@@ -76,9 +75,7 @@ class EngineLoop {
     
     eventBus.emit(EVENTS.ENGINE.SYSTEM_UNREGISTER, { system: systemName })
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🎮 Sistema desregistrado: ${systemName}`)
-    }
+    loggers.engine.debug(`Sistema desregistrado: ${systemName}`)
   }
   
   /**
@@ -110,9 +107,7 @@ class EngineLoop {
     
     this.loop()
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🎮 EngineLoop iniciado')
-    }
+    loggers.engine.info('EngineLoop iniciado')
   }
   
   /**
@@ -128,9 +123,7 @@ class EngineLoop {
       this.animationFrameId = null
     }
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🎮 EngineLoop detenido')
-    }
+    loggers.engine.info('EngineLoop detenido')
   }
   
   /**
@@ -201,7 +194,7 @@ class EngineLoop {
         try {
           system.update(delta, time)
         } catch (error) {
-          console.error(`Error en sistema "${system.name}":`, error)
+          loggers.engine.error(`Error en sistema "${system.name}":`, error)
         }
       }
     }
@@ -245,9 +238,7 @@ class EngineLoop {
     
     this.systems = []
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🎮 EngineLoop disposed')
-    }
+    loggers.engine.info('EngineLoop disposed')
   }
 }
 

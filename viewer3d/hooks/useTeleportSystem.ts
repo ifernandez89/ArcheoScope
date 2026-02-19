@@ -5,6 +5,7 @@
 
 import { useState, useCallback } from 'react'
 import eventBus, { EVENTS } from '@/core/EventBus'
+import { loggers } from '@/core/Logger'
 
 export type ViewMode = 'globe' | 'model'
 
@@ -34,9 +35,7 @@ export function useTeleportSystem(
     
     setIsTeleporting(true)
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🌍 Teletransporte a: lat=${lat.toFixed(4)}, lon=${lon.toFixed(4)}`)
-    }
+    loggers.world.info(`Teletransporte a: lat=${lat.toFixed(4)}, lon=${lon.toFixed(4)}`)
     
     // Emitir evento
     eventBus.emit(EVENTS.WORLD.TELEPORT, { lat, lon })
@@ -55,9 +54,7 @@ export function useTeleportSystem(
     
     setIsTeleporting(false)
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('✅ Teletransporte completado')
-    }
+    loggers.world.info('Teletransporte completado')
   }, [isTeleporting, onLocationChange, onModeChange])
   
   /**
@@ -66,9 +63,7 @@ export function useTeleportSystem(
   const teleportToSite = useCallback(async (site: ArchaeologicalSite) => {
     if (isTeleporting) return
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🏛️ Teletransporte a sitio: ${site.name}`)
-    }
+    loggers.world.info(`Teletransporte a sitio: ${site.name}`)
     
     await teleportToLocation(site.lat, site.lon)
   }, [isTeleporting, teleportToLocation])
@@ -81,9 +76,7 @@ export function useTeleportSystem(
     
     eventBus.emit(EVENTS.CAMERA.MODE_CHANGE, { mode: 'globe' })
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🌍 Regreso al globo')
-    }
+    loggers.world.info('Regreso al globo')
   }, [onModeChange])
   
   return {

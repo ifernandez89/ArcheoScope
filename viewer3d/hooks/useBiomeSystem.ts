@@ -6,6 +6,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { detectBiome, getSkyColorForBiome, getFogColorForBiome, type BiomeInfo } from '@/utils/biome-detector'
 import eventBus, { EVENTS } from '@/core/EventBus'
+import { loggers } from '@/core/Logger'
 
 interface Location {
   lat: number
@@ -50,10 +51,8 @@ export function useBiomeSystem(location: Location | null, isDay: boolean) {
         location
       })
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🌍 Bioma: ${biome.name} (${biome.type})`)
-        console.log(`   Temp: ${biome.temperature}°C, Humedad: ${biome.humidity}%`)
-      }
+      loggers.world.debug(`Bioma: ${biome.name} (${biome.type})`)
+      loggers.world.debug(`Temp: ${biome.temperature}°C, Humedad: ${biome.humidity}%`)
     }
   }, [biome, location])
   
