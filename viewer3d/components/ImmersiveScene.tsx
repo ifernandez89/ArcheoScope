@@ -12,6 +12,13 @@ import LocationInfo from './LocationInfo'
 import VolcanicTerrain from './VolcanicTerrain'
 import IceTerrain from './IceTerrain'
 import SnowParticles from './SnowParticles'
+import RainParticles from './RainParticles'
+import WeatherControl, { type WeatherState } from './WeatherControl'
+import WindEffect, { WindParticles } from './weather/WindEffect'
+import LightningEffect from './weather/LightningEffect'
+import DynamicFog, { FogParticles } from './weather/DynamicFog'
+import TornadoEffect from './weather/TornadoEffect'
+import WeatherManager from './weather/WeatherManager'
 import IceLighting from './IceLighting'
 import BasicCollisions from './BasicCollisions'
 import WalkableAvatar from './WalkableAvatar'
@@ -58,13 +65,24 @@ interface ImmersiveSceneProps {
 export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false }: ImmersiveSceneProps) {
   const [mode, setMode] = useState<'globe' | 'transition' | 'model' | 'exploration'>('globe')
   const [selectedModel, setSelectedModel] = useState<string>(getAssetPath('/moai.glb'))
-  const [avatarModel, setAvatarModel] = useState<string>(getAssetPath('/warrior.glb'))
+  const [avatarModel, setAvatarModel] = useState<string>(getAssetPath('/ovni.glb')) // OVNI por defecto
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(null)
   const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
-  const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('orbit')
+  const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('avatar') // Modo avatar por defecto
   const [showLocationInfo, setShowLocationInfo] = useState(false)
   const [showGeometryField, setShowGeometryField] = useState(true) // Activado por defecto
   const [isDay, setIsDay] = useState(true) // Estado día/noche
+  const [weather, setWeather] = useState<WeatherState>({ 
+    snow: false, 
+    rainLight: false,
+    rainModerate: false,
+    rainHeavy: false,
+    wind: false,
+    fog: false,
+    storm: false,
+    lightning: false,
+    tornado: false
+  }) // Estado del clima
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // Dirección del sol como objeto plano
   const [solarState, setSolarState] = useState({
     altitude: 0,
@@ -277,7 +295,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                 : 'rgba(34, 197, 94, 0.9)'
             }}
           >
-            {movementMode === 'avatar' ? '🚶 Modo: Exploración' : '🔄 Modo: Órbita'}
+            {movementMode === 'avatar' ? '🛸 Modo: OVNI' : '🔄 Modo: Órbita'}
           </button>
 
           {/* Botón para mostrar/ocultar información de ubicación */}
@@ -311,55 +329,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           >
             📍 {showLocationInfo ? 'Ocultar Info' : 'Mostrar Info'}
           </button>
-
-          {/* Selector de Avatar (solo en modo avatar) - SIN recuadro negro */}
-          {movementMode === 'avatar' && (
-            <>
-              {[
-                { name: 'Warrior', path: getAssetPath('/warrior.glb'), icon: '⚔️' },
-                { name: 'Moai', path: getAssetPath('/moai.glb'), icon: '🗿' },
-                { name: 'Sphinx', path: getAssetPath('/sphinx.glb'), icon: '🦁' },
-                { name: 'OVNI', path: getAssetPath('/ovni.glb'), icon: '🛸' }
-              ].map((model) => (
-                <button
-                  key={model.path}
-                  onClick={() => setAvatarModel(model.path)}
-                  style={{
-                    padding: '12px 24px',
-                    background: avatarModel === model.path 
-                      ? 'rgba(139, 92, 246, 0.9)' 
-                      : 'rgba(75, 85, 99, 0.7)',
-                    border: avatarModel === model.path
-                      ? '2px solid rgba(139, 92, 246, 1)'
-                      : '1px solid rgba(255,255,255,0.3)',
-                    borderRadius: '8px',
-                    color: 'white',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    transition: 'all 0.2s',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (avatarModel !== model.path) {
-                      e.currentTarget.style.background = 'rgba(75, 85, 99, 0.9)'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (avatarModel !== model.path) {
-                      e.currentTarget.style.background = 'rgba(75, 85, 99, 0.7)'
-                    }
-                  }}
-                >
-                  <span>{model.icon}</span>
-                  <span>{model.name}</span>
-                </button>
-              ))}
-            </>
-          )}
         </div>
       )}
 
@@ -413,8 +382,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             setSolarDirection(direction)
             setSolarState({ altitude, azimuth, declination })
           }}
+          weather={weather}
         />
       ) : null}
+
+      {/* Control de clima */}
+      {mode === 'model' && (
+        <WeatherControl onWeatherChange={setWeather} />
+      )}
 
       <style jsx>{`
         @keyframes fadeIn {
@@ -570,7 +545,8 @@ function ModelScene({
   onDayNightChange,
   solarDirection,
   solarState,
-  onSolarUpdate
+  onSolarUpdate,
+  weather
 }: { 
   modelPath: string
   avatarModel: string
@@ -585,6 +561,7 @@ function ModelScene({
   solarDirection: { x: number, y: number, z: number }
   solarState: { altitude: number, azimuth: number, declination: number }
   onSolarUpdate: (direction: { x: number, y: number, z: number }, altitude: number, azimuth: number, declination: number) => void
+  weather: WeatherState
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -649,10 +626,10 @@ function ModelScene({
       ) : null}
       {/* En modo avatar, la cámara es controlada por WalkableAvatar */}
 
-      {/* Sistema astronómico-geométrico vivo */}
+      {/* Sistema astronómico-geométrico vivo - DESHABILITADO en modo avatar */}
       <AstronomicalWorld
         location={location}
-        enabled={true}
+        enabled={movementMode === 'orbit'}  // Solo activo en modo órbita
         showGeometry={showGeometryField}
         onDayNightChange={onDayNightChange}
         onSolarUpdate={onSolarUpdate}
@@ -682,9 +659,13 @@ function ModelScene({
       )}
 
       {/* Cielo dinámico - color adaptado al bioma */}
-      <DynamicSky isDay={isDay} skyColor={skyColor} />
+      <DynamicSky 
+        isDay={isDay} 
+        skyColor={skyColor} 
+        stormDarkness={weather.storm || weather.tornado ? 0.6 : 0} 
+      />
 
-      {/* Trayectoria solar del día */}
+      {/* Trayectoria solar del día - líneas ultra sutiles */}
       <SolarTrajectory
         solarAltitude={solarState.altitude}
         solarAzimuth={solarState.azimuth}
@@ -716,16 +697,57 @@ function ModelScene({
         />
       )}
 
-      {/* Grid sutil para referencia de movimiento */}
+      {/* Grid sutil para referencia de movimiento - OCULTO */}
       <gridHelper 
         args={[200, 100, '#3a3a3a', '#2a2a2a']} 
         position={[0, 0.01, 0]}
-        material-opacity={0.15}
+        material-opacity={0}
         material-transparent={true}
+        visible={false}
       />
 
-      {/* Partículas ambientales - nieve en biomas helados */}
-      {isIceBiome ? <SnowParticles /> : <AmbientParticles />}
+      {/* Sistema climático completo */}
+      <WeatherManager
+        config={{
+          state: weather.storm ? 'storm' : weather.rainHeavy || weather.rainModerate || weather.rainLight ? 'rain' : weather.snow ? 'snow' : 'clear',
+          intensity: weather.rainHeavy ? 1 : weather.rainModerate ? 0.6 : weather.rainLight ? 0.3 : 0.5,
+          windStrength: weather.wind ? 0.7 : 0,
+          fogDensity: weather.fog ? 0.8 : 0,
+          lightningFrequency: weather.storm ? 12 : 0,
+          transitionSpeed: 0.5
+        }}
+      >
+        {/* Precipitación */}
+        {weather.snow && <SnowParticles />}
+        {weather.rainLight && <RainParticles intensity="light" />}
+        {weather.rainModerate && <RainParticles intensity="moderate" />}
+        {weather.rainHeavy && <RainParticles intensity="heavy" />}
+        
+        {/* Efectos atmosféricos */}
+        {weather.wind && (
+          <>
+            <WindEffect strength={0.7} direction={[1, 0, 0.5]} gustFrequency={0.5} />
+            <WindParticles strength={0.7} />
+          </>
+        )}
+        
+        {weather.fog && (
+          <>
+            <DynamicFog density={0.8} color="#b0b0b0" animated={true} />
+            <FogParticles density={0.8} />
+          </>
+        )}
+        
+        {/* Fenómenos extremos */}
+        {weather.storm && <LightningEffect enabled={true} intensity={1} showVisualBolts={true} />}
+        {weather.lightning && !weather.storm && <LightningEffect enabled={true} intensity={0.8} showVisualBolts={true} />}
+        {weather.tornado && <TornadoEffect position={[20, 0, 20]} intensity={0.8} height={40} />}
+        
+        {/* Nieve automática solo en biomas helados si no hay clima manual activo */}
+        {!weather.snow && !weather.rainLight && !weather.rainModerate && !weather.rainHeavy && isIceBiome && (
+          <SnowParticles />
+        )}
+      </WeatherManager>
 
       {/* Elementos del entorno: rocas y vegetación - dinámicos según ubicación */}
       <EnvironmentElements location={location} />
@@ -755,8 +777,8 @@ function ModelScene({
       <CameraCapture onReady={onCameraReady} />
       <ModelCapture onLoaded={onModelLoaded} />
       
-      {/* Zoom cinematográfico al entrar */}
-      <CinematicZoom />
+      {/* Zoom cinematográfico al entrar - SOLO en modo órbita */}
+      {movementMode === 'orbit' && <CinematicZoom />}
 
       {/* Post-processing siempre activo */}
       <SubtlePostProcessing
@@ -769,15 +791,16 @@ function ModelScene({
   )
 }
 
-// Zoom cinematográfico
+// Zoom cinematográfico - SOLO en modo órbita
 function CinematicZoom() {
   const { camera } = useThree()
   const startPos = useRef(new THREE.Vector3(15, 10, 15))
   const targetPos = useRef(new THREE.Vector3(5, 3, 5))
   const progress = useRef(0)
+  const [isActive, setIsActive] = useState(true)
 
   useFrame((state, delta) => {
-    if (progress.current < 1) {
+    if (progress.current < 1 && isActive) {
       progress.current += delta * 0.5
       const t = Math.min(progress.current, 1)
       

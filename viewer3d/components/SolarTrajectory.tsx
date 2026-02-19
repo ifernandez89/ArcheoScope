@@ -89,8 +89,8 @@ export default function SolarTrajectory({
       const trajectoryMaterial = new THREE.LineBasicMaterial({
         color: 0xffd700,
         transparent: true,
-        opacity: 0.15, // Reducido de 0.3 a 0.15 (50% más sutil)
-        linewidth: 1 // Reducido de 2 a 1
+        opacity: 0, // Invisible
+        linewidth: 1
       })
       const trajectoryLine = new THREE.Line(trajectoryGeometry, trajectoryMaterial)
       trajectoryLine.name = 'SolarTrajectory'
@@ -109,7 +109,7 @@ export default function SolarTrajectory({
     const sunMarkerMaterial = new THREE.MeshBasicMaterial({
       color: 0xffaa00,
       transparent: true,
-      opacity: 0.5 // Reducido de 0.8 a 0.5 (más sutil)
+      opacity: 0 // Invisible
     })
     const sunMarker = new THREE.Mesh(sunMarkerGeometry, sunMarkerMaterial)
     sunMarker.position.set(currentX, currentY, currentZ)
@@ -122,7 +122,7 @@ export default function SolarTrajectory({
     const cardinalMaterial = new THREE.LineBasicMaterial({
       color: 0x4a90e2,
       transparent: true,
-      opacity: 0.08, // Reducido de 0.2 a 0.08 (ultra sutil)
+      opacity: 0, // Invisible
       linewidth: 1
     })
     
@@ -158,8 +158,8 @@ export default function SolarTrajectory({
     const axialMaterial = new THREE.LineBasicMaterial({
       color: 0x00ff88,
       transparent: true,
-      opacity: 0.12, // Reducido de 0.25 a 0.12 (más sutil)
-      linewidth: 1 // Reducido de 2 a 1
+      opacity: 0, // Invisible
+      linewidth: 1
     })
     const axialLine = new THREE.Line(axialGeometry, axialMaterial)
     axialLine.rotation.z = axialTilt
@@ -214,7 +214,7 @@ export default function SolarTrajectory({
     
     // Revelación sutil: las líneas aparecen y desaparecen lentamente
     const revealCycle = Math.sin(time * 0.1) * 0.5 + 0.5 // Ciclo lento 0-1
-    const targetOpacity = isDay && visible ? revealCycle * 0.3 : 0 // Máximo 30% de opacidad
+    const targetOpacity = 0 // Siempre invisible
     
     groupRef.current.children.forEach(child => {
       if (child instanceof THREE.Line) {
