@@ -181,9 +181,9 @@ export function getSkyColorForBiome(biome: BiomeType, isDay: boolean): string {
     case 'ice':
       return '#b8d4e8' // Azul pálido helado
     case 'volcanic':
-      return '#d4a574' // Marrón-naranja suave (menos intenso)
+      return '#87ceeb' // Azul cielo (igual que default)
     case 'desert':
-      return '#e8d4b8' // Amarillo desértico suave
+      return '#a8c8e8' // Azul cielo suave (menos amarillo)
     case 'ocean':
       return '#4a90e2' // Azul océano
     case 'forest':

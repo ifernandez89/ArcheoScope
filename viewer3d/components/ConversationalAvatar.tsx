@@ -555,7 +555,7 @@ export default function ConversationalAvatar({
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: 'fixed',
-          bottom: '20px',
+          bottom: '110px',
           right: '20px',
           width: '70px',
           height: '70px',
@@ -637,7 +637,7 @@ export default function ConversationalAvatar({
       {isOpen && (
         <div style={{
           position: 'fixed',
-          bottom: '90px',
+          bottom: '200px',
           right: '20px',
           width: '400px',
           height: '550px',

@@ -7,7 +7,7 @@
       "static/chunks/engines.f7a40adf576cab2b.js",
       "static/chunks/vendor-55591b3032203042.js",
       "static/chunks/696.cd56f23f25efb537.js",
-      "static/chunks/160.66715af8923c7fc8.js"
+      "static/chunks/160.4b1740dcef81d789.js"
     ]
   },
   "app\\realistic-solar\\page.tsx -> @/components/RealisticSolarSystemScene": {
@@ -38,7 +38,7 @@
     "id": 5528,
     "files": [
       "static/chunks/vendor-55591b3032203042.js",
-      "static/chunks/528.3a99993dfb7e990f.js"
+      "static/chunks/528.0f9fc5128db4b0cd.js"
     ]
   }
 }

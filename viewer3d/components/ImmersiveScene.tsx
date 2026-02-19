@@ -656,7 +656,11 @@ function ModelScene({
         isDay={isDay}
         skyColor={skyColor}
         fogColor={fogColor}
-        stormDarkness={weather.storm || weather.tornado ? 0.6 : 0}
+        stormDarkness={
+          weather.storm || weather.tornado ? 0.7 : 
+          weather.rainHeavy || weather.lightning ? 0.5 : 
+          0
+        }
         fogDensity={isIceBiome ? 0.012 : 0.008}
         showWater={!isIceBiome}
         waterPosition={[0, -0.5, 0]}

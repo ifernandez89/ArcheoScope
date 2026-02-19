@@ -189,12 +189,35 @@ viewer3d/components/
 ✅ Modo tormenta automático
 ✅ Forma esponjosa ovalada
 ✅ Solo en cielo superior
+✅ Cambio de color según clima (blancas/oscuras)
 ✅ Build exitoso
 ✅ Listo para producción
 
+## Mejoras Recientes (2026-02-19)
+
+### Sistema de Rayos Mejorado
+- Rayos visibles activados (`showBolt={true}`)
+- Múltiples rayos simultáneos (1-3 por evento)
+- Frecuencia aumentada:
+  - Tormenta: 1.5-4s entre eventos
+  - Rayos: 2.5-6s entre eventos
+- Delays aleatorios entre rayos (0-200ms)
+
+### Cielo Dinámico
+- Color azul para todos los biomas
+- Oscurecimiento según clima:
+  - Tormenta/Tornado: 70% oscuro
+  - Lluvia Fuerte/Rayos: 50% oscuro
+  - Clima normal: 0% (azul claro)
+
+### UI Mejorada
+- Botón de chat IA movido arriba del clima
+- Panel de chat reposicionado (bottom: 200px)
+- Mejor jerarquía visual
+
 ---
 
-**Versión**: 1.0  
+**Versión**: 1.1  
 **Fecha**: 2026-02-19  
 **Bundle Impact**: 0 KB  
 **Performance**: Excelente

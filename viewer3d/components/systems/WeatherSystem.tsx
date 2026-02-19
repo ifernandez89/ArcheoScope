@@ -109,11 +109,11 @@ export default function WeatherSystem({ weather, isIceBiome }: WeatherSystemProp
         <ProceduralLightning
           enabled={true}
           intensity={weather.storm ? 1.0 : 0.7}
-          showBolt={false} // Desactivado por ahora para ligereza
+          showBolt={true}
           minDistance={200}
           maxDistance={weather.storm ? 2000 : 3000}
-          minInterval={weather.storm ? 2000 : 4000}
-          maxInterval={weather.storm ? 6000 : 10000}
+          minInterval={weather.storm ? 1500 : 2500}
+          maxInterval={weather.storm ? 4000 : 6000}
         />
       )}
       {weather.tornado && <TornadoEffect position={[20, 0, 20]} intensity={0.8} height={40} />}

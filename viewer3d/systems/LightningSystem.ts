@@ -90,9 +90,26 @@ class LightningManager {
   }
   
   /**
-   * Disparar un rayo
+   * Disparar un rayo (o múltiples)
    */
   triggerLightning() {
+    // Número de rayos simultáneos (1-3)
+    const numStrikes = 1 + Math.floor(Math.random() * 3) // 1, 2 o 3 rayos
+    
+    for (let i = 0; i < numStrikes; i++) {
+      // Pequeño delay entre rayos (0-200ms)
+      const strikeDelay = i * (Math.random() * 0.2)
+      
+      setTimeout(() => {
+        this.triggerSingleLightning()
+      }, strikeDelay * 1000)
+    }
+  }
+  
+  /**
+   * Disparar un solo rayo
+   */
+  private triggerSingleLightning() {
     // Distancia aleatoria
     const distance = this.config.minDistance + 
       Math.random() * (this.config.maxDistance - this.config.minDistance)
