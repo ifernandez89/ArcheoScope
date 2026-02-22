@@ -8,6 +8,7 @@ import { useRef, useEffect } from 'react'
 import { useLoader } from '@react-three/fiber'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js'
+import { TextureLoader } from 'three'
 import * as THREE from 'three'
 
 interface Rock3DModelProps {
@@ -19,42 +20,38 @@ interface Rock3DModelProps {
 export default function Rock3DModel({ position, scale = 1, rotation = 0 }: Rock3DModelProps) {
   const groupRef = useRef<THREE.Group>(null)
   
-  // Cargar materiales y modelo OBJ
-  const materials = useLoader(MTLLoader, '/Rock1.mtl')
-  const obj = useLoader(OBJLoader, '/Rock1.obj', (loader) => {
-    materials.preload()
-    loader.setMaterials(materials)
-  })
+  // Cargar textura directamente
+  const texture = useLoader(TextureLoader, '/Rock-Texture-Surface.jpg')
+  
+  // Cargar modelo OBJ sin MTL para evitar problemas
+  const obj = useLoader(OBJLoader, '/Rock1.obj')
   
   // Clonar el modelo para cada instancia
   const clonedObj = obj.clone()
   
   useEffect(() => {
-    if (clonedObj) {
+    if (clonedObj && texture) {
       // Ajustar escala y rotación
-      clonedObj.scale.set(scale * 0.015, scale * 0.015, scale * 0.015) // OBJ suele venir en escala grande
+      clonedObj.scale.set(scale * 0.015, scale * 0.015, scale * 0.015)
       clonedObj.rotation.y = rotation
       
-      // Habilitar sombras
+      // Aplicar textura y configurar material
       clonedObj.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.castShadow = true
           child.receiveShadow = true
           
-          // Asegurar que el material sea visible
-          if (child.material) {
-            if (Array.isArray(child.material)) {
-              child.material.forEach(mat => {
-                mat.side = THREE.DoubleSide
-              })
-            } else {
-              child.material.side = THREE.DoubleSide
-            }
-          }
+          // Crear material con la textura
+          child.material = new THREE.MeshStandardMaterial({
+            map: texture,
+            roughness: 0.95,
+            metalness: 0.05,
+            side: THREE.FrontSide // Solo cara frontal, sin transparencia
+          })
         }
       })
     }
-  }, [clonedObj, scale, rotation])
+  }, [clonedObj, texture, scale, rotation])
   
   return (
     <group ref={groupRef} position={position}>
