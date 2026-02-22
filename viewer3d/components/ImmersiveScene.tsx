@@ -93,10 +93,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     declination: 0
   })
   
-  // Estado del terreno mejorado
-  const [enhancedTerrainEnabled, setEnhancedTerrainEnabled] = useState(false)
-  const [terrainExaggeration, setTerrainExaggeration] = useState(1.5)
-  const [terrainLOD, setTerrainLOD] = useState(true)
+  // Estado del terreno mejorado - HABILITADO POR DEFECTO
+  const [enhancedTerrainEnabled] = useState(true)
+  const [terrainExaggeration] = useState(1.5)
+  const [terrainLOD] = useState(true)
+  const [terrainLoading, setTerrainLoading] = useState(false)
 
   // Notificar cambios de modo al padre
   useEffect(() => {
@@ -393,24 +394,45 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           enhancedTerrainEnabled={enhancedTerrainEnabled}
           terrainExaggeration={terrainExaggeration}
           terrainLOD={terrainLOD}
+          onTerrainLoadingChange={setTerrainLoading}
         />
       ) : null}
 
       {/* Control de clima */}
       {mode === 'model' && (
-        <>
-          <WeatherControl onWeatherChange={setWeather} />
-          
-          {/* Control de terreno mejorado */}
-          <TerrainControl
-            enabled={enhancedTerrainEnabled}
-            onToggle={setEnhancedTerrainEnabled}
-            exaggeration={terrainExaggeration}
-            onExaggerationChange={setTerrainExaggeration}
-            enableLOD={terrainLOD}
-            onLODToggle={setTerrainLOD}
-          />
-        </>
+        <WeatherControl onWeatherChange={setWeather} />
+      )}
+      
+      {/* Indicador de carga de terreno */}
+      {mode === 'model' && terrainLoading && (
+        <div style={{
+          position: 'absolute',
+          bottom: '80px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1001,
+          background: 'rgba(0, 0, 0, 0.85)',
+          backdropFilter: 'blur(10px)',
+          padding: '16px 32px',
+          borderRadius: '12px',
+          border: '1px solid rgba(102, 126, 234, 0.5)',
+          color: 'white',
+          fontSize: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
+        }}>
+          <div style={{
+            width: '20px',
+            height: '20px',
+            border: '3px solid rgba(102, 126, 234, 0.3)',
+            borderTop: '3px solid #667eea',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <span>🗺️ Cargando terreno DEM real...</span>
+        </div>
       )}
 
       <style jsx>{`
@@ -421,6 +443,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         @keyframes pulse {
           0%, 100% { transform: scale(1); opacity: 1; }
           50% { transform: scale(1.2); opacity: 0.7; }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>
@@ -593,6 +619,7 @@ function ModelScene({
   enhancedTerrainEnabled?: boolean
   terrainExaggeration?: number
   terrainLOD?: boolean
+  onTerrainLoadingChange?: (loading: boolean) => void
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -717,6 +744,7 @@ function ModelScene({
           exaggeration={terrainExaggeration || 1.5}
           enableLOD={terrainLOD !== false}
           enableHydrography={false}
+          onLoadingChange={onTerrainLoadingChange}
         />
       )}
 

@@ -30,7 +30,7 @@ export class TerrainDataService {
   private baseUrl: string
   private cache: Map<string, TerrainData> = new Map()
   
-  constructor(baseUrl: string = 'http://localhost:8003') {
+  constructor(baseUrl: string = 'http://localhost:8000') {
     this.baseUrl = baseUrl
   }
   
