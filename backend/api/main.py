@@ -566,6 +566,27 @@ except Exception as e:
     traceback.print_exc()
 
 # ============================================================================
+# INCLUIR ROUTER TERRAIN DATA (SISTEMA DE TERRENO MEJORADO)
+# ============================================================================
+
+try:
+    from api.terrain_endpoint import router as terrain_router
+    
+    app.include_router(
+        terrain_router,
+        tags=["Terrain Data"]
+    )
+    logger.info("✅ Router Terrain Data incluido en /api/terrain")
+except ImportError as e:
+    logger.error(f"❌ No se pudo cargar router Terrain Data: {e}")
+    import traceback
+    traceback.print_exc()
+except Exception as e:
+    logger.error(f"❌ Error inicializando Terrain Data: {e}")
+    import traceback
+    traceback.print_exc()
+
+# ============================================================================
 # SERVIR ARCHIVOS ESTÁTICOS (ANOMALISM)
 # ============================================================================
 
