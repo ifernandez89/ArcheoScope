@@ -51,7 +51,7 @@ export default function WalkableAvatar({
   // Estado del avatar
   const [state, setState] = useState<'idle' | 'walking'>('idle')
   const velocity = useRef(new THREE.Vector3())
-  const moveSpeed = 5.0  // Aumentado para movimiento más visible
+  const moveSpeed = 10.0  // Duplicado para movimiento más rápido
   const rotationSpeed = 8.0  // Aumentado para rotación más rápida
   const keys = useRef<{ [key: string]: boolean }>({})
   const raycaster = useRef(new THREE.Raycaster())
