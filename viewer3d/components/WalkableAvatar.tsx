@@ -58,9 +58,8 @@ export default function WalkableAvatar({
   
   // Control vertical con SHIFT + mouse
   const isShiftPressed = useRef(false)
-  const mouseY = useRef(0)
-  const lastMouseY = useRef(0)
-  const verticalSpeed = 15.0  // Velocidad de ascenso/descenso
+  const mousePosition = useRef({ x: 0, y: 0 })
+  const targetDirection = useRef(new THREE.Vector3())
   
   // Configurar raycaster para que solo detecte capa 0 (terreno)
   // Ignorar capa 1 (efectos visuales)
@@ -100,10 +99,9 @@ export default function WalkableAvatar({
       const key = e.key.toLowerCase()
       keys.current[key] = true
       
-      // Detectar SHIFT para control vertical
+      // Detectar SHIFT para control de vuelo libre
       if (e.key === 'Shift') {
         isShiftPressed.current = true
-        lastMouseY.current = mouseY.current  // Resetear referencia
       }
       
       // Detectar salto con barra espaciadora (solo si NO es Avenger)
@@ -124,7 +122,9 @@ export default function WalkableAvatar({
     }
     
     const handleMouseMove = (e: MouseEvent) => {
-      mouseY.current = e.clientY
+      // Normalizar coordenadas del mouse (-1 a 1)
+      mousePosition.current.x = (e.clientX / window.innerWidth) * 2 - 1
+      mousePosition.current.y = -(e.clientY / window.innerHeight) * 2 + 1
     }
 
     window.addEventListener('keydown', handleKeyDown)
@@ -274,9 +274,46 @@ export default function WalkableAvatar({
   }, [state, actions, names, avatarType])
   
   // Loop de movimiento
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (!group.current) return
     
+    const camera = state.camera
+    
+    // MODO VUELO LIBRE: SHIFT presionado (solo para Avenger)
+    if (avatarType === 'flying' && isShiftPressed.current) {
+      // Crear raycaster desde la cámara hacia la posición del mouse
+      const raycasterMouse = new THREE.Raycaster()
+      raycasterMouse.setFromCamera(
+        new THREE.Vector2(mousePosition.current.x, mousePosition.current.y),
+        camera
+      )
+      
+      // Obtener dirección 3D hacia donde apunta el mouse
+      const direction = raycasterMouse.ray.direction.clone()
+      
+      // Mover la nave en esa dirección
+      const flySpeed = moveSpeed * 1.5  // Velocidad aumentada en modo vuelo libre
+      const movement = direction.multiplyScalar(flySpeed * delta)
+      group.current.position.add(movement)
+      
+      // Hacer que la nave mire hacia donde se mueve
+      const lookAtTarget = group.current.position.clone().add(direction.multiplyScalar(5))
+      group.current.lookAt(lookAtTarget)
+      
+      // Limitar altura mínima
+      if (group.current.position.y < 2) {
+        group.current.position.y = 2
+      }
+      
+      // Limitar altura máxima
+      if (group.current.position.y > 100) {
+        group.current.position.y = 100
+      }
+      
+      return  // Salir del frame, no procesar movimiento normal
+    }
+    
+    // MODO NORMAL: Movimiento basado en teclado
     // Calcular dirección de movimiento basada en el AVATAR, no en la cámara
     const moveDirection = new THREE.Vector3()
     
@@ -334,30 +371,6 @@ export default function WalkableAvatar({
       moveDirection.normalize()
       velocity.current.copy(moveDirection.multiplyScalar(moveSpeed * delta))
       group.current.position.add(velocity.current)
-    }
-    
-    // Control vertical con SHIFT + mouse (solo para Avenger)
-    if (avatarType === 'flying' && isShiftPressed.current) {
-      const mouseDeltaY = mouseY.current - lastMouseY.current
-      
-      // Movimiento del mouse hacia arriba (valores negativos) = ascender
-      // Movimiento del mouse hacia abajo (valores positivos) = descender
-      if (Math.abs(mouseDeltaY) > 1) {  // Umbral mínimo para evitar micro-movimientos
-        const verticalMovement = -mouseDeltaY * verticalSpeed * delta * 0.01
-        group.current.position.y += verticalMovement
-        
-        // Limitar altura mínima (no bajar del suelo)
-        if (group.current.position.y < 2) {
-          group.current.position.y = 2
-        }
-        
-        // Limitar altura máxima (opcional)
-        if (group.current.position.y > 100) {
-          group.current.position.y = 100
-        }
-        
-        lastMouseY.current = mouseY.current
-      }
     }
     
     // Física de salto (solo para avatares terrestres)
