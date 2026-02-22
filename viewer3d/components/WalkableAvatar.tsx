@@ -56,6 +56,12 @@ export default function WalkableAvatar({
   const keys = useRef<{ [key: string]: boolean }>({})
   const raycaster = useRef(new THREE.Raycaster())
   
+  // Control vertical con SHIFT + mouse
+  const isShiftPressed = useRef(false)
+  const mouseY = useRef(0)
+  const lastMouseY = useRef(0)
+  const verticalSpeed = 15.0  // Velocidad de ascenso/descenso
+  
   // Configurar raycaster para que solo detecte capa 0 (terreno)
   // Ignorar capa 1 (efectos visuales)
   useEffect(() => {
@@ -94,6 +100,12 @@ export default function WalkableAvatar({
       const key = e.key.toLowerCase()
       keys.current[key] = true
       
+      // Detectar SHIFT para control vertical
+      if (e.key === 'Shift') {
+        isShiftPressed.current = true
+        lastMouseY.current = mouseY.current  // Resetear referencia
+      }
+      
       // Detectar salto con barra espaciadora (solo si NO es Avenger)
       if (e.code === 'Space' && !isJumping.current && avatarType !== 'flying') {
         isJumping.current = true
@@ -101,16 +113,28 @@ export default function WalkableAvatar({
         loggers.avatar.debug('Salto iniciado')
       }
     }
+    
     const handleKeyUp = (e: KeyboardEvent) => {
       keys.current[e.key.toLowerCase()] = false
+      
+      // Detectar liberación de SHIFT
+      if (e.key === 'Shift') {
+        isShiftPressed.current = false
+      }
+    }
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseY.current = e.clientY
     }
 
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
+    window.addEventListener('mousemove', handleMouseMove)
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
+      window.removeEventListener('mousemove', handleMouseMove)
     }
   }, [avatarType])
   
@@ -310,6 +334,30 @@ export default function WalkableAvatar({
       moveDirection.normalize()
       velocity.current.copy(moveDirection.multiplyScalar(moveSpeed * delta))
       group.current.position.add(velocity.current)
+    }
+    
+    // Control vertical con SHIFT + mouse (solo para Avenger)
+    if (avatarType === 'flying' && isShiftPressed.current) {
+      const mouseDeltaY = mouseY.current - lastMouseY.current
+      
+      // Movimiento del mouse hacia arriba (valores negativos) = ascender
+      // Movimiento del mouse hacia abajo (valores positivos) = descender
+      if (Math.abs(mouseDeltaY) > 1) {  // Umbral mínimo para evitar micro-movimientos
+        const verticalMovement = -mouseDeltaY * verticalSpeed * delta * 0.01
+        group.current.position.y += verticalMovement
+        
+        // Limitar altura mínima (no bajar del suelo)
+        if (group.current.position.y < 2) {
+          group.current.position.y = 2
+        }
+        
+        // Limitar altura máxima (opcional)
+        if (group.current.position.y > 100) {
+          group.current.position.y = 100
+        }
+        
+        lastMouseY.current = mouseY.current
+      }
     }
     
     // Física de salto (solo para avatares terrestres)
