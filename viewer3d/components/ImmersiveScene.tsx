@@ -361,6 +361,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           <span>🚶 W/S - Adelante/Atrás</span>
           <span>A/D - Izquierda/Derecha</span>
           <span>Q/E - Rotar</span>
+          <span>⬆️ SHIFT + Mouse - Ascender/Descender</span>
         </div>
       )}
 
