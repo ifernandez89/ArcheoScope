@@ -600,7 +600,8 @@ function ModelScene({
   weather,
   enhancedTerrainEnabled,
   terrainExaggeration,
-  terrainLOD
+  terrainLOD,
+  onTerrainLoadingChange
 }: { 
   modelPath: string
   avatarModel: string
