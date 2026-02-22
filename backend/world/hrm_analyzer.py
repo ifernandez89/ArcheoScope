@@ -67,40 +67,93 @@ class HRMWorldAnalyzer:
     
     def _build_hrm_model(self) -> nn.Module:
         """
-        Construye arquitectura HRM
+        Construye arquitectura HRM según checkpoint real
         
-        TODO: Adaptar según arquitectura real del checkpoint
-        Placeholder por ahora
+        Arquitectura del checkpoint maze-30x30-hard:
+        - hidden_size: 512
+        - H_layers: 4, H_cycles: 2
+        - L_layers: 4, L_cycles: 2
+        - num_heads: 8
+        - expansion: 4
+        - pos_encodings: rope
         """
-        # Esta es una estructura simplificada
-        # Debe coincidir con el checkpoint real
-        class SimpleHRM(nn.Module):
-            def __init__(self, vocab_size=6, hidden_size=256, num_layers=4):
-                super().__init__()
-                self.embedding = nn.Embedding(vocab_size, hidden_size)
-                self.h_level = nn.LSTM(hidden_size, hidden_size, num_layers, batch_first=True)
-                self.l_level = nn.LSTM(hidden_size, hidden_size, num_layers, batch_first=True)
-                self.output = nn.Linear(hidden_size, vocab_size)
-                
-            def forward(self, x, num_cycles=2):
-                # Embedding
-                x = self.embedding(x)
-                
-                # Ciclos H-level / L-level
-                for _ in range(num_cycles):
-                    # H-level (global)
-                    h_out, _ = self.h_level(x)
+        try:
+            # Intentar importar arquitectura real si existe
+            from backend.hrm.hrm_act_v1 import HierarchicalReasoningModel_ACTV1
+            
+            # Configuración del checkpoint
+            config = {
+                'hidden_size': 512,
+                'H_layers': 4,
+                'H_cycles': 2,
+                'L_layers': 4,
+                'L_cycles': 2,
+                'num_heads': 8,
+                'expansion': 4,
+                'vocab_size': 6,  # Reinterpretado para mundo (0-5)
+                'max_seq_len': 64,  # 64 zonas
+                'pos_encodings': 'rope'
+            }
+            
+            model = HierarchicalReasoningModel_ACTV1(config)
+            return model
+            
+        except ImportError:
+            # Fallback: arquitectura simplificada compatible
+            class HRMWorldModel(nn.Module):
+                def __init__(self, vocab_size=6, hidden_size=512, h_layers=4, l_layers=4):
+                    super().__init__()
+                    self.hidden_size = hidden_size
+                    self.vocab_size = vocab_size
                     
-                    # L-level (local)
-                    l_out, _ = self.l_level(h_out)
+                    # Embedding
+                    self.embedding = nn.Embedding(vocab_size, hidden_size)
                     
-                    x = l_out
-                
-                # Output
-                logits = self.output(x)
-                return logits
-        
-        return SimpleHRM()
+                    # H-level (global reasoning)
+                    self.h_transformer = nn.TransformerEncoder(
+                        nn.TransformerEncoderLayer(
+                            d_model=hidden_size,
+                            nhead=8,
+                            dim_feedforward=hidden_size * 4,
+                            batch_first=True
+                        ),
+                        num_layers=h_layers
+                    )
+                    
+                    # L-level (local reasoning)
+                    self.l_transformer = nn.TransformerEncoder(
+                        nn.TransformerEncoderLayer(
+                            d_model=hidden_size,
+                            nhead=8,
+                            dim_feedforward=hidden_size * 4,
+                            batch_first=True
+                        ),
+                        num_layers=l_layers
+                    )
+                    
+                    # Output head
+                    self.output_head = nn.Linear(hidden_size, vocab_size)
+                    
+                def forward(self, x, num_cycles=2):
+                    # Embedding
+                    x = self.embedding(x)  # [batch, seq_len, hidden_size]
+                    
+                    # Ciclos H-level / L-level
+                    for cycle in range(num_cycles):
+                        # H-level: visión global
+                        h_out = self.h_transformer(x)
+                        
+                        # L-level: refinamiento local
+                        l_out = self.l_transformer(h_out)
+                        
+                        # Residual connection
+                        x = x + l_out
+                    
+                    # Output logits
+                    logits = self.output_head(x)
+                    return logits
+            
+            return HRMWorldModel()
     
     def analyze(
         self, 

@@ -1,0 +1,25 @@
+# HRM-World Engine Requirements
+
+# Core
+torch>=2.0.0
+numpy>=1.24.0
+
+# API
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+websockets>=12.0
+pydantic>=2.0.0
+
+# HTTP Client
+requests>=2.31.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.25.0
+
+# Environment
+python-dotenv>=1.0.0
+
+# Optional: GPU support
+# torch-cuda>=2.0.0

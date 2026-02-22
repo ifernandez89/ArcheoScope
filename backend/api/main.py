@@ -530,6 +530,42 @@ except Exception as e:
     logger.error(f"❌ Error inicializando router de Credenciales: {e}")
 
 # ============================================================================
+# INCLUIR ROUTER HRM-WORLD ENGINE (EMERGENT WORLD SYSTEM)
+# ============================================================================
+
+try:
+    from world.api_endpoints import router as world_router, init_world_engine
+    
+    # Inicializar World Engine en startup
+    @app.on_event("startup")
+    async def init_world():
+        try:
+            checkpoint_path = "backend/hrm/checkpoints/maze-30x30-hard/checkpoint"
+            init_world_engine(
+                hrm_checkpoint_path=checkpoint_path,
+                llm_model="qwen2.5:3b",
+                ollama_url="http://localhost:11434",
+                device="cpu"
+            )
+            logger.info("✅ HRM-World Engine inicializado")
+        except Exception as e:
+            logger.warning(f"⚠️ HRM-World Engine no disponible: {e}")
+    
+    app.include_router(
+        world_router,
+        tags=["HRM-World Engine"]
+    )
+    logger.info("✅ Router HRM-World incluido en /world")
+except ImportError as e:
+    logger.error(f"❌ No se pudo cargar router HRM-World: {e}")
+    import traceback
+    traceback.print_exc()
+except Exception as e:
+    logger.error(f"❌ Error inicializando HRM-World Engine: {e}")
+    import traceback
+    traceback.print_exc()
+
+# ============================================================================
 # SERVIR ARCHIVOS ESTÁTICOS (ANOMALISM)
 # ============================================================================
 
