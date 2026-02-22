@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { TerrainEngine, type DEMData } from '../engines/TerrainEngine'
+import { TerrainEngineAdvanced, type DEMData } from '../engines/TerrainEngineAdvanced'
 import { terrainDataService } from '../services/TerrainDataService'
 import { loggers } from '@/core/Logger'
 
@@ -19,6 +19,7 @@ interface EnhancedTerrainProps {
   exaggeration?: number  // Factor de exageración vertical
   enableLOD?: boolean
   enableHydrography?: boolean
+  onLoadingChange?: (loading: boolean) => void
 }
 
 export default function EnhancedTerrain({
@@ -28,10 +29,11 @@ export default function EnhancedTerrain({
   resolution = 256,
   exaggeration = 1.5,
   enableLOD = true,
-  enableHydrography = false
+  enableHydrography = false,
+  onLoadingChange
 }: EnhancedTerrainProps) {
   const { scene } = useThree()
-  const terrainEngineRef = useRef<TerrainEngine | null>(null)
+  const terrainEngineRef = useRef<TerrainEngineAdvanced | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
@@ -47,14 +49,20 @@ export default function EnhancedTerrain({
     
     // Inicializar TerrainEngine
     if (!terrainEngineRef.current) {
-      terrainEngineRef.current = new TerrainEngine(scene, {
+      terrainEngineRef.current = new TerrainEngineAdvanced(scene, {
         segments: resolution,
         exaggeration,
         enableLOD,
-        enableHydrography
+        enableHydrography,
+        erosionStrength: 0.3,
+        multiScaleDetail: true,
+        directionalBias: { x: 0.8, y: 1.3 },
+        microDetailStrength: 0.5,
+        atmosphericFog: true,
+        anomalyStrength: 0.2
       })
       
-      loggers.engine.info('TerrainEngine inicializado')
+      loggers.engine.info('TerrainEngineAdvanced inicializado con mejoras geométricas')
     }
     
     // Cargar datos de terreno
@@ -74,6 +82,11 @@ export default function EnhancedTerrain({
     
     setIsLoading(true)
     setError(null)
+    
+    // Notificar al padre que estamos cargando
+    if (onLoadingChange) {
+      onLoadingChange(true)
+    }
     
     try {
       loggers.engine.info('Cargando datos de terreno...', {
@@ -129,11 +142,21 @@ export default function EnhancedTerrain({
       })
       
       setIsLoading(false)
+      
+      // Notificar al padre que terminamos de cargar
+      if (onLoadingChange) {
+        onLoadingChange(false)
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido'
       loggers.engine.error('Error cargando terreno:', errorMessage)
       setError(errorMessage)
       setIsLoading(false)
+      
+      // Notificar al padre que terminamos (con error)
+      if (onLoadingChange) {
+        onLoadingChange(false)
+      }
     }
   }
   
