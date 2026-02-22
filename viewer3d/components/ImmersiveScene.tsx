@@ -734,8 +734,8 @@ function ModelScene({
       {/* Sistema climático completo */}
       <WeatherSystem weather={weather} isIceBiome={isIceBiome} />
 
-      {/* Elementos del entorno: rocas y vegetación - dinámicos según ubicación */}
-      <EnvironmentElements location={location} />
+      {/* Elementos del entorno: rocas y vegetación - DESHABILITADOS por petición del usuario */}
+      {/* <EnvironmentElements location={location} /> */}
 
       {/* Modelo 3D o Avatar según modo */}
       {movementMode === 'avatar' ? (
