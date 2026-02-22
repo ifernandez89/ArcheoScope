@@ -1,44 +1,33 @@
 {
   "app\\page.tsx -> @/components/Scene3D": {
-    "id": 1932,
+    "id": "app\\page.tsx -> @/components/Scene3D",
     "files": [
-      "static/chunks/three.815c5b8d93734097.js",
-      "static/chunks/react-three.994f8dbb8dcd66d9.js",
-      "static/chunks/engines.f7a40adf576cab2b.js",
-      "static/chunks/vendor-55591b3032203042.js",
-      "static/chunks/696.217aeac06004b5ad.js",
-      "static/chunks/160.c8c838d22643c864.js"
-    ]
-  },
-  "app\\realistic-solar\\page.tsx -> @/components/RealisticSolarSystemScene": {
-    "id": 6982,
-    "files": [
-      "static/chunks/three.815c5b8d93734097.js",
-      "static/chunks/react-three.994f8dbb8dcd66d9.js",
-      "static/chunks/vendor-55591b3032203042.js",
-      "static/chunks/696.217aeac06004b5ad.js",
-      "static/chunks/982.c805409f0462423d.js"
+      "static/chunks/three.js",
+      "static/chunks/react-three.js",
+      "static/chunks/engines.js",
+      "static/chunks/vendor.js",
+      "static/chunks/_app-pages-browser_components_Scene3D_tsx-_app-pages-browser_utils_performance-monitor_ts-_ap-d48b50.js"
     ]
   },
   "utils\\lazy-systems.ts -> @/components/ProceduralTerrain": {
-    "id": 8851,
+    "id": "utils\\lazy-systems.ts -> @/components/ProceduralTerrain",
     "files": [
-      "static/chunks/851.0b64110526323343.js"
+      "static/chunks/_app-pages-browser_components_ProceduralTerrain_tsx.js"
     ]
   },
   "utils\\lazy-systems.ts -> @/components/systems/PostProcessingSystem": {
-    "id": 1437,
+    "id": "utils\\lazy-systems.ts -> @/components/systems/PostProcessingSystem",
     "files": [
-      "static/chunks/react-three.994f8dbb8dcd66d9.js",
-      "static/chunks/vendor-55591b3032203042.js",
-      "static/chunks/437.2520b2eb5f33f403.js"
+      "static/chunks/react-three.js",
+      "static/chunks/vendor.js",
+      "static/chunks/_app-pages-browser_components_systems_PostProcessingSystem_tsx.js"
     ]
   },
   "utils\\lazy-systems.ts -> @/components/systems/WeatherSystem": {
-    "id": 5528,
+    "id": "utils\\lazy-systems.ts -> @/components/systems/WeatherSystem",
     "files": [
-      "static/chunks/vendor-55591b3032203042.js",
-      "static/chunks/528.73424f6a554cd598.js"
+      "static/chunks/vendor.js",
+      "static/chunks/_app-pages-browser_components_systems_WeatherSystem_tsx.js"
     ]
   }
 }

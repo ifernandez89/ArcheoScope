@@ -63,7 +63,7 @@ interface ImmersiveSceneProps {
 export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false }: ImmersiveSceneProps) {
   const [mode, setMode] = useState<'globe' | 'transition' | 'model' | 'exploration'>('globe')
   const [selectedModel, setSelectedModel] = useState<string>(getAssetPath('/moai.glb'))
-  const [avatarModel, setAvatarModel] = useState<string>(getAssetPath('/ovni.glb')) // OVNI por defecto
+  const [avatarModel, setAvatarModel] = useState<string>(getAssetPath('/avenger_01.glb')) // Avenger por defecto
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(null)
   const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
   const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('avatar') // Modo avatar por defecto
@@ -293,7 +293,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                 : 'rgba(34, 197, 94, 0.9)'
             }}
           >
-            {movementMode === 'avatar' ? '🛸 Modo: OVNI' : '🔄 Modo: Órbita'}
+            {movementMode === 'avatar' ? 'Modo: Avenger' : '🔄 Modo: Órbita'}
           </button>
 
           {/* Botón para mostrar/ocultar información de ubicación */}
@@ -475,7 +475,7 @@ function GlobeScene({
       camera={{ position: [0, 0, 15], fov: 50 }}
       style={{ 
         background: '#000',
-        cursor: spaceUfoActive ? 'none' : 'default' // Ocultar cursor cuando OVNI está activo
+        cursor: spaceUfoActive ? 'none' : 'default' // Ocultar cursor cuando Avenger está activo
       }}
     >
       {/* 🎮 SISTEMAS DE PERFORMANCE - ÚNICO useFrame */}
@@ -496,7 +496,7 @@ function GlobeScene({
         markerPosition={markerPosition}
       />
       
-      {/* OVNI Espacial controlado por mouse */}
+      {/* Avenger Espacial controlado por mouse */}
       {spaceUfoActive && (
         <SpaceUfo />
       )}
@@ -1172,15 +1172,15 @@ function SiteInfo({ site }: { site: ArchaeologicalSite }) {
 }
 
 
-// OVNI Espacial controlado por mouse
+// Avenger Espacial controlado por mouse
 function SpaceUfo() {
   const ufoRef = useRef<THREE.Group>(null)
   const sunLightRef = useRef<THREE.DirectionalLight>(null)
   const { camera, size, scene: threeScene } = useThree()
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   
-  // Cargar modelo del OVNI
-  const { scene } = useGLTF(getAssetPath('/ovni.glb'))
+  // Cargar modelo del Avenger
+  const { scene } = useGLTF(getAssetPath('/avenger_01.glb'))
   
   // Capturar movimiento del mouse
   useEffect(() => {
@@ -1196,7 +1196,7 @@ function SpaceUfo() {
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [size])
   
-  // Actualizar posición del OVNI para seguir el mouse
+  // Actualizar posición del Avenger para seguir el mouse
   useFrame(() => {
     if (!ufoRef.current) return
     
@@ -1210,7 +1210,7 @@ function SpaceUfo() {
       raycaster.ray.direction.multiplyScalar(distance)
     )
     
-    // Suavizar movimiento del OVNI hacia la posición objetivo
+    // Suavizar movimiento del Avenger hacia la posición objetivo
     ufoRef.current.position.lerp(targetPosition, 0.1)
     
     // Hacer que el OVNI mire hacia donde se mueve
@@ -1271,7 +1271,7 @@ function SpaceUfo() {
   
   return (
     <group ref={ufoRef} position={[0, 0, 10]}>
-      <primitive object={scene} scale={1.14} />
+      <primitive object={scene} scale={1.37} />
       
       {/* Iluminación del Sol */}
       <directionalLight 

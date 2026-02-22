@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import ImmersiveScene from './ImmersiveScene'
 import PerformanceStats from './PerformanceStats'
-import ConversationalAvatar from './ConversationalAvatar'
 // import { AudioSystem } from '@/core/audio'  // Deshabilitado para GitHub Pages
 import * as THREE from 'three'
 
@@ -12,7 +11,7 @@ export default function Scene3D() {
   const [loadedModel, setLoadedModel] = useState<THREE.Object3D | null>(null)
   const [camera, setCamera] = useState<THREE.Camera | null>(null)
   const [showPerformance, setShowPerformance] = useState(true)
-  const [spaceUfoActive, setSpaceUfoActive] = useState(false) // OVNI espacial
+  const [spaceUfoActive, setSpaceUfoActive] = useState(false) // Avenger espacial
 
   // Inicializar sistemas
   useEffect(() => {
@@ -37,7 +36,7 @@ export default function Scene3D() {
         spaceUfoActive={spaceUfoActive}
       />
 
-      {/* Botón de OVNI Espacial - Solo en modo globo */}
+      {/* Botón de Avenger Espacial - Solo en modo globo */}
       {showPerformance && (
         <button
           onClick={() => setSpaceUfoActive(!spaceUfoActive)}
@@ -76,18 +75,12 @@ export default function Scene3D() {
               : 'rgba(75, 85, 99, 0.7)'
           }}
         >
-          🛸 {spaceUfoActive ? 'OVNI Activo' : 'Activar OVNI'}
+          Avenger_01
         </button>
       )}
 
       {/* Performance Stats - Solo en modo globo y desarrollo */}
       {process.env.NODE_ENV === 'development' && showPerformance && <PerformanceStats />}
-
-      {/* Avatar Conversacional */}
-      <ConversationalAvatar 
-        model={loadedModel}
-        camera={camera}
-      />
     </div>
   )
 }
