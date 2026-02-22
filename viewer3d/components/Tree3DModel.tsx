@@ -27,10 +27,10 @@ export default function Tree3DModel({ position, scale = 1, rotation = 0 }: Tree3
     return x - Math.floor(x)
   }
   
-  const trunkHeight = scale * (2.0 + random(1) * 0.8)
-  const trunkRadius = scale * 0.18
-  const crownHeight = scale * (2.5 + random(2) * 1.2)
-  const crownRadius = scale * (1.2 + random(3) * 0.6)
+  const trunkHeight = scale * (0.8 + random(1) * 0.4)
+  const trunkRadius = scale * 0.08
+  const crownHeight = scale * (1.0 + random(2) * 0.5)
+  const crownRadius = scale * (0.5 + random(3) * 0.3)
   
   // Colores variados para el follaje
   const foliageColors = [
@@ -56,7 +56,7 @@ export default function Tree3DModel({ position, scale = 1, rotation = 0 }: Tree3
       {[0, 1, 2, 3, 4, 5].map((i) => {
         const angle = (i / 6) * Math.PI * 2 + random(i + 10)
         const height = trunkHeight * (0.5 + random(i + 20) * 0.3)
-        const length = scale * (0.4 + random(i + 30) * 0.3)
+        const length = scale * (0.2 + random(i + 30) * 0.15)
         const thickness = trunkRadius * (0.3 + random(i + 40) * 0.2)
         
         return (
@@ -128,7 +128,7 @@ export default function Tree3DModel({ position, scale = 1, rotation = 0 }: Tree3
             ]}
             castShadow
           >
-            <sphereGeometry args={[crownRadius * 0.4, 6, 6]} />
+            <sphereGeometry args={[crownRadius * 0.35, 6, 6]} />
             <meshStandardMaterial 
               color={foliageColors[Math.floor(random(i + 80) * 4)]}
               roughness={0.87}
