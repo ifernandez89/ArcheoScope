@@ -41,6 +41,10 @@ import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
 import { getAssetPath } from '@/lib/paths'
 import { loggers } from '@/core/Logger'
 
+// 🗺️ SISTEMA DE TERRENO MEJORADO
+import EnhancedTerrain from './EnhancedTerrain'
+import TerrainControl from './TerrainControl'
+
 // 🎮 SISTEMAS DE PERFORMANCE
 import EngineIntegration from './EngineIntegration'
 
@@ -88,6 +92,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     azimuth: 0,
     declination: 0
   })
+  
+  // Estado del terreno mejorado
+  const [enhancedTerrainEnabled, setEnhancedTerrainEnabled] = useState(false)
+  const [terrainExaggeration, setTerrainExaggeration] = useState(1.5)
+  const [terrainLOD, setTerrainLOD] = useState(true)
 
   // Notificar cambios de modo al padre
   useEffect(() => {
@@ -381,12 +390,27 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             setSolarState({ altitude, azimuth, declination })
           }}
           weather={weather}
+          enhancedTerrainEnabled={enhancedTerrainEnabled}
+          terrainExaggeration={terrainExaggeration}
+          terrainLOD={terrainLOD}
         />
       ) : null}
 
       {/* Control de clima */}
       {mode === 'model' && (
-        <WeatherControl onWeatherChange={setWeather} />
+        <>
+          <WeatherControl onWeatherChange={setWeather} />
+          
+          {/* Control de terreno mejorado */}
+          <TerrainControl
+            enabled={enhancedTerrainEnabled}
+            onToggle={setEnhancedTerrainEnabled}
+            exaggeration={terrainExaggeration}
+            onExaggerationChange={setTerrainExaggeration}
+            enableLOD={terrainLOD}
+            onLODToggle={setTerrainLOD}
+          />
+        </>
       )}
 
       <style jsx>{`
@@ -547,7 +571,10 @@ function ModelScene({
   solarDirection,
   solarState,
   onSolarUpdate,
-  weather
+  weather,
+  enhancedTerrainEnabled,
+  terrainExaggeration,
+  terrainLOD
 }: { 
   modelPath: string
   avatarModel: string
@@ -563,6 +590,9 @@ function ModelScene({
   solarState: { altitude: number, azimuth: number, declination: number }
   onSolarUpdate: (direction: { x: number, y: number, z: number }, altitude: number, azimuth: number, declination: number) => void
   weather: WeatherState
+  enhancedTerrainEnabled?: boolean
+  terrainExaggeration?: number
+  terrainLOD?: boolean
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -675,6 +705,19 @@ function ModelScene({
         <IceTerrain location={location} ref={terrainRef} />
       ) : (
         <VolcanicTerrain location={location} ref={terrainRef} />
+      )}
+      
+      {/* Terreno mejorado con DEM real - se superpone al terreno procedural */}
+      {enhancedTerrainEnabled && (
+        <EnhancedTerrain
+          location={location}
+          enabled={enhancedTerrainEnabled}
+          radius={0.05}
+          resolution={256}
+          exaggeration={terrainExaggeration || 1.5}
+          enableLOD={terrainLOD !== false}
+          enableHydrography={false}
+        />
       )}
 
       {/* Grid sutil para referencia de movimiento - OCULTO */}
