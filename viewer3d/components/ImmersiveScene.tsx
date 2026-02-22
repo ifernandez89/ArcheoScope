@@ -734,8 +734,8 @@ function ModelScene({
       {/* Sistema climático completo */}
       <WeatherSystem weather={weather} isIceBiome={isIceBiome} />
 
-      {/* Elementos del entorno: rocas y vegetación - DESHABILITADOS por petición del usuario */}
-      {/* <EnvironmentElements location={location} /> */}
+      {/* Elementos del entorno: rocas y vegetación - usando modelos GLB de Blender */}
+      <EnvironmentElements location={location} />
 
       {/* Modelo 3D o Avatar según modo */}
       {movementMode === 'avatar' ? (
@@ -937,7 +937,7 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
               <Tree3DModel 
                 key={`tree-${i}`}
                 position={[item.x, 0, item.z]}
-                scale={item.height * 0.5}
+                scale={item.height * 0.3}
                 rotation={item.rotation}
               />
             )
@@ -1003,7 +1003,7 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
               <Rock3DModel 
                 key={`rock-${i}`}
                 position={[item.x, 0, item.z]}
-                scale={item.scale * 100}
+                scale={item.scale * 0.5}
                 rotation={item.rotation}
               />
             )
