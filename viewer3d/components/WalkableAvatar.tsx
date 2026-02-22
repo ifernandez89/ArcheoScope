@@ -24,7 +24,7 @@ function getAvatarType(modelPath: string): 'humanoid' | 'statue' | 'creature' | 
   if (modelPath.includes('warrior')) return 'humanoid'
   if (modelPath.includes('moai')) return 'statue'
   if (modelPath.includes('sphinx')) return 'creature'
-  if (modelPath.includes('ovni') || modelPath.includes('ufo')) return 'flying'
+  if (modelPath.includes('avenger') || modelPath.includes('ufo')) return 'flying'
   return 'humanoid'
 }
 
@@ -94,7 +94,7 @@ export default function WalkableAvatar({
       const key = e.key.toLowerCase()
       keys.current[key] = true
       
-      // Detectar salto con barra espaciadora (solo si NO es OVNI)
+      // Detectar salto con barra espaciadora (solo si NO es Avenger)
       if (e.code === 'Space' && !isJumping.current && avatarType !== 'flying') {
         isJumping.current = true
         verticalVelocity.current = jumpForce
@@ -338,7 +338,7 @@ export default function WalkableAvatar({
     timeAccumulator.current += delta
     
     if (avatarType === 'flying') {
-      // 🛸 OVNI: Vuelo flotante con oscilación suave
+      // 🚀 Avenger: Vuelo flotante con oscilación suave
       // Calcular altura objetivo sobre el terreno
       let targetHeight = flyingHeight
       
@@ -480,14 +480,14 @@ export default function WalkableAvatar({
       camera.lookAt(lookAtTarget)
     }
     
-    // Actualizar luz del Sol en el espacio para que apunte desde el Sol (0,0,0) hacia el OVNI
+    // Actualizar luz del Sol en el espacio para que apunte desde el Sol (0,0,0) hacia el Avenger
     if (disableCameraControl && sunLightRef.current && group.current) {
-      // Calcular dirección desde el Sol hacia el OVNI
+      // Calcular dirección desde el Sol hacia el Avenger
       const sunPosition = new THREE.Vector3(0, 0, 0)
-      const ufoPosition = group.current.position.clone()
-      const direction = ufoPosition.sub(sunPosition).normalize()
+      const avengerPosition = group.current.position.clone()
+      const direction = avengerPosition.sub(sunPosition).normalize()
       
-      // Posicionar la luz en dirección opuesta al OVNI (desde el Sol)
+      // Posicionar la luz en dirección opuesta al Avenger (desde el Sol)
       const lightDistance = 50
       sunLightRef.current.position.copy(direction.multiplyScalar(-lightDistance))
     }
@@ -500,8 +500,8 @@ export default function WalkableAvatar({
   
   return (
     <>
-      <group ref={group} position={[0, 0, 0]}>
-        {/* Efectos cósmicos envolviendo el avatar (solo en Tierra, no en espacio, y NO para OVNI) */}
+      <group ref={group} position={[0, 0, 0]} scale={avatarType === 'flying' ? 1.2 : 1}>
+        {/* Efectos cósmicos envolviendo el avatar (solo en Tierra, no en espacio, y NO para Avenger) */}
         {showCosmicEffects && !disableCameraControl && avatarType !== 'flying' && (
           <CosmicEntity
             solarDirection={solarDirectionVec3}
@@ -514,7 +514,7 @@ export default function WalkableAvatar({
         {/* Sin efectos cósmicos, solo el modelo */}
         {(!showCosmicEffects || disableCameraControl || avatarType === 'flying') && <primitive object={scene} />}
         
-        {/* Iluminación mejorada para OVNI en el espacio */}
+        {/* Iluminación mejorada para Avenger en el espacio */}
         {disableCameraControl && (
           <>
             {/* Luz del Sol - Direccional que simula la luz solar */}
@@ -577,4 +577,4 @@ import { getAssetPath } from '@/lib/paths'
 useGLTF.preload(getAssetPath('/warrior.glb'))
 useGLTF.preload(getAssetPath('/moai.glb'))
 useGLTF.preload(getAssetPath('/sphinx.glb'))
-useGLTF.preload(getAssetPath('/ovni.glb'))
+useGLTF.preload(getAssetPath('/avenger_01.glb'))

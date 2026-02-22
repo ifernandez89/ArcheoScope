@@ -31,7 +31,6 @@ import {
 import Globe3D from './Globe3D'
 import SiteMarkers from './SiteMarkers'
 import CoordinateInput from './CoordinateInput'
-import ConversationalAvatar from './ConversationalAvatar'
 import type { WeatherState } from './WeatherControl'
 import type { ArchaeologicalSite } from '../engines'
 import { getAssetPath } from '@/lib/paths'
@@ -224,14 +223,6 @@ export default function ImmersiveScene({
         onWeatherChange={setWeather}
         onReturnToGlobe={handleBackToGlobe}
       />
-      
-      {/* Avatar Conversacional */}
-      {mode === 'model' && (
-        <ConversationalAvatar
-          model={loadedModel}
-          camera={camera}
-        />
-      )}
       
       {/* Estilos */}
       <style jsx>{`
