@@ -281,31 +281,70 @@ export default function WalkableAvatar({
     
     // MODO VUELO LIBRE: SHIFT presionado (solo para Avenger)
     if (avatarType === 'flying' && isShiftPressed.current) {
-      // Crear raycaster desde la cámara hacia la posición del mouse
-      const raycasterMouse = new THREE.Raycaster()
-      raycasterMouse.setFromCamera(
-        new THREE.Vector2(mousePosition.current.x, mousePosition.current.y),
-        camera
-      )
+      // El mouse controla la DIRECCIÓN (pitch) de la nave
+      // mousePosition.y: 1 (arriba) = mirar hacia arriba, -1 (abajo) = mirar hacia abajo
       
-      // Obtener dirección 3D hacia donde apunta el mouse
-      const direction = raycasterMouse.ray.direction.clone()
+      // Calcular pitch (inclinación vertical) basado en posición Y del mouse
+      // Rango: -45° (abajo) a +45° (arriba)
+      const targetPitch = mousePosition.current.y * (Math.PI / 4)  // ±45 grados
       
-      // Mover la nave en esa dirección
-      const flySpeed = moveSpeed * 1.5  // Velocidad aumentada en modo vuelo libre
-      const movement = direction.multiplyScalar(flySpeed * delta)
-      group.current.position.add(movement)
+      // Aplicar rotación suave
+      const currentRotation = group.current.rotation.clone()
+      currentRotation.x = THREE.MathUtils.lerp(currentRotation.x, targetPitch, 0.1)
+      group.current.rotation.x = currentRotation.x
       
-      // Hacer que la nave mire hacia donde se mueve
-      const lookAtTarget = group.current.position.clone().add(direction.multiplyScalar(5))
-      group.current.lookAt(lookAtTarget)
+      // Calcular dirección de movimiento basada en las teclas Y la orientación de la nave
+      const moveDirection = new THREE.Vector3()
       
-      // Limitar altura mínima
+      // Obtener la dirección frontal de la nave (considerando su rotación)
+      const avatarForward = new THREE.Vector3(0, 0, 1)
+      avatarForward.applyQuaternion(group.current.quaternion)
+      avatarForward.normalize()
+      
+      // Calcular dirección derecha
+      const avatarRight = new THREE.Vector3()
+      avatarRight.crossVectors(avatarForward, new THREE.Vector3(0, 1, 0)).normalize()
+      
+      // Input de teclado (igual que modo normal)
+      let isMoving = false
+      
+      if (keys.current['w']) {
+        moveDirection.add(avatarForward)  // Adelante (en la dirección que mira)
+        isMoving = true
+      }
+      if (keys.current['s']) {
+        moveDirection.sub(avatarForward)  // Atrás
+        isMoving = true
+      }
+      if (keys.current['a']) {
+        moveDirection.sub(avatarRight)  // Izquierda
+        isMoving = true
+      }
+      if (keys.current['d']) {
+        moveDirection.add(avatarRight)  // Derecha
+        isMoving = true
+      }
+      
+      // Rotación con Q/E (yaw)
+      if (keys.current['q']) {
+        group.current.rotation.y += 2.0 * delta
+      }
+      if (keys.current['e']) {
+        group.current.rotation.y -= 2.0 * delta
+      }
+      
+      // Aplicar movimiento solo si hay input de teclado
+      if (isMoving) {
+        moveDirection.normalize()
+        const flySpeed = moveSpeed * 1.2  // Velocidad en modo vuelo libre
+        velocity.current.copy(moveDirection.multiplyScalar(flySpeed * delta))
+        group.current.position.add(velocity.current)
+      }
+      
+      // Limitar altura
       if (group.current.position.y < 2) {
         group.current.position.y = 2
       }
-      
-      // Limitar altura máxima
       if (group.current.position.y > 100) {
         group.current.position.y = 100
       }
