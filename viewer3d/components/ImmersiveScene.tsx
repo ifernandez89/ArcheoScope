@@ -851,13 +851,14 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
       // Altura real del árbol en metros (entre 2 y 10 metros)
       const heightInMeters = 2 + random(index++) * 8
       
-      // Seleccionar tipo de árbol aleatorio (4 tipos disponibles)
+      // Seleccionar tipo de árbol aleatorio (SOLO default y tree1 por ahora)
       const treeTypeRandom = random(index++)
       let treeType: 'default' | 'tree1' | 'tree2' | 'tree3'
-      if (treeTypeRandom < 0.25) treeType = 'default'
-      else if (treeTypeRandom < 0.5) treeType = 'tree1'
-      else if (treeTypeRandom < 0.75) treeType = 'tree2'
-      else treeType = 'tree3'
+      if (treeTypeRandom < 0.5) treeType = 'default'
+      else treeType = 'tree1'
+      // tree2 y tree3 desactivados temporalmente
+      // else if (treeTypeRandom < 0.75) treeType = 'tree2'
+      // else treeType = 'tree3'
       
       items.push({ 
         type: 'tree', 
