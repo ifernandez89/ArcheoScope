@@ -50,9 +50,7 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
     { name: 'Chichén Itzá, México', lat: 20.6843, lon: -88.5678, category: 'famous' },
     { name: 'Acrópolis de Atenas, Grecia', lat: 37.9715, lon: 23.7267, category: 'famous' },
     { name: 'Antártida (Base McMurdo)', lat: -77.8419, lon: 166.6863, category: 'famous' },
-    
-    // Zona de prueba
-    { name: '🌊 Océano Pacífico', lat: 8.7783, lon: -144.8885, category: 'test' },
+    { name: '🌊 Océano Pacífico', lat: 8.7783, lon: -144.8885, category: 'famous' },
     
     // Descubrimientos ArcheoScope
     { name: '🔍 Anomalía Patagonia', lat: -50.5, lon: -72.0, category: 'discovery' },
