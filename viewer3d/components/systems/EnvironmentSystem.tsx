@@ -32,6 +32,8 @@ export default function EnvironmentSystem({
   waterSize = 150,
   waterColor = '#1e3a5f'
 }: EnvironmentSystemProps) {
+  console.log('EnvironmentSystem - showWater:', showWater)
+  
   return (
     <>
       {/* Cielo dinámico */}

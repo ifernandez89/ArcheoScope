@@ -19,6 +19,7 @@ const IceTerrain = forwardRef<THREE.Mesh, IceTerrainProps>(
   const isInOcean = useMemo(() => {
     if (!location) return false
     const biome = detectBiome(location.lat, location.lon)
+    console.log('IceTerrain - Location:', location, 'Biome:', biome.type, 'isInOcean:', biome.type === 'ocean')
     return biome.type === 'ocean'
   }, [location])
   

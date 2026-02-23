@@ -20,6 +20,7 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
   const isInOcean = useMemo(() => {
     if (!location) return false
     const biome = detectBiome(location.lat, location.lon)
+    console.log('VolcanicTerrain - Location:', location, 'Biome:', biome.type, 'isInOcean:', biome.type === 'ocean')
     return biome.type === 'ocean'
   }, [location])
   

@@ -31,8 +31,6 @@ export default function RealisticWater({
     uniforms: {
       time: { value: 0 },
       deepWaterColor: { value: new THREE.Color(color) },
-      shallowWaterColor: { value: new THREE.Color('#4a9eff') },
-      fresnelColor: { value: new THREE.Color('#87ceeb') },
       waveAmplitude: { value: 0.15 },
       waveFrequency: { value: 0.3 },
       waveSpeed: { value: 0.3 }
@@ -42,11 +40,6 @@ export default function RealisticWater({
       uniform float waveAmplitude;
       uniform float waveFrequency;
       uniform float waveSpeed;
-      
-      varying vec3 vNormal;
-      varying vec3 vViewPosition;
-      varying vec2 vUv;
-      varying float vElevation;
       
       // Gerstner Waves para olas realistas
       vec3 gerstnerWave(vec3 pos, float time) {
@@ -64,8 +57,6 @@ export default function RealisticWater({
       }
       
       void main() {
-        vUv = uv;
-        
         // Aplicar múltiples olas Gerstner
         vec3 pos = position;
         vec3 wave1 = gerstnerWave(pos, time);
@@ -73,57 +64,16 @@ export default function RealisticWater({
         vec3 wave3 = gerstnerWave(pos * 0.7 + vec3(-5.0, 0.0, 5.0), time * 0.9);
         
         pos += wave1 + wave2 * 0.5 + wave3 * 0.3;
-        vElevation = pos.y;
         
-        // Calcular normal para Fresnel
-        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-        vViewPosition = -mvPosition.xyz;
-        vNormal = normalize(normalMatrix * normal);
-        
-        gl_Position = projectionMatrix * mvPosition;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
       }
     `,
     fragmentShader: `
       uniform vec3 deepWaterColor;
-      uniform vec3 shallowWaterColor;
-      uniform vec3 fresnelColor;
-      uniform float time;
-      
-      varying vec3 vNormal;
-      varying vec3 vViewPosition;
-      varying vec2 vUv;
-      varying float vElevation;
       
       void main() {
-        // Fresnel effect (clave del realismo)
-        vec3 viewDir = normalize(vViewPosition);
-        float fresnel = pow(1.0 - max(dot(vNormal, viewDir), 0.0), 3.0);
-        
-        // Depth-based color (simular profundidad)
-        float depth = smoothstep(-0.5, 0.5, vElevation);
-        vec3 waterColor = mix(deepWaterColor, shallowWaterColor, depth);
-        
-        // Refraction fake (distorsión UV)
-        vec2 distortion = vNormal.xy * 0.05;
-        vec2 distortedUv = vUv + distortion;
-        
-        // Ondulación procedural para textura
-        float ripple = sin(distortedUv.x * 20.0 + time * 2.0) * 
-                       cos(distortedUv.y * 20.0 + time * 1.5);
-        ripple *= 0.05;
-        
-        // Combinar todo
-        vec3 color = mix(waterColor, fresnelColor, fresnel * 0.7);
-        color += ripple * 0.1;
-        
-        // Espuma procedural en crestas
-        float foam = smoothstep(0.2, 0.3, vElevation);
-        color = mix(color, vec3(1.0), foam * 0.3);
-        
-        // Transparencia con Fresnel
-        float alpha = mix(0.85, 0.95, fresnel);
-        
-        gl_FragColor = vec4(color, alpha);
+        // Color COMPLETAMENTE uniforme sin ninguna variación
+        gl_FragColor = vec4(deepWaterColor, 0.9);
       }
     `
   }), [color])
