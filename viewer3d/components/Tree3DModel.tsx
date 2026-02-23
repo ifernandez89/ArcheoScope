@@ -18,7 +18,7 @@ export default function Tree3DModel({ position, scale = 1, rotation = 0 }: Tree3
   const groupRef = useRef<THREE.Group>(null)
   
   // Cargar modelo GLB
-  const { scene } = useGLTF('/tree_blender.glb')
+  const { scene } = useGLTF('/ArcheoScope/tree_blender.glb')
   
   // Clonar el modelo para cada instancia
   const clonedScene = scene.clone()
@@ -47,4 +47,4 @@ export default function Tree3DModel({ position, scale = 1, rotation = 0 }: Tree3
 }
 
 // Precargar el modelo
-useGLTF.preload('/tree_blender.glb')
+useGLTF.preload('/ArcheoScope/tree_blender.glb')
