@@ -695,7 +695,7 @@ function ModelScene({
           0
         }
         fogDensity={isIceBiome ? 0.012 : 0.008}
-        showWater={biome.type === 'ocean'}
+        showWater={!isIceBiome}
         waterPosition={[0, -0.5, 0]}
         waterSize={150}
         waterColor="#1e3a5f"
