@@ -1,268 +1,441 @@
 /**
  * Performance Monitor - Sistema de monitoreo de rendimiento
- * Mide y reporta métricas clave de performance
+ * Solo logging en consola, sin UI
  */
 
-export interface PerformanceMetrics {
+import * as THREE from 'three'
+import { fileLogger } from './file-logger'
+
+// Función para enviar logs al servidor
+async function sendLogToServer(category: string, message: string, data?: any) {
+  try {
+    const logLine = `[${new Date().toISOString()}] [${category}] ${message}${data ? ' | ' + JSON.stringify(data) : ''}`
+    await fetch('/api/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ log: logLine })
+    })
+  } catch (e) {
+    // Silencioso
+  }
+}
+
+interface PerformanceMetrics {
   fps: number
   frameTime: number
-  memory: {
-    used: number
-    total: number
-    limit: number
-  }
   drawCalls: number
   triangles: number
   geometries: number
   textures: number
   programs: number
-  loadTime: number
+  memoryUsed?: number
+  timestamp: number
+}
+
+interface PerformanceSnapshot {
+  location: string
+  weather: string
+  anomaliesActive: number
+  metrics: PerformanceMetrics
+  warnings: string[]
 }
 
 export class PerformanceMonitor {
-  private static instance: PerformanceMonitor
-  
-  private metrics: PerformanceMetrics = {
-    fps: 60,
-    frameTime: 16.67,
-    memory: { used: 0, total: 0, limit: 0 },
-    drawCalls: 0,
-    triangles: 0,
-    geometries: 0,
-    textures: 0,
-    programs: 0,
-    loadTime: 0
-  }
-  
-  private frameCount = 0
-  private lastTime = performance.now()
+  private renderer: THREE.WebGLRenderer | null = null
+  private lastTime: number = performance.now()
+  private frameCount: number = 0
   private fpsHistory: number[] = []
-  private maxHistorySize = 60
+  private frameTimeHistory: number[] = []
+  private logInterval: number = 2000 // Log cada 2 segundos
+  private lastLogTime: number = 0
+  private snapshots: PerformanceSnapshot[] = []
   
-  private listeners: Set<(metrics: PerformanceMetrics) => void> = new Set()
-  
-  private constructor() {
-    this.startMonitoring()
+  // Umbrales de alerta
+  private readonly THRESHOLDS = {
+    FPS_CRITICAL: 25,
+    FPS_WARNING: 30,
+    FRAME_TIME_CRITICAL: 40, // ms
+    FRAME_TIME_WARNING: 33, // ms
+    DRAW_CALLS_WARNING: 200,
+    DRAW_CALLS_CRITICAL: 300,
+    TRIANGLES_WARNING: 500000,
+    TRIANGLES_CRITICAL: 1000000
   }
   
-  static getInstance(): PerformanceMonitor {
-    if (!PerformanceMonitor.instance) {
-      PerformanceMonitor.instance = new PerformanceMonitor()
-    }
-    return PerformanceMonitor.instance
-  }
-  
-  /**
-   * Iniciar monitoreo
-   */
-  private startMonitoring() {
-    if (typeof window === 'undefined') return
-    
-    // Medir tiempo de carga
-    window.addEventListener('load', () => {
-      const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
-      if (perfData) {
-        this.metrics.loadTime = perfData.loadEventEnd - perfData.fetchStart
-      }
-    })
-    
-    // Monitorear FPS
-    this.measureFPS()
+  constructor() {
+    console.log('📊 PerformanceMonitor initialized')
+    console.log('🎯 Thresholds:', this.THRESHOLDS)
+    fileLogger.log('PERF_INIT', 'PerformanceMonitor initialized', this.THRESHOLDS)
+    sendLogToServer('PERF_INIT', 'PerformanceMonitor initialized', this.THRESHOLDS)
   }
   
   /**
-   * Medir FPS
+   * Registrar renderer de Three.js
    */
-  private measureFPS() {
+  setRenderer(renderer: THREE.WebGLRenderer): void {
+    this.renderer = renderer
+    console.log('🎨 Renderer registered for monitoring')
+  }
+  
+  /**
+   * Actualizar métricas cada frame
+   */
+  update(): PerformanceMetrics | null {
+    if (!this.renderer) return null
+    
     const now = performance.now()
     const delta = now - this.lastTime
+    this.lastTime = now
     
+    // Calcular FPS
     this.frameCount++
+    const fps = 1000 / delta
+    this.fpsHistory.push(fps)
+    this.frameTimeHistory.push(delta)
     
-    if (delta >= 1000) {
-      const fps = Math.round((this.frameCount * 1000) / delta)
-      this.metrics.fps = fps
-      this.metrics.frameTime = 1000 / fps
-      
-      this.fpsHistory.push(fps)
-      if (this.fpsHistory.length > this.maxHistorySize) {
-        this.fpsHistory.shift()
+    // Mantener solo últimos 60 frames
+    if (this.fpsHistory.length > 60) {
+      this.fpsHistory.shift()
+      this.frameTimeHistory.shift()
+    }
+    
+    // CRÍTICO: Leer renderer.info DESPUÉS del render, no antes
+    // El renderer.info se actualiza DURANTE el render, no antes
+    const info = this.renderer.info
+    const renderInfo = info.render
+    const memoryInfo = info.memory
+    
+    const metrics: PerformanceMetrics = {
+      fps: Math.round(fps),
+      frameTime: parseFloat(delta.toFixed(2)),
+      drawCalls: renderInfo.calls,
+      triangles: renderInfo.triangles,
+      geometries: memoryInfo.geometries,
+      textures: memoryInfo.textures,
+      programs: info.programs?.length || 0,
+      timestamp: now
+    }
+    
+    // Intentar obtener memoria (solo en Chrome)
+    if ('memory' in performance) {
+      const mem = (performance as any).memory
+      metrics.memoryUsed = Math.round(mem.usedJSHeapSize / 1048576) // MB
+    }
+    
+    // Log periódico
+    if (now - this.lastLogTime > this.logInterval) {
+      this.logMetrics(metrics)
+      this.lastLogTime = now
+    }
+    
+    return metrics
+  }
+  
+  /**
+   * Log de métricas en consola
+   */
+  private logMetrics(metrics: PerformanceMetrics): void {
+    const avgFps = this.getAverageFPS()
+    const avgFrameTime = this.getAverageFrameTime()
+    const minFps = Math.min(...this.fpsHistory)
+    const maxFrameTime = Math.max(...this.frameTimeHistory)
+    
+    // LOG EN ARCHIVO
+    fileLogger.log('PERF_METRICS', 'Performance snapshot', {
+      fps: avgFps.toFixed(1),
+      fpsMin: minFps.toFixed(1),
+      frameTime: avgFrameTime.toFixed(2),
+      frameTimeMax: maxFrameTime.toFixed(2),
+      drawCalls: metrics.drawCalls,
+      triangles: metrics.triangles,
+      memory: metrics.memoryUsed
+    })
+    
+    // LOG AL SERVIDOR
+    sendLogToServer('PERF_METRICS', 'Performance snapshot', {
+      fps: avgFps.toFixed(1),
+      fpsMin: minFps.toFixed(1),
+      frameTime: avgFrameTime.toFixed(2),
+      frameTimeMax: maxFrameTime.toFixed(2),
+      drawCalls: metrics.drawCalls,
+      triangles: metrics.triangles,
+      memory: metrics.memoryUsed
+    })
+    
+    console.group('📊 PERFORMANCE METRICS')
+    
+    // FPS
+    const fpsStatus = this.getFPSStatus(avgFps)
+    console.log(`%c🎯 FPS: ${avgFps.toFixed(1)} (min: ${minFps.toFixed(1)}) [${fpsStatus.status}]`, 
+      `color: ${fpsStatus.color}; font-weight: bold`)
+    
+    // Frame Time
+    const frameTimeStatus = this.getFrameTimeStatus(avgFrameTime)
+    console.log(`%c⏱️ Frame Time: ${avgFrameTime.toFixed(2)}ms (max: ${maxFrameTime.toFixed(2)}ms) [${frameTimeStatus.status}]`, 
+      `color: ${frameTimeStatus.color}; font-weight: bold`)
+    
+    // Draw Calls
+    const drawCallsStatus = this.getDrawCallsStatus(metrics.drawCalls)
+    console.log(`%c🎨 Draw Calls: ${metrics.drawCalls} [${drawCallsStatus.status}]`, 
+      `color: ${drawCallsStatus.color}`)
+    
+    // Triángulos
+    const trianglesStatus = this.getTrianglesStatus(metrics.triangles)
+    console.log(`%c🔺 Triangles: ${this.formatNumber(metrics.triangles)} [${trianglesStatus.status}]`, 
+      `color: ${trianglesStatus.color}`)
+    
+    // Geometrías y Texturas
+    console.log(`📦 Geometries: ${metrics.geometries}`)
+    console.log(`🖼️ Textures: ${metrics.textures}`)
+    console.log(`🔧 Programs: ${metrics.programs}`)
+    
+    // Memoria (si disponible)
+    if (metrics.memoryUsed) {
+      console.log(`💾 Memory: ${metrics.memoryUsed}MB`)
+    }
+    
+    // Warnings
+    const warnings = this.getWarnings(metrics, avgFps, avgFrameTime)
+    if (warnings.length > 0) {
+      console.warn('⚠️ WARNINGS:')
+      warnings.forEach(w => console.warn(`  - ${w}`))
+      fileLogger.log('PERF_WARNING', 'Performance warnings', warnings)
+    }
+    
+    console.groupEnd()
+  }
+  
+  /**
+   * Crear snapshot de performance
+   */
+  createSnapshot(location: string, weather: string, anomaliesActive: number): void {
+    if (!this.renderer) return
+    
+    const metrics = this.update()
+    if (!metrics) return
+    
+    const avgFps = this.getAverageFPS()
+    const avgFrameTime = this.getAverageFrameTime()
+    const warnings = this.getWarnings(metrics, avgFps, avgFrameTime)
+    
+    const snapshot: PerformanceSnapshot = {
+      location,
+      weather,
+      anomaliesActive,
+      metrics,
+      warnings
+    }
+    
+    this.snapshots.push(snapshot)
+    
+    // LOG EN ARCHIVO
+    fileLogger.log('SNAPSHOT', `Snapshot #${this.snapshots.length}: ${location}`, {
+      location,
+      weather,
+      anomalies: anomaliesActive,
+      fps: avgFps.toFixed(1),
+      frameTime: avgFrameTime.toFixed(2),
+      drawCalls: metrics.drawCalls,
+      triangles: metrics.triangles,
+      memory: metrics.memoryUsed,
+      warnings: warnings.length
+    })
+    
+    // LOG AL SERVIDOR
+    sendLogToServer('SNAPSHOT', `Snapshot #${this.snapshots.length}: ${location}`, {
+      location,
+      weather,
+      anomalies: anomaliesActive,
+      fps: avgFps.toFixed(1),
+      frameTime: avgFrameTime.toFixed(2),
+      drawCalls: metrics.drawCalls,
+      triangles: metrics.triangles,
+      memory: metrics.memoryUsed,
+      warnings
+    })
+    
+    console.group(`📸 PERFORMANCE SNAPSHOT #${this.snapshots.length}`)
+    console.log(`%c📍 Location: ${location}`, 'font-weight: bold; font-size: 14px')
+    console.log(`🌦️ Weather: ${weather}`)
+    console.log(`🌌 Anomalies: ${anomaliesActive}`)
+    console.log(`📊 FPS: ${avgFps.toFixed(1)} (${this.getFPSStatus(avgFps).status})`)
+    console.log(`⏱️ Frame Time: ${avgFrameTime.toFixed(2)}ms (${this.getFrameTimeStatus(avgFrameTime).status})`)
+    console.log(`🎨 Draw Calls: ${metrics.drawCalls} (${this.getDrawCallsStatus(metrics.drawCalls).status})`)
+    console.log(`🔺 Triangles: ${this.formatNumber(metrics.triangles)} (${this.getTrianglesStatus(metrics.triangles).status})`)
+    console.log(`📦 Geometries: ${metrics.geometries}`)
+    console.log(`🖼️ Textures: ${metrics.textures}`)
+    console.log(`🔧 Programs: ${metrics.programs}`)
+    if (metrics.memoryUsed) {
+      console.log(`💾 Memory: ${metrics.memoryUsed}MB`)
+    }
+    
+    if (warnings.length > 0) {
+      console.warn('⚠️ Warnings:', warnings)
+      fileLogger.log('SNAPSHOT_WARNING', 'Snapshot has warnings', warnings)
+    } else {
+      console.log('✅ No warnings - Performance is good!')
+    }
+    console.groupEnd()
+    
+    // Log separador
+    console.log('═'.repeat(80))
+  }
+  
+  /**
+   * Generar reporte completo
+   */
+  generateReport(): string {
+    if (this.snapshots.length === 0) {
+      return 'No snapshots available'
+    }
+    
+    let report = '\n'
+    report += '═══════════════════════════════════════════════════════\n'
+    report += '📊 ARCHEOSCOPE PERFORMANCE REPORT\n'
+    report += '═══════════════════════════════════════════════════════\n\n'
+    
+    this.snapshots.forEach((snapshot, i) => {
+      report += `\n📸 SNAPSHOT ${i + 1}\n`
+      report += `${'─'.repeat(50)}\n`
+      report += `📍 Location: ${snapshot.location}\n`
+      report += `🌦️ Weather: ${snapshot.weather}\n`
+      report += `🌌 Anomalies: ${snapshot.anomaliesActive}\n`
+      report += `\n📊 Metrics:\n`
+      report += `  FPS: ${snapshot.metrics.fps}\n`
+      report += `  Frame Time: ${snapshot.metrics.frameTime}ms\n`
+      report += `  Draw Calls: ${snapshot.metrics.drawCalls}\n`
+      report += `  Triangles: ${this.formatNumber(snapshot.metrics.triangles)}\n`
+      report += `  Geometries: ${snapshot.metrics.geometries}\n`
+      report += `  Textures: ${snapshot.metrics.textures}\n`
+      if (snapshot.metrics.memoryUsed) {
+        report += `  Memory: ${snapshot.metrics.memoryUsed}MB\n`
       }
       
-      this.frameCount = 0
-      this.lastTime = now
-      
-      this.notifyListeners()
-    }
-    
-    requestAnimationFrame(() => this.measureFPS())
-  }
-  
-  /**
-   * Actualizar métricas de Three.js
-   */
-  updateThreeMetrics(renderer: any) {
-    if (!renderer || !renderer.info) return
-    
-    this.metrics.drawCalls = renderer.info.render.calls
-    this.metrics.triangles = renderer.info.render.triangles
-    this.metrics.geometries = renderer.info.memory.geometries
-    this.metrics.textures = renderer.info.memory.textures
-    this.metrics.programs = renderer.info.programs?.length || 0
-    
-    this.notifyListeners()
-  }
-  
-  /**
-   * Actualizar métricas de memoria
-   */
-  updateMemoryMetrics() {
-    if (typeof window === 'undefined') return
-    
-    // @ts-ignore - performance.memory es específico de Chrome
-    if (performance.memory) {
-      // @ts-ignore
-      this.metrics.memory = {
-        // @ts-ignore
-        used: Math.round(performance.memory.usedJSHeapSize / 1048576), // MB
-        // @ts-ignore
-        total: Math.round(performance.memory.totalJSHeapSize / 1048576),
-        // @ts-ignore
-        limit: Math.round(performance.memory.jsHeapSizeLimit / 1048576)
+      if (snapshot.warnings.length > 0) {
+        report += `\n⚠️ Warnings:\n`
+        snapshot.warnings.forEach(w => {
+          report += `  - ${w}\n`
+        })
       }
+      report += '\n'
+    })
+    
+    // Análisis comparativo
+    if (this.snapshots.length > 1) {
+      report += '\n📈 COMPARATIVE ANALYSIS\n'
+      report += `${'─'.repeat(50)}\n`
       
-      this.notifyListeners()
-    }
-  }
-  
-  /**
-   * Obtener métricas actuales
-   */
-  getMetrics(): PerformanceMetrics {
-    return { ...this.metrics }
-  }
-  
-  /**
-   * Obtener FPS promedio
-   */
-  getAverageFPS(): number {
-    if (this.fpsHistory.length === 0) return 60
-    
-    const sum = this.fpsHistory.reduce((a, b) => a + b, 0)
-    return Math.round(sum / this.fpsHistory.length)
-  }
-  
-  /**
-   * Obtener FPS mínimo
-   */
-  getMinFPS(): number {
-    if (this.fpsHistory.length === 0) return 60
-    return Math.min(...this.fpsHistory)
-  }
-  
-  /**
-   * Obtener FPS máximo
-   */
-  getMaxFPS(): number {
-    if (this.fpsHistory.length === 0) return 60
-    return Math.max(...this.fpsHistory)
-  }
-  
-  /**
-   * Verificar si el rendimiento es bueno
-   */
-  isPerformanceGood(): boolean {
-    return this.metrics.fps >= 50 && this.metrics.memory.used < this.metrics.memory.limit * 0.8
-  }
-  
-  /**
-   * Obtener nivel de performance
-   */
-  getPerformanceLevel(): 'excellent' | 'good' | 'fair' | 'poor' {
-    const fps = this.metrics.fps
-    
-    if (fps >= 55) return 'excellent'
-    if (fps >= 45) return 'good'
-    if (fps >= 30) return 'fair'
-    return 'poor'
-  }
-  
-  /**
-   * Suscribirse a cambios de métricas
-   */
-  subscribe(callback: (metrics: PerformanceMetrics) => void) {
-    this.listeners.add(callback)
-    
-    return () => {
-      this.listeners.delete(callback)
-    }
-  }
-  
-  /**
-   * Notificar a listeners
-   */
-  private notifyListeners() {
-    this.listeners.forEach(callback => callback(this.metrics))
-  }
-  
-  /**
-   * Obtener recomendaciones de optimización
-   */
-  getOptimizationSuggestions(): string[] {
-    const suggestions: string[] = []
-    
-    if (this.metrics.fps < 30) {
-      suggestions.push('FPS muy bajo. Considera reducir la calidad gráfica.')
+      const avgFps = this.snapshots.reduce((sum, s) => sum + s.metrics.fps, 0) / this.snapshots.length
+      const avgFrameTime = this.snapshots.reduce((sum, s) => sum + s.metrics.frameTime, 0) / this.snapshots.length
+      const avgDrawCalls = this.snapshots.reduce((sum, s) => sum + s.metrics.drawCalls, 0) / this.snapshots.length
+      
+      report += `Average FPS: ${avgFps.toFixed(1)}\n`
+      report += `Average Frame Time: ${avgFrameTime.toFixed(2)}ms\n`
+      report += `Average Draw Calls: ${Math.round(avgDrawCalls)}\n`
+      
+      const worstSnapshot = this.snapshots.reduce((worst, current) => 
+        current.metrics.fps < worst.metrics.fps ? current : worst
+      )
+      
+      report += `\n🔴 Worst Performance:\n`
+      report += `  Location: ${worstSnapshot.location}\n`
+      report += `  Weather: ${worstSnapshot.weather}\n`
+      report += `  FPS: ${worstSnapshot.metrics.fps}\n`
+      report += `  Frame Time: ${worstSnapshot.metrics.frameTime}ms\n`
     }
     
-    if (this.metrics.drawCalls > 200) {
-      suggestions.push('Muchos draw calls. Considera usar instancing o combinar geometrías.')
-    }
+    report += '\n═══════════════════════════════════════════════════════\n'
     
-    if (this.metrics.triangles > 1000000) {
-      suggestions.push('Muchos triángulos. Implementa LOD o reduce complejidad de modelos.')
-    }
-    
-    if (this.metrics.memory.used > this.metrics.memory.limit * 0.8) {
-      suggestions.push('Uso de memoria alto. Libera recursos no utilizados.')
-    }
-    
-    if (this.metrics.textures > 50) {
-      suggestions.push('Muchas texturas. Considera usar atlas de texturas.')
-    }
-    
-    if (this.metrics.geometries > 100) {
-      suggestions.push('Muchas geometrías. Reutiliza geometrías cuando sea posible.')
-    }
-    
-    return suggestions
+    return report
   }
   
   /**
-   * Exportar métricas como JSON
+   * Imprimir reporte en consola
    */
-  exportMetrics(): string {
-    return JSON.stringify({
-      timestamp: Date.now(),
-      metrics: this.metrics,
-      stats: {
-        avgFPS: this.getAverageFPS(),
-        minFPS: this.getMinFPS(),
-        maxFPS: this.getMaxFPS(),
-        performanceLevel: this.getPerformanceLevel()
-      },
-      suggestions: this.getOptimizationSuggestions()
-    }, null, 2)
+  printReport(): void {
+    console.log(this.generateReport())
   }
   
   /**
-   * Reset de métricas
+   * Limpiar snapshots
    */
-  reset() {
-    this.fpsHistory = []
-    this.frameCount = 0
-    this.lastTime = performance.now()
+  clearSnapshots(): void {
+    this.snapshots = []
+    console.log('🧹 Snapshots cleared')
+  }
+  
+  // Métodos auxiliares
+  
+  private getAverageFPS(): number {
+    if (this.fpsHistory.length === 0) return 0
+    return this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length
+  }
+  
+  private getAverageFrameTime(): number {
+    if (this.frameTimeHistory.length === 0) return 0
+    return this.frameTimeHistory.reduce((a, b) => a + b, 0) / this.frameTimeHistory.length
+  }
+  
+  private getFPSStatus(fps: number): { status: string, color: string } {
+    if (fps < this.THRESHOLDS.FPS_CRITICAL) return { status: 'CRITICAL', color: '#ff0000' }
+    if (fps < this.THRESHOLDS.FPS_WARNING) return { status: 'WARNING', color: '#ff9900' }
+    return { status: 'GOOD', color: '#00ff00' }
+  }
+  
+  private getFrameTimeStatus(frameTime: number): { status: string, color: string } {
+    if (frameTime > this.THRESHOLDS.FRAME_TIME_CRITICAL) return { status: 'CRITICAL', color: '#ff0000' }
+    if (frameTime > this.THRESHOLDS.FRAME_TIME_WARNING) return { status: 'WARNING', color: '#ff9900' }
+    return { status: 'GOOD', color: '#00ff00' }
+  }
+  
+  private getDrawCallsStatus(drawCalls: number): { status: string, color: string } {
+    if (drawCalls > this.THRESHOLDS.DRAW_CALLS_CRITICAL) return { status: 'CRITICAL', color: '#ff0000' }
+    if (drawCalls > this.THRESHOLDS.DRAW_CALLS_WARNING) return { status: 'WARNING', color: '#ff9900' }
+    return { status: 'GOOD', color: '#00ff00' }
+  }
+  
+  private getTrianglesStatus(triangles: number): { status: string, color: string } {
+    if (triangles > this.THRESHOLDS.TRIANGLES_CRITICAL) return { status: 'CRITICAL', color: '#ff0000' }
+    if (triangles > this.THRESHOLDS.TRIANGLES_WARNING) return { status: 'WARNING', color: '#ff9900' }
+    return { status: 'GOOD', color: '#00ff00' }
+  }
+  
+  private getWarnings(metrics: PerformanceMetrics, avgFps: number, avgFrameTime: number): string[] {
+    const warnings: string[] = []
+    
+    if (avgFps < this.THRESHOLDS.FPS_CRITICAL) {
+      warnings.push(`FPS crítico: ${avgFps.toFixed(1)} (objetivo: >${this.THRESHOLDS.FPS_WARNING})`)
+    }
+    
+    if (avgFrameTime > this.THRESHOLDS.FRAME_TIME_CRITICAL) {
+      warnings.push(`Frame time crítico: ${avgFrameTime.toFixed(2)}ms (objetivo: <${this.THRESHOLDS.FRAME_TIME_WARNING}ms)`)
+    }
+    
+    if (metrics.drawCalls > this.THRESHOLDS.DRAW_CALLS_WARNING) {
+      warnings.push(`Draw calls alto: ${metrics.drawCalls} (objetivo: <${this.THRESHOLDS.DRAW_CALLS_WARNING})`)
+    }
+    
+    if (metrics.triangles > this.THRESHOLDS.TRIANGLES_WARNING) {
+      warnings.push(`Triángulos alto: ${this.formatNumber(metrics.triangles)} (objetivo: <${this.formatNumber(this.THRESHOLDS.TRIANGLES_WARNING)})`)
+    }
+    
+    return warnings
+  }
+  
+  private formatNumber(num: number): string {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(2)}M`
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
+    return num.toString()
   }
 }
 
-export default PerformanceMonitor.getInstance()
+// Singleton global
+export const performanceMonitor = new PerformanceMonitor()
+
+// Export default también para compatibilidad
+export default performanceMonitor
+
+// Exponer globalmente para debugging
+if (typeof window !== 'undefined') {
+  (window as any).perfMonitor = performanceMonitor
+}

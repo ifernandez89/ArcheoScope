@@ -1,26 +1,16 @@
 /**
  * GraphicsPresetPanel - Panel para cambiar presets gráficos
- * CRÍTICO: Medir antes de optimizar
+ * TEMPORALMENTE DESHABILITADO - Usar nuevo sistema de performance con performanceMonitor
  */
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import GraphicsPresetManager, { QualityPreset, GraphicsConfig } from '@/systems/GraphicsPresets'
-import PerformanceMonitor from '@/utils/performance-monitor'
 
 export default function GraphicsPresetPanel() {
   const [preset, setPreset] = useState<QualityPreset>(GraphicsPresetManager.getPreset())
   const [config, setConfig] = useState<GraphicsConfig>(GraphicsPresetManager.getConfig())
-  const [metrics, setMetrics] = useState(PerformanceMonitor.getMetrics())
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMetrics(PerformanceMonitor.getMetrics())
-    }, 100)
-    
-    return () => clearInterval(interval)
-  }, [])
   
   const handlePresetChange = (newPreset: QualityPreset) => {
     setPreset(newPreset)
@@ -42,18 +32,12 @@ export default function GraphicsPresetPanel() {
     }
   }
   
-  const getFPSColor = (fps: number) => {
-    if (fps >= 55) return 'text-green-400'
-    if (fps >= 30) return 'text-yellow-400'
-    return 'text-red-400'
-  }
-  
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-black/90 text-white p-4 rounded-lg font-mono text-xs w-96 z-50">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-bold">🎨 Graphics Quality</h3>
-        <span className={`text-lg font-bold ${getFPSColor(metrics.fps)}`}>
-          {metrics.fps.toFixed(0)} FPS
+        <span className="text-sm text-gray-400">
+          Use window.perfMonitor.printReport() in console
         </span>
       </div>
       
@@ -119,57 +103,10 @@ export default function GraphicsPresetPanel() {
         </div>
       </div>
       
-      {/* Métricas de performance */}
-      <div className="border-t border-gray-700 pt-3 mt-3 space-y-1 text-[10px]">
-        <h4 className="font-bold mb-2">Performance:</h4>
-        
-        <div className="flex justify-between">
-          <span className="text-gray-400">Frame Time:</span>
-          <span className="text-white">{metrics.frameTime.toFixed(1)}ms</span>
-        </div>
-        
-        <div className="flex justify-between">
-          <span className="text-gray-400">Draw Calls:</span>
-          <span className="text-white">{metrics.drawCalls}</span>
-        </div>
-        
-        <div className="flex justify-between">
-          <span className="text-gray-400">Triangles:</span>
-          <span className="text-white">{(metrics.triangles / 1000).toFixed(1)}K</span>
-        </div>
-        
-        <div className="flex justify-between">
-          <span className="text-gray-400">Memory:</span>
-          <span className="text-white">
-            {typeof metrics.memory === 'object' && 'used' in metrics.memory
-              ? `${metrics.memory.used.toFixed(0)}MB`
-              : `${(metrics.memory as number).toFixed(0)}MB`}
-          </span>
-        </div>
-      </div>
-      
-      {/* Diagnóstico */}
-      <div className="border-t border-gray-700 pt-3 mt-3 text-[10px]">
-        <h4 className="font-bold mb-2">💡 Diagnosis:</h4>
-        {metrics.fps < 30 && (
-          <p className="text-red-400">
-            ⚠️ Low FPS detected. Try LOW preset.
-          </p>
-        )}
-        {metrics.fps >= 55 && preset !== 'ULTRA' && (
-          <p className="text-green-400">
-            ✓ Good performance. Try higher preset.
-          </p>
-        )}
-        {metrics.drawCalls > 100 && (
-          <p className="text-yellow-400">
-            ⚠️ High draw calls. Use more instancing.
-          </p>
-        )}
-      </div>
-      
-      <div className="border-t border-gray-700 pt-3 mt-3 text-[10px] text-gray-500">
-        <p>💡 Si LOW es fluido y HIGH no → problema en postprocesado</p>
+      <div className="border-t border-gray-700 pt-3 mt-3 text-[10px] text-gray-400">
+        <p>💡 Open browser console and use:</p>
+        <p className="text-white mt-1">window.perfMonitor.printReport()</p>
+        <p className="text-white">window.perfMonitor.createSnapshot("Location", "Weather", 1)</p>
       </div>
     </div>
   )

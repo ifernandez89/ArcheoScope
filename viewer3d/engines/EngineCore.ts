@@ -6,7 +6,7 @@
  */
 
 import { WorldCore } from './WorldCore'
-import PerformanceMonitor from '@/utils/performance-monitor'
+// import PerformanceMonitor from '@/utils/performance-monitor' // Ya no se usa aquí
 
 export interface EngineSystem {
   update(delta: number): void
@@ -159,11 +159,8 @@ export class EngineCore {
    * Actualizar métricas de performance
    */
   private updateMetrics(): void {
-    if (this.renderer) {
-      PerformanceMonitor.updateThreeMetrics(this.renderer)
-    }
-    
-    PerformanceMonitor.updateMemoryMetrics()
+    // Métricas ahora manejadas por performanceMonitor.update() en EngineIntegration
+    // No necesitamos actualizar aquí
   }
   
   /**
