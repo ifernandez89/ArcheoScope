@@ -150,24 +150,21 @@ export function detectBiome(lat: number, lon: number): BiomeInfo {
   // Océano Pacífico - LA ZONA MÁS GRANDE DEL PLANETA
   // Longitud < -70 (excluyendo costas de América)
   if (lon < -70) {
-    // Excluir costa oeste de América del Norte (lat > 30, lon > -130)
-    if (lat > 30 && lon > -130) {
-      // Es costa, no océano
-    }
-    // Excluir costa oeste de América del Sur (lat < -10, lon > -85)
-    else if (lat < -10 && lon > -85) {
-      // Es costa, no océano
-    }
-    // Excluir costa de Chile (lat < -15, lon > -75)
-    else if (lat < -15 && lon > -75) {
-      // Es costa, no océano
-    }
-    // Excluir Alaska (lat > 50, lon > -170)
-    else if (lat > 50 && lon > -170) {
-      // Es costa, no océano
-    }
-    // TODO LO DEMÁS ES OCÉANO PACÍFICO
-    else {
+    // Excluir toda América (lon > -120 es costa oeste, lon < -30 es costa este)
+    // América del Norte: lat > 10, lon entre -170 y -50
+    const isNorthAmerica = lat > 10 && lon > -170 && lon < -50
+    
+    // América Central: lat entre 7 y 23, lon entre -120 y -77
+    const isCentralAmerica = lat > 7 && lat < 23 && lon > -120 && lon < -77
+    
+    // América del Sur: lat < 15, lon entre -82 y -34
+    const isSouthAmerica = lat < 15 && lon > -82 && lon < -34
+    
+    // Patagonia: lat < -35, lon entre -75 y -53
+    const isPatagonia = lat < -35 && lon > -75 && lon < -53
+    
+    // Si NO es ninguna parte de América, es océano
+    if (!isNorthAmerica && !isCentralAmerica && !isSouthAmerica && !isPatagonia) {
       return {
         type: 'ocean',
         name: 'Océano Pacífico',
