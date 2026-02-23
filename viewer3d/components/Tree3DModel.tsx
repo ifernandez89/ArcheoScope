@@ -7,6 +7,7 @@
 import { useRef, useEffect } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
+import { getAssetPath } from '@/lib/paths'
 
 interface Tree3DModelProps {
   position: [number, number, number]
@@ -18,7 +19,7 @@ export default function Tree3DModel({ position, scale = 1, rotation = 0 }: Tree3
   const groupRef = useRef<THREE.Group>(null)
   
   // Cargar modelo GLB
-  const { scene } = useGLTF('/ArcheoScope/tree_blender.glb')
+  const { scene } = useGLTF(getAssetPath('/tree_blender.glb'))
   
   // Clonar el modelo para cada instancia
   const clonedScene = scene.clone()
@@ -47,4 +48,4 @@ export default function Tree3DModel({ position, scale = 1, rotation = 0 }: Tree3
 }
 
 // Precargar el modelo
-useGLTF.preload('/ArcheoScope/tree_blender.glb')
+useGLTF.preload(getAssetPath('/tree_blender.glb'))

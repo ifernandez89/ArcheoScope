@@ -1,12 +1,15 @@
 /**
- * Get the correct asset path considering basePath in production
+ * Helper para rutas de assets
+ * En desarrollo: /archivo.glb
+ * En producción (GitHub Pages): /ArcheoScope/archivo.glb
  */
+
 export function getAssetPath(path: string): string {
-  // Use basePath in production (GitHub Pages)
-  const basePath = process.env.NODE_ENV === 'production' ? '/ArcheoScope' : '';
+  // Si estamos en desarrollo (localhost), no agregar prefijo
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return path
+  }
   
-  // Ensure path starts with /
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  
-  return `${basePath}${normalizedPath}`;
+  // En producción (GitHub Pages), agregar prefijo /ArcheoScope
+  return `/ArcheoScope${path}`
 }

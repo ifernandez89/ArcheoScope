@@ -7,6 +7,7 @@
 import { useRef, useEffect } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
+import { getAssetPath } from '@/lib/paths'
 
 interface Rock3DModelProps {
   position: [number, number, number]
@@ -18,7 +19,7 @@ export default function Rock3DModel({ position, scale = 1, rotation = 0 }: Rock3
   const groupRef = useRef<THREE.Group>(null)
   
   // Cargar modelo GLB
-  const { scene } = useGLTF('/ArcheoScope/rock_blender.glb')
+  const { scene } = useGLTF(getAssetPath('/rock_blender.glb'))
   
   // Clonar el modelo para cada instancia
   const clonedScene = scene.clone()
@@ -47,4 +48,4 @@ export default function Rock3DModel({ position, scale = 1, rotation = 0 }: Rock3
 }
 
 // Precargar el modelo
-useGLTF.preload('/ArcheoScope/rock_blender.glb')
+useGLTF.preload(getAssetPath('/rock_blender.glb'))
