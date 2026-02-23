@@ -46,7 +46,7 @@ import EnhancedTerrain from './EnhancedTerrain'
 import TerrainControl from './TerrainControl'
 
 // 🌳 MODELOS 3D DE VEGETACIÓN Y ROCAS
-import Tree3DModel from './Tree3DModel'
+import Tree3DModel, { type TreeType } from './Tree3DModel'
 import Rock3DModel from './Rock3DModel'
 
 // 🎮 SISTEMAS DE PERFORMANCE
@@ -848,7 +848,15 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
       const x = Math.cos(angle) * radius + (random(index++) - 0.5) * 10
       const z = Math.sin(angle) * radius + (random(index++) - 0.5) * 10
       const height = 1.5 + random(index++) * 2.0
-      items.push({ type: 'tree', x, z, height, rotation: random(index++) * Math.PI * 2 })
+      // Seleccionar tipo de árbol aleatorio (4 tipos disponibles)
+      const treeTypeRandom = random(index++)
+      let treeType: 'default' | 'tree1' | 'tree2' | 'tree3'
+      if (treeTypeRandom < 0.25) treeType = 'default'
+      else if (treeTypeRandom < 0.5) treeType = 'tree1'
+      else if (treeTypeRandom < 0.75) treeType = 'tree2'
+      else treeType = 'tree3'
+      
+      items.push({ type: 'tree', x, z, height, rotation: random(index++) * Math.PI * 2, treeType })
     }
     
     // Generar arbustos
@@ -941,6 +949,7 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
                 position={[item.x, 0, item.z]}
                 scale={item.height * 0.3}
                 rotation={item.rotation}
+                treeType={item.treeType}
               />
             )
           
