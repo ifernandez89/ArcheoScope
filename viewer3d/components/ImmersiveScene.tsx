@@ -695,7 +695,7 @@ function ModelScene({
           0
         }
         fogDensity={isIceBiome ? 0.012 : 0.008}
-        showWater={!isIceBiome}
+        showWater={biome.type === 'ocean'}
         waterPosition={[0, -0.5, 0]}
         waterSize={150}
         waterColor="#1e3a5f"
@@ -735,7 +735,7 @@ function ModelScene({
       <WeatherSystem weather={weather} isIceBiome={isIceBiome} />
 
       {/* Elementos del entorno: rocas y vegetación - NO renderizar sobre océano */}
-      {!isIceBiome && biome.type !== 'default' && (
+      {!isIceBiome && biome.type !== 'ocean' && (
         <EnvironmentElements location={location} />
       )}
 

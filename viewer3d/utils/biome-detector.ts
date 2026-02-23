@@ -147,13 +147,66 @@ export function detectBiome(lat: number, lon: number): BiomeInfo {
   }
   
   // OCÉANO - Océano abierto
-  // Pacífico central
-  if (Math.abs(lon) > 140 && absLat < 50) {
+  // Océano Pacífico - LA ZONA MÁS GRANDE DEL PLANETA
+  // Longitud < -70 (excluyendo costas de América)
+  if (lon < -70) {
+    // Excluir costa oeste de América del Norte (lat > 30, lon > -130)
+    if (lat > 30 && lon > -130) {
+      // Es costa, no océano
+    }
+    // Excluir costa oeste de América del Sur (lat < -10, lon > -85)
+    else if (lat < -10 && lon > -85) {
+      // Es costa, no océano
+    }
+    // Excluir costa de Chile (lat < -15, lon > -75)
+    else if (lat < -15 && lon > -75) {
+      // Es costa, no océano
+    }
+    // Excluir Alaska (lat > 50, lon > -170)
+    else if (lat > 50 && lon > -170) {
+      // Es costa, no océano
+    }
+    // TODO LO DEMÁS ES OCÉANO PACÍFICO
+    else {
+      return {
+        type: 'ocean',
+        name: 'Océano Pacífico',
+        description: 'Océano abierto',
+        temperature: 20,
+        humidity: 100
+      }
+    }
+  }
+  
+  // Océano Pacífico occidental (lon > 140)
+  if (lon > 140 && absLat < 50) {
     return {
       type: 'ocean',
       name: 'Océano Pacífico',
       description: 'Océano abierto',
       temperature: 20,
+      humidity: 100
+    }
+  }
+  
+  // Océano Atlántico central
+  if (lon > -50 && lon < -10 && absLat < 40) {
+    return {
+      type: 'ocean',
+      name: 'Océano Atlántico',
+      description: 'Océano abierto',
+      temperature: 18,
+      humidity: 100
+    }
+  }
+  
+  // Océano Índico
+  if (lon > 40 && lon < 100 && lat < 0 && lat > -40) {
+    return {
+      type: 'ocean',
+      name: 'Océano Índico',
+      description: 'Océano abierto',
+      temperature: 22,
       humidity: 100
     }
   }
