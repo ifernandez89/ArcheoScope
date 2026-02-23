@@ -847,7 +847,10 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
       const radius = 15 + random(index++) * 30
       const x = Math.cos(angle) * radius + (random(index++) - 0.5) * 10
       const z = Math.sin(angle) * radius + (random(index++) - 0.5) * 10
-      const height = 1.5 + random(index++) * 2.0
+      
+      // Altura real del árbol en metros (entre 2 y 10 metros)
+      const heightInMeters = 2 + random(index++) * 8
+      
       // Seleccionar tipo de árbol aleatorio (4 tipos disponibles)
       const treeTypeRandom = random(index++)
       let treeType: 'default' | 'tree1' | 'tree2' | 'tree3'
@@ -856,7 +859,14 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
       else if (treeTypeRandom < 0.75) treeType = 'tree2'
       else treeType = 'tree3'
       
-      items.push({ type: 'tree', x, z, height, rotation: random(index++) * Math.PI * 2, treeType })
+      items.push({ 
+        type: 'tree', 
+        x, 
+        z, 
+        heightInMeters, 
+        rotation: random(index++) * Math.PI * 2, 
+        treeType 
+      })
     }
     
     // Generar arbustos
@@ -943,11 +953,13 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
       {elements.map((item, i) => {
         switch (item.type) {
           case 'tree':
+            // Escala muy pequeña para modelos GLB de Blender
+            // heightInMeters entre 2-10, multiplicado por 0.05 = escala entre 0.1-0.5
             return (
               <Tree3DModel 
                 key={`tree-${i}`}
                 position={[item.x, 0, item.z]}
-                scale={item.height * 0.3}
+                scale={item.heightInMeters * 0.05}
                 rotation={item.rotation}
                 treeType={item.treeType}
               />
