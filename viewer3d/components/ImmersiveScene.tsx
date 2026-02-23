@@ -734,8 +734,10 @@ function ModelScene({
       {/* Sistema climático completo */}
       <WeatherSystem weather={weather} isIceBiome={isIceBiome} />
 
-      {/* Elementos del entorno: rocas y vegetación - usando modelos GLB de Blender */}
-      <EnvironmentElements location={location} />
+      {/* Elementos del entorno: rocas y vegetación - NO renderizar sobre océano */}
+      {!isIceBiome && biome.type !== 'default' && (
+        <EnvironmentElements location={location} />
+      )}
 
       {/* Modelo 3D o Avatar según modo */}
       {movementMode === 'avatar' ? (

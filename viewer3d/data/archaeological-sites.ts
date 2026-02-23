@@ -246,6 +246,21 @@ export const ARCHAEOLOGICAL_SITES: ArchaeologicalSite[] = [
     culture: 'Mogol',
     period: 'Imperio Mogol',
     discovered: 1653
+  },
+
+  // Océano Pacífico - Zona de prueba de agua
+  {
+    id: 'pacific-ocean-test',
+    name: 'Océano Pacífico',
+    description: 'Zona abierta del Océano Pacífico para probar el sistema de agua realista',
+    coordinates: {
+      latitude: 8.7783,
+      longitude: -144.8885,
+      altitude: 0
+    },
+    culture: 'Natural',
+    period: 'Moderno',
+    discovered: 2026
   }
 ]
 
