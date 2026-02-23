@@ -33,9 +33,9 @@ export default function RealisticWater({
       deepWaterColor: { value: new THREE.Color(color) },
       shallowWaterColor: { value: new THREE.Color('#4a9eff') },
       fresnelColor: { value: new THREE.Color('#87ceeb') },
-      waveAmplitude: { value: 0.3 },
-      waveFrequency: { value: 0.5 },
-      waveSpeed: { value: 0.5 }
+      waveAmplitude: { value: 0.15 },
+      waveFrequency: { value: 0.3 },
+      waveSpeed: { value: 0.3 }
     },
     vertexShader: `
       uniform float time;
@@ -143,7 +143,7 @@ export default function RealisticWater({
       rotation={[-Math.PI / 2, 0, 0]} 
       receiveShadow
     >
-      <planeGeometry args={[size, size, 128, 128]} />
+      <planeGeometry args={[size, size, 64, 64]} />
       <shaderMaterial
         vertexShader={waterShader.vertexShader}
         fragmentShader={waterShader.fragmentShader}
