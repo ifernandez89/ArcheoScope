@@ -7,7 +7,7 @@
 
 import DynamicSky from '../DynamicSky'
 import VolumetricFog from '../VolumetricFog'
-import MinimalistWater from '../MinimalistWater'
+import RealisticWater from '../RealisticWater'
 
 interface EnvironmentSystemProps {
   isDay: boolean
@@ -47,9 +47,9 @@ export default function EnvironmentSystem({
         density={fogDensity}
       />
 
-      {/* Agua minimalista */}
+      {/* Agua realista con Fresnel, Reflection y Refraction */}
       {showWater && (
-        <MinimalistWater
+        <RealisticWater
           position={waterPosition}
           size={waterSize}
           color={waterColor}

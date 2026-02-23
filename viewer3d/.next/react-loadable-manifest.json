@@ -1,13 +1,13 @@
 {
   "app\\page.tsx -> @/components/Scene3D": {
-    "id": 2808,
+    "id": 2035,
     "files": [
       "static/chunks/three.815c5b8d93734097.js",
       "static/chunks/react-three.994f8dbb8dcd66d9.js",
       "static/chunks/engines.df765c51f1ed18d5.js",
       "static/chunks/vendor-6198448b4e3567f7.js",
       "static/chunks/696.217aeac06004b5ad.js",
-      "static/chunks/112.cf80bcd208a8a53d.js"
+      "static/chunks/178.04fde2b512b33bca.js"
     ]
   },
   "app\\realistic-solar\\page.tsx -> @/components/RealisticSolarSystemScene": {
