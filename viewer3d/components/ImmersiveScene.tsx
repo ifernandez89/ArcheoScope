@@ -45,6 +45,10 @@ import { loggers } from '@/core/Logger'
 import EnhancedTerrain from './EnhancedTerrain'
 import TerrainControl from './TerrainControl'
 
+// 🌳 MODELOS 3D DE VEGETACIÓN Y ROCAS
+import Tree3DModel from './Tree3DModel'
+import Rock3DModel from './Rock3DModel'
+
 // 🎮 SISTEMAS DE PERFORMANCE
 import EngineIntegration from './EngineIntegration'
 
@@ -730,7 +734,7 @@ function ModelScene({
       {/* Sistema climático completo */}
       <WeatherSystem weather={weather} isIceBiome={isIceBiome} />
 
-      {/* Elementos del entorno: rocas y vegetación - dinámicos según ubicación */}
+      {/* Elementos del entorno: rocas y vegetación - usando modelos GLB de Blender */}
       <EnvironmentElements location={location} />
 
       {/* Modelo 3D o Avatar según modo */}
@@ -930,18 +934,12 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
         switch (item.type) {
           case 'tree':
             return (
-              <group key={`tree-${i}`} position={[item.x, 0, item.z]}>
-                {/* Tronco */}
-                <mesh position={[0, item.height, 0]} castShadow receiveShadow>
-                  <cylinderGeometry args={[0.15 * item.height, 0.2 * item.height, item.height * 2, 8]} />
-                  <meshStandardMaterial color="#4a3520" roughness={0.95} />
-                </mesh>
-                {/* Copa */}
-                <mesh position={[0, item.height * 2 + item.height * 1.25, 0]} castShadow receiveShadow>
-                  <coneGeometry args={[item.height * 1.2, item.height * 2.5, 8]} />
-                  <meshStandardMaterial color="#2d5016" roughness={0.8} />
-                </mesh>
-              </group>
+              <Tree3DModel 
+                key={`tree-${i}`}
+                position={[item.x, 0, item.z]}
+                scale={item.height * 0.3}
+                rotation={item.rotation}
+              />
             )
           
           case 'palm':
@@ -1002,16 +1000,12 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
           
           case 'rock':
             return (
-              <mesh 
+              <Rock3DModel 
                 key={`rock-${i}`}
                 position={[item.x, 0, item.z]}
-                rotation={[0, item.rotation, 0]}
-                castShadow
-                receiveShadow
-              >
-                <dodecahedronGeometry args={[item.scale, 0]} />
-                <meshStandardMaterial color="#3a2a1a" roughness={0.95} metalness={0.05} />
-              </mesh>
+                scale={item.scale * 0.5}
+                rotation={item.rotation}
+              />
             )
           
           case 'log':
