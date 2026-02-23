@@ -8,6 +8,7 @@ import { useRef, useEffect } from 'react'
 import { useGLTF } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { getAssetPath } from '@/lib/paths'
 
 interface WaterModel3DProps {
   position?: [number, number, number]
@@ -23,7 +24,7 @@ export default function WaterModel3D({
   const groupRef = useRef<THREE.Group>(null)
   
   // Cargar modelo GLB
-  const { scene } = useGLTF('/water_blender.glb')
+  const { scene } = useGLTF(getAssetPath('/water_blender.glb'))
   
   // Clonar el modelo
   const clonedScene = scene.clone()
@@ -79,4 +80,4 @@ export default function WaterModel3D({
 }
 
 // Precargar el modelo
-useGLTF.preload('/water_blender.glb')
+useGLTF.preload(getAssetPath('/water_blender.glb'))
