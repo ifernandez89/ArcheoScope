@@ -7,7 +7,7 @@
 
 import DynamicSky from '../DynamicSky'
 import VolumetricFog from '../VolumetricFog'
-import WaterModel3D from '../WaterModel3D'
+import MinimalistWater from '../MinimalistWater'
 
 interface EnvironmentSystemProps {
   isDay: boolean
@@ -47,9 +47,9 @@ export default function EnvironmentSystem({
         density={fogDensity}
       />
 
-      {/* Agua con modelo 3D de Blender */}
+      {/* Agua minimalista */}
       {showWater && (
-        <WaterModel3D
+        <MinimalistWater
           position={waterPosition}
           size={waterSize}
           color={waterColor}
