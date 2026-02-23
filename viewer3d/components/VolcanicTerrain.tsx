@@ -21,7 +21,7 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
     
     const { lat, lon } = location
     
-    // Océano Pacífico - la mayor parte del planeta
+    // OCÉANO PACÍFICO CENTRAL - La zona más grande
     // Longitud entre -180 y -70 (excluyendo costas de América)
     if (lon < -70) {
       // Excluir costa oeste de América del Norte (lat > 30, lon > -130)
@@ -36,7 +36,8 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
       // Excluir Alaska (lat > 50, lon > -170)
       if (lat > 50 && lon > -170) return false
       
-      // Todo lo demás en esta longitud es océano Pacífico
+      // TODO LO DEMÁS EN ESTA LONGITUD ES OCÉANO PACÍFICO
+      // Esto incluye (8.7783°, -144.8885°)
       return true
     }
     
