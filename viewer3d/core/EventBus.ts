@@ -218,6 +218,15 @@ export const EVENTS = {
     QUALITY_CHANGE: 'performance:quality:change'
   },
   
+  // Sistema de Resonancia
+  RESONANCE: {
+    UPDATE: 'resonance:update',
+    ANOMALY_DETECTED: 'resonance:anomaly:detected',
+    ANOMALY_LOST: 'resonance:anomaly:lost',
+    FIELD_CHANGE: 'resonance:field:change',
+    INTENSITY_PEAK: 'resonance:intensity:peak'
+  },
+  
   // Sistema de Motor
   ENGINE: {
     INIT: 'engine:init',
@@ -262,4 +271,13 @@ export type AvatarEventData = {
   position?: { x: number; y: number; z: number }
   velocity?: { x: number; y: number; z: number }
   target?: any
+}
+
+export type ResonanceEventData = {
+  value?: number
+  stability?: number
+  position?: { x: number; y: number; z: number }
+  anomalyId?: string
+  intensity?: number
+  frequency?: number
 }

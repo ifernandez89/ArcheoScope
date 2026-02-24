@@ -1,0 +1,16 @@
+# ArcheoScope Backend - AI/ML Dependencies
+# Instalar SOLO si se necesita inferencia de IA
+# pip install -r requirements-ai.txt
+
+# Deep Learning
+tensorflow==2.15.0
+torch==2.1.1
+torchvision==0.16.1
+
+# ML clásico
+scikit-learn==1.3.2
+scikit-image==0.22.0
+
+# LLM Integration
+ollama==0.1.7
+langchain==0.1.0
