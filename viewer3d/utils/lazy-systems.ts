@@ -12,11 +12,8 @@ export { default as EnvironmentSystem } from '@/components/systems/EnvironmentSy
 export { default as AstronomicalSystem } from '@/components/systems/AstronomicalSystem'
 
 // ✅ SISTEMAS OPCIONALES - Lazy loading
-// Sistema climático (solo se usa cuando hay clima activo)
-export const WeatherSystem = dynamic(
-  () => import('@/components/systems/WeatherSystem'),
-  { ssr: false }
-)
+// Sistema climático - Import directo para evitar chunk errors
+export { default as WeatherSystem } from '@/components/systems/WeatherSystem'
 
 // Sistema de post-procesado (podría ser opcional según preset)
 export const PostProcessingSystem = dynamic(

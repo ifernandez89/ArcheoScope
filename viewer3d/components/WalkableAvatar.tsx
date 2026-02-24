@@ -40,6 +40,7 @@ export default function WalkableAvatar({
   initialPosition = [0, 0, 0] // Posición inicial por defecto
 }: WalkableAvatarProps) {
   const group = useRef<THREE.Group>(null)
+  const modelRef = useRef<THREE.Group>(null) // Ref para el modelo interno (solo para rotación)
   const sunLightRef = useRef<THREE.DirectionalLight>(null)
   const { scene, animations } = useGLTF(modelPath)
   const { actions, names } = useAnimations(animations, group)
@@ -81,6 +82,8 @@ export default function WalkableAvatar({
   // Resetear avatar al cambiar modelo
   useEffect(() => {
     loggers.avatar.debug('Tipo de avatar:', avatarType)
+    loggers.avatar.debug('Model path:', modelPath)
+    loggers.avatar.debug('Es UFO 1?', modelPath.includes('ufo_1'))
     
     // Solo resetear posición al montar el componente inicialmente
     if (group.current && group.current.position.length() === 0) {
@@ -387,7 +390,7 @@ export default function WalkableAvatar({
       isMoving = true
     }
     
-    // Rotación del avatar con Q/E
+    // Rotación del avatar con Q/E (todos los UFOs pueden rotar manualmente)
     if (keys.current['q']) {
       group.current.rotation.y += 2.0 * delta  // Rotar izquierda
     }
@@ -467,7 +470,36 @@ export default function WalkableAvatar({
       // Suavizar transición a altura objetivo (con oscilación incluida)
       group.current.position.y += (finalTargetHeight - group.current.position.y) * 8 * delta
       
-      // Inclinación sutil según dirección de movimiento
+      // ========================================
+      // ROTACIÓN AUTOMÁTICA DE MODELOS
+      // ========================================
+      // Esta lógica permite que ciertos modelos roten automáticamente sobre su eje Y
+      // mientras mantienen la capacidad de ser controlados con Q/E.
+      // 
+      // IMPORTANTE: Usar modelRef.current.rotation.y (NO group.current.rotation.y)
+      // para rotar solo el modelo interno sin afectar la cámara ni el movimiento.
+      //
+      // Para agregar rotación automática a otros modelos en el futuro:
+      // 1. Agregar condición: if (modelPath.includes('nombre_modelo') && modelRef.current)
+      // 2. Aplicar rotación: modelRef.current.rotation.y += velocidad * delta
+      // 3. Velocidad recomendada: 0.5 a 2.0 * delta (más alto = más rápido)
+      // ========================================
+      
+      // UFO 1: Rotación automática a velocidad normal
+      if (modelPath.includes('ufo_1') && modelRef.current) {
+        modelRef.current.rotation.y += 1.0 * delta
+      }
+      
+      // UFO 5: Rotación automática a mitad de velocidad
+      if (modelPath.includes('ufo_5') && modelRef.current) {
+        modelRef.current.rotation.y += 0.5 * delta
+      }
+      
+      // ========================================
+      // FIN ROTACIÓN AUTOMÁTICA
+      // ========================================
+      
+      // Inclinación sutil según dirección de movimiento (todos los UFOs)
       if (isMoving) {
         // Inclinación MUY sutil hacia adelante al moverse
         const targetX = Math.sin(timeAccumulator.current * 3) * 0.02 + 0.05
@@ -601,18 +633,21 @@ export default function WalkableAvatar({
   return (
     <>
       <group ref={group} position={[0, 0, 0]} scale={avatarType === 'flying' ? 1.2 : 1}>
-        {/* Efectos cósmicos envolviendo el avatar (solo en Tierra, no en espacio, y NO para Avenger) */}
-        {showCosmicEffects && !disableCameraControl && avatarType !== 'flying' && (
-          <CosmicEntity
-            solarDirection={solarDirectionVec3}
-            isDay={isDay}
-          >
-            <primitive object={scene} />
-          </CosmicEntity>
-        )}
-        
-        {/* Sin efectos cósmicos, solo el modelo */}
-        {(!showCosmicEffects || disableCameraControl || avatarType === 'flying') && <primitive object={scene} />}
+        {/* Grupo interno para el modelo (permite rotación independiente) */}
+        <group ref={modelRef}>
+          {/* Efectos cósmicos envolviendo el avatar (solo en Tierra, no en espacio, y NO para Avenger) */}
+          {showCosmicEffects && !disableCameraControl && avatarType !== 'flying' && (
+            <CosmicEntity
+              solarDirection={solarDirectionVec3}
+              isDay={isDay}
+            >
+              <primitive object={scene} />
+            </CosmicEntity>
+          )}
+          
+          {/* Sin efectos cósmicos, solo el modelo */}
+          {(!showCosmicEffects || disableCameraControl || avatarType === 'flying') && <primitive object={scene} />}
+        </group>
         
         {/* Iluminación mejorada para Avenger en el espacio */}
         {disableCameraControl && (
@@ -677,4 +712,12 @@ import { getAssetPath } from '@/lib/paths'
 useGLTF.preload(getAssetPath('/warrior.glb'))
 useGLTF.preload(getAssetPath('/moai.glb'))
 useGLTF.preload(getAssetPath('/sphinx.glb'))
+
+// Precargar todos los UFOs
+useGLTF.preload(getAssetPath('/ufo_1.glb'))
+useGLTF.preload(getAssetPath('/ufo_2.glb'))
+useGLTF.preload(getAssetPath('/ufo_3.glb'))
+useGLTF.preload(getAssetPath('/ufo_4.glb'))
+useGLTF.preload(getAssetPath('/ufo_5.glb'))
+
 useGLTF.preload(getAssetPath('/avenger_01.glb'))
