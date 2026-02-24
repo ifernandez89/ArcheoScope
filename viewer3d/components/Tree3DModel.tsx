@@ -97,9 +97,11 @@ export default function Tree3DModel({
 
 // Precargar todos los modelos
 useGLTF.preload(getAssetPath('/tree_blender.glb'))
-useGLTF.preload(getAssetPath('/tree_1.glb'))
-useGLTF.preload(getAssetPath('/tree_2.glb'))
-useGLTF.preload(getAssetPath('/tree_3.glb'))
+// NOTA: Los árboles pesados (tree_1, tree_2, tree_3) se cargan bajo demanda
+// para mejorar el tiempo de carga inicial (43MB total)
+// useGLTF.preload(getAssetPath('/tree_1.glb'))
+// useGLTF.preload(getAssetPath('/tree_2.glb'))
+// useGLTF.preload(getAssetPath('/tree_3.glb'))
 
 // Precargar texturas
 useTexture.preload(getAssetPath('/BarkDecidious0143_5_S.jpg'))

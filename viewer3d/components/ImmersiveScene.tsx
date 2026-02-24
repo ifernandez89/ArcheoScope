@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
@@ -41,18 +41,18 @@ import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
 import { getAssetPath } from '@/lib/paths'
 import { loggers } from '@/core/Logger'
 
-// 🗺️ SISTEMA DE TERRENO MEJORADO
+// ðŸ—ºï¸ SISTEMA DE TERRENO MEJORADO
 import EnhancedTerrain from './EnhancedTerrain'
 import TerrainControl from './TerrainControl'
 
-// 🌳 MODELOS 3D DE VEGETACIÓN Y ROCAS
+// ðŸŒ³ MODELOS 3D DE VEGETACIÃ“N Y ROCAS
 import Tree3DModel, { type TreeType } from './Tree3DModel'
 import Rock3DModel from './Rock3DModel'
 
-// 🎮 SISTEMAS DE PERFORMANCE
+// ðŸŽ® SISTEMAS DE PERFORMANCE
 import EngineIntegration from './EngineIntegration'
 
-// 🔥 SISTEMAS MODULARES LAZY-LOADED
+// ðŸ”¥ SISTEMAS MODULARES LAZY-LOADED
 import {
   LightingSystem,
   WeatherSystem,
@@ -61,23 +61,29 @@ import {
   AstronomicalSystem
 } from '@/utils/lazy-systems'
 
+// ðŸŽ¨ NUEVA ARQUITECTURA: UI Systems Layer
+import UISystems from './layers/UISystems'
+
 interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
   onCameraReady?: (camera: THREE.Camera) => void
   onModeChange?: (mode: 'globe' | 'transition' | 'model' | 'exploration') => void
   spaceUfoActive?: boolean
+  spaceUfoNumber?: number
 }
 
-export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false }: ImmersiveSceneProps) {
+export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false, spaceUfoNumber = 1 }: ImmersiveSceneProps) {
   const [mode, setMode] = useState<'globe' | 'transition' | 'model' | 'exploration'>('globe')
   const [selectedModel, setSelectedModel] = useState<string>(getAssetPath('/moai.glb'))
-  const [avatarModel, setAvatarModel] = useState<string>(getAssetPath('/avenger_01.glb')) // Avenger por defecto
+  const [avatarModel, setAvatarModel] = useState<string>(getAssetPath('/ufo_1.glb')) // UFO 1 por defecto
+  const [currentUfo, setCurrentUfo] = useState<number>(1) // UFO actual
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(null)
   const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
   const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('avatar') // Modo avatar por defecto
   const [showLocationInfo, setShowLocationInfo] = useState(false)
   const [showGeometryField, setShowGeometryField] = useState(true) // Activado por defecto
-  const [isDay, setIsDay] = useState(true) // Estado día/noche
+  const [showUfoSelector, setShowUfoSelector] = useState(false) // Dropdown de UFOs
+  const [isDay, setIsDay] = useState(true) // Estado dÃ­a/noche
   const [weather, setWeather] = useState<WeatherState>({ 
     snow: false, 
     rainLight: false,
@@ -90,7 +96,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     tornado: false,
     clouds: false
   }) // Estado del clima
-  const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // Dirección del sol como objeto plano
+  const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // DirecciÃ³n del sol como objeto plano
   const [solarState, setSolarState] = useState({
     altitude: 0,
     azimuth: 0,
@@ -110,9 +116,16 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     }
   }, [mode, onModeChange])
 
+  // Sincronizar UFO seleccionado desde el globo
+  useEffect(() => {
+    // Sincronizar al inicio o cuando cambia
+    setCurrentUfo(spaceUfoNumber)
+    setAvatarModel(getAssetPath(`/ufo_${spaceUfoNumber}.glb`))
+  }, [spaceUfoNumber])
 
 
-  // Manejar click en sitio arqueológico
+
+  // Manejar click en sitio arqueolÃ³gico
   const handleSiteClick = async (site: ArchaeologicalSite) => {
     loggers.world.info(`Sitio seleccionado: ${site.name}`)
     
@@ -133,10 +146,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     
     setMode('model')
     
-    loggers.world.info('Teletransporte a sitio arqueológico completado')
+    loggers.world.info('Teletransporte a sitio arqueolÃ³gico completado')
   }
 
-  // Manejar click en ubicación del globo
+  // Manejar click en ubicaciÃ³n del globo
   const handleLocationClick = async (lat: number, lon: number) => {
     loggers.world.info(`Iniciando teletransporte a: lat=${lat.toFixed(4)}, lon=${lon.toFixed(4)}`)
     
@@ -145,7 +158,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     setSelectedSite(null)
     setMode('transition')
     
-    // Transición cinematográfica de 2 segundos
+    // TransiciÃ³n cinematogrÃ¡fica de 2 segundos
     await new Promise(resolve => setTimeout(resolve, 2000))
     
     // Cambiar a modo modelo
@@ -171,6 +184,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     })
   }
 
+  // Cambiar UFO en modo exploración
+  const handleUfoChange = (ufoNumber: number) => {
+    const newPath = getAssetPath(`/ufo_${ufoNumber}.glb`)
+    console.log('🛸 Cambiando UFO:', ufoNumber, 'Path:', newPath)
+    setCurrentUfo(ufoNumber)
+    setAvatarModel(newPath)
+  }
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       {/* Input de coordenadas */}
@@ -179,7 +200,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         currentLocation={selectedLocation}
       />
 
-      {/* Información de ubicación (desplegable) */}
+      {/* InformaciÃ³n de ubicaciÃ³n (desplegable) */}
       {mode === 'model' && showLocationInfo && (
         <LocationInfo 
           location={selectedLocation}
@@ -187,7 +208,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         />
       )}
 
-      {/* Indicador de transición cinematográfica */}
+      {/* Indicador de transiciÃ³n cinematogrÃ¡fica */}
       {mode === 'transition' && (
         <div style={{
           position: 'absolute',
@@ -208,7 +229,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             marginBottom: '20px',
             animation: 'pulse 1.5s infinite'
           }}>
-            🌍
+            ðŸŒ
           </div>
           <div style={{
             color: 'white',
@@ -228,7 +249,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
               fontSize: '14px',
               marginTop: '10px'
             }}>
-              📍 Lat: {selectedLocation.lat.toFixed(4)}° | Lon: {selectedLocation.lon.toFixed(4)}°
+              ðŸ“ Lat: {selectedLocation.lat.toFixed(4)}Â° | Lon: {selectedLocation.lon.toFixed(4)}Â°
             </div>
           )}
           {selectedSite && (
@@ -237,7 +258,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
               fontSize: '12px',
               marginTop: '8px'
             }}>
-              {selectedSite.culture} • {selectedSite.period}
+              {selectedSite.culture} â€¢ {selectedSite.period}
             </div>
           )}
         </div>
@@ -274,43 +295,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(102, 126, 234, 1)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(102, 126, 234, 0.9)'}
           >
-            🌍 Volver al Globo
+            ðŸŒ Volver al Globo
           </button>
 
-          <button
-            onClick={toggleMovementMode}
-            style={{
-              padding: '12px 24px',
-              background: movementMode === 'avatar' 
-                ? 'rgba(139, 92, 246, 0.9)'
-                : 'rgba(34, 197, 94, 0.9)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = movementMode === 'avatar'
-                ? 'rgba(139, 92, 246, 1)'
-                : 'rgba(34, 197, 94, 1)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = movementMode === 'avatar'
-                ? 'rgba(139, 92, 246, 0.9)'
-                : 'rgba(34, 197, 94, 0.9)'
-            }}
-          >
-            {movementMode === 'avatar' ? 'Modo: Avenger' : '🔄 Modo: Órbita'}
-          </button>
-
-          {/* Botón para mostrar/ocultar información de ubicación */}
+                    {/* BotÃ³n para mostrar/ocultar informaciÃ³n de ubicaciÃ³n */}
           <button
             onClick={() => setShowLocationInfo(!showLocationInfo)}
             style={{
@@ -339,8 +327,88 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                 : 'rgba(75, 85, 99, 0.7)'
             }}
           >
-            📍 {showLocationInfo ? 'Ocultar Info' : 'Mostrar Info'}
+            ðŸ“ {showLocationInfo ? 'Ocultar Info' : 'Mostrar Info'}
           </button>
+
+          {/* Selector de UFO en modo avatar */}
+          {movementMode === 'avatar' && (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowUfoSelector(!showUfoSelector)}
+                style={{
+                  padding: '12px 24px',
+                  background: 'rgba(139, 92, 246, 0.9)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  borderRadius: '8px',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                  width: '100%'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 1)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 0.9)'}
+              >
+                🛸 UFO {currentUfo}
+              </button>
+
+              {/* Dropdown de UFOs */}
+              {showUfoSelector && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  marginTop: '4px',
+                  background: 'rgba(0, 0, 0, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  overflow: 'hidden',
+                  zIndex: 2000,
+                  minWidth: '200px'
+                }}>
+                  {[1, 2, 3, 4, 5].map(ufoNum => (
+                    <button
+                      key={ufoNum}
+                      onClick={() => {
+                        handleUfoChange(ufoNum)
+                        setShowUfoSelector(false)
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        background: currentUfo === ufoNum ? 'rgba(139, 92, 246, 0.5)' : 'transparent',
+                        border: 'none',
+                        borderRadius: '4px',
+                        color: 'white',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (currentUfo !== ufoNum) {
+                          e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (currentUfo !== ufoNum) {
+                          e.currentTarget.style.background = 'transparent'
+                        }
+                      }}
+                    >
+                      🛸 UFO {ufoNum}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -362,10 +430,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           display: 'flex',
           gap: '20px'
         }}>
-          <span>🚶 W/S - Adelante/Atrás</span>
+          <span>ðŸš¶ W/S - Adelante/AtrÃ¡s</span>
           <span>A/D - Izquierda/Derecha</span>
           <span>Q/E - Rotar</span>
-          <span>🚀 SHIFT + Mouse↕ - Control de Dirección</span>
+          <span>ðŸš€ SHIFT + Mouseâ†• - Control de DirecciÃ³n</span>
         </div>
       )}
 
@@ -376,6 +444,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onSiteClick={handleSiteClick}
           markerPosition={selectedLocation}
           spaceUfoActive={spaceUfoActive}
+          spaceUfoNumber={spaceUfoNumber}
         />
       ) : mode === 'model' ? (
         <ModelScene 
@@ -426,18 +495,18 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   )
 }
 
-// Partículas ambientales sutiles para sensación de movimiento
+// PartÃ­culas ambientales sutiles para sensaciÃ³n de movimiento
 function AmbientParticles() {
   const particlesRef = useRef<THREE.Points>(null)
   
   const particlesGeometry = useMemo(() => {
     const geometry = new THREE.BufferGeometry()
-    const count = 500  // Pocas partículas, muy sutiles
+    const count = 500  // Pocas partÃ­culas, muy sutiles
     const positions = new Float32Array(count * 3)
     
     for (let i = 0; i < count; i++) {
       const i3 = i * 3
-      // Distribuir en un área amplia alrededor del jugador
+      // Distribuir en un Ã¡rea amplia alrededor del jugador
       positions[i3] = (Math.random() - 0.5) * 100
       positions[i3 + 1] = Math.random() * 10 + 1  // Entre 1 y 11 metros de altura
       positions[i3 + 2] = (Math.random() - 0.5) * 100
@@ -459,7 +528,7 @@ function AmbientParticles() {
     })
   }, [])
   
-  // Animación sutil de flotación
+  // AnimaciÃ³n sutil de flotaciÃ³n
   useFrame((state) => {
     if (particlesRef.current) {
       const positions = particlesRef.current.geometry.attributes.position.array as Float32Array
@@ -468,7 +537,7 @@ function AmbientParticles() {
         // Movimiento vertical lento
         positions[i + 1] += Math.sin(state.clock.elapsedTime + i) * 0.001
         
-        // Si la partícula baja mucho, resetearla arriba
+        // Si la partÃ­cula baja mucho, resetearla arriba
         if (positions[i + 1] < 0.5) {
           positions[i + 1] = 11
         }
@@ -486,22 +555,24 @@ function GlobeScene({
   onLocationClick,
   onSiteClick,
   markerPosition,
-  spaceUfoActive = false
+  spaceUfoActive = false,
+  spaceUfoNumber = 1
 }: { 
   onLocationClick: (lat: number, lon: number) => void
   onSiteClick: (site: ArchaeologicalSite) => void
   markerPosition?: { lat: number, lon: number } | null
   spaceUfoActive?: boolean
+  spaceUfoNumber?: number
 }) {
   return (
     <Canvas
       camera={{ position: [0, 0, 15], fov: 50 }}
       style={{ 
         background: '#000',
-        cursor: spaceUfoActive ? 'none' : 'default' // Ocultar cursor cuando Avenger está activo
+        cursor: spaceUfoActive ? 'none' : 'default' // Ocultar cursor cuando Avenger estÃ¡ activo
       }}
     >
-      {/* 🎮 SISTEMAS DE PERFORMANCE - ÚNICO useFrame */}
+      {/* ðŸŽ® SISTEMAS DE PERFORMANCE - ÃšNICO useFrame */}
       <EngineIntegration />
       
       <PerspectiveCamera makeDefault position={[0, 0, 15]} fov={50} />
@@ -509,7 +580,7 @@ function GlobeScene({
         enableDamping
         dampingFactor={0.05}
         minDistance={8}
-        maxDistance={450} // Aumentado para ver órbita completa de Marte (304 unidades)
+        maxDistance={450} // Aumentado para ver Ã³rbita completa de Marte (304 unidades)
         autoRotate={false}
       />
       
@@ -521,10 +592,10 @@ function GlobeScene({
       
       {/* Avenger Espacial controlado por mouse */}
       {spaceUfoActive && (
-        <SpaceUfo />
+        <SpaceUfo key={spaceUfoNumber} ufoNumber={spaceUfoNumber} />
       )}
       
-      {/* Marcadores de sitios arqueológicos - Temporalmente deshabilitados */}
+      {/* Marcadores de sitios arqueolÃ³gicos - Temporalmente deshabilitados */}
       {/* <SiteMarkers onSiteClick={onSiteClick} /> */}
     </Canvas>
   )
@@ -540,13 +611,13 @@ function NarrativeZoomContent({
 }) {
   return (
     <>
-      {/* Fondo de la Vía Láctea - Esfera envolvente con textura */}
+      {/* Fondo de la VÃ­a LÃ¡ctea - Esfera envolvente con textura */}
       <MilkyWayBackground />
       
       {/* Estrellas procedurales */}
       <Stars />
       
-      {/* Sistema Solar Realista con posiciones astronómicas reales */}
+      {/* Sistema Solar Realista con posiciones astronÃ³micas reales */}
       <RealisticSolarSystem 
         onLocationClick={onLocationClick}
         markerPosition={markerPosition}
@@ -555,7 +626,7 @@ function NarrativeZoomContent({
   )
 }
 
-// Escena del modelo con zoom cinematográfico
+// Escena del modelo con zoom cinematogrÃ¡fico
 function ModelScene({ 
   modelPath, 
   avatarModel,
@@ -599,15 +670,15 @@ function ModelScene({
   const modelRef = useRef<THREE.Group>(null)
   const [obstacles, setObstacles] = useState<THREE.Object3D[]>([])
   
-  // Detectar bioma basado en ubicación
+  // Detectar bioma basado en ubicaciÃ³n
   const biome = useMemo(() => {
-    if (!location) return { type: 'default' as const, name: 'Genérico', description: '', temperature: 20, humidity: 50 }
+    if (!location) return { type: 'default' as const, name: 'GenÃ©rico', description: '', temperature: 20, humidity: 50 }
     return detectBiome(location.lat, location.lon)
   }, [location])
   
   const isIceBiome = biome.type === 'ice'
   
-  // Colores dinámicos según bioma
+  // Colores dinÃ¡micos segÃºn bioma
   const skyColor = useMemo(() => getSkyColorForBiome(biome.type, isDay), [biome.type, isDay])
   const fogColor = useMemo(() => getFogColorForBiome(biome.type), [biome.type])
   
@@ -621,7 +692,7 @@ function ModelScene({
     }
   }, [biome, location])
   
-  // Actualizar obstáculos cuando el modelo cargue
+  // Actualizar obstÃ¡culos cuando el modelo cargue
   useEffect(() => {
     if (modelRef.current) {
       setObstacles([modelRef.current])
@@ -640,12 +711,12 @@ function ModelScene({
         toneMappingExposure: 1.2
       }}
     >
-      {/* 🎮 SISTEMAS DE PERFORMANCE - ÚNICO useFrame */}
+      {/* ðŸŽ® SISTEMAS DE PERFORMANCE - ÃšNICO useFrame */}
       <EngineIntegration />
       
       <PerspectiveCamera makeDefault position={[8, 4, 8]} fov={60} />
       
-      {/* Controles según modo */}
+      {/* Controles segÃºn modo */}
       {movementMode === 'orbit' ? (
         <OrbitControls
           enableDamping
@@ -661,9 +732,9 @@ function ModelScene({
           target={[0, 1, 0]}
         />
       ) : null}
-      {/* En modo avatar, la cámara es controlada por WalkableAvatar */}
+      {/* En modo avatar, la cÃ¡mara es controlada por WalkableAvatar */}
 
-      {/* Sistema astronómico-geométrico vivo - DESHABILITADO en modo avatar */}
+      {/* Sistema astronÃ³mico-geomÃ©trico vivo - DESHABILITADO en modo avatar */}
       <AstronomicalSystem
         location={location}
         enabled={movementMode === 'orbit'}
@@ -675,7 +746,7 @@ function ModelScene({
         showTrajectory={true}
       />
 
-      {/* Iluminación cinematográfica - adaptada al bioma */}
+      {/* IluminaciÃ³n cinematogrÃ¡fica - adaptada al bioma */}
       <LightingSystem
         biomeType={biome.type}
         solarDirection={solarDirection}
@@ -731,15 +802,15 @@ function ModelScene({
         visible={false}
       />
 
-      {/* Sistema climático completo */}
+      {/* Sistema climÃ¡tico completo */}
       <WeatherSystem weather={weather} isIceBiome={isIceBiome} />
 
-      {/* Elementos del entorno: rocas y vegetación - NO renderizar sobre océano */}
+      {/* Elementos del entorno: rocas y vegetaciÃ³n - NO renderizar sobre ocÃ©ano */}
       {!isIceBiome && biome.type !== 'ocean' && (
         <EnvironmentElements location={location} />
       )}
 
-      {/* Modelo 3D o Avatar según modo */}
+      {/* Modelo 3D o Avatar segÃºn modo */}
       {movementMode === 'avatar' ? (
         <WalkableAvatar 
           key={avatarModel}  // Key para forzar re-mount cuando cambia el modelo
@@ -753,7 +824,7 @@ function ModelScene({
         <ModelViewer modelPath={avatarModel} ref={modelRef} />
       )}
       
-      {/* Colisiones básicas ya no son necesarias, WalkableAvatar las maneja */}
+      {/* Colisiones bÃ¡sicas ya no son necesarias, WalkableAvatar las maneja */}
       
       {/* Info del sitio */}
       {site && (
@@ -764,7 +835,7 @@ function ModelScene({
       <CameraCapture onReady={onCameraReady} />
       <ModelCapture onLoaded={onModelLoaded} />
       
-      {/* Zoom cinematográfico al entrar - SOLO en modo órbita */}
+      {/* Zoom cinematogrÃ¡fico al entrar - SOLO en modo Ã³rbita */}
       {movementMode === 'orbit' && <CinematicZoom />}
 
       {/* Post-processing modular */}
@@ -778,7 +849,7 @@ function ModelScene({
   )
 }
 
-// Zoom cinematográfico - SOLO en modo órbita
+// Zoom cinematogrÃ¡fico - SOLO en modo Ã³rbita
 function CinematicZoom() {
   const { camera } = useThree()
   const startPos = useRef(new THREE.Vector3(15, 10, 15))
@@ -802,7 +873,7 @@ function CinematicZoom() {
   return null
 }
 
-// Elementos decorativos del entorno - DINÁMICOS según ubicación
+// Elementos decorativos del entorno - DINÃMICOS segÃºn ubicaciÃ³n
 function EnvironmentElements({ location }: { location?: { lat: number, lon: number } | null }) {
   // Generar seed basado en coordenadas para consistencia
   const seed = useMemo(() => {
@@ -810,7 +881,7 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
     return Math.floor(location.lat * 1000 + location.lon * 1000)
   }, [location?.lat, location?.lon])
   
-  // Determinar bioma según ubicación
+  // Determinar bioma segÃºn ubicaciÃ³n
   const biome = useMemo(() => {
     if (!location) return 'temperate'
     const absLat = Math.abs(location.lat)
@@ -828,7 +899,7 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
       return x - Math.floor(x)
     }
     
-    // Cantidad según bioma
+    // Cantidad segÃºn bioma
     const counts: Record<string, Record<string, number>> = {
       tropical: { trees: 15, bushes: 20, rocks: 10, palms: 8, flowers: 25 },
       temperate: { trees: 12, bushes: 15, rocks: 15, logs: 5, flowers: 15 },
@@ -841,17 +912,17 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
     const items: any[] = []
     let index = 0
     
-    // Generar árboles
+    // Generar Ã¡rboles
     for (let i = 0; i < count.trees; i++) {
       const angle = random(index++) * Math.PI * 2
       const radius = 15 + random(index++) * 30
       const x = Math.cos(angle) * radius + (random(index++) - 0.5) * 10
       const z = Math.sin(angle) * radius + (random(index++) - 0.5) * 10
       
-      // Altura real del árbol en metros (entre 2 y 10 metros)
+      // Altura real del Ã¡rbol en metros (entre 2 y 10 metros)
       const heightInMeters = 2 + random(index++) * 8
       
-      // Seleccionar tipo de árbol aleatorio (4 tipos disponibles)
+      // Seleccionar tipo de Ã¡rbol aleatorio (4 tipos disponibles)
       const treeTypeRandom = random(index++)
       let treeType: 'default' | 'tree1' | 'tree2' | 'tree3'
       if (treeTypeRandom < 0.25) treeType = 'default'
@@ -889,7 +960,7 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
       items.push({ type: 'rock', x, z, scale, rotation: random(index++) * Math.PI * 2 })
     }
     
-    // Elementos específicos por bioma
+    // Elementos especÃ­ficos por bioma
     if (biome === 'tropical' && count.palms) {
       for (let i = 0; i < count.palms; i++) {
         const angle = random(index++) * Math.PI * 2
@@ -953,7 +1024,7 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
       {elements.map((item, i) => {
         switch (item.type) {
           case 'tree':
-            // Escala muy pequeña para modelos GLB de Blender
+            // Escala muy pequeÃ±a para modelos GLB de Blender
             // heightInMeters entre 2-10, multiplicado por 0.05 = escala entre 0.1-0.5
             return (
               <Tree3DModel 
@@ -965,62 +1036,6 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
               />
             )
           
-          case 'palm':
-            return (
-              <group key={`palm-${i}`} position={[item.x, 0, item.z]}>
-                {/* Tronco curvo */}
-                <mesh position={[0, item.height * 1.5, 0]} castShadow receiveShadow>
-                  <cylinderGeometry args={[0.12, 0.15, item.height * 3, 8]} />
-                  <meshStandardMaterial color="#8b6f47" roughness={0.9} />
-                </mesh>
-                {/* Hojas (4 direcciones) */}
-                {[0, 1, 2, 3].map(dir => (
-                  <mesh 
-                    key={dir}
-                    position={[
-                      Math.cos(dir * Math.PI / 2) * 0.5,
-                      item.height * 3,
-                      Math.sin(dir * Math.PI / 2) * 0.5
-                    ]}
-                    rotation={[Math.PI / 6, dir * Math.PI / 2, 0]}
-                    castShadow
-                  >
-                    <boxGeometry args={[0.3, 2, 0.1]} />
-                    <meshStandardMaterial color="#2d5016" roughness={0.7} />
-                  </mesh>
-                ))}
-              </group>
-            )
-          
-          case 'cactus':
-            return (
-              <group key={`cactus-${i}`} position={[item.x, 0, item.z]}>
-                {/* Cuerpo principal */}
-                <mesh position={[0, item.height, 0]} castShadow receiveShadow>
-                  <cylinderGeometry args={[0.2, 0.25, item.height * 2, 8]} />
-                  <meshStandardMaterial color="#3a5a2a" roughness={0.8} />
-                </mesh>
-                {/* Brazos laterales */}
-                <mesh position={[-0.4, item.height * 0.8, 0]} rotation={[0, 0, Math.PI / 4]} castShadow>
-                  <cylinderGeometry args={[0.15, 0.18, item.height * 0.8, 6]} />
-                  <meshStandardMaterial color="#3a5a2a" roughness={0.8} />
-                </mesh>
-              </group>
-            )
-          
-          case 'bush':
-            return (
-              <mesh 
-                key={`bush-${i}`}
-                position={[item.x, item.scale * 0.4, item.z]}
-                castShadow
-                receiveShadow
-              >
-                <sphereGeometry args={[item.scale, 8, 8]} />
-                <meshStandardMaterial color="#2d5016" roughness={0.9} />
-              </mesh>
-            )
-          
           case 'rock':
             return (
               <Rock3DModel 
@@ -1029,20 +1044,6 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
                 scale={item.scale * 0.5}
                 rotation={item.rotation}
               />
-            )
-          
-          case 'log':
-            return (
-              <mesh 
-                key={`log-${i}`}
-                position={[item.x, 0.2, item.z]}
-                rotation={[Math.PI / 2, 0, item.rotation]}
-                castShadow
-                receiveShadow
-              >
-                <cylinderGeometry args={[0.3, 0.35, 2, 8]} />
-                <meshStandardMaterial color="#4a3520" roughness={0.95} />
-              </mesh>
             )
           
           case 'flower':
@@ -1096,7 +1097,7 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
   )
 }
 
-// Capturar cámara
+// Capturar cÃ¡mara
 function CameraCapture({ onReady }: { onReady?: (camera: THREE.Camera) => void }) {
   const { camera } = useThree()
   
@@ -1126,22 +1127,22 @@ function ModelCapture({ onLoaded }: { onLoaded?: (model: THREE.Object3D) => void
   return null
 }
 
-// Simulación solar real basada en coordenadas
+// SimulaciÃ³n solar real basada en coordenadas
 function SolarSimulation({ lat, lon }: { lat: number, lon: number }) {
   const lightRef = useRef<THREE.DirectionalLight>(null)
   
   useEffect(() => {
     if (!lightRef.current) return
     
-    // Calcular posición solar basada en lat/lon y hora actual
+    // Calcular posiciÃ³n solar basada en lat/lon y hora actual
     const now = new Date()
     const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000)
     const hour = now.getHours() + now.getMinutes() / 60
     
-    // Declinación solar (simplificado)
+    // DeclinaciÃ³n solar (simplificado)
     const declination = 23.45 * Math.sin((360 / 365) * (dayOfYear - 81) * Math.PI / 180)
     
-    // Ángulo horario
+    // Ãngulo horario
     const hourAngle = 15 * (hour - 12)
     
     // Altura solar
@@ -1153,7 +1154,7 @@ function SolarSimulation({ lat, lon }: { lat: number, lon: number }) {
     // Azimut solar (simplificado)
     const azimuth = hourAngle
     
-    // Convertir a posición 3D
+    // Convertir a posiciÃ³n 3D
     const distance = 15
     const x = distance * Math.cos(altitude * Math.PI / 180) * Math.sin(azimuth * Math.PI / 180)
     const y = distance * Math.sin(altitude * Math.PI / 180)
@@ -1161,18 +1162,18 @@ function SolarSimulation({ lat, lon }: { lat: number, lon: number }) {
     
     lightRef.current.position.set(x, Math.max(y, 2), z)
     
-    // Ajustar intensidad según altura solar
+    // Ajustar intensidad segÃºn altura solar
     const intensity = Math.max(0.3, Math.sin(altitude * Math.PI / 180) * 1.5)
     lightRef.current.intensity = intensity
     
-    // Color según hora del día
+    // Color segÃºn hora del dÃ­a
     const sunColor = altitude > 0 
-      ? (altitude < 15 ? '#ff9966' : '#ffffff')  // Amanecer/atardecer vs mediodía
+      ? (altitude < 15 ? '#ff9966' : '#ffffff')  // Amanecer/atardecer vs mediodÃ­a
       : '#1a1a2e'  // Noche
     
     lightRef.current.color.set(sunColor)
     
-    loggers.world.debug('Simulación solar:', {
+    loggers.world.debug('SimulaciÃ³n solar:', {
       lat: lat.toFixed(2),
       lon: lon.toFixed(2),
       altitude: altitude.toFixed(2),
@@ -1196,7 +1197,7 @@ function SolarSimulation({ lat, lon }: { lat: number, lon: number }) {
   )
 }
 
-// Info del sitio arqueológico
+// Info del sitio arqueolÃ³gico
 function SiteInfo({ site }: { site: ArchaeologicalSite }) {
   return (
     <Html
@@ -1217,10 +1218,10 @@ function SiteInfo({ site }: { site: ArchaeologicalSite }) {
       }}
     >
       <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#fbbf24', fontSize: '16px' }}>
-        🏛️ {site.name}
+        ðŸ›ï¸ {site.name}
       </div>
       <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>
-        {site.culture} • {site.period}
+        {site.culture} â€¢ {site.period}
       </div>
       <div style={{ fontSize: '11px', color: '#ccc', lineHeight: '1.4' }}>
         {site.description}
@@ -1231,14 +1232,14 @@ function SiteInfo({ site }: { site: ArchaeologicalSite }) {
 
 
 // Avenger Espacial controlado por mouse
-function SpaceUfo() {
+function SpaceUfo({ ufoNumber = 1 }: { ufoNumber?: number }) {
   const ufoRef = useRef<THREE.Group>(null)
   const sunLightRef = useRef<THREE.DirectionalLight>(null)
   const { camera, size, scene: threeScene } = useThree()
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   
-  // Cargar modelo del Avenger
-  const { scene } = useGLTF(getAssetPath('/avenger_01.glb'))
+  // Cargar modelo del UFO seleccionado
+  const { scene } = useGLTF(getAssetPath(`/ufo_${ufoNumber}.glb`))
   
   // Capturar movimiento del mouse
   useEffect(() => {
@@ -1254,27 +1255,37 @@ function SpaceUfo() {
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [size])
   
-  // Actualizar posición del Avenger para seguir el mouse
+  // Actualizar posiciÃ³n del Avenger para seguir el mouse
   useFrame(() => {
     if (!ufoRef.current) return
     
-    // Crear un raycaster desde la cámara hacia la posición del mouse
+    // Crear un raycaster desde la cÃ¡mara hacia la posiciÃ³n del mouse
     const raycaster = new THREE.Raycaster()
     raycaster.setFromCamera(new THREE.Vector2(mousePosition.x, mousePosition.y), camera)
     
-    // Calcular punto en el espacio a una distancia fija de la cámara
-    const distance = 10 // Distancia desde la cámara
+    // Calcular punto en el espacio a una distancia fija de la cÃ¡mara
+    const distance = 10 // Distancia desde la cÃ¡mara
     const targetPosition = raycaster.ray.origin.clone().add(
       raycaster.ray.direction.multiplyScalar(distance)
     )
     
-    // Suavizar movimiento del Avenger hacia la posición objetivo
+    // Suavizar movimiento del Avenger hacia la posiciÃ³n objetivo
     ufoRef.current.position.lerp(targetPosition, 0.1)
     
-    // Hacer que el OVNI mire hacia donde se mueve
-    if (raycaster.ray.direction.length() > 0) {
+    // Hacer que el OVNI mire hacia donde se mueve (excepto UFO 1 y 5 que rotan)
+    if (ufoNumber !== 1 && ufoNumber !== 5 && raycaster.ray.direction.length() > 0) {
       const lookAtPos = ufoRef.current.position.clone().add(raycaster.ray.direction)
       ufoRef.current.lookAt(lookAtPos)
+    }
+    
+    // Rotación especial para UFO 1: gira sobre su propio eje (antihorario)
+    if (ufoNumber === 1) {
+      ufoRef.current.rotation.y += 0.01 // Velocidad de rotación reducida
+    }
+    
+    // Rotación especial para UFO 5: gira sobre su propio eje (antihorario, mitad de velocidad)
+    if (ufoNumber === 5) {
+      ufoRef.current.rotation.y += 0.005 // Mitad de velocidad que UFO 1
     }
     
     // Calcular escala basada en distancia a planetas REALES en la escena
@@ -1283,7 +1294,7 @@ function SpaceUfo() {
     
     // Buscar todos los meshes de planetas en la escena
     threeScene.traverse((object) => {
-      // Buscar objetos que sean planetas (tienen geometría de esfera)
+      // Buscar objetos que sean planetas (tienen geometrÃ­a de esfera)
       if (object instanceof THREE.Mesh && object.geometry instanceof THREE.SphereGeometry) {
         // Calcular distancia al OVNI
         const dist = ufoPosition.distanceTo(object.getWorldPosition(new THREE.Vector3()))
@@ -1294,18 +1305,18 @@ function SpaceUfo() {
     })
     
     // Calcular escala: 
-    // OVNI con tamaño base 3 veces Mercurio (0.38 * 3 = 1.14)
+    // OVNI con tamaÃ±o base 3 veces Mercurio (0.38 * 3 = 1.14)
     // - Lejos de planetas (>50 unidades): escala 1.14 (3 veces Mercurio)
-    // - Cerca de planetas (<5 unidades): escala 0.0285 (40 veces más pequeño)
+    // - Cerca de planetas (<5 unidades): escala 0.0285 (40 veces mÃ¡s pequeÃ±o)
     const maxDistance = 50 // Distancia donde empieza a reducirse
-    const minDistanceThreshold = 5 // Distancia mínima donde alcanza el tamaño mínimo
+    const minDistanceThreshold = 5 // Distancia mÃ­nima donde alcanza el tamaÃ±o mÃ­nimo
     
-    const normalScale = 1.14 // 3 veces el tamaño de Mercurio (0.38 * 3)
-    const minScale = 0.0285 // 40 veces más pequeño (1.14 / 40)
+    const normalScale = 1.14 // 3 veces el tamaÃ±o de Mercurio (0.38 * 3)
+    const minScale = 0.0285 // 40 veces mÃ¡s pequeÃ±o (1.14 / 40)
     
     let targetScale = normalScale // Escala normal
     if (minDistance < maxDistance) {
-      // Interpolación suave entre escala normal y escala mínima
+      // InterpolaciÃ³n suave entre escala normal y escala mÃ­nima
       const t = Math.max(0, Math.min(1, (maxDistance - minDistance) / (maxDistance - minDistanceThreshold)))
       targetScale = normalScale - (t * (normalScale - minScale))
     }
@@ -1321,7 +1332,7 @@ function SpaceUfo() {
       const ufoPos = ufoRef.current.position.clone()
       const direction = ufoPos.sub(sunPosition).normalize()
       
-      // Posicionar la luz en dirección opuesta al OVNI (desde el Sol)
+      // Posicionar la luz en direcciÃ³n opuesta al OVNI (desde el Sol)
       const lightDistance = 50
       sunLightRef.current.position.copy(direction.multiplyScalar(-lightDistance))
     }
@@ -1331,7 +1342,7 @@ function SpaceUfo() {
     <group ref={ufoRef} position={[0, 0, 10]}>
       <primitive object={scene} scale={1.37} />
       
-      {/* Iluminación del Sol */}
+      {/* IluminaciÃ³n del Sol */}
       <directionalLight 
         ref={sunLightRef}
         intensity={2.5} 
@@ -1347,3 +1358,6 @@ function SpaceUfo() {
     </group>
   )
 }
+
+
+
