@@ -1,50 +1,55 @@
-/**
- * EnvironmentLayer - Capa de entorno (cielo, agua, iluminación)
- * Responsabilidad: Gestionar elementos ambientales visuales
- */
-
 'use client'
 
-import { Suspense, lazy } from 'react'
-import { useBiomeSystem } from '@/hooks/useBiomeSystem'
-import { useWeatherIntegration } from '@/hooks/useWeatherIntegration'
-import type { WeatherState } from '../WeatherControl'
+/**
+ * EnvironmentLayer - Terreno, Agua, Vegetación
+ * 
+ * Responsabilidades:
+ * - Terreno 3D (ProceduralTerrain, EnhancedTerrain)
+ * - Vegetación (Tree3DModel, Rock3DModel)
+ * - Biomas y ambiente
+ * 
+ * LAZY LOADING: Solo se carga cuando se necesita
+ */
 
-const EnvironmentSystem = lazy(() => import('../systems/EnvironmentSystem'))
+import { Suspense } from 'react'
+import ProceduralTerrain from '../ProceduralTerrain'
+import EnhancedTerrain from '../EnhancedTerrain'
+import Tree3DModel, { type TreeType } from '../Tree3DModel'
+import Rock3DModel from '../Rock3DModel'
 
 interface EnvironmentLayerProps {
-  location: { lat: number; lon: number } | null
-  isDay: boolean
-  weather: WeatherState
-  enabled: boolean
+  location?: { lat: number; lon: number } | null
+  enhancedTerrainEnabled?: boolean
+  terrainExaggeration?: number
+  terrainLOD?: boolean
+  children?: React.ReactNode
 }
 
-export default function EnvironmentLayer({ 
-  location, 
-  isDay,
-  weather,
-  enabled 
+export default function EnvironmentLayer({
+  location,
+  enhancedTerrainEnabled = false,
+  terrainExaggeration = 1.5,
+  terrainLOD = true,
+  children
 }: EnvironmentLayerProps) {
-  const { skyColor, fogColor, isIceBiome } = useBiomeSystem(location, isDay)
-  const { stormDarkness } = useWeatherIntegration(weather)
-  
-  if (!enabled) return null
-  
   return (
-    <group name="environment-layer">
-      <Suspense fallback={null}>
-        <EnvironmentSystem
-          isDay={isDay}
-          skyColor={skyColor}
-          fogColor={fogColor}
-          stormDarkness={stormDarkness}
-          fogDensity={isIceBiome ? 0.012 : 0.008}
-          showWater={!isIceBiome}
-          waterPosition={[0, -0.5, 0]}
-          waterSize={150}
-          waterColor="#1e3a5f"
-        />
-      </Suspense>
-    </group>
+    <Suspense fallback={null}>
+      <group name="environment-layer">
+        {/* Terreno mejorado con DEM real */}
+        {enhancedTerrainEnabled && location && (
+          <EnhancedTerrain
+            location={location}
+            enabled={enhancedTerrainEnabled}
+            radius={0.05}
+            resolution={256}
+            exaggeration={terrainExaggeration}
+            enableLOD={terrainLOD}
+          />
+        )}
+
+        {/* Contenido adicional (vegetación, etc.) */}
+        {children}
+      </group>
+    </Suspense>
   )
 }
