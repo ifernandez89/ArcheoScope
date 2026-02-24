@@ -15,11 +15,8 @@ export { default as AstronomicalSystem } from '@/components/systems/Astronomical
 // Sistema climático - Import directo para evitar chunk errors
 export { default as WeatherSystem } from '@/components/systems/WeatherSystem'
 
-// Sistema de post-procesado (podría ser opcional según preset)
-export const PostProcessingSystem = dynamic(
-  () => import('@/components/systems/PostProcessingSystem'),
-  { ssr: false }
-)
+// Sistema de post-procesado - Import directo para evitar chunk errors
+export { default as PostProcessingSystem } from '@/components/systems/PostProcessingSystem'
 
 // Sistema de terreno procedural
 export const ProceduralTerrain = dynamic(

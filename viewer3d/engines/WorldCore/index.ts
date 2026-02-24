@@ -31,6 +31,7 @@ import { ProceduralGenerator } from './ProceduralGenerator'
 import WorldLODInstance from './WorldLOD'
 import WorldStreamingInstance from './WorldStreaming'
 import WorldPersistenceInstance from './WorldPersistence'
+import worldManager from '../WorldManager'
 
 // Instancias singleton
 const EntitySystemInstance = new EntitySystem()
@@ -44,7 +45,16 @@ export const WorldCore = {
   Procedural: ProceduralGeneratorInstance,
   LOD: WorldLODInstance,
   Streaming: WorldStreamingInstance,
-  Persistence: WorldPersistenceInstance
+  Persistence: WorldPersistenceInstance,
+  
+  // 🎯 NUEVO: Orquestador central de mundos
+  Manager: worldManager,
+  
+  // Métodos de conveniencia para gobernanza de mundos
+  setActiveWorld: (id: string, scene?: any, metadata?: any) => worldManager.setActiveWorld(id, scene, metadata),
+  getActiveWorldCount: () => worldManager.getActiveWorldCount(),
+  getActiveWorldId: () => worldManager.getActiveWorldId(),
+  getWorldStats: () => worldManager.getStats()
 }
 
 export default WorldCore

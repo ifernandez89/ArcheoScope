@@ -7,9 +7,12 @@
  * - Mezcla dinámica según intensidad
  * - Fades suaves entre estados
  * - Simulación realista (rayos con delay por distancia)
+ * - 🌊 Modulación por resonancia dimensional
  */
 
 import { getProceduralAudio } from './ProceduralAudio'
+import ResonanceSystem, { type ResonanceState } from './ResonanceSystem'
+import ResonanceAudioAdapter from './ResonanceAudioAdapter'
 
 type WeatherAudioState = {
   rain: number // 0-1
@@ -21,6 +24,7 @@ type WeatherAudioState = {
 
 class ClimateAudioManager {
   private audioGenerator = getProceduralAudio()
+  private resonanceSystem?: ResonanceSystem
   private currentState: WeatherAudioState = {
     rain: 0,
     wind: 0,
@@ -29,6 +33,8 @@ class ClimateAudioManager {
     tornado: 0
   }
   private initialized = false
+  private lastResonanceUpdate = 0
+  private resonanceUpdateInterval = 100 // ms entre actualizaciones
   
   /**
    * Inicializar sistema de audio
@@ -36,8 +42,35 @@ class ClimateAudioManager {
   initialize() {
     if (this.initialized) return
     
-    console.log('🌦️ ClimateAudioSystem inicializado (audio procedural)')
+    console.log('🌦️ ClimateAudioSystem inicializado (audio procedural + resonancia)')
     this.initialized = true
+  }
+  
+  /**
+   * 🌊 Habilitar sistema de resonancia
+   */
+  enableResonance(config?: {
+    baseFrequency?: number
+    intensity?: number
+    harmonics?: number[]
+  }) {
+    this.resonanceSystem = new ResonanceSystem(config)
+    console.log('🌊 Sistema de resonancia habilitado')
+  }
+  
+  /**
+   * 🌊 Deshabilitar sistema de resonancia
+   */
+  disableResonance() {
+    this.resonanceSystem = undefined
+    console.log('🌊 Sistema de resonancia deshabilitado')
+  }
+  
+  /**
+   * 🌊 Verificar si resonancia está habilitada
+   */
+  isResonanceEnabled(): boolean {
+    return this.resonanceSystem !== undefined
   }
   
   /**
@@ -84,6 +117,47 @@ class ClimateAudioManager {
     }
     
     console.log('🎵 Audio actualizado:', this.currentState)
+  }
+  
+  /**
+   * 🌊 Actualizar con resonancia (llamar cada frame)
+   */
+  updateWithResonance(deltaTime: number) {
+    if (!this.resonanceSystem) return
+    
+    // Throttle: solo actualizar cada X ms
+    const now = Date.now()
+    if (now - this.lastResonanceUpdate < this.resonanceUpdateInterval) {
+      return
+    }
+    this.lastResonanceUpdate = now
+    
+    // Obtener estado de resonancia
+    const resonanceState = this.resonanceSystem.update(deltaTime)
+    
+    // Convertir a modulación de audio
+    const modulation = ResonanceAudioAdapter.toAudioModulation(resonanceState)
+    
+    // Aplicar al audio
+    this.audioGenerator.applyResonanceModulation({
+      filterFrequency: modulation.filterFrequency,
+      noiseReduction: modulation.noiseReduction,
+      lfoRate: modulation.lfoRate
+    })
+    
+    // Log del perfil (solo cuando cambia)
+    const profile = ResonanceAudioAdapter.getAudioProfile(resonanceState)
+    if (Math.random() < 0.01) { // Log ocasional para no saturar consola
+      console.log(`🌊 Resonancia: ${resonanceState.value.toFixed(2)}, Perfil: ${profile.profile}`)
+    }
+  }
+  
+  /**
+   * 🌊 Obtener estado actual de resonancia
+   */
+  getResonanceState(): ResonanceState | null {
+    if (!this.resonanceSystem) return null
+    return this.resonanceSystem.update(0)
   }
   
   /**

@@ -12,25 +12,67 @@
 type NoiseType = 'white' | 'pink' | 'brown'
 
 class ProceduralAudioGenerator {
-  private context: AudioContext | null = null
-  private masterGain: GainNode | null = null
+  private context?: AudioContext
+  private masterGain?: GainNode
+  private enabled: boolean = false
+  private baseVolume: number = 0.6 // Aumentado de 0.3 a 0.6 (60%)
   
-  // Generadores activos
-  private rainGenerator: AudioWorkletNode | null = null
-  private windGenerator: OscillatorNode | null = null
-  private windNoise: AudioBufferSourceNode | null = null
-  private windLFO: OscillatorNode | null = null
-  private windGain: GainNode | null = null
+  // Generadores activos - Type safe
+  private rainSource?: AudioBufferSourceNode
+  private rainGain?: GainNode
+  private rainFilter?: BiquadFilterNode
+  
+  private windSource?: AudioBufferSourceNode
+  private windGain?: GainNode
+  private windFilter?: BiquadFilterNode
+  private windLFO?: OscillatorNode
+  private windLFOGain?: GainNode
+  
+  private tornadoSource?: AudioBufferSourceNode
+  private tornadoGain?: GainNode
+  private tornadoFilter?: BiquadFilterNode
+  private tornadoLFO?: OscillatorNode
+  private tornadoLFOGain?: GainNode
   
   constructor() {
+    // No inicializar AudioContext aquí
+    // Esperar interacción del usuario
+    console.log('🎵 ProceduralAudio creado (esperando enable)')
+  }
+  
+  /**
+   * Habilitar audio (requiere interacción del usuario)
+   */
+  async enable(): Promise<void> {
+    if (this.enabled) {
+      console.log('🎵 Audio ya habilitado')
+      return
+    }
+    
     if (typeof window === 'undefined') return
     
+    // Crear AudioContext
     this.context = new (window.AudioContext || (window as any).webkitAudioContext)()
+    
+    // Resume si está suspendido
+    if (this.context.state === 'suspended') {
+      await this.context.resume()
+    }
+    
+    // Crear master gain
     this.masterGain = this.context.createGain()
-    this.masterGain.gain.value = 0.3 // Volumen master moderado
+    this.masterGain.gain.value = this.baseVolume
     this.masterGain.connect(this.context.destination)
     
-    console.log('🎵 ProceduralAudio inicializado')
+    this.enabled = true
+    console.log('🎵 ProceduralAudio habilitado')
+  }
+  
+  /**
+   * Verificar si está habilitado
+   */
+  isEnabled(): boolean {
+    return this.enabled
   }
   
   /**
@@ -83,7 +125,7 @@ class ProceduralAudioGenerator {
    * White noise + high-pass filter
    */
   startRain(intensity: number = 0.5) {
-    if (!this.context || !this.masterGain) return
+    if (!this.context || !this.masterGain || !this.enabled) return
     
     this.stopRain() // Detener si ya existe
     
@@ -112,37 +154,51 @@ class ProceduralAudioGenerator {
     
     source.start(0)
     
-    // Guardar referencia (usando any para evitar error de tipo)
-    ;(this as any).rainSource = source
-    ;(this as any).rainGain = gain
-    ;(this as any).rainFilter = filter
+    // 🔥 FIX: Cleanup automático cuando termina
+    source.onended = () => {
+      source.disconnect()
+      filter.disconnect()
+      gain.disconnect()
+    }
+    
+    // Guardar referencias - Type safe
+    this.rainSource = source
+    this.rainGain = gain
+    this.rainFilter = filter
     
     console.log('🌧️ Lluvia procedural iniciada:', intensity)
   }
   
   stopRain() {
-    const rainSource = (this as any).rainSource
-    if (rainSource) {
-      rainSource.stop()
-      ;(this as any).rainSource = null
-      ;(this as any).rainGain = null
-      ;(this as any).rainFilter = null
+    if (this.rainSource) {
+      try {
+        this.rainSource.stop()
+        this.rainSource.disconnect()
+      } catch (e) {
+        // Ya detenido
+      }
+      this.rainSource = undefined
+    }
+    if (this.rainFilter) {
+      this.rainFilter.disconnect()
+      this.rainFilter = undefined
+    }
+    if (this.rainGain) {
+      this.rainGain.disconnect()
+      this.rainGain = undefined
     }
   }
   
   updateRain(intensity: number) {
-    const rainGain = (this as any).rainGain
-    const rainFilter = (this as any).rainFilter
-    
-    if (rainGain && rainFilter && this.context) {
+    if (this.rainGain && this.rainFilter && this.context) {
       // Fade suave
-      rainGain.gain.linearRampToValueAtTime(
+      this.rainGain.gain.linearRampToValueAtTime(
         intensity * 0.3,
         this.context.currentTime + 0.5
       )
       
       // Ajustar filtro
-      rainFilter.frequency.linearRampToValueAtTime(
+      this.rainFilter.frequency.linearRampToValueAtTime(
         1000 + (intensity * 2000),
         this.context.currentTime + 0.5
       )
@@ -154,7 +210,7 @@ class ProceduralAudioGenerator {
    * Pink noise + LFO (oscilación lenta)
    */
   startWind(intensity: number = 0.5) {
-    if (!this.context || !this.masterGain) return
+    if (!this.context || !this.masterGain || !this.enabled) return
     
     this.stopWind()
     
@@ -196,42 +252,66 @@ class ProceduralAudioGenerator {
     source.start(0)
     lfo.start(0)
     
-    // Guardar referencias
-    ;(this as any).windSource = source
-    ;(this as any).windGain = gain
-    ;(this as any).windLFO = lfo
-    ;(this as any).windFilter = filter
+    // 🔥 FIX: Cleanup automático
+    source.onended = () => {
+      source.disconnect()
+      filter.disconnect()
+      gain.disconnect()
+      lfo.disconnect()
+      lfoGain.disconnect()
+    }
+    
+    // Guardar referencias - Type safe
+    this.windSource = source
+    this.windGain = gain
+    this.windLFO = lfo
+    this.windFilter = filter
+    this.windLFOGain = lfoGain
     
     console.log('🌬️ Viento procedural iniciado:', intensity)
   }
   
   stopWind() {
-    const windSource = (this as any).windSource
-    const windLFO = (this as any).windLFO
-    
-    if (windSource) {
-      windSource.stop()
-      ;(this as any).windSource = null
+    if (this.windSource) {
+      try {
+        this.windSource.stop()
+        this.windSource.disconnect()
+      } catch (e) {
+        // Ya detenido
+      }
+      this.windSource = undefined
     }
-    if (windLFO) {
-      windLFO.stop()
-      ;(this as any).windLFO = null
+    if (this.windLFO) {
+      try {
+        this.windLFO.stop()
+        this.windLFO.disconnect()
+      } catch (e) {
+        // Ya detenido
+      }
+      this.windLFO = undefined
     }
-    ;(this as any).windGain = null
-    ;(this as any).windFilter = null
+    if (this.windFilter) {
+      this.windFilter.disconnect()
+      this.windFilter = undefined
+    }
+    if (this.windGain) {
+      this.windGain.disconnect()
+      this.windGain = undefined
+    }
+    if (this.windLFOGain) {
+      this.windLFOGain.disconnect()
+      this.windLFOGain = undefined
+    }
   }
   
   updateWind(intensity: number) {
-    const windGain = (this as any).windGain
-    const windFilter = (this as any).windFilter
-    
-    if (windGain && windFilter && this.context) {
-      windGain.gain.linearRampToValueAtTime(
+    if (this.windGain && this.windFilter && this.context) {
+      this.windGain.gain.linearRampToValueAtTime(
         intensity * 0.4,
         this.context.currentTime + 0.5
       )
       
-      windFilter.frequency.linearRampToValueAtTime(
+      this.windFilter.frequency.linearRampToValueAtTime(
         500 - (intensity * 200),
         this.context.currentTime + 0.5
       )
@@ -286,7 +366,9 @@ class ProceduralAudioGenerator {
    * Brown noise + modulación circular
    */
   startTornado(intensity: number = 0.8) {
-    if (!this.context || !this.masterGain) return
+    if (!this.context || !this.masterGain || !this.enabled) return
+    
+    this.stopTornado()
     
     // Similar al viento pero más grave y más intenso
     const noiseBuffer = this.createNoiseBuffer('brown', 2)
@@ -322,23 +404,55 @@ class ProceduralAudioGenerator {
     source.start(0)
     lfo.start(0)
     
-    ;(this as any).tornadoSource = source
-    ;(this as any).tornadoLFO = lfo
+    // 🔥 FIX: Cleanup automático
+    source.onended = () => {
+      source.disconnect()
+      filter.disconnect()
+      gain.disconnect()
+      lfo.disconnect()
+      lfoGain.disconnect()
+    }
+    
+    // Guardar referencias - Type safe
+    this.tornadoSource = source
+    this.tornadoGain = gain
+    this.tornadoFilter = filter
+    this.tornadoLFO = lfo
+    this.tornadoLFOGain = lfoGain
     
     console.log('🌪️ Tornado procedural iniciado:', intensity)
   }
   
   stopTornado() {
-    const tornadoSource = (this as any).tornadoSource
-    const tornadoLFO = (this as any).tornadoLFO
-    
-    if (tornadoSource) {
-      tornadoSource.stop()
-      ;(this as any).tornadoSource = null
+    if (this.tornadoSource) {
+      try {
+        this.tornadoSource.stop()
+        this.tornadoSource.disconnect()
+      } catch (e) {
+        // Ya detenido
+      }
+      this.tornadoSource = undefined
     }
-    if (tornadoLFO) {
-      tornadoLFO.stop()
-      ;(this as any).tornadoLFO = null
+    if (this.tornadoLFO) {
+      try {
+        this.tornadoLFO.stop()
+        this.tornadoLFO.disconnect()
+      } catch (e) {
+        // Ya detenido
+      }
+      this.tornadoLFO = undefined
+    }
+    if (this.tornadoFilter) {
+      this.tornadoFilter.disconnect()
+      this.tornadoFilter = undefined
+    }
+    if (this.tornadoGain) {
+      this.tornadoGain.disconnect()
+      this.tornadoGain = undefined
+    }
+    if (this.tornadoLFOGain) {
+      this.tornadoLFOGain.disconnect()
+      this.tornadoLFOGain = undefined
     }
   }
   
@@ -346,11 +460,83 @@ class ProceduralAudioGenerator {
    * Ajustar volumen master
    */
   setMasterVolume(volume: number) {
+    this.baseVolume = Math.max(0, Math.min(1, volume))
+    
     if (this.masterGain && this.context) {
       this.masterGain.gain.linearRampToValueAtTime(
-        volume,
+        this.baseVolume,
         this.context.currentTime + 0.1
       )
+    }
+  }
+  
+  /**
+   * Obtener volumen master actual
+   */
+  getMasterVolume(): number {
+    return this.baseVolume
+  }
+  
+  /**
+   * 🌊 Aplicar modulación de resonancia
+   * Modula el audio existente sin agregar nuevos sonidos
+   */
+  applyResonanceModulation(modulation: {
+    filterFrequency: number
+    noiseReduction: number
+    lfoRate?: number
+  }) {
+    if (!this.context || !this.enabled) return
+    
+    const currentTime = this.context.currentTime
+    const rampTime = 0.5 // Transición suave de 500ms
+    
+    // Modular filtros activos
+    if (this.windFilter) {
+      this.windFilter.frequency.linearRampToValueAtTime(
+        modulation.filterFrequency * 0.5, // Viento más grave
+        currentTime + rampTime
+      )
+    }
+    
+    if (this.rainFilter) {
+      this.rainFilter.frequency.linearRampToValueAtTime(
+        modulation.filterFrequency * 2, // Lluvia más aguda
+        currentTime + rampTime
+      )
+    }
+    
+    if (this.tornadoFilter) {
+      this.tornadoFilter.frequency.linearRampToValueAtTime(
+        modulation.filterFrequency * 0.3, // Tornado muy grave
+        currentTime + rampTime
+      )
+    }
+    
+    // Modular gain master según reducción de ruido
+    if (this.masterGain) {
+      const targetGain = this.baseVolume * (1 - modulation.noiseReduction * 0.3)
+      this.masterGain.gain.linearRampToValueAtTime(
+        targetGain,
+        currentTime + rampTime
+      )
+    }
+    
+    // Modular LFO si está disponible
+    if (modulation.lfoRate) {
+      if (this.windLFO) {
+        this.windLFO.frequency.linearRampToValueAtTime(
+          modulation.lfoRate * 0.3, // LFO más lento para viento
+          currentTime + rampTime
+        )
+      }
+      
+      if (this.tornadoLFO) {
+        this.tornadoLFO.frequency.linearRampToValueAtTime(
+          modulation.lfoRate * 1.5, // LFO más rápido para tornado
+          currentTime + rampTime
+        )
+      }
     }
   }
   
@@ -362,10 +548,17 @@ class ProceduralAudioGenerator {
     this.stopWind()
     this.stopTornado()
     
-    if (this.context) {
-      this.context.close()
+    if (this.masterGain) {
+      this.masterGain.disconnect()
+      this.masterGain = undefined
     }
     
+    if (this.context) {
+      this.context.close()
+      this.context = undefined
+    }
+    
+    this.enabled = false
     console.log('🎵 ProceduralAudio disposed')
   }
 }

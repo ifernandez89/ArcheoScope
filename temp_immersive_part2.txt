@@ -1,503 +1,10 @@
-﻿'use client'
-
-import { useState, useRef, useEffect, useMemo } from 'react'
-import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, Html, useGLTF } from '@react-three/drei'
-import * as THREE from 'three'
-import Globe3D from './Globe3D'
-import ModelViewer from './ModelViewer'
-import SiteMarkers from './SiteMarkers'
-import CoordinateInput from './CoordinateInput'
-import LocationInfo from './LocationInfo'
-import VolcanicTerrain from './VolcanicTerrain'
-import IceTerrain from './IceTerrain'
-import WeatherControl, { type WeatherState } from './WeatherControl'
-import BasicCollisions from './BasicCollisions'
-import WalkableAvatar from './WalkableAvatar'
-import SolarSystemIntegrated from './SolarSystemIntegrated'
-import SimpleMoon from './SimpleMoon'
-import Sun from './Sun'
-import Mercury from './Mercury'
-import Venus from './Venus'
-import Mars from './Mars'
-import PlanetaryOrbits from './PlanetaryOrbits'
-import EarthOrbitWrapper from './EarthOrbitWrapper'
-import LunarOrbitLine from './LunarOrbitLine'
-import MilkyWayBackground from './MilkyWayBackground'
-import RealisticSolarSystem from './RealisticSolarSystem'
-import Stars from './Stars'
-import { 
-  useNarrativeZoom
-  // LunarOrbit, 
-  // OrbitalPlane, 
-  // SimpleSun, 
-  // EarthOrbit, 
-  // EclipticPlane 
-} from './NarrativeZoom'
-import { detectBiome, getSkyColorForBiome, getFogColorForBiome } from '@/utils/biome-detector'
-import ProceduralTerrain from './ProceduralTerrain'
-import AmbientMotion from './AmbientMotion'
-import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
-import { getAssetPath } from '@/lib/paths'
-import { loggers } from '@/core/Logger'
-import { WorldCore } from '../engines/WorldCore'
-import { getProceduralAudio } from '../systems/ProceduralAudio'
-
-// ðŸ—ºï¸ SISTEMA DE TERRENO MEJORADO
-import EnhancedTerrain from './EnhancedTerrain'
-import TerrainControl from './TerrainControl'
-
-// ðŸŒ³ MODELOS 3D DE VEGETACIÃ“N Y ROCAS
-import Tree3DModel, { type TreeType } from './Tree3DModel'
-import Rock3DModel from './Rock3DModel'
-
-// ðŸŽ® SISTEMAS DE PERFORMANCE
-import EngineIntegration from './EngineIntegration'
-
-// ðŸ”¥ SISTEMAS MODULARES LAZY-LOADED
-import {
-  LightingSystem,
-  WeatherSystem,
-  EnvironmentSystem,
-  PostProcessingSystem,
-  AstronomicalSystem
-} from '@/utils/lazy-systems'
-
-// ðŸŽ¨ NUEVA ARQUITECTURA: UI Systems Layer
-import UISystems from './layers/UISystems'
-
-interface ImmersiveSceneProps {
-  onModelLoaded?: (model: THREE.Object3D) => void
-  onCameraReady?: (camera: THREE.Camera) => void
-  onModeChange?: (mode: 'globe' | 'transition' | 'model' | 'exploration') => void
-  spaceUfoActive?: boolean
-  spaceUfoNumber?: number
-}
-
-export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false, spaceUfoNumber = 1 }: ImmersiveSceneProps) {
-  const [mode, setMode] = useState<'globe' | 'transition' | 'model' | 'exploration'>('globe')
-  const [selectedModel, setSelectedModel] = useState<string>(getAssetPath('/moai.glb'))
-  const [avatarModel, setAvatarModel] = useState<string>(getAssetPath('/ufo_1.glb')) // UFO 1 por defecto
-  const [currentUfo, setCurrentUfo] = useState<number>(1) // UFO actual
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(null)
-  const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
-  const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('avatar') // Modo avatar por defecto
-  const [showLocationInfo, setShowLocationInfo] = useState(false)
-  const [showGeometryField, setShowGeometryField] = useState(true) // Activado por defecto
-  const [showUfoSelector, setShowUfoSelector] = useState(false) // Dropdown de UFOs
-  const [isDay, setIsDay] = useState(true) // Estado dÃ­a/noche
-  const [weather, setWeather] = useState<WeatherState>({ 
-    snow: false, 
-    rainLight: false,
-    rainModerate: false,
-    rainHeavy: false,
-    wind: false,
-    fog: false,
-    storm: false,
-    lightning: false,
-    tornado: false,
-    clouds: false
-  }) // Estado del clima
-  const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // DirecciÃ³n del sol como objeto plano
-  const [solarState, setSolarState] = useState({
-    altitude: 0,
-    azimuth: 0,
-    declination: 0
-  })
-  
-  // Estado del terreno mejorado - DESHABILITADO (terreno procedural por defecto)
-  const [enhancedTerrainEnabled] = useState(false)
-  const [terrainExaggeration] = useState(1.5)
-  const [terrainLOD] = useState(true)
-  const [terrainLoading, setTerrainLoading] = useState(false)
-
-  // 🎵 Estado del audio
-  const [audioEnabled, setAudioEnabled] = useState(false)
-  const audioGenerator = getProceduralAudio()
-
-  // 🎵 Habilitar audio automáticamente en primera interacción
-  useEffect(() => {
-    if (audioEnabled) return
-
-    const enableAudioOnInteraction = async () => {
-      try {
-        await audioGenerator.enable()
-        setAudioEnabled(true)
-        loggers.world.info('🔊 Audio habilitado automáticamente')
-        
-        // Remover listeners después de habilitar
-        window.removeEventListener('click', enableAudioOnInteraction)
-        window.removeEventListener('keydown', enableAudioOnInteraction)
-      } catch (error) {
-        loggers.world.error('Error habilitando audio:', error)
-      }
-    }
-
-    // Escuchar primera interacción
-    window.addEventListener('click', enableAudioOnInteraction, { once: true })
-    window.addEventListener('keydown', enableAudioOnInteraction, { once: true })
-
-    return () => {
-      window.removeEventListener('click', enableAudioOnInteraction)
-      window.removeEventListener('keydown', enableAudioOnInteraction)
-    }
-  }, [audioEnabled, audioGenerator])
-
-  // Notificar cambios de modo al padre
-  useEffect(() => {
-    if (onModeChange) {
-      onModeChange(mode)
-    }
-  }, [mode, onModeChange])
-
-  // 🎯 WORLDMANAGER: Garantizar solo 1 mundo activo
-  useEffect(() => {
-    if (mode === 'globe') {
-      WorldCore.setActiveWorld('globe', undefined, { type: 'globe' })
-    } else if (mode === 'model') {
-      WorldCore.setActiveWorld('terrain', undefined, { 
-        type: 'terrain',
-        location: selectedLocation || undefined
-      })
-    }
-    // mode === 'transition' no registra mundo (estado intermedio)
-    
-    // Cleanup al desmontar el componente completo
-    return () => {
-      loggers.world.info('🗑️ ImmersiveScene desmontado, limpiando mundos...')
-      // No dispose aquí porque React maneja el desmontaje de Canvas
-    }
-  }, [mode, selectedLocation])
-
-  // Sincronizar UFO seleccionado desde el globo
-  useEffect(() => {
-    // Sincronizar al inicio o cuando cambia
-    setCurrentUfo(spaceUfoNumber)
-    setAvatarModel(getAssetPath(`/ufo_${spaceUfoNumber}.glb`))
-  }, [spaceUfoNumber])
-
-
-
-  // Manejar click en sitio arqueolÃ³gico
-  const handleSiteClick = async (site: ArchaeologicalSite) => {
-    loggers.world.info(`Sitio seleccionado: ${site.name}`)
-    
-    // Actualizar contexto del avatar
-    AvatarEngine.setContext({
-      siteName: site.name,
-      culture: site.culture,
-      period: site.period,
-      location: { lat: site.lat, lon: site.lon }
-    })
-    
-    setSelectedLocation({ lat: site.lat, lon: site.lon })
-    setSelectedModel(site.model)
-    setSelectedSite(site)
-    setMode('transition')
-    
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    setMode('model')
-    
-    loggers.world.info('Teletransporte a sitio arqueolÃ³gico completado')
-  }
-
-  // Manejar click en ubicaciÃ³n del globo
-  const handleLocationClick = async (lat: number, lon: number) => {
-    loggers.world.info(`Iniciando teletransporte a: lat=${lat.toFixed(4)}, lon=${lon.toFixed(4)}`)
-    
-    setSelectedLocation({ lat, lon })
-    setSelectedModel(getAssetPath('/moai.glb'))
-    setSelectedSite(null)
-    setMode('transition')
-    
-    // TransiciÃ³n cinematogrÃ¡fica de 2 segundos
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // Cambiar a modo modelo
-    setMode('model')
-    
-    loggers.world.info('Teletransporte completado', { lat, lon })
-  }
-
-  // Volver al globo
-  const handleBackToGlobe = async () => {
-    setMode('transition')
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    setMode('globe')
-    setSelectedLocation(null)
-    setSelectedSite(null)
-  }
-
-  // Toggle entre modos de movimiento
-  const toggleMovementMode = () => {
-    setMovementMode(prev => {
-      if (prev === 'orbit') return 'avatar'
-      return 'orbit'
-    })
-  }
-
-  // Cambiar UFO en modo exploración
-  const handleUfoChange = (ufoNumber: number) => {
-    const newPath = getAssetPath(`/ufo_${ufoNumber}.glb`)
-    console.log('🛸 Cambiando UFO:', ufoNumber, 'Path:', newPath)
-    setCurrentUfo(ufoNumber)
-    setAvatarModel(newPath)
-  }
-
-  return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      {/* Input de coordenadas */}
-      <CoordinateInput 
-        onCoordinateSubmit={handleLocationClick}
-        currentLocation={selectedLocation}
-      />
-
-      {/* InformaciÃ³n de ubicaciÃ³n (desplegable) */}
-      {mode === 'model' && showLocationInfo && (
-        <LocationInfo 
-          location={selectedLocation}
-          site={selectedSite}
-        />
-      )}
-
-      {/* Indicador de transiciÃ³n cinematogrÃ¡fica */}
-      {mode === 'transition' && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 2000,
-          background: 'radial-gradient(circle, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.95) 100%)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          animation: 'fadeIn 0.5s ease-in-out'
-        }}>
-          <div style={{
-            fontSize: '48px',
-            marginBottom: '20px',
-            animation: 'pulse 1.5s infinite'
-          }}>
-            ðŸŒ
-          </div>
-          <div style={{
-            color: 'white',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            textShadow: '0 0 20px rgba(102, 126, 234, 0.8)'
-          }}>
-            {selectedSite 
-              ? `Viajando a ${selectedSite.name}...` 
-              : selectedLocation 
-                ? 'Teletransportando...' 
-                : 'Regresando al globo...'}
-          </div>
-          {selectedLocation && (
-            <div style={{
-              color: '#888',
-              fontSize: '14px',
-              marginTop: '10px'
-            }}>
-              ðŸ“ Lat: {selectedLocation.lat.toFixed(4)}Â° | Lon: {selectedLocation.lon.toFixed(4)}Â°
-            </div>
-          )}
-          {selectedSite && (
-            <div style={{
-              color: '#fbbf24',
-              fontSize: '12px',
-              marginTop: '8px'
-            }}>
-              {selectedSite.culture} â€¢ {selectedSite.period}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Botones de control */}
-      {mode === 'model' && (
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          left: '20px',
-          zIndex: 1001,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px'
-        }}>
-          <button
-            onClick={handleBackToGlobe}
-            style={{
-              padding: '12px 24px',
-              background: 'rgba(102, 126, 234, 0.9)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(102, 126, 234, 1)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(102, 126, 234, 0.9)'}
-          >
-            ðŸŒ Volver al Globo
-          </button>
-
-                    {/* BotÃ³n para mostrar/ocultar informaciÃ³n de ubicaciÃ³n */}
-          <button
-            onClick={() => setShowLocationInfo(!showLocationInfo)}
-            style={{
-              padding: '12px 24px',
-              background: showLocationInfo ? 'rgba(102, 126, 234, 0.9)' : 'rgba(75, 85, 99, 0.7)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = showLocationInfo 
-                ? 'rgba(102, 126, 234, 1)' 
-                : 'rgba(75, 85, 99, 0.9)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = showLocationInfo 
-                ? 'rgba(102, 126, 234, 0.9)' 
-                : 'rgba(75, 85, 99, 0.7)'
-            }}
-          >
-            ðŸ“ {showLocationInfo ? 'Ocultar Info' : 'Mostrar Info'}
-          </button>
-
-          {/* Selector de UFO en modo avatar */}
-          {movementMode === 'avatar' && (
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setShowUfoSelector(!showUfoSelector)}
-                style={{
-                  padding: '12px 24px',
-                  background: 'rgba(139, 92, 246, 0.9)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  borderRadius: '8px',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                  width: '100%'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 1)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 0.9)'}
-              >
-                🛸 UFO {currentUfo}
-              </button>
-
-              {/* Dropdown de UFOs */}
-              {showUfoSelector && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  marginTop: '4px',
-                  background: 'rgba(0, 0, 0, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  overflow: 'hidden',
-                  zIndex: 2000,
-                  minWidth: '200px'
-                }}>
-                  {[1, 2, 3, 4, 5].map(ufoNum => (
-                    <button
-                      key={ufoNum}
-                      onClick={() => {
-                        handleUfoChange(ufoNum)
-                        setShowUfoSelector(false)
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '8px 12px',
-                        background: currentUfo === ufoNum ? 'rgba(139, 92, 246, 0.5)' : 'transparent',
-                        border: 'none',
-                        borderRadius: '4px',
-                        color: 'white',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'background 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (currentUfo !== ufoNum) {
-                          e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (currentUfo !== ufoNum) {
-                          e.currentTarget.style.background = 'transparent'
-                        }
-                      }}
-                    >
-                      🛸 UFO {ufoNum}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Instrucciones de movimiento */}
-      {mode === 'model' && movementMode === 'avatar' && (
-        <div style={{
-          position: 'absolute',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1001,
-          background: 'rgba(0, 0, 0, 0.8)',
-          backdropFilter: 'blur(10px)',
-          padding: '12px 24px',
-          borderRadius: '8px',
-          border: '1px solid rgba(255,255,255,0.2)',
-          color: 'white',
-          fontSize: '12px',
-          display: 'flex',
-          gap: '20px'
-        }}>
-          <span>ðŸš¶ W/S - Adelante/AtrÃ¡s</span>
-          <span>A/D - Izquierda/Derecha</span>
-          <span>Q/E - Rotar</span>
-          <span>ðŸš€ SHIFT + Mouseâ†• - Control de DirecciÃ³n</span>
-        </div>
-      )}
-
-      {/* Escena 3D */}
+﻿      {/* Escena 3D */}
       {mode === 'globe' ? (
         <GlobeScene 
           onLocationClick={handleLocationClick}
           onSiteClick={handleSiteClick}
           markerPosition={selectedLocation}
           spaceUfoActive={spaceUfoActive}
-          spaceUfoNumber={spaceUfoNumber}
         />
       ) : mode === 'model' ? (
         <ModelScene 
@@ -608,14 +115,12 @@ function GlobeScene({
   onLocationClick,
   onSiteClick,
   markerPosition,
-  spaceUfoActive = false,
-  spaceUfoNumber = 1
+  spaceUfoActive = false
 }: { 
   onLocationClick: (lat: number, lon: number) => void
   onSiteClick: (site: ArchaeologicalSite) => void
   markerPosition?: { lat: number, lon: number } | null
   spaceUfoActive?: boolean
-  spaceUfoNumber?: number
 }) {
   return (
     <Canvas
@@ -645,7 +150,7 @@ function GlobeScene({
       
       {/* Avenger Espacial controlado por mouse */}
       {spaceUfoActive && (
-        <SpaceUfo key={spaceUfoNumber} ufoNumber={spaceUfoNumber} />
+        <SpaceUfo />
       )}
       
       {/* Marcadores de sitios arqueolÃ³gicos - Temporalmente deshabilitados */}
@@ -1089,6 +594,62 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
               />
             )
           
+          case 'palm':
+            return (
+              <group key={`palm-${i}`} position={[item.x, 0, item.z]}>
+                {/* Tronco curvo */}
+                <mesh position={[0, item.height * 1.5, 0]} castShadow receiveShadow>
+                  <cylinderGeometry args={[0.12, 0.15, item.height * 3, 8]} />
+                  <meshStandardMaterial color="#8b6f47" roughness={0.9} />
+                </mesh>
+                {/* Hojas (4 direcciones) */}
+                {[0, 1, 2, 3].map(dir => (
+                  <mesh 
+                    key={dir}
+                    position={[
+                      Math.cos(dir * Math.PI / 2) * 0.5,
+                      item.height * 3,
+                      Math.sin(dir * Math.PI / 2) * 0.5
+                    ]}
+                    rotation={[Math.PI / 6, dir * Math.PI / 2, 0]}
+                    castShadow
+                  >
+                    <boxGeometry args={[0.3, 2, 0.1]} />
+                    <meshStandardMaterial color="#2d5016" roughness={0.7} />
+                  </mesh>
+                ))}
+              </group>
+            )
+          
+          case 'cactus':
+            return (
+              <group key={`cactus-${i}`} position={[item.x, 0, item.z]}>
+                {/* Cuerpo principal */}
+                <mesh position={[0, item.height, 0]} castShadow receiveShadow>
+                  <cylinderGeometry args={[0.2, 0.25, item.height * 2, 8]} />
+                  <meshStandardMaterial color="#3a5a2a" roughness={0.8} />
+                </mesh>
+                {/* Brazos laterales */}
+                <mesh position={[-0.4, item.height * 0.8, 0]} rotation={[0, 0, Math.PI / 4]} castShadow>
+                  <cylinderGeometry args={[0.15, 0.18, item.height * 0.8, 6]} />
+                  <meshStandardMaterial color="#3a5a2a" roughness={0.8} />
+                </mesh>
+              </group>
+            )
+          
+          case 'bush':
+            return (
+              <mesh 
+                key={`bush-${i}`}
+                position={[item.x, item.scale * 0.4, item.z]}
+                castShadow
+                receiveShadow
+              >
+                <sphereGeometry args={[item.scale, 8, 8]} />
+                <meshStandardMaterial color="#2d5016" roughness={0.9} />
+              </mesh>
+            )
+          
           case 'rock':
             return (
               <Rock3DModel 
@@ -1097,6 +658,20 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
                 scale={item.scale * 0.5}
                 rotation={item.rotation}
               />
+            )
+          
+          case 'log':
+            return (
+              <mesh 
+                key={`log-${i}`}
+                position={[item.x, 0.2, item.z]}
+                rotation={[Math.PI / 2, 0, item.rotation]}
+                castShadow
+                receiveShadow
+              >
+                <cylinderGeometry args={[0.3, 0.35, 2, 8]} />
+                <meshStandardMaterial color="#4a3520" roughness={0.95} />
+              </mesh>
             )
           
           case 'flower':
@@ -1285,14 +860,14 @@ function SiteInfo({ site }: { site: ArchaeologicalSite }) {
 
 
 // Avenger Espacial controlado por mouse
-function SpaceUfo({ ufoNumber = 1 }: { ufoNumber?: number }) {
+function SpaceUfo() {
   const ufoRef = useRef<THREE.Group>(null)
   const sunLightRef = useRef<THREE.DirectionalLight>(null)
   const { camera, size, scene: threeScene } = useThree()
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   
-  // Cargar modelo del UFO seleccionado
-  const { scene } = useGLTF(getAssetPath(`/ufo_${ufoNumber}.glb`))
+  // Cargar modelo del Avenger
+  const { scene } = useGLTF(getAssetPath('/avenger_01.glb'))
   
   // Capturar movimiento del mouse
   useEffect(() => {
@@ -1325,20 +900,10 @@ function SpaceUfo({ ufoNumber = 1 }: { ufoNumber?: number }) {
     // Suavizar movimiento del Avenger hacia la posiciÃ³n objetivo
     ufoRef.current.position.lerp(targetPosition, 0.1)
     
-    // Hacer que el OVNI mire hacia donde se mueve (excepto UFO 1 y 5 que rotan)
-    if (ufoNumber !== 1 && ufoNumber !== 5 && raycaster.ray.direction.length() > 0) {
+    // Hacer que el OVNI mire hacia donde se mueve
+    if (raycaster.ray.direction.length() > 0) {
       const lookAtPos = ufoRef.current.position.clone().add(raycaster.ray.direction)
       ufoRef.current.lookAt(lookAtPos)
-    }
-    
-    // Rotación especial para UFO 1: gira sobre su propio eje (antihorario)
-    if (ufoNumber === 1) {
-      ufoRef.current.rotation.y += 0.01 // Velocidad de rotación reducida
-    }
-    
-    // Rotación especial para UFO 5: gira sobre su propio eje (antihorario, mitad de velocidad)
-    if (ufoNumber === 5) {
-      ufoRef.current.rotation.y += 0.005 // Mitad de velocidad que UFO 1
     }
     
     // Calcular escala basada en distancia a planetas REALES en la escena
@@ -1411,6 +976,5 @@ function SpaceUfo({ ufoNumber = 1 }: { ufoNumber?: number }) {
     </group>
   )
 }
-
 
 
