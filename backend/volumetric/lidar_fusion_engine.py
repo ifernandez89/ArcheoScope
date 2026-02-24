@@ -493,12 +493,11 @@ class LidarFusionEngine:
         
         # Hash determinístico para terreno consistente
         coord_hash = int((abs(site.coordinates[0]) * 10000 + abs(site.coordinates[1]) * 10000) % 1000000)
-        dtm = np.zeros((size, size))
-        for i in range(size):
-            for j in range(size):
-                # Terreno determinista basado en coordenadas
-                roughness_factor = ((coord_hash + i * 7 + j * 11) % int(terrain_roughness * 100)) / 100.0
-                dtm[i, j] = roughness_factor * 20 + base_elevation
+        
+        # VECTORIZADO: DTM sin bucles anidados
+        i_indices, j_indices = np.ogrid[:size, :size]
+        roughness_factor = ((coord_hash + i_indices * 7 + j_indices * 11) % int(terrain_roughness * 100)) / 100.0
+        dtm = roughness_factor * 20 + base_elevation
         
         return dtm
     
@@ -510,24 +509,15 @@ class LidarFusionEngine:
         # Añadir vegetación/estructuras DETERMINÍSTICAS basado en tipo de sitio
         coord_hash = int((abs(site.coordinates[0]) * 10000 + abs(site.coordinates[1]) * 10000) % 1000000)
         
+        # VECTORIZADO: Vegetación/estructuras sin bucles
+        i_indices, j_indices = np.ogrid[:dtm.shape[0], :dtm.shape[1]]
+        
         if site.site_type == SiteType.ARCHAEOLOGICAL_CONFIRMED:
-            # Sitios arqueológicos: estructuras más pronunciadas
-            vegetation_height = np.zeros(dtm.shape)
-            for i in range(dtm.shape[0]):
-                for j in range(dtm.shape[1]):
-                    vegetation_height[i, j] = 1 + ((coord_hash + i + j) % 30) / 10.0  # 1-4m, DETERMINÍSTICO
+            vegetation_height = 1 + ((coord_hash + i_indices + j_indices) % 30) / 10.0
         elif site.site_type == SiteType.MODERN_CONTROL:
-            # Sitios modernos: estructuras altas y regulares
-            vegetation_height = np.zeros(dtm.shape)
-            for i in range(dtm.shape[0]):
-                for j in range(dtm.shape[1]):
-                    vegetation_height[i, j] = 2 + ((coord_hash + i * 2 + j * 3) % 80) / 10.0  # 2-10m, DETERMINÍSTICO
+            vegetation_height = 2 + ((coord_hash + i_indices * 2 + j_indices * 3) % 80) / 10.0
         else:
-            # Sitios naturales: vegetación variable
-            vegetation_height = np.zeros(dtm.shape)
-            for i in range(dtm.shape[0]):
-                for j in range(dtm.shape[1]):
-                    vegetation_height[i, j] = ((coord_hash + i * 5 + j * 7) % 50) / 10.0  # 0-5m, DETERMINÍSTICO
+            vegetation_height = ((coord_hash + i_indices * 5 + j_indices * 7) % 50) / 10.0
         
         return dtm + vegetation_height
     

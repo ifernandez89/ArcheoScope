@@ -74,27 +74,27 @@ class BaseField:
         # 4. Componente temporal (hora del día, estación)
         temporal_component = self._compute_temporal_component(timestamp)
         
-        # Combinar componentes
-        for i in range(self.grid_size):
-            for j in range(self.grid_size):
-                # Índice normalizado (0-1)
-                ni = i / self.grid_size
-                nj = j / self.grid_size
-                
-                # Combinar componentes con pesos
-                value = (
-                    geo_component * 0.3 +
-                    topo_component * 0.3 +
-                    solar_component * 0.2 +
-                    temporal_component * 0.2
-                )
-                
-                # Añadir variación espacial determinista
-                spatial_hash = self._spatial_hash(lat, lon, i, j)
-                value += spatial_hash * 0.1
-                
-                # Discretizar a 0-5
-                field[i, j] = int(np.clip(value * 6, 0, 5))
+        # Combinar componentes VECTORIZADO
+        i_indices, j_indices = np.ogrid[:self.grid_size, :self.grid_size]
+        ni = i_indices / self.grid_size
+        nj = j_indices / self.grid_size
+        
+        # Combinar componentes con pesos
+        value = (
+            geo_component * 0.3 +
+            topo_component * 0.3 +
+            solar_component * 0.2 +
+            temporal_component * 0.2
+        )
+        
+        # Añadir variación espacial determinista vectorizada
+        spatial_hash = np.frompyfunc(self._spatial_hash, 4, 1)(
+            lat, lon, i_indices, j_indices
+        ).astype(float)
+        value += spatial_hash * 0.1
+        
+        # Discretizar a 0-5
+        field = np.clip(value * 6, 0, 5).astype(int)
         
         return field
     
@@ -274,11 +274,13 @@ class DynamicField:
         energy_modifier = np.array(field_data['energy_modifier']).reshape(8, 8)
         
         if weather_type == 'rain':
-            # Añadir ruido en celdas cerca de agua (bordes)
-            for i in range(8):
-                for j in range(8):
-                    if i == 0 or i == 7 or j == 0 or j == 7:
-                        energy_modifier[i, j] += np.random.randint(0, 2) * intensity
+            # VECTORIZADO: Añadir ruido en celdas cerca de agua (bordes)
+            edge_mask = np.zeros((8, 8), dtype=bool)
+            edge_mask[0, :] = True
+            edge_mask[7, :] = True
+            edge_mask[:, 0] = True
+            edge_mask[:, 7] = True
+            energy_modifier[edge_mask] += (np.random.randint(0, 2, size=edge_mask.sum()) * intensity)
         
         elif weather_type == 'storm':
             # Aumentar inestabilidad en clusters

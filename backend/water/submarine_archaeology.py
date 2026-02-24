@@ -275,25 +275,26 @@ class SubmarineArchaeologyEngine:
         # Crear topografía del fondo marino DETERMINÍSTICA SIN RANDOM
         # Usar funciones matemáticas puras, no aleatorias
         
-        # Inicializar bathymetry determinística SIN random
-        bathymetry = np.zeros((grid_size, grid_size))
-        for i in range(grid_size):
-            for j in range(grid_size):
-                # Variación determinista basada en coordenadas
-                depth_variation = np.sin(coord_hash + i * 0.1) * np.cos(coord_hash + j * 0.1) * (base_depth * 0.1)
-                bathymetry[i, j] = base_depth + depth_variation
+        # VECTORIZADO: Crear grids de coordenadas de una sola vez
+        i_indices, j_indices = np.ogrid[:grid_size, :grid_size]
+        
+        # Variación determinista vectorizada - opera en toda la matriz a la vez
+        depth_variation = (
+            np.sin(coord_hash + i_indices * 0.1) * 
+            np.cos(coord_hash + j_indices * 0.1) * 
+            (base_depth * 0.1)
+        )
+        bathymetry = base_depth + depth_variation
         
         # Añadir características del fondo según tipo de agua DETERMINÍSTICAMENTE
         if water_context.water_type == WaterBodyType.RIVER:
-            # Canales de río - variación determinista
             center = grid_size // 2
-            depth_variation_river = 2 + (coord_hash % 8)  # 2-10, sin random
+            depth_variation_river = 2 + (coord_hash % 8)
             bathymetry[center-5:center+5, :] += depth_variation_river
             
         elif water_context.water_type == WaterBodyType.COASTAL:
-            # Pendiente costera - gradiente determinista
-            for i in range(grid_size):
-                bathymetry[i, :] += i * (base_depth * 0.02)
+            # Pendiente costera vectorizada - gradiente determinista
+            bathymetry += i_indices * (base_depth * 0.02)
         
         # Añadir anomalías potenciales (naufragios simulados)
         # DETERMINÍSTICO: Número de anomalías basado en seed, NO aleatorio
@@ -352,21 +353,17 @@ class SubmarineArchaeologyEngine:
         lat, lon = water_context.coordinates
         coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
-        # Imagen base del fondo DETERMINÍSTICA sin np.random
-        acoustic_image = np.zeros((grid_size, grid_size))
-        for i in range(grid_size):
-            for j in range(grid_size):
-                # Reflectancia base determinista basada en coordenadas
-                base_reflectance = 0.2 + ((coord_hash + i + j) % 60) / 100.0  # 0.2-0.8
-                acoustic_image[i, j] = base_reflectance
+        # VECTORIZADO: Crear grids de coordenadas
+        i_indices, j_indices = np.ogrid[:grid_size, :grid_size]
+        
+        # Reflectancia base determinista vectorizada
+        acoustic_image = 0.2 + ((coord_hash + i_indices + j_indices) % 60) / 100.0
         
         # Añadir características según tipo de sedimento DETERMINÍSTICAMENTE
         if water_context.sediment_type == "sand_gravel":
-            # Arena/grava - mayor reflectancia determinista
-            for i in range(grid_size):
-                for j in range(grid_size):
-                    variation = ((coord_hash + i * 3 + j * 7) % 30) / 100.0  # 0-0.3
-                    acoustic_image[i, j] += variation
+            # Arena/grava - mayor reflectancia determinista vectorizada
+            variation = ((coord_hash + i_indices * 3 + j_indices * 7) % 30) / 100.0
+            acoustic_image += variation
         elif water_context.sediment_type == "silt_clay":
             # Limo/arcilla - menor reflectancia
             acoustic_image *= 0.7  # Menor reflectancia
@@ -392,14 +389,14 @@ class SubmarineArchaeologyEngine:
         lat, lon = water_context.coordinates
         coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
-        # Capas de sedimento DETERMINÍSTICAS sin np.random
-        sediment_layers = np.zeros((grid_size, grid_size, 10))  # 10 capas
-        for i in range(grid_size):
-            for j in range(grid_size):
-                for k in range(10):  # 10 capas
-                    # Valor determinista basado en coordenadas y capa
-                    layer_value = 0.1 + ((coord_hash + i + j * 2 + k * 3) % 80) / 100.0  # 0.1-0.9
-                    sediment_layers[i, j, k] = layer_value
+        # VECTORIZADO: Capas de sedimento 3D sin bucles
+        # Crear grids para las 3 dimensiones
+        i_grid, j_grid, k_grid = np.ogrid[:grid_size, :grid_size, :10]
+        
+        # Valor determinista vectorizado para todas las posiciones
+        sediment_layers = 0.1 + (
+            (coord_hash + i_grid + j_grid * 2 + k_grid * 3) % 80
+        ) / 100.0
         
         # Añadir objetos enterrados 100% DETERMINÍSTICAMENTE
         num_buried = coord_hash % 2  # 0 o 1, nunca cambia para mismas coords
@@ -421,13 +418,12 @@ class SubmarineArchaeologyEngine:
         lat, lon = water_context.coordinates
         coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
-        # Campo magnético base DETERMINÍSTICO sin np.random
-        magnetic_field = np.zeros((grid_size, grid_size))
-        for i in range(grid_size):
-            for j in range(grid_size):
-                # Campo magnético base determinista
-                field_variation = ((coord_hash + i * 5 + j * 7) % 200) - 100  # -100 a 100
-                magnetic_field[i, j] = 50000 + field_variation  # 49900-50100 nT
+        # VECTORIZADO: Campo magnético base sin bucles
+        i_indices, j_indices = np.ogrid[:grid_size, :grid_size]
+        
+        # Campo magnético base determinista vectorizado
+        field_variation = ((coord_hash + i_indices * 5 + j_indices * 7) % 200) - 100
+        magnetic_field = 50000 + field_variation
         
         # Añadir anomalías magnéticas (objetos ferrosos) 100% DETERMINÍSTICAMENTE
         num_anomalies = coord_hash % 3  # 0, 1 o 2, nunca cambia para mismas coords
@@ -450,28 +446,20 @@ class SubmarineArchaeologyEngine:
         lat, lon = water_context.coordinates
         coord_hash = int((abs(lat) * 10000 + abs(lon) * 10000) % 1000000)
         
-        # Reflectancia base según tipo de fondo DETERMINÍSTICA sin np.random
-        base_reflectance = np.zeros((grid_size, grid_size))
+        # VECTORIZADO: Reflectancia base según tipo de fondo sin bucles
+        i_indices, j_indices = np.ogrid[:grid_size, :grid_size]
         
-        for i in range(grid_size):
-            for j in range(grid_size):
-                # Reflectancia determinista basada en coordenadas
-                if water_context.sediment_type == "sand_gravel":
-                    # Arena/grava: mayor reflectancia 0.4-0.7
-                    reflectance_range = 0.3
-                    base_value = 0.4
-                elif water_context.sediment_type == "silt_clay":
-                    # Limo/arcilla: menor reflectancia 0.1-0.4
-                    reflectance_range = 0.3
-                    base_value = 0.1
-                else:
-                    # Otro: reflectancia media 0.2-0.6
-                    reflectance_range = 0.4
-                    base_value = 0.2
-                
-                # Valor determinista usando hash de coordenadas
-                variation = ((coord_hash + i * 7 + j * 11) % int(reflectance_range * 100)) / 100.0
-                base_reflectance[i, j] = base_value + variation
+        # Determinar parámetros según tipo de sedimento
+        if water_context.sediment_type == "sand_gravel":
+            base_value, reflectance_range = 0.4, 0.3
+        elif water_context.sediment_type == "silt_clay":
+            base_value, reflectance_range = 0.1, 0.3
+        else:
+            base_value, reflectance_range = 0.2, 0.4
+        
+        # Valor determinista vectorizado
+        variation = ((coord_hash + i_indices * 7 + j_indices * 11) % int(reflectance_range * 100)) / 100.0
+        base_reflectance = base_value + variation
         
         return base_reflectance
     

@@ -268,22 +268,23 @@ class TerrainDataService:
         
         Usado como fallback cuando no hay datos reales disponibles
         """
-        # Generar heightmap sintético
+        # Generar heightmap sintético VECTORIZADO
+        i_indices, j_indices = np.ogrid[:resolution, :resolution]
+        
+        # Ruido Perlin simplificado (multi-octava) - vectorizado
         data = np.zeros((resolution, resolution), dtype=np.float32)
         
-        # Ruido Perlin simplificado (multi-octava)
         for octave in range(4):
             freq = 2 ** octave
             amp = 1.0 / (2 ** octave)
             
-            for i in range(resolution):
-                for j in range(resolution):
-                    x = i / resolution * freq
-                    y = j / resolution * freq
-                    
-                    # Ruido simple (en producción usar librería de ruido)
-                    noise = np.sin(x * 10) * np.cos(y * 10)
-                    data[i, j] += noise * amp * 1000  # Escalar a metros
+            # Coordenadas vectorizadas para esta octava
+            x = i_indices / resolution * freq
+            y = j_indices / resolution * freq
+            
+            # Ruido vectorizado (en producción usar librería de ruido)
+            noise = np.sin(x * 10) * np.cos(y * 10)
+            data += (noise * amp * 1000).astype(np.float32)
         
         # Normalizar a rango realista (0-3000m)
         data = (data - data.min()) / (data.max() - data.min()) * 3000
