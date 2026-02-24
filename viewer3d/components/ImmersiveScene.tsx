@@ -1,52 +1,65 @@
-/**
- * ImmersiveScene - Versión Refactorizada Completa
- * 
- * Arquitectura modular inteligente que mantiene TODAS las features
- * sin perder la claridad organizacional
- */
-
 'use client'
 
-import { useState, useRef, useEffect, useMemo } from 'react'
-import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, Html, useGLTF } from '@react-three/drei'
+/**
+ * ImmersiveScene - REFACTORIZADO
+ * 
+ * Nueva arquitectura: SOLO estado y orquestación
+ * 
+ * Delegación de responsabilidades:
+ * - CoreEngine: Motor mínimo (siempre)
+ * - EnvironmentLayer: Terreno, agua (lazy)
+ * - EffectsLayer: Shaders, bloom (lazy fuerte, condicional por preset gráfico)
+ * - InteractionLayer: Input, raycasting (semi-lazy)
+ * - UISystems: Botones, transiciones (siempre, ligero)
+ * - OptionalSystems: Clima, audio (lazy + condicional)
+ * 
+ * Beneficios:
+ * ✅ Más rápido de cargar (lazy + tree-shaking)
+ * ✅ Código más legible
+ * ✅ Fácil de escalar
+ * ✅ Testing independiente de layers
+ * ✅ Mejor manejo de memoria
+ */
+
+import { useState, Suspense, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import * as THREE from 'three'
 
-// 🗺️ Componentes principales
+// Componentes core (siempre presentes, rápidos)
+import CoordinateInput from './CoordinateInput'
+import LocationInfo from './LocationInfo'
 import Globe3D from './Globe3D'
 import ModelViewer from './ModelViewer'
 import SiteMarkers from './SiteMarkers'
-import CoordinateInput from './CoordinateInput'
-import LocationInfo from './LocationInfo'
-import VolcanicTerrain from './VolcanicTerrain'
-import IceTerrain from './IceTerrain'
-import WeatherControl, { type WeatherState } from './WeatherControl'
 import WalkableAvatar from './WalkableAvatar'
-
-// 🌍 Sistema Solar y Astronómico
+import WeatherControl, { type WeatherState } from './WeatherControl'
 import RealisticSolarSystem from './RealisticSolarSystem'
 import MilkyWayBackground from './MilkyWayBackground'
 import Stars from './Stars'
 
-// 🎮 Performance y Sistemas
-import EngineIntegration from './EngineIntegration'
-import {
-  LightingSystem,
-  WeatherSystem,
-  EnvironmentSystem,
-  PostProcessingSystem
-} from '@/utils/lazy-systems'
+// Layers principales
+import { CoreEngine, UISystems } from './layers'
 
-// 🗺️ Terreno avanzado
-import EnhancedTerrain from './EnhancedTerrain'
-import Tree3DModel, { type TreeType } from './Tree3DModel'
-import Rock3DModel from './Rock3DModel'
+// Layers lazy-loaded
+const EnvironmentLayer = dynamic(() =>
+  import('./layers/EnvironmentLayer').then(m => ({ default: m.default })),
+  { ssr: false }
+)
 
-// Utilidades
-import { detectBiome, getSkyColorForBiome, getFogColorForBiome } from '@/utils/biome-detector'
-import { getAssetPath } from '@/lib/paths'
-import { loggers } from '@/core/Logger'
-import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
+const EffectsLayer = dynamic(() =>
+  import('./layers/EffectsLayer').then(m => ({ default: m.default })),
+  { ssr: false }
+)
+
+const InteractionLayer = dynamic(() =>
+  import('./layers/InteractionLayer').then(m => ({ default: m.default })),
+  { ssr: false }
+)
+
+const OptionalSystems = dynamic(() =>
+  import('./layers/OptionalSystems').then(m => ({ default: m.default })),
+  { ssr: false }
+)
 
 // ==================== TIPOS ====================
 
@@ -57,29 +70,29 @@ interface ImmersiveSceneProps {
   onCameraReady?: (camera: THREE.Camera) => void
   onModeChange?: (mode: ViewMode) => void
   spaceUfoActive?: boolean
+  graphicsPreset?: 'low' | 'medium' | 'high' | 'ultra'
 }
 
 // ==================== COMPONENTE PRINCIPAL ====================
 
-export default function ImmersiveScene({ 
-  onModelLoaded, 
-  onCameraReady, 
+export default function ImmersiveScene({
+  onModelLoaded,
+  onCameraReady,
   onModeChange,
-  spaceUfoActive = false
+  spaceUfoActive = false,
+  graphicsPreset = 'high'
 }: ImmersiveSceneProps) {
   
-  // ==================== ESTADO PRINCIPAL ====================
+  // ==================== ESTADO ====================
   const [mode, setMode] = useState<ViewMode>('globe')
-  const [selectedModel, setSelectedModel] = useState<string>(getAssetPath('/moai.glb'))
-  const [avatarModel, setAvatarModel] = useState<string>(getAssetPath('/avenger_01.glb'))
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(null)
-  const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lon: number } | null>(null)
+  const [selectedSite, setSelectedSite] = useState<any | null>(null)
   const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('avatar')
   const [showLocationInfo, setShowLocationInfo] = useState(false)
-  const [showGeometryField, setShowGeometryField] = useState(true)
   const [isDay, setIsDay] = useState(true)
-  const [weather, setWeather] = useState<WeatherState>({ 
-    snow: false, 
+  const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 })
+  const [weather, setWeather] = useState<WeatherState>({
+    snow: false,
     rainLight: false,
     rainModerate: false,
     rainHeavy: false,
@@ -90,62 +103,25 @@ export default function ImmersiveScene({
     tornado: false,
     clouds: false
   })
-  const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 })
-  const [solarState, setSolarState] = useState({
-    altitude: 0,
-    azimuth: 0,
-    declination: 0
-  })
-  
-  // Terreno
-  const [enhancedTerrainEnabled] = useState(false)
-  const [terrainExaggeration] = useState(1.5)
-  const [terrainLOD] = useState(true)
-  const [terrainLoading, setTerrainLoading] = useState(false)
-
-  // ==================== EFECTOS ====================
-  
-  useEffect(() => {
-    if (onModeChange) {
-      onModeChange(mode)
-    }
-  }, [mode, onModeChange])
+  const [camera, setCamera] = useState<THREE.Camera | null>(null)
+  const [loadedModel, setLoadedModel] = useState<THREE.Object3D | null>(null)
 
   // ==================== HANDLERS ====================
-  
-  const handleSiteClick = async (site: ArchaeologicalSite) => {
-    loggers.world.info(`Sitio seleccionado: ${site.name}`)
-    
-    AvatarEngine.setContext({
-      siteName: site.name,
-      culture: site.culture,
-      period: site.period,
-      location: { lat: site.lat, lon: site.lon }
-    })
-    
+
+  const handleSiteClick = async (site: any) => {
     setSelectedLocation({ lat: site.lat, lon: site.lon })
-    setSelectedModel(site.model)
     setSelectedSite(site)
     setMode('transition')
-    
     await new Promise(resolve => setTimeout(resolve, 2000))
     setMode('model')
-    
-    loggers.world.info('Teletransporte a sitio arqueológico completado')
   }
 
   const handleLocationClick = async (lat: number, lon: number) => {
-    loggers.world.info(`Iniciando teletransporte a: lat=${lat.toFixed(4)}, lon=${lon.toFixed(4)}`)
-    
     setSelectedLocation({ lat, lon })
-    setSelectedModel(getAssetPath('/moai.glb'))
     setSelectedSite(null)
     setMode('transition')
-    
     await new Promise(resolve => setTimeout(resolve, 2000))
     setMode('model')
-    
-    loggers.world.info('Teletransporte completado', { lat, lon })
   }
 
   const handleBackToGlobe = async () => {
@@ -160,244 +136,125 @@ export default function ImmersiveScene({
     setMovementMode(prev => prev === 'orbit' ? 'avatar' : 'orbit')
   }
 
+  // ==================== EFFECTS ====================
+
+  // Notificar cambios de modo
+  if (onModeChange) {
+    onModeChange(mode)
+  }
+
   // ==================== RENDER ====================
-  
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       {/* Input de coordenadas */}
-      <CoordinateInput 
+      <CoordinateInput
         onCoordinateSubmit={handleLocationClick}
         currentLocation={selectedLocation}
       />
 
       {/* Información de ubicación */}
       {mode === 'model' && showLocationInfo && (
-        <LocationInfo 
+        <LocationInfo
           location={selectedLocation}
           site={selectedSite}
         />
       )}
 
-      {/* Transición cinematográfica */}
-      {mode === 'transition' && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 2000,
-          background: 'radial-gradient(circle, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.95) 100%)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          animation: 'fadeIn 0.5s ease-in-out'
-        }}>
-          <div style={{
-            fontSize: '48px',
-            marginBottom: '20px',
-            animation: 'pulse 1.5s infinite'
-          }}>
-            🌍
-          </div>
-          <div style={{
-            color: 'white',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            textShadow: '0 0 20px rgba(102, 126, 234, 0.8)'
-          }}>
-            {selectedSite 
-              ? `Viajando a ${selectedSite.name}...` 
-              : selectedLocation 
-                ? 'Teletransportando...' 
-                : 'Regresando al globo...'}
-          </div>
-          {selectedLocation && (
-            <div style={{
-              color: '#888',
-              fontSize: '14px',
-              marginTop: '10px'
-            }}>
-              📍 Lat: {selectedLocation.lat.toFixed(4)}° | Lon: {selectedLocation.lon.toFixed(4)}°
-            </div>
-          )}
-          {selectedSite && (
-            <div style={{
-              color: '#fbbf24',
-              fontSize: '12px',
-              marginTop: '8px'
-            }}>
-              {selectedSite.culture} • {selectedSite.period}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Canvas 3D con arquitectura de layers */}
+      <CoreEngine
+        cameraPosition={mode === 'globe' ? [0, 0, 15] : [8, 4, 8]}
+        fov={mode === 'globe' ? 50 : 60}
+        shadows={mode === 'model'}
+        onCameraReady={setCamera}
+      >
+        {/* GLOBO: Mostrar sistema solar */}
+        {mode === 'globe' && (
+          <group name="globe-scene">
+            <MilkyWayBackground />
+            <Stars />
+            <RealisticSolarSystem
+              onLocationClick={handleLocationClick}
+              markerPosition={selectedLocation}
+            />
+            <SiteMarkers onSiteClick={handleSiteClick} />
+          </group>
+        )}
 
-      {/* Botones de control */}
-      {mode === 'model' && (
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          left: '20px',
-          zIndex: 1001,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px'
-        }}>
-          <button
-            onClick={handleBackToGlobe}
-            style={{
-              padding: '12px 24px',
-              background: 'rgba(102, 126, 234, 0.9)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(102, 126, 234, 1)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(102, 126, 234, 0.9)'}
-          >
-            🌍 Volver al Globo
-          </button>
+        {/* MODELO: Cargar layers modulares */}
+        {mode === 'model' && selectedLocation && (
+          <group name="model-scene">
+            {/* Environment - Terreno, agua, vegetación (LAZY) */}
+            <Suspense fallback={null}>
+              <EnvironmentLayer
+                location={selectedLocation}
+                isDay={isDay}
+                showTerrain={true}
+                showVegetation={true}
+                weatherState={weather}
+                solarDirection={solarDirection}
+              />
+            </Suspense>
 
-          <button
-            onClick={toggleMovementMode}
-            style={{
-              padding: '12px 24px',
-              background: movementMode === 'avatar' 
-                ? 'rgba(139, 92, 246, 0.9)'
-                : 'rgba(34, 197, 94, 0.9)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = movementMode === 'avatar'
-                ? 'rgba(139, 92, 246, 1)'
-                : 'rgba(34, 197, 94, 1)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = movementMode === 'avatar'
-                ? 'rgba(139, 92, 246, 0.9)'
-                : 'rgba(34, 197, 94, 0.9)'
-            }}
-          >
-            {movementMode === 'avatar' ? 'Modo: Avenger' : '🔄 Modo: Órbita'}
-          </button>
+            {/* Effects - Post-processing (LAZY FUERTE: condicional para low preset) */}
+            <Suspense fallback={null}>
+              <EffectsLayer
+                enabled={graphicsPreset !== 'low'}
+                graphicsPreset={graphicsPreset}
+                bloomIntensity={0.3}
+                vignetteIntensity={0.4}
+              />
+            </Suspense>
 
-          <button
-            onClick={() => setShowLocationInfo(!showLocationInfo)}
-            style={{
-              padding: '12px 24px',
-              background: showLocationInfo ? 'rgba(102, 126, 234, 0.9)' : 'rgba(75, 85, 99, 0.7)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = showLocationInfo 
-                ? 'rgba(102, 126, 234, 1)' 
-                : 'rgba(75, 85, 99, 0.9)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = showLocationInfo 
-                ? 'rgba(102, 126, 234, 0.9)' 
-                : 'rgba(75, 85, 99, 0.7)'
-            }}
-          >
-            📍 {showLocationInfo ? 'Ocultar Info' : 'Mostrar Info'}
-          </button>
-        </div>
-      )}
+            {/* Interaction - Raycasting, input (SEMI-LAZY) */}
+            <Suspense fallback={null}>
+              <InteractionLayer enabled={true} />
+            </Suspense>
 
-      {/* Instrucciones de movimiento */}
-      {mode === 'model' && movementMode === 'avatar' && (
-        <div style={{
-          position: 'absolute',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1001,
-          background: 'rgba(0, 0, 0, 0.8)',
-          backdropFilter: 'blur(10px)',
-          padding: '12px 24px',
-          borderRadius: '8px',
-          border: '1px solid rgba(255,255,255,0.2)',
-          color: 'white',
-          fontSize: '12px',
-          display: 'flex',
-          gap: '20px'
-        }}>
-          <span>🚶 W/S - Adelante/Atrás</span>
-          <span>A/D - Izquierda/Derecha</span>
-          <span>Q/E - Rotar</span>
-          <span>🚀 SHIFT + Mouse↕ - Control de Dirección</span>
-        </div>
-      )}
+            {/* Avatar o Modelo */}
+            {movementMode === 'avatar' ? (
+              <WalkableAvatar
+                modelPath={selectedSite?.model || '/avenger_01.glb'}
+                terrainRef={null}
+                solarDirection={solarDirection}
+                isDay={isDay}
+                showCosmicEffects={true}
+              />
+            ) : (
+              <ModelViewer modelPath={selectedSite?.model || '/moai.glb'} />
+            )}
 
-      {/* Canvas 3D */}
-      {mode === 'globe' ? (
-        <GlobeScene 
-          onLocationClick={handleLocationClick}
-          onSiteClick={handleSiteClick}
-          markerPosition={selectedLocation}
-          spaceUfoActive={spaceUfoActive}
-        />
-      ) : mode === 'model' ? (
-        <ModelScene 
-          modelPath={selectedModel}
-          avatarModel={avatarModel}
-          onModelLoaded={onModelLoaded}
-          onCameraReady={onCameraReady}
-          movementMode={movementMode}
-          location={selectedLocation}
-          site={selectedSite}
-          showGeometryField={showGeometryField}
-          isDay={isDay}
-          onDayNightChange={setIsDay}
-          solarDirection={solarDirection}
-          solarState={solarState}
-          onSolarUpdate={(direction, altitude, azimuth, declination) => {
-            setSolarDirection(direction)
-            setSolarState({ altitude, azimuth, declination })
-          }}
-          weather={weather}
-          enhancedTerrainEnabled={enhancedTerrainEnabled}
-          terrainExaggeration={terrainExaggeration}
-          terrainLOD={terrainLOD}
-          onTerrainLoadingChange={setTerrainLoading}
-        />
-      ) : null}
+            {/* Optional Systems - Clima, audio (LAZY + CONDICIONAL) */}
+            <Suspense fallback={null}>
+              <OptionalSystems
+                enableWeather={Object.values(weather).some(v => v === true)}
+                enableClimate={true}
+                weatherState={weather}
+              />
+            </Suspense>
+          </group>
+        )}
+      </CoreEngine>
+
+      {/* UI Systems - Botones, transiciones (SIEMPRE) */}
+      <UISystems
+        mode={mode}
+        location={selectedLocation}
+        selectedSite={selectedSite}
+        movementMode={movementMode}
+        showLocationInfo={showLocationInfo}
+        onReturnToGlobe={handleBackToGlobe}
+        onToggleMovementMode={toggleMovementMode}
+        onToggleLocationInfo={() => setShowLocationInfo(!showLocationInfo)}
+        onWeatherChange={setWeather}
+      />
 
       {/* Control de clima */}
       {mode === 'model' && (
         <WeatherControl onWeatherChange={setWeather} />
       )}
 
+      {/* Estilos globales */}
       <style jsx>{`
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -407,704 +264,7 @@ export default function ImmersiveScene({
           0%, 100% { transform: scale(1); opacity: 1; }
           50% { transform: scale(1.2); opacity: 0.7; }
         }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
       `}</style>
     </div>
-  )
-}
-
-// ==================== ESCENA DEL GLOBO ====================
-
-function GlobeScene({ 
-  onLocationClick,
-  onSiteClick,
-  markerPosition,
-  spaceUfoActive = false
-}: { 
-  onLocationClick: (lat: number, lon: number) => void
-  onSiteClick: (site: ArchaeologicalSite) => void
-  markerPosition?: { lat: number, lon: number } | null
-  spaceUfoActive?: boolean
-}) {
-  return (
-    <Canvas
-      camera={{ position: [0, 0, 15], fov: 50 }}
-      style={{ 
-        background: '#000',
-        cursor: spaceUfoActive ? 'none' : 'default'
-      }}
-    >
-      <EngineIntegration />
-      
-      <PerspectiveCamera makeDefault position={[0, 0, 15]} fov={50} />
-      <OrbitControls
-        enableDamping
-        dampingFactor={0.05}
-        minDistance={8}
-        maxDistance={450}
-        autoRotate={false}
-      />
-      
-      <NarrativeZoomContent 
-        onLocationClick={onLocationClick}
-        markerPosition={markerPosition}
-      />
-      
-      {spaceUfoActive && <SpaceUfo />}
-    </Canvas>
-  )
-}
-
-// ==================== CONTENIDO DE ZOOM NARRATIVO ====================
-
-function NarrativeZoomContent({ 
-  onLocationClick,
-  markerPosition
-}: {
-  onLocationClick: (lat: number, lon: number) => void
-  markerPosition?: { lat: number, lon: number } | null
-}) {
-  return (
-    <>
-      <MilkyWayBackground />
-      <Stars />
-      <RealisticSolarSystem 
-        onLocationClick={onLocationClick}
-        markerPosition={markerPosition}
-      />
-    </>
-  )
-}
-
-// ==================== ESCENA DEL MODELO ====================
-
-function ModelScene({ 
-  modelPath, 
-  avatarModel,
-  onModelLoaded, 
-  onCameraReady,
-  movementMode,
-  location,
-  site,
-  showGeometryField,
-  isDay,
-  onDayNightChange,
-  solarDirection,
-  solarState,
-  onSolarUpdate,
-  weather,
-  enhancedTerrainEnabled,
-  terrainExaggeration,
-  terrainLOD,
-  onTerrainLoadingChange
-}: { 
-  modelPath: string
-  avatarModel: string
-  onModelLoaded?: (model: THREE.Object3D) => void
-  onCameraReady?: (camera: THREE.Camera) => void
-  movementMode: 'orbit' | 'avatar'
-  location?: { lat: number, lon: number } | null
-  site?: ArchaeologicalSite | null
-  showGeometryField: boolean
-  isDay: boolean
-  onDayNightChange: (isDay: boolean) => void
-  solarDirection: { x: number, y: number, z: number }
-  solarState: { altitude: number, azimuth: number, declination: number }
-  onSolarUpdate: (direction: { x: number, y: number, z: number }, altitude: number, azimuth: number, declination: number) => void
-  weather: WeatherState
-  enhancedTerrainEnabled?: boolean
-  terrainExaggeration?: number
-  terrainLOD?: boolean
-  onTerrainLoadingChange?: (loading: boolean) => void
-}) {
-  const terrainRef = useRef<THREE.Mesh>(null)
-  const modelRef = useRef<THREE.Group>(null)
-  
-  const biome = useMemo(() => {
-    if (!location) return { type: 'default' as const, name: 'Genérico', description: '', temperature: 20, humidity: 50 }
-    return detectBiome(location.lat, location.lon)
-  }, [location])
-  
-  const isIceBiome = biome.type === 'ice'
-  const skyColor = useMemo(() => getSkyColorForBiome(biome.type, isDay), [biome.type, isDay])
-  const fogColor = useMemo(() => getFogColorForBiome(biome.type), [biome.type])
-  
-  useEffect(() => {
-    if (location) {
-      loggers.world.info(`Bioma detectado: ${biome.name} (${biome.type})`, {
-        temperatura: biome.temperature,
-        humedad: biome.humidity
-      })
-    }
-  }, [biome, location])
-  
-  useEffect(() => {
-    if (modelRef.current) {
-      // Actualizar obstáculos si es necesario
-    }
-  }, [modelRef.current])
-  
-  return (
-    <Canvas
-      shadows
-      camera={{ position: [8, 4, 8], fov: 60 }}
-      gl={{ 
-        antialias: true,
-        alpha: false,
-        powerPreference: 'high-performance',
-        toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1.2
-      }}
-    >
-      <EngineIntegration />
-      
-      <PerspectiveCamera makeDefault position={[8, 4, 8]} fov={60} />
-      
-      {movementMode === 'orbit' && (
-        <OrbitControls
-          enableDamping
-          dampingFactor={0.08}
-          minDistance={3}
-          maxDistance={30}
-          minPolarAngle={Math.PI / 8}
-          maxPolarAngle={Math.PI / 2.2}
-          enablePan={true}
-          panSpeed={0.8}
-          rotateSpeed={0.6}
-          zoomSpeed={0.8}
-          target={[0, 1, 0]}
-        />
-      )}
-
-      <LightingSystem
-        biomeType={biome.type}
-        solarDirection={solarDirection}
-        enableShadows={true}
-        sunIntensity={2.5}
-        hemisphereIntensity={1.2}
-      />
-
-      <EnvironmentSystem
-        isDay={isDay}
-        skyColor={skyColor}
-        fogColor={fogColor}
-        stormDarkness={
-          weather.storm || weather.tornado ? 0.7 : 
-          weather.rainHeavy || weather.lightning ? 0.5 : 
-          0
-        }
-        fogDensity={isIceBiome ? 0.012 : 0.008}
-        showWater={!isIceBiome}
-        waterPosition={[0, -0.5, 0]}
-        waterSize={150}
-        waterColor="#1e3a5f"
-      />
-
-      {isIceBiome ? (
-        <IceTerrain location={location} ref={terrainRef} />
-      ) : (
-        <VolcanicTerrain location={location} ref={terrainRef} />
-      )}
-      
-      {enhancedTerrainEnabled && (
-        <EnhancedTerrain
-          location={location}
-          enabled={enhancedTerrainEnabled}
-          radius={0.05}
-          resolution={256}
-          exaggeration={terrainExaggeration || 1.5}
-          enableLOD={terrainLOD !== false}
-          enableHydrography={false}
-          onLoadingChange={onTerrainLoadingChange}
-        />
-      )}
-
-      <gridHelper 
-        args={[200, 100, '#3a3a3a', '#2a2a2a']} 
-        position={[0, 0.01, 0]}
-        material-opacity={0}
-        material-transparent={true}
-        visible={false}
-      />
-
-      <WeatherSystem weather={weather} isIceBiome={isIceBiome} />
-
-      {!isIceBiome && biome.type !== 'ocean' && (
-        <EnvironmentElements location={location} />
-      )}
-
-      {movementMode === 'avatar' ? (
-        <WalkableAvatar 
-          key={avatarModel}
-          modelPath={avatarModel}
-          terrainRef={terrainRef}
-          solarDirection={solarDirection}
-          isDay={isDay}
-          showCosmicEffects={true}
-        />
-      ) : (
-        <ModelViewer modelPath={avatarModel} ref={modelRef} />
-      )}
-      
-      {site && (
-        <SiteInfo site={site} />
-      )}
-      
-      <CameraCapture onReady={onCameraReady} />
-      <ModelCapture onLoaded={onModelLoaded} />
-      
-      {movementMode === 'orbit' && <CinematicZoom />}
-
-      <PostProcessingSystem
-        enableBloom={true}
-        enableVignette={true}
-        bloomIntensity={0.3}
-        vignetteIntensity={0.4}
-      />
-    </Canvas>
-  )
-}
-
-// ==================== COMPONENTES AUXILIARES ====================
-
-function CinematicZoom() {
-  const { camera } = useThree()
-  const startPos = useRef(new THREE.Vector3(15, 10, 15))
-  const targetPos = useRef(new THREE.Vector3(5, 3, 5))
-  const progress = useRef(0)
-  const [isActive, setIsActive] = useState(true)
-
-  useFrame((state, delta) => {
-    if (progress.current < 1 && isActive) {
-      progress.current += delta * 0.5
-      const t = Math.min(progress.current, 1)
-      const eased = 1 - Math.pow(1 - t, 3)
-      
-      camera.position.lerpVectors(startPos.current, targetPos.current, eased)
-      camera.lookAt(0, 0, 0)
-    }
-  })
-
-  return null
-}
-
-function EnvironmentElements({ location }: { location?: { lat: number, lon: number } | null }) {
-  const seed = useMemo(() => {
-    if (!location) return 0
-    return Math.floor(location.lat * 1000 + location.lon * 1000)
-  }, [location?.lat, location?.lon])
-  
-  const biome = useMemo(() => {
-    if (!location) return 'temperate'
-    const absLat = Math.abs(location.lat)
-    if (absLat < 10) return 'tropical'
-    if (absLat > 20 && absLat < 35) return 'desert'
-    if (absLat > 60) return 'arctic'
-    return 'temperate'
-  }, [location])
-  
-  const elements = useMemo(() => {
-    const random = (index: number) => {
-      const x = Math.sin(seed + index * 12.9898) * 43758.5453
-      return x - Math.floor(x)
-    }
-    
-    const counts: Record<string, Record<string, number>> = {
-      tropical: { trees: 15, bushes: 20, rocks: 10, palms: 8, flowers: 25 },
-      temperate: { trees: 12, bushes: 15, rocks: 15, logs: 5, flowers: 15 },
-      desert: { trees: 3, bushes: 5, rocks: 25, cacti: 12, crystals: 8 },
-      arctic: { trees: 5, bushes: 8, rocks: 30, crystals: 5, flowers: 5 }
-    }
-    
-    const count = counts[biome] || counts.temperate
-    const items: any[] = []
-    let index = 0
-    
-    // Generar árboles
-    for (let i = 0; i < count.trees; i++) {
-      const angle = random(index++) * Math.PI * 2
-      const radius = 15 + random(index++) * 30
-      const x = Math.cos(angle) * radius + (random(index++) - 0.5) * 10
-      const z = Math.sin(angle) * radius + (random(index++) - 0.5) * 10
-      const heightInMeters = 2 + random(index++) * 8
-      
-      const treeTypeRandom = random(index++)
-      let treeType: 'default' | 'tree1' | 'tree2' | 'tree3'
-      if (treeTypeRandom < 0.25) treeType = 'default'
-      else if (treeTypeRandom < 0.5) treeType = 'tree1'
-      else if (treeTypeRandom < 0.75) treeType = 'tree2'
-      else treeType = 'tree3'
-      
-      items.push({ 
-        type: 'tree', 
-        x, 
-        z, 
-        heightInMeters, 
-        rotation: random(index++) * Math.PI * 2, 
-        treeType 
-      })
-    }
-    
-    for (let i = 0; i < count.bushes; i++) {
-      const angle = random(index++) * Math.PI * 2
-      const radius = 10 + random(index++) * 35
-      const x = Math.cos(angle) * radius + (random(index++) - 0.5) * 8
-      const z = Math.sin(angle) * radius + (random(index++) - 0.5) * 8
-      const scale = 0.3 + random(index++) * 0.5
-      items.push({ type: 'bush', x, z, scale })
-    }
-    
-    for (let i = 0; i < count.rocks; i++) {
-      const angle = random(index++) * Math.PI * 2
-      const radius = 12 + random(index++) * 35
-      const x = Math.cos(angle) * radius + (random(index++) - 0.5) * 10
-      const z = Math.sin(angle) * radius + (random(index++) - 0.5) * 10
-      const scale = 0.2 + random(index++) * 0.6
-      items.push({ type: 'rock', x, z, scale, rotation: random(index++) * Math.PI * 2 })
-    }
-    
-    if (biome === 'tropical' && count.palms) {
-      for (let i = 0; i < count.palms; i++) {
-        const angle = random(index++) * Math.PI * 2
-        const radius = 18 + random(index++) * 25
-        const x = Math.cos(angle) * radius
-        const z = Math.sin(angle) * radius
-        const height = 2.5 + random(index++) * 1.5
-        items.push({ type: 'palm', x, z, height })
-      }
-    }
-    
-    if (biome === 'desert' && count.cacti) {
-      for (let i = 0; i < count.cacti; i++) {
-        const angle = random(index++) * Math.PI * 2
-        const radius = 15 + random(index++) * 30
-        const x = Math.cos(angle) * radius
-        const z = Math.sin(angle) * radius
-        const height = 1.0 + random(index++) * 2.0
-        items.push({ type: 'cactus', x, z, height })
-      }
-    }
-    
-    if (biome === 'temperate' && count.logs) {
-      for (let i = 0; i < count.logs; i++) {
-        const angle = random(index++) * Math.PI * 2
-        const radius = 20 + random(index++) * 25
-        const x = Math.cos(angle) * radius
-        const z = Math.sin(angle) * radius
-        items.push({ type: 'log', x, z, rotation: random(index++) * Math.PI * 2 })
-      }
-    }
-    
-    if (count.flowers) {
-      for (let i = 0; i < count.flowers; i++) {
-        const angle = random(index++) * Math.PI * 2
-        const radius = 8 + random(index++) * 35
-        const x = Math.cos(angle) * radius + (random(index++) - 0.5) * 5
-        const z = Math.sin(angle) * radius + (random(index++) - 0.5) * 5
-        const scale = 0.1 + random(index++) * 0.15
-        const colorIndex = Math.floor(random(index++) * 4)
-        items.push({ type: 'flower', x, z, scale, colorIndex })
-      }
-    }
-    
-    if (count.crystals) {
-      for (let i = 0; i < count.crystals; i++) {
-        const angle = random(index++) * Math.PI * 2
-        const radius = 20 + random(index++) * 25
-        const x = Math.cos(angle) * radius
-        const z = Math.sin(angle) * radius
-        const scale = 0.3 + random(index++) * 0.5
-        items.push({ type: 'crystal', x, z, scale, rotation: random(index++) * Math.PI })
-      }
-    }
-    
-    return items
-  }, [seed, biome])
-
-  return (
-    <group>
-      {elements.map((item, i) => {
-        switch (item.type) {
-          case 'tree':
-            return (
-              <Tree3DModel 
-                key={`tree-${i}`}
-                position={[item.x, 0, item.z]}
-                scale={item.heightInMeters * 0.05}
-                rotation={item.rotation}
-                treeType={item.treeType}
-              />
-            )
-          case 'palm':
-            return (
-              <group key={`palm-${i}`} position={[item.x, 0, item.z]}>
-                <mesh position={[0, item.height * 1.5, 0]} castShadow receiveShadow>
-                  <cylinderGeometry args={[0.12, 0.15, item.height * 3, 8]} />
-                  <meshStandardMaterial color="#8b6f47" roughness={0.9} />
-                </mesh>
-                {[0, 1, 2, 3].map(dir => (
-                  <mesh 
-                    key={dir}
-                    position={[
-                      Math.cos(dir * Math.PI / 2) * 0.5,
-                      item.height * 3,
-                      Math.sin(dir * Math.PI / 2) * 0.5
-                    ]}
-                    rotation={[Math.PI / 6, dir * Math.PI / 2, 0]}
-                    castShadow
-                  >
-                    <boxGeometry args={[0.3, 2, 0.1]} />
-                    <meshStandardMaterial color="#2d5016" roughness={0.7} />
-                  </mesh>
-                ))}
-              </group>
-            )
-          case 'cactus':
-            return (
-              <group key={`cactus-${i}`} position={[item.x, 0, item.z]}>
-                <mesh position={[0, item.height, 0]} castShadow receiveShadow>
-                  <cylinderGeometry args={[0.2, 0.25, item.height * 2, 8]} />
-                  <meshStandardMaterial color="#3a5a2a" roughness={0.8} />
-                </mesh>
-                <mesh position={[-0.4, item.height * 0.8, 0]} rotation={[0, 0, Math.PI / 4]} castShadow>
-                  <cylinderGeometry args={[0.15, 0.18, item.height * 0.8, 6]} />
-                  <meshStandardMaterial color="#3a5a2a" roughness={0.8} />
-                </mesh>
-              </group>
-            )
-          case 'bush':
-            return (
-              <mesh 
-                key={`bush-${i}`}
-                position={[item.x, item.scale * 0.4, item.z]}
-                castShadow
-                receiveShadow
-              >
-                <sphereGeometry args={[item.scale, 8, 8]} />
-                <meshStandardMaterial color="#2d5016" roughness={0.9} />
-              </mesh>
-            )
-          case 'rock':
-            return (
-              <Rock3DModel 
-                key={`rock-${i}`}
-                position={[item.x, 0, item.z]}
-                scale={item.scale * 0.5}
-                rotation={item.rotation}
-              />
-            )
-          case 'log':
-            return (
-              <mesh 
-                key={`log-${i}`}
-                position={[item.x, 0.2, item.z]}
-                rotation={[Math.PI / 2, 0, item.rotation]}
-                castShadow
-                receiveShadow
-              >
-                <cylinderGeometry args={[0.3, 0.35, 2, 8]} />
-                <meshStandardMaterial color="#4a3520" roughness={0.95} />
-              </mesh>
-            )
-          case 'flower':
-            const flowerColors = ['#ff6b9d', '#ffd93d', '#a8e6cf', '#c7b3ff']
-            return (
-              <group key={`flower-${i}`} position={[item.x, 0, item.z]}>
-                <mesh position={[0, item.scale * 2, 0]}>
-                  <cylinderGeometry args={[0.02, 0.02, item.scale * 4, 4]} />
-                  <meshStandardMaterial color="#2d5016" />
-                </mesh>
-                <mesh position={[0, item.scale * 4, 0]} castShadow>
-                  <sphereGeometry args={[item.scale, 6, 6]} />
-                  <meshStandardMaterial 
-                    color={flowerColors[item.colorIndex]} 
-                    emissive={flowerColors[item.colorIndex]}
-                    emissiveIntensity={0.2}
-                  />
-                </mesh>
-              </group>
-            )
-          case 'crystal':
-            return (
-              <mesh 
-                key={`crystal-${i}`}
-                position={[item.x, item.scale * 0.8, item.z]}
-                rotation={[0, item.rotation, 0]}
-                castShadow
-                receiveShadow
-              >
-                <coneGeometry args={[item.scale * 0.5, item.scale * 1.5, 6]} />
-                <meshStandardMaterial 
-                  color="#88ccff" 
-                  metalness={0.3}
-                  roughness={0.2}
-                  transparent={true}
-                  opacity={0.8}
-                  emissive="#88ccff"
-                  emissiveIntensity={0.3}
-                />
-              </mesh>
-            )
-          default:
-            return null
-        }
-      })}
-    </group>
-  )
-}
-
-function CameraCapture({ onReady }: { onReady?: (camera: THREE.Camera) => void }) {
-  const { camera } = useThree()
-  
-  useEffect(() => {
-    if (camera && onReady) {
-      onReady(camera)
-    }
-  }, [camera, onReady])
-  
-  return null
-}
-
-function ModelCapture({ onLoaded }: { onLoaded?: (model: THREE.Object3D) => void }) {
-  const { scene } = useThree()
-  
-  useEffect(() => {
-    const model = scene.children.find(child => 
-      child.type === 'Group' && child.children.length > 0
-    )
-    
-    if (model && onLoaded) {
-      onLoaded(model)
-    }
-  }, [scene, onLoaded])
-  
-  return null
-}
-
-function SiteInfo({ site }: { site: ArchaeologicalSite }) {
-  return (
-    <Html
-      position={[0, 2.5, 0]}
-      center
-      distanceFactor={8}
-      style={{
-        background: 'rgba(0, 0, 0, 0.85)',
-        padding: '12px 20px',
-        borderRadius: '12px',
-        border: '2px solid rgba(251, 191, 36, 0.5)',
-        color: 'white',
-        fontSize: '13px',
-        fontFamily: 'system-ui',
-        pointerEvents: 'none',
-        minWidth: '250px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
-      }}
-    >
-      <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#fbbf24', fontSize: '16px' }}>
-        🏛️ {site.name}
-      </div>
-      <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>
-        {site.culture} • {site.period}
-      </div>
-      <div style={{ fontSize: '11px', color: '#ccc', lineHeight: '1.4' }}>
-        {site.description}
-      </div>
-    </Html>
-  )
-}
-
-function SpaceUfo() {
-  const ufoRef = useRef<THREE.Group>(null)
-  const sunLightRef = useRef<THREE.DirectionalLight>(null)
-  const { camera, size, scene: threeScene } = useThree()
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  
-  const { scene } = useGLTF(getAssetPath('/avenger_01.glb'))
-  
-  useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      setMousePosition({
-        x: (event.clientX / size.width) * 2 - 1,
-        y: -(event.clientY / size.height) * 2 + 1
-      })
-    }
-    
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [size])
-  
-  useFrame(() => {
-    if (!ufoRef.current) return
-    
-    const raycaster = new THREE.Raycaster()
-    raycaster.setFromCamera(new THREE.Vector2(mousePosition.x, mousePosition.y), camera)
-    
-    const distance = 10
-    const targetPosition = raycaster.ray.origin.clone().add(
-      raycaster.ray.direction.multiplyScalar(distance)
-    )
-    
-    ufoRef.current.position.lerp(targetPosition, 0.1)
-    
-    if (raycaster.ray.direction.length() > 0) {
-      const lookAtPos = ufoRef.current.position.clone().add(raycaster.ray.direction)
-      ufoRef.current.lookAt(lookAtPos)
-    }
-    
-    let minDistance = Infinity
-    const ufoPosition = ufoRef.current.position
-    
-    threeScene.traverse((object) => {
-      if (object instanceof THREE.Mesh && object.geometry instanceof THREE.SphereGeometry) {
-        const dist = ufoPosition.distanceTo(object.getWorldPosition(new THREE.Vector3()))
-        if (dist < minDistance) {
-          minDistance = dist
-        }
-      }
-    })
-    
-    const maxDistance = 50
-    const minDistanceThreshold = 5
-    const normalScale = 1.14
-    const minScale = 0.0285
-    
-    let targetScale = normalScale
-    if (minDistance < maxDistance) {
-      const t = Math.max(0, Math.min(1, (maxDistance - minDistance) / (maxDistance - minDistanceThreshold)))
-      targetScale = normalScale - (t * (normalScale - minScale))
-    }
-    
-    const currentScale = ufoRef.current.scale.x
-    const newScale = currentScale + (targetScale - currentScale) * 0.05
-    ufoRef.current.scale.setScalar(newScale)
-    
-    if (sunLightRef.current) {
-      const sunPosition = new THREE.Vector3(0, 0, 0)
-      const ufoPos = ufoRef.current.position.clone()
-      const direction = ufoPos.sub(sunPosition).normalize()
-      const lightDistance = 50
-      sunLightRef.current.position.copy(direction.multiplyScalar(-lightDistance))
-    }
-  })
-  
-  return (
-    <group ref={ufoRef} position={[0, 0, 10]}>
-      <primitive object={scene} scale={1.37} />
-      
-      <directionalLight 
-        ref={sunLightRef}
-        intensity={2.5} 
-        color="#fff5e6"
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-      />
-      
-      <ambientLight intensity={0.2} />
-      <pointLight position={[10, 10, 10]} intensity={0.3} color="#ffffff" />
-    </group>
   )
 }
