@@ -248,6 +248,22 @@ export const ARCHAEOLOGICAL_SITES: ArchaeologicalSite[] = [
     discovered: 1653
   },
 
+  // Bolivia
+  {
+    id: 'puma-punku',
+    name: 'Puma Punku - Tiwanaku',
+    description: 'Complejo megalítico con bloques de andesita y diorita de precisión extraordinaria. Parte del sitio de Tiwanaku, Patrimonio de la Humanidad.',
+    coordinates: {
+      latitude: -16.56164569638123,
+      longitude: -68.67952141492464,
+      altitude: 3840
+    },
+    modelPath: '/puma_punku_block.glb',
+    culture: 'Tiwanaku',
+    period: 'Período Tiwanaku',
+    discovered: 500
+  },
+
   // Océano Pacífico - Zona de prueba de agua
   {
     id: 'pacific-ocean-test',
@@ -267,7 +283,7 @@ export const ARCHAEOLOGICAL_SITES: ArchaeologicalSite[] = [
 // Sitios por región
 export const SITES_BY_REGION = {
   africa: ['giza-sphinx', 'giza-pyramid', 'karnak'],
-  americas: ['rapa-nui-ahu-tongariki', 'rapa-nui-rano-raraku', 'machu-picchu', 'nazca-lines', 'sacsayhuaman', 'chichen-itza', 'teotihuacan'],
+  americas: ['rapa-nui-ahu-tongariki', 'rapa-nui-rano-raraku', 'machu-picchu', 'nazca-lines', 'sacsayhuaman', 'chichen-itza', 'teotihuacan', 'puma-punku'],
   europe: ['stonehenge', 'parthenon', 'colosseum'],
   asia: ['petra', 'angkor-wat', 'great-wall', 'taj-mahal']
 }

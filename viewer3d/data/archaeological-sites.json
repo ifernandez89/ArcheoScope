@@ -99,6 +99,16 @@
       "description": "Ciudad prehispánica en México",
       "period": "100-650 d.C.",
       "culture": "Teotihuacana"
+    },
+    {
+      "id": "puma-punku",
+      "name": "Puma Punku - Tiwanaku",
+      "lat": -16.56164569638123,
+      "lon": -68.67952141492464,
+      "model": "/puma_punku_block.glb",
+      "description": "Complejo megalítico de Tiwanaku con bloques de andesita y diorita de precisión extraordinaria, datados c. 500-900 d.C.",
+      "period": "500-900 d.C.",
+      "culture": "Tiwanaku"
     }
   ]
 }

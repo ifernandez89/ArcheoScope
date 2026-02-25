@@ -50,6 +50,7 @@ import TerrainControl from './TerrainControl'
 // ðŸŒ³ MODELOS 3D DE VEGETACIÃ“N Y ROCAS
 import Tree3DModel, { type TreeType } from './Tree3DModel'
 import Rock3DModel from './Rock3DModel'
+import PumaPunkuBlock from './PumaPunkuBlock'
 
 // ðŸŽ® SISTEMAS DE PERFORMANCE
 import EngineIntegration from './EngineIntegration'
@@ -882,6 +883,15 @@ function ModelScene({
       {/* Info del sitio */}
       {site && (
         <SiteInfo site={site} />
+      )}
+
+      {/* 🗿 Bloque de Puma Punku - solo en Tiwanaku */}
+      {site?.id === 'puma-punku' && (
+        <PumaPunkuBlock
+          position={[0, 0, 0]}
+          scale={2}
+          rotation={[0, Math.PI / 4, 0]}
+        />
       )}
       
       {/* Capturar referencias */}
