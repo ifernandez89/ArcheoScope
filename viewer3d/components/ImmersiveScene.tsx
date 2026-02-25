@@ -51,6 +51,7 @@ import TerrainControl from './TerrainControl'
 import Tree3DModel, { type TreeType } from './Tree3DModel'
 import Rock3DModel from './Rock3DModel'
 import PumaPunkuBlock from './PumaPunkuBlock'
+import PumaPunkuStructure from './PumaPunkuStructure'
 import SelectableObject from './SelectableObject'
 import TerrainClickReceiver from './TerrainClickReceiver'
 import { ObjectSelectionProvider } from './ObjectSelectionContext'
@@ -403,6 +404,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '8px',
                   transition: 'all 0.2s',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
@@ -411,7 +413,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 1)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 0.9)'}
               >
-                🛸 UFO {currentUfo}
+                ðŸ
               </button>
 
               {/* Dropdown de UFOs */}
@@ -459,7 +461,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                         }
                       }}
                     >
-                      🛸 UFO {ufoNum}
+                      ðŸ
                     </button>
                   ))}
                 </div>
@@ -889,13 +891,13 @@ function ModelScene({
         <SiteInfo site={site} />
       )}
 
-      {/* 🗿 Bloque de Puma Punku - por sitio o por coordenadas */}
+      {/* 🗿 Escena de Puma Punku - estructura + bloques dispersos */}
       {(site?.id === 'puma-punku' || (
         location &&
         Math.abs(location.lat - (-16.5616)) < 0.05 &&
         Math.abs(location.lon - (-68.6795)) < 0.05
       )) && (
-        <MovablePumaPunkuBlock />
+        <PumaPunkuScene />
       )}
       
       {/* Capturar referencias */}
@@ -945,6 +947,50 @@ function CinematicZoom() {
 }
 
 // Elementos decorativos del entorno - DINÃMICOS segÃºn ubicaciÃ³n
+// Escena completa de Puma Punku
+function PumaPunkuScene() {
+  const extraBlocks: Array<{ pos: [number, number, number]; rot: number; id: string }> = [
+    { id: 'pp-b1', pos: [-12, 0,   8], rot: 0.3 },
+    { id: 'pp-b2', pos: [ 15, 0,  -6], rot: 1.1 },
+    { id: 'pp-b3', pos: [ -8, 0, -18], rot: 2.0 },
+    { id: 'pp-b4', pos: [ 20, 0,  14], rot: 0.7 },
+    { id: 'pp-b5', pos: [-20, 0, -10], rot: 1.5 },
+    { id: 'pp-b6', pos: [  6, 0,  22], rot: 0.9 },
+    { id: 'pp-b7', pos: [-16, 0,  18], rot: 2.4 },
+    { id: 'pp-b8', pos: [ 10, 0, -22], rot: 0.2 },
+  ]
+  return (
+    <>
+      <MovablePumaPunkuStructure />
+      <MovablePumaPunkuBlock />
+      {extraBlocks.map((b) => (
+        <MovableExtraBlock key={b.id} id={b.id} position={b.pos} rotation={b.rot} />
+      ))}
+    </>
+  )
+}
+
+// Estructura principal movible
+function MovablePumaPunkuStructure() {
+  const [pos, setPos] = useState<[number, number, number]>([8, 0, -8])
+  return (
+    <SelectableObject id="puma-punku-structure" position={pos} onMove={setPos}>
+      <PumaPunkuStructure position={[0, 0, 0]} rotation={[0, Math.PI / 6, 0]} />
+    </SelectableObject>
+  )
+}
+
+// Bloque extra movible
+function MovableExtraBlock({ id, position, rotation }: { id: string; position: [number, number, number]; rotation: number }) {
+  const [pos, setPos] = useState<[number, number, number]>(position)
+  return (
+    <SelectableObject id={id} position={pos} onMove={setPos}>
+      <PumaPunkuBlock position={[0, 0.3, 0]} scale={0.075} rotation={[0, rotation, 0]} />
+    </SelectableObject>
+  )
+}
+
+
 // Bloque de Puma Punku movible con seleccion
 function MovablePumaPunkuBlock() {
   const [pos, setPos] = useState<[number, number, number]>([0, 0, 0])
