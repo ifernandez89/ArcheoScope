@@ -49,6 +49,7 @@ export default function Scene3D() {
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: '8px',
               transition: 'all 0.2s',
               boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
@@ -65,7 +66,7 @@ export default function Scene3D() {
                 : 'rgba(75, 85, 99, 0.7)'
             }}
           >
-            🛸 UFO {currentSpaceUfo}
+            ðŸŒ
           </button>
 
           {/* Selector desplegable de UFOs */}
@@ -103,7 +104,7 @@ export default function Scene3D() {
                     color: 'white',
                     fontSize: '14px',
                     cursor: 'pointer',
-                    textAlign: 'left',
+                    textAlign: 'center',
                     marginBottom: '4px',
                     transition: 'all 0.2s'
                   }}
@@ -118,7 +119,7 @@ export default function Scene3D() {
                     }
                   }}
                 >
-                  🛸 UFO {ufoNum}
+                  ðŸŒ
                 </button>
               ))}
               

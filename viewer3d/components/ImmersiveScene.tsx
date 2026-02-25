@@ -400,6 +400,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '8px',
                   transition: 'all 0.2s',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
@@ -408,7 +409,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 1)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 0.9)'}
               >
-                🛸 UFO {currentUfo}
+                ðŸŒ
               </button>
 
               {/* Dropdown de UFOs */}
@@ -442,7 +443,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                         color: 'white',
                         fontSize: '13px',
                         cursor: 'pointer',
-                        textAlign: 'left',
+                        textAlign: 'center',
                         transition: 'background 0.2s'
                       }}
                       onMouseEnter={(e) => {
@@ -456,7 +457,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                         }
                       }}
                     >
-                      🛸 UFO {ufoNum}
+                      ðŸŒ
                     </button>
                   ))}
                 </div>
@@ -885,11 +886,13 @@ function ModelScene({
         <SiteInfo site={site} />
       )}
 
-      {/* 🗿 Bloque de Puma Punku - solo en Tiwanaku */}
-      {site?.id === 'puma-punku' && (
+      {/* 🗿 Bloque de Puma Punku - detectado por coordenadas */}
+      {location && 
+        Math.abs(location.lat - (-16.5616)) < 0.05 && 
+        Math.abs(location.lon - (-68.6795)) < 0.05 && (
         <PumaPunkuBlock
-          position={[0, 0, 0]}
-          scale={2}
+          position={[0, 0.3, 0]}
+          scale={0.075}
           rotation={[0, Math.PI / 4, 0]}
         />
       )}

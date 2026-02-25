@@ -134,7 +134,7 @@ export default function UISystems({
           {/* Botón UFO con selector desplegable */}
           <div style={{ position: 'relative' }}>
             <ControlButton
-              label={`🛸 UFO ${currentUfo}`}
+              label={`ðŸŒ`}
               onClick={() => setShowUfoSelector(!showUfoSelector)}
               color="rgba(139, 92, 246, 0.9)"
             />
@@ -190,7 +190,7 @@ export default function UISystems({
                       }
                     }}
                   >
-                    🛸 UFO {ufoNum}
+                    🌍
                   </button>
                 ))}
               </div>

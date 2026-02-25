@@ -1,11 +1,6 @@
 'use client'
 
-/**
- * PumaPunkuBlock - Bloque H de Puma Punku con textura de roca
- * Se coloca en el suelo cuando el usuario visita Tiwanaku
- */
-
-import { useRef, useEffect } from 'react'
+import { useMemo, useEffect } from 'react'
 import { useGLTF, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
@@ -17,51 +12,44 @@ interface PumaPunkuBlockProps {
 }
 
 export default function PumaPunkuBlock({
-  position = [0, 0, 0],
-  scale = 1,
+  position = [0, 0.3, 0],
+  scale = 0.075,
   rotation = [0, 0, 0]
 }: PumaPunkuBlockProps) {
-  const groupRef = useRef<THREE.Group>(null)
-
   const { scene } = useGLTF(getAssetPath('/puma_punku_block.glb'))
   const rockTexture = useTexture(getAssetPath('/Rock-Texture-Surface.jpg'))
 
-  // Clonar escena para evitar mutaciones del original
-  const clonedScene = scene.clone()
+  const cloned = useMemo(() => scene.clone(true), [scene])
 
+  // Aplicar textura en useEffect para garantizar que rockTexture ya cargó
   useEffect(() => {
-    if (!clonedScene) return
-
-    // Configurar textura de roca
     rockTexture.wrapS = THREE.RepeatWrapping
     rockTexture.wrapT = THREE.RepeatWrapping
     rockTexture.repeat.set(2, 2)
+    rockTexture.needsUpdate = true
 
-    clonedScene.traverse((child) => {
+    cloned.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true
         child.receiveShadow = true
-
-        // Aplicar textura de roca manteniendo la geometría del modelo
         child.material = new THREE.MeshStandardMaterial({
           map: rockTexture,
           roughness: 0.85,
           metalness: 0.05,
-          color: new THREE.Color(0x9a8878), // tono piedra andina
+          color: new THREE.Color(0xb0a090),
         })
+        ;(child.material as THREE.MeshStandardMaterial).needsUpdate = true
       }
     })
-  }, [clonedScene, rockTexture])
+  }, [cloned, rockTexture])
 
   return (
-    <group
-      ref={groupRef}
+    <primitive
+      object={cloned}
       position={position}
       rotation={rotation}
       scale={[scale, scale, scale]}
-    >
-      <primitive object={clonedScene} />
-    </group>
+    />
   )
 }
 
