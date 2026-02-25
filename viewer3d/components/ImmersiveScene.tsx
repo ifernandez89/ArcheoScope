@@ -51,6 +51,9 @@ import TerrainControl from './TerrainControl'
 import Tree3DModel, { type TreeType } from './Tree3DModel'
 import Rock3DModel from './Rock3DModel'
 import PumaPunkuBlock from './PumaPunkuBlock'
+import SelectableObject from './SelectableObject'
+import TerrainClickReceiver from './TerrainClickReceiver'
+import { ObjectSelectionProvider } from './ObjectSelectionContext'
 
 // ðŸŽ® SISTEMAS DE PERFORMANCE
 import EngineIntegration from './EngineIntegration'
@@ -400,7 +403,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
                   gap: '8px',
                   transition: 'all 0.2s',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
@@ -409,7 +411,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 1)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 0.9)'}
               >
-                ðŸŒ
+                🛸 UFO {currentUfo}
               </button>
 
               {/* Dropdown de UFOs */}
@@ -443,7 +445,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                         color: 'white',
                         fontSize: '13px',
                         cursor: 'pointer',
-                        textAlign: 'center',
+                        textAlign: 'left',
                         transition: 'background 0.2s'
                       }}
                       onMouseEnter={(e) => {
@@ -457,7 +459,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                         }
                       }}
                     >
-                      ðŸŒ
+                      🛸 UFO {ufoNum}
                     </button>
                   ))}
                 </div>
@@ -755,6 +757,7 @@ function ModelScene({
   }, [modelRef.current])
   
   return (
+    <ObjectSelectionProvider>
     <Canvas
       shadows
       camera={{ position: [8, 4, 8], fov: 60 }}
@@ -886,15 +889,13 @@ function ModelScene({
         <SiteInfo site={site} />
       )}
 
-      {/* 🗿 Bloque de Puma Punku - detectado por coordenadas */}
-      {location && 
-        Math.abs(location.lat - (-16.5616)) < 0.05 && 
-        Math.abs(location.lon - (-68.6795)) < 0.05 && (
-        <PumaPunkuBlock
-          position={[0, 0.3, 0]}
-          scale={0.075}
-          rotation={[0, Math.PI / 4, 0]}
-        />
+      {/* 🗿 Bloque de Puma Punku - por sitio o por coordenadas */}
+      {(site?.id === 'puma-punku' || (
+        location &&
+        Math.abs(location.lat - (-16.5616)) < 0.05 &&
+        Math.abs(location.lon - (-68.6795)) < 0.05
+      )) && (
+        <MovablePumaPunkuBlock />
       )}
       
       {/* Capturar referencias */}
@@ -911,7 +912,11 @@ function ModelScene({
         bloomIntensity={0.3}
         vignetteIntensity={0.4}
       />
+
+      {/* Receptor de clicks en terreno para mover objetos seleccionados */}
+      <TerrainClickReceiver />
     </Canvas>
+    </ObjectSelectionProvider>
   )
 }
 
@@ -940,6 +945,45 @@ function CinematicZoom() {
 }
 
 // Elementos decorativos del entorno - DINÃMICOS segÃºn ubicaciÃ³n
+// Bloque de Puma Punku movible con seleccion
+function MovablePumaPunkuBlock() {
+  const [pos, setPos] = useState<[number, number, number]>([0, 0, 0])
+  return (
+    <SelectableObject id="puma-punku-block" position={pos} onMove={setPos}>
+      <PumaPunkuBlock
+        position={[0, 0.3, 0]}
+        scale={0.075}
+        rotation={[0, Math.PI / 4, 0]}
+      />
+    </SelectableObject>
+  )
+}
+
+// Arbol movible con seleccion
+function MovableTree({ id, initialPosition, scale, rotation, treeType }: {
+  id: string; initialPosition: [number, number, number]; scale: number; rotation: number; treeType: any
+}) {
+  const [pos, setPos] = useState<[number, number, number]>(initialPosition)
+  return (
+    <SelectableObject id={id} position={pos} onMove={setPos}>
+      <Tree3DModel position={[0, 0, 0]} scale={scale} rotation={rotation} treeType={treeType} />
+    </SelectableObject>
+  )
+}
+
+// Roca movible con seleccion
+function MovableRock({ id, initialPosition, scale, rotation }: {
+  id: string; initialPosition: [number, number, number]; scale: number; rotation: number
+}) {
+  const [pos, setPos] = useState<[number, number, number]>(initialPosition)
+  return (
+    <SelectableObject id={id} position={pos} onMove={setPos}>
+      <Rock3DModel position={[0, 0, 0]} scale={scale} rotation={rotation} />
+    </SelectableObject>
+  )
+}
+
+
 function EnvironmentElements({ location }: { location?: { lat: number, lon: number } | null }) {
   // Generar seed basado en coordenadas para consistencia
   const seed = useMemo(() => {
@@ -1093,9 +1137,10 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
             // Escala muy pequeÃ±a para modelos GLB de Blender
             // heightInMeters entre 2-10, multiplicado por 0.05 = escala entre 0.1-0.5
             return (
-              <Tree3DModel 
-                key={`tree-${i}`}
-                position={[item.x, 0, item.z]}
+              <MovableTree
+                key={`tree-${seed}-${i}`}
+                id={`tree-${seed}-${i}`}
+                initialPosition={[item.x, 0, item.z]}
                 scale={item.heightInMeters * 0.05}
                 rotation={item.rotation}
                 treeType={item.treeType}
@@ -1104,9 +1149,10 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
           
           case 'rock':
             return (
-              <Rock3DModel 
-                key={`rock-${i}`}
-                position={[item.x, 0, item.z]}
+              <MovableRock
+                key={`rock-${seed}-${i}`}
+                id={`rock-${seed}-${i}`}
+                initialPosition={[item.x, 0, item.z]}
                 scale={item.scale * 0.5}
                 rotation={item.rotation}
               />
