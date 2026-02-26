@@ -30,11 +30,18 @@ const ObjectSelectionContext = createContext<ObjectSelectionState>({
   notifyBlockMoved: () => {}
 })
 
-export function ObjectSelectionProvider({ children }: { children: React.ReactNode }) {
+interface ObjectSelectionProviderProps {
+  children: React.ReactNode
+  onBlockMoved?: () => void
+}
+
+export function ObjectSelectionProvider({ children, onBlockMoved }: ObjectSelectionProviderProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const pendingMoveRef = useRef<[number, number, number] | null>(null)
   const [pendingMove, setPendingMove] = useState<[number, number, number] | null>(null)
   const [blockMoved, setBlockMoved] = useState(false)
+  const onBlockMovedRef = useRef(onBlockMoved)
+  onBlockMovedRef.current = onBlockMoved
 
   const setSelected = useCallback((id: string | null) => {
     setSelectedId(id)
@@ -58,6 +65,7 @@ export function ObjectSelectionProvider({ children }: { children: React.ReactNod
 
   const notifyBlockMoved = useCallback(() => {
     setBlockMoved(true)
+    onBlockMovedRef.current?.()
   }, [])
 
   return (

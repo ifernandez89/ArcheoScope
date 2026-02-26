@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export interface WeatherState {
   snow: boolean
@@ -18,11 +18,12 @@ export interface WeatherState {
 
 interface WeatherControlProps {
   onWeatherChange: (weather: WeatherState) => void
+  initialWeather?: WeatherState
 }
 
-export default function WeatherControl({ onWeatherChange }: WeatherControlProps) {
+export default function WeatherControl({ onWeatherChange, initialWeather }: WeatherControlProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [weather, setWeather] = useState<WeatherState>({ 
+  const [weather, setWeather] = useState<WeatherState>(initialWeather ?? { 
     snow: false, 
     rainLight: false,
     rainModerate: false,
@@ -35,6 +36,14 @@ export default function WeatherControl({ onWeatherChange }: WeatherControlProps)
     clouds: false,
     earthquake: false
   })
+
+  // Sincronizar cuando cambia el clima externo (ej: al llegar a un sitio)
+  useEffect(() => {
+    if (!initialWeather) return
+    setWeather(initialWeather)
+    onWeatherChange(initialWeather)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialWeather])
 
   const handleToggle = (type: keyof WeatherState) => {
     let newWeather = { ...weather }

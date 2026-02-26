@@ -69,7 +69,7 @@ export default function CloudSky({
     }
     
     // Crear nubes SOLO en la mitad superior (cielo)
-    const cloudCount = stormMode ? 40 : 30 // Más nubes en tormenta
+    const cloudCount = stormMode ? 60 : 30 // Más nubes en tormenta
     
     for (let i = 0; i < cloudCount; i++) {
       const x = Math.random() * 1024
@@ -306,14 +306,28 @@ export function LightClouds({
   opacity?: number
   stormMode?: boolean 
 }) {
+  if (stormMode) {
+    // Tormenta: 3 capas densas a distintas alturas y velocidades
+    return (
+      <>
+        {/* Capa baja - muy densa y oscura */}
+        <CloudSky enabled={true} opacity={0.98} speed={1.8} height={60}  radius={350} stormMode={true} />
+        {/* Capa media - cobertura total */}
+        <CloudSky enabled={true} opacity={0.92} speed={1.2} height={100} radius={500} stormMode={true} />
+        {/* Capa alta - más difusa, movimiento lento */}
+        <CloudSky enabled={true} opacity={0.75} speed={0.6} height={160} radius={700} stormMode={true} />
+      </>
+    )
+  }
+
   return (
     <CloudSky
       enabled={true}
-      opacity={stormMode ? 0.95 : opacity}
+      opacity={opacity}
       speed={1.0}
       height={80}
       radius={400}
-      stormMode={stormMode}
+      stormMode={false}
     />
   )
 }

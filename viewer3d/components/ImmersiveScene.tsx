@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, Html, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
@@ -42,6 +42,7 @@ import { getAssetPath } from '@/lib/paths'
 import { loggers } from '@/core/Logger'
 import { WorldCore } from '../engines/WorldCore'
 import { getProceduralAudio } from '../systems/ProceduralAudio'
+import { getClimateAudio } from '../systems/ClimateAudioSystem'
 
 // ðŸ—ºï¸ SISTEMA DE TERRENO MEJORADO
 import EnhancedTerrain from './EnhancedTerrain'
@@ -70,6 +71,7 @@ import {
 
 // ðŸŽ¨ NUEVA ARQUITECTURA: UI Systems Layer
 import UISystems from './layers/UISystems'
+import AmbientAudio from './AmbientAudio'
 
 interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
@@ -79,6 +81,19 @@ interface ImmersiveSceneProps {
   spaceUfoNumber?: number
 }
 
+// Constantes de clima fuera del componente para estabilidad de closures
+const DEFAULT_STORM_WEATHER: WeatherState = {
+  snow: false, rainLight: false, rainModerate: false, rainHeavy: true,
+  wind: true, fog: false, storm: true, lightning: true,
+  tornado: false, clouds: true, earthquake: false
+}
+
+const CALM_WEATHER: WeatherState = {
+  snow: false, rainLight: false, rainModerate: false, rainHeavy: false,
+  wind: false, fog: false, storm: false, lightning: false,
+  tornado: false, clouds: false, earthquake: false
+}
+
 export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false, spaceUfoNumber = 1 }: ImmersiveSceneProps) {
   const [mode, setMode] = useState<'globe' | 'transition' | 'model' | 'exploration'>('globe')
   const [selectedModel, setSelectedModel] = useState<string>(getAssetPath('/moai.glb'))
@@ -86,24 +101,34 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [currentUfo, setCurrentUfo] = useState<number>(1) // UFO actual
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(null)
   const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
+  // Sitios donde ya se descubrió la estructura megalítica — persiste durante la sesión
+  const discoveredSites = useRef<Set<string>>(new Set())
+  // Ref al sitio actual para evitar stale closure en handleBlockMoved
+  const selectedSiteRef = useRef<ArchaeologicalSite | null>(null)
   const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('avatar') // Modo avatar por defecto
   const [showLocationInfo, setShowLocationInfo] = useState(false)
   const [showGeometryField, setShowGeometryField] = useState(true) // Activado por defecto
   const [showUfoSelector, setShowUfoSelector] = useState(false) // Dropdown de UFOs
   const [isDay, setIsDay] = useState(true) // Estado dÃ­a/noche
-  const [weather, setWeather] = useState<WeatherState>({ 
-    snow: false, 
-    rainLight: false,
-    rainModerate: false,
-    rainHeavy: false,
-    wind: false,
-    fog: false,
-    storm: false,
-    lightning: false,
-    tornado: false,
-    clouds: false,
-    earthquake: false
-  }) // Estado del clima
+  const [weather, setWeather] = useState<WeatherState>(DEFAULT_STORM_WEATHER) // Estado del clima
+  // Secuencia de clima al mover un bloque de Puma Punku
+  // Mantener ref sincronizado con el estado
+  useEffect(() => {
+    selectedSiteRef.current = selectedSite
+  }, [selectedSite])
+
+  const handleBlockMoved = useCallback(() => {
+    const siteId = selectedSiteRef.current?.id
+    // Marcar este sitio como descubierto
+    if (siteId) discoveredSites.current.add(siteId)
+    // 1. Activar terremoto inmediatamente (coincide con inicio del fade-in de la estructura)
+    setWeather(prev => ({ ...prev, earthquake: true }))
+    // 2. Después de ~3.2s (duración del fade-in), calma total
+    setTimeout(() => {
+      setWeather(CALM_WEATHER)
+    }, 3200)
+  }, [])
+
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // DirecciÃ³n del sol como objeto plano
   const [solarState, setSolarState] = useState({
     altitude: 0,
@@ -203,6 +228,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     
     await new Promise(resolve => setTimeout(resolve, 2000))
     
+    setWeather(discoveredSites.current.has(site.id) ? CALM_WEATHER : DEFAULT_STORM_WEATHER)
     setMode('model')
     
     loggers.world.info('Teletransporte a sitio arqueolÃ³gico completado')
@@ -221,6 +247,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     await new Promise(resolve => setTimeout(resolve, 2000))
     
     // Cambiar a modo modelo
+    setWeather(DEFAULT_STORM_WEATHER)
     setMode('model')
     
     loggers.world.info('Teletransporte completado', { lat, lon })
@@ -228,6 +255,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
 
   // Volver al globo
   const handleBackToGlobe = async () => {
+    // Silenciar todo el audio climático antes de salir
+    getClimateAudio().updateWeather({ rain: 0, wind: 0, tornado: 0, snow: 0, thunder: false })
+    setWeather(CALM_WEATHER)
     setMode('transition')
     await new Promise(resolve => setTimeout(resolve, 1500))
     setMode('globe')
@@ -529,12 +559,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           terrainExaggeration={terrainExaggeration}
           terrainLOD={terrainLOD}
           onTerrainLoadingChange={setTerrainLoading}
+          onBlockMoved={handleBlockMoved}
         />
       ) : null}
 
       {/* Control de clima */}
       {mode === 'model' && (
-        <WeatherControl onWeatherChange={setWeather} />
+        <WeatherControl onWeatherChange={setWeather} initialWeather={weather} />
       )}
 
       <style jsx>{`
@@ -705,7 +736,8 @@ function ModelScene({
   enhancedTerrainEnabled,
   terrainExaggeration,
   terrainLOD,
-  onTerrainLoadingChange
+  onTerrainLoadingChange,
+  onBlockMoved
 }: { 
   modelPath: string
   avatarModel: string
@@ -725,11 +757,11 @@ function ModelScene({
   terrainExaggeration?: number
   terrainLOD?: boolean
   onTerrainLoadingChange?: (loading: boolean) => void
+  onBlockMoved?: () => void
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
   const [obstacles, setObstacles] = useState<THREE.Object3D[]>([])
-  
   // Detectar bioma basado en ubicaciÃ³n
   const biome = useMemo(() => {
     if (!location) return { type: 'default' as const, name: 'GenÃ©rico', description: '', temperature: 20, humidity: 50 }
@@ -760,7 +792,7 @@ function ModelScene({
   }, [modelRef.current])
   
   return (
-    <ObjectSelectionProvider>
+    <ObjectSelectionProvider onBlockMoved={onBlockMoved}>
     <Canvas
       shadows
       camera={{ position: [8, 4, 8], fov: 60 }}
@@ -866,9 +898,12 @@ function ModelScene({
       {/* Sistema climÃ¡tico completo */}
       <WeatherSystem weather={weather} isIceBiome={isIceBiome} />
 
+      {/* Drone atmosférico - activo en todos los modos */}
+      <AmbientAudio />
+
       {/* Elementos del entorno: rocas y vegetaciÃ³n - NO renderizar sobre ocÃ©ano */}
       {!isIceBiome && biome.type !== 'ocean' && (
-        <EnvironmentElements location={location} />
+        <EnvironmentElementsWithTrees location={location} />
       )}
 
       {/* Modelo 3D o Avatar segÃºn modo */}
@@ -1031,7 +1066,13 @@ function MovableRock({ id, initialPosition, scale, rotation }: {
 }
 
 
-function EnvironmentElements({ location }: { location?: { lat: number, lon: number } | null }) {
+// Wrapper que lee blockMoved DENTRO del ObjectSelectionProvider
+function EnvironmentElementsWithTrees({ location }: { location?: { lat: number, lon: number } | null }) {
+  const { blockMoved } = useObjectSelection()
+  return <EnvironmentElements location={location} treeMultiplier={blockMoved ? 3 : 1} />
+}
+
+function EnvironmentElements({ location, treeMultiplier = 1 }: { location?: { lat: number, lon: number } | null, treeMultiplier?: number }) {
   // Generar seed basado en coordenadas para consistencia
   const seed = useMemo(() => {
     if (!location) return 0
@@ -1068,13 +1109,39 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
     
     const items: any[] = []
     let index = 0
+
+    // Zonas ocupadas: [x, z, radioMinimo]
+    // La estructura de Puma Punku está en [8, -8], radio de exclusión 12
+    const occupied: Array<[number, number, number]> = [[8, -8, 12]]
+
+    const isTooClose = (x: number, z: number, minDist: number): boolean => {
+      for (const [ox, oz, r] of occupied) {
+        const d = Math.sqrt((x - ox) ** 2 + (z - oz) ** 2)
+        if (d < r) return true
+      }
+      return false
+    }
+
+    const registerPos = (x: number, z: number, r: number) => {
+      occupied.push([x, z, r])
+    }
     
-    // Generar Ã¡rboles
-    for (let i = 0; i < count.trees; i++) {
-      const angle = random(index++) * Math.PI * 2
-      const radius = 15 + random(index++) * 30
-      const x = Math.cos(angle) * radius + (random(index++) - 0.5) * 10
-      const z = Math.sin(angle) * radius + (random(index++) - 0.5) * 10
+    // Generar árboles (con multiplicador para post-descubrimiento)
+    // Los árboles extra (treeMultiplier > 1) se colocan en radio mayor para no chocar con la estructura
+    for (let i = 0; i < count.trees * treeMultiplier; i++) {
+      const isExtra = i >= count.trees
+      let x = 0, z = 0
+      let attempts = 0
+      // Intentar hasta 8 veces encontrar posición libre
+      do {
+        const angle = random(index++) * Math.PI * 2
+        // Árboles extra: radio mínimo 35 para alejarlos del centro
+        const minRadius = isExtra ? 35 : 15
+        const radius = minRadius + random(index++) * 25
+        x = Math.cos(angle) * radius + (random(index++) - 0.5) * 8
+        z = Math.sin(angle) * radius + (random(index++) - 0.5) * 8
+        attempts++
+      } while (isTooClose(x, z, 5) && attempts < 8)
       
       // Altura real del Ã¡rbol en metros (entre 2 y 10 metros)
       const heightInMeters = 2 + random(index++) * 8
@@ -1095,6 +1162,7 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
         rotation: random(index++) * Math.PI * 2, 
         treeType 
       })
+      registerPos(x, z, 4)
     }
     
     // Generar arbustos
@@ -1174,7 +1242,7 @@ function EnvironmentElements({ location }: { location?: { lat: number, lon: numb
     }
     
     return items
-  }, [seed, biome])
+  }, [seed, biome, treeMultiplier])
 
   return (
     <group>

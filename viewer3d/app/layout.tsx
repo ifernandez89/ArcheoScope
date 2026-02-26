@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import AlienCursorTrail from '@/components/AlienCursorTrail'
 
 export const metadata: Metadata = {
   title: 'ArcheoScope 3D Viewer',
@@ -13,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        {children}
+        <AlienCursorTrail />
+      </body>
     </html>
   )
 }
