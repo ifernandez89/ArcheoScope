@@ -54,7 +54,7 @@ import PumaPunkuBlock from './PumaPunkuBlock'
 import PumaPunkuStructure from './PumaPunkuStructure'
 import SelectableObject from './SelectableObject'
 import TerrainClickReceiver from './TerrainClickReceiver'
-import { ObjectSelectionProvider } from './ObjectSelectionContext'
+import { ObjectSelectionProvider, useObjectSelection } from './ObjectSelectionContext'
 
 // ðŸŽ® SISTEMAS DE PERFORMANCE
 import EngineIntegration from './EngineIntegration'
@@ -101,7 +101,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     storm: false,
     lightning: false,
     tornado: false,
-    clouds: false
+    clouds: false,
+    earthquake: false
   }) // Estado del clima
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // DirecciÃ³n del sol como objeto plano
   const [solarState, setSolarState] = useState({
@@ -949,6 +950,7 @@ function CinematicZoom() {
 // Elementos decorativos del entorno - DINÃMICOS segÃºn ubicaciÃ³n
 // Escena completa de Puma Punku
 function PumaPunkuScene() {
+  const { blockMoved } = useObjectSelection()
   const extraBlocks: Array<{ pos: [number, number, number]; rot: number; id: string }> = [
     { id: 'pp-b1', pos: [-12, 0,   8], rot: 0.3 },
     { id: 'pp-b2', pos: [ 15, 0,  -6], rot: 1.1 },
@@ -961,7 +963,7 @@ function PumaPunkuScene() {
   ]
   return (
     <>
-      <MovablePumaPunkuStructure />
+      <MovablePumaPunkuStructure revealed={blockMoved} />
       <MovablePumaPunkuBlock />
       {extraBlocks.map((b) => (
         <MovableExtraBlock key={b.id} id={b.id} position={b.pos} rotation={b.rot} />
@@ -970,21 +972,19 @@ function PumaPunkuScene() {
   )
 }
 
-// Estructura principal movible
-function MovablePumaPunkuStructure() {
-  const [pos, setPos] = useState<[number, number, number]>([8, 0, -8])
+// Estructura principal - fija, no movible
+function MovablePumaPunkuStructure({ revealed = false }: { revealed?: boolean }) {
   return (
-    <SelectableObject id="puma-punku-structure" position={pos} onMove={setPos}>
-      <PumaPunkuStructure position={[0, 0, 0]} rotation={[0, Math.PI / 6, 0]} />
-    </SelectableObject>
+    <PumaPunkuStructure position={[8, 0, -8]} rotation={[0, Math.PI / 6, 0]} revealed={revealed} />
   )
 }
 
 // Bloque extra movible
 function MovableExtraBlock({ id, position, rotation }: { id: string; position: [number, number, number]; rotation: number }) {
   const [pos, setPos] = useState<[number, number, number]>(position)
+  const { notifyBlockMoved } = useObjectSelection()
   return (
-    <SelectableObject id={id} position={pos} onMove={setPos}>
+    <SelectableObject id={id} position={pos} onMove={(p) => { setPos(p); notifyBlockMoved() }}>
       <PumaPunkuBlock position={[0, 0.3, 0]} scale={0.075} rotation={[0, rotation, 0]} />
     </SelectableObject>
   )
@@ -994,8 +994,9 @@ function MovableExtraBlock({ id, position, rotation }: { id: string; position: [
 // Bloque de Puma Punku movible con seleccion
 function MovablePumaPunkuBlock() {
   const [pos, setPos] = useState<[number, number, number]>([0, 0, 0])
+  const { notifyBlockMoved } = useObjectSelection()
   return (
-    <SelectableObject id="puma-punku-block" position={pos} onMove={setPos}>
+    <SelectableObject id="puma-punku-block" position={pos} onMove={(p) => { setPos(p); notifyBlockMoved() }}>
       <PumaPunkuBlock
         position={[0, 0.3, 0]}
         scale={0.075}

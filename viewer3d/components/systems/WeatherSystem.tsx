@@ -13,6 +13,7 @@ import ProceduralLightning from '../weather/ProceduralLightning'
 import { LightFog } from '../weather/RealisticFog'
 import { LightClouds } from '../weather/CloudSky'
 import TornadoEffect from '../weather/TornadoEffect'
+import EarthquakeEffect from '../weather/EarthquakeEffect'
 import WeatherManager from '../weather/WeatherManager'
 import type { WeatherState } from '../WeatherControl'
 import { getClimateAudio } from '@/systems/ClimateAudioSystem'
@@ -115,6 +116,7 @@ export default function WeatherSystem({ weather, isIceBiome }: WeatherSystemProp
         />
       )}
       {weather.tornado && <TornadoEffect position={[20, 0, 20]} intensity={0.8} height={40} />}
+      {weather.earthquake && <EarthquakeEffect />}
       
       {/* Nieve automática solo en biomas helados si no hay clima manual activo */}
       {!weather.snow && !weather.rainLight && !weather.rainModerate && !weather.rainHeavy && isIceBiome && (

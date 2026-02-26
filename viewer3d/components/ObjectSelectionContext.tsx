@@ -5,6 +5,7 @@
  * 
  * selectedId: ID del objeto actualmente seleccionado (null = ninguno)
  * pendingMove: posición destino pendiente de consumir
+ * blockMoved: true cuando algún bloque de Puma Punku fue movido (activa reveal de estructura)
  */
 
 import { createContext, useContext, useState, useCallback, useRef } from 'react'
@@ -15,6 +16,8 @@ interface ObjectSelectionState {
   pendingMove: [number, number, number] | null
   requestMove: (pos: [number, number, number]) => void
   consumeMove: () => [number, number, number] | null
+  blockMoved: boolean
+  notifyBlockMoved: () => void
 }
 
 const ObjectSelectionContext = createContext<ObjectSelectionState>({
@@ -22,13 +25,16 @@ const ObjectSelectionContext = createContext<ObjectSelectionState>({
   setSelected: () => {},
   pendingMove: null,
   requestMove: () => {},
-  consumeMove: () => null
+  consumeMove: () => null,
+  blockMoved: false,
+  notifyBlockMoved: () => {}
 })
 
 export function ObjectSelectionProvider({ children }: { children: React.ReactNode }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const pendingMoveRef = useRef<[number, number, number] | null>(null)
   const [pendingMove, setPendingMove] = useState<[number, number, number] | null>(null)
+  const [blockMoved, setBlockMoved] = useState(false)
 
   const setSelected = useCallback((id: string | null) => {
     setSelectedId(id)
@@ -50,8 +56,12 @@ export function ObjectSelectionProvider({ children }: { children: React.ReactNod
     return move
   }, [])
 
+  const notifyBlockMoved = useCallback(() => {
+    setBlockMoved(true)
+  }, [])
+
   return (
-    <ObjectSelectionContext.Provider value={{ selectedId, setSelected, pendingMove, requestMove, consumeMove }}>
+    <ObjectSelectionContext.Provider value={{ selectedId, setSelected, pendingMove, requestMove, consumeMove, blockMoved, notifyBlockMoved }}>
       {children}
     </ObjectSelectionContext.Provider>
   )

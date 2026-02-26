@@ -13,6 +13,7 @@ export interface WeatherState {
   lightning: boolean
   tornado: boolean
   clouds: boolean
+  earthquake: boolean
 }
 
 interface WeatherControlProps {
@@ -31,7 +32,8 @@ export default function WeatherControl({ onWeatherChange }: WeatherControlProps)
     storm: false,
     lightning: false,
     tornado: false,
-    clouds: false
+    clouds: false,
+    earthquake: false
   })
 
   const handleToggle = (type: keyof WeatherState) => {
@@ -239,6 +241,13 @@ export default function WeatherControl({ onWeatherChange }: WeatherControlProps)
             onChange={() => handleToggle('tornado')}
             icon="🌪️"
             label="Tornado"
+          />
+
+          <WeatherCheckbox 
+            checked={weather.earthquake} 
+            onChange={() => handleToggle('earthquake')}
+            icon="🌋"
+            label="Terremoto"
           />
 
           <div style={{ 
