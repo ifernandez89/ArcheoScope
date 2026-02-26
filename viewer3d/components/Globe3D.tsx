@@ -34,9 +34,9 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
     
     // Luego intentar cargar la textura real
     loader.load(
-      getAssetPath('/textures/earth_8k.jpg'),
+      getAssetPath('/textures/2k_earth_daymap.jpg'),
       (texture) => {
-        loggers.world.info('Textura real 8K cargada exitosamente')
+        loggers.world.info('Textura real 2K cargada exitosamente')
         setEarthTexture(texture)
       },
       undefined,

@@ -73,7 +73,7 @@ export class GeoEngine {
     
     try {
       const [day, night] = await Promise.all([
-        loader.loadAsync('/textures/earth_8k.jpg'),
+        loader.loadAsync('/textures/2k_earth_daymap.jpg'),
         loader.loadAsync('/textures/earth_night_8k.jpg')
       ])
       
