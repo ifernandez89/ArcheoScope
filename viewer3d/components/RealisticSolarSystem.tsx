@@ -11,6 +11,8 @@ import Globe3D from './Globe3D'
 import RealisticOrbits from './RealisticOrbits'
 import RealisticLunarOrbit from './RealisticLunarOrbit'
 import CelestialTooltip from './CelestialTooltip'
+import { CelestialOverlay3D } from './CelestialOverlay'
+import AsteroidBelt3D from './AsteroidBelt3D'
 
 /**
  * Sistema Solar Realista
@@ -37,6 +39,11 @@ export default function RealisticSolarSystem({
   const venusAtmosphereTexture = useTexture(getAssetPath('/textures/4k_venus_atmosphere.jpg'))
   const marsTexture = useTexture(getAssetPath('/textures/8k_mars.jpg'))
   const moonTexture = useTexture(getAssetPath('/textures/8k_moon.jpg'))
+  const jupiterTexture = useTexture(getAssetPath('/textures/2k_jupiter.jpg'))
+  const saturnTexture = useTexture(getAssetPath('/textures/2k_saturn.jpg'))
+  const saturnRingTexture = useTexture(getAssetPath('/textures/2k_saturn_ring_alpha.png'))
+  const uranusTexture = useTexture(getAssetPath('/textures/2k_uranus.jpg'))
+  const neptuneTexture = useTexture(getAssetPath('/textures/2k_neptune.jpg'))
   
   // Sistema astronómico
   const astroSystemRef = useRef<AstronomicalSystem>(
@@ -57,6 +64,16 @@ export default function RealisticSolarSystem({
   const marsMeshRef = useRef<THREE.Mesh>(null)
   const moonRef = useRef<THREE.Group>(null)
   const moonMeshRef = useRef<THREE.Mesh>(null)
+
+  // Planetas exteriores
+  const jupiterRef = useRef<THREE.Group>(null)
+  const jupiterMeshRef = useRef<THREE.Mesh>(null)
+  const saturnRef = useRef<THREE.Group>(null)
+  const saturnMeshRef = useRef<THREE.Mesh>(null)
+  const uranusRef = useRef<THREE.Group>(null)
+  const uranusMeshRef = useRef<THREE.Mesh>(null)
+  const neptuneRef = useRef<THREE.Group>(null)
+  const neptuneMeshRef = useRef<THREE.Mesh>(null)
   
   // Actualización del sistema
   useFrame((state, delta) => {
@@ -90,11 +107,41 @@ export default function RealisticSolarSystem({
     if (marsRef.current) {
       marsRef.current.position.set(positions.mars.x, positions.mars.y, positions.mars.z)
     }
-    
-    // Rotación axial de Marte (similar a la Tierra, 24.6 horas)
     if (marsMeshRef.current) {
-      marsMeshRef.current.rotation.y += delta * 0.05 // Similar a la Tierra
+      marsMeshRef.current.rotation.y += delta * 0.05
     }
+
+    // Planetas exteriores — Kepler calibrado con longitudes medias J2000.0 reales
+    // Fuente: Astronomical Almanac / JPL (L0 en radianes, n en rad/s)
+    // J2000.0 = 2000-01-01 12:00 UTC = unix 946728000
+    const J2000_UNIX = 946728000
+    const t = astroSystem.getTimeEngine().getCurrentTime().getTime() / 1000
+    const t_j2000 = t - J2000_UNIX // segundos desde J2000
+    const AU = 200 // escala visual
+
+    // Longitudes medias J2000 (radianes) + velocidades medias (rad/s)
+    // L0 fuente: Astronomical Almanac Table C24
+    const DEG = Math.PI / 180
+
+    // Júpiter: L0=34.35°, T=11.86 años
+    const jAngle = 34.351519 * DEG + (t_j2000 / (11.86 * 365.25 * 86400)) * Math.PI * 2
+    if (jupiterRef.current) jupiterRef.current.position.set(Math.cos(jAngle) * 5.2 * AU, 0, Math.sin(jAngle) * 5.2 * AU)
+    if (jupiterMeshRef.current) jupiterMeshRef.current.rotation.y += delta * 0.045
+
+    // Saturno: L0=50.08°, T=29.46 años
+    const sAngle = 50.077444 * DEG + (t_j2000 / (29.46 * 365.25 * 86400)) * Math.PI * 2
+    if (saturnRef.current) saturnRef.current.position.set(Math.cos(sAngle) * 9.58 * AU, 0, Math.sin(sAngle) * 9.58 * AU)
+    if (saturnMeshRef.current) saturnMeshRef.current.rotation.y += delta * 0.043
+
+    // Urano: L0=314.06°, T=84.01 años
+    const uAngle = 314.055005 * DEG + (t_j2000 / (84.01 * 365.25 * 86400)) * Math.PI * 2
+    if (uranusRef.current) uranusRef.current.position.set(Math.cos(uAngle) * 19.2 * AU, 0, Math.sin(uAngle) * 19.2 * AU)
+    if (uranusMeshRef.current) uranusMeshRef.current.rotation.y += delta * 0.03
+
+    // Neptuno: L0=304.35°, T=164.8 años
+    const nAngle = 304.348665 * DEG + (t_j2000 / (164.8 * 365.25 * 86400)) * Math.PI * 2
+    if (neptuneRef.current) neptuneRef.current.position.set(Math.cos(nAngle) * 30.05 * AU, 0, Math.sin(nAngle) * 30.05 * AU)
+    if (neptuneMeshRef.current) neptuneMeshRef.current.rotation.y += delta * 0.032
     
     // Luna relativa a la Tierra con TIDAL LOCKING
     if (moonRef.current && moonMeshRef.current && earthGroupRef.current) {
@@ -143,7 +190,7 @@ export default function RealisticSolarSystem({
       {/* Mercurio - Posición real con rotación axial */}
       <group ref={mercuryRef}>
         <mesh ref={mercuryMeshRef}>
-          <sphereGeometry args={[0.38, 64, 64]} />
+          <sphereGeometry args={[1.9, 64, 64]} />
           <meshStandardMaterial 
             map={mercuryTexture}
             color="#9c9c9c" 
@@ -163,7 +210,7 @@ export default function RealisticSolarSystem({
             atmosphere: "Sin atmósfera",
             funFact: "Un año dura menos que su día"
           }}
-          position={[0, 0.8, 0]}
+          position={[0, 3, 0]}
           color="#9c9c9c"
         />
       </group>
@@ -328,6 +375,102 @@ export default function RealisticSolarSystem({
           position={[0, 1.2, 0]}
           color="#c97a5f"
         />
+      </group>
+
+      {/* Cinturón de asteroides — modelos GLB reales instanciados */}
+      <AsteroidBelt3D />
+
+      {/* Convergencias planetarias reales — líneas 3D */}
+      <CelestialOverlay3D />
+
+      {/* ── Júpiter ─────────────────────────────────────────────────────── */}
+      <group ref={jupiterRef}>
+        <mesh ref={jupiterMeshRef}>
+          <sphereGeometry args={[55, 64, 64]} />
+          <meshStandardMaterial map={jupiterTexture} roughness={0.9} metalness={0.0} />
+        </mesh>
+        <CelestialTooltip name="Júpiter" symbol="♃" type="Gigante gaseoso"
+          data={{ orbitalPeriod: "11.86 años", day: "9h 56m", diameter: "139.820 km",
+            temperature: "-110°C", moons: "95 conocidas", atmosphere: "H₂, He, NH₃",
+            funFact: "El planeta más grande — cabe 1.300 Tierras" }}
+          position={[0, 60, 0]} color="#c8a87a" />
+      </group>
+
+      {/* ── Saturno + anillos ────────────────────────────────────────────── */}
+      {/* saturnRef mueve el grupo en el plano orbital */}
+      <group ref={saturnRef}>
+        {/* Subgrupo con tilt axial real de Saturno (26.7°) + leve rotación Y para perspectiva */}
+        <group rotation={[0, 0.3, THREE.MathUtils.degToRad(26.7)]}>
+          {/* Planeta */}
+          <mesh ref={saturnMeshRef} castShadow>
+            <sphereGeometry args={[38, 64, 64]} />
+            <meshStandardMaterial map={saturnTexture} roughness={0.9} metalness={0.0} />
+          </mesh>
+          {/* Anillos — en el plano ecuatorial del planeta (XZ), heredan el tilt del grupo */}
+          <mesh rotation={[Math.PI / 2, 0, 0]} receiveShadow>
+            <ringGeometry args={[46, 88, 128]} />
+            <meshStandardMaterial
+              map={saturnRingTexture}
+              alphaMap={saturnRingTexture}
+              side={THREE.DoubleSide}
+              transparent
+              opacity={0.85}
+              depthWrite={false}
+              roughness={0.8}
+              metalness={0.0}
+            />
+          </mesh>
+          {/* Segunda capa sutil para sensación de volumen */}
+          <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0.4, 0]}>
+            <ringGeometry args={[46, 88, 128]} />
+            <meshBasicMaterial
+              map={saturnRingTexture}
+              side={THREE.DoubleSide}
+              transparent
+              opacity={0.18}
+              depthWrite={false}
+            />
+          </mesh>
+        </group>
+        <CelestialTooltip name="Saturno" symbol="♄" type="Gigante gaseoso"
+          data={{ orbitalPeriod: "29.46 años", day: "10h 42m", diameter: "116.460 km",
+            temperature: "-140°C", moons: "146 conocidas", atmosphere: "H₂, He",
+            funFact: "Sus anillos tienen 270.000 km de diámetro pero solo 1 km de grosor" }}
+          position={[0, 55, 0]} color="#e8d5a0" />
+      </group>
+
+      {/* ── Urano ────────────────────────────────────────────────────────── */}
+      <group ref={uranusRef}>
+        <mesh ref={uranusMeshRef}>
+          <sphereGeometry args={[20, 64, 64]} />
+          <meshStandardMaterial map={uranusTexture} roughness={0.85} metalness={0.0}
+            emissive="#7de8e8" emissiveIntensity={0.04} />
+        </mesh>
+        {/* Anillos tenues de Urano — inclinados ~98° (eje casi horizontal) */}
+        <mesh rotation={[0, 0, Math.PI / 2]}>
+          <ringGeometry args={[24, 30, 64]} />
+          <meshBasicMaterial color="#7de8e8" side={THREE.DoubleSide}
+            transparent opacity={0.18} depthWrite={false} blending={THREE.AdditiveBlending} />
+        </mesh>
+        <CelestialTooltip name="Urano" symbol="⛢" type="Gigante de hielo"
+          data={{ orbitalPeriod: "84 años", day: "17h 14m", diameter: "50.724 km",
+            temperature: "-195°C", moons: "28 conocidas", atmosphere: "H₂, He, CH₄",
+            funFact: "Rota de lado — su eje está inclinado 98°" }}
+          position={[0, 25, 0]} color="#7de8e8" />
+      </group>
+
+      {/* ── Neptuno ──────────────────────────────────────────────────────── */}
+      <group ref={neptuneRef}>
+        <mesh ref={neptuneMeshRef}>
+          <sphereGeometry args={[19, 64, 64]} />
+          <meshStandardMaterial map={neptuneTexture} roughness={0.85} metalness={0.0}
+            emissive="#4b70dd" emissiveIntensity={0.06} />
+        </mesh>
+        <CelestialTooltip name="Neptuno" symbol="♆" type="Gigante de hielo"
+          data={{ orbitalPeriod: "164.8 años", day: "16h 6m", diameter: "49.244 km",
+            temperature: "-200°C", moons: "16 conocidas", atmosphere: "H₂, He, CH₄",
+            funFact: "Vientos de hasta 2.100 km/h — los más rápidos del sistema solar" }}
+          position={[0, 24, 0]} color="#4b70dd" />
       </group>
     </group>
   )

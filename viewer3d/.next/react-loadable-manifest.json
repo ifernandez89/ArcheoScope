@@ -1,13 +1,13 @@
 {
   "app\\page.tsx -> @/components/Scene3D": {
-    "id": 503,
+    "id": 3330,
     "files": [
       "static/chunks/three.815c5b8d93734097.js",
       "static/chunks/react-three.994f8dbb8dcd66d9.js",
-      "static/chunks/engines.54e00784d5ba2b93.js",
-      "static/chunks/vendor-45adcb1b69dcf6ab.js",
-      "static/chunks/696.9feb895297c0aa4b.js",
-      "static/chunks/121.7fdb5319a4090a5c.js"
+      "static/chunks/engines.514c605b294a844a.js",
+      "static/chunks/vendor-a6f0d04e7b9249bf.js",
+      "static/chunks/127.112a3646adc77ed2.js",
+      "static/chunks/435.8904f7cb65024d9e.js"
     ]
   },
   "app\\realistic-solar\\page.tsx -> @/components/RealisticSolarSystemScene": {
@@ -15,9 +15,16 @@
     "files": [
       "static/chunks/three.815c5b8d93734097.js",
       "static/chunks/react-three.994f8dbb8dcd66d9.js",
-      "static/chunks/vendor-45adcb1b69dcf6ab.js",
-      "static/chunks/696.9feb895297c0aa4b.js",
-      "static/chunks/982.c805409f0462423d.js"
+      "static/chunks/vendor-a6f0d04e7b9249bf.js",
+      "static/chunks/821.bc8512724002ddc8.js",
+      "static/chunks/127.112a3646adc77ed2.js",
+      "static/chunks/982.dd665013bf2a3216.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./RealisticSolarSystem": {
+    "id": 7821,
+    "files": [
+      "static/chunks/821.bc8512724002ddc8.js"
     ]
   },
   "utils\\lazy-systems.ts -> @/components/ProceduralTerrain": {

@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import dynamic from 'next/dynamic'
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, Html, useGLTF } from '@react-three/drei'
@@ -24,7 +25,7 @@ import PlanetaryOrbits from './PlanetaryOrbits'
 import EarthOrbitWrapper from './EarthOrbitWrapper'
 import LunarOrbitLine from './LunarOrbitLine'
 import MilkyWayBackground from './MilkyWayBackground'
-import RealisticSolarSystem from './RealisticSolarSystem'
+const RealisticSolarSystem = dynamic(() => import('./RealisticSolarSystem'), { ssr: false })
 import Stars from './Stars'
 import { 
   useNarrativeZoom
@@ -79,6 +80,7 @@ import SolarSimulation from './SolarSimulation'
 import SpaceUfo from './SpaceUfo'
 import PumaPunkuScene from './PumaPunkuScene'
 import EnvironmentElements, { EnvironmentElementsWithTrees } from './EnvironmentElements'
+import { CelestialOverlayHUD } from './CelestialOverlay'
 
 interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
@@ -610,13 +612,15 @@ function GlobeScene({
   spaceUfoNumber?: number
 }) {
   return (
-    <Canvas
-      camera={{ position: [0, 0, 15], fov: 50 }}
-      style={{ 
-        background: '#000',
-        cursor: spaceUfoActive ? 'none' : 'default' // Ocultar cursor cuando Avenger estÃ¡ activo
-      }}
-    >
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <CelestialOverlayHUD />
+      <Canvas
+        camera={{ position: [0, 0, 15], fov: 50 }}
+        style={{ 
+          background: '#000',
+          cursor: spaceUfoActive ? 'none' : 'default' // Ocultar cursor cuando Avenger estÃ¡ activo
+        }}
+      >
       {/* ðŸŽ® SISTEMAS DE PERFORMANCE - ÃšNICO useFrame */}
       <EngineIntegration />
       
@@ -625,7 +629,7 @@ function GlobeScene({
         enableDamping
         dampingFactor={0.05}
         minDistance={8}
-        maxDistance={450} // Aumentado para ver Ã³rbita completa de Marte (304 unidades)
+        maxDistance={8000} // Neptuno está a ~6010 unidades (30.05 AU × 200)
         autoRotate={false}
       />
       
@@ -642,7 +646,8 @@ function GlobeScene({
       
       {/* Marcadores de sitios arqueolÃ³gicos - Temporalmente deshabilitados */}
       {/* <SiteMarkers onSiteClick={onSiteClick} /> */}
-    </Canvas>
+      </Canvas>
+    </div>
   )
 }
 
