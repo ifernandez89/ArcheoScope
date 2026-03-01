@@ -54,6 +54,12 @@ export default function EnvironmentElements({
   const biome = useMemo(() => {
     if (!location) return 'temperate'
     const absLat = Math.abs(location.lat)
+    
+    // Altiplano - Lago Titicaca
+    if (absLat > 15.5 && absLat < 16.5 && location.lon > -70 && location.lon < -68.5) {
+      return 'altiplano'
+    }
+    
     if (absLat < 10) return 'tropical'
     if (absLat > 20 && absLat < 35) return 'desert'
     if (absLat > 60) return 'arctic'
@@ -69,6 +75,7 @@ export default function EnvironmentElements({
     const counts: Record<string, Record<string, number>> = {
       tropical:  { trees: 15, bushes: 20, rocks: 10, palms: 8,  flowers: 25 },
       temperate: { trees: 12, bushes: 15, rocks: 15, logs: 5,   flowers: 15 },
+      altiplano: { trees: 4,  bushes: 25, rocks: 20, logs: 3,   flowers: 30 }, // Vegetación baja, pocos árboles
       desert:    { trees: 3,  bushes: 5,  rocks: 25, cacti: 12, crystals: 8 },
       arctic:    { trees: 5,  bushes: 8,  rocks: 30, crystals: 5, flowers: 5 }
     }

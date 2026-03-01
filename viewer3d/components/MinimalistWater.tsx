@@ -22,7 +22,10 @@ export default function MinimalistWater({
     uniforms: {
       time: { value: 0 },
       waterColor: { value: new THREE.Color(color) },
-      fresnelColor: { value: new THREE.Color('#87ceeb') }
+      shallowColor: { value: new THREE.Color(color === '#2a5a8f' ? '#4a8abf' : '#2a5a8f') }, // Más claro para gradiente
+      fresnelColor: { value: new THREE.Color('#87ceeb') },
+      isAltiplano: { value: color === '#2a5a8f' ? 1.0 : 0.0 },
+      lakeSize: { value: size }
     },
     vertexShader: `
       varying vec3 vNormal;
@@ -50,27 +53,76 @@ export default function MinimalistWater({
     `,
     fragmentShader: `
       uniform vec3 waterColor;
+      uniform vec3 shallowColor;
       uniform vec3 fresnelColor;
       uniform float time;
+      uniform float isAltiplano;
+      uniform float lakeSize;
       
       varying vec3 vNormal;
       varying vec3 vPosition;
       varying vec2 vUv;
       
+      // Función de ruido para distorsión orgánica
+      float noise(vec2 p) {
+        return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+      }
+      
       void main() {
-        // Fresnel effect
+        // Forma de medialuna para Lago Titicaca (solo si isAltiplano)
+        float alpha = 1.0;
+        
+        if (isAltiplano > 0.5) {
+          // Coordenadas centradas (-1 a 1)
+          vec2 centered = (vUv - 0.5) * 2.0;
+          
+          // Forma base elíptica (más ancho en vertical que horizontal)
+          vec2 ellipse = centered;
+          ellipse.x *= 1.3; // Comprimir horizontalmente para hacer más ancho verticalmente
+          float dist = length(ellipse);
+          
+          // Crear forma de herradura/medialuna
+          // Estrechar en el centro superior para crear la forma característica
+          float narrowing = smoothstep(-0.3, 0.6, centered.y) * 0.35; // Estrechamiento en parte superior
+          float horizontalCut = abs(centered.x) * narrowing;
+          
+          // Distorsión orgánica para bordes irregulares (penínsulas)
+          float n1 = noise(vUv * 8.0 + time * 0.05);
+          float n2 = noise(vUv * 15.0);
+          float distortion = (n1 * 0.15 + n2 * 0.08);
+          
+          // Máscara del lago con forma irregular
+          float lakeMask = smoothstep(0.88 + distortion, 0.72, dist + horizontalCut);
+          
+          alpha = lakeMask;
+          
+          // Descartar fragmentos fuera del lago
+          if (alpha < 0.05) discard;
+        }
+        
+        // Fresnel effect (más fuerte para altiplano)
         vec3 viewDirection = normalize(vPosition);
-        float fresnel = pow(1.0 - abs(dot(viewDirection, vNormal)), 3.0);
+        float fresnelPower = mix(3.0, 2.2, isAltiplano); // Más fuerte en altiplano
+        float fresnel = pow(1.0 - abs(dot(viewDirection, vNormal)), fresnelPower);
         
-        // Animated ripples
+        // Gradiente de profundidad (del centro hacia afuera)
+        float distFromCenter = length(vUv - 0.5) * 2.0; // 0 en centro, 1 en borde
+        vec3 depthColor = mix(waterColor, shallowColor, distFromCenter * 0.6);
+        
+        // Animated ripples (más sutiles en altiplano)
+        float rippleIntensity = mix(0.1, 0.05, isAltiplano);
         float ripple = sin(vUv.x * 20.0 + time) * sin(vUv.y * 20.0 + time) * 0.5 + 0.5;
-        ripple *= 0.1;
+        ripple *= rippleIntensity;
         
-        // Mix water color with fresnel
-        vec3 color = mix(waterColor, fresnelColor, fresnel * 0.6);
+        // Mix depth color with fresnel (más intenso en altiplano)
+        float fresnelMix = mix(0.6, 0.75, isAltiplano);
+        vec3 color = mix(depthColor, fresnelColor, fresnel * fresnelMix);
         color += ripple * 0.1;
         
-        gl_FragColor = vec4(color, 0.85);
+        // Transparencia ligeramente mayor en altiplano (agua más clara)
+        float finalAlpha = mix(0.85, 0.88, isAltiplano) * alpha;
+        
+        gl_FragColor = vec4(color, finalAlpha);
       }
     `
   }

@@ -1,6 +1,6 @@
 // Biome Detector - Detecta el bioma basado en coordenadas geográficas
 
-export type BiomeType = 'ice' | 'volcanic' | 'desert' | 'forest' | 'ocean' | 'default'
+export type BiomeType = 'ice' | 'volcanic' | 'desert' | 'forest' | 'ocean' | 'altiplano' | 'default'
 
 export interface BiomeInfo {
   type: BiomeType
@@ -12,6 +12,18 @@ export interface BiomeInfo {
 
 export function detectBiome(lat: number, lon: number): BiomeInfo {
   const absLat = Math.abs(lat)
+  
+  // ALTIPLANO - Lago Titicaca y región andina alta
+  // Lago Titicaca (lat entre -16.5 y -15.5, lon entre -70 y -68.5)
+  if (lat > -16.5 && lat < -15.5 && lon > -70 && lon < -68.5) {
+    return {
+      type: 'altiplano',
+      name: 'Altiplano - Lago Titicaca',
+      description: 'Lago navegable más alto del mundo (3812 msnm)',
+      temperature: 10,
+      humidity: 45
+    }
+  }
   
   // HIELO - Regiones polares y glaciares
   // Ártico (lat > 66.5) y Antártico (lat < -66.5)
@@ -230,6 +242,8 @@ export function getSkyColorForBiome(biome: BiomeType, isDay: boolean): string {
   switch (biome) {
     case 'ice':
       return '#b8d4e8' // Azul pálido helado
+    case 'altiplano':
+      return '#4a7bb7' // Azul profundo intenso (cielo de altura)
     case 'volcanic':
       return '#87ceeb' // Azul cielo (igual que default)
     case 'desert':
@@ -248,6 +262,8 @@ export function getFogColorForBiome(biome: BiomeType): string {
   switch (biome) {
     case 'ice':
       return '#d0e8f2' // Niebla blanca-azulada
+    case 'altiplano':
+      return '#c8d5e8' // Niebla clara y seca (menos haze)
     case 'volcanic':
       return '#8b7355' // Niebla gris-marrón
     case 'desert':

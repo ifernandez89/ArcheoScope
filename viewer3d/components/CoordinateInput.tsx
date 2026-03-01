@@ -36,28 +36,15 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
     setIsOpen(false)
   }
 
-  // Coordenadas de sitios famosos + descubrimientos ArcheoScope
+  // Coordenadas de sitios seleccionados
   const famousSites = [
-    // Sitios arqueológicos mundialmente famosos
-    { name: 'Machu Picchu, Perú', lat: -13.1631, lon: -72.5450, category: 'famous' },
-    { name: 'Pirámides de Giza, Egipto', lat: 29.9792, lon: 31.1342, category: 'famous' },
-    { name: 'Stonehenge, Inglaterra', lat: 51.1789, lon: -1.8262, category: 'famous' },
-    { name: 'Isla de Pascua, Chile', lat: -27.1127, lon: -109.3497, category: 'famous' },
-    { name: 'Angkor Wat, Camboya', lat: 13.4125, lon: 103.8670, category: 'famous' },
-    { name: 'Petra, Jordania', lat: 30.3285, lon: 35.4444, category: 'famous' },
-    { name: 'Göbekli Tepe, Turquía', lat: 37.2233, lon: 38.9225, category: 'famous' },
-    { name: 'Teotihuacán, México', lat: 19.6925, lon: -98.8438, category: 'famous' },
-    { name: 'Chichén Itzá, México', lat: 20.6843, lon: -88.5678, category: 'famous' },
-    { name: 'Acrópolis de Atenas, Grecia', lat: 37.9715, lon: 23.7267, category: 'famous' },
-    { name: 'Puma Punku - Tiwanaku, Bolivia', lat: -16.56164569638123, lon: -68.67952141492464, category: 'famous' },
-    { name: 'Antártida (Base McMurdo)', lat: -77.8419, lon: 166.6863, category: 'famous' },
     { name: '🌊 Océano Pacífico', lat: 8.7783, lon: -144.8885, category: 'famous' },
-    
-    // Descubrimientos ArcheoScope
-    { name: '🔍 Anomalía Patagonia', lat: -50.5, lon: -72.0, category: 'discovery' },
-    { name: '🔍 Zona Anatolia (cerca Göbekli)', lat: 37.5, lon: 39.2, category: 'discovery' },
-    { name: '🔍 Anomalía Puerto Rico', lat: 18.2, lon: -66.5, category: 'discovery' },
-    { name: '🔍 Desierto Anatolia Norte', lat: 38.0, lon: 38.5, category: 'discovery' },
+    { name: 'Antártida', lat: -75.2509, lon: 0.0714, category: 'famous' },
+    { name: 'Puma Punku - Tiwanaku, Bolivia', lat: -16.56164569638123, lon: -68.67952141492464, category: 'famous' },
+    { name: 'Pirámides de Giza, Egipto', lat: 29.9792, lon: 31.1342, category: 'famous' },
+    { name: 'Isla de Pascua, Chile', lat: -27.1254, lon: -109.2778, category: 'famous' },
+    { name: 'Teotihuacán, México', lat: 19.6925, lon: -98.8438, category: 'famous' },
+    { name: 'Tres Zapotes, Veracruz, México', lat: 18.4667, lon: -95.4500, category: 'famous' },
   ]
 
   return (

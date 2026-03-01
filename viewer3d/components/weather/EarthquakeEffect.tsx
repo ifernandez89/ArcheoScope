@@ -5,9 +5,11 @@
  * - Shake de cámara con ruido senoidal multicapa
  * - Partículas de polvo que suben del suelo
  * - Intensidad variable (ondas P y S)
+ * 
+ * IMPORTANTE: Limpia la rotación de cámara al desmontarse
  */
 
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -19,6 +21,13 @@ export default function EarthquakeEffect() {
 
   // Guardar posición original de la cámara una sola vez
   const initialized = useRef(false)
+
+  // Cleanup: resetear rotación de cámara al desmontar
+  useEffect(() => {
+    return () => {
+      camera.rotation.z = 0
+    }
+  }, [camera])
 
   // Partículas de polvo
   const dustGeometry = useMemo(() => {

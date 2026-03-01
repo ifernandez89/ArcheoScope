@@ -81,6 +81,11 @@ import SpaceUfo from './SpaceUfo'
 import PumaPunkuScene from './PumaPunkuScene'
 import EnvironmentElements, { EnvironmentElementsWithTrees } from './EnvironmentElements'
 import { CelestialOverlayHUD } from './CelestialOverlay'
+import BackgroundMountains from './BackgroundMountains'
+import DiscoveredItemInWorld from './DiscoveredItemInWorld'
+import ItemCollectedMessage from './ItemCollectedMessage'
+import ViracochaDialogue from './ViracochaDialogue'
+import Compass from './Compass'
 
 interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
@@ -138,6 +143,16 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     }, 3200)
   }, [])
 
+  // Handler para recolectar el item
+  const handleCollectItem = useCallback(() => {
+    console.log('📦 Item recolectado!')
+    setItemCollected(true)
+    setShowCollectedMessage(true)
+    
+    // Guardar en sessionStorage
+    sessionStorage.setItem('item_magna_bowl_collected', 'true')
+  }, [])
+
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // DirecciÃ³n del sol como objeto plano
   const [solarState, setSolarState] = useState({
     altitude: 0,
@@ -154,6 +169,31 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   // 🎵 Estado del audio
   const [audioEnabled, setAudioEnabled] = useState(false)
   const audioGenerator = getProceduralAudio()
+
+  // 🏺 Estado del item descubierto
+  const [itemDiscovered, setItemDiscovered] = useState(false)
+  const [itemCollected, setItemCollected] = useState(false)
+  const [showCollectedMessage, setShowCollectedMessage] = useState(false)
+  
+  // 🗿 Estado del diálogo de Viracocha
+  const [showViracochaDialogue, setShowViracochaDialogue] = useState(false)
+  const [magnaBowlCollected, setMagnaBowlCollected] = useState(false)
+
+  // Verificar si la Magna Bowl fue recolectada
+  useEffect(() => {
+    const checkMagnaBowl = () => {
+      if (typeof window !== 'undefined') {
+        const collected = sessionStorage.getItem('item_magna_bowl_collected') === 'true'
+        setMagnaBowlCollected(collected)
+      }
+    }
+    
+    // Verificar al montar y cada segundo
+    checkMagnaBowl()
+    const interval = setInterval(checkMagnaBowl, 1000)
+    return () => clearInterval(interval)
+  }, [])
+  
 
   // 🎵 Habilitar audio automáticamente en primera interacción
   useEffect(() => {
@@ -529,11 +569,16 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           display: 'flex',
           gap: '20px'
         }}>
-          <span>ðŸš¶ W/S - Adelante/AtrÃ¡s</span>
+          <span>🚶 W/S - Adelante/Atrás</span>
           <span>A/D - Izquierda/Derecha</span>
           <span>Q/E - Rotar</span>
-          <span>ðŸš€ SHIFT + Mouseâ†• - Control de DirecciÃ³n</span>
+          <span>🚀 SHIFT + Mouse↑↓ - Subir/Bajar Nave</span>
         </div>
+      )}
+
+      {/* Brújula astronómica - muestra el norte real basado en el sol */}
+      {mode === 'model' && (
+        <Compass solarAzimuth={solarState.azimuth} />
       )}
 
       {/* Escena 3D */}
@@ -569,6 +614,16 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           terrainLOD={terrainLOD}
           onTerrainLoadingChange={setTerrainLoading}
           onBlockMoved={handleBlockMoved}
+          itemDiscovered={itemDiscovered}
+          itemCollected={itemCollected}
+          onCollectItem={handleCollectItem}
+          showCollectedMessage={showCollectedMessage}
+          onCloseMessage={() => setShowCollectedMessage(false)}
+          showViracochaDialogue={showViracochaDialogue}
+          onViracochaSpeak={() => setShowViracochaDialogue(true)}
+          onCloseViracochaDialogue={() => setShowViracochaDialogue(false)}
+          onPortalEnter={() => handleLocationClick(-16.031003664299448, -69.49975772335767)}
+          magnaBowlCollected={magnaBowlCollected}
         />
       ) : null}
 
@@ -626,8 +681,7 @@ function GlobeScene({
       
       <PerspectiveCamera makeDefault position={[0, 0, 15]} fov={50} />
       <OrbitControls
-        enableDamping
-        dampingFactor={0.05}
+        enableDamping={false}
         minDistance={8}
         maxDistance={8000} // Neptuno está a ~6010 unidades (30.05 AU × 200)
         autoRotate={false}
@@ -696,7 +750,17 @@ function ModelScene({
   terrainExaggeration,
   terrainLOD,
   onTerrainLoadingChange,
-  onBlockMoved
+  onBlockMoved,
+  itemDiscovered,
+  itemCollected,
+  onCollectItem,
+  showCollectedMessage,
+  onCloseMessage,
+  showViracochaDialogue,
+  onViracochaSpeak,
+  onCloseViracochaDialogue,
+  onPortalEnter,
+  magnaBowlCollected
 }: { 
   modelPath: string
   avatarModel: string
@@ -717,10 +781,21 @@ function ModelScene({
   terrainLOD?: boolean
   onTerrainLoadingChange?: (loading: boolean) => void
   onBlockMoved?: () => void
+  itemDiscovered?: boolean
+  itemCollected?: boolean
+  onCollectItem?: () => void
+  showCollectedMessage?: boolean
+  onCloseMessage?: () => void
+  showViracochaDialogue?: boolean
+  onViracochaSpeak?: () => void
+  onCloseViracochaDialogue?: () => void
+  onPortalEnter?: () => void
+  magnaBowlCollected: boolean
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
   const [obstacles, setObstacles] = useState<THREE.Object3D[]>([])
+  const avatarPositionRef = useRef(new THREE.Vector3())
   // Detectar bioma basado en ubicaciÃ³n
   const biome = useMemo(() => {
     if (!location) return { type: 'default' as const, name: 'GenÃ©rico', description: '', temperature: 20, humidity: 50 }
@@ -751,6 +826,7 @@ function ModelScene({
   }, [modelRef.current])
   
   return (
+    <>
     <ObjectSelectionProvider onBlockMoved={onBlockMoved}>
     <Canvas
       shadows
@@ -763,7 +839,7 @@ function ModelScene({
         toneMappingExposure: 1.2
       }}
     >
-      {/* ðŸŽ® SISTEMAS DE PERFORMANCE - ÃšNICO useFrame */}
+      {/* 🎮 SISTEMAS DE PERFORMANCE - ÚNICO useFrame */}
       <EngineIntegration />
       
       <PerspectiveCamera makeDefault position={[8, 4, 8]} fov={60} />
@@ -771,8 +847,7 @@ function ModelScene({
       {/* Controles segÃºn modo */}
       {movementMode === 'orbit' ? (
         <OrbitControls
-          enableDamping
-          dampingFactor={0.08}
+          enableDamping={false}
           minDistance={3}
           maxDistance={30}
           minPolarAngle={Math.PI / 8}
@@ -786,17 +861,19 @@ function ModelScene({
       ) : null}
       {/* En modo avatar, la cÃ¡mara es controlada por WalkableAvatar */}
 
-      {/* Sistema astronÃ³mico-geomÃ©trico vivo - DESHABILITADO en modo avatar */}
-      <AstronomicalSystem
-        location={location}
-        enabled={movementMode === 'orbit'}
-        showGeometry={showGeometryField}
-        onDayNightChange={onDayNightChange}
-        onSolarUpdate={onSolarUpdate}
-        solarState={solarState}
-        isDay={isDay}
-        showTrajectory={true}
-      />
+      {/* Sistema astronómico-geométrico vivo - SOLO en modo órbita */}
+      {movementMode === 'orbit' && (
+        <AstronomicalSystem
+          location={location}
+          enabled={true}
+          showGeometry={showGeometryField}
+          onDayNightChange={onDayNightChange}
+          onSolarUpdate={onSolarUpdate}
+          solarState={solarState}
+          isDay={isDay}
+          showTrajectory={true}
+        />
+      )}
 
       {/* IluminaciÃ³n cinematogrÃ¡fica - adaptada al bioma */}
       <LightingSystem
@@ -817,11 +894,11 @@ function ModelScene({
           weather.rainHeavy || weather.lightning ? 0.5 : 
           0
         }
-        fogDensity={isIceBiome ? 0.012 : 0.008}
+        fogDensity={biome.type === 'altiplano' ? 0.004 : isIceBiome ? 0.012 : 0.008}
         showWater={!isIceBiome}
         waterPosition={[0, -0.5, 0]}
-        waterSize={150}
-        waterColor="#1e3a5f"
+        waterSize={biome.type === 'altiplano' ? 350 : 150}
+        waterColor={biome.type === 'altiplano' ? '#2a5a8f' : '#1e3a5f'}
       />
 
       {/* Terreno - adaptado al bioma (no lazy porque necesita ref) */}
@@ -830,6 +907,9 @@ function ModelScene({
       ) : (
         <VolcanicTerrain location={location} ref={terrainRef} />
       )}
+      
+      {/* Montañas de fondo para altiplano */}
+      <BackgroundMountains biomeType={biome.type} />
       
       {/* Terreno mejorado con DEM real - se superpone al terreno procedural */}
       {enhancedTerrainEnabled && (
@@ -865,7 +945,7 @@ function ModelScene({
         <EnvironmentElementsWithTrees location={location} />
       )}
 
-      {/* Modelo 3D o Avatar segÃºn modo */}
+      {/* Modelo 3D o Avatar según modo */}
       {movementMode === 'avatar' ? (
         <WalkableAvatar 
           key={avatarModel}  // Key para forzar re-mount cuando cambia el modelo
@@ -874,6 +954,7 @@ function ModelScene({
           solarDirection={solarDirection}
           isDay={isDay}
           showCosmicEffects={true}
+          onPositionChange={(pos) => avatarPositionRef.current.copy(pos)}
         />
       ) : (
         <ModelViewer modelPath={avatarModel} ref={modelRef} />
@@ -892,7 +973,11 @@ function ModelScene({
         Math.abs(location.lat - (-16.5616)) < 0.05 &&
         Math.abs(location.lon - (-68.6795)) < 0.05
       )) && (
-        <PumaPunkuScene />
+        <PumaPunkuScene 
+          onViracochaSpeak={onViracochaSpeak}
+          onPortalEnter={onPortalEnter}
+          avatarPositionRef={avatarPositionRef}
+        />
       )}
       
       {/* Capturar referencias */}
@@ -912,8 +997,34 @@ function ModelScene({
 
       {/* Receptor de clicks en terreno para mover objetos seleccionados */}
       <TerrainClickReceiver />
+      {/* Item descubierto flotando en el mundo - SIEMPRE VISIBLE en Lago Titicaca */}
+      {!itemCollected && location && 
+       location.lat > -16.5 && location.lat < -15.5 && 
+       location.lon > -70 && location.lon < -68.5 && onCollectItem && (
+        <DiscoveredItemInWorld
+          modelPath={getAssetPath('/magna_bowl.glb')}
+          position={[0, 0.5, 0]}
+          onCollect={onCollectItem}
+        />
+      )}
     </Canvas>
     </ObjectSelectionProvider>
+    
+    {/* Mensaje de item recolectado - FUERA del Canvas */}
+    {showCollectedMessage && onCloseMessage && (
+      <ItemCollectedMessage onClose={onCloseMessage} />
+    )}
+    
+    {/* Diálogo de Viracocha - FUERA del Canvas */}
+    {showViracochaDialogue && onCloseViracochaDialogue && (
+      <ViracochaDialogue
+        message={magnaBowlCollected 
+          ? "¡Gracias, viajero! Has traído lo que necesitaba." 
+          : "¡Atraviesa el portal, y tráeme lo que necesito!"}
+        onComplete={onCloseViracochaDialogue}
+      />
+    )}
+    </>
   )
 }
 

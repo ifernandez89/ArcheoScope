@@ -69,7 +69,7 @@ export default function CloudSky({
     }
     
     // Crear nubes SOLO en la mitad superior (cielo)
-    const cloudCount = stormMode ? 60 : 30 // Más nubes en tormenta
+    const cloudCount = stormMode ? 120 : 60 // DUPLICADO: Más nubes en tormenta (era 60:30)
     
     for (let i = 0; i < cloudCount; i++) {
       const x = Math.random() * 1024

@@ -1,18 +1,71 @@
 'use client'
 
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import { useGLTF } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import PumaPunkuBlock from './PumaPunkuBlock'
 import PumaPunkuStructure from './PumaPunkuStructure'
 import SelectableObject from './SelectableObject'
 import { useObjectSelection } from './ObjectSelectionContext'
 import { getAssetPath } from '@/lib/paths'
+import SunGate from './SunGate'
+import PortalDetector from './PortalDetector'
 
 /** Escena completa de Puma Punku: estructura + bloque central + 8 bloques dispersos */
-export default function PumaPunkuScene() {
+export default function PumaPunkuScene({ 
+  onViracochaSpeak,
+  onPortalEnter,
+  avatarPositionRef
+}: { 
+  onViracochaSpeak?: () => void
+  onPortalEnter?: () => void
+  avatarPositionRef?: React.RefObject<THREE.Vector3>
+}) {
   const { blockMoved } = useObjectSelection()
+  
+  // Cargar estado persistente de la misión
+  const [gateRevealed, setGateRevealed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('viracocha_gate_revealed') === 'true'
+    }
+    return false
+  })
+
+  const [magnaBowlCollected, setMagnaBowlCollected] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('item_magna_bowl_collected') === 'true'
+    }
+    return false
+  })
+
+  // Sincronizar con sessionStorage cuando cambia el estado del item
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkMagnaBowl = () => {
+        const collected = sessionStorage.getItem('item_magna_bowl_collected') === 'true'
+        setMagnaBowlCollected(collected)
+      }
+      
+      // Verificar cada segundo si se recolectó el item
+      const interval = setInterval(checkMagnaBowl, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [])
+
+  const handleViracochaSpeak = () => {
+    // Revelar la puerta la primera vez que habla
+    if (!gateRevealed) {
+      setGateRevealed(true)
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('viracocha_gate_revealed', 'true')
+      }
+    }
+    // Llamar al callback original con el estado de la misión
+    if (onViracochaSpeak) {
+      onViracochaSpeak()
+    }
+  }
 
   const extraBlocks: Array<{ id: string; pos: [number, number, number]; rot: number }> = [
     { id: 'pp-b1', pos: [-12, 0,   8], rot: 0.3 },
@@ -31,7 +84,30 @@ export default function PumaPunkuScene() {
       <PumaPunkuStructure position={[8, 0, -8]} rotation={[0, Math.PI / 6, 0]} revealed={blockMoved} />
 
       {/* Viracocha — guardián en la entrada de la estructura */}
-      <ViracochaGuardian revealed={blockMoved} />
+      <ViracochaGuardian 
+        revealed={blockMoved} 
+        onSpeak={handleViracochaSpeak}
+        magnaBowlCollected={magnaBowlCollected}
+      />
+
+      {/* Puerta del Sol - aparece cuando Viracocha habla por primera vez */}
+      <SunGate 
+        position={[70, 8, 60]} 
+        rotation={[0, -Math.PI / 2 - Math.PI / 12 + Math.PI / 6 + Math.PI / 12, 0]} 
+        revealed={gateRevealed} 
+      />
+
+      {/* Detector de portal - teletransporta al Lago Titicaca */}
+      {gateRevealed && avatarPositionRef && onPortalEnter && (
+        <PortalDetector
+          avatarPositionRef={avatarPositionRef}
+          portalPosition={[70, 8, 60]}
+          portalRotation={[0, -Math.PI / 2 - Math.PI / 12 + Math.PI / 6 + Math.PI / 12, 0]}
+          portalScale={20}
+          onPortalEnter={onPortalEnter}
+          enabled={gateRevealed}
+        />
+      )}
 
       {/* Bloque central */}
       <MovablePumaPunkuBlock />
@@ -65,15 +141,25 @@ function MovableExtraBlock({ id, position, rotation }: { id: string; position: [
 }
 
 /** Viracocha parado en la entrada de la estructura megalítica */
-function ViracochaGuardian({ revealed }: { revealed: boolean }) {
+function ViracochaGuardian({ 
+  revealed, 
+  onSpeak,
+  magnaBowlCollected 
+}: { 
+  revealed: boolean
+  onSpeak?: () => void
+  magnaBowlCollected: boolean
+}) {
   const { scene } = useGLTF(getAssetPath('/viracocha.glb'))
   const groupRef = useRef<THREE.Group>(null)
   const opacityRef = useRef(0)
+  const [hovered, setHovered] = useState(false)
+  const { camera, gl } = useThree()
 
   const SCALE = 4
   const OFFSET_Y = 0.206 * SCALE
 
-  // Clonar escena y preparar materiales transparentes (igual que PumaPunkuStructure)
+  // Clonar escena y preparar materiales transparentes
   const { cloned, meshes } = useMemo(() => {
     const cloned = scene.clone(true)
     const meshes: THREE.Mesh[] = []
@@ -104,6 +190,19 @@ function ViracochaGuardian({ revealed }: { revealed: boolean }) {
       })
     }
 
+    // Outline dorado cuando está hovered
+    if (revealed && opacityRef.current > 0) {
+      meshes.forEach(m => {
+        if (hovered) {
+          ;(m.material as THREE.MeshStandardMaterial).emissive = new THREE.Color('#ffd700')
+          ;(m.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.3
+        } else {
+          ;(m.material as THREE.MeshStandardMaterial).emissive = new THREE.Color('#000000')
+          ;(m.material as THREE.MeshStandardMaterial).emissiveIntensity = 0
+        }
+      })
+    }
+
     // Seguir la cámara con la mirada (solo eje Y)
     if (opacityRef.current > 0) {
       const pos = groupRef.current.position
@@ -113,11 +212,28 @@ function ViracochaGuardian({ revealed }: { revealed: boolean }) {
     }
   })
 
+  // Cambiar cursor cuando está visible y hovered
+  useFrame(() => {
+    if (revealed && opacityRef.current > 0.5) {
+      gl.domElement.style.cursor = hovered ? 'pointer' : 'auto'
+    }
+  })
+
+  const handleClick = (e: any) => {
+    if (revealed && opacityRef.current > 0.5 && onSpeak) {
+      e.stopPropagation()
+      onSpeak()
+    }
+  }
+
   return (
     <group
       ref={groupRef}
       position={[14.5 - 0.866, OFFSET_Y + 4.4, 0.33 + 0.5]}
       scale={SCALE}
+      onClick={handleClick}
+      onPointerOver={() => revealed && opacityRef.current > 0.5 && setHovered(true)}
+      onPointerOut={() => setHovered(false)}
     >
       <primitive object={cloned} />
     </group>

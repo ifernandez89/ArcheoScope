@@ -233,7 +233,7 @@ export default function UISystems({
           <span>⬆️ W/S - Adelante/Atrás</span>
           <span>A/D - Izquierda/Derecha</span>
           <span>Q/E - Rotar</span>
-          <span>⬆️ SHIFT + Mouse⬇️ - Control de Dirección</span>
+          <span>🚀 SHIFT + Mouse↑↓ - Subir/Bajar Nave</span>
         </div>
       )}
     </>

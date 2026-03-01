@@ -52,7 +52,7 @@ export default function WalkableAvatar({
   // Estado del avatar
   const [state, setState] = useState<'idle' | 'walking'>('idle')
   const velocity = useRef(new THREE.Vector3())
-  const moveSpeed = 10.0  // Duplicado para movimiento más rápido
+  const moveSpeed = 20.0  // Duplicado: de 10.0 a 20.0 para movimiento más rápido
   const rotationSpeed = 8.0  // Aumentado para rotación más rápida
   const keys = useRef<{ [key: string]: boolean }>({})
   const raycaster = useRef(new THREE.Raycaster())
@@ -293,13 +293,13 @@ export default function WalkableAvatar({
       
       // Aplicar rotación suave
       const currentRotation = group.current.rotation.clone()
-      currentRotation.x = THREE.MathUtils.lerp(currentRotation.x, targetPitch, 0.1)
+      currentRotation.x = THREE.MathUtils.lerp(currentRotation.x, targetPitch, 0.15)
       group.current.rotation.x = currentRotation.x
       
       // Calcular dirección de movimiento basada en las teclas Y la orientación de la nave
       const moveDirection = new THREE.Vector3()
       
-      // Obtener la dirección frontal de la nave (considerando su rotación)
+      // Obtener la dirección frontal de la nave (considerando su rotación completa)
       const avatarForward = new THREE.Vector3(0, 0, 1)
       avatarForward.applyQuaternion(group.current.quaternion)
       avatarForward.normalize()
@@ -312,19 +312,23 @@ export default function WalkableAvatar({
       let isMoving = false
       
       if (keys.current['w']) {
-        moveDirection.add(avatarForward)  // Adelante (en la dirección que mira)
+        // Adelante en la dirección que mira (INCLUYE componente vertical)
+        moveDirection.add(avatarForward)
         isMoving = true
       }
       if (keys.current['s']) {
-        moveDirection.sub(avatarForward)  // Atrás
+        // Atrás (opuesto a la dirección)
+        moveDirection.sub(avatarForward)
         isMoving = true
       }
       if (keys.current['a']) {
-        moveDirection.sub(avatarRight)  // Izquierda
+        // Izquierda
+        moveDirection.sub(avatarRight)
         isMoving = true
       }
       if (keys.current['d']) {
-        moveDirection.add(avatarRight)  // Derecha
+        // Derecha
+        moveDirection.add(avatarRight)
         isMoving = true
       }
       
@@ -339,7 +343,7 @@ export default function WalkableAvatar({
       // Aplicar movimiento solo si hay input de teclado
       if (isMoving) {
         moveDirection.normalize()
-        const flySpeed = moveSpeed * 1.2  // Velocidad en modo vuelo libre
+        const flySpeed = moveSpeed * 1.5  // Velocidad aumentada en modo vuelo libre (era 1.2)
         velocity.current.copy(moveDirection.multiplyScalar(flySpeed * delta))
         group.current.position.add(velocity.current)
       }
@@ -348,8 +352,8 @@ export default function WalkableAvatar({
       if (group.current.position.y < 2) {
         group.current.position.y = 2
       }
-      if (group.current.position.y > 100) {
-        group.current.position.y = 100
+      if (group.current.position.y > 150) {  // Aumentado de 100 a 150
+        group.current.position.y = 150
       }
       
       return  // Salir del frame, no procesar movimiento normal
@@ -520,8 +524,8 @@ export default function WalkableAvatar({
         // Leve inclinación hacia adelante
         group.current.rotation.x = Math.sin(timeAccumulator.current * 2) * 0.03
       } else {
-        // Respiración sutil cuando está quieto
-        group.current.position.y += Math.sin(timeAccumulator.current * 1.5) * 0.005
+        // Respiración desactivada - mantener posición estable
+        // group.current.position.y += Math.sin(timeAccumulator.current * 1.5) * 0.005
         // Volver a posición vertical
         group.current.rotation.x *= 0.95
       }
@@ -577,12 +581,12 @@ export default function WalkableAvatar({
       const cameraZ = group.current.position.z - Math.cos(avatarRotation) * cameraDistance
       let cameraY = group.current.position.y + cameraHeight
       
-      // Camera bob (oscilación al caminar) para sensación de movimiento
-      if (isMoving) {
-        const bobSpeed = 8  // Velocidad de oscilación
-        const bobAmount = 0.08  // Amplitud de oscilación (sutil)
-        cameraY += Math.sin(timeAccumulator.current * bobSpeed) * bobAmount
-      }
+      // Camera bob desactivado para eliminar oscilación
+      // if (isMoving) {
+      //   const bobSpeed = 8
+      //   const bobAmount = 0.08
+      //   cameraY += Math.sin(timeAccumulator.current * bobSpeed) * bobAmount
+      // }
       
       // Velocidad de seguimiento adaptativa
       let followSpeed

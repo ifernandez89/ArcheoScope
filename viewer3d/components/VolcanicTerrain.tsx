@@ -26,7 +26,13 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
   
   // Generar geometría con relieve procedural basado en coordenadas
   const geometry = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(200, 200, 100, 100)
+    // Terreno más grande para altiplano (Lago Titicaca es enorme)
+    const isAltiplano = location && 
+      Math.abs(location.lat) > 15.5 && Math.abs(location.lat) < 16.5 && 
+      location.lon > -70 && location.lon < -68.5
+    
+    const terrainSize = isAltiplano ? 400 : 200 // Doble de grande para altiplano
+    const geo = new THREE.PlaneGeometry(terrainSize, terrainSize, 100, 100)
     const positions = geo.attributes.position.array as Float32Array
     
     // Usar coordenadas como semilla para variación
@@ -44,8 +50,13 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
     if (location) {
       const absLat = Math.abs(location.lat)
       
+      // Altiplano - relieve quebrado y erosionado con MONTAÑAS MUY ALTAS
+      if (absLat > 15.5 && absLat < 16.5 && location.lon > -70 && location.lon < -68.5) {
+        amplitudeFactor = 22.0  // Montañas el doble de altas (era 11.0)
+        roughnessFactor = 16.0  // Muy rugoso, erosionado (era 8.0)
+      }
       // Terreno más montañoso cerca de zonas volcánicas conocidas
-      if ((absLat > 10 && absLat < 30) || (absLat > 60)) {
+      else if ((absLat > 10 && absLat < 30) || (absLat > 60)) {
         amplitudeFactor = 2.0  // Más montañoso
         roughnessFactor = 1.8
       } else if (absLat < 10) {
@@ -72,11 +83,23 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
       const y = positions[i + 1]
       
       // Combinar diferentes frecuencias de ruido con semilla única
-      const height = 
+      const baseNoise = 
         noise(x, y, 0.02, seed * 0.01) * 1.5 * amplitudeFactor +      // Ondulaciones grandes
-        noise(x, y, 0.05, seed * 0.02) * 0.8 * amplitudeFactor +      // Colinas medianas
+        noise(x, y, 0.05, seed * 0.02) * 0.8 * amplitudeFactor        // Colinas medianas
+      
+      const ridgeNoise = 
         noise(x, y, 0.1, seed * 0.03) * 0.4 * roughnessFactor +       // Detalles pequeños
-        noise(x, y, 0.2, seed * 0.04) * 0.2 * roughnessFactor         // Micro-relieve
+        noise(x, y, 0.2, seed * 0.04) * 0.2 * roughnessFactor +       // Micro-relieve
+        noise(x, y, 0.35, seed * 0.05) * 0.15 * roughnessFactor       // Alta frecuencia (erosión)
+      
+      // Mezcla más dramática para altiplano: 50% base + 50% relieve quebrado
+      const isAltiplanoTerrain = location && 
+        Math.abs(location.lat) > 15.5 && Math.abs(location.lat) < 16.5 && 
+        location.lon > -70 && location.lon < -68.5
+      
+      const height = isAltiplanoTerrain 
+        ? baseNoise * 0.5 + ridgeNoise * 0.5  // Más quebrado para altiplano
+        : baseNoise * 0.6 + ridgeNoise * 0.4  // Normal para otros terrenos
       
       positions[i + 2] = height
     }
@@ -95,8 +118,12 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
     if (location) {
       const absLat = Math.abs(location.lat)
       
+      // Altiplano - Lago Titicaca (PRIORIDAD MÁXIMA)
+      if (absLat > 15.5 && absLat < 16.5 && location.lon > -70 && location.lon < -68.5) {
+        baseColorType = 'altiplano'
+      }
       // Isla de Pascua - tierra rojiza volcánica
-      if (absLat > 25 && absLat < 30 && location.lon < -100 && location.lon > -115) {
+      else if (absLat > 25 && absLat < 30 && location.lon < -100 && location.lon > -115) {
         baseColorType = 'volcanic-red'
       }
       // Machu Picchu - tierra andina
@@ -163,6 +190,11 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
           mediumColor = vec3(0.20, 0.45, 0.22);  // Verde bosque medio
           lightColor = vec3(0.30, 0.55, 0.30);   // Verde bosque claro
           depthColor = vec3(0.08, 0.22, 0.10);   // Verde muy oscuro
+        } else if (colorType == 5) { // altiplano - OCRE SECO
+          darkColor = vec3(0.56, 0.54, 0.32);    // #8f8a52 - Verde oliva seco
+          mediumColor = vec3(0.75, 0.66, 0.42);  // #bfa76a - Ocre claro
+          lightColor = vec3(0.79, 0.69, 0.48);   // #c9b07a - Beige altiplano
+          depthColor = vec3(0.63, 0.55, 0.36);   // #a18d5c - Marrón tierra
         } else { // desert
           darkColor = vec3(0.35, 0.3, 0.2);
           mediumColor = vec3(0.45, 0.4, 0.3);
@@ -205,6 +237,7 @@ const VolcanicTerrain = forwardRef<THREE.Mesh, VolcanicTerrainProps>(
     else if (baseColorType === 'andean') colorTypeInt = 2
     else if (baseColorType === 'tropical') colorTypeInt = 3
     else if (baseColorType === 'desert') colorTypeInt = 4
+    else if (baseColorType === 'altiplano') colorTypeInt = 5
     
     return new THREE.ShaderMaterial({
       vertexShader,

@@ -39,7 +39,15 @@ export function ObjectSelectionProvider({ children, onBlockMoved }: ObjectSelect
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const pendingMoveRef = useRef<[number, number, number] | null>(null)
   const [pendingMove, setPendingMove] = useState<[number, number, number] | null>(null)
-  const [blockMoved, setBlockMoved] = useState(false)
+  
+  // Estado persistente de blockMoved
+  const [blockMoved, setBlockMoved] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('puma_punku_block_moved') === 'true'
+    }
+    return false
+  })
+  
   const onBlockMovedRef = useRef(onBlockMoved)
   onBlockMovedRef.current = onBlockMoved
 
@@ -65,6 +73,9 @@ export function ObjectSelectionProvider({ children, onBlockMoved }: ObjectSelect
 
   const notifyBlockMoved = useCallback(() => {
     setBlockMoved(true)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('puma_punku_block_moved', 'true')
+    }
     onBlockMovedRef.current?.()
   }, [])
 
