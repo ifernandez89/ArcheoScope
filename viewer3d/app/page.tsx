@@ -1,44 +1,49 @@
 'use client'
 
-import dynamic from 'next/dynamic'
-import UI from '@/components/UI'
-import HelpPanel from '@/components/HelpPanel'
+import { useRouter } from 'next/navigation'
 
-// Importar Scene3D dinámicamente para evitar SSR issues con Three.js
-const Scene3D = dynamic(() => import('@/components/Scene3D'), {
-  ssr: false,
-  loading: () => (
-    <div style={{
+export default function Home() {
+  const router = useRouter()
+
+  return (
+    <main style={{
       width: '100vw',
       height: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)',
-      color: '#fff',
-      fontFamily: 'monospace'
+      background: '#000000',
+      margin: 0,
+      padding: 0,
+      overflow: 'hidden'
     }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{
-          fontSize: '3rem',
-          marginBottom: '1rem'
-        }}>
-          🏛️
-        </div>
-        <div style={{ fontSize: '1.25rem' }}>
-          Inicializando visualizador 3D...
-        </div>
-      </div>
-    </div>
-  )
-})
-
-export default function Home() {
-  return (
-    <main>
-      <Scene3D />
-      <UI />
-      <HelpPanel />
+      <button
+        onClick={() => router.push('/game')}
+        style={{
+          padding: '20px 60px',
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#ffffff',
+          background: 'transparent',
+          border: '2px solid #ffffff',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          transition: 'all 0.3s ease',
+          fontFamily: 'inherit',
+          letterSpacing: '2px',
+          textTransform: 'uppercase'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#ffffff'
+          e.currentTarget.style.color = '#000000'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = '#ffffff'
+        }}
+      >
+        Entrar
+      </button>
     </main>
   )
 }
