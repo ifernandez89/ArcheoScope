@@ -86,6 +86,7 @@ import DiscoveredItemInWorld from './DiscoveredItemInWorld'
 import ItemCollectedMessage from './ItemCollectedMessage'
 import ViracochaDialogue from './ViracochaDialogue'
 import Compass from './Compass'
+import { loadPlayerState, savePlayerState, updatePlayerLocation } from '@/types/player'
 
 interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
@@ -109,11 +110,43 @@ const CALM_WEATHER: WeatherState = {
 }
 
 export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false, spaceUfoNumber = 1 }: ImmersiveSceneProps) {
-  const [mode, setMode] = useState<'globe' | 'transition' | 'model' | 'exploration'>('globe')
+  // Cargar estado del jugador
+  const playerState = loadPlayerState()
+  
+  // Cargar modo inicial según última ubicación
+  const [mode, setMode] = useState<'globe' | 'transition' | 'model' | 'exploration'>(() => {
+    if (playerState?.lastLocation && playerState.lastLocation.mode === 'model') {
+      return 'model'
+    }
+    return 'globe'
+  })
+  
   const [selectedModel, setSelectedModel] = useState<string>(getAssetPath('/moai.glb'))
-  const [avatarModel, setAvatarModel] = useState<string>(getAssetPath('/ufo_1.glb')) // UFO 1 por defecto
-  const [currentUfo, setCurrentUfo] = useState<number>(1) // UFO actual
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(null)
+  
+  // Cargar nave del jugador si existe, sino usar UFO 1 por defecto
+  const [avatarModel, setAvatarModel] = useState<string>(() => {
+    if (playerState?.ship?.model) {
+      return getAssetPath(playerState.ship.model)
+    }
+    return getAssetPath('/ufo_1.glb')
+  })
+  
+  const [currentUfo, setCurrentUfo] = useState<number>(() => {
+    if (playerState?.ship?.id) {
+      const ufoNum = parseInt(playerState.ship.id.split('_')[1])
+      return ufoNum || 1
+    }
+    return 1
+  })
+  
+  // Cargar última ubicación si existe
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(() => {
+    if (playerState?.lastLocation) {
+      return { lat: playerState.lastLocation.lat, lon: playerState.lastLocation.lon }
+    }
+    return null
+  })
+  
   const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
   // Sitios donde ya se descubrió la estructura megalítica — persiste durante la sesión
   const discoveredSites = useRef<Set<string>>(new Set())
@@ -125,6 +158,47 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [showUfoSelector, setShowUfoSelector] = useState(false) // Dropdown de UFOs
   const [isDay, setIsDay] = useState(true) // Estado dÃ­a/noche
   const [weather, setWeather] = useState<WeatherState>(DEFAULT_STORM_WEATHER) // Estado del clima
+  
+  // Mostrar información del jugador al cargar
+  useEffect(() => {
+    if (playerState) {
+      console.log('🎮 Jugador cargado:', playerState.playerName)
+      console.log('🛸 Nave:', playerState.ship.name)
+      console.log('📊 Progreso:', playerState.progress)
+      
+      // Aplicar volumen guardado
+      const audioGenerator = getProceduralAudio()
+      if (playerState.settings?.musicVolume !== undefined) {
+        audioGenerator.setMasterVolume(playerState.settings.musicVolume)
+        console.log('🔊 Volumen aplicado:', playerState.settings.musicVolume)
+      }
+    } else {
+      console.log('⚠️ No hay estado de jugador guardado')
+    }
+  }, [])
+  
+  // Escuchar cambios en el volumen desde el menú
+  useEffect(() => {
+    const checkVolumeChanges = () => {
+      const currentState = loadPlayerState()
+      if (currentState?.settings?.musicVolume !== undefined) {
+        const audioGenerator = getProceduralAudio()
+        const currentVolume = audioGenerator.getMasterVolume()
+        const savedVolume = currentState.settings.musicVolume
+        
+        // Solo actualizar si cambió
+        if (Math.abs(currentVolume - savedVolume) > 0.01) {
+          audioGenerator.setMasterVolume(savedVolume)
+          console.log('🔊 Volumen actualizado:', savedVolume)
+        }
+      }
+    }
+    
+    // Verificar cada 500ms si el volumen cambió
+    const interval = setInterval(checkVolumeChanges, 500)
+    return () => clearInterval(interval)
+  }, [])
+  
   // Secuencia de clima al mover un bloque de Puma Punku
   // Mantener ref sincronizado con el estado
   useEffect(() => {
@@ -292,6 +366,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     setSelectedSite(null)
     setMode('transition')
     
+    // Guardar ubicación en el estado del jugador
+    updatePlayerLocation(lat, lon, 'model')
+    
     // TransiciÃ³n cinematogrÃ¡fica de 2 segundos
     await new Promise(resolve => setTimeout(resolve, 2000))
     
@@ -308,6 +385,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     getClimateAudio().updateWeather({ rain: 0, wind: 0, tornado: 0, snow: 0, thunder: false })
     setWeather(CALM_WEATHER)
     setMode('transition')
+    
+    // Guardar que volvió al globo
+    updatePlayerLocation(0, 0, 'globe')
+    
     await new Promise(resolve => setTimeout(resolve, 1500))
     setMode('globe')
     setSelectedLocation(null)
@@ -322,12 +403,32 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     })
   }
 
-  // Cambiar UFO en modo exploración
+  // Cambiar UFO en modo exploración (para condiciones especiales del juego)
   const handleUfoChange = (ufoNumber: number) => {
     const newPath = getAssetPath(`/ufo_${ufoNumber}.glb`)
     console.log('🛸 Cambiando UFO:', ufoNumber, 'Path:', newPath)
     setCurrentUfo(ufoNumber)
     setAvatarModel(newPath)
+    
+    // Actualizar estado del jugador si existe
+    const currentState = loadPlayerState()
+    if (currentState) {
+      // Mapeo de naves (debe coincidir con player-setup)
+      const ships = [
+        { id: 'ufo_1', name: '🌫️ Phantom', model: '/ufo_1.glb', specialty: 'Cloaking / Invisibilidad', description: 'Especialidad: infiltración y espionaje', ability: 'Habilidad principal: camuflaje óptico', missions: 'Tipo de misiones: infiltración, espionaje, recuperar artefactos, entrar a ruinas antiguas' },
+        { id: 'ufo_2', name: '🛡️ Aegis', model: '/ufo_2.glb', specialty: 'Defensa / Campo EM', description: 'Especialidad: protección y control físico', ability: 'Habilidad principal: campo electromagnético', missions: 'Tipo de misiones: atravesar campos de asteroides, rescates, misiones de escolta, limpiar escombros espaciales' },
+        { id: 'ufo_3', name: '⚡ Vector', model: '/ufo_3.glb', specialty: 'Velocidad / Teletransporte', description: 'Especialidad: movilidad extrema', ability: 'Habilidad principal: salto cuántico', missions: 'Tipo de misiones: carreras, persecuciones, exploración, entrega urgente' },
+        { id: 'ufo_4', name: '🔬 Oracle', model: '/ufo_4.glb', specialty: 'Ciencia / Escaneo', description: 'Especialidad: conocimiento y análisis', ability: 'Habilidad principal: escáner cuántico', missions: 'Tipo de misiones: exploración planetaria, arqueología alienígena, investigación, cartografía' },
+        { id: 'ufo_5', name: '💣 Titan', model: '/ufo_5.glb', specialty: 'Fuerza Bruta / Impacto', description: 'Especialidad: potencia y resistencia', ability: 'Habilidad principal: masa + potencia', missions: 'Tipo de misiones: combate, minería pesada, abrir rutas, destruir obstáculos' }
+      ]
+      
+      const newShip = ships[ufoNumber - 1]
+      if (newShip) {
+        currentState.ship = newShip
+        savePlayerState(currentState)
+        console.log('💾 Nave actualizada en estado del jugador:', newShip.name)
+      }
+    }
   }
 
   return (
@@ -468,86 +569,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             ðŸ“ {showLocationInfo ? 'Ocultar Info' : 'Mostrar Info'}
           </button>
 
-          {/* Selector de UFO en modo avatar */}
-          {movementMode === 'avatar' && (
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setShowUfoSelector(!showUfoSelector)}
-                style={{
-                  padding: '12px 24px',
-                  background: 'rgba(139, 92, 246, 0.9)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  borderRadius: '8px',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                  width: '100%'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 1)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 0.9)'}
-              >
-                ðŸ
-              </button>
 
-              {/* Dropdown de UFOs */}
-              {showUfoSelector && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  marginTop: '4px',
-                  background: 'rgba(0, 0, 0, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  overflow: 'hidden',
-                  zIndex: 2000,
-                  minWidth: '200px'
-                }}>
-                  {[1, 2, 3, 4, 5].map(ufoNum => (
-                    <button
-                      key={ufoNum}
-                      onClick={() => {
-                        handleUfoChange(ufoNum)
-                        setShowUfoSelector(false)
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '8px 12px',
-                        background: currentUfo === ufoNum ? 'rgba(139, 92, 246, 0.5)' : 'transparent',
-                        border: 'none',
-                        borderRadius: '4px',
-                        color: 'white',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'background 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (currentUfo !== ufoNum) {
-                          e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (currentUfo !== ufoNum) {
-                          e.currentTarget.style.background = 'transparent'
-                        }
-                      }}
-                    >
-                      ðŸ
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          {/* Selector de UFO eliminado - ahora se configura en /player-setup */}
         </div>
       )}
 

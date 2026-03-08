@@ -1,54 +1,43 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import { resetPlayerState } from '@/types/player'
 
-export default function Home() {
+export default function InfoPage() {
   const router = useRouter()
-
-  // Detectar F5 para resetear el juego
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'F5') {
-        e.preventDefault()
-        resetPlayerState()
-        if (typeof window !== 'undefined') {
-          sessionStorage.clear()
-        }
-        console.log('🗑️ F5 presionado - Estado del juego reseteado')
-        window.location.reload()
-      }
-    }
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [])
 
   return (
     <main style={{
       width: '100vw',
       height: '100vh',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       background: '#000000',
       margin: 0,
       padding: 0,
-      overflow: 'hidden'
+      overflow: 'hidden',
+      color: '#ffffff'
     }}>
+      <h1 style={{
+        fontSize: '48px',
+        marginBottom: '40px',
+        letterSpacing: '4px'
+      }}>
+        INFORMACIÓN
+      </h1>
+      
       <button
         onClick={() => router.push('/menu')}
         style={{
-          padding: '20px 60px',
-          fontSize: '24px',
-          fontWeight: 'bold',
+          padding: '15px 40px',
+          fontSize: '18px',
           color: '#ffffff',
           background: 'transparent',
           border: '2px solid #ffffff',
           borderRadius: '8px',
           cursor: 'pointer',
           transition: 'all 0.3s ease',
-          fontFamily: 'inherit',
           letterSpacing: '2px',
           textTransform: 'uppercase'
         }}
@@ -61,7 +50,7 @@ export default function Home() {
           e.currentTarget.style.color = '#ffffff'
         }}
       >
-        Entrar
+        Volver
       </button>
     </main>
   )
