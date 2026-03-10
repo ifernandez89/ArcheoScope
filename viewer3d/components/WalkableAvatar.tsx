@@ -467,12 +467,15 @@ export default function WalkableAvatar({
         }
       }
       
-      // Agregar oscilación a la altura objetivo (no a la posición actual)
-      const oscillation = Math.sin(timeAccumulator.current * 2) * 0.15
+      // Oscilación desactivada para evitar meneo de la nave
+      const oscillation = 0  // Era: Math.sin(timeAccumulator.current * 2) * 0.15
       const finalTargetHeight = targetHeight + oscillation
       
-      // Suavizar transición a altura objetivo (con oscilación incluida)
-      group.current.position.y += (finalTargetHeight - group.current.position.y) * 8 * delta
+      // Suavizar transición a altura objetivo solo si hay diferencia significativa
+      const heightDifference = Math.abs(finalTargetHeight - group.current.position.y)
+      if (heightDifference > 0.01) {  // Solo ajustar si la diferencia es mayor a 1cm
+        group.current.position.y += (finalTargetHeight - group.current.position.y) * 8 * delta
+      }
       
       // ========================================
       // ROTACIÓN AUTOMÁTICA DE MODELOS
