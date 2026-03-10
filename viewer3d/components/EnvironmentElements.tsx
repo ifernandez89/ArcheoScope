@@ -66,6 +66,15 @@ export default function EnvironmentElements({
     return 'temperate'
   }, [location])
 
+  // Detectar si estamos en Puma Punku
+  const isPumaPunku = useMemo(() => {
+    if (!location) return false
+    const lat = location.lat
+    const lon = location.lon
+    // Coordenadas de Puma Punku: -16.5596°S, -68.6788°W
+    return Math.abs(lat + 16.5596) < 0.05 && Math.abs(lon + 68.6788) < 0.05
+  }, [location])
+
   const elements = useMemo(() => {
     const random = (index: number) => {
       const x = Math.sin(seed + index * 12.9898) * 43758.5453
@@ -73,19 +82,44 @@ export default function EnvironmentElements({
     }
 
     const counts: Record<string, Record<string, number>> = {
-      tropical:  { trees: 15, bushes: 20, rocks: 10, palms: 8,  flowers: 25 },
-      temperate: { trees: 12, bushes: 15, rocks: 15, logs: 5,   flowers: 15 },
-      altiplano: { trees: 4,  bushes: 25, rocks: 20, logs: 3,   flowers: 30 }, // Vegetación baja, pocos árboles
-      desert:    { trees: 3,  bushes: 5,  rocks: 25, cacti: 12, crystals: 8 },
-      arctic:    { trees: 5,  bushes: 8,  rocks: 30, crystals: 5, flowers: 5 }
+      tropical:  { trees: 25, bushes: 20, rocks: 10, palms: 8,  flowers: 25 },
+      temperate: { trees: 25, bushes: 15, rocks: 15, logs: 5,   flowers: 15 },
+      altiplano: { trees: 20, bushes: 25, rocks: 20, logs: 3,   flowers: 30 }, // Vegetación baja, árboles moderados
+      desert:    { trees: 15, bushes: 5,  rocks: 25, cacti: 12, crystals: 8 },  // Menos árboles en desierto
+      arctic:    { trees: 20, bushes: 8,  rocks: 30, crystals: 5, flowers: 5 }
     }
     const count = counts[biome] || counts.temperate
     const items: any[] = []
     let index = 0
 
     // Zonas ocupadas: [x, z, radioExclusión]
-    // Estructura de Puma Punku en [8, -8], radio 12
-    const occupied: Array<[number, number, number]> = [[8, -8, 12]]
+    const occupied: Array<[number, number, number]> = []
+    
+    // Detectar si estamos en Giza
+    const isGiza = location && Math.abs(location.lat - 29.9792) < 0.05 && Math.abs(location.lon - 31.1342) < 0.05
+    
+    // En Puma Punku: proteger estructura y Viracocha con radios GRANDES
+    if (isPumaPunku) {
+      occupied.push([8, -8, 25])       // Estructura principal (radio muy amplio)
+      occupied.push([13.634, 0.83, 15]) // Viracocha (radio amplio)
+      occupied.push([70, 60, 20])       // Puerta del Sol (radio amplio)
+      // Proteger todos los bloques dispersos
+      occupied.push([-12, 8, 8])
+      occupied.push([15, -6, 8])
+      occupied.push([-8, -18, 8])
+      occupied.push([20, 14, 8])
+      occupied.push([-20, -10, 8])
+      occupied.push([6, 22, 8])
+      occupied.push([-16, 18, 8])
+      occupied.push([10, -22, 8])
+    }
+    
+    // En Giza: proteger pirámide y esfinge con radios MUY GRANDES
+    if (isGiza) {
+      occupied.push([0, 0, 80])        // Gran Pirámide (radio enorme)
+      occupied.push([100, 50, 30])     // Esfinge (radio grande)
+      occupied.push([0, 0, 50])        // Templo del Valle (bajo la pirámide)
+    }
 
     const isTooClose = (x: number, z: number): boolean => {
       for (const [ox, oz, r] of occupied) {
@@ -94,22 +128,45 @@ export default function EnvironmentElements({
       return false
     }
 
-    // Árboles — los extra van en radio exterior (≥35) para no chocar con la estructura
-    for (let i = 0; i < count.trees * treeMultiplier; i++) {
+    // Árboles — los extra van en radio exterior (≥45 en Puma Punku) para no chocar con la estructura
+    // En Puma Punku: FORZAR solo 1 árbol sin importar treeMultiplier
+    const finalTreeCount = isPumaPunku ? count.trees : count.trees * treeMultiplier
+    for (let i = 0; i < finalTreeCount; i++) {
       const isExtra = i >= count.trees
       let x = 0, z = 0, attempts = 0
-      do {
-        const angle = random(index++) * Math.PI * 2
-        const minR = isExtra ? 35 : 15
-        const radius = minR + random(index++) * 25
-        x = Math.cos(angle) * radius + (random(index++) - 0.5) * 8
-        z = Math.sin(angle) * radius + (random(index++) - 0.5) * 8
-        attempts++
-      } while (isTooClose(x, z) && attempts < 8)
+      
+      if (isPumaPunku) {
+        // En Puma Punku: posiciones aleatorias respetando zonas de exclusión
+        do {
+          const angle = random(index++) * Math.PI * 2
+          const radius = 30 + random(index++) * 40  // Entre 30 y 70 metros
+          x = Math.cos(angle) * radius + (random(index++) - 0.5) * 10
+          z = Math.sin(angle) * radius + (random(index++) - 0.5) * 10
+          attempts++
+        } while (isTooClose(x, z) && attempts < 50)
+      } else {
+        do {
+          const angle = random(index++) * Math.PI * 2
+          const minR = isExtra ? 35 : 15
+          const radius = minR + random(index++) * 25
+          x = Math.cos(angle) * radius + (random(index++) - 0.5) * 8
+          z = Math.sin(angle) * radius + (random(index++) - 0.5) * 8
+          attempts++
+        } while (isTooClose(x, z) && attempts < 20)
+      }
+      
+      console.log(`[EnvironmentElements] Árbol generado: x=${x.toFixed(2)}, z=${z.toFixed(2)}, isPumaPunku=${isPumaPunku}`)
 
-      const heightInMeters = 2 + random(index++) * 8
+      // Seleccionar tipo de árbol: distribuir equitativamente entre los 3 tipos finales
+      // Altura: mínimo 2.2m (mitad de Viracocha), máximo 5m
+      const heightInMeters = 2.2 + random(index++) * 2.8  // Entre 2.2m y 5m
       const tr = random(index++)
-      const treeType = tr < 0.25 ? 'default' : tr < 0.5 ? 'tree1' : tr < 0.75 ? 'tree2' : 'tree3'
+      let treeType: any
+      // En todas las escenas: distribuir equitativamente entre los 3 tipos
+      if (tr < 0.33) treeType = 'default'     // tree_new.glb (33%)
+      else if (tr < 0.66) treeType = 'tree1'  // tree_new2.glb (33%)
+      else treeType = 'tree2'                 // tree_new3.glb (33%)
+      
       items.push({ type: 'tree', x, z, heightInMeters, rotation: random(index++) * Math.PI * 2, treeType })
       occupied.push([x, z, 4])
     }
@@ -174,7 +231,7 @@ export default function EnvironmentElements({
     }
 
     return items
-  }, [seed, biome, treeMultiplier])
+  }, [seed, biome, treeMultiplier, isPumaPunku])
 
   const flowerColors = ['#ff6b9d', '#ffd93d', '#a8e6cf', '#c7b3ff']
 
@@ -183,9 +240,12 @@ export default function EnvironmentElements({
       {elements.map((item, i) => {
         switch (item.type) {
           case 'tree':
+            // Escala basada en altura (heightInMeters ya está entre 2.2 y 5)
+            const treeY = 0
+            const treeScale = item.heightInMeters * 0.1  // Aumentado de 0.05 a 0.1 para hacerlos más grandes
             return (
               <MovableTree key={`tree-${seed}-${i}`} id={`tree-${seed}-${i}`}
-                initialPosition={[item.x, 0, item.z]} scale={item.heightInMeters * 0.05}
+                initialPosition={[item.x, treeY, item.z]} scale={treeScale}
                 rotation={item.rotation} treeType={item.treeType} />
             )
           case 'rock':

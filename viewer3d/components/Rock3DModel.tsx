@@ -4,7 +4,7 @@
  * Carga el modelo rock_blender.glb
  */
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
@@ -21,8 +21,12 @@ export default function Rock3DModel({ position, scale = 1, rotation = 0 }: Rock3
   // Cargar modelo GLB
   const { scene } = useGLTF(getAssetPath('/rock_blender.glb'))
   
-  // Clonar el modelo para cada instancia
-  const clonedScene = scene.clone()
+  // Clonar el modelo para cada instancia - SOLO UNA VEZ con useMemo
+  const clonedScene = useMemo(() => {
+    const cloned = scene.clone(true)
+    console.log('[Rock3DModel] Clonando roca')
+    return cloned
+  }, [scene])
   
   useEffect(() => {
     if (clonedScene) {
@@ -35,6 +39,11 @@ export default function Rock3DModel({ position, scale = 1, rotation = 0 }: Rock3
         if (child instanceof THREE.Mesh) {
           child.castShadow = true
           child.receiveShadow = true
+          
+          // Clonar material para evitar compartir entre instancias
+          if (child.material) {
+            child.material = (child.material as THREE.Material).clone()
+          }
         }
       })
     }

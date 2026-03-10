@@ -1,35 +1,41 @@
 {
   "pages": {
-    "/_not-found/page": [
-      "static/chunks/webpack-d8c97905d2685b3a.js",
-      "static/chunks/vendor-102878d4a5620e4f.js",
-      "static/chunks/main-app-a197d865af5093da.js",
-      "static/chunks/app/_not-found/page-4ab590ec801a1eb2.js"
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
     ],
     "/layout": [
-      "static/chunks/webpack-d8c97905d2685b3a.js",
-      "static/chunks/vendor-102878d4a5620e4f.js",
-      "static/chunks/main-app-a197d865af5093da.js",
-      "static/css/249ec7b36a9b822f.css",
-      "static/chunks/app/layout-c12ee11d94b450ad.js"
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/css/app/layout.css",
+      "static/chunks/app/layout.js"
     ],
-    "/page": [
-      "static/chunks/webpack-d8c97905d2685b3a.js",
-      "static/chunks/vendor-102878d4a5620e4f.js",
-      "static/chunks/main-app-a197d865af5093da.js",
-      "static/chunks/app/page-8702a201b1be0595.js"
+    "/menu/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/menu/page.js"
     ],
-    "/realistic-solar/page": [
-      "static/chunks/webpack-d8c97905d2685b3a.js",
-      "static/chunks/vendor-102878d4a5620e4f.js",
-      "static/chunks/main-app-a197d865af5093da.js",
-      "static/chunks/app/realistic-solar/page-272a2b146f91c0e6.js"
+    "/player-setup/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/player-setup/page.js"
     ],
     "/game/page": [
-      "static/chunks/webpack-d8c97905d2685b3a.js",
-      "static/chunks/vendor-102878d4a5620e4f.js",
-      "static/chunks/main-app-a197d865af5093da.js",
-      "static/chunks/app/game/page-8e48de92d1eb6598.js"
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/game/page.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

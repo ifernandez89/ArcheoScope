@@ -79,13 +79,16 @@ import SiteInfo from './SiteInfo'
 import SolarSimulation from './SolarSimulation'
 import SpaceUfo from './SpaceUfo'
 import PumaPunkuScene from './PumaPunkuScene'
+import GizaScene from './GizaScene'
 import EnvironmentElements, { EnvironmentElementsWithTrees } from './EnvironmentElements'
 import { CelestialOverlayHUD } from './CelestialOverlay'
 import BackgroundMountains from './BackgroundMountains'
 import DiscoveredItemInWorld from './DiscoveredItemInWorld'
 import ItemCollectedMessage from './ItemCollectedMessage'
 import ViracochaDialogue from './ViracochaDialogue'
+import SphinxDialogue from './SphinxDialogue'
 import Compass from './Compass'
+import CompassTracker from './CompassTracker'
 import { loadPlayerState, savePlayerState, updatePlayerLocation } from '@/types/player'
 
 interface ImmersiveSceneProps {
@@ -158,6 +161,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [showUfoSelector, setShowUfoSelector] = useState(false) // Dropdown de UFOs
   const [isDay, setIsDay] = useState(true) // Estado dÃ­a/noche
   const [weather, setWeather] = useState<WeatherState>(DEFAULT_STORM_WEATHER) // Estado del clima
+  const [cameraRotation, setCameraRotation] = useState(0) // Rotación de la cámara para la brújula
+  const [showSphinxDialogue, setShowSphinxDialogue] = useState(false) // Diálogo de la Esfinge en Giza
   
   // Mostrar información del jugador al cargar
   useEffect(() => {
@@ -599,9 +604,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         </div>
       )}
 
-      {/* Brújula astronómica - muestra el norte real basado en el sol */}
+      {/* Brújula astronómica - muestra el norte real basado en la rotación de la cámara */}
       {mode === 'model' && (
-        <Compass solarAzimuth={solarState.azimuth} />
+        <Compass rotation={cameraRotation} solarAzimuth={solarState.azimuth} />
       )}
 
       {/* Escena 3D */}
@@ -647,12 +652,19 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onCloseViracochaDialogue={() => setShowViracochaDialogue(false)}
           onPortalEnter={() => handleLocationClick(-16.031003664299448, -69.49975772335767)}
           magnaBowlCollected={magnaBowlCollected}
+          onCameraRotationChange={setCameraRotation}
+          onSphinxClick={() => setShowSphinxDialogue(true)}
         />
       ) : null}
 
       {/* Control de clima */}
       {mode === 'model' && (
         <WeatherControl onWeatherChange={setWeather} initialWeather={weather} />
+      )}
+      
+      {/* Diálogo de la Esfinge - FUERA del Canvas */}
+      {showSphinxDialogue && (
+        <SphinxDialogue onClose={() => setShowSphinxDialogue(false)} />
       )}
 
       <style jsx>{`
@@ -783,7 +795,9 @@ function ModelScene({
   onViracochaSpeak,
   onCloseViracochaDialogue,
   onPortalEnter,
-  magnaBowlCollected
+  magnaBowlCollected,
+  onCameraRotationChange,
+  onSphinxClick
 }: { 
   modelPath: string
   avatarModel: string
@@ -814,6 +828,8 @@ function ModelScene({
   onCloseViracochaDialogue?: () => void
   onPortalEnter?: () => void
   magnaBowlCollected: boolean
+  onCameraRotationChange?: (rotation: number) => void
+  onSphinxClick?: () => void
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -864,6 +880,9 @@ function ModelScene({
     >
       {/* 🎮 SISTEMAS DE PERFORMANCE - ÚNICO useFrame */}
       <EngineIntegration />
+      
+      {/* 🧭 Rastreador de rotación de cámara para la brújula */}
+      {onCameraRotationChange && <CompassTracker onRotationChange={onCameraRotationChange} />}
       
       <PerspectiveCamera makeDefault position={[8, 4, 8]} fov={60} />
       
@@ -963,8 +982,12 @@ function ModelScene({
       {/* Drone atmosférico - activo en todos los modos */}
       <AmbientAudio />
 
-      {/* Elementos del entorno: rocas y vegetaciÃ³n - NO renderizar sobre ocÃ©ano */}
-      {!isIceBiome && biome.type !== 'ocean' && (
+      {/* Elementos del entorno: rocas y vegetación - NO renderizar sobre océano ni en Giza */}
+      {!isIceBiome && biome.type !== 'ocean' && !(
+        location &&
+        Math.abs(location.lat - 29.9792) < 0.05 &&
+        Math.abs(location.lon - 31.1342) < 0.05
+      ) && (
         <EnvironmentElementsWithTrees location={location} />
       )}
 
@@ -1000,6 +1023,17 @@ function ModelScene({
           onViracochaSpeak={onViracochaSpeak}
           onPortalEnter={onPortalEnter}
           avatarPositionRef={avatarPositionRef}
+        />
+      )}
+      
+      {/* 🏜️ Escena de Giza - Gran Pirámide alineada astronómicamente */}
+      {(location &&
+        Math.abs(location.lat - 29.9792) < 0.05 &&
+        Math.abs(location.lon - 31.1342) < 0.05
+      ) && (
+        <GizaScene 
+          avatarPositionRef={avatarPositionRef}
+          onSphinxClick={onSphinxClick}
         />
       )}
       

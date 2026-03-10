@@ -1,36 +1,33 @@
 {
   "app\\game\\page.tsx -> @/components/Scene3D": {
-    "id": 2607,
+    "id": "app\\game\\page.tsx -> @/components/Scene3D",
     "files": [
-      "static/chunks/three.815c5b8d93734097.js",
-      "static/chunks/react-three.994f8dbb8dcd66d9.js",
-      "static/chunks/engines.514c605b294a844a.js",
-      "static/chunks/vendor-102878d4a5620e4f.js",
-      "static/chunks/127.112a3646adc77ed2.js",
-      "static/chunks/798.60ed728e1ce8ea0c.js"
+      "static/chunks/three.js",
+      "static/chunks/react-three.js",
+      "static/chunks/engines.js",
+      "static/chunks/vendor.js",
+      "static/chunks/_app-pages-browser_components_Scene3D_tsx-_app-pages-browser_data_archaeological-sites_json.js"
     ]
   },
-  "app\\realistic-solar\\page.tsx -> @/components/RealisticSolarSystemScene": {
-    "id": 6982,
+  "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
+    "id": "app\\player-setup\\page.tsx -> @/components/ShipPreview",
     "files": [
-      "static/chunks/three.815c5b8d93734097.js",
-      "static/chunks/react-three.994f8dbb8dcd66d9.js",
-      "static/chunks/vendor-102878d4a5620e4f.js",
-      "static/chunks/821.bc8512724002ddc8.js",
-      "static/chunks/127.112a3646adc77ed2.js",
-      "static/chunks/982.dd665013bf2a3216.js"
+      "static/chunks/three.js",
+      "static/chunks/react-three.js",
+      "static/chunks/vendor.js",
+      "static/chunks/_app-pages-browser_components_ShipPreview_tsx.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./RealisticSolarSystem": {
-    "id": 7821,
+    "id": "components\\ImmersiveScene.tsx -> ./RealisticSolarSystem",
     "files": [
-      "static/chunks/821.bc8512724002ddc8.js"
+      "static/chunks/_app-pages-browser_components_RealisticSolarSystem_tsx.js"
     ]
   },
   "utils\\lazy-systems.ts -> @/components/ProceduralTerrain": {
-    "id": 8851,
+    "id": "utils\\lazy-systems.ts -> @/components/ProceduralTerrain",
     "files": [
-      "static/chunks/851.0b64110526323343.js"
+      "static/chunks/_app-pages-browser_components_ProceduralTerrain_tsx.js"
     ]
   }
 }
