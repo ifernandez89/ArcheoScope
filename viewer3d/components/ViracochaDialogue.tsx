@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 interface ViracochaDialogueProps {
   message: string
@@ -10,27 +10,35 @@ interface ViracochaDialogueProps {
 export default function ViracochaDialogue({ message, onComplete }: ViracochaDialogueProps) {
   const [opacity, setOpacity] = useState(0)
   const [translateY, setTranslateY] = useState(0)
+  const onCompleteRef = useRef(onComplete)
+
+  // Mantener la referencia actualizada
+  useEffect(() => {
+    onCompleteRef.current = onComplete
+  }, [onComplete])
 
   useEffect(() => {
     // Fade in
     setTimeout(() => setOpacity(1), 50)
 
-    // Después de 3.5 segundos, empezar a flotar y desaparecer (era 1.5)
+    // Después de 3.5 segundos, empezar a flotar y desaparecer
     const floatTimer = setTimeout(() => {
       setOpacity(0)
       setTranslateY(-30)
     }, 3500)
 
-    // Después de 4 segundos total, notificar que terminó (era 2)
+    // Después de 4 segundos total, notificar que terminó
     const completeTimer = setTimeout(() => {
-      if (onComplete) onComplete()
+      if (onCompleteRef.current) {
+        onCompleteRef.current()
+      }
     }, 4000)
 
     return () => {
       clearTimeout(floatTimer)
       clearTimeout(completeTimer)
     }
-  }, [onComplete])
+  }, []) // Sin dependencias - solo se ejecuta una vez al montar
 
   return (
     <div
