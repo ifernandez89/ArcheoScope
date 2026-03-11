@@ -63,7 +63,7 @@ export class OpenRouterIntegration {
           'Authorization': `Bearer ${this.config.apiKey}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': window.location.origin,
-          'X-Title': 'ArcheoScope 3D Viewer'
+          'X-Title': 'Archeoscope: The Forgotten Relics'
         },
         body: JSON.stringify(payload)
       })

@@ -1,8 +1,8 @@
-# 🎨 Creador3D Ecosystem
+# 🏛️ Archeoscope: The Forgotten Relics
 
-**Generación y visualización 3D experimental**
+**Explora civilizaciones antiguas y descubre reliquias olvidadas**
 
-Un ecosistema completo para crear, manipular y visualizar modelos 3D con una API REST moderna y un visualizador web interactivo.
+Un juego inmersivo de exploración arqueológica que te permite viajar por sitios históricos, descubrir artefactos antiguos y desentrañar los misterios de civilizaciones perdidas.
 
 ---
 

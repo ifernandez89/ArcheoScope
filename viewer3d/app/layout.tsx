@@ -3,8 +3,8 @@ import './globals.css'
 import AlienCursorTrail from '@/components/AlienCursorTrail'
 
 export const metadata: Metadata = {
-  title: 'ArcheoScope 3D Viewer',
-  description: 'Visualizador 3D interactivo para modelos arqueológicos',
+  title: 'Archeoscope: The Forgotten Relics',
+  description: 'Explora civilizaciones antiguas y descubre reliquias olvidadas en un viaje inmersivo por la historia',
 }
 
 export default function RootLayout({

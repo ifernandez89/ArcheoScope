@@ -1,6 +1,6 @@
-# 🏛️ ArcheoScope 3D Viewer
+# 🏛️ Archeoscope: The Forgotten Relics
 
-Visualizador 3D interactivo para modelos arqueológicos usando Next.js + React Three Fiber.
+Juego inmersivo de exploración arqueológica usando Next.js + React Three Fiber.
 
 ## 🚀 Inicio Rápido
 
