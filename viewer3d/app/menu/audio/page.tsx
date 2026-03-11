@@ -14,20 +14,27 @@ export default function AudioPage() {
   useEffect(() => {
     const playerState = loadPlayerState()
     if (playerState?.settings) {
-      setMasterVolume(Math.round(playerState.settings.musicVolume * 100))
-      setMusicVolume(Math.round(playerState.settings.musicVolume * 100))
-      setSfxVolume(Math.round(playerState.settings.sfxVolume * 100))
+      const master = Math.round((playerState.settings.masterVolume || 0.7) * 100)
+      
+      setMasterVolume(master)
+      setMusicVolume(master)
+      setSfxVolume(master)
+      
+      console.log('🔊 Volumen cargado desde playerState:', master)
     }
   }, [])
 
-  // Guardar cambios
+  // Guardar cambios - SOLO masterVolume es el que importa
   const handleSave = () => {
     const playerState = loadPlayerState()
     if (playerState) {
-      playerState.settings.musicVolume = musicVolume / 100
-      playerState.settings.sfxVolume = sfxVolume / 100
+      // SOLO guardamos masterVolume, los demás son visuales
+      playerState.settings.masterVolume = masterVolume / 100
+      playerState.settings.musicVolume = masterVolume / 100
+      playerState.settings.sfxVolume = masterVolume / 100
       savePlayerState(playerState)
-      console.log('🔊 Configuración de audio guardada')
+      
+      console.log('🔊 Volumen guardado:', masterVolume / 100)
     }
     router.push('/menu')
   }

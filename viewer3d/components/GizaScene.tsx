@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGLTF } from '@react-three/drei'
 import { getAssetPath } from '@/lib/paths'
@@ -8,6 +9,8 @@ import { getAssetPath } from '@/lib/paths'
 interface GizaSceneProps {
   avatarPositionRef: React.MutableRefObject<THREE.Vector3>
   onSphinxClick?: () => void
+  onPyramidionCollect?: () => void
+  pyramidionCollected?: boolean
 }
 
 /**
@@ -28,7 +31,7 @@ interface GizaSceneProps {
  * - Niebla amarillenta atmosférica
  * - Piedras dispersas
  */
-export default function GizaScene({ avatarPositionRef, onSphinxClick }: GizaSceneProps) {
+export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidionCollect, pyramidionCollected }: GizaSceneProps) {
   return (
     <group name="giza-complex">
         {/* 🌫️ Niebla desértica amarillenta */}
@@ -37,11 +40,21 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick }: GizaScen
         {/* 🏜️ Terreno desértico con dunas suaves */}
         <DesertTerrain />
         
-        {/* 🔺 Gran Pirámide de Keops (Khufu) */}
+        {/* 🔺 Gran Pirámide de Keops (Khufu) - CON PUNTA PLANA */}
         <GreatPyramid 
           position={[0, 0, 0]}
           rotation={[0, Math.PI / 4, 0]} // Rotación 45° para alinear caras con cardinales
+          pyramidionCollected={pyramidionCollected || false}
         />
+        
+        {/* 🔶 Piramidión - Frente a la esfinge (50cm delante) */}
+        {!pyramidionCollected && (
+          <Pyramidion 
+            position={[100, 0, 35]} // 15m delante de la esfinge (Z: 50-15=35)
+            rotation={[0, 0, 0]}
+            onCollect={onPyramidionCollect}
+          />
+        )}
         
         {/* 🦁 La Gran Esfinge - Al este de la pirámide, mirando al Este */}
         <Sphinx 
@@ -62,37 +75,71 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick }: GizaScen
 }
 
 /**
- * 🔺 Gran Pirámide de Keops
- * La más grande y precisa
+ * 🔺 Gran Pirámide de Keops - CON PUNTA PLANA
+ * La más grande y precisa - Actualmente sin piramidón
  */
-function GreatPyramid({ position, rotation }: { position: [number, number, number], rotation: [number, number, number] }) {
-  const baseSize = 138 // 60% de 230m real
-  const height = 88 // 60% de 146m real
+function GreatPyramid({ position, rotation, pyramidionCollected }: { 
+  position: [number, number, number]
+  rotation: [number, number, number]
+  pyramidionCollected: boolean
+}) {
+  const baseSize = 69 // Reducido a la mitad (30% de 230m real)
+  const height = 44 // Reducido a la mitad (30% de 146m real)
+  const topSize = 4 // Reducido a la mitad - Tamaño de la plataforma superior (punta plana)
   
-  // Geometría con ligera concavidad en las caras (detalle histórico real)
+  // Geometría de tronco de pirámide (pirámide con punta cortada)
   const geometry = useMemo(() => {
-    const geo = new THREE.ConeGeometry(baseSize / Math.sqrt(2), height, 4)
-    geo.rotateY(Math.PI / 4) // Alinear caras con ejes
+    const geo = new THREE.BufferGeometry()
     
-    // Aplicar concavidad sutil (las caras están ligeramente hundidas)
-    const positions = geo.attributes.position
-    for (let i = 0; i < positions.count; i++) {
-      const x = positions.getX(i)
-      const y = positions.getY(i)
-      const z = positions.getZ(i)
+    // Vértices del tronco de pirámide
+    const halfBase = baseSize / 2
+    const halfTop = topSize / 2
+    
+    // 8 vértices: 4 en la base, 4 en la parte superior
+    const vertices = new Float32Array([
+      // Base (y = 0)
+      -halfBase, 0, -halfBase,  // 0
+       halfBase, 0, -halfBase,  // 1
+       halfBase, 0,  halfBase,  // 2
+      -halfBase, 0,  halfBase,  // 3
       
-      // Solo afectar vértices de las caras (no base ni cima)
-      if (y > 1 && y < height - 1) {
-        const distFromCenter = Math.sqrt(x * x + z * z)
-        const concavity = 0.3 // Sutil hundimiento
-        const factor = 1 - (concavity * (y / height))
-        positions.setXYZ(i, x * factor, y, z * factor)
-      }
-    }
+      // Top (y = height)
+      -halfTop, height, -halfTop,  // 4
+       halfTop, height, -halfTop,  // 5
+       halfTop, height,  halfTop,  // 6
+      -halfTop, height,  halfTop,  // 7
+    ])
     
+    // Índices para las caras (triángulos)
+    const indices = new Uint16Array([
+      // Base (mirando hacia abajo)
+      0, 2, 1,  0, 3, 2,
+      
+      // Top (mirando hacia arriba)
+      4, 5, 6,  4, 6, 7,
+      
+      // Cara Norte (frente)
+      0, 1, 5,  0, 5, 4,
+      
+      // Cara Este (derecha)
+      1, 2, 6,  1, 6, 5,
+      
+      // Cara Sur (atrás)
+      2, 3, 7,  2, 7, 6,
+      
+      // Cara Oeste (izquierda)
+      3, 0, 4,  3, 4, 7,
+    ])
+    
+    geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3))
+    geo.setIndex(new THREE.BufferAttribute(indices, 1))
     geo.computeVertexNormals()
+    
+    // Rotar para alinear caras con cardinales
+    geo.rotateY(Math.PI / 4)
+    
     return geo
-  }, [baseSize, height])
+  }, [baseSize, height, topSize])
   
   return (
     <group position={position} rotation={rotation}>
@@ -103,6 +150,15 @@ function GreatPyramid({ position, rotation }: { position: [number, number, numbe
           metalness={0.1}
         />
       </mesh>
+      
+      {/* 🔶 Piramidón en la punta - Solo visible si fue recolectado */}
+      {pyramidionCollected && (
+        <Pyramidion 
+          position={[0, height, 0]} // En la punta de la pirámide
+          rotation={[0, 0, 0]}
+          onCollect={undefined} // No clickeable cuando está en la pirámide
+        />
+      )}
     </group>
   )
 }
@@ -138,6 +194,105 @@ function Sphinx({ position, rotation, onClick }: { position: [number, number, nu
 
 // Precargar modelo
 useGLTF.preload(getAssetPath('/sphinx_base.glb'))
+
+/**
+ * 🔶 Piramidón - Capstone de la Gran Pirámide
+ * Objeto seleccionable en el piso, al costado de la pirámide
+ * Modelo: piramidon.glb
+ */
+function Pyramidion({ position, rotation, onCollect }: { 
+  position: [number, number, number]
+  rotation: [number, number, number]
+  onCollect?: () => void
+}) {
+  const { scene } = useGLTF(getAssetPath('/piramidon.glb'))
+  const [isHovered, setIsHovered] = useState(false)
+  const [isDisappearing, setIsDisappearing] = useState(false)
+  const disappearTimer = useRef(0)
+  
+  // Clonar la escena para evitar problemas de reutilización
+  const clonedScene = useMemo(() => scene.clone(), [scene])
+  
+  // Escala del piramidón - Aumentado al doble
+  const scale = 4 // Duplicado de 2 a 4
+  
+  // Calcular el offset Y para que la base esté exactamente en el suelo
+  const yOffset = useMemo(() => {
+    const box = new THREE.Box3().setFromObject(clonedScene)
+    const minY = box.min.y
+    // Retornar el offset necesario para que minY * scale esté en 0
+    return -minY * scale
+  }, [clonedScene, scale])
+  
+  // Animación de desaparición
+  useFrame((state, delta) => {
+    if (isDisappearing && clonedScene) {
+      disappearTimer.current += delta
+      
+      // Fade out y escala hacia arriba
+      const progress = Math.min(disappearTimer.current / 1.0, 1) // 1 segundo
+      clonedScene.scale.setScalar(scale * (1 + progress * 0.5)) // Crece un poco
+      
+      // Fade out de todos los materiales
+      clonedScene.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh
+          if (mesh.material) {
+            const material = mesh.material as THREE.MeshStandardMaterial
+            material.transparent = true
+            material.opacity = 1 - progress
+          }
+        }
+      })
+      
+      // Llamar callback cuando termine
+      if (progress >= 1 && onCollect) {
+        onCollect()
+      }
+    }
+  })
+  
+  const handleClick = (e: any) => {
+    if (onCollect && !isDisappearing) {
+      e.stopPropagation()
+      setIsDisappearing(true)
+      console.log('🔶 Piramidón recogido! Desapareciendo...')
+    }
+  }
+  
+  return (
+    <group 
+      position={[position[0], position[1] + yOffset, position[2]]} 
+      rotation={rotation}
+      onClick={handleClick}
+      onPointerOver={() => onCollect && !isDisappearing && setIsHovered(true)}
+      onPointerOut={() => setIsHovered(false)}
+    >
+      <primitive 
+        object={clonedScene}
+        scale={[scale, scale, scale]}
+        castShadow
+        receiveShadow
+      />
+      
+      {/* Outline cuando está hover */}
+      {isHovered && onCollect && !isDisappearing && (
+        <mesh>
+          <sphereGeometry args={[2, 16, 16]} />
+          <meshBasicMaterial
+            color="#ffff00"
+            wireframe
+            transparent
+            opacity={0.3}
+          />
+        </mesh>
+      )}
+    </group>
+  )
+}
+
+// Precargar modelo del piramidón
+useGLTF.preload(getAssetPath('/piramidon.glb'))
 
 /**
  * 🏜️ Terreno desértico con dunas suaves

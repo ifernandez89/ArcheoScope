@@ -15,7 +15,7 @@ class ProceduralAudioGenerator {
   private context?: AudioContext
   private masterGain?: GainNode
   private enabled: boolean = false
-  private baseVolume: number = 0.6 // Aumentado de 0.3 a 0.6 (60%)
+  private baseVolume: number = 0.7 // Default, se sobrescribe al cargar playerState
   
   // Generadores activos - Type safe
   private rainSource?: AudioBufferSourceNode
@@ -35,9 +35,29 @@ class ProceduralAudioGenerator {
   private tornadoLFOGain?: GainNode
   
   constructor() {
-    // No inicializar AudioContext aquí
-    // Esperar interacción del usuario
-    console.log('🎵 ProceduralAudio creado (esperando enable)')
+    // Cargar volumen guardado INMEDIATAMENTE
+    this.loadSavedVolume()
+    console.log('🎵 ProceduralAudio creado con volumen:', this.baseVolume)
+  }
+  
+  /**
+   * Cargar volumen guardado desde localStorage
+   */
+  private loadSavedVolume(): void {
+    if (typeof window === 'undefined') return
+    
+    try {
+      const playerStateStr = localStorage.getItem('player_state')
+      if (playerStateStr) {
+        const playerState = JSON.parse(playerStateStr)
+        if (playerState?.settings?.masterVolume !== undefined) {
+          this.baseVolume = playerState.settings.masterVolume
+          console.log('🔊 Volumen cargado desde playerState:', this.baseVolume)
+        }
+      }
+    } catch (error) {
+      console.error('Error cargando volumen:', error)
+    }
   }
   
   /**
@@ -51,6 +71,9 @@ class ProceduralAudioGenerator {
     
     if (typeof window === 'undefined') return
     
+    // Recargar volumen por si cambió antes de enable
+    this.loadSavedVolume()
+    
     // Crear AudioContext
     this.context = new (window.AudioContext || (window as any).webkitAudioContext)()
     
@@ -59,13 +82,13 @@ class ProceduralAudioGenerator {
       await this.context.resume()
     }
     
-    // Crear master gain
+    // Crear master gain con el volumen guardado
     this.masterGain = this.context.createGain()
     this.masterGain.gain.value = this.baseVolume
     this.masterGain.connect(this.context.destination)
     
     this.enabled = true
-    console.log('🎵 ProceduralAudio habilitado')
+    console.log('🎵 ProceduralAudio habilitado con volumen:', this.baseVolume)
   }
   
   /**

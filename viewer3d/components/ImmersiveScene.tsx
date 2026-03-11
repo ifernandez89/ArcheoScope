@@ -171,11 +171,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       console.log('🛸 Nave:', playerState.ship.name)
       console.log('📊 Progreso:', playerState.progress)
       
-      // Aplicar volumen guardado
+      // Aplicar volumen guardado - USAR masterVolume
       const audioGenerator = getProceduralAudio()
-      if (playerState.settings?.musicVolume !== undefined) {
-        audioGenerator.setMasterVolume(playerState.settings.musicVolume)
-        console.log('🔊 Volumen aplicado:', playerState.settings.musicVolume)
+      if (playerState.settings?.masterVolume !== undefined) {
+        audioGenerator.setMasterVolume(playerState.settings.masterVolume)
+        console.log('🔊 Volumen aplicado al iniciar:', playerState.settings.masterVolume)
       }
     } else {
       console.log('⚠️ No hay estado de jugador guardado')
@@ -186,15 +186,15 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   useEffect(() => {
     const checkVolumeChanges = () => {
       const currentState = loadPlayerState()
-      if (currentState?.settings?.musicVolume !== undefined) {
+      if (currentState?.settings?.masterVolume !== undefined) {
         const audioGenerator = getProceduralAudio()
         const currentVolume = audioGenerator.getMasterVolume()
-        const savedVolume = currentState.settings.musicVolume
+        const savedVolume = currentState.settings.masterVolume
         
         // Solo actualizar si cambió
         if (Math.abs(currentVolume - savedVolume) > 0.01) {
           audioGenerator.setMasterVolume(savedVolume)
-          console.log('🔊 Volumen actualizado:', savedVolume)
+          console.log('🔊 Volumen actualizado desde menú:', savedVolume)
         }
       }
     }
@@ -231,6 +231,19 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // Guardar en sessionStorage
     sessionStorage.setItem('item_magna_bowl_collected', 'true')
   }, [])
+  
+  // Handler para recolectar el piramidón
+  const handleCollectPyramidion = useCallback(() => {
+    console.log('🔶 Piramidón recolectado!')
+    
+    // Guardar en sessionStorage
+    sessionStorage.setItem('item_pyramidion_collected', 'true')
+    setPyramidionCollected(true)
+    
+    // Mostrar mensaje
+    setShowCollectedMessage(true)
+    setTimeout(() => setShowCollectedMessage(false), 3000)
+  }, [])
 
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // DirecciÃ³n del sol como objeto plano
   const [solarState, setSolarState] = useState({
@@ -257,6 +270,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   // 🗿 Estado del diálogo de Viracocha
   const [showViracochaDialogue, setShowViracochaDialogue] = useState(false)
   const [magnaBowlCollected, setMagnaBowlCollected] = useState(false)
+  const [pyramidionCollected, setPyramidionCollected] = useState(false)
 
   // Verificar si la Magna Bowl fue recolectada
   useEffect(() => {
@@ -270,6 +284,21 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // Verificar al montar y cada segundo
     checkMagnaBowl()
     const interval = setInterval(checkMagnaBowl, 1000)
+    return () => clearInterval(interval)
+  }, [])
+  
+  // Verificar si el Piramidón fue recolectado
+  useEffect(() => {
+    const checkPyramidion = () => {
+      if (typeof window !== 'undefined') {
+        const collected = sessionStorage.getItem('item_pyramidion_collected') === 'true'
+        setPyramidionCollected(collected)
+      }
+    }
+    
+    // Verificar al montar y cada segundo
+    checkPyramidion()
+    const interval = setInterval(checkPyramidion, 1000)
     return () => clearInterval(interval)
   }, [])
   
@@ -654,6 +683,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           magnaBowlCollected={magnaBowlCollected}
           onCameraRotationChange={setCameraRotation}
           onSphinxClick={() => setShowSphinxDialogue(true)}
+          onPyramidionCollect={handleCollectPyramidion}
+          pyramidionCollected={pyramidionCollected}
         />
       ) : null}
 
@@ -797,7 +828,9 @@ function ModelScene({
   onPortalEnter,
   magnaBowlCollected,
   onCameraRotationChange,
-  onSphinxClick
+  onSphinxClick,
+  onPyramidionCollect,
+  pyramidionCollected
 }: { 
   modelPath: string
   avatarModel: string
@@ -830,6 +863,8 @@ function ModelScene({
   magnaBowlCollected: boolean
   onCameraRotationChange?: (rotation: number) => void
   onSphinxClick?: () => void
+  onPyramidionCollect?: () => void
+  pyramidionCollected?: boolean
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -1034,6 +1069,8 @@ function ModelScene({
         <GizaScene 
           avatarPositionRef={avatarPositionRef}
           onSphinxClick={onSphinxClick}
+          onPyramidionCollect={onPyramidionCollect}
+          pyramidionCollected={pyramidionCollected || false}
         />
       )}
       

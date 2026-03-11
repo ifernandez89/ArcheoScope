@@ -45,6 +45,7 @@ export interface PlayerState {
   // Configuración
   settings: {
     audioEnabled: boolean
+    masterVolume: number
     musicVolume: number
     sfxVolume: number
   }
@@ -83,6 +84,7 @@ export const DEFAULT_PLAYER_STATE: PlayerState = {
   
   settings: {
     audioEnabled: true,
+    masterVolume: 0.7,
     musicVolume: 0.7,
     sfxVolume: 0.8
   }

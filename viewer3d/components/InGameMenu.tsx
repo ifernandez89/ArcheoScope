@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { loadPlayerState, savePlayerState } from '@/types/player'
 
 interface InGameMenuProps {
   isOpen: boolean
@@ -10,23 +11,206 @@ interface InGameMenuProps {
 
 export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
   const router = useRouter()
+  const [showAudioSettings, setShowAudioSettings] = useState(false)
+  const [masterVolume, setMasterVolume] = useState(70)
+
+  // Cargar volumen guardado cuando se abre el menú
+  useEffect(() => {
+    if (isOpen) {
+      const playerState = loadPlayerState()
+      if (playerState?.settings?.masterVolume !== undefined) {
+        const volume = Math.round(playerState.settings.masterVolume * 100)
+        setMasterVolume(volume)
+        console.log('🔊 Volumen cargado en InGameMenu:', volume)
+      }
+    }
+  }, [isOpen])
 
   // Cerrar con ESC
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose()
+        if (showAudioSettings) {
+          setShowAudioSettings(false)
+        } else {
+          onClose()
+        }
       }
     }
     window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, showAudioSettings])
+
+  // Guardar volumen
+  const handleSaveVolume = () => {
+    const playerState = loadPlayerState()
+    if (playerState) {
+      playerState.settings.masterVolume = masterVolume / 100
+      playerState.settings.musicVolume = masterVolume / 100
+      playerState.settings.sfxVolume = masterVolume / 100
+      savePlayerState(playerState)
+      console.log('🔊 Volumen guardado desde InGameMenu:', masterVolume / 100)
+    }
+    setShowAudioSettings(false)
+  }
 
   if (!isOpen) return null
 
+  // Mostrar configuración de audio
+  if (showAudioSettings) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0, 0, 0, 0.85)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          animation: 'fadeIn 0.2s ease-out'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '40px',
+            alignItems: 'center',
+            padding: '40px'
+          }}
+        >
+          <h1 style={{
+            color: '#ffffff',
+            fontSize: '48px',
+            margin: '0',
+            letterSpacing: '4px',
+            textTransform: 'uppercase'
+          }}>
+            Audio
+          </h1>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '15px',
+            width: '500px'
+          }}>
+            <label style={{
+              color: '#ffffff',
+              fontSize: '20px',
+              letterSpacing: '2px',
+              textTransform: 'uppercase'
+            }}>
+              Volumen General: {masterVolume}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={masterVolume}
+              onChange={(e) => setMasterVolume(parseInt(e.target.value))}
+              style={{
+                width: '100%',
+                height: '8px',
+                borderRadius: '4px',
+                outline: 'none',
+                background: `linear-gradient(to right, #4a9eff 0%, #4a9eff ${masterVolume}%, #333333 ${masterVolume}%, #333333 100%)`,
+                cursor: 'pointer'
+              }}
+            />
+          </div>
+
+          <div style={{
+            display: 'flex',
+            gap: '20px',
+            marginTop: '20px'
+          }}>
+            <button
+              onClick={() => setShowAudioSettings(false)}
+              style={{
+                padding: '15px 40px',
+                fontSize: '18px',
+                color: '#ffffff',
+                background: 'transparent',
+                border: '2px solid #ffffff',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                letterSpacing: '2px',
+                textTransform: 'uppercase'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#ffffff'
+                e.currentTarget.style.color = '#000000'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+                e.currentTarget.style.color = '#ffffff'
+              }}
+            >
+              Cancelar
+            </button>
+
+            <button
+              onClick={handleSaveVolume}
+              style={{
+                padding: '15px 40px',
+                fontSize: '18px',
+                color: '#000000',
+                background: '#4a9eff',
+                border: '2px solid #4a9eff',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                letterSpacing: '2px',
+                textTransform: 'uppercase'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#6ab7ff'
+                e.currentTarget.style.borderColor = '#6ab7ff'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#4a9eff'
+                e.currentTarget.style.borderColor = '#4a9eff'
+              }}
+            >
+              Guardar
+            </button>
+          </div>
+
+          <div style={{
+            color: '#888888',
+            fontSize: '14px',
+            marginTop: '10px',
+            letterSpacing: '1px'
+          }}>
+            Presiona ESC para volver
+          </div>
+        </div>
+
+        <style jsx>{`
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+            }
+            to {
+              opacity: 1;
+            }
+          }
+        `}</style>
+      </div>
+    )
+  }
+
+  // Menú principal
   const menuOptions = [
     { label: 'Continuar', action: () => onClose() },
-    { label: 'Audio', action: () => router.push('/menu/audio') },
+    { label: 'Audio', action: () => setShowAudioSettings(true) },
     { label: 'Video', action: () => router.push('/menu/video') },
     { label: 'Información', action: () => router.push('/menu/info') },
     { label: 'Menú Principal', action: () => router.push('/menu') }
