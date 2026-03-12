@@ -86,10 +86,12 @@ import BackgroundMountains from './BackgroundMountains'
 import DiscoveredItemInWorld from './DiscoveredItemInWorld'
 import ItemCollectedMessage from './ItemCollectedMessage'
 import ViracochaDialogue from './ViracochaDialogue'
-import SphinxDialogue from './SphinxDialogue'
+import SphinxInteractiveDialogue from './SphinxInteractiveDialogue'
 import Compass from './Compass'
 import CompassTracker from './CompassTracker'
 import { loadPlayerState, savePlayerState, updatePlayerLocation } from '@/types/player'
+import { loadGameSettings } from '@/types/gameSettings'
+import { collectItem, interactWithNPC, loadMissionState, sphinxReceivePyramidion, hasSphinxReceivedPyramidion, clearWeather, isWeatherCleared, type MissionState } from '@/types/missionState'
 
 interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
@@ -170,31 +172,33 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       console.log('🎮 Jugador cargado:', playerState.playerName)
       console.log('🛸 Nave:', playerState.ship.name)
       console.log('📊 Progreso:', playerState.progress)
-      
-      // Aplicar volumen guardado - USAR masterVolume
-      const audioGenerator = getProceduralAudio()
-      if (playerState.settings?.masterVolume !== undefined) {
-        audioGenerator.setMasterVolume(playerState.settings.masterVolume)
-        console.log('🔊 Volumen aplicado al iniciar:', playerState.settings.masterVolume)
-      }
     } else {
       console.log('⚠️ No hay estado de jugador guardado')
+    }
+    
+    // Aplicar volumen guardado desde gameSettings
+    const settings = loadGameSettings()
+    const audioGenerator = getProceduralAudio()
+    if (settings?.audio?.masterVolume !== undefined) {
+      audioGenerator.setMasterVolume(settings.audio.masterVolume)
+      console.log('🔊 Volumen aplicado al iniciar desde gameSettings:', settings.audio.masterVolume)
     }
   }, [])
   
   // Escuchar cambios en el volumen desde el menú
   useEffect(() => {
     const checkVolumeChanges = () => {
-      const currentState = loadPlayerState()
-      if (currentState?.settings?.masterVolume !== undefined) {
+      // Cargar desde gameSettings (nueva fuente de verdad)
+      const settings = loadGameSettings()
+      if (settings?.audio?.masterVolume !== undefined) {
         const audioGenerator = getProceduralAudio()
         const currentVolume = audioGenerator.getMasterVolume()
-        const savedVolume = currentState.settings.masterVolume
+        const savedVolume = settings.audio.masterVolume
         
         // Solo actualizar si cambió
         if (Math.abs(currentVolume - savedVolume) > 0.01) {
           audioGenerator.setMasterVolume(savedVolume)
-          console.log('🔊 Volumen actualizado desde menú:', savedVolume)
+          console.log('🔊 Volumen actualizado desde gameSettings:', savedVolume)
         }
       }
     }
@@ -214,11 +218,16 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     const siteId = selectedSiteRef.current?.id
     // Marcar este sitio como descubierto
     if (siteId) discoveredSites.current.add(siteId)
+    
+    // Limpiar clima de Puma Punku
+    clearWeather('pumaPunku')
+    
     // 1. Activar terremoto inmediatamente (coincide con inicio del fade-in de la estructura)
     setWeather(prev => ({ ...prev, earthquake: true }))
     // 2. Después de ~3.2s (duración del fade-in), calma total
     setTimeout(() => {
       setWeather(CALM_WEATHER)
+      console.log('☀️ Clima de Puma Punku desbloqueado')
     }, 3200)
   }, [])
 
@@ -235,6 +244,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   // Handler para recolectar el piramidón
   const handleCollectPyramidion = useCallback(() => {
     console.log('🔶 Piramidón recolectado!')
+    
+    // Registrar en el sistema de misiones
+    collectItem('giza', 'pyramidion')
     
     // Guardar en sessionStorage
     sessionStorage.setItem('item_pyramidion_collected', 'true')
@@ -291,7 +303,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   useEffect(() => {
     const checkPyramidion = () => {
       if (typeof window !== 'undefined') {
-        const collected = sessionStorage.getItem('item_pyramidion_collected') === 'true'
+        // Verificar desde missionState (fuente de verdad)
+        const missionState = loadMissionState()
+        const collectedFromMissions = missionState.sites.giza.itemsCollected.includes('pyramidion')
+        
+        // También verificar sessionStorage para compatibilidad
+        const collectedFromSession = sessionStorage.getItem('item_pyramidion_collected') === 'true'
+        
+        const collected = collectedFromMissions || collectedFromSession
         setPyramidionCollected(collected)
       }
     }
@@ -366,6 +385,23 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
 
 
 
+  // Función helper para determinar el sitio basado en coordenadas
+  const getSiteNameFromCoordinates = (lat: number, lon: number): keyof MissionState['sites'] | null => {
+    // Puma Punku
+    if (Math.abs(lat - (-16.5616)) < 0.05 && Math.abs(lon - (-68.6795)) < 0.05) {
+      return 'pumaPunku'
+    }
+    // Giza
+    if (Math.abs(lat - 29.9792) < 0.05 && Math.abs(lon - 31.1342) < 0.05) {
+      return 'giza'
+    }
+    // Lago Titicaca (subsitio de Puma Punku)
+    if (lat > -16.5 && lat < -15.5 && lon > -70 && lon < -68.5) {
+      return 'pumaPunku'
+    }
+    return null
+  }
+
   // Manejar click en sitio arqueolÃ³gico
   const handleSiteClick = async (site: ArchaeologicalSite) => {
     loggers.world.info(`Sitio seleccionado: ${site.name}`)
@@ -385,7 +421,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     
     await new Promise(resolve => setTimeout(resolve, 2000))
     
-    setWeather(discoveredSites.current.has(site.id) ? CALM_WEATHER : DEFAULT_STORM_WEATHER)
+    // Determinar clima basado en si la misión está completada
+    const siteName = getSiteNameFromCoordinates(site.lat, site.lon)
+    const weatherCleared = siteName ? isWeatherCleared(siteName) : discoveredSites.current.has(site.id)
+    setWeather(weatherCleared ? CALM_WEATHER : DEFAULT_STORM_WEATHER)
     setMode('model')
     
     loggers.world.info('Teletransporte a sitio arqueolÃ³gico completado')
@@ -406,8 +445,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // TransiciÃ³n cinematogrÃ¡fica de 2 segundos
     await new Promise(resolve => setTimeout(resolve, 2000))
     
-    // Cambiar a modo modelo
-    setWeather(DEFAULT_STORM_WEATHER)
+    // Determinar clima basado en si la misión está completada
+    const siteName = getSiteNameFromCoordinates(lat, lon)
+    const weatherCleared = siteName ? isWeatherCleared(siteName) : false
+    setWeather(weatherCleared ? CALM_WEATHER : DEFAULT_STORM_WEATHER)
     setMode('model')
     
     loggers.world.info('Teletransporte completado', { lat, lon })
@@ -608,31 +649,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         </div>
       )}
 
-      {/* Instrucciones de movimiento */}
-      {mode === 'model' && movementMode === 'avatar' && (
-        <div style={{
-          position: 'absolute',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1001,
-          background: 'rgba(0, 0, 0, 0.8)',
-          backdropFilter: 'blur(10px)',
-          padding: '12px 24px',
-          borderRadius: '8px',
-          border: '1px solid rgba(255,255,255,0.2)',
-          color: 'white',
-          fontSize: '12px',
-          display: 'flex',
-          gap: '20px'
-        }}>
-          <span>🚶 W/S - Adelante/Atrás</span>
-          <span>A/D - Izquierda/Derecha</span>
-          <span>Q/E - Rotar</span>
-          <span>🚀 SHIFT + Mouse↑↓ - Subir/Bajar Nave</span>
-        </div>
-      )}
-
       {/* Brújula astronómica - muestra el norte real basado en la rotación de la cámara */}
       {mode === 'model' && (
         <Compass rotation={cameraRotation} solarAzimuth={solarState.azimuth} />
@@ -695,7 +711,31 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       
       {/* Diálogo de la Esfinge - FUERA del Canvas */}
       {showSphinxDialogue && (
-        <SphinxDialogue onClose={() => setShowSphinxDialogue(false)} />
+        <SphinxInteractiveDialogue
+          pyramidionCollected={pyramidionCollected}
+          hasReceivedPyramidion={hasSphinxReceivedPyramidion()}
+          onClose={() => {
+            setShowSphinxDialogue(false)
+            // Registrar interacción con la Esfinge
+            interactWithNPC('giza', 'sphinx')
+            
+            // Si tiene el piramidón y aún no se lo ha dado, marcarlo como entregado
+            if (pyramidionCollected && !hasSphinxReceivedPyramidion()) {
+              sphinxReceivePyramidion()
+              
+              // Activar terremoto y limpiar clima (igual que en Puma Punku)
+              setWeather(prev => ({ ...prev, earthquake: true }))
+              setTimeout(() => {
+                setWeather(CALM_WEATHER)
+                clearWeather('giza')
+                console.log('☀️ Clima de Giza desbloqueado - Misión completada')
+              }, 3200)
+            }
+          }}
+          onOptionSelected={(optionId) => {
+            console.log(`🗿 Opción seleccionada: ${optionId}`)
+          }}
+        />
       )}
 
       <style jsx>{`

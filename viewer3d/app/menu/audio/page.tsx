@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { loadPlayerState, savePlayerState } from '@/types/player'
+import { loadGameSettings, updateAudioSettings } from '@/types/gameSettings'
 
 export default function AudioPage() {
   const router = useRouter()
@@ -10,32 +10,30 @@ export default function AudioPage() {
   const [musicVolume, setMusicVolume] = useState(70)
   const [sfxVolume, setSfxVolume] = useState(80)
 
-  // Cargar volúmenes guardados
+  // Cargar volúmenes guardados desde gameSettings
   useEffect(() => {
-    const playerState = loadPlayerState()
-    if (playerState?.settings) {
-      const master = Math.round((playerState.settings.masterVolume || 0.7) * 100)
-      
-      setMasterVolume(master)
-      setMusicVolume(master)
-      setSfxVolume(master)
-      
-      console.log('🔊 Volumen cargado desde playerState:', master)
-    }
+    const settings = loadGameSettings()
+    const master = Math.round(settings.audio.masterVolume * 100)
+    const music = Math.round(settings.audio.musicVolume * 100)
+    const sfx = Math.round(settings.audio.sfxVolume * 100)
+    
+    setMasterVolume(master)
+    setMusicVolume(music)
+    setSfxVolume(sfx)
+    
+    console.log('🔊 Volúmenes cargados desde gameSettings:', { master, music, sfx })
   }, [])
 
   // Guardar cambios - SOLO masterVolume es el que importa
   const handleSave = () => {
-    const playerState = loadPlayerState()
-    if (playerState) {
-      // SOLO guardamos masterVolume, los demás son visuales
-      playerState.settings.masterVolume = masterVolume / 100
-      playerState.settings.musicVolume = masterVolume / 100
-      playerState.settings.sfxVolume = masterVolume / 100
-      savePlayerState(playerState)
-      
-      console.log('🔊 Volumen guardado:', masterVolume / 100)
-    }
+    // Guardar en gameSettings
+    updateAudioSettings({
+      masterVolume: masterVolume / 100,
+      musicVolume: masterVolume / 100,
+      sfxVolume: masterVolume / 100
+    })
+    
+    console.log('🔊 Volumen guardado en gameSettings:', masterVolume / 100)
     router.push('/menu')
   }
 
@@ -172,8 +170,9 @@ export default function AudioPage() {
         <button
           onClick={() => router.push('/menu')}
           style={{
-            padding: '15px 40px',
-            fontSize: '18px',
+            padding: '20px 80px',
+            fontSize: '24px',
+            fontWeight: 'bold',
             color: '#ffffff',
             background: 'transparent',
             border: '2px solid #ffffff',
@@ -181,7 +180,8 @@ export default function AudioPage() {
             cursor: 'pointer',
             transition: 'all 0.3s ease',
             letterSpacing: '2px',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
+            width: '350px'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = '#ffffff'
@@ -198,8 +198,9 @@ export default function AudioPage() {
         <button
           onClick={handleSave}
           style={{
-            padding: '15px 40px',
-            fontSize: '18px',
+            padding: '20px 80px',
+            fontSize: '24px',
+            fontWeight: 'bold',
             color: '#000000',
             background: '#4a9eff',
             border: '2px solid #4a9eff',
@@ -207,7 +208,8 @@ export default function AudioPage() {
             cursor: 'pointer',
             transition: 'all 0.3s ease',
             letterSpacing: '2px',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
+            width: '350px'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = '#6ab7ff'

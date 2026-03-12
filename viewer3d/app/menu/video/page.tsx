@@ -30,8 +30,9 @@ export default function VideoPage() {
       <button
         onClick={() => router.push('/menu')}
         style={{
-          padding: '15px 40px',
-          fontSize: '18px',
+          padding: '20px 80px',
+          fontSize: '24px',
+          fontWeight: 'bold',
           color: '#ffffff',
           background: 'transparent',
           border: '2px solid #ffffff',
@@ -39,7 +40,8 @@ export default function VideoPage() {
           cursor: 'pointer',
           transition: 'all 0.3s ease',
           letterSpacing: '2px',
-          textTransform: 'uppercase'
+          textTransform: 'uppercase',
+          width: '350px'
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.background = '#ffffff'

@@ -47,12 +47,24 @@ class ProceduralAudioGenerator {
     if (typeof window === 'undefined') return
     
     try {
+      // Intentar cargar desde gameSettings primero
+      const gameSettingsStr = localStorage.getItem('game_settings')
+      if (gameSettingsStr) {
+        const gameSettings = JSON.parse(gameSettingsStr)
+        if (gameSettings?.audio?.masterVolume !== undefined) {
+          this.baseVolume = gameSettings.audio.masterVolume
+          console.log('🔊 Volumen cargado desde gameSettings:', this.baseVolume)
+          return
+        }
+      }
+      
+      // Fallback: intentar cargar desde playerState (legacy)
       const playerStateStr = localStorage.getItem('player_state')
       if (playerStateStr) {
         const playerState = JSON.parse(playerStateStr)
         if (playerState?.settings?.masterVolume !== undefined) {
           this.baseVolume = playerState.settings.masterVolume
-          console.log('🔊 Volumen cargado desde playerState:', this.baseVolume)
+          console.log('🔊 Volumen cargado desde playerState (legacy):', this.baseVolume)
         }
       }
     } catch (error) {

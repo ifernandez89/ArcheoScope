@@ -39,6 +39,7 @@ export default function MenuPage() {
     ...(hasActiveGame ? [{ label: 'Continuar', path: '/game' }] : []),
     { label: 'Player', path: '/player-setup' },
     { label: 'Audio', path: '/menu/audio' },
+    { label: 'Controles', path: '/menu/controls' },
     { label: 'Video', path: '/menu/video' },
     { label: 'Información', path: '/menu/info' }
   ]
@@ -78,7 +79,7 @@ export default function MenuPage() {
               fontFamily: 'inherit',
               letterSpacing: '2px',
               textTransform: 'uppercase',
-              minWidth: '300px'
+              width: '350px'
             }}
             onMouseEnter={(e) => {
               if (option.label === 'Continuar') {

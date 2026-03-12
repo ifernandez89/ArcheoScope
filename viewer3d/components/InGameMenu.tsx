@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { loadPlayerState, savePlayerState } from '@/types/player'
+import { loadGameSettings, updateAudioSettings } from '@/types/gameSettings'
 
 interface InGameMenuProps {
   isOpen: boolean
@@ -17,12 +17,10 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
   // Cargar volumen guardado cuando se abre el menú
   useEffect(() => {
     if (isOpen) {
-      const playerState = loadPlayerState()
-      if (playerState?.settings?.masterVolume !== undefined) {
-        const volume = Math.round(playerState.settings.masterVolume * 100)
-        setMasterVolume(volume)
-        console.log('🔊 Volumen cargado en InGameMenu:', volume)
-      }
+      const settings = loadGameSettings()
+      const volume = Math.round(settings.audio.masterVolume * 100)
+      setMasterVolume(volume)
+      console.log('🔊 Volumen cargado en InGameMenu desde gameSettings:', volume)
     }
   }, [isOpen])
 
@@ -43,14 +41,14 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
 
   // Guardar volumen
   const handleSaveVolume = () => {
-    const playerState = loadPlayerState()
-    if (playerState) {
-      playerState.settings.masterVolume = masterVolume / 100
-      playerState.settings.musicVolume = masterVolume / 100
-      playerState.settings.sfxVolume = masterVolume / 100
-      savePlayerState(playerState)
-      console.log('🔊 Volumen guardado desde InGameMenu:', masterVolume / 100)
-    }
+    // Guardar en gameSettings
+    updateAudioSettings({
+      masterVolume: masterVolume / 100,
+      musicVolume: masterVolume / 100,
+      sfxVolume: masterVolume / 100
+    })
+    
+    console.log('🔊 Volumen guardado desde InGameMenu en gameSettings:', masterVolume / 100)
     setShowAudioSettings(false)
   }
 
@@ -97,32 +95,104 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
           <div style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '15px',
+            gap: '40px',
             width: '500px'
           }}>
-            <label style={{
-              color: '#ffffff',
-              fontSize: '20px',
-              letterSpacing: '2px',
-              textTransform: 'uppercase'
+            {/* Volumen General */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '15px'
             }}>
-              Volumen General: {masterVolume}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={masterVolume}
-              onChange={(e) => setMasterVolume(parseInt(e.target.value))}
-              style={{
-                width: '100%',
-                height: '8px',
-                borderRadius: '4px',
-                outline: 'none',
-                background: `linear-gradient(to right, #4a9eff 0%, #4a9eff ${masterVolume}%, #333333 ${masterVolume}%, #333333 100%)`,
-                cursor: 'pointer'
-              }}
-            />
+              <label style={{
+                color: '#ffffff',
+                fontSize: '20px',
+                letterSpacing: '2px',
+                textTransform: 'uppercase'
+              }}>
+                Volumen General: {masterVolume}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={masterVolume}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value)
+                  setMasterVolume(value)
+                }}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  outline: 'none',
+                  background: `linear-gradient(to right, #4a9eff 0%, #4a9eff ${masterVolume}%, #333333 ${masterVolume}%, #333333 100%)`,
+                  cursor: 'pointer'
+                }}
+              />
+            </div>
+
+            {/* Volumen Música */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '15px'
+            }}>
+              <label style={{
+                color: '#ffffff',
+                fontSize: '20px',
+                letterSpacing: '2px',
+                textTransform: 'uppercase'
+              }}>
+                Música: {masterVolume}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={masterVolume}
+                onChange={(e) => setMasterVolume(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  outline: 'none',
+                  background: `linear-gradient(to right, #4a9eff 0%, #4a9eff ${masterVolume}%, #333333 ${masterVolume}%, #333333 100%)`,
+                  cursor: 'pointer'
+                }}
+              />
+            </div>
+
+            {/* Volumen Efectos */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '15px'
+            }}>
+              <label style={{
+                color: '#ffffff',
+                fontSize: '20px',
+                letterSpacing: '2px',
+                textTransform: 'uppercase'
+              }}>
+                Efectos de Sonido: {masterVolume}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={masterVolume}
+                onChange={(e) => setMasterVolume(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  outline: 'none',
+                  background: `linear-gradient(to right, #4a9eff 0%, #4a9eff ${masterVolume}%, #333333 ${masterVolume}%, #333333 100%)`,
+                  cursor: 'pointer'
+                }}
+              />
+            </div>
           </div>
 
           <div style={{
@@ -211,9 +281,9 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
   const menuOptions = [
     { label: 'Continuar', action: () => onClose() },
     { label: 'Audio', action: () => setShowAudioSettings(true) },
+    { label: 'Controles', action: () => router.push('/menu/controls') },
     { label: 'Video', action: () => router.push('/menu/video') },
-    { label: 'Información', action: () => router.push('/menu/info') },
-    { label: 'Menú Principal', action: () => router.push('/menu') }
+    { label: 'Información', action: () => router.push('/menu/info') }
   ]
 
   return (

@@ -1,0 +1,31 @@
+{
+  "initial": {
+    "text": "¿Qué quieres?",
+    "type": "simple"
+  },
+  "gratitude": {
+    "text": "Gracias, viajero. Has traído lo que buscaba.",
+    "type": "simple"
+  },
+  "menu": {
+    "text": "¿Qué deseas saber?",
+    "type": "options",
+    "options": [
+      {
+        "id": 1,
+        "label": "¿Quién eres?",
+        "response": "Soy la guardiana de los secretos antiguos, testigo de milenios. He visto imperios nacer y caer como granos de arena en el desierto."
+      },
+      {
+        "id": 2,
+        "label": "¿Qué debo hacer?",
+        "response": "Sigue buscando y lo hallarás. Los secretos no se revelan a quienes no perseveran."
+      },
+      {
+        "id": 3,
+        "label": "Cuéntame un secreto",
+        "response": "Las estrellas guardan mapas que los antiguos conocían. Mira hacia arriba y encontrarás el camino que buscas."
+      }
+    ]
+  }
+}
