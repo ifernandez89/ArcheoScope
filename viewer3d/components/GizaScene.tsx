@@ -52,10 +52,30 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
         
         {/* 🔶 Piramidión - Frente a la esfinge (50cm delante) */}
         {!pyramidionCollected && (
+          <>
+            {/* Piramidón flotante en la punta de la pirámide - INVISIBLE */}
+            <Pyramidion 
+              position={[0, 44, 0]} // En la punta de la pirámide (altura 44m)
+              rotation={[0, 0, 0]}
+              onCollect={undefined} // NO clickeable
+              opacity={0}
+            />
+            {/* Piramidón en el suelo */}
+            <Pyramidion 
+              position={[100, 0, 35]} // 15m delante de la esfinge, en el suelo
+              rotation={[0, 0, 0]}
+              onCollect={onPyramidionCollect}
+            />
+          </>
+        )}
+        
+        {/* 🔶 Piramidón en la punta - VISIBLE después de entregarlo a la Esfinge */}
+        {pyramidionOnTop && (
           <Pyramidion 
-            position={[100, 0, 35]} // 15m delante de la esfinge (Z: 50-15=35)
+            position={[0, 44, 0]} // En la punta de la pirámide
             rotation={[0, 0, 0]}
-            onCollect={onPyramidionCollect}
+            onCollect={undefined} // NO clickeable
+            opacity={1}
           />
         )}
         
@@ -203,10 +223,11 @@ useGLTF.preload(getAssetPath('/sphinx_base.glb'))
  * Objeto seleccionable en el piso, al costado de la pirámide
  * Modelo: piramidon.glb
  */
-function Pyramidion({ position, rotation, onCollect }: { 
+function Pyramidion({ position, rotation, onCollect, opacity = 1 }: { 
   position: [number, number, number]
   rotation: [number, number, number]
   onCollect?: () => void
+  opacity?: number
 }) {
   const { scene } = useGLTF(getAssetPath('/piramidon.glb'))
   const [isHovered, setIsHovered] = useState(false)
@@ -215,6 +236,23 @@ function Pyramidion({ position, rotation, onCollect }: {
   
   // Clonar la escena para evitar problemas de reutilización
   const clonedScene = useMemo(() => scene.clone(), [scene])
+  
+  // Aplicar opacidad inicial
+  useEffect(() => {
+    clonedScene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh
+        if (mesh.material) {
+          // Clonar el material para evitar afectar otras instancias
+          const material = (mesh.material as THREE.MeshStandardMaterial).clone()
+          material.transparent = true
+          material.opacity = opacity
+          material.needsUpdate = true
+          mesh.material = material
+        }
+      }
+    })
+  }, [clonedScene, opacity])
   
   // Escala del piramidón - Aumentado al doble
   const scale = 4 // Duplicado de 2 a 4

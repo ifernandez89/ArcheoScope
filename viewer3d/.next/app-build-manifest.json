@@ -20,6 +20,12 @@
       "static/chunks/_app-pages-browser_types_missionState_ts-_app-pages-browser_types_player_ts.js",
       "static/chunks/app/menu/page.js"
     ],
+    "/menu/audio/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/menu/audio/page.js"
+    ],
     "/player-setup/page": [
       "static/chunks/webpack.js",
       "static/chunks/vendor.js",
@@ -31,12 +37,6 @@
       "static/chunks/vendor.js",
       "static/chunks/main-app.js",
       "static/chunks/app/game/page.js"
-    ],
-    "/_not-found/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/vendor.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
     ]
   }
 }
