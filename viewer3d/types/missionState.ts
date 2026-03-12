@@ -64,6 +64,7 @@ export const DEFAULT_MISSION_STATE: MissionState = {
     },
     giza: {
       discovered: false,
+      sphinxReceivedPyramidion: false,
       weatherCleared: false,
       itemsCollected: [],
       npcsInteracted: [],
@@ -254,6 +255,14 @@ export function updatePlayTime(seconds: number): void {
  */
 export function resetMissionState(): void {
   saveMissionState(DEFAULT_MISSION_STATE)
+  
+  // Limpiar sessionStorage relacionado con misiones
+  if (typeof window !== 'undefined') {
+    sessionStorage.removeItem('item_magna_bowl_collected')
+    sessionStorage.removeItem('item_pyramidion_collected')
+    sessionStorage.removeItem('giza_pyramidion_on_top')
+  }
+  
   console.log('🔄 Estado de misiones reseteado')
 }
 

@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { loadGameSettings, updateAudioSettings } from '@/types/gameSettings'
+import { resetPlayerState } from '@/types/player'
+import { resetMissionState } from '@/types/missionState'
 
 interface InGameMenuProps {
   isOpen: boolean
@@ -50,6 +52,27 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
     
     console.log('🔊 Volumen guardado desde InGameMenu en gameSettings:', masterVolume / 100)
     setShowAudioSettings(false)
+  }
+
+  // Handler para nueva partida - resetea todos los estados
+  const handleNewGame = () => {
+    console.log('🎮 Iniciando nueva partida desde InGameMenu - Reseteando todos los estados...')
+    
+    // Resetear estado del jugador
+    resetPlayerState()
+    
+    // Resetear estado de misiones
+    resetMissionState()
+    
+    // Limpiar sessionStorage
+    if (typeof window !== 'undefined') {
+      sessionStorage.clear()
+    }
+    
+    console.log('✅ Todos los estados reseteados - Redirigiendo a player-setup')
+    
+    // Ir a player-setup para configurar nueva partida
+    router.push('/player-setup')
   }
 
   if (!isOpen) return null
@@ -279,7 +302,7 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
 
   // Menú principal
   const menuOptions = [
-    { label: 'Continuar', action: () => onClose() },
+    { label: 'Nueva', action: handleNewGame },
     { label: 'Audio', action: () => setShowAudioSettings(true) },
     { label: 'Controles', action: () => router.push('/menu/controls') },
     { label: 'Video', action: () => router.push('/menu/video') },

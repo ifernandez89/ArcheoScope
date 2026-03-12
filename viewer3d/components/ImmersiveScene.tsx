@@ -248,13 +248,35 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // Registrar en el sistema de misiones
     collectItem('giza', 'pyramidion')
     
-    // Guardar en sessionStorage
+    // Guardar en sessionStorage que fue recolectado
     sessionStorage.setItem('item_pyramidion_collected', 'true')
+    
+    // NO colocar en la punta todavía - solo marcar como recolectado
     setPyramidionCollected(true)
     
     // Mostrar mensaje
     setShowCollectedMessage(true)
     setTimeout(() => setShowCollectedMessage(false), 3000)
+    
+    // Desencadenar secuencia de misión completada
+    console.log('🗿 Iniciando secuencia de misión completada...')
+    
+    // 1. PRIMERO: Clima mejora inmediatamente
+    clearWeather('giza')
+    setWeather(CALM_WEATHER)
+    console.log('☀️ Clima de Giza desbloqueado')
+    
+    // 2. SEGUNDO: Mini terremoto (500ms después del clima)
+    setTimeout(() => {
+      setWeather(prev => ({ ...prev, earthquake: true }))
+      console.log('🌍 Mini terremoto activado')
+      
+      // 3. TERCERO: Terminar terremoto (3.2s)
+      setTimeout(() => {
+        setWeather(CALM_WEATHER)
+        console.log('🌍 Terremoto finalizado - Misión completada')
+      }, 3200)
+    }, 500)
   }, [])
 
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // DirecciÃ³n del sol como objeto plano
@@ -283,6 +305,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [showViracochaDialogue, setShowViracochaDialogue] = useState(false)
   const [magnaBowlCollected, setMagnaBowlCollected] = useState(false)
   const [pyramidionCollected, setPyramidionCollected] = useState(false)
+  const [pyramidionOnTop, setPyramidionOnTop] = useState(false) // Si el piramidón está en la punta
 
   // Verificar si la Magna Bowl fue recolectada
   useEffect(() => {
@@ -299,7 +322,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     return () => clearInterval(interval)
   }, [])
   
-  // Verificar si el Piramidón fue recolectado
+  // Verificar si el Piramidón fue recolectado Y entregado a la Esfinge
   useEffect(() => {
     const checkPyramidion = () => {
       if (typeof window !== 'undefined') {
@@ -311,7 +334,15 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         const collectedFromSession = sessionStorage.getItem('item_pyramidion_collected') === 'true'
         
         const collected = collectedFromMissions || collectedFromSession
-        setPyramidionCollected(collected)
+        
+        // Verificar si fue entregado a la Esfinge (desde missionState)
+        const delivered = hasSphinxReceivedPyramidion()
+        
+        // Si fue entregado, el piramidón SIEMPRE debe estar visible en la punta
+        // Si solo fue recolectado (no entregado), también debe estar visible
+        if (collected || delivered) {
+          setPyramidionCollected(true)
+        }
       }
     }
     
@@ -701,6 +732,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onSphinxClick={() => setShowSphinxDialogue(true)}
           onPyramidionCollect={handleCollectPyramidion}
           pyramidionCollected={pyramidionCollected}
+          pyramidionOnTop={pyramidionOnTop}
         />
       ) : null}
 
@@ -722,14 +754,12 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             // Si tiene el piramidón y aún no se lo ha dado, marcarlo como entregado
             if (pyramidionCollected && !hasSphinxReceivedPyramidion()) {
               sphinxReceivePyramidion()
+              console.log('🗿 La Esfinge agradece por devolver el piramidón')
               
-              // Activar terremoto y limpiar clima (igual que en Puma Punku)
-              setWeather(prev => ({ ...prev, earthquake: true }))
-              setTimeout(() => {
-                setWeather(CALM_WEATHER)
-                clearWeather('giza')
-                console.log('☀️ Clima de Giza desbloqueado - Misión completada')
-              }, 3200)
+              // REPLICAR EXACTAMENTE el comportamiento del commit anterior
+              // Simplemente activar el estado que hace aparecer el piramidón
+              setPyramidionOnTop(true)
+              console.log('🔶 setPyramidionOnTop(true) - Piramidón debe aparecer en la punta')
             }
           }}
           onOptionSelected={(optionId) => {
@@ -870,7 +900,8 @@ function ModelScene({
   onCameraRotationChange,
   onSphinxClick,
   onPyramidionCollect,
-  pyramidionCollected
+  pyramidionCollected,
+  pyramidionOnTop
 }: { 
   modelPath: string
   avatarModel: string
@@ -905,6 +936,7 @@ function ModelScene({
   onSphinxClick?: () => void
   onPyramidionCollect?: () => void
   pyramidionCollected?: boolean
+  pyramidionOnTop?: boolean
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -1107,10 +1139,12 @@ function ModelScene({
         Math.abs(location.lon - 31.1342) < 0.05
       ) && (
         <GizaScene 
+          key="giza-scene-permanent"
           avatarPositionRef={avatarPositionRef}
           onSphinxClick={onSphinxClick}
           onPyramidionCollect={onPyramidionCollect}
           pyramidionCollected={pyramidionCollected || false}
+          pyramidionOnTop={pyramidionOnTop || false}
         />
       )}
       

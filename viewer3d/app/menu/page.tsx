@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { resetPlayerState } from '@/types/player'
+import { resetMissionState } from '@/types/missionState'
+import { resetGameSettings } from '@/types/gameSettings'
 
 export default function MenuPage() {
   const router = useRouter()
@@ -21,11 +23,7 @@ export default function MenuPage() {
       if (e.key === 'F5') {
         e.preventDefault()
         // Limpiar todo el estado
-        resetPlayerState()
-        if (typeof window !== 'undefined') {
-          sessionStorage.clear()
-          localStorage.clear()
-        }
+        handleNewGame()
         console.log('🗑️ F5 presionado - Estado del juego reseteado')
         // Recargar la página
         window.location.reload()
@@ -35,13 +33,37 @@ export default function MenuPage() {
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [])
 
+  // Handler para nueva partida - resetea todos los estados
+  const handleNewGame = () => {
+    console.log('🎮 Iniciando nueva partida - Reseteando todos los estados...')
+    
+    // Resetear estado del jugador
+    resetPlayerState()
+    
+    // Resetear estado de misiones
+    resetMissionState()
+    
+    // Resetear configuración del juego (opcional - mantiene preferencias de audio/video)
+    // resetGameSettings()
+    
+    // Limpiar sessionStorage
+    if (typeof window !== 'undefined') {
+      sessionStorage.clear()
+    }
+    
+    console.log('✅ Todos los estados reseteados - Comenzando nueva partida')
+    
+    // Ir a player-setup para configurar nueva partida
+    router.push('/player-setup')
+  }
+
   const menuOptions = [
-    ...(hasActiveGame ? [{ label: 'Continuar', path: '/game' }] : []),
-    { label: 'Player', path: '/player-setup' },
-    { label: 'Audio', path: '/menu/audio' },
-    { label: 'Controles', path: '/menu/controls' },
-    { label: 'Video', path: '/menu/video' },
-    { label: 'Información', path: '/menu/info' }
+    ...(hasActiveGame ? [{ label: 'Continuar', path: '/game', action: null }] : []),
+    { label: 'Nueva', path: null, action: handleNewGame },
+    { label: 'Audio', path: '/menu/audio', action: null },
+    { label: 'Controles', path: '/menu/controls', action: null },
+    { label: 'Video', path: '/menu/video', action: null },
+    { label: 'Información', path: '/menu/info', action: null }
   ]
 
   return (
@@ -65,7 +87,13 @@ export default function MenuPage() {
         {menuOptions.map((option) => (
           <button
             key={option.label}
-            onClick={() => router.push(option.path)}
+            onClick={() => {
+              if (option.action) {
+                option.action()
+              } else if (option.path) {
+                router.push(option.path)
+              }
+            }}
             style={{
               padding: '20px 80px',
               fontSize: '24px',

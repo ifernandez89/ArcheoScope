@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useRef } from 'react'
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGLTF } from '@react-three/drei'
@@ -11,6 +11,7 @@ interface GizaSceneProps {
   onSphinxClick?: () => void
   onPyramidionCollect?: () => void
   pyramidionCollected?: boolean
+  pyramidionOnTop?: boolean
 }
 
 /**
@@ -31,7 +32,9 @@ interface GizaSceneProps {
  * - Niebla amarillenta atmosférica
  * - Piedras dispersas
  */
-export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidionCollect, pyramidionCollected }: GizaSceneProps) {
+export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidionCollect, pyramidionCollected, pyramidionOnTop }: GizaSceneProps) {
+  console.log('🔶 GizaScene RENDER - pyramidionCollected:', pyramidionCollected, 'pyramidionOnTop:', pyramidionOnTop)
+  
   return (
     <group name="giza-complex">
         {/* 🌫️ Niebla desértica amarillenta */}
@@ -44,7 +47,7 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
         <GreatPyramid 
           position={[0, 0, 0]}
           rotation={[0, Math.PI / 4, 0]} // Rotación 45° para alinear caras con cardinales
-          pyramidionCollected={pyramidionCollected || false}
+          pyramidionCollected={pyramidionOnTop || false}
         />
         
         {/* 🔶 Piramidión - Frente a la esfinge (50cm delante) */}
