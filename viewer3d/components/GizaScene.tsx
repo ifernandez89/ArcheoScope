@@ -50,6 +50,14 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
           pyramidionCollected={pyramidionOnTop || false}
         />
         
+        {/* 👑 Akhenaton - Dentro de la pirámide (cámara del rey) */}
+        <PharaoStatue 
+          model="akenaton.glb"
+          position={[0, 0, 0]} // Centro de la pirámide, a nivel del suelo
+          rotation={[0, 0, 0]} // De pie, mirando al norte
+          scale={6}
+        />
+        
         {/* 🔶 Piramidión - Frente a la esfinge (50cm delante) */}
         {!pyramidionCollected && (
           <>
@@ -84,6 +92,23 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
           position={[100, 5, 50]}
           rotation={[0, Math.PI / 2, 0]} // Mira hacia el Este (salida del sol)
           onClick={onSphinxClick}
+        />
+        
+        {/* 👑 Estatuas de faraones - Frente a la pirámide, mirando al sur */}
+        {/* Ramsés II - Lado oeste, CAÍDO de lado */}
+        <PharaoStatue 
+          model="ramses2.glb"
+          position={[-20, 0, -50]} // Oeste de la pirámide, frente sur
+          rotation={[0, 0, Math.PI / 2]} // Rotado 90° en Z para que caiga de lado
+          scale={8}
+        />
+        
+        {/* Hatshepsut - Lado este */}
+        <PharaoStatue 
+          model="hatshepsut.glb"
+          position={[20, 0, -50]} // Este de la pirámide, frente sur
+          rotation={[0, Math.PI, 0]} // Mirando al sur (rotada 180° para enfrentar a Ramsés)
+          scale={8}
         />
         
         {/* 🏛️ Templo del Valle de Kefrén - Debajo de la pirámide */}
@@ -217,6 +242,38 @@ function Sphinx({ position, rotation, onClick }: { position: [number, number, nu
 
 // Precargar modelo
 useGLTF.preload(getAssetPath('/sphinx_base.glb'))
+
+/**
+ * 👑 Estatua de Faraón
+ * Estatuas monumentales de faraones egipcios
+ */
+function PharaoStatue({ model, position, rotation, scale }: { 
+  model: string
+  position: [number, number, number]
+  rotation: [number, number, number]
+  scale: number
+}) {
+  const { scene } = useGLTF(getAssetPath(`/${model}`))
+  
+  // Clonar la escena para evitar problemas de reutilización
+  const clonedScene = useMemo(() => scene.clone(), [scene])
+  
+  return (
+    <group position={position} rotation={rotation}>
+      <primitive 
+        object={clonedScene}
+        scale={[scale, scale, scale]}
+        castShadow
+        receiveShadow
+      />
+    </group>
+  )
+}
+
+// Precargar modelos de faraones
+useGLTF.preload(getAssetPath('/ramses2.glb'))
+useGLTF.preload(getAssetPath('/hatshepsut.glb'))
+useGLTF.preload(getAssetPath('/akenaton.glb'))
 
 /**
  * 🔶 Piramidón - Capstone de la Gran Pirámide
