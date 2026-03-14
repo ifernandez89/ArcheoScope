@@ -56,20 +56,20 @@ export default function DayNightClock({ solarAltitude, solarAzimuth, isDay }: Da
   return (
     <div style={{
       position: 'fixed',
-      top: '140px',
+      top: '80px',
       right: '20px',
       zIndex: 1000,
-      width: '80px',
-      height: '80px',
+      width: '72px',
+      height: '72px',
       pointerEvents: 'none'
     }}>
       {/* Círculo exterior */}
-      <svg width="80" height="80" style={{ position: 'absolute' }}>
+      <svg width="72" height="72" style={{ position: 'absolute' }}>
         {/* Fondo del cielo */}
         <circle
-          cx="40"
-          cy="40"
-          r="38"
+          cx="36"
+          cy="36"
+          r="34"
           fill={isDay ? 'rgba(135, 206, 235, 0.3)' : 'rgba(25, 25, 112, 0.3)'}
           stroke={isDay ? 'rgba(255, 215, 0, 0.6)' : 'rgba(192, 192, 192, 0.6)'}
           strokeWidth="2"
@@ -78,25 +78,25 @@ export default function DayNightClock({ solarAltitude, solarAzimuth, isDay }: Da
         {/* Línea del horizonte */}
         <line
           x1="2"
-          y1="40"
-          x2="78"
-          y2="40"
+          y1="36"
+          x2="70"
+          y2="36"
           stroke="rgba(255, 255, 255, 0.4)"
           strokeWidth="1"
           strokeDasharray="2,2"
         />
         
         {/* Marcadores cardinales */}
-        <text x="40" y="10" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="8">N</text>
-        <text x="70" y="43" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="8">E</text>
-        <text x="40" y="75" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="8">S</text>
-        <text x="10" y="43" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="8">O</text>
+        <text x="36" y="10" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="8">N</text>
+        <text x="63" y="39" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="8">E</text>
+        <text x="36" y="68" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="8">S</text>
+        <text x="9" y="39" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="8">O</text>
         
         {/* Trayectoria del sol/luna */}
         <circle
-          cx={x}
-          cy={y}
-          r="6"
+          cx={x * 0.9}
+          cy={y * 0.9}
+          r="5"
           fill={isDay ? '#FFD700' : '#C0C0C0'}
           stroke={isDay ? '#FFA500' : '#A0A0A0'}
           strokeWidth="1"
@@ -106,31 +106,13 @@ export default function DayNightClock({ solarAltitude, solarAzimuth, isDay }: Da
       {/* Icono del sol/luna */}
       <div style={{
         position: 'absolute',
-        left: `${x - 8}px`,
-        top: `${y - 8}px`,
-        fontSize: '16px',
+        left: `${x * 0.9 - 7}px`,
+        top: `${y * 0.9 - 7}px`,
+        fontSize: '14px',
         textShadow: '0 0 4px rgba(0,0,0,0.5)',
         pointerEvents: 'none'
       }}>
         {icon}
-      </div>
-      
-      {/* Hora del día */}
-      <div style={{
-        position: 'absolute',
-        bottom: '-20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        color: 'white',
-        fontSize: '11px',
-        fontWeight: 'bold',
-        textShadow: '0 0 4px rgba(0,0,0,0.8)',
-        background: 'rgba(0,0,0,0.5)',
-        padding: '2px 6px',
-        borderRadius: '4px',
-        whiteSpace: 'nowrap'
-      }}>
-        {timeLabel}
       </div>
     </div>
   )

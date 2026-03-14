@@ -16,7 +16,7 @@ export default function Compass({ rotation, solarAzimuth }: CompassProps) {
     <div
       style={{
         position: 'fixed',
-        top: '70px',
+        top: '165px',
         right: '20px',
         width: '65px',
         height: '65px',
