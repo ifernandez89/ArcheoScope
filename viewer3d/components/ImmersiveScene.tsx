@@ -278,6 +278,30 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       }, 3200)
     }, 500)
   }, [])
+  
+  // Handler para cuando se mueve la momia
+  const handleMummyMoved = useCallback(() => {
+    console.log('🏺 Momia movida! Revelando escarabajo...')
+    setScarabDiscovered(true)
+  }, [])
+  
+  // Handler para recolectar el escarabajo
+  const handleCollectScarab = useCallback(() => {
+    console.log('🪲 Escarabajo recolectado!')
+    
+    // Registrar en el sistema de misiones
+    collectItem('giza', 'scarab')
+    
+    // Guardar en sessionStorage
+    sessionStorage.setItem('item_scarab_collected', 'true')
+    
+    // Marcar como recolectado
+    setScarabCollected(true)
+    
+    // Mostrar mensaje
+    setShowCollectedMessage(true)
+    setTimeout(() => setShowCollectedMessage(false), 3000)
+  }, [])
 
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // DirecciÃ³n del sol como objeto plano
   const [solarState, setSolarState] = useState({
@@ -306,6 +330,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [magnaBowlCollected, setMagnaBowlCollected] = useState(false)
   const [pyramidionCollected, setPyramidionCollected] = useState(false)
   const [pyramidionOnTop, setPyramidionOnTop] = useState(false) // Si el piramidón está en la punta
+  const [scarabDiscovered, setScarabDiscovered] = useState(false) // Si se movió la momia
+  const [scarabCollected, setScarabCollected] = useState(false) // Si se recogió el escarabajo
 
   // Verificar si la Magna Bowl fue recolectada
   useEffect(() => {
@@ -733,6 +759,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onPyramidionCollect={handleCollectPyramidion}
           pyramidionCollected={pyramidionCollected}
           pyramidionOnTop={pyramidionOnTop}
+          onMummyMoved={handleMummyMoved}
+          onScarabCollect={handleCollectScarab}
+          scarabDiscovered={scarabDiscovered}
+          scarabCollected={scarabCollected}
         />
       ) : null}
 
@@ -901,7 +931,11 @@ function ModelScene({
   onSphinxClick,
   onPyramidionCollect,
   pyramidionCollected,
-  pyramidionOnTop
+  pyramidionOnTop,
+  onMummyMoved,
+  onScarabCollect,
+  scarabDiscovered,
+  scarabCollected
 }: { 
   modelPath: string
   avatarModel: string
@@ -937,6 +971,10 @@ function ModelScene({
   onPyramidionCollect?: () => void
   pyramidionCollected?: boolean
   pyramidionOnTop?: boolean
+  onMummyMoved?: () => void
+  onScarabCollect?: () => void
+  scarabDiscovered?: boolean
+  scarabCollected?: boolean
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -1145,6 +1183,10 @@ function ModelScene({
           onPyramidionCollect={onPyramidionCollect}
           pyramidionCollected={pyramidionCollected || false}
           pyramidionOnTop={pyramidionOnTop || false}
+          onMummyMoved={onMummyMoved}
+          onScarabCollect={onScarabCollect}
+          scarabDiscovered={scarabDiscovered || false}
+          scarabCollected={scarabCollected || false}
         />
       )}
       

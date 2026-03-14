@@ -26,29 +26,17 @@
       "static/chunks/main-app.js",
       "static/chunks/app/player-setup/page.js"
     ],
-    "/menu/info/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/vendor.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/menu/info/page.js"
-    ],
-    "/menu/controls/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/vendor.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/menu/controls/page.js"
-    ],
-    "/menu/video/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/vendor.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/menu/video/page.js"
-    ],
     "/game/page": [
       "static/chunks/webpack.js",
       "static/chunks/vendor.js",
       "static/chunks/main-app.js",
       "static/chunks/app/game/page.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

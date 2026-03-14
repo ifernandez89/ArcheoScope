@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGLTF } from '@react-three/drei'
 import { getAssetPath } from '@/lib/paths'
+import SelectableObject from './SelectableObject'
 
 interface GizaSceneProps {
   avatarPositionRef: React.MutableRefObject<THREE.Vector3>
@@ -12,6 +13,10 @@ interface GizaSceneProps {
   onPyramidionCollect?: () => void
   pyramidionCollected?: boolean
   pyramidionOnTop?: boolean
+  onMummyMoved?: () => void
+  onScarabCollect?: () => void
+  scarabDiscovered?: boolean
+  scarabCollected?: boolean
 }
 
 /**
@@ -32,7 +37,7 @@ interface GizaSceneProps {
  * - Niebla amarillenta atmosférica
  * - Piedras dispersas
  */
-export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidionCollect, pyramidionCollected, pyramidionOnTop }: GizaSceneProps) {
+export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidionCollect, pyramidionCollected, pyramidionOnTop, onMummyMoved, onScarabCollect, scarabDiscovered, scarabCollected }: GizaSceneProps) {
   console.log('🔶 GizaScene RENDER - pyramidionCollected:', pyramidionCollected, 'pyramidionOnTop:', pyramidionOnTop)
   
   return (
@@ -50,13 +55,32 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
           pyramidionCollected={pyramidionOnTop || false}
         />
         
-        {/* 👑 Akhenaton - Dentro de la pirámide (cámara del rey) */}
-        <PharaoStatue 
+        {/* 👑 Akhenaton - Dentro de la pirámide (cámara del rey) - MOVIBLE */}
+        <MovablePharao 
+          id="giza-akhenaton"
           model="akenaton.glb"
-          position={[0, 0, 0]} // Centro de la pirámide, a nivel del suelo
+          initialPosition={[0, 0, 0]} // Centro de la pirámide, a nivel del suelo
           rotation={[0, 0, 0]} // De pie, mirando al norte
           scale={6}
         />
+        
+        {/* 🏺 Momia - Fuera de la pirámide hacia el oeste - MOVIBLE */}
+        <MovableMummy 
+          id="giza-momia"
+          model="momia.glb"
+          initialPosition={[-72, 0, -2]} // 2 metros más al oeste, a nivel del piso
+          rotation={[-Math.PI / 2, 0, 0]} // Acostada boca arriba
+          scale={0.125}
+          onMove={onMummyMoved}
+        />
+        
+        {/* 🪲 Escarabajo - Aparece cuando se mueve la momia */}
+        {scarabDiscovered && !scarabCollected && (
+          <Scarab 
+            position={[-72, 1, -2]} // Encima de donde estaba la momia
+            onCollect={onScarabCollect}
+          />
+        )}
         
         {/* 🔶 Piramidión - Frente a la esfinge (50cm delante) */}
         {!pyramidionCollected && (
@@ -274,6 +298,155 @@ function PharaoStatue({ model, position, rotation, scale }: {
 useGLTF.preload(getAssetPath('/ramses2.glb'))
 useGLTF.preload(getAssetPath('/hatshepsut.glb'))
 useGLTF.preload(getAssetPath('/akenaton.glb'))
+useGLTF.preload(getAssetPath('/momia.glb'))
+useGLTF.preload(getAssetPath('/escab.glb'))
+
+/**
+ * 👑 Faraón Movible - Wrapper para hacer estatuas seleccionables y movibles
+ * Usa SelectableObject para permitir click y movimiento como los bloques H
+ */
+function MovablePharao({ id, model, initialPosition, rotation, scale }: {
+  id: string
+  model: string
+  initialPosition: [number, number, number]
+  rotation: [number, number, number]
+  scale: number
+}) {
+  const [pos, setPos] = useState<[number, number, number]>(initialPosition)
+  
+  return (
+    <SelectableObject id={id} position={pos} onMove={setPos}>
+      <PharaoStatue 
+        model={model}
+        position={[0, 0, 0]} // Posición relativa al SelectableObject
+        rotation={rotation}
+        scale={scale}
+      />
+    </SelectableObject>
+  )
+}
+
+/**
+ * 🏺 Momia Movible - Detecta cuando se mueve para revelar el escarabajo
+ */
+function MovableMummy({ id, model, initialPosition, rotation, scale, onMove }: {
+  id: string
+  model: string
+  initialPosition: [number, number, number]
+  rotation: [number, number, number]
+  scale: number
+  onMove?: () => void
+}) {
+  const [pos, setPos] = useState<[number, number, number]>(initialPosition)
+  const [hasMoved, setHasMoved] = useState(false)
+  
+  const handleMove = useCallback((newPos: [number, number, number]) => {
+    setPos(newPos)
+    if (!hasMoved) {
+      setHasMoved(true)
+      if (onMove) {
+        onMove()
+        console.log('🏺 Momia movida! Escarabajo revelado')
+      }
+    }
+  }, [hasMoved, onMove])
+  
+  return (
+    <SelectableObject id={id} position={pos} onMove={handleMove}>
+      <PharaoStatue 
+        model={model}
+        position={[0, 0, 0]}
+        rotation={rotation}
+        scale={scale}
+      />
+    </SelectableObject>
+  )
+}
+
+/**
+ * 🪲 Escarabajo - Item coleccionable que aparece bajo la momia
+ */
+function Scarab({ position, onCollect }: {
+  position: [number, number, number]
+  onCollect?: () => void
+}) {
+  const { scene } = useGLTF(getAssetPath('/escab.glb'))
+  const [isHovered, setIsHovered] = useState(false)
+  const [isDisappearing, setIsDisappearing] = useState(false)
+  const disappearTimer = useRef(0)
+  
+  const clonedScene = useMemo(() => scene.clone(), [scene])
+  
+  const scale = 0.5
+  
+  // Calcular offset Y para que esté en el suelo
+  const yOffset = useMemo(() => {
+    const box = new THREE.Box3().setFromObject(clonedScene)
+    const minY = box.min.y
+    return -minY * scale
+  }, [clonedScene, scale])
+  
+  // Animación de desaparición
+  useFrame((state, delta) => {
+    if (isDisappearing && clonedScene) {
+      disappearTimer.current += delta
+      
+      const progress = Math.min(disappearTimer.current / 1.0, 1)
+      clonedScene.scale.setScalar(scale * (1 + progress * 0.5))
+      
+      clonedScene.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh
+          if (mesh.material) {
+            const material = mesh.material as THREE.MeshStandardMaterial
+            material.transparent = true
+            material.opacity = 1 - progress
+          }
+        }
+      })
+      
+      if (progress >= 1 && onCollect) {
+        onCollect()
+      }
+    }
+  })
+  
+  const handleClick = (e: any) => {
+    if (onCollect && !isDisappearing) {
+      e.stopPropagation()
+      setIsDisappearing(true)
+      console.log('🪲 Escarabajo recogido!')
+    }
+  }
+  
+  return (
+    <group 
+      position={[position[0], position[1] + yOffset, position[2]]} 
+      onClick={handleClick}
+      onPointerOver={() => onCollect && !isDisappearing && setIsHovered(true)}
+      onPointerOut={() => setIsHovered(false)}
+    >
+      <primitive 
+        object={clonedScene}
+        scale={[scale, scale, scale]}
+        castShadow
+        receiveShadow
+      />
+      
+      {isHovered && onCollect && !isDisappearing && (
+        <mesh>
+          <sphereGeometry args={[1, 16, 16]} />
+          <meshBasicMaterial
+            color="#ffff00"
+            wireframe
+            transparent
+            opacity={0.3}
+          />
+        </mesh>
+      )}
+    </group>
+  )
+}
 
 /**
  * 🔶 Piramidón - Capstone de la Gran Pirámide
