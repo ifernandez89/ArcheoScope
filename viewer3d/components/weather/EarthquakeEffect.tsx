@@ -73,18 +73,18 @@ export default function EarthquakeEffect() {
     const t = timeRef.current
 
     // Shake multicapa: onda principal + réplicas + vibración fina
-    // Onda principal (4Hz, amplitud 0.3)
-    const shakeX = Math.sin(t * 25) * 0.3 + Math.sin(t * 17.3) * 0.15
-    const shakeY = Math.sin(t * 19.7) * 0.12 + Math.sin(t * 31) * 0.06
-    const shakeZ = Math.sin(t * 22.1) * 0.25 + Math.sin(t * 13.5) * 0.1
+    // REDUCIDO DRÁSTICAMENTE para evitar mareos (amplitud reducida 90%)
+    const shakeX = Math.sin(t * 25) * 0.03 + Math.sin(t * 17.3) * 0.015
+    const shakeY = Math.sin(t * 19.7) * 0.012 + Math.sin(t * 31) * 0.006
+    const shakeZ = Math.sin(t * 22.1) * 0.025 + Math.sin(t * 13.5) * 0.01
 
-    // Aplicar shake relativo a la posición actual (no al origen fijo)
-    camera.position.x += shakeX * delta * 8
-    camera.position.y += shakeY * delta * 8
-    camera.position.z += shakeZ * delta * 8
+    // Aplicar shake relativo a la posición actual (velocidad reducida 75%)
+    camera.position.x += shakeX * delta * 2
+    camera.position.y += shakeY * delta * 2
+    camera.position.z += shakeZ * delta * 2
 
-    // Leve rotación de cámara para sensación de inestabilidad
-    camera.rotation.z = Math.sin(t * 18) * 0.008
+    // Leve rotación de cámara para sensación de inestabilidad (reducida 50%)
+    camera.rotation.z = Math.sin(t * 18) * 0.004
 
     // Animar partículas de polvo
     if (dustRef.current) {

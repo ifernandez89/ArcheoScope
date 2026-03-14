@@ -459,7 +459,7 @@ export default function WalkableAvatar({
           new THREE.Vector3(0, -1, 0)
         )
         
-        const intersects = raycaster.current.intersectObject(terrainRef.current, true)
+        const intersects = raycaster.current.intersectObject(terrainRef.current, false)  // false = no recursivo, solo terreno
         
         if (intersects.length > 0) {
           const groundHeight = intersects[0].point.y
@@ -473,8 +473,8 @@ export default function WalkableAvatar({
       
       // Suavizar transición a altura objetivo solo si hay diferencia significativa
       const heightDifference = Math.abs(finalTargetHeight - group.current.position.y)
-      if (heightDifference > 0.01) {  // Solo ajustar si la diferencia es mayor a 1cm
-        group.current.position.y += (finalTargetHeight - group.current.position.y) * 8 * delta
+      if (heightDifference > 0.05) {  // Aumentado de 0.01 a 0.05 para más estabilidad
+        group.current.position.y += (finalTargetHeight - group.current.position.y) * 5 * delta  // Reducido de 8 a 5 para movimiento más suave
       }
       
       // ========================================
@@ -558,7 +558,7 @@ export default function WalkableAvatar({
         new THREE.Vector3(0, -1, 0)
       )
       
-      const intersects = raycaster.current.intersectObject(terrainRef.current, true)
+      const intersects = raycaster.current.intersectObject(terrainRef.current, false)  // false = no recursivo, solo terreno
       
       if (intersects.length > 0) {
         const groundHeight = intersects[0].point.y
