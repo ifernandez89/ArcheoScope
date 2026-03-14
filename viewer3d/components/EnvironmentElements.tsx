@@ -82,11 +82,11 @@ export default function EnvironmentElements({
     }
 
     const counts: Record<string, Record<string, number>> = {
-      tropical:  { trees: 25, bushes: 20, rocks: 10, palms: 8,  flowers: 25 },
-      temperate: { trees: 25, bushes: 15, rocks: 15, logs: 5,   flowers: 15 },
-      altiplano: { trees: 10, bushes: 25, rocks: 20, logs: 3,   flowers: 30 }, // Reducido a la mitad para evitar bugs
+      tropical:  { trees: 25, bushes: 20, rocks: 10, palms: 8 },
+      temperate: { trees: 25, bushes: 15, rocks: 15, logs: 5 },
+      altiplano: { trees: 10, bushes: 25, rocks: 20, logs: 3 }, // Reducido a la mitad para evitar bugs
       desert:    { trees: 15, bushes: 5,  rocks: 25, cacti: 12, crystals: 8 },  // Menos árboles en desierto
-      arctic:    { trees: 20, bushes: 8,  rocks: 30, crystals: 5, flowers: 5 }
+      arctic:    { trees: 20, bushes: 8,  rocks: 30, crystals: 5 }
     }
     const count = counts[biome] || counts.temperate
     const items: any[] = []
@@ -212,15 +212,6 @@ export default function EnvironmentElements({
       }
     }
 
-    // Flores
-    if (count.flowers) {
-      for (let i = 0; i < count.flowers; i++) {
-        const angle = random(index++) * Math.PI * 2
-        const radius = 8 + random(index++) * 35
-        items.push({ type: 'flower', x: Math.cos(angle) * radius + (random(index++) - 0.5) * 5, z: Math.sin(angle) * radius + (random(index++) - 0.5) * 5, scale: 0.1 + random(index++) * 0.15, colorIndex: Math.floor(random(index++) * 4) })
-      }
-    }
-
     // Cristales
     if (count.crystals) {
       for (let i = 0; i < count.crystals; i++) {
@@ -232,8 +223,6 @@ export default function EnvironmentElements({
 
     return items
   }, [seed, biome, treeMultiplier, isPumaPunku])
-
-  const flowerColors = ['#ff6b9d', '#ffd93d', '#a8e6cf', '#c7b3ff']
 
   return (
     <group>
@@ -252,19 +241,6 @@ export default function EnvironmentElements({
             return (
               <MovableRock key={`rock-${seed}-${i}`} id={`rock-${seed}-${i}`}
                 initialPosition={[item.x, 0, item.z]} scale={item.scale * 0.5} rotation={item.rotation} />
-            )
-          case 'flower':
-            return (
-              <group key={`flower-${i}`} position={[item.x, 0, item.z]}>
-                <mesh position={[0, item.scale * 2, 0]}>
-                  <cylinderGeometry args={[0.02, 0.02, item.scale * 4, 4]} />
-                  <meshStandardMaterial color="#2d5016" />
-                </mesh>
-                <mesh position={[0, item.scale * 4, 0]} castShadow>
-                  <sphereGeometry args={[item.scale, 6, 6]} />
-                  <meshStandardMaterial color={flowerColors[item.colorIndex]} emissive={flowerColors[item.colorIndex]} emissiveIntensity={0.2} />
-                </mesh>
-              </group>
             )
           case 'crystal':
             return (

@@ -713,18 +713,5 @@ export default function WalkableAvatar({
   )
 }
 
-import { getAssetPath } from '@/lib/paths'
-
-// Precargar modelos comunes
-useGLTF.preload(getAssetPath('/warrior.glb'))
-useGLTF.preload(getAssetPath('/moai.glb'))
-useGLTF.preload(getAssetPath('/sphinx.glb'))
-
-// Precargar todos los UFOs
-useGLTF.preload(getAssetPath('/ufo_1.glb'))
-useGLTF.preload(getAssetPath('/ufo_2.glb'))
-useGLTF.preload(getAssetPath('/ufo_3.glb'))
-useGLTF.preload(getAssetPath('/ufo_4.glb'))
-useGLTF.preload(getAssetPath('/ufo_5.glb'))
-
-useGLTF.preload(getAssetPath('/avenger_01.glb'))
+// Los modelos se cargan bajo demanda cuando se necesitan
+// No precargar para mejorar tiempo de carga inicial en GitHub Pages

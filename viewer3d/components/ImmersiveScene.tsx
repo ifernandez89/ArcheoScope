@@ -29,11 +29,6 @@ const RealisticSolarSystem = dynamic(() => import('./RealisticSolarSystem'), { s
 import Stars from './Stars'
 import { 
   useNarrativeZoom
-  // LunarOrbit, 
-  // OrbitalPlane, 
-  // SimpleSun, 
-  // EarthOrbit, 
-  // EclipticPlane 
 } from './NarrativeZoom'
 import { detectBiome, getSkyColorForBiome, getFogColorForBiome } from '@/utils/biome-detector'
 import ProceduralTerrain from './ProceduralTerrain'
@@ -45,11 +40,11 @@ import { WorldCore } from '../engines/WorldCore'
 import { getProceduralAudio } from '../systems/ProceduralAudio'
 import { getClimateAudio } from '../systems/ClimateAudioSystem'
 
-// ðŸ—ºï¸ SISTEMA DE TERRENO MEJORADO
+// SISTEMA DE TERRENO MEJORADO
 import EnhancedTerrain from './EnhancedTerrain'
 import TerrainControl from './TerrainControl'
 
-// ðŸŒ³ MODELOS 3D DE VEGETACIÃ“N Y ROCAS
+// MODELOS 3D DE VEGETACIÓN Y ROCAS
 import Tree3DModel, { type TreeType } from './Tree3DModel'
 import Rock3DModel from './Rock3DModel'
 import PumaPunkuBlock from './PumaPunkuBlock'
@@ -58,10 +53,10 @@ import SelectableObject from './SelectableObject'
 import TerrainClickReceiver from './TerrainClickReceiver'
 import { ObjectSelectionProvider, useObjectSelection } from './ObjectSelectionContext'
 
-// ðŸŽ® SISTEMAS DE PERFORMANCE
+// SISTEMAS DE PERFORMANCE
 import EngineIntegration from './EngineIntegration'
 
-// ðŸ”¥ SISTEMAS MODULARES LAZY-LOADED
+// SISTEMAS MODULARES LAZY-LOADED
 import {
   LightingSystem,
   WeatherSystem,
@@ -70,25 +65,32 @@ import {
   AstronomicalSystem
 } from '@/utils/lazy-systems'
 
-// ðŸŽ¨ NUEVA ARQUITECTURA: UI Systems Layer
+// UI Systems Layer
 import UISystems from './layers/UISystems'
 import AmbientAudio from './AmbientAudio'
 import AmbientParticles from './AmbientParticles'
 import CinematicZoom from './CinematicZoom'
 import SiteInfo from './SiteInfo'
 import SolarSimulation from './SolarSimulation'
-import SpaceUfo from './SpaceUfo'
-import PumaPunkuScene from './PumaPunkuScene'
-import GizaScene from './GizaScene'
-import EnvironmentElements, { EnvironmentElementsWithTrees } from './EnvironmentElements'
-import { CelestialOverlayHUD } from './CelestialOverlay'
-import BackgroundMountains from './BackgroundMountains'
-import DiscoveredItemInWorld from './DiscoveredItemInWorld'
-import ItemCollectedMessage from './ItemCollectedMessage'
-import ViracochaDialogue from './ViracochaDialogue'
-import SphinxInteractiveDialogue from './SphinxInteractiveDialogue'
-import Compass from './Compass'
-import CompassTracker from './CompassTracker'
+
+// ESCENAS PESADAS - LAZY LOADING (solo se cargan cuando se necesitan)
+const SpaceUfo = dynamic(() => import('./SpaceUfo'), { ssr: false })
+const PumaPunkuScene = dynamic(() => import('./PumaPunkuScene'), { ssr: false })
+const GizaScene = dynamic(() => import('./GizaScene'), { ssr: false })
+const EnvironmentElements = dynamic(() => import('./EnvironmentElements'), { ssr: false, loading: () => null })
+
+// COMPONENTES DE DIÁLOGO - LAZY LOADING
+const ViracochaDialogue = dynamic(() => import('./ViracochaDialogue'), { ssr: false })
+const SphinxInteractiveDialogue = dynamic(() => import('./SphinxInteractiveDialogue'), { ssr: false })
+const DiscoveredItemInWorld = dynamic(() => import('./DiscoveredItemInWorld'), { ssr: false })
+const ItemCollectedMessage = dynamic(() => import('./ItemCollectedMessage'), { ssr: false })
+const Compass = dynamic(() => import('./Compass'), { ssr: false })
+const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
+const CelestialOverlayHUD = dynamic(() => import('./CelestialOverlay').then(m => ({ default: m.CelestialOverlayHUD })), { ssr: false })
+const BackgroundMountains = dynamic(() => import('./BackgroundMountains'), { ssr: false, loading: () => null })
+
+// EnvironmentElementsWithTrees necesita el contexto, importar directamente
+import { EnvironmentElementsWithTrees } from './EnvironmentElements'
 import { loadPlayerState, savePlayerState, updatePlayerLocation } from '@/types/player'
 import { loadGameSettings } from '@/types/gameSettings'
 import { collectItem, interactWithNPC, loadMissionState, sphinxReceivePyramidion, hasSphinxReceivedPyramidion, clearWeather, isWeatherCleared, type MissionState } from '@/types/missionState'
