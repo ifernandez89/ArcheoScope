@@ -85,6 +85,7 @@ const SphinxInteractiveDialogue = dynamic(() => import('./SphinxInteractiveDialo
 const DiscoveredItemInWorld = dynamic(() => import('./DiscoveredItemInWorld'), { ssr: false })
 const ItemCollectedMessage = dynamic(() => import('./ItemCollectedMessage'), { ssr: false })
 const Compass = dynamic(() => import('./Compass'), { ssr: false })
+const DayNightClock = dynamic(() => import('./DayNightClock'), { ssr: false })
 const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
 const CelestialOverlayHUD = dynamic(() => import('./CelestialOverlay').then(m => ({ default: m.CelestialOverlayHUD })), { ssr: false })
 const BackgroundMountains = dynamic(() => import('./BackgroundMountains'), { ssr: false, loading: () => null })
@@ -714,7 +715,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
 
       {/* Brújula astronómica - muestra el norte real basado en la rotación de la cámara */}
       {mode === 'model' && (
-        <Compass rotation={cameraRotation} solarAzimuth={solarState.azimuth} />
+        <>
+          <Compass rotation={cameraRotation} solarAzimuth={solarState.azimuth} />
+          <DayNightClock 
+            solarAltitude={solarState.altitude} 
+            solarAzimuth={solarState.azimuth}
+            isDay={isDay}
+          />
+        </>
       )}
 
       {/* Escena 3D */}

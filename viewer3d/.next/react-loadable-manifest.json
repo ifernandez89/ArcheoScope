@@ -6,7 +6,7 @@
       "static/chunks/react-three.994f8dbb8dcd66d9.js",
       "static/chunks/engines.514c605b294a844a.js",
       "static/chunks/vendor-06cb701289697aa7.js",
-      "static/chunks/269.070f4bff9fa06c51.js"
+      "static/chunks/269.394d023b5d061b2c.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -51,6 +51,12 @@
     "id": 3843,
     "files": [
       "static/chunks/843.f9618e7408042293.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./DayNightClock": {
+    "id": 7156,
+    "files": [
+      "static/chunks/156.dcc608705aea233c.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./DiscoveredItemInWorld": {
