@@ -38,13 +38,13 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
 
   // Coordenadas de sitios seleccionados
   const famousSites = [
-    { name: '🌊 Océano Pacífico', lat: 8.7783, lon: -144.8885, category: 'famous' },
+    { name: 'Océano Pacífico', lat: 8.7783, lon: -144.8885, category: 'famous' },
     { name: 'Antártida', lat: -75.2509, lon: 0.0714, category: 'famous' },
-    { name: 'Puma Punku - Tiwanaku, Bolivia', lat: -16.56164569638123, lon: -68.67952141492464, category: 'famous' },
-    { name: 'Pirámides de Giza, Egipto', lat: 29.9792, lon: 31.1342, category: 'famous' },
-    { name: 'Isla de Pascua, Chile', lat: -27.1254, lon: -109.2778, category: 'famous' },
-    { name: 'Teotihuacán, México', lat: 19.6925, lon: -98.8438, category: 'famous' },
-    { name: 'Tres Zapotes, Veracruz, México', lat: 18.4667, lon: -95.4500, category: 'famous' },
+    { name: 'Bolivia', lat: -16.56164569638123, lon: -68.67952141492464, category: 'famous' },
+    { name: 'Egipto', lat: 29.9792, lon: 31.1342, category: 'famous' },
+    { name: 'Isla/Chile', lat: -27.1254, lon: -109.2778, category: 'famous' },
+    { name: 'México', lat: 19.6925, lon: -98.8438, category: 'famous' },
+    { name: 'Veracruz', lat: 18.4667, lon: -95.4500, category: 'famous' },
   ]
 
   return (
@@ -198,7 +198,7 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
                 transition: 'all 0.2s'
               }}
             >
-              🌍 Ir a Ubicación
+              🌍 Viajar
             </button>
           </form>
 
@@ -210,7 +210,7 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
               marginBottom: '10px',
               fontWeight: 'bold'
             }}>
-              🏛️ Sitios Arqueológicos Famosos:
+              🏛️ Sitios:
             </div>
             <div style={{
               display: 'flex',
@@ -243,52 +243,6 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
                     e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
-                  }}
-                >
-                  {site.name}
-                </button>
-              ))}
-            </div>
-
-            {/* Descubrimientos ArcheoScope */}
-            <div style={{
-              color: 'rgba(255,200,100,0.8)',
-              fontSize: '12px',
-              marginBottom: '10px',
-              fontWeight: 'bold'
-            }}>
-              🔍 Descubrimientos ArcheoScope:
-            </div>
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px'
-            }}>
-              {famousSites.filter(s => s.category === 'discovery').map((site) => (
-                <button
-                  key={site.name}
-                  onClick={() => {
-                    setLat(site.lat.toFixed(4))
-                    setLon(site.lon.toFixed(4))
-                  }}
-                  style={{
-                    padding: '8px 12px',
-                    background: 'rgba(255,200,100,0.05)',
-                    border: '1px solid rgba(255,200,100,0.2)',
-                    borderRadius: '6px',
-                    color: '#ffc864',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    textAlign: 'left',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,200,100,0.15)'
-                    e.currentTarget.style.borderColor = 'rgba(255,200,100,0.5)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,200,100,0.05)'
-                    e.currentTarget.style.borderColor = 'rgba(255,200,100,0.2)'
                   }}
                 >
                   {site.name}
