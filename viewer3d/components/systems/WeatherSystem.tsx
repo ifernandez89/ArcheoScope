@@ -15,6 +15,7 @@ import { LightClouds } from '../weather/CloudSky'
 import TornadoEffect from '../weather/TornadoEffect'
 import EarthquakeEffect from '../weather/EarthquakeEffect'
 import VisibleSun from '../weather/VisibleSun'
+import VisibleMoon from '../weather/VisibleMoon'
 import WeatherManager from '../weather/WeatherManager'
 import type { WeatherState } from '../WeatherControl'
 import { getClimateAudio } from '@/systems/ClimateAudioSystem'
@@ -120,13 +121,23 @@ export default function WeatherSystem({ weather, isIceBiome, solarDirection = { 
       {weather.tornado && <TornadoEffect position={[20, 0, 20]} intensity={0.8} height={40} />}
       {weather.earthquake && <EarthquakeEffect />}
       
-      {/* Sol visible en el cielo */}
+      {/* Sol/Luna visible en el cielo según hora del día */}
       {weather.visibleSun && (
-        <VisibleSun 
-          solarDirection={solarDirection}
-          intensity={3.0}
-          distance={500}
-        />
+        <>
+          {/* Sol visible de día (cuando solarDirection.y > -0.1) */}
+          <VisibleSun 
+            solarDirection={solarDirection}
+            intensity={3.0}
+            distance={500}
+          />
+          
+          {/* Luna visible de noche (cuando solarDirection.y < -0.1) */}
+          <VisibleMoon 
+            solarDirection={solarDirection}
+            intensity={0.8}
+            distance={500}
+          />
+        </>
       )}
       
       {/* Nieve automática solo en biomas helados si no hay clima manual activo */}
