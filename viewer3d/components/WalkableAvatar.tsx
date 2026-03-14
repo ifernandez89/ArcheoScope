@@ -597,24 +597,27 @@ export default function WalkableAvatar({
       //   cameraY += Math.sin(timeAccumulator.current * bobSpeed) * bobAmount
       // }
       
-      // Velocidad de seguimiento adaptativa
+      // Velocidad de seguimiento adaptativa - SUAVIZADA
       let followSpeed
       if (idleTimer.current > 1.0) {
-        // Si ha estado quieto >1 seg, reposicionar agresivamente
-        followSpeed = 15 * delta
+        // Si ha estado quieto >1 seg, CONGELAR cámara completamente
+        followSpeed = 0  // CERO movimiento
       } else if (isMoving) {
-        // Cuando se mueve, seguimiento rápido
-        followSpeed = 10 * delta
+        // Cuando se mueve, seguimiento SUAVE (reducido de 10 a 3)
+        followSpeed = 3 * delta
       } else {
         // Transición suave cuando acaba de detenerse
-        followSpeed = 5 * delta
+        followSpeed = 2 * delta
       }
       
-      // Suavizar movimiento de cámara
-      camera.position.lerp(
-        new THREE.Vector3(cameraX, cameraY, cameraZ),
-        followSpeed
-      )
+      // Solo mover cámara si followSpeed > 0
+      if (followSpeed > 0) {
+        camera.position.lerp(
+          new THREE.Vector3(cameraX, cameraY, cameraZ),
+          followSpeed
+        )
+      }
+      // Si followSpeed = 0: NO TOCAR la cámara (congelada)
       
       // Siempre mirar al avatar (un poco arriba del centro)
       const lookAtTarget = new THREE.Vector3(
