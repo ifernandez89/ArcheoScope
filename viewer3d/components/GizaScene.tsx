@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { useGLTF, Html } from '@react-three/drei'
 import { getAssetPath } from '@/lib/paths'
 import SelectableObject from './SelectableObject'
+import { useRouter } from 'next/navigation'
 
 interface GizaSceneProps {
   avatarPositionRef: React.MutableRefObject<THREE.Vector3>
@@ -40,6 +41,7 @@ interface GizaSceneProps {
 export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidionCollect, pyramidionCollected, pyramidionOnTop, onMummyMoved, onScarabCollect, scarabDiscovered, scarabCollected }: GizaSceneProps) {
   console.log('🔶 GizaScene RENDER - pyramidionCollected:', pyramidionCollected, 'pyramidionOnTop:', pyramidionOnTop)
   
+  const router = useRouter()
   const [floodLevel, setFloodLevel] = useState(0) // Nivel de inundación (0 a 50m)
   const [isFlooding, setIsFlooding] = useState(false)
   const [fadeToBlack, setFadeToBlack] = useState(false)
@@ -75,9 +77,9 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
           sessionStorage.removeItem('game_session_active')
         }
         
-        // Redirigir al menú después de 1 segundo
+        // Redirigir al menú después de 1 segundo usando Next.js router
         setTimeout(() => {
-          window.location.href = '/menu'
+          router.push('/menu')
         }, 1000)
       }
     }
