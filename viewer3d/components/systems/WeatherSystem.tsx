@@ -14,6 +14,7 @@ import { LightFog } from '../weather/RealisticFog'
 import { LightClouds } from '../weather/CloudSky'
 import TornadoEffect from '../weather/TornadoEffect'
 import EarthquakeEffect from '../weather/EarthquakeEffect'
+import VisibleSun from '../weather/VisibleSun'
 import WeatherManager from '../weather/WeatherManager'
 import type { WeatherState } from '../WeatherControl'
 import { getClimateAudio } from '@/systems/ClimateAudioSystem'
@@ -22,9 +23,10 @@ import { loggers } from '@/core/Logger'
 interface WeatherSystemProps {
   weather: WeatherState
   isIceBiome: boolean
+  solarDirection?: { x: number; y: number; z: number }
 }
 
-export default function WeatherSystem({ weather, isIceBiome }: WeatherSystemProps) {
+export default function WeatherSystem({ weather, isIceBiome, solarDirection = { x: 0, y: 1, z: 0 } }: WeatherSystemProps) {
   // Determinar estado del clima
   const weatherState = weather.storm 
     ? 'storm' 
@@ -117,6 +119,15 @@ export default function WeatherSystem({ weather, isIceBiome }: WeatherSystemProp
       )}
       {weather.tornado && <TornadoEffect position={[20, 0, 20]} intensity={0.8} height={40} />}
       {weather.earthquake && <EarthquakeEffect />}
+      
+      {/* Sol visible en el cielo */}
+      {weather.visibleSun && (
+        <VisibleSun 
+          solarDirection={solarDirection}
+          intensity={3.0}
+          distance={500}
+        />
+      )}
       
       {/* Nieve automática solo en biomas helados si no hay clima manual activo */}
       {!weather.snow && !weather.rainLight && !weather.rainModerate && !weather.rainHeavy && isIceBiome && (

@@ -471,11 +471,17 @@ export default function WalkableAvatar({
       const oscillation = 0  // Era: Math.sin(timeAccumulator.current * 2) * 0.15
       const finalTargetHeight = targetHeight + oscillation
       
-      // Suavizar transición a altura objetivo solo si hay diferencia significativa
+      // SOLO ajustar altura si la nave se está moviendo o hay diferencia MUY grande
+      // Esto previene el shake cuando la nave está quieta
       const heightDifference = Math.abs(finalTargetHeight - group.current.position.y)
-      if (heightDifference > 0.05) {  // Aumentado de 0.01 a 0.05 para más estabilidad
-        group.current.position.y += (finalTargetHeight - group.current.position.y) * 5 * delta  // Reducido de 8 a 5 para movimiento más suave
+      if (isMoving && heightDifference > 0.05) {
+        // Solo ajustar cuando se mueve
+        group.current.position.y += (finalTargetHeight - group.current.position.y) * 5 * delta
+      } else if (heightDifference > 0.5) {
+        // Si hay diferencia MUY grande (>50cm), ajustar lentamente incluso quieto
+        group.current.position.y += (finalTargetHeight - group.current.position.y) * 2 * delta
       }
+      // Si está quieto y diferencia < 50cm: NO HACER NADA (congelar altura)
       
       // ========================================
       // ROTACIÓN AUTOMÁTICA DE MODELOS

@@ -107,13 +107,13 @@ interface ImmersiveSceneProps {
 const DEFAULT_STORM_WEATHER: WeatherState = {
   snow: false, rainLight: false, rainModerate: false, rainHeavy: true,
   wind: true, fog: false, storm: true, lightning: true,
-  tornado: false, clouds: true, earthquake: false
+  tornado: false, clouds: true, earthquake: false, visibleSun: false
 }
 
 const CALM_WEATHER: WeatherState = {
   snow: false, rainLight: false, rainModerate: false, rainHeavy: false,
   wind: false, fog: false, storm: false, lightning: false,
-  tornado: false, clouds: false, earthquake: false
+  tornado: false, clouds: false, earthquake: false, visibleSun: true
 }
 
 export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false, spaceUfoNumber = 1 }: ImmersiveSceneProps) {
@@ -1128,7 +1128,7 @@ function ModelScene({
       />
 
       {/* Sistema climÃ¡tico completo */}
-      <WeatherSystem weather={weather} isIceBiome={isIceBiome} />
+      <WeatherSystem weather={weather} isIceBiome={isIceBiome} solarDirection={solarDirection} />
 
       {/* Drone atmosférico - activo en todos los modos */}
       <AmbientAudio />

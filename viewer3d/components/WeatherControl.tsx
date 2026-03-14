@@ -14,6 +14,7 @@ export interface WeatherState {
   tornado: boolean
   clouds: boolean
   earthquake: boolean
+  visibleSun: boolean // Sol visible en el cielo
 }
 
 interface WeatherControlProps {
@@ -34,7 +35,8 @@ export default function WeatherControl({ onWeatherChange, initialWeather }: Weat
     lightning: false,
     tornado: false,
     clouds: false,
-    earthquake: false
+    earthquake: false,
+    visibleSun: false
   })
 
   // Sincronizar cuando cambia el clima externo (ej: al llegar a un sitio)
@@ -188,7 +190,7 @@ export default function WeatherControl({ onWeatherChange, initialWeather }: Weat
             label="Lluvia Fuerte"
           />
 
-          {/* Efectos Atmosféricos */}
+          {/* Atmósfera */}
           <div style={{ 
             margin: '10px 0', 
             borderTop: '1px solid rgba(255,255,255,0.1)',
@@ -198,6 +200,13 @@ export default function WeatherControl({ onWeatherChange, initialWeather }: Weat
               Atmósfera
             </div>
           </div>
+
+          <WeatherCheckbox 
+            checked={weather.visibleSun} 
+            onChange={() => handleToggle('visibleSun')}
+            icon="☀️"
+            label="Sol Visible"
+          />
 
           <WeatherCheckbox 
             checked={weather.wind} 
