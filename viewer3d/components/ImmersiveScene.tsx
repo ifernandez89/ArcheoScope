@@ -301,6 +301,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // Mostrar mensaje
     setShowCollectedMessage(true)
     setTimeout(() => setShowCollectedMessage(false), 3000)
+    
+    // INICIAR INUNDACIÓN
+    console.log('🌊 Iniciando inundación de Giza...')
+    // La inundación se maneja en GizaScene
   }, [])
 
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // DirecciÃ³n del sol como objeto plano

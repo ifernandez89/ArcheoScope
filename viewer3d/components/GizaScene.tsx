@@ -3,7 +3,7 @@
 import { useMemo, useState, useRef, useEffect, useCallback } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { useGLTF } from '@react-three/drei'
+import { useGLTF, Html } from '@react-three/drei'
 import { getAssetPath } from '@/lib/paths'
 import SelectableObject from './SelectableObject'
 
@@ -39,6 +39,49 @@ interface GizaSceneProps {
  */
 export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidionCollect, pyramidionCollected, pyramidionOnTop, onMummyMoved, onScarabCollect, scarabDiscovered, scarabCollected }: GizaSceneProps) {
   console.log('🔶 GizaScene RENDER - pyramidionCollected:', pyramidionCollected, 'pyramidionOnTop:', pyramidionOnTop)
+  
+  const [floodLevel, setFloodLevel] = useState(0) // Nivel de inundación (0 a 50m)
+  const [isFlooding, setIsFlooding] = useState(false)
+  const [fadeToBlack, setFadeToBlack] = useState(false)
+  
+  // Iniciar inundación cuando se recoge el escarabajo
+  useEffect(() => {
+    if (scarabCollected && !isFlooding) {
+      console.log('🌊 Escarabajo recogido - Iniciando inundación...')
+      setIsFlooding(true)
+    }
+  }, [scarabCollected, isFlooding])
+  
+  // Animación de inundación progresiva
+  useFrame((state, delta) => {
+    if (isFlooding && !fadeToBlack) {
+      // Subir agua lentamente (1m por segundo - más rápido)
+      setFloodLevel(prev => Math.min(prev + delta * 1.0, 100))
+      
+      // Verificar si el agua alcanzó la nave del usuario
+      const avatarY = avatarPositionRef.current.y
+      
+      if (floodLevel >= avatarY) {
+        // ¡El agua alcanzó al jugador!
+        console.log('🌊 El agua ha alcanzado al jugador - Game Over')
+        setFadeToBlack(true)
+        
+        // Limpiar estados para forzar nueva partida
+        if (typeof window !== 'undefined') {
+          // Limpiar sessionStorage
+          sessionStorage.clear()
+          
+          // Limpiar flag de sesión activa para ocultar "Continuar"
+          sessionStorage.removeItem('game_session_active')
+        }
+        
+        // Redirigir al menú después de 1 segundo
+        setTimeout(() => {
+          window.location.href = '/menu'
+        }, 1000)
+      }
+    }
+  })
   
   return (
     <group name="giza-complex">
@@ -142,6 +185,34 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
         
         {/* 🪨 Piedras dispersas del desierto */}
         <DesertRocks />
+        
+        {/* 🌊 INUNDACIÓN - Plano de agua que sube progresivamente */}
+        {isFlooding && floodLevel > 0 && (
+          <FloodWater level={floodLevel} />
+        )}
+        
+        {/* ⬛ FADE TO BLACK - Overlay cuando el agua alcanza al jugador */}
+        {fadeToBlack && (
+          <Html fullscreen>
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              background: 'black',
+              animation: 'fadeIn 1s ease-in',
+              zIndex: 9999
+            }}>
+              <style>{`
+                @keyframes fadeIn {
+                  from { opacity: 0; }
+                  to { opacity: 1; }
+                }
+              `}</style>
+            </div>
+          </Html>
+        )}
       </group>
   )
 }
@@ -300,6 +371,37 @@ useGLTF.preload(getAssetPath('/hatshepsut.glb'))
 useGLTF.preload(getAssetPath('/akenaton.glb'))
 useGLTF.preload(getAssetPath('/momia.glb'))
 useGLTF.preload(getAssetPath('/escab.glb'))
+
+/**
+ * 🌊 Agua de inundación - Plano que sube progresivamente
+ */
+function FloodWater({ level }: { level: number }) {
+  const waterRef = useRef<THREE.Mesh>(null)
+  
+  // Animación de ondulación del agua
+  useFrame((state) => {
+    if (waterRef.current && waterRef.current.material) {
+      const time = state.clock.getElapsedTime()
+      const material = waterRef.current.material as THREE.MeshStandardMaterial
+      // Ondulación sutil usando el shader
+      material.opacity = 0.6 + Math.sin(time * 0.5) * 0.1
+    }
+  })
+  
+  return (
+    <mesh ref={waterRef} position={[0, level, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[1000, 1000, 50, 50]} />
+      <meshStandardMaterial
+        color="#1e3a5f" // Azul oscuro del agua del Nilo
+        transparent
+        opacity={0.6}
+        metalness={0.8}
+        roughness={0.2}
+        envMapIntensity={1}
+      />
+    </mesh>
+  )
+}
 
 /**
  * 👑 Faraón Movible - Wrapper para hacer estatuas seleccionables y movibles
