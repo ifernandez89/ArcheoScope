@@ -1,11 +1,20 @@
 'use client'
 
-import { useMemo, useState, useRef, useEffect, useCallback } from 'react'
+import { useMemo, useState, useRef, useEffect, useCallback, Suspense } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGLTF, Html } from '@react-three/drei'
 import { getAssetPath } from '@/lib/paths'
 import SelectableObject from './SelectableObject'
+
+// 🚀 PRECARGAR TODOS LOS MODELOS INMEDIATAMENTE
+useGLTF.preload(getAssetPath('/sphinx_base.glb'))
+useGLTF.preload(getAssetPath('/ramses2.glb'))
+useGLTF.preload(getAssetPath('/hatshepsut.glb'))
+useGLTF.preload(getAssetPath('/akenaton.glb'))
+useGLTF.preload(getAssetPath('/momia.glb'))
+useGLTF.preload(getAssetPath('/escab.glb'))
+useGLTF.preload(getAssetPath('/piramidon.glb'))
 
 interface GizaSceneProps {
   avatarPositionRef: React.MutableRefObject<THREE.Vector3>
@@ -83,7 +92,8 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
   })
   
   return (
-    <group name="giza-complex">
+    <Suspense fallback={<LoadingGiza />}>
+      <group name="giza-complex">
         {/* 🌫️ Niebla desértica amarillenta */}
         <fog attach="fog" args={['#e8d5b7', 50, 400]} />
         
@@ -190,6 +200,28 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
           <FloodWater level={floodLevel} />
         )}
       </group>
+    </Suspense>
+  )
+}
+
+/**
+ * 🔄 Loading placeholder para Giza
+ */
+function LoadingGiza() {
+  return (
+    <Html center>
+      <div style={{
+        color: 'white',
+        fontSize: '24px',
+        textAlign: 'center',
+        padding: '20px',
+        background: 'rgba(0,0,0,0.7)',
+        borderRadius: '10px'
+      }}>
+        <div style={{ fontSize: '48px', marginBottom: '10px' }}>🏜️</div>
+        <div>Cargando Giza...</div>
+      </div>
+    </Html>
   )
 }
 
@@ -311,9 +343,6 @@ function Sphinx({ position, rotation, onClick }: { position: [number, number, nu
   )
 }
 
-// Precargar modelo
-useGLTF.preload(getAssetPath('/sphinx_base.glb'))
-
 /**
  * 👑 Estatua de Faraón
  * Estatuas monumentales de faraones egipcios
@@ -340,13 +369,6 @@ function PharaoStatue({ model, position, rotation, scale }: {
     </group>
   )
 }
-
-// Precargar modelos de faraones
-useGLTF.preload(getAssetPath('/ramses2.glb'))
-useGLTF.preload(getAssetPath('/hatshepsut.glb'))
-useGLTF.preload(getAssetPath('/akenaton.glb'))
-useGLTF.preload(getAssetPath('/momia.glb'))
-useGLTF.preload(getAssetPath('/escab.glb'))
 
 /**
  * 🌊 Agua de inundación - Plano que sube progresivamente
@@ -639,9 +661,6 @@ function Pyramidion({ position, rotation, onCollect, opacity = 1 }: {
     </group>
   )
 }
-
-// Precargar modelo del piramidón
-useGLTF.preload(getAssetPath('/piramidon.glb'))
 
 /**
  * 🏜️ Terreno desértico con dunas suaves
