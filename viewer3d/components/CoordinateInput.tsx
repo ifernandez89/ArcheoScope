@@ -74,7 +74,7 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
         onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(102, 126, 234, 1)'}
         onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(102, 126, 234, 0.9)'}
       >
-        📍 Coordenadas
+        Coordenadas
       </button>
 
       {/* Panel de coordenadas */}

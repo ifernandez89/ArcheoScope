@@ -6,7 +6,6 @@ import * as THREE from 'three'
 import { useGLTF, Html } from '@react-three/drei'
 import { getAssetPath } from '@/lib/paths'
 import SelectableObject from './SelectableObject'
-import { useRouter } from 'next/navigation'
 
 interface GizaSceneProps {
   avatarPositionRef: React.MutableRefObject<THREE.Vector3>
@@ -41,7 +40,6 @@ interface GizaSceneProps {
 export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidionCollect, pyramidionCollected, pyramidionOnTop, onMummyMoved, onScarabCollect, scarabDiscovered, scarabCollected }: GizaSceneProps) {
   console.log('🔶 GizaScene RENDER - pyramidionCollected:', pyramidionCollected, 'pyramidionOnTop:', pyramidionOnTop)
   
-  const router = useRouter()
   const [floodLevel, setFloodLevel] = useState(0) // Nivel de inundación (0 a 50m)
   const [isFlooding, setIsFlooding] = useState(false)
   const [fadeToBlack, setFadeToBlack] = useState(false)
@@ -66,7 +64,7 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
       if (floodLevel >= avatarY) {
         // ¡El agua alcanzó al jugador!
         console.log('🌊 El agua ha alcanzado al jugador - Game Over')
-        setFadeToBlack(true)
+        setFadeToBlack(true) // Marcar para evitar múltiples redirecciones
         
         // Limpiar estados para forzar nueva partida
         if (typeof window !== 'undefined') {
@@ -75,12 +73,11 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
           
           // Limpiar flag de sesión activa para ocultar "Continuar"
           sessionStorage.removeItem('game_session_active')
+          
+          // Redirigir inmediatamente al menú
+          const basePath = window.location.pathname.includes('/ArcheoScope') ? '/ArcheoScope' : ''
+          window.location.href = basePath + '/menu'
         }
-        
-        // Redirigir al menú después de 1 segundo usando Next.js router
-        setTimeout(() => {
-          router.push('/menu')
-        }, 1000)
       }
     }
   })
@@ -191,29 +188,6 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
         {/* 🌊 INUNDACIÓN - Plano de agua que sube progresivamente */}
         {isFlooding && floodLevel > 0 && (
           <FloodWater level={floodLevel} />
-        )}
-        
-        {/* ⬛ FADE TO BLACK - Overlay cuando el agua alcanza al jugador */}
-        {fadeToBlack && (
-          <Html fullscreen>
-            <div style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100vw',
-              height: '100vh',
-              background: 'black',
-              animation: 'fadeIn 1s ease-in',
-              zIndex: 9999
-            }}>
-              <style>{`
-                @keyframes fadeIn {
-                  from { opacity: 0; }
-                  to { opacity: 1; }
-                }
-              `}</style>
-            </div>
-          </Html>
         )}
       </group>
   )

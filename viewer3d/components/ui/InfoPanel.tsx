@@ -120,7 +120,7 @@ export function SiteInfoPanel({ site, onClose, onNavigate, onLearnMore }: SiteIn
             fontSize: '12px'
           }}>
             <div style={{ marginBottom: '4px' }}>
-              📍 Coordenadas: {site.lat.toFixed(4)}°, {site.lon.toFixed(4)}°
+              Coordenadas: {site.lat.toFixed(4)}°, {site.lon.toFixed(4)}°
             </div>
             {site.elevation && (
               <div style={{ marginBottom: '4px' }}>

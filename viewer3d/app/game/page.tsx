@@ -25,7 +25,6 @@ const Scene3D = dynamic(() => import('@/components/Scene3D'), {
           🏛️
         </div>
         <div style={{ fontSize: '1.25rem' }}>
-          Inicializando visualizador 3D...
         </div>
       </div>
     </div>
