@@ -4,7 +4,9 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
-import { AstronomicalSystem } from '@/lib/astronomyEngine'
+import { SolarEngine } from '@/engines/SolarEngine'
+import { calculateAllPlanets } from '@/utils/planetary-orbits'
+import { calculateLunarPhase } from '@/utils/lunar-system'
 import { getAssetPath } from '@/lib/paths'
 import Sun from './Sun'
 import Globe3D from './Globe3D'
@@ -45,14 +47,13 @@ export default function RealisticSolarSystem({
   const uranusTexture = useTexture(getAssetPath('/textures/2k_uranus.jpg'))
   const neptuneTexture = useTexture(getAssetPath('/textures/2k_neptune.jpg'))
   
-  // Sistema astronómico
-  const astroSystemRef = useRef<AstronomicalSystem>(
-    new AstronomicalSystem(
-      new Date(), // Fecha actual
-      3600,       // 1 segundo real = 1 hora simulada (más rápido para ver la Luna)
-      200         // Escala visual (Tierra a 200 unidades)
-    )
+  // Sistema astronómico actualizado
+  const solarEngineRef = useRef<SolarEngine>(
+    new SolarEngine(0, 0) // Coordenadas del sistema solar (centro)
   )
+  
+  // Tiempo de referencia para órbitas
+  const startTimeRef = useRef(new Date())
   
   // Referencias a planetas
   const mercuryRef = useRef<THREE.Group>(null)
@@ -77,90 +78,82 @@ export default function RealisticSolarSystem({
   
   // Actualización del sistema
   useFrame((state, delta) => {
-    const astroSystem = astroSystemRef.current
-    const positions = astroSystem.update(delta)
+    const solarEngine = solarEngineRef.current
+    const solarState = solarEngine.update(delta)
     
-    // Actualizar posiciones de planetas
-    if (mercuryRef.current) {
-      mercuryRef.current.position.set(positions.mercury.x, positions.mercury.y, positions.mercury.z)
+    // Calcular tiempo en días desde el inicio
+    const timeInDays = (solarState.simulatedTime.getTime() - startTimeRef.current.getTime()) / (1000 * 60 * 60 * 24)
+    
+    // Usar nuestro sistema planetario mejorado para TODOS los planetas
+    const planets = calculateAllPlanets(timeInDays, 200) // escala 200 para visualización
+    
+    // Actualizar posiciones de planetas interiores
+    const mercury = planets.find(p => p.planet.name === 'Mercurio')
+    if (mercury && mercuryRef.current) {
+      mercuryRef.current.position.copy(mercury.position)
     }
-    
-    // Rotación axial de Mercurio (muy lenta, 58.6 días terrestres)
     if (mercuryMeshRef.current) {
-      mercuryMeshRef.current.rotation.y += delta * 0.00017 // Muy lenta
+      mercuryMeshRef.current.rotation.y += delta * 0.00017 // Rotación lenta
     }
     
-    if (venusRef.current) {
-      venusRef.current.position.set(positions.venus.x, positions.venus.y, positions.venus.z)
+    const venus = planets.find(p => p.planet.name === 'Venus')
+    if (venus && venusRef.current) {
+      venusRef.current.position.copy(venus.position)
     }
-    
-    // Rotación axial de Venus (retrógrada, 243 días terrestres)
     if (venusMeshRef.current) {
-      venusMeshRef.current.rotation.y -= delta * 0.00004 // Muy lenta y al revés
+      venusMeshRef.current.rotation.y -= delta * 0.00004 // Retrógrada
     }
     
-    if (earthGroupRef.current) {
-      earthGroupRef.current.position.set(positions.earth.x, positions.earth.y, positions.earth.z)
+    const earth = planets.find(p => p.planet.name === 'Tierra')
+    if (earth && earthGroupRef.current) {
+      earthGroupRef.current.position.copy(earth.position)
     }
-    // La Tierra ya rota en Globe3D
     
-    if (marsRef.current) {
-      marsRef.current.position.set(positions.mars.x, positions.mars.y, positions.mars.z)
+    const mars = planets.find(p => p.planet.name === 'Marte')
+    if (mars && marsRef.current) {
+      marsRef.current.position.copy(mars.position)
     }
     if (marsMeshRef.current) {
       marsMeshRef.current.rotation.y += delta * 0.05
     }
 
-    // Planetas exteriores — Kepler calibrado con longitudes medias J2000.0 reales
-    // Fuente: Astronomical Almanac / JPL (L0 en radianes, n en rad/s)
-    // J2000.0 = 2000-01-01 12:00 UTC = unix 946728000
-    const J2000_UNIX = 946728000
-    const t = astroSystem.getTimeEngine().getCurrentTime().getTime() / 1000
-    const t_j2000 = t - J2000_UNIX // segundos desde J2000
-    const AU = 200 // escala visual
-
-    // Longitudes medias J2000 (radianes) + velocidades medias (rad/s)
-    // L0 fuente: Astronomical Almanac Table C24
-    const DEG = Math.PI / 180
-
-    // Júpiter: L0=34.35°, T=11.86 años
-    const jAngle = 34.351519 * DEG + (t_j2000 / (11.86 * 365.25 * 86400)) * Math.PI * 2
-    if (jupiterRef.current) jupiterRef.current.position.set(Math.cos(jAngle) * 5.2 * AU, 0, Math.sin(jAngle) * 5.2 * AU)
+    // Planetas exteriores - ahora también usan nuestro sistema
+    const jupiter = planets.find(p => p.planet.name === 'Júpiter')
+    if (jupiter && jupiterRef.current) {
+      jupiterRef.current.position.copy(jupiter.position)
+    }
     if (jupiterMeshRef.current) jupiterMeshRef.current.rotation.y += delta * 0.045
 
-    // Saturno: L0=50.08°, T=29.46 años
-    const sAngle = 50.077444 * DEG + (t_j2000 / (29.46 * 365.25 * 86400)) * Math.PI * 2
-    if (saturnRef.current) saturnRef.current.position.set(Math.cos(sAngle) * 9.58 * AU, 0, Math.sin(sAngle) * 9.58 * AU)
+    const saturn = planets.find(p => p.planet.name === 'Saturno')
+    if (saturn && saturnRef.current) {
+      saturnRef.current.position.copy(saturn.position)
+    }
     if (saturnMeshRef.current) saturnMeshRef.current.rotation.y += delta * 0.043
 
-    // Urano: L0=314.06°, T=84.01 años
-    const uAngle = 314.055005 * DEG + (t_j2000 / (84.01 * 365.25 * 86400)) * Math.PI * 2
-    if (uranusRef.current) uranusRef.current.position.set(Math.cos(uAngle) * 19.2 * AU, 0, Math.sin(uAngle) * 19.2 * AU)
+    const uranus = planets.find(p => p.planet.name === 'Urano')
+    if (uranus && uranusRef.current) {
+      uranusRef.current.position.copy(uranus.position)
+    }
     if (uranusMeshRef.current) uranusMeshRef.current.rotation.y += delta * 0.03
 
-    // Neptuno: L0=304.35°, T=164.8 años
-    const nAngle = 304.348665 * DEG + (t_j2000 / (164.8 * 365.25 * 86400)) * Math.PI * 2
-    if (neptuneRef.current) neptuneRef.current.position.set(Math.cos(nAngle) * 30.05 * AU, 0, Math.sin(nAngle) * 30.05 * AU)
+    const neptune = planets.find(p => p.planet.name === 'Neptuno')
+    if (neptune && neptuneRef.current) {
+      neptuneRef.current.position.copy(neptune.position)
+    }
     if (neptuneMeshRef.current) neptuneMeshRef.current.rotation.y += delta * 0.032
     
-    // Luna relativa a la Tierra con TIDAL LOCKING
+    // Luna usando nuestro sistema lunar
+    const lunarState = calculateLunarPhase(timeInDays)
     if (moonRef.current && moonMeshRef.current && earthGroupRef.current) {
-      // Actualizar posición
-      moonRef.current.position.set(positions.moon.x, positions.moon.y, positions.moon.z)
-      
+      // Posición lunar relativa a la Tierra
+      const earthPos = earthGroupRef.current.position
+      const moonPos = lunarState.position.clone().multiplyScalar(50) // escalar para visualización
+      moonRef.current.position.copy(earthPos).add(moonPos)
       // 🌙 TIDAL LOCKING (Bloqueo por marea)
       // La Luna siempre muestra la misma cara hacia la Tierra
-      // Resetear rotación antes de aplicar lookAt
       moonMeshRef.current.rotation.set(0, 0, 0)
-      
-      // Hacer que la Luna mire hacia el centro (Tierra en 0,0,0)
-      // lookAt hace que el eje -Z apunte hacia el objetivo
-      moonMeshRef.current.lookAt(0, 0, 0)
-      
-      // Ajuste de rotación para que la cara correcta de la textura mire hacia la Tierra
-      // La textura 2K puede tener orientación diferente, ajustamos con rotación en Y
-      // Probamos sin rotación adicional primero para ver la orientación base
-      moonMeshRef.current.rotateY(0) // Sin rotación adicional - cara frontal hacia Tierra
+      moonMeshRef.current.lookAt(earthPos)
+      moonMeshRef.current.rotateY(0) // Sin rotación adicional
     }
   })
   

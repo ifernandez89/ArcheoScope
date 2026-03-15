@@ -17,7 +17,13 @@ interface AstronomicalWorldProps {
   showGeometry?: boolean
   onStateChange?: (state: any) => void
   onDayNightChange?: (isDay: boolean) => void
-  onSolarUpdate?: (direction: { x: number, y: number, z: number }, altitude: number, azimuth: number, declination: number) => void
+  onSolarUpdate?: (
+    direction: { x: number, y: number, z: number }, 
+    altitude: number, 
+    azimuth: number, 
+    declination: number,
+    fullState?: any // Estado completo del SolarEngine
+  ) => void
 }
 
 export default function AstronomicalWorld({
@@ -237,13 +243,14 @@ export default function AstronomicalWorld({
       onDayNightChange(solarState.isDay)
     }
     
-    // Notificar dirección solar
+    // Notificar dirección solar con información completa
     if (onSolarUpdate) {
       onSolarUpdate(
         { x: solarState.sunDirection.x, y: solarState.sunDirection.y, z: solarState.sunDirection.z },
         solarState.solarAltitude,
         solarState.solarAzimuth,
-        solarState.declination
+        solarState.declination,
+        solarState // Pasar estado completo
       )
     }
     

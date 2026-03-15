@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from 'react'
 import * as THREE from 'three'
-import * as Astronomy from 'astronomy-engine'
+import { calculatePlanetPosition, PLANETS } from '@/utils/planetary-orbits'
 
 // ── Planetas interiores: órbitas reales via astronomy-engine ─────────────────
 
@@ -20,17 +20,29 @@ function RealisticOrbit({ body, color, opacity = 0.35, segments = 256, scale = 2
   useEffect(() => {
     if (!groupRef.current) return
 
-    const periods: Record<string, number> = {
-      Mercury: 88, Venus: 225, Earth: 365, Mars: 687
+    // Mapear nombres de astronomy-engine a nuestro sistema
+    const planetMap: Record<string, string> = {
+      'Mercury': 'mercury',
+      'Venus': 'venus', 
+      'Earth': 'earth',
+      'Mars': 'mars',
+      'Jupiter': 'jupiter',
+      'Saturn': 'saturn',
+      'Uranus': 'uranus',
+      'Neptune': 'neptune'
     }
-    const period = periods[body] || 365
-    const points: THREE.Vector3[] = []
-    const startDate = new Date()
+    
+    const planetKey = planetMap[body]
+    if (!planetKey || !PLANETS[planetKey]) return
 
+    const planet = PLANETS[planetKey]
+    const points: THREE.Vector3[] = []
+    
+    // Generar órbita completa usando nuestro sistema
     for (let i = 0; i <= segments; i++) {
-      const date = new Date(startDate.getTime() + (i / segments) * period * 86400000)
-      const pos = Astronomy.HelioVector(body as any, date)
-      points.push(new THREE.Vector3(pos.x * scale, pos.z * scale, pos.y * scale))
+      const timeInDays = (i / segments) * planet.period // Un período completo
+      const position = calculatePlanetPosition(planet, timeInDays, scale)
+      points.push(position.position)
     }
 
     const geometry = new THREE.BufferGeometry().setFromPoints(points)
@@ -143,19 +155,17 @@ function AsteroidBelt({ scale = 200 }: { scale?: number }) {
 export default function RealisticOrbits() {
   return (
     <group>
-      {/* Planetas interiores — posiciones reales */}
+      {/* Todos los planetas usando nuestro sistema unificado */}
       <RealisticOrbit body="Mercury" color="#9c9c9c" opacity={0.30} />
       <RealisticOrbit body="Venus"   color="#f5e6d3" opacity={0.30} />
       <RealisticOrbit body="Earth"   color="#4a9eff" opacity={0.40} />
       <RealisticOrbit body="Mars"    color="#c97a5f" opacity={0.30} />
-
-      {/* Cinturón de asteroides — líneas quitadas, se usan modelos 3D reales */}
-
-      {/* Planetas exteriores — círculos en XZ, radios idénticos al useFrame */}
-      <CircleOrbit radiusAU={5.2}   color="#c8a87a" opacity={0.32} />  {/* Júpiter  */}
-      <CircleOrbit radiusAU={9.58}  color="#e8d5a0" opacity={0.32} />  {/* Saturno  */}
-      <CircleOrbit radiusAU={19.2}  color="#7de8e8" opacity={0.28} />  {/* Urano    */}
-      <CircleOrbit radiusAU={30.05} color="#4b70dd" opacity={0.28} />  {/* Neptuno  */}
+      
+      {/* Planetas exteriores también con nuestro sistema */}
+      <RealisticOrbit body="Jupiter" color="#c8a87a" opacity={0.32} />
+      <RealisticOrbit body="Saturn"  color="#e8d5a0" opacity={0.32} />
+      <RealisticOrbit body="Uranus"  color="#7de8e8" opacity={0.28} />
+      <RealisticOrbit body="Neptune" color="#4b70dd" opacity={0.28} />
     </group>
   )
 }

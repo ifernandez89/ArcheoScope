@@ -1,1 +1,124 @@
-{}
+{
+  "app\\game\\page.tsx -> @/components/Scene3D": {
+    "id": "app\\game\\page.tsx -> @/components/Scene3D",
+    "files": [
+      "static/chunks/three.js",
+      "static/chunks/react-three.js",
+      "static/chunks/engines.js",
+      "static/chunks/vendor.js",
+      "static/chunks/_app-pages-browser_types_missionState_ts-_app-pages-browser_types_player_ts.js",
+      "static/chunks/_app-pages-browser_components_Scene3D_tsx-_app-pages-browser_utils_lunar-system_ts-_app-pages-df5be5.js"
+    ]
+  },
+  "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
+    "id": "app\\player-setup\\page.tsx -> @/components/ShipPreview",
+    "files": [
+      "static/chunks/three.js",
+      "static/chunks/react-three.js",
+      "static/chunks/vendor.js",
+      "static/chunks/_app-pages-browser_components_ShipPreview_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./AstronomicalInfo": {
+    "id": "components\\ImmersiveScene.tsx -> ./AstronomicalInfo",
+    "files": [
+      "static/chunks/_app-pages-browser_components_AstronomicalInfo_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./BackgroundMountains": {
+    "id": "components\\ImmersiveScene.tsx -> ./BackgroundMountains",
+    "files": [
+      "static/chunks/_app-pages-browser_components_BackgroundMountains_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./CelestialOverlay": {
+    "id": "components\\ImmersiveScene.tsx -> ./CelestialOverlay",
+    "files": [
+      "static/chunks/_app-pages-browser_components_CelestialOverlay_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./Compass": {
+    "id": "components\\ImmersiveScene.tsx -> ./Compass",
+    "files": [
+      "static/chunks/_app-pages-browser_components_Compass_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./CompassTracker": {
+    "id": "components\\ImmersiveScene.tsx -> ./CompassTracker",
+    "files": [
+      "static/chunks/_app-pages-browser_components_CompassTracker_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./DayNightClock": {
+    "id": "components\\ImmersiveScene.tsx -> ./DayNightClock",
+    "files": [
+      "static/chunks/_app-pages-browser_components_DayNightClock_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./DiscoveredItemInWorld": {
+    "id": "components\\ImmersiveScene.tsx -> ./DiscoveredItemInWorld",
+    "files": [
+      "static/chunks/_app-pages-browser_components_DiscoveredItemInWorld_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./EnhancedMoon": {
+    "id": "components\\ImmersiveScene.tsx -> ./EnhancedMoon",
+    "files": [
+      "static/chunks/_app-pages-browser_components_EnhancedMoon_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./EnvironmentElements": {
+    "id": "components\\ImmersiveScene.tsx -> ./EnvironmentElements",
+    "files": []
+  },
+  "components\\ImmersiveScene.tsx -> ./GizaScene": {
+    "id": "components\\ImmersiveScene.tsx -> ./GizaScene",
+    "files": [
+      "static/chunks/_app-pages-browser_components_GizaScene_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./ItemCollectedMessage": {
+    "id": "components\\ImmersiveScene.tsx -> ./ItemCollectedMessage",
+    "files": [
+      "static/chunks/_app-pages-browser_components_ItemCollectedMessage_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./PumaPunkuScene": {
+    "id": "components\\ImmersiveScene.tsx -> ./PumaPunkuScene",
+    "files": [
+      "static/chunks/_app-pages-browser_components_PumaPunkuScene_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./RealisticSolarSystem": {
+    "id": "components\\ImmersiveScene.tsx -> ./RealisticSolarSystem",
+    "files": [
+      "static/chunks/vendor.js",
+      "static/chunks/_app-pages-browser_components_CelestialOverlay_tsx.js",
+      "static/chunks/_app-pages-browser_components_RealisticSolarSystem_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./SpaceUfo": {
+    "id": "components\\ImmersiveScene.tsx -> ./SpaceUfo",
+    "files": [
+      "static/chunks/_app-pages-browser_components_SpaceUfo_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./SphinxInteractiveDialogue": {
+    "id": "components\\ImmersiveScene.tsx -> ./SphinxInteractiveDialogue",
+    "files": [
+      "static/chunks/_app-pages-browser_components_SphinxInteractiveDialogue_tsx.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./ViracochaDialogue": {
+    "id": "components\\ImmersiveScene.tsx -> ./ViracochaDialogue",
+    "files": [
+      "static/chunks/_app-pages-browser_components_ViracochaDialogue_tsx.js"
+    ]
+  },
+  "utils\\lazy-systems.ts -> @/components/ProceduralTerrain": {
+    "id": "utils\\lazy-systems.ts -> @/components/ProceduralTerrain",
+    "files": [
+      "static/chunks/_app-pages-browser_components_ProceduralTerrain_tsx.js"
+    ]
+  }
+}

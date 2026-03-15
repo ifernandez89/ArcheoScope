@@ -17,7 +17,8 @@ interface AstronomicalSystemProps {
     direction: { x: number; y: number; z: number },
     altitude: number,
     azimuth: number,
-    declination: number
+    declination: number,
+    fullState?: any
   ) => void
   solarState: { altitude: number; azimuth: number; declination: number }
   isDay: boolean

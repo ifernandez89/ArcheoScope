@@ -89,6 +89,8 @@ const DayNightClock = dynamic(() => import('./DayNightClock'), { ssr: false })
 const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
 const CelestialOverlayHUD = dynamic(() => import('./CelestialOverlay').then(m => ({ default: m.CelestialOverlayHUD })), { ssr: false })
 const BackgroundMountains = dynamic(() => import('./BackgroundMountains'), { ssr: false, loading: () => null })
+const AstronomicalInfo = dynamic(() => import('./AstronomicalInfo'), { ssr: false })
+const EnhancedMoon = dynamic(() => import('./EnhancedMoon'), { ssr: false })
 
 // EnvironmentElementsWithTrees necesita el contexto, importar directamente
 import { EnvironmentElementsWithTrees } from './EnvironmentElements'
@@ -314,7 +316,15 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [solarState, setSolarState] = useState({
     altitude: 0,
     azimuth: 0,
-    declination: 0
+    declination: 0,
+    // Nuevas propiedades FASE 2
+    season: 'spring' as 'spring' | 'summer' | 'autumn' | 'winter',
+    dayOfYear: 1,
+    precessionAngle: 0,
+    planets: [] as any[],
+    lunarState: null as any,
+    eclipse: null as any,
+    simulatedTime: new Date()
   })
   
   // Estado del terreno mejorado - DESHABILITADO (terreno procedural por defecto)
@@ -721,6 +731,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             solarAltitude={solarState.altitude} 
             solarAzimuth={solarState.azimuth}
             isDay={isDay}
+            simulatedTime={solarState.simulatedTime}
           />
         </>
       )}
@@ -748,9 +759,37 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onDayNightChange={setIsDay}
           solarDirection={solarDirection}
           solarState={solarState}
-          onSolarUpdate={(direction, altitude, azimuth, declination) => {
+          onSolarUpdate={(direction, altitude, azimuth, declination, fullState) => {
             setSolarDirection(direction)
-            setSolarState({ altitude, azimuth, declination })
+            if (fullState) {
+              // Usar estado completo del SolarEngine
+              setSolarState({
+                altitude,
+                azimuth,
+                declination,
+                season: fullState.season || 'spring',
+                dayOfYear: fullState.dayOfYear || 1,
+                precessionAngle: fullState.precessionAngle || 0,
+                planets: fullState.planets || [],
+                lunarState: fullState.lunarState || null,
+                eclipse: fullState.eclipse || null,
+                simulatedTime: fullState.simulatedTime || new Date()
+              })
+            } else {
+              // Fallback al formato anterior
+              setSolarState({ 
+                altitude, 
+                azimuth, 
+                declination,
+                season: 'spring',
+                dayOfYear: 1,
+                precessionAngle: 0,
+                planets: [],
+                lunarState: null,
+                eclipse: null,
+                simulatedTime: new Date()
+              })
+            }
           }}
           weather={weather}
           enhancedTerrainEnabled={enhancedTerrainEnabled}
@@ -962,8 +1001,19 @@ function ModelScene({
   isDay: boolean
   onDayNightChange: (isDay: boolean) => void
   solarDirection: { x: number, y: number, z: number }
-  solarState: { altitude: number, azimuth: number, declination: number }
-  onSolarUpdate: (direction: { x: number, y: number, z: number }, altitude: number, azimuth: number, declination: number) => void
+  solarState: { 
+    altitude: number, 
+    azimuth: number, 
+    declination: number,
+    season?: 'spring' | 'summer' | 'autumn' | 'winter',
+    dayOfYear?: number,
+    precessionAngle?: number,
+    planets?: any[],
+    lunarState?: any,
+    eclipse?: any,
+    simulatedTime?: Date
+  }
+  onSolarUpdate: (direction: { x: number, y: number, z: number }, altitude: number, azimuth: number, declination: number, fullState?: any) => void
   weather: WeatherState
   enhancedTerrainEnabled?: boolean
   terrainExaggeration?: number
@@ -1073,6 +1123,16 @@ function ModelScene({
           solarState={solarState}
           isDay={isDay}
           showTrajectory={true}
+        />
+      )}
+      
+      {/* Luna mejorada con fases y eclipses - SOLO en modo órbita */}
+      {movementMode === 'orbit' && solarState.lunarState && (
+        <EnhancedMoon
+          lunarState={solarState.lunarState}
+          eclipse={solarState.eclipse}
+          solarDirection={solarDirection}
+          visible={true}
         />
       )}
 
@@ -1246,6 +1306,14 @@ function ModelScene({
           ? "¡Gracias, viajero! Has traído lo que necesitaba." 
           : "¡Atraviesa el portal, y tráeme lo que necesito!"}
         onComplete={onCloseViracochaDialogue}
+      />
+    )}
+    
+    {/* Panel de información astronómica avanzada - FUERA del Canvas */}
+    {location && solarState && (
+      <AstronomicalInfo
+        location={location}
+        solarState={solarState}
       />
     )}
     </>

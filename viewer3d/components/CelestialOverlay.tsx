@@ -13,11 +13,12 @@
 import { useRef, useEffect, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { calculateOrbitalPositions } from '@/lib/astronomyEngine'
+import { SolarEngine } from '@/engines/SolarEngine'
+import { calculateAllPlanets } from '@/utils/planetary-orbits'
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
-const CONVERGENCE_THRESHOLD = 20   // grados
+const CONVERGENCE_THRESHOLD = 10   // grados (más estricto para convergencias reales)
 const UPDATE_INTERVAL       = 2.0  // segundos entre recálculos
 const TIME_SCALE            = 3600 // 1 seg real = 1 hora simulada
 const VISUAL_SCALE          = 200
@@ -49,24 +50,33 @@ function geocentricAngle(earth: THREE.Vector3, a: THREE.Vector3, b: THREE.Vector
 interface LineData { from: THREE.Vector3; to: THREE.Vector3; intensity: number }
 
 export function CelestialOverlay3D() {
-  const simTime = useRef(new Date())
+  const solarEngineRef = useRef<SolarEngine>(new SolarEngine(0, 0))
+  const startTimeRef = useRef(new Date())
   const elapsed = useRef(0)
   const [lines, setLines] = useState<LineData[]>([])
 
   useFrame((_, delta) => {
-    simTime.current = new Date(simTime.current.getTime() + delta * TIME_SCALE * 1000)
     elapsed.current += delta
     if (elapsed.current < UPDATE_INTERVAL) return
     elapsed.current = 0
 
-    const state = calculateOrbitalPositions(simTime.current)
-    const earth = auToScene(state.earth.x, state.earth.y, state.earth.z)
-
+    // Usar nuestro sistema planetario actualizado
+    const solarEngine = solarEngineRef.current
+    const solarState = solarEngine.update(delta)
+    const timeInDays = (solarState.simulatedTime.getTime() - startTimeRef.current.getTime()) / (1000 * 60 * 60 * 24)
+    
+    // Calcular posiciones usando nuestro sistema
+    const allPlanets = calculateAllPlanets(timeInDays, VISUAL_SCALE)
+    
+    // Filtrar solo los planetas que queremos mostrar convergencias
     const planets = [
-      { name: 'Mercurio', pos: auToScene(state.mercury.x, state.mercury.y, state.mercury.z) },
-      { name: 'Venus',    pos: auToScene(state.venus.x,   state.venus.y,   state.venus.z)   },
-      { name: 'Marte',    pos: auToScene(state.mars.x,    state.mars.y,    state.mars.z)    },
+      { name: 'Mercurio', pos: allPlanets.find(p => p.planet.name === 'Mercurio')?.position || new THREE.Vector3() },
+      { name: 'Venus', pos: allPlanets.find(p => p.planet.name === 'Venus')?.position || new THREE.Vector3() },
+      { name: 'Marte', pos: allPlanets.find(p => p.planet.name === 'Marte')?.position || new THREE.Vector3() },
     ]
+    
+    // Tierra como punto de referencia
+    const earth = allPlanets.find(p => p.planet.name === 'Tierra')?.position || new THREE.Vector3()
 
     const newLines: LineData[] = []
     const convergences: Convergence[] = []

@@ -6,16 +6,19 @@
  */
 
 import { useMemo } from 'react'
+import { radiansToSexagesimal } from '@/utils/sexagesimal'
 
 interface DayNightClockProps {
   solarAltitude: number  // Altura del sol en radianes (-π/2 a π/2)
   solarAzimuth: number   // Azimut del sol en radianes
   isDay: boolean
+  // Agregar tiempo simulado para cálculo correcto
+  simulatedTime?: Date
 }
 
-export default function DayNightClock({ solarAltitude, solarAzimuth, isDay }: DayNightClockProps) {
+export default function DayNightClock({ solarAltitude, solarAzimuth, isDay, simulatedTime }: DayNightClockProps) {
   // Calcular posición del sol/luna en el círculo
-  const { x, y, icon, timeLabel } = useMemo(() => {
+  const { x, y, icon, timeLabel, altitudeSex, azimuthSex } = useMemo(() => {
     // Convertir altitud a posición en círculo (0° = horizonte este, 90° = cenit, 180° = horizonte oeste)
     // Normalizar altitud de -90° a 90° a un rango de 0 a 1
     const normalizedAltitude = (solarAltitude + Math.PI / 2) / Math.PI
@@ -34,24 +37,42 @@ export default function DayNightClock({ solarAltitude, solarAzimuth, isDay }: Da
     // Determinar icono
     const displayIcon = isDay ? '☀️' : '🌙'
     
-    // Calcular hora aproximada (basado en altitud)
-    // Amanecer ~6am (altitud = 0°), Mediodía ~12pm (altitud = 90°), Atardecer ~6pm (altitud = 0°)
-    let hour = 0
-    if (solarAltitude >= 0) {
-      // Día: de 6am a 6pm
-      hour = 6 + (solarAltitude / (Math.PI / 2)) * 6
+    // Usar tiempo simulado si está disponible, sino calcular basado en altitud
+    let timeStr = '00:00'
+    if (simulatedTime) {
+      const hours = simulatedTime.getHours()
+      const minutes = simulatedTime.getMinutes()
+      timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
     } else {
-      // Noche: de 6pm a 6am
-      hour = 18 + ((solarAltitude + Math.PI / 2) / (Math.PI / 2)) * 12
-      if (hour >= 24) hour -= 24
+      // Fallback al cálculo anterior
+      let hour = 0
+      if (solarAltitude >= 0) {
+        // Día: de 6am a 6pm
+        hour = 6 + (solarAltitude / (Math.PI / 2)) * 6
+      } else {
+        // Noche: de 6pm a 6am
+        hour = 18 + ((solarAltitude + Math.PI / 2) / (Math.PI / 2)) * 12
+        if (hour >= 24) hour -= 24
+      }
+      
+      const hourInt = Math.floor(hour)
+      const minutes = Math.floor((hour - hourInt) * 60)
+      timeStr = `${hourInt.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
     }
     
-    const hourInt = Math.floor(hour)
-    const minutes = Math.floor((hour - hourInt) * 60)
-    const timeStr = `${hourInt.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+    // Convertir a sistema sexagesimal (base 60)
+    const altitudeSexagesimal = radiansToSexagesimal(solarAltitude)
+    const azimuthSexagesimal = radiansToSexagesimal(solarAzimuth)
     
-    return { x: posX, y: posY, icon: displayIcon, timeLabel: timeStr }
-  }, [solarAltitude, solarAzimuth, isDay])
+    return { 
+      x: posX, 
+      y: posY, 
+      icon: displayIcon, 
+      timeLabel: timeStr,
+      altitudeSex: altitudeSexagesimal,
+      azimuthSex: azimuthSexagesimal
+    }
+  }, [solarAltitude, solarAzimuth, isDay, simulatedTime])
   
   return (
     <div style={{
@@ -113,6 +134,33 @@ export default function DayNightClock({ solarAltitude, solarAzimuth, isDay }: Da
         pointerEvents: 'none'
       }}>
         {icon}
+      </div>
+      
+      {/* Información sexagesimal (base 60) */}
+      <div style={{
+        position: 'absolute',
+        top: '76px',
+        left: '-40px',
+        width: '152px',
+        background: 'rgba(0, 0, 0, 0.8)',
+        border: '1px solid rgba(255,255,255,0.2)',
+        borderRadius: '4px',
+        padding: '6px',
+        fontSize: '9px',
+        color: 'white',
+        fontFamily: 'monospace',
+        textAlign: 'center',
+        pointerEvents: 'none'
+      }}>
+        <div style={{ color: '#fbbf24', marginBottom: '2px' }}>
+          ⏰ {timeLabel}
+        </div>
+        <div style={{ color: '#60a5fa', fontSize: '8px' }}>
+          Alt: {altitudeSex.degrees}° {altitudeSex.minutes}' {altitudeSex.seconds}"
+        </div>
+        <div style={{ color: '#f97316', fontSize: '8px' }}>
+          Az: {azimuthSex.degrees}° {azimuthSex.minutes}' {azimuthSex.seconds}"
+        </div>
       </div>
     </div>
   )
