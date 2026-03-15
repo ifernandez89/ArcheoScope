@@ -13,29 +13,29 @@
       "static/css/249ec7b36a9b822f.css",
       "static/chunks/app/layout-c12ee11d94b450ad.js"
     ],
-    "/game/page": [
-      "static/chunks/webpack-c7aeeb0118f30c6d.js",
-      "static/chunks/vendor-06cb701289697aa7.js",
-      "static/chunks/main-app-a197d865af5093da.js",
-      "static/chunks/app/game/page-f400176739fa6b31.js"
-    ],
     "/menu/audio/page": [
       "static/chunks/webpack-c7aeeb0118f30c6d.js",
       "static/chunks/vendor-06cb701289697aa7.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/menu/audio/page-4b9836794bdfed93.js"
     ],
+    "/menu/controls/page": [
+      "static/chunks/webpack-c7aeeb0118f30c6d.js",
+      "static/chunks/vendor-06cb701289697aa7.js",
+      "static/chunks/main-app-a197d865af5093da.js",
+      "static/chunks/app/menu/controls/page-eeb1683c8e986110.js"
+    ],
+    "/game/page": [
+      "static/chunks/webpack-c7aeeb0118f30c6d.js",
+      "static/chunks/vendor-06cb701289697aa7.js",
+      "static/chunks/main-app-a197d865af5093da.js",
+      "static/chunks/app/game/page-f400176739fa6b31.js"
+    ],
     "/menu/info/page": [
       "static/chunks/webpack-c7aeeb0118f30c6d.js",
       "static/chunks/vendor-06cb701289697aa7.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/menu/info/page-e705f6c18b68d406.js"
-    ],
-    "/page": [
-      "static/chunks/webpack-c7aeeb0118f30c6d.js",
-      "static/chunks/vendor-06cb701289697aa7.js",
-      "static/chunks/main-app-a197d865af5093da.js",
-      "static/chunks/app/page-76fcba8d84fd4118.js"
     ],
     "/menu/page": [
       "static/chunks/webpack-c7aeeb0118f30c6d.js",
@@ -49,17 +49,17 @@
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/menu/video/page-39d7b67a6958d98c.js"
     ],
+    "/page": [
+      "static/chunks/webpack-c7aeeb0118f30c6d.js",
+      "static/chunks/vendor-06cb701289697aa7.js",
+      "static/chunks/main-app-a197d865af5093da.js",
+      "static/chunks/app/page-76fcba8d84fd4118.js"
+    ],
     "/player-setup/page": [
       "static/chunks/webpack-c7aeeb0118f30c6d.js",
       "static/chunks/vendor-06cb701289697aa7.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/player-setup/page-972a4e5901806c15.js"
-    ],
-    "/reset/page": [
-      "static/chunks/webpack-c7aeeb0118f30c6d.js",
-      "static/chunks/vendor-06cb701289697aa7.js",
-      "static/chunks/main-app-a197d865af5093da.js",
-      "static/chunks/app/reset/page-86210a9f1f9a63e0.js"
     ],
     "/realistic-solar/page": [
       "static/chunks/webpack-c7aeeb0118f30c6d.js",
@@ -67,11 +67,11 @@
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/realistic-solar/page-9a654937f02484df.js"
     ],
-    "/menu/controls/page": [
+    "/reset/page": [
       "static/chunks/webpack-c7aeeb0118f30c6d.js",
       "static/chunks/vendor-06cb701289697aa7.js",
       "static/chunks/main-app-a197d865af5093da.js",
-      "static/chunks/app/menu/controls/page-eeb1683c8e986110.js"
+      "static/chunks/app/reset/page-86210a9f1f9a63e0.js"
     ]
   }
 }
