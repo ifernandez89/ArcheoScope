@@ -46,6 +46,7 @@ export default function RealisticSolarSystem({
   const saturnRingTexture = useTexture(getAssetPath('/textures/2k_saturn_ring_alpha.png'))
   const uranusTexture = useTexture(getAssetPath('/textures/2k_uranus.jpg'))
   const neptuneTexture = useTexture(getAssetPath('/textures/2k_neptune.jpg'))
+  const plutoTexture = useTexture(getAssetPath('/textures/1k_pluto.png'))
   
   // Sistema astronómico actualizado
   const solarEngineRef = useRef<SolarEngine>(
@@ -75,6 +76,8 @@ export default function RealisticSolarSystem({
   const uranusMeshRef = useRef<THREE.Mesh>(null)
   const neptuneRef = useRef<THREE.Group>(null)
   const neptuneMeshRef = useRef<THREE.Mesh>(null)
+  const plutoRef = useRef<THREE.Group>(null)
+  const plutoMeshRef = useRef<THREE.Mesh>(null)
   
   // Actualización del sistema
   useFrame((state, delta) => {
@@ -142,17 +145,33 @@ export default function RealisticSolarSystem({
     }
     if (neptuneMeshRef.current) neptuneMeshRef.current.rotation.y += delta * 0.032
     
-    // Luna usando nuestro sistema lunar
+    const pluto = planets.find(p => p.planet.name === 'Plutón')
+    if (pluto && plutoRef.current) {
+      plutoRef.current.position.copy(pluto.position)
+    }
+    if (plutoMeshRef.current) plutoMeshRef.current.rotation.y += delta * 0.02 // Muy lento
+    
+    // Luna usando nuestro sistema lunar - POSICIÓN ABSOLUTA CON ESCALA CONSISTENTE
     const lunarState = calculateLunarPhase(timeInDays)
     if (moonRef.current && moonMeshRef.current && earthGroupRef.current) {
-      // Posición lunar relativa a la Tierra
+      // Posición de la Tierra (absoluta)
       const earthPos = earthGroupRef.current.position
-      const moonPos = lunarState.position.clone().multiplyScalar(50) // escalar para visualización
-      moonRef.current.position.copy(earthPos).add(moonPos)
+      
+      // Posición lunar ABSOLUTA - ya viene en la escala correcta (1 AU = 200 unidades)
+      // Luna está a 0.00257 AU = 0.514 unidades de la Tierra
+      // Multiplicamos por 10 para visualización (sino es invisible)
+      const VISUAL_SCALE = 10
+      const moonPos = lunarState.position.clone().multiplyScalar(VISUAL_SCALE)
+      moonRef.current.position.set(
+        earthPos.x + moonPos.x,
+        earthPos.y + moonPos.y,
+        earthPos.z + moonPos.z
+      )
+      
       // 🌙 TIDAL LOCKING (Bloqueo por marea)
       // La Luna siempre muestra la misma cara hacia la Tierra
       moonMeshRef.current.rotation.set(0, 0, 0)
-      moonMeshRef.current.lookAt(earthPos)
+      moonMeshRef.current.lookAt(earthPos) // Mirar hacia la TIERRA, no el Sol
       moonMeshRef.current.rotateY(0) // Sin rotación adicional
     }
   })
@@ -300,34 +319,34 @@ export default function RealisticSolarSystem({
           color="#4a9eff"
         />
         
-        {/* Órbita lunar visible */}
+        {/* Órbita lunar visible - DENTRO del grupo de la Tierra para que se mueva con ella */}
         <RealisticLunarOrbit />
-        
-        {/* Luna relativa a la Tierra con etiqueta y tidal locking */}
-        <group ref={moonRef}>
-          <mesh ref={moonMeshRef}>
-            <sphereGeometry args={[0.27, 64, 64]} />
-            <meshStandardMaterial 
-              map={moonTexture}
-              color="#FFFFFF" 
-              roughness={0.95} 
-              metalness={0.05} 
-            />
-          </mesh>
-          <CelestialTooltip
-            name="Luna"
-            symbol="☾"
-            type="Satélite natural"
-            data={{
-              orbitalPeriod: "27.3 días",
-              diameter: "3.474 km",
-              temperature: "-173°C a 127°C",
-              funFact: "Siempre muestra la misma cara a la Tierra"
-            }}
-            position={[0, 0.8, 0]}
-            color="#FFFFFF"
+      </group>
+      
+      {/* Luna con posición ABSOLUTA - FUERA del grupo de la Tierra */}
+      <group ref={moonRef}>
+        <mesh ref={moonMeshRef}>
+          <sphereGeometry args={[0.27, 64, 64]} />
+          <meshStandardMaterial 
+            map={moonTexture}
+            color="#FFFFFF" 
+            roughness={0.95} 
+            metalness={0.05} 
           />
-        </group>
+        </mesh>
+        <CelestialTooltip
+          name="Luna"
+          symbol="☾"
+          type="Satélite natural"
+          data={{
+            orbitalPeriod: "27.3 días",
+            diameter: "3.474 km",
+            temperature: "-173°C a 127°C",
+            funFact: "Siempre muestra la misma cara a la Tierra"
+          }}
+          position={[0, 0.8, 0]}
+          color="#FFFFFF"
+        />
       </group>
       
       {/* Marte - Posición real con rotación axial */}
@@ -464,6 +483,35 @@ export default function RealisticSolarSystem({
             temperature: "-200°C", moons: "16 conocidas", atmosphere: "H₂, He, CH₄",
             funFact: "Vientos de hasta 2.100 km/h — los más rápidos del sistema solar" }}
           position={[0, 24, 0]} color="#4b70dd" />
+      </group>
+
+      {/* ── Plutón ──────────────────────────────────────────────────────── */}
+      <group ref={plutoRef}>
+        <mesh ref={plutoMeshRef}>
+          <sphereGeometry args={[2.5, 32, 32]} />
+          <meshStandardMaterial 
+            map={plutoTexture} 
+            roughness={0.95} 
+            metalness={0.0}
+            color="#8c7853"
+          />
+        </mesh>
+        <CelestialTooltip 
+          name="Plutón" 
+          symbol="♇" 
+          type="Planeta enano"
+          data={{ 
+            orbitalPeriod: "248 años", 
+            day: "6.4 días terrestres", 
+            diameter: "2.374 km",
+            temperature: "-230°C", 
+            moons: "5 conocidas (Caronte, Nix, Hidra...)", 
+            atmosphere: "N₂, CH₄, CO",
+            funFact: "Órbita muy elíptica e inclinada — a veces más cerca que Neptuno" 
+          }}
+          position={[0, 3.5, 0]} 
+          color="#8c7853" 
+        />
       </group>
     </group>
   )

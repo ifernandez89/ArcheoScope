@@ -96,6 +96,16 @@ export const PLANETS: Record<string, PlanetaryData> = {
     color: '#4b70dd',
     size: 3.9,
     initialAngle: 355 * Math.PI / 180 // Neptuno casi inmóvil
+  },
+  pluto: {
+    name: 'Plutón',
+    period: 248 * 365,
+    radius: 39.5,
+    inclination: 17.1, // Muy inclinado
+    eccentricity: 0.248, // Muy elíptico
+    color: '#8c7853',
+    size: 0.18,
+    initialAngle: 110 * Math.PI / 180 // Posición aproximada
   }
 }
 

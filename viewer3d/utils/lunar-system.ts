@@ -53,10 +53,16 @@ export function calculateLunarPhase(daysSinceNewMoon: number): LunarState {
   const lunarAngle = (age / LUNAR_ORBITAL_PERIOD) * 2 * Math.PI
   const distance = LUNAR_DISTANCE * (1 + 0.055 * Math.cos(lunarAngle)) // excentricidad
   
+  // ESCALA CONSISTENTE: 1 AU = 200 unidades (igual que los planetas)
+  // Luna: 384,400 km = 0.00257 AU
+  const AU_TO_KM = 149597871
+  const distanceInAU = distance / AU_TO_KM
+  const SCALE = 200 // Misma escala que los planetas
+  
   const position = new THREE.Vector3(
-    distance * Math.cos(lunarAngle) / 10000, // escalar para visualización
+    distanceInAU * SCALE * Math.cos(lunarAngle),
     0,
-    distance * Math.sin(lunarAngle) / 10000
+    distanceInAU * SCALE * Math.sin(lunarAngle)
   )
   
   // Tamaño angular (varía con distancia)

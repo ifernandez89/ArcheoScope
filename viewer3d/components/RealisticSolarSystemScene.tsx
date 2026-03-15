@@ -55,15 +55,15 @@ export default function RealisticSolarSystemScene({
       </div>
       
       <Canvas
-        camera={{ position: [0, 100, 300], fov: 50 }}
+        camera={{ position: [0, 300, 1200], fov: 50 }}
         style={{ background: '#000' }}
       >
-        <PerspectiveCamera makeDefault position={[0, 100, 300]} fov={50} />
+        <PerspectiveCamera makeDefault position={[0, 300, 1200]} fov={50} />
         <OrbitControls
           enableDamping
           dampingFactor={0.05}
           minDistance={50}
-          maxDistance={600}
+          maxDistance={150000}
           autoRotate={false}
         />
         

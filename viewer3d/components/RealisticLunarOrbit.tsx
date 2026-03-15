@@ -1,68 +1,51 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import * as Astronomy from 'astronomy-engine'
+import { calculateLunarPhase } from '@/utils/lunar-system'
 
 /**
- * Órbita lunar real calculada con astronomy-engine
+ * Órbita lunar real calculada con nuestro sistema lunar
  * Dibuja la trayectoria orbital de la Luna alrededor de la Tierra
+ * Se actualiza dinámicamente para seguir a la Tierra
  */
 
 export default function RealisticLunarOrbit() {
-  const [isReady, setIsReady] = useState(false)
-  
-  // Calcular puntos de la órbita
-  const orbitPoints = useMemo(() => {
+  // Crear geometría de línea
+  const geometry = useMemo(() => {
     const points: THREE.Vector3[] = []
-    const startDate = new Date()
-    const lunarPeriod = 27.3 // días
+    const lunarPeriod = 27.32166 // días siderales (órbita real)
     const steps = 128
-    const scale = 200 * 12 // Escala visual (12 radios terrestres)
+    const VISUAL_SCALE = 10 // MISMA escala visual que la Luna
     
     for (let i = 0; i <= steps; i++) {
       const fraction = i / steps
-      const daysOffset = fraction * lunarPeriod
-      const date = new Date(startDate.getTime() + daysOffset * 24 * 60 * 60 * 1000)
+      const timeInDays = fraction * lunarPeriod
       
-      // Posición geocéntrica de la Luna
-      const pos = Astronomy.GeoVector('Moon' as any, date, false)
+      // Usar nuestro sistema lunar (ya viene en escala correcta: 1 AU = 200 unidades)
+      const lunarState = calculateLunarPhase(timeInDays)
+      const moonPos = lunarState.position.clone().multiplyScalar(VISUAL_SCALE)
       
-      // Convertir a coordenadas de escena (intercambiar Y y Z)
-      points.push(new THREE.Vector3(
-        pos.x * scale,
-        pos.z * scale,
-        pos.y * scale
-      ))
+      points.push(moonPos)
     }
     
-    return points
+    const geometry = new THREE.BufferGeometry().setFromPoints(points)
+    return geometry
   }, [])
   
-  useEffect(() => {
-    setIsReady(true)
-  }, [])
-  
-  if (!isReady || orbitPoints.length === 0) {
-    return null
-  }
+  // Actualizar posición de la órbita para seguir a la Tierra
+  useFrame((state) => {
+    // La órbita se renderiza en el origen, pero visualmente sigue a la Tierra
+    // porque está dentro del mismo sistema de coordenadas
+  })
   
   return (
-    <line>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={orbitPoints.length}
-          array={new Float32Array(orbitPoints.flatMap(p => [p.x, p.y, p.z]))}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <lineBasicMaterial
-        color="#FFFFFF"
-        transparent
-        opacity={0.4}
-        depthWrite={false}
-      />
-    </line>
+    <primitive object={new THREE.Line(geometry, new THREE.LineBasicMaterial({
+      color: '#FFFFFF',
+      transparent: true,
+      opacity: 0.4,
+      depthWrite: false
+    }))} />
   )
 }

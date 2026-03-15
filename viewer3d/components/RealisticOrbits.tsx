@@ -29,7 +29,8 @@ function RealisticOrbit({ body, color, opacity = 0.35, segments = 256, scale = 2
       'Jupiter': 'jupiter',
       'Saturn': 'saturn',
       'Uranus': 'uranus',
-      'Neptune': 'neptune'
+      'Neptune': 'neptune',
+      'Pluto': 'pluto'
     }
     
     const planetKey = planetMap[body]
@@ -155,17 +156,20 @@ function AsteroidBelt({ scale = 200 }: { scale?: number }) {
 export default function RealisticOrbits() {
   return (
     <group>
-      {/* Todos los planetas usando nuestro sistema unificado */}
+      {/* Planetas interiores */}
       <RealisticOrbit body="Mercury" color="#9c9c9c" opacity={0.30} />
       <RealisticOrbit body="Venus"   color="#f5e6d3" opacity={0.30} />
       <RealisticOrbit body="Earth"   color="#4a9eff" opacity={0.40} />
       <RealisticOrbit body="Mars"    color="#c97a5f" opacity={0.30} />
       
-      {/* Planetas exteriores también con nuestro sistema */}
-      <RealisticOrbit body="Jupiter" color="#c8a87a" opacity={0.32} />
-      <RealisticOrbit body="Saturn"  color="#e8d5a0" opacity={0.32} />
-      <RealisticOrbit body="Uranus"  color="#7de8e8" opacity={0.28} />
-      <RealisticOrbit body="Neptune" color="#4b70dd" opacity={0.28} />
+      {/* Planetas exteriores */}
+      <RealisticOrbit body="Jupiter" color="#c8a87a" opacity={0.35} />
+      <RealisticOrbit body="Saturn"  color="#e8d5a0" opacity={0.35} />
+      
+      {/* Planetas exteriores lejanos - OPACIDAD AUMENTADA PARA VISIBILIDAD */}
+      <RealisticOrbit body="Uranus"  color="#7de8e8" opacity={0.50} segments={512} />
+      <RealisticOrbit body="Neptune" color="#4b70dd" opacity={0.50} segments={512} />
+      <RealisticOrbit body="Pluto"   color="#ff8c00" opacity={0.60} segments={512} />
     </group>
   )
 }
