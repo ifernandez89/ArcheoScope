@@ -43,29 +43,29 @@
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/menu/page-b1af73dd2d1645da.js"
     ],
-    "/page": [
-      "static/chunks/webpack-c7aeeb0118f30c6d.js",
-      "static/chunks/vendor-06cb701289697aa7.js",
-      "static/chunks/main-app-a197d865af5093da.js",
-      "static/chunks/app/page-76fcba8d84fd4118.js"
-    ],
     "/menu/video/page": [
       "static/chunks/webpack-c7aeeb0118f30c6d.js",
       "static/chunks/vendor-06cb701289697aa7.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/menu/video/page-39d7b67a6958d98c.js"
     ],
-    "/realistic-solar/page": [
+    "/page": [
       "static/chunks/webpack-c7aeeb0118f30c6d.js",
       "static/chunks/vendor-06cb701289697aa7.js",
       "static/chunks/main-app-a197d865af5093da.js",
-      "static/chunks/app/realistic-solar/page-9a654937f02484df.js"
+      "static/chunks/app/page-76fcba8d84fd4118.js"
     ],
     "/player-setup/page": [
       "static/chunks/webpack-c7aeeb0118f30c6d.js",
       "static/chunks/vendor-06cb701289697aa7.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/player-setup/page-972a4e5901806c15.js"
+    ],
+    "/realistic-solar/page": [
+      "static/chunks/webpack-c7aeeb0118f30c6d.js",
+      "static/chunks/vendor-06cb701289697aa7.js",
+      "static/chunks/main-app-a197d865af5093da.js",
+      "static/chunks/app/realistic-solar/page-9a654937f02484df.js"
     ],
     "/reset/page": [
       "static/chunks/webpack-c7aeeb0118f30c6d.js",
