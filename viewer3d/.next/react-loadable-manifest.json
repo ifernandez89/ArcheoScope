@@ -1,113 +1,121 @@
 {
   "app\\game\\page.tsx -> @/components/Scene3D": {
-    "id": "app\\game\\page.tsx -> @/components/Scene3D",
+    "id": 9705,
     "files": [
-      "static/chunks/three.js",
-      "static/chunks/react-three.js",
-      "static/chunks/engines.js",
-      "static/chunks/vendor.js",
-      "static/chunks/_app-pages-browser_types_missionState_ts-_app-pages-browser_types_player_ts.js",
-      "static/chunks/_app-pages-browser_components_Scene3D_tsx-_app-pages-browser_data_archaeological-sites_json.js"
+      "static/chunks/three.815c5b8d93734097.js",
+      "static/chunks/react-three.994f8dbb8dcd66d9.js",
+      "static/chunks/engines.58efe466aeafe565.js",
+      "static/chunks/vendor-06cb701289697aa7.js",
+      "static/chunks/269.394d023b5d061b2c.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
-    "id": "app\\player-setup\\page.tsx -> @/components/ShipPreview",
+    "id": 2006,
     "files": [
-      "static/chunks/three.js",
-      "static/chunks/react-three.js",
-      "static/chunks/vendor.js",
-      "static/chunks/_app-pages-browser_components_ShipPreview_tsx.js"
+      "static/chunks/three.815c5b8d93734097.js",
+      "static/chunks/react-three.994f8dbb8dcd66d9.js",
+      "static/chunks/vendor-06cb701289697aa7.js",
+      "static/chunks/6.6ceb4117431d1b6d.js"
+    ]
+  },
+  "app\\realistic-solar\\page.tsx -> @/components/RealisticSolarSystemScene": {
+    "id": 6982,
+    "files": [
+      "static/chunks/three.815c5b8d93734097.js",
+      "static/chunks/react-three.994f8dbb8dcd66d9.js",
+      "static/chunks/vendor-06cb701289697aa7.js",
+      "static/chunks/821.730a7264a16406f6.js",
+      "static/chunks/666.0bb73bdfabceb115.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./BackgroundMountains": {
-    "id": "components\\ImmersiveScene.tsx -> ./BackgroundMountains",
+    "id": 7222,
     "files": [
-      "static/chunks/_app-pages-browser_components_BackgroundMountains_tsx.js"
+      "static/chunks/222.371540ecb5f91251.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./CelestialOverlay": {
-    "id": "components\\ImmersiveScene.tsx -> ./CelestialOverlay",
+    "id": 1353,
     "files": [
-      "static/chunks/vendor.js",
-      "static/chunks/_app-pages-browser_components_CelestialOverlay_tsx.js"
+      "static/chunks/vendor-06cb701289697aa7.js",
+      "static/chunks/353.7fe93a291a41388f.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./Compass": {
-    "id": "components\\ImmersiveScene.tsx -> ./Compass",
+    "id": 6660,
     "files": [
-      "static/chunks/_app-pages-browser_components_Compass_tsx.js"
+      "static/chunks/660.3d522d4d3131afc8.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./CompassTracker": {
-    "id": "components\\ImmersiveScene.tsx -> ./CompassTracker",
+    "id": 3843,
     "files": [
-      "static/chunks/_app-pages-browser_components_CompassTracker_tsx.js"
+      "static/chunks/843.f9618e7408042293.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./DayNightClock": {
-    "id": "components\\ImmersiveScene.tsx -> ./DayNightClock",
+    "id": 7156,
     "files": [
-      "static/chunks/_app-pages-browser_components_DayNightClock_tsx.js"
+      "static/chunks/156.8edfeedcdbb086a7.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./DiscoveredItemInWorld": {
-    "id": "components\\ImmersiveScene.tsx -> ./DiscoveredItemInWorld",
+    "id": 6893,
     "files": [
-      "static/chunks/_app-pages-browser_components_DiscoveredItemInWorld_tsx.js"
+      "static/chunks/893.2d81525a1f08d051.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EnvironmentElements": {
-    "id": "components\\ImmersiveScene.tsx -> ./EnvironmentElements",
+    "id": 7158,
     "files": []
   },
   "components\\ImmersiveScene.tsx -> ./GizaScene": {
-    "id": "components\\ImmersiveScene.tsx -> ./GizaScene",
+    "id": 5178,
     "files": [
-      "static/chunks/_app-pages-browser_components_GizaScene_tsx.js"
+      "static/chunks/178.a211d0408164d105.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./ItemCollectedMessage": {
-    "id": "components\\ImmersiveScene.tsx -> ./ItemCollectedMessage",
+    "id": 9323,
     "files": [
-      "static/chunks/_app-pages-browser_components_ItemCollectedMessage_tsx.js"
+      "static/chunks/323.4bb3d76c6ce8ab1d.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./PumaPunkuScene": {
-    "id": "components\\ImmersiveScene.tsx -> ./PumaPunkuScene",
+    "id": 1175,
     "files": [
-      "static/chunks/_app-pages-browser_components_PumaPunkuScene_tsx.js"
+      "static/chunks/175.30b37a212d2954ef.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./RealisticSolarSystem": {
-    "id": "components\\ImmersiveScene.tsx -> ./RealisticSolarSystem",
+    "id": 7821,
     "files": [
-      "static/chunks/vendor.js",
-      "static/chunks/_app-pages-browser_components_CelestialOverlay_tsx.js",
-      "static/chunks/_app-pages-browser_components_RealisticSolarSystem_tsx.js"
+      "static/chunks/vendor-06cb701289697aa7.js",
+      "static/chunks/821.730a7264a16406f6.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./SpaceUfo": {
-    "id": "components\\ImmersiveScene.tsx -> ./SpaceUfo",
+    "id": 657,
     "files": [
-      "static/chunks/_app-pages-browser_components_SpaceUfo_tsx.js"
+      "static/chunks/657.42ffc72cdf345938.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./SphinxInteractiveDialogue": {
-    "id": "components\\ImmersiveScene.tsx -> ./SphinxInteractiveDialogue",
+    "id": 6064,
     "files": [
-      "static/chunks/_app-pages-browser_components_SphinxInteractiveDialogue_tsx.js"
+      "static/chunks/64.29704ded55697177.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./ViracochaDialogue": {
-    "id": "components\\ImmersiveScene.tsx -> ./ViracochaDialogue",
+    "id": 5054,
     "files": [
-      "static/chunks/_app-pages-browser_components_ViracochaDialogue_tsx.js"
+      "static/chunks/54.baa8a6073f25cc00.js"
     ]
   },
   "utils\\lazy-systems.ts -> @/components/ProceduralTerrain": {
-    "id": "utils\\lazy-systems.ts -> @/components/ProceduralTerrain",
+    "id": 8851,
     "files": [
-      "static/chunks/_app-pages-browser_components_ProceduralTerrain_tsx.js"
+      "static/chunks/749.8d721470e3ba41f5.js"
     ]
   }
 }

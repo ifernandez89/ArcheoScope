@@ -21,12 +21,17 @@ export class SolarEngine {
   private currentSunDirection: THREE.Vector3
   private targetSunDirection: THREE.Vector3
   private smoothingSpeed: number = 0.01 // Muy lento
+  
+  // Sistema de tiempo acelerado
+  private simulatedTime: Date
+  private timeScale: number = 60 // 1 segundo real = 1 minuto simulado (1 minuto real = 1 hora simulada)
 
   constructor(latitude: number = 0, longitude: number = 0) {
     this.latitude = latitude * (Math.PI / 180) // Convertir a radianes
     this.longitude = longitude
     this.currentSunDirection = new THREE.Vector3(0, 1, 0)
     this.targetSunDirection = new THREE.Vector3(0, 1, 0)
+    this.simulatedTime = new Date() // Iniciar con hora actual
   }
 
   setLatitude(lat: number) {
@@ -43,10 +48,10 @@ export class SolarEngine {
   }
 
   /**
-   * Calcular estado solar actual basado en fecha y hora real
+   * Calcular estado solar actual basado en fecha y hora simulada (acelerada)
    */
   calculateSolarState(): SolarState {
-    const now = new Date()
+    const now = this.simulatedTime
     
     // Día del año (1-365)
     const startOfYear = new Date(now.getFullYear(), 0, 0)
@@ -113,6 +118,11 @@ export class SolarEngine {
    * Actualizar posición del sol con interpolación suave
    */
   update(deltaTime: number): SolarState {
+    // Avanzar tiempo simulado (1 segundo real = 60 segundos simulados = 1 minuto)
+    // Esto significa: 1 minuto real = 1 hora simulada
+    const simulatedSeconds = deltaTime * this.timeScale
+    this.simulatedTime = new Date(this.simulatedTime.getTime() + simulatedSeconds * 1000)
+    
     const state = this.calculateSolarState()
     
     // Actualizar target
