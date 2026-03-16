@@ -77,10 +77,10 @@ export default function EasterIslandDialogue({
   useEffect(() => {
     if (!visible || !enabled) return
     
-    // Cambiar de línea cada 8 segundos
+    // Cambiar de línea cada 12 segundos (más pausado)
     const interval = setInterval(() => {
       setCurrentLineIndex((prev) => (prev + 1) % DIALOGUE.length)
-    }, 8000)
+    }, 12000)
     
     return () => clearInterval(interval)
   }, [visible, enabled])
@@ -121,16 +121,6 @@ export default function EasterIslandDialogue({
           backdropFilter: 'blur(4px)'
         }}
       >
-        {/* Indicador de quién habla */}
-        <div style={{
-          fontSize: '18px',
-          marginBottom: '8px',
-          fontWeight: 'bold',
-          opacity: 0.9
-        }}>
-          {currentLine.speaker === 'moai' ? '🗿 Moai' : '🏛️ Atlante'}
-        </div>
-        
         {/* Texto del diálogo */}
         <div style={{
           fontSize: '13px',

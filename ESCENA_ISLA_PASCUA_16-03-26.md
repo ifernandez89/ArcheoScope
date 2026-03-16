@@ -25,8 +25,9 @@
 #### Características:
 - Burbujas de diálogo flotantes sobre cada personaje
 - Conversación automática en loop (8 líneas)
-- Cambio de línea cada 8 segundos
+- Cambio de línea cada 12 segundos (ritmo pausado y contemplativo)
 - Animación de fade-in suave
+- Diseño minimalista: solo texto, sin iconos ni nombres
 - Colores diferenciados por personaje:
   - Moai: marrón tierra (rgba(139, 115, 85, 0.95))
   - Atlante: azul acero (rgba(70, 130, 180, 0.95))
