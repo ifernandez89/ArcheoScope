@@ -19,7 +19,41 @@
 - Iluminación ambiental y direccional incluida
 - Modelos optimizados con compresión Draco
 
-### 3. Optimización de Modelos GLB
+### 3. Sistema de Diálogo Interactivo 🗿💬🏛️
+**Archivo**: `viewer3d/components/EasterIslandDialogue.tsx`
+
+#### Características:
+- Burbujas de diálogo flotantes sobre cada personaje
+- Conversación automática en loop (8 líneas)
+- Cambio de línea cada 8 segundos
+- Animación de fade-in suave
+- Colores diferenciados por personaje:
+  - Moai: marrón tierra (rgba(139, 115, 85, 0.95))
+  - Atlante: azul acero (rgba(70, 130, 180, 0.95))
+
+#### Narrativa:
+**Contexto**: Red energética planetaria desalineada
+**Guardianes**:
+- 🗿 Moai → Guardián de la Tierra y las líneas energéticas
+- 🏛️ Atlante → Guardián de la ingeniería estelar
+
+**Temas del diálogo**:
+- Resonancia terrestre y ciclos estelares
+- Cristales del tiempo (referencia a Jacobo Grinberg-Zylberbaum)
+- Red de nodos planetarios: Giza, Teotihuacan, Puma Punku, Rapa Nui
+- Misión del viajero: restaurar la red antes de que el tiempo se fracture
+
+#### Diálogo completo (8 líneas en loop):
+1. Moai: "La resonancia de la Tierra ha cambiado. El pulso ya no coincide con el ciclo estelar."
+2. Atlante: "Lo detecté también. Los cristales del tiempo están fuera de fase."
+3. Moai: "Si la red permanece inestable, la distorsión crecerá."
+4. Atlante: "Los nodos deben realinearse: Giza, Teotihuacan, Puma Punku… y este."
+5. Moai: "La ingeniería antigua fue diseñada para resistir ciclos largos."
+6. Atlante: "Pero incluso la ingeniería eterna falla si los guardianes olvidan su propósito."
+7. Moai: "Entonces el viajero deberá restaurar la red."
+8. Atlante: "Antes de que el tiempo se fracture."
+
+### 4. Optimización de Modelos GLB
 **Herramienta**: gltf-pipeline con compresión Draco
 
 #### Resultados:
@@ -38,33 +72,47 @@
   - Optimizado: 34.47 MB
   - Reducción total: 29.1% (14.16 MB ahorrados)
 
-### 4. Archivos Agregados
+### 5. Archivos Agregados
+- `viewer3d/components/EasterIslandDialogue.tsx` - Sistema de diálogo
 - `viewer3d/public/atlante.glb` - Modelo del Atlante optimizado
 - `viewer3d/public/moai.glb` - Modelo del Moai optimizado (ya existía, reoptimizado)
 - `viewer3d/public/draco/*` - Decodificador Draco para descomprimir modelos
 - `viewer3d/public/atlante_original.glb` - Backup del original
 - `viewer3d/public/moai_original.glb` - Backup del original
 
-### 5. Integración en ImmersiveScene
+### 6. Integración en ImmersiveScene
 **Archivo**: `viewer3d/components/ImmersiveScene.tsx`
 - Import dinámico (lazy loading) para optimizar performance
 - Renderizado condicional basado en coordenadas de Isla de Pascua
 - Se activa tanto por site ID como por coordenadas exactas
 
-### 6. Tecnologías Utilizadas
+### 7. Tecnologías Utilizadas
 - **Compresión Draco**: Reduce geometría y atributos de malla
 - **gltf-pipeline**: Herramienta oficial de Khronos Group
 - **Nivel de compresión**: 10 (máximo)
 - **Lazy loading**: Carga diferida de la escena
+- **React Three Fiber**: Renderizado 3D
+- **@react-three/drei**: Html component para UI 3D
 
 ## Cómo Probar
 1. Navegar a las coordenadas de Isla de Pascua: lat -27.1254, lon -109.2778
 2. La escena cargará automáticamente con Moai y Atlante
-3. El terreno será volcánico (no océano)
-4. Los modelos están optimizados para carga rápida
+3. Esperar 3 segundos para que comience el diálogo
+4. Las burbujas de diálogo cambiarán cada 8 segundos
+5. El terreno será volcánico (no océano)
+6. Los modelos están optimizados para carga rápida
 
 ## Performance
 - Reducción de 14.16 MB en tamaño de modelos
 - Carga más rápida en conexiones lentas
 - Menor uso de memoria en GPU
 - Decodificación Draco en tiempo real (mínimo overhead)
+- Sistema de diálogo ligero (sin impacto en FPS)
+
+## Narrativa y Lore
+El diálogo establece:
+- Una red energética planetaria antigua
+- Conexión entre sitios arqueológicos clave
+- Misión implícita para el jugador
+- Referencias a conceptos de física cuántica y consciencia
+- Misterio sin explicación excesiva

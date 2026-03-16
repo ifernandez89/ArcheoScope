@@ -4,11 +4,13 @@ import { useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import EasterIslandDialogue from './EasterIslandDialogue'
 
 /**
  * Escena de Isla de Pascua (Rapa Nui)
  * Moai y Atlante enfrentados "charlando"
  * Modelos optimizados con compresión Draco
+ * Sistema de diálogo sobre la red energética planetaria
  */
 
 interface EasterIslandSceneProps {
@@ -19,6 +21,10 @@ export default function EasterIslandScene({ avatarPositionRef }: EasterIslandSce
   // Cargar modelos (optimizados con Draco)
   const moaiModel = useGLTF('/moai.glb')
   const atlanteModel = useGLTF('/atlante.glb')
+  
+  // Posiciones para el sistema de diálogo
+  const moaiPosition = new THREE.Vector3(-4, 3, 0)
+  const atlantePosition = new THREE.Vector3(4, 2, 0)
   
   return (
     <group>
@@ -37,6 +43,13 @@ export default function EasterIslandScene({ avatarPositionRef }: EasterIslandSce
           scale={5}
         />
       </group>
+      
+      {/* Sistema de diálogo entre Moai y Atlante */}
+      <EasterIslandDialogue
+        moaiPosition={moaiPosition}
+        atlantePosition={atlantePosition}
+        enabled={true}
+      />
       
       {/* Luz ambiental para iluminar la escena */}
       <ambientLight intensity={0.5} />
