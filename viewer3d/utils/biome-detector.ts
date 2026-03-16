@@ -162,6 +162,21 @@ export function detectBiome(lat: number, lon: number): BiomeInfo {
   // Océano Pacífico - LA ZONA MÁS GRANDE DEL PLANETA
   // Longitud < -70 (excluyendo costas de América)
   if (lon < -70) {
+    // EXCEPCIÓN: Isla de Pascua (Rapa Nui)
+    // lat: -27.1254, lon: -109.2778
+    // Rango: lat entre -27.5 y -26.5, lon entre -110 y -108.5
+    const isEasterIsland = lat > -27.5 && lat < -26.5 && lon > -110 && lon < -108.5
+    
+    if (isEasterIsland) {
+      return {
+        type: 'volcanic',
+        name: 'Isla de Pascua (Rapa Nui)',
+        description: 'Isla volcánica remota con moai',
+        temperature: 21,
+        humidity: 75
+      }
+    }
+    
     // Excluir toda América (lon > -120 es costa oeste, lon < -30 es costa este)
     // América del Norte: lat > 10, lon entre -170 y -50
     const isNorthAmerica = lat > 10 && lon > -170 && lon < -50

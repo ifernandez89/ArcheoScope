@@ -77,6 +77,7 @@ import SolarSimulation from './SolarSimulation'
 const SpaceUfo = dynamic(() => import('./SpaceUfo'), { ssr: false })
 const PumaPunkuScene = dynamic(() => import('./PumaPunkuScene'), { ssr: false })
 const GizaScene = dynamic(() => import('./GizaScene'), { ssr: false })
+const EasterIslandScene = dynamic(() => import('./EasterIslandScene'), { ssr: false })
 const EnvironmentElements = dynamic(() => import('./EnvironmentElements'), { ssr: false, loading: () => null })
 
 // COMPONENTES DE DIÁLOGO - LAZY LOADING
@@ -1253,6 +1254,17 @@ function ModelScene({
           onScarabCollect={onScarabCollect}
           scarabDiscovered={scarabDiscovered || false}
           scarabCollected={scarabCollected || false}
+        />
+      )}
+      
+      {/* 🗿 Escena de Isla de Pascua - Moai y Atlante "charlando" */}
+      {(site?.id === 'rapa-nui-ahu-tongariki' || (
+        location &&
+        Math.abs(location.lat - (-27.1254)) < 0.05 &&
+        Math.abs(location.lon - (-109.2778)) < 0.05
+      )) && (
+        <EasterIslandScene 
+          avatarPositionRef={avatarPositionRef}
         />
       )}
       
