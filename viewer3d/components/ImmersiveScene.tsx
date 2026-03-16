@@ -88,7 +88,6 @@ const Compass = dynamic(() => import('./Compass'), { ssr: false })
 const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
 const CelestialOverlayHUD = dynamic(() => import('./CelestialOverlay').then(m => ({ default: m.CelestialOverlayHUD })), { ssr: false })
 const BackgroundMountains = dynamic(() => import('./BackgroundMountains'), { ssr: false, loading: () => null })
-const AstronomicalInfo = dynamic(() => import('./AstronomicalInfo'), { ssr: false })
 const EnhancedMoon = dynamic(() => import('./EnhancedMoon'), { ssr: false })
 
 // EnvironmentElementsWithTrees necesita el contexto, importar directamente
@@ -1302,13 +1301,6 @@ function ModelScene({
       />
     )}
     
-    {/* Panel de información astronómica avanzada - FUERA del Canvas */}
-    {location && solarState && (
-      <AstronomicalInfo
-        location={location}
-        solarState={solarState}
-      />
-    )}
     </>
   )
 }

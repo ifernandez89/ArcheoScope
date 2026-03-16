@@ -6,7 +6,7 @@
       "static/chunks/react-three.994f8dbb8dcd66d9.js",
       "static/chunks/engines.619a09be4e5159a2.js",
       "static/chunks/vendor-1978933b9fb55829.js",
-      "static/chunks/928.9f823b7683c09d50.js"
+      "static/chunks/928.677ea63445aec0a6.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -26,13 +26,7 @@
       "static/chunks/engines.619a09be4e5159a2.js",
       "static/chunks/vendor-1978933b9fb55829.js",
       "static/chunks/821.bf22540c9abf2a56.js",
-      "static/chunks/527.496786684e2c46fa.js"
-    ]
-  },
-  "components\\ImmersiveScene.tsx -> ./AstronomicalInfo": {
-    "id": 8132,
-    "files": [
-      "static/chunks/132.de8d73b551a1617a.js"
+      "static/chunks/527.75422bfc51b94128.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./BackgroundMountains": {
