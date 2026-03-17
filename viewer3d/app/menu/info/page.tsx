@@ -81,87 +81,7 @@ export default function InfoPage() {
           </p>
         </section>
         
-        {/* Sección de Créditos */}
-        <section style={{
-          marginBottom: '40px',
-          padding: '30px',
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '12px'
-        }}>
-          <h2 style={{
-            fontSize: '32px',
-            marginBottom: '20px',
-            color: '#ffffff',
-            letterSpacing: '2px'
-          }}>
-            🎮 Créditos
-          </h2>
-          
-          <p style={{
-            fontSize: '16px',
-            lineHeight: '1.8',
-            marginBottom: '20px',
-            opacity: 0.9
-          }}>
-            Este juego es una <strong>obra de ficción</strong> inspirada en diversas teorías sobre la conciencia, la arqueología y la estructura del universo.
-          </p>
-          
-          <div style={{
-            marginTop: '30px',
-            padding: '20px',
-            background: 'rgba(0, 0, 0, 0.3)',
-            borderRadius: '8px',
-            borderLeft: '4px solid #667eea'
-          }}>
-            <h3 style={{
-              fontSize: '18px',
-              marginBottom: '15px',
-              color: '#667eea'
-            }}>
-              ✅ Lo que SÍ podés hacer
-            </h3>
-            <ul style={{
-              fontSize: '14px',
-              lineHeight: '1.8',
-              opacity: 0.85,
-              paddingLeft: '20px'
-            }}>
-              <li>✔ Mencionar al autor</li>
-              <li>✔ Decir que te inspiraste en sus ideas</li>
-              <li>✔ Reinterpretar conceptos en tu propio universo</li>
-              <li>✔ Hacer homenajes (muy común en videojuegos)</li>
-            </ul>
-          </div>
-          
-          <div style={{
-            marginTop: '20px',
-            padding: '20px',
-            background: 'rgba(0, 0, 0, 0.3)',
-            borderRadius: '8px',
-            borderLeft: '4px solid #f59e0b'
-          }}>
-            <h3 style={{
-              fontSize: '18px',
-              marginBottom: '15px',
-              color: '#f59e0b'
-            }}>
-              ⚠️ Cosas a evitar
-            </h3>
-            <ul style={{
-              fontSize: '14px',
-              lineHeight: '1.8',
-              opacity: 0.85,
-              paddingLeft: '20px'
-            }}>
-              <li>• No usar frases literales extensas sin citar</li>
-              <li>• No presentar como "verdad científica comprobada"</li>
-              <li>• Siempre aclarar que es inspiración artística</li>
-            </ul>
-          </div>
-        </section>
-        
-        {/* Archivo recuperado (lore inmersivo) */}
+        {/* Sección de Créditos */}        
         <section style={{
           marginBottom: '20px',
           padding: '25px',
@@ -176,7 +96,7 @@ export default function InfoPage() {
             marginBottom: '15px',
             letterSpacing: '1px'
           }}>
-            [ARCHIVO RECUPERADO 07-A]
+            [Créditos]
           </div>
           
           <p style={{
