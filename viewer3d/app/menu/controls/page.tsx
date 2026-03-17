@@ -156,10 +156,6 @@ export default function ControlsPage() {
               <span style={{ color: '#888' }}>Q / E</span>
               <span>Rotar Avatar</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#888', fontWeight: 'bold' }}>Espacio</span>
-              <span style={{ fontWeight: 'bold', color: '#10b981' }}>🦘 Saltar</span>
-            </div>
           </div>
         </div>
 
