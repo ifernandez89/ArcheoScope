@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import { getAssetPath } from '@/lib/paths'
 import EasterIslandDialogue from './EasterIslandDialogue'
 
 /**
@@ -19,8 +20,8 @@ interface EasterIslandSceneProps {
 
 export default function EasterIslandScene({ avatarPositionRef }: EasterIslandSceneProps) {
   // Cargar modelos (optimizados con Draco)
-  const moaiModel = useGLTF('/moai.glb')
-  const atlanteModel = useGLTF('/atlante.glb')
+  const moaiModel = useGLTF(getAssetPath('/moai.glb'))
+  const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
   
   // Posiciones para el sistema de diálogo
   const moaiPosition = new THREE.Vector3(-4, 3, 0)
@@ -59,5 +60,5 @@ export default function EasterIslandScene({ avatarPositionRef }: EasterIslandSce
 }
 
 // Precargar modelos
-useGLTF.preload('/moai.glb')
-useGLTF.preload('/atlante.glb')
+useGLTF.preload(getAssetPath('/moai.glb'))
+useGLTF.preload(getAssetPath('/atlante.glb'))
