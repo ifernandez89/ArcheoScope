@@ -1,6 +1,15 @@
 {
-  "/page": "app/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/log/route": "app/api/log/route.js",
+  "/game/page": "app/game/page.js",
+  "/api/openrouter-key/route": "app/api/openrouter-key/route.js",
+  "/menu/info/page": "app/menu/info/page.js",
+  "/menu/controls/page": "app/menu/controls/page.js",
+  "/menu/video/page": "app/menu/video/page.js",
+  "/menu/audio/page": "app/menu/audio/page.js",
   "/menu/page": "app/menu/page.js",
+  "/realistic-solar/page": "app/realistic-solar/page.js",
+  "/page": "app/page.js",
   "/player-setup/page": "app/player-setup/page.js",
-  "/game/page": "app/game/page.js"
+  "/reset/page": "app/reset/page.js"
 }

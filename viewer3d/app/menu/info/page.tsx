@@ -12,20 +12,192 @@ export default function InfoPage() {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'flex-start',
       background: '#000000',
       margin: 0,
-      padding: 0,
-      overflow: 'hidden',
+      padding: '40px 20px',
+      overflow: 'auto',
       color: '#ffffff'
     }}>
       <h1 style={{
         fontSize: '48px',
-        marginBottom: '40px',
+        marginBottom: '20px',
         letterSpacing: '4px'
       }}>
         INFORMACIÓN
       </h1>
+      
+      {/* Contenedor de contenido con scroll */}
+      <div style={{
+        maxWidth: '800px',
+        width: '100%',
+        marginBottom: '30px',
+        padding: '20px',
+        overflowY: 'auto',
+        maxHeight: 'calc(100vh - 200px)'
+      }}>
+        
+        {/* Sección de Inspiración */}
+        <section style={{
+          marginBottom: '40px',
+          padding: '30px',
+          background: 'rgba(102, 126, 234, 0.1)',
+          border: '1px solid rgba(102, 126, 234, 0.3)',
+          borderRadius: '12px'
+        }}>
+          <h2 style={{
+            fontSize: '32px',
+            marginBottom: '20px',
+            color: '#667eea',
+            letterSpacing: '2px'
+          }}>
+            📜 Inspiración
+          </h2>
+          
+          <p style={{
+            fontSize: '16px',
+            lineHeight: '1.8',
+            marginBottom: '20px',
+            opacity: 0.9
+          }}>
+            <strong>Archeoscope</strong> toma inspiración de diversas culturas antiguas, teorías arqueológicas y estudios sobre la conciencia.
+          </p>
+          
+          <p style={{
+            fontSize: '16px',
+            lineHeight: '1.8',
+            marginBottom: '20px',
+            opacity: 0.9
+          }}>
+            Parte de su narrativa y concepto de <strong>red energética planetaria</strong> está influenciado por las ideas del investigador mexicano <strong>Jacobo Grinberg-Zylberbaum</strong>, especialmente su obra <em>La teoría sintérgica</em>.
+          </p>
+          
+          <p style={{
+            fontSize: '16px',
+            lineHeight: '1.8',
+            opacity: 0.9
+          }}>
+            Estas referencias han sido reinterpretadas libremente con fines artísticos y narrativos.
+          </p>
+        </section>
+        
+        {/* Sección de Créditos */}
+        <section style={{
+          marginBottom: '40px',
+          padding: '30px',
+          background: 'rgba(255, 255, 255, 0.05)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '12px'
+        }}>
+          <h2 style={{
+            fontSize: '32px',
+            marginBottom: '20px',
+            color: '#ffffff',
+            letterSpacing: '2px'
+          }}>
+            🎮 Créditos
+          </h2>
+          
+          <p style={{
+            fontSize: '16px',
+            lineHeight: '1.8',
+            marginBottom: '20px',
+            opacity: 0.9
+          }}>
+            Este juego es una <strong>obra de ficción</strong> inspirada en diversas teorías sobre la conciencia, la arqueología y la estructura del universo.
+          </p>
+          
+          <div style={{
+            marginTop: '30px',
+            padding: '20px',
+            background: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: '8px',
+            borderLeft: '4px solid #667eea'
+          }}>
+            <h3 style={{
+              fontSize: '18px',
+              marginBottom: '15px',
+              color: '#667eea'
+            }}>
+              ✅ Lo que SÍ podés hacer
+            </h3>
+            <ul style={{
+              fontSize: '14px',
+              lineHeight: '1.8',
+              opacity: 0.85,
+              paddingLeft: '20px'
+            }}>
+              <li>✔ Mencionar al autor</li>
+              <li>✔ Decir que te inspiraste en sus ideas</li>
+              <li>✔ Reinterpretar conceptos en tu propio universo</li>
+              <li>✔ Hacer homenajes (muy común en videojuegos)</li>
+            </ul>
+          </div>
+          
+          <div style={{
+            marginTop: '20px',
+            padding: '20px',
+            background: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: '8px',
+            borderLeft: '4px solid #f59e0b'
+          }}>
+            <h3 style={{
+              fontSize: '18px',
+              marginBottom: '15px',
+              color: '#f59e0b'
+            }}>
+              ⚠️ Cosas a evitar
+            </h3>
+            <ul style={{
+              fontSize: '14px',
+              lineHeight: '1.8',
+              opacity: 0.85,
+              paddingLeft: '20px'
+            }}>
+              <li>• No usar frases literales extensas sin citar</li>
+              <li>• No presentar como "verdad científica comprobada"</li>
+              <li>• Siempre aclarar que es inspiración artística</li>
+            </ul>
+          </div>
+        </section>
+        
+        {/* Archivo recuperado (lore inmersivo) */}
+        <section style={{
+          marginBottom: '20px',
+          padding: '25px',
+          background: 'rgba(139, 92, 46, 0.15)',
+          border: '1px solid rgba(205, 133, 63, 0.4)',
+          borderRadius: '8px',
+          fontFamily: 'monospace'
+        }}>
+          <div style={{
+            fontSize: '12px',
+            color: '#cd853f',
+            marginBottom: '15px',
+            letterSpacing: '1px'
+          }}>
+            [ARCHIVO RECUPERADO 07-A]
+          </div>
+          
+          <p style={{
+            fontSize: '14px',
+            lineHeight: '1.8',
+            opacity: 0.9,
+            fontStyle: 'italic'
+          }}>
+            "Algunos antiguos sistemas sugieren que la realidad es una red estructurada de información. Si dicha red es alterada, el espacio y el tiempo podrían deformarse."
+          </p>
+          
+          <div style={{
+            fontSize: '12px',
+            color: '#cd853f',
+            marginTop: '15px',
+            opacity: 0.7
+          }}>
+            — Registro atribuido a un investigador previo a la desaparición.
+          </div>
+        </section>
+      </div>
       
       <button
         onClick={() => router.push('/menu')}
@@ -41,7 +213,8 @@ export default function InfoPage() {
           transition: 'all 0.3s ease',
           letterSpacing: '2px',
           textTransform: 'uppercase',
-          width: '350px'
+          width: '350px',
+          marginTop: '20px'
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.background = '#ffffff'
