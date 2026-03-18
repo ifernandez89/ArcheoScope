@@ -8,14 +8,18 @@ import { getAssetPath } from '@/lib/paths'
 
 /**
  * Escena de Teotihuacán
- * Pirámide del Sol, Templo Mayor Azteca, Calendario Maya y Quetzalcoatl
+ * Templo de Kukulkán (Chichén Itzá), Templo Mayor Azteca, Calendario Maya y Quetzalcoatl
  * 
- * Datos reales:
- * - Pirámide del Sol: 65m altura, 225m base (similar a Giza pero más pequeña)
- * - Templo Mayor: ~45m altura
+ * Proporciones reales:
+ * - Templo de Kukulkán: 30m altura, 55x55m base (escala 0.3)
+ *   • Precisión astronómica: 91 escalones × 4 lados + 1 = 365 días
+ *   • Fenómeno de equinoccio: sombra de serpiente descendiendo
  * 
- * Escala Giza para referencia: Gran Pirámide usa escala ~0.08
- * Pirámide del Sol: ~65m vs 146m de Giza = 44% del tamaño
+ * - Templo Mayor Azteca: 60m altura, 80m base (escala 0.6 - el doble que Kukulkán)
+ *   • Doble templo ritual dedicado a Tláloc y Huitzilopochtli
+ *   • Centro ceremonial de Tenochtitlán
+ * 
+ * Relación de tamaños: Templo Mayor es 2x más alto que Kukulkán (60m vs 30m)
  */
 
 interface TeotihuacanSceneProps {
@@ -24,7 +28,7 @@ interface TeotihuacanSceneProps {
 
 export default function TeotihuacanScene({ avatarPositionRef }: TeotihuacanSceneProps) {
   // Cargar modelos
-  const piramideSolModel = useGLTF(getAssetPath('/piramide_del_sol.glb'))
+  const kukulkanModel = useGLTF(getAssetPath('/kukulkan.glb'))
   const aztecTempleModel = useGLTF(getAssetPath('/aztec_temple.glb'))
   const calendarioModel = useGLTF(getAssetPath('/calendario_maya.glb'))
   const quetzalcoatlModel = useGLTF(getAssetPath('/quetzalcoatl.glb'))
@@ -66,18 +70,18 @@ export default function TeotihuacanScene({ avatarPositionRef }: TeotihuacanScene
   
   return (
     <group>
-      {/* Pirámide del Sol - Estructura principal, más grande y visible */}
+      {/* Templo de Kukulkán - Pirámide maya con precisión astronómica (30m altura, 55x55m base) */}
       <group position={[0, 0, -20]} rotation={[0, 0, 0]}>
         <primitive 
-          object={piramideSolModel.scene.clone()} 
-          scale={0.08}
+          object={kukulkanModel.scene.clone()} 
+          scale={0.3} // Escala base para 30m
         />
       </group>
       
-      {/* Calendario Maya - Flotando sobre la punta de la Pirámide del Sol */}
+      {/* Calendario Maya - Flotando sobre la punta de Kukulkán */}
       <group 
         ref={calendarioRef}
-        position={[0, 8, -20]} // Ajustado para estar sobre la pirámide
+        position={[0, 10, -20]} // Ajustado a la nueva altura de Kukulkán (30m)
         onClick={handleCalendarioClick}
         onPointerOver={(e) => {
           e.stopPropagation()
@@ -94,11 +98,11 @@ export default function TeotihuacanScene({ avatarPositionRef }: TeotihuacanScene
         />
       </group>
       
-      {/* Templo Mayor Azteca - Más cerca del jugador */}
-      <group position={[20, 0, 5]} rotation={[0, -Math.PI / 4, 0]}>
+      {/* Templo Mayor Azteca - El doble de alto que Kukulkán (60m altura, 80m base) */}
+      <group position={[25, 0, 10]} rotation={[0, -Math.PI / 3, 0]}>
         <primitive 
           object={aztecTempleModel.scene.clone()} 
-          scale={0.05}
+          scale={0.26}
         />
       </group>
       
@@ -130,7 +134,7 @@ export default function TeotihuacanScene({ avatarPositionRef }: TeotihuacanScene
 }
 
 // Precargar modelos
-useGLTF.preload(getAssetPath('/piramide_del_sol.glb'))
+useGLTF.preload(getAssetPath('/kukulkan.glb'))
 useGLTF.preload(getAssetPath('/aztec_temple.glb'))
 useGLTF.preload(getAssetPath('/calendario_maya.glb'))
 useGLTF.preload(getAssetPath('/quetzalcoatl.glb'))

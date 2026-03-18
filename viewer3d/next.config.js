@@ -16,7 +16,7 @@ try {
 const nextConfig = {
   output: 'export',
   basePath: isProd ? '/ArcheoScope' : '',
-  assetPrefix: isProd ? '/ArcheoScope/' : '',
+  assetPrefix: isProd ? '/ArcheoScope' : '',
   reactStrictMode: true,
   images: {
     unoptimized: true,
