@@ -78,6 +78,7 @@ const SpaceUfo = dynamic(() => import('./SpaceUfo'), { ssr: false })
 const PumaPunkuScene = dynamic(() => import('./PumaPunkuScene'), { ssr: false })
 const GizaScene = dynamic(() => import('./GizaScene'), { ssr: false })
 const EasterIslandScene = dynamic(() => import('./EasterIslandScene'), { ssr: false })
+const TeotihuacanScene = dynamic(() => import('./TeotihuacanScene'), { ssr: false })
 const EnvironmentElements = dynamic(() => import('./EnvironmentElements'), { ssr: false, loading: () => null })
 
 // COMPONENTES DE DIÁLOGO - LAZY LOADING
@@ -1264,6 +1265,17 @@ function ModelScene({
         Math.abs(location.lon - (-109.2778)) < 0.05
       )) && (
         <EasterIslandScene 
+          avatarPositionRef={avatarPositionRef}
+        />
+      )}
+      
+      {/* 🏛️ Escena de Teotihuacán - Pirámide del Sol y Templo Mayor */}
+      {(site?.id === 'teotihuacan' || (
+        location &&
+        Math.abs(location.lat - 19.6925) < 0.05 &&
+        Math.abs(location.lon - (-98.8438)) < 0.05
+      )) && (
+        <TeotihuacanScene 
           avatarPositionRef={avatarPositionRef}
         />
       )}

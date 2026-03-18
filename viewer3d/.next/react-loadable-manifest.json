@@ -6,7 +6,7 @@
       "static/chunks/react-three.994f8dbb8dcd66d9.js",
       "static/chunks/engines.619a09be4e5159a2.js",
       "static/chunks/vendor-1978933b9fb55829.js",
-      "static/chunks/928.e26dcd6e1860618e.js"
+      "static/chunks/928.96c5de809e96126f.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -109,6 +109,12 @@
     "id": 6064,
     "files": [
       "static/chunks/64.29704ded55697177.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./TeotihuacanScene": {
+    "id": 9624,
+    "files": [
+      "static/chunks/624.2621a490a36de889.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./ViracochaDialogue": {
