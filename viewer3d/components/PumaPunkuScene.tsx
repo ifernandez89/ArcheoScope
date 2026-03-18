@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef, useMemo, useEffect } from 'react'
-import { useGLTF } from '@react-three/drei'
+import { useState, useRef, useMemo, useEffect, Suspense } from 'react'
+import { useGLTF, Html } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import PumaPunkuBlock from './PumaPunkuBlock'
@@ -12,8 +12,50 @@ import { getAssetPath } from '@/lib/paths'
 import SunGate from './SunGate'
 import PortalDetector from './PortalDetector'
 
+/**
+ * 🔄 Loading placeholder para Puma Punku
+ */
+function LoadingPumaPunku() {
+  return (
+    <Html center>
+      <div style={{
+        background: 'rgba(0, 0, 0, 0.8)',
+        padding: '20px 40px',
+        borderRadius: '12px',
+        color: 'white',
+        fontFamily: 'system-ui, sans-serif',
+        textAlign: 'center',
+        border: '2px solid rgba(255, 215, 0, 0.3)'
+      }}>
+        <div style={{ fontSize: '48px', marginBottom: '10px' }}>🗿</div>
+        <div>Cargando Puma Punku...</div>
+      </div>
+    </Html>
+  )
+}
+
 /** Escena completa de Puma Punku: estructura + bloque central + 8 bloques dispersos */
 export default function PumaPunkuScene({ 
+  onViracochaSpeak,
+  onPortalEnter,
+  avatarPositionRef
+}: { 
+  onViracochaSpeak?: () => void
+  onPortalEnter?: () => void
+  avatarPositionRef?: React.RefObject<THREE.Vector3>
+}) {
+  return (
+    <Suspense fallback={<LoadingPumaPunku />}>
+      <PumaPunkuSceneContent 
+        onViracochaSpeak={onViracochaSpeak}
+        onPortalEnter={onPortalEnter}
+        avatarPositionRef={avatarPositionRef}
+      />
+    </Suspense>
+  )
+}
+
+function PumaPunkuSceneContent({ 
   onViracochaSpeak,
   onPortalEnter,
   avatarPositionRef

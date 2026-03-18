@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { useGLTF } from '@react-three/drei'
+import { useState, useRef, Suspense } from 'react'
+import { useGLTF, Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
@@ -27,6 +27,14 @@ interface TeotihuacanSceneProps {
 }
 
 export default function TeotihuacanScene({ avatarPositionRef }: TeotihuacanSceneProps) {
+  return (
+    <Suspense fallback={<LoadingTeotihuacan />}>
+      <TeotihuacanSceneContent avatarPositionRef={avatarPositionRef} />
+    </Suspense>
+  )
+}
+
+function TeotihuacanSceneContent({ avatarPositionRef }: TeotihuacanSceneProps) {
   // Cargar modelos
   const kukulkanModel = useGLTF(getAssetPath('/kukulkan.glb'))
   const aztecTempleModel = useGLTF(getAssetPath('/aztec_temple.glb'))
@@ -130,6 +138,28 @@ export default function TeotihuacanScene({ avatarPositionRef }: TeotihuacanScene
       {/* Luz especial para el calendario */}
       <pointLight position={[0, 10, -20]} intensity={1.2} color="#ffd700" distance={15} />
     </group>
+  )
+}
+
+/**
+ * 🔄 Loading placeholder para Teotihuacán
+ */
+function LoadingTeotihuacan() {
+  return (
+    <Html center>
+      <div style={{
+        background: 'rgba(0, 0, 0, 0.8)',
+        padding: '20px 40px',
+        borderRadius: '12px',
+        color: 'white',
+        fontFamily: 'system-ui, sans-serif',
+        textAlign: 'center',
+        border: '2px solid rgba(255, 215, 0, 0.3)'
+      }}>
+        <div style={{ fontSize: '48px', marginBottom: '10px' }}>🏛️</div>
+        <div>Cargando Teotihuacán...</div>
+      </div>
+    </Html>
   )
 }
 

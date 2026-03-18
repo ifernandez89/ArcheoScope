@@ -1,7 +1,7 @@
 'use client'
 
-import { useRef } from 'react'
-import { useGLTF } from '@react-three/drei'
+import { useRef, Suspense } from 'react'
+import { useGLTF, Html } from '@react-three/drei'
 import * as THREE from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { getAssetPath } from '@/lib/paths'
@@ -14,11 +14,41 @@ import EasterIslandDialogue from './EasterIslandDialogue'
  * Sistema de diálogo sobre la red energética planetaria
  */
 
+/**
+ * 🔄 Loading placeholder para Isla de Pascua
+ */
+function LoadingEasterIsland() {
+  return (
+    <Html center>
+      <div style={{
+        background: 'rgba(0, 0, 0, 0.8)',
+        padding: '20px 40px',
+        borderRadius: '12px',
+        color: 'white',
+        fontFamily: 'system-ui, sans-serif',
+        textAlign: 'center',
+        border: '2px solid rgba(255, 215, 0, 0.3)'
+      }}>
+        <div style={{ fontSize: '48px', marginBottom: '10px' }}>🗿</div>
+        <div>Cargando Isla de Pascua...</div>
+      </div>
+    </Html>
+  )
+}
+
 interface EasterIslandSceneProps {
   avatarPositionRef?: React.RefObject<THREE.Vector3>
 }
 
 export default function EasterIslandScene({ avatarPositionRef }: EasterIslandSceneProps) {
+  return (
+    <Suspense fallback={<LoadingEasterIsland />}>
+      <EasterIslandSceneContent avatarPositionRef={avatarPositionRef} />
+    </Suspense>
+  )
+}
+
+function EasterIslandSceneContent({ avatarPositionRef }: EasterIslandSceneProps) {
   // Cargar modelos (optimizados con Draco)
   const moaiModel = useGLTF(getAssetPath('/moai.glb'))
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))

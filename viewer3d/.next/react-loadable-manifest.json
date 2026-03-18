@@ -62,7 +62,7 @@
   "components\\ImmersiveScene.tsx -> ./EasterIslandScene": {
     "id": 1256,
     "files": [
-      "static/chunks/256.0b05bb8f2f90ded9.js"
+      "static/chunks/256.cae5d2e4c4e82e19.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EnhancedMoon": {
@@ -90,7 +90,7 @@
   "components\\ImmersiveScene.tsx -> ./PumaPunkuScene": {
     "id": 1175,
     "files": [
-      "static/chunks/175.30b37a212d2954ef.js"
+      "static/chunks/175.b7912720a3f1dd92.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./RealisticSolarSystem": {
@@ -114,7 +114,7 @@
   "components\\ImmersiveScene.tsx -> ./TeotihuacanScene": {
     "id": 9624,
     "files": [
-      "static/chunks/624.c542ae4583b3e5a9.js"
+      "static/chunks/624.b4cd3ac7a3cfa443.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./ViracochaDialogue": {
