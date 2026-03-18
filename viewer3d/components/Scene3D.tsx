@@ -5,12 +5,28 @@ import ImmersiveScene from './ImmersiveScene'
 import InGameMenu from './InGameMenu'
 import * as THREE from 'three'
 import { loadPlayerState, resetPlayerState } from '@/types/player'
+import { mark3D, measure3D } from '@/lib/performance3D'
 
 export default function Scene3D() {
   const [loadedModel, setLoadedModel] = useState<THREE.Object3D | null>(null)
   const [camera, setCamera] = useState<THREE.Camera | null>(null)
   const [isGlobeMode, setIsGlobeMode] = useState(true)
   const [showMenu, setShowMenu] = useState(false)
+  
+  // Marcar inicio de carga del 3D
+  useEffect(() => {
+    mark3D('scene3d-mount')
+  }, [])
+  
+  // Medir cuando el 3D está completamente cargado
+  useEffect(() => {
+    if (loadedModel && camera) {
+      measure3D('scene3d-ready', 'scene3d-mount', {
+        hasModel: !!loadedModel,
+        hasCamera: !!camera
+      })
+    }
+  }, [loadedModel, camera])
   
   // Cargar nave del jugador para la escena del espacio
   const [spaceUfoNumber, setSpaceUfoNumber] = useState(() => {

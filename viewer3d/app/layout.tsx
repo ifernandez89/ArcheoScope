@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import AlienCursorTrail from '@/components/AlienCursorTrail'
+import WebVitalsInit from '@/components/WebVitalsInit'
+import PerformanceStats from '@/components/PerformanceStats'
 
 export const metadata: Metadata = {
   title: 'Archeoscope: The Forgotten Relics',
@@ -17,6 +19,8 @@ export default function RootLayout({
       <body>
         {children}
         <AlienCursorTrail />
+        <WebVitalsInit />
+        <PerformanceStats />
       </body>
     </html>
   )

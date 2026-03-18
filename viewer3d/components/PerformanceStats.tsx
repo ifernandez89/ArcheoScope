@@ -1,103 +1,136 @@
+/**
+ * Componente de Stats.js para monitoreo visual de FPS
+ * Solo se muestra en desarrollo o cuando se activa manualmente
+ */
+
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
+import Stats from 'stats.js'
 
-export default function PerformanceStats() {
-  const [fps, setFps] = useState(60)
-  const [frameTime, setFrameTime] = useState(0)
-  const frameCount = useRef(0)
-  const lastTime = useRef(performance.now())
+interface PerformanceStatsProps {
+  enabled?: boolean
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+}
 
+export default function PerformanceStats({ 
+  enabled = process.env.NODE_ENV === 'development',
+  position = 'top-left'
+}: PerformanceStatsProps) {
+  const statsRef = useRef<Stats | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  
   useEffect(() => {
-    let animationId: number
-
-    const updateStats = () => {
-      frameCount.current++
-      const currentTime = performance.now()
-      const delta = currentTime - lastTime.current
-
-      if (delta >= 1000) {
-        const currentFps = Math.round((frameCount.current * 1000) / delta)
-        const avgFrameTime = delta / frameCount.current
-        
-        setFps(currentFps)
-        setFrameTime(Math.round(avgFrameTime * 100) / 100)
-        
-        frameCount.current = 0
-        lastTime.current = currentTime
-      }
-
-      animationId = requestAnimationFrame(updateStats)
+    if (!enabled || typeof window === 'undefined') return
+    
+    // Crear instancia de Stats
+    const stats = new Stats()
+    statsRef.current = stats
+    
+    // Configurar panel (0: FPS, 1: MS, 2: MB)
+    stats.showPanel(0) // FPS por defecto
+    
+    // Estilos del contenedor
+    stats.dom.style.position = 'fixed'
+    stats.dom.style.zIndex = '9999'
+    
+    // Posicionar según prop
+    switch (position) {
+      case 'top-left':
+        stats.dom.style.left = '0'
+        stats.dom.style.top = '0'
+        break
+      case 'top-right':
+        stats.dom.style.right = '0'
+        stats.dom.style.top = '0'
+        stats.dom.style.left = 'auto'
+        break
+      case 'bottom-left':
+        stats.dom.style.left = '0'
+        stats.dom.style.bottom = '0'
+        stats.dom.style.top = 'auto'
+        break
+      case 'bottom-right':
+        stats.dom.style.right = '0'
+        stats.dom.style.bottom = '0'
+        stats.dom.style.top = 'auto'
+        stats.dom.style.left = 'auto'
+        break
     }
-
-    animationId = requestAnimationFrame(updateStats)
-
+    
+    // Agregar al DOM
+    if (containerRef.current) {
+      containerRef.current.appendChild(stats.dom)
+    } else {
+      document.body.appendChild(stats.dom)
+    }
+    
+    // Loop de actualización
+    let animationId: number
+    
+    function animate() {
+      stats.begin()
+      // El render real lo hace Three.js, aquí solo medimos
+      stats.end()
+      animationId = requestAnimationFrame(animate)
+    }
+    
+    animate()
+    
+    // Cleanup
     return () => {
       if (animationId) {
         cancelAnimationFrame(animationId)
       }
+      if (stats.dom.parentElement) {
+        stats.dom.parentElement.removeChild(stats.dom)
+      }
+    }
+  }, [enabled, position])
+  
+  // Cambiar panel con click
+  useEffect(() => {
+    if (!statsRef.current) return
+    
+    const handleClick = () => {
+      if (statsRef.current) {
+        const currentPanel = statsRef.current.dom.children[0] as any
+        const nextPanel = (parseInt(currentPanel.style.display === 'block' ? '0' : '1') + 1) % 3
+        statsRef.current.showPanel(nextPanel)
+      }
+    }
+    
+    statsRef.current.dom.addEventListener('click', handleClick)
+    
+    return () => {
+      if (statsRef.current) {
+        statsRef.current.dom.removeEventListener('click', handleClick)
+      }
     }
   }, [])
+  
+  if (!enabled) return null
+  
+  return <div ref={containerRef} />
+}
 
-  return (
-    <div style={{
-      position: 'fixed',
-      top: '100px',
-      left: '20px',
-      padding: '12px 16px',
-      background: 'rgba(0, 0, 0, 0.85)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-      borderRadius: '8px',
-      fontFamily: 'monospace',
-      fontSize: '12px',
-      color: '#fff',
-      zIndex: 1000,
-      minWidth: '120px'
-    }}>
-      <div style={{ 
-        marginBottom: '8px',
-        fontSize: '11px',
-        color: '#888',
-        textTransform: 'uppercase',
-        letterSpacing: '1px'
-      }}>
-        Performance
-      </div>
-      
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between',
-        marginBottom: '4px'
-      }}>
-        <span style={{ color: '#888' }}>FPS:</span>
-        <span style={{ 
-          color: fps >= 55 ? '#4ade80' : fps >= 30 ? '#fbbf24' : '#ef4444',
-          fontWeight: 'bold'
-        }}>
-          {fps}
-        </span>
-      </div>
-      
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between'
-      }}>
-        <span style={{ color: '#888' }}>Frame:</span>
-        <span style={{ color: '#60a5fa' }}>
-          {frameTime}ms
-        </span>
-      </div>
-
-      <div style={{
-        marginTop: '8px',
-        paddingTop: '8px',
-        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-        fontSize: '10px',
-        color: '#666'
-      }}>
-        {fps >= 55 ? '✓ Optimal' : fps >= 30 ? '⚠ Moderate' : '✗ Low'}
-      </div>
-    </div>
-  )
+// Hook para usar Stats en componentes Three.js
+export function useStats() {
+  const statsRef = useRef<Stats | null>(null)
+  
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    const stats = new Stats()
+    statsRef.current = stats
+    
+    return () => {
+      statsRef.current = null
+    }
+  }, [])
+  
+  const begin = () => statsRef.current?.begin()
+  const end = () => statsRef.current?.end()
+  
+  return { begin, end, stats: statsRef.current }
 }

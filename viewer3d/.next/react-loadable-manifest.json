@@ -5,8 +5,8 @@
       "static/chunks/three.815c5b8d93734097.js",
       "static/chunks/react-three.994f8dbb8dcd66d9.js",
       "static/chunks/engines.619a09be4e5159a2.js",
-      "static/chunks/vendor-1978933b9fb55829.js",
-      "static/chunks/928.96c5de809e96126f.js"
+      "static/chunks/vendor-a952d533fa34bfd1.js",
+      "static/chunks/928.a685de8aff9dfcca.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -14,7 +14,7 @@
     "files": [
       "static/chunks/three.815c5b8d93734097.js",
       "static/chunks/react-three.994f8dbb8dcd66d9.js",
-      "static/chunks/vendor-1978933b9fb55829.js",
+      "static/chunks/vendor-a952d533fa34bfd1.js",
       "static/chunks/6.6ceb4117431d1b6d.js"
     ]
   },
@@ -24,7 +24,7 @@
       "static/chunks/three.815c5b8d93734097.js",
       "static/chunks/react-three.994f8dbb8dcd66d9.js",
       "static/chunks/engines.619a09be4e5159a2.js",
-      "static/chunks/vendor-1978933b9fb55829.js",
+      "static/chunks/vendor-a952d533fa34bfd1.js",
       "static/chunks/821.bf22540c9abf2a56.js",
       "static/chunks/527.75422bfc51b94128.js"
     ]
