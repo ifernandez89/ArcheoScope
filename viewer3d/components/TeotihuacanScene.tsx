@@ -3,7 +3,7 @@
 import { useState, useRef, Suspense } from 'react'
 import { useGLTF, Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
+import { Group } from 'three'
 import { getAssetPath } from '@/lib/paths'
 
 /**
@@ -48,8 +48,8 @@ function TeotihuacanSceneContent({ avatarPositionRef }: TeotihuacanSceneProps) {
   const [showQuetzalcoatl, setShowQuetzalcoatl] = useState(false)
   const [quetzalcoatlOpacity, setQuetzalcoatlOpacity] = useState(0)
   
-  const calendarioRef = useRef<THREE.Group>(null)
-  const quetzalcoatlRef = useRef<THREE.Group>(null)
+  const calendarioRef = useRef<Group>(null)
+  const quetzalcoatlRef = useRef<Group>(null)
   
   // Rotación del calendario
   useFrame((state, delta) => {

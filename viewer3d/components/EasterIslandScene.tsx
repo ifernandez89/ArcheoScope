@@ -2,7 +2,7 @@
 
 import { useRef, Suspense } from 'react'
 import { useGLTF, Html } from '@react-three/drei'
-import * as THREE from 'three'
+import { Vector3 } from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { getAssetPath } from '@/lib/paths'
 import EasterIslandDialogue from './EasterIslandDialogue'
@@ -37,7 +37,7 @@ function LoadingEasterIsland() {
 }
 
 interface EasterIslandSceneProps {
-  avatarPositionRef?: React.RefObject<THREE.Vector3>
+  avatarPositionRef?: React.RefObject<Vector3>
 }
 
 export default function EasterIslandScene({ avatarPositionRef }: EasterIslandSceneProps) {
@@ -54,8 +54,8 @@ function EasterIslandSceneContent({ avatarPositionRef }: EasterIslandSceneProps)
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
   
   // Posiciones para el sistema de diálogo
-  const moaiPosition = new THREE.Vector3(-4, 3, 0)
-  const atlantePosition = new THREE.Vector3(4, 2, 0)
+  const moaiPosition = new Vector3(-4, 3, 0)
+  const atlantePosition = new Vector3(4, 2, 0)
   
   return (
     <group>

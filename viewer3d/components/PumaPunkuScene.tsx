@@ -3,7 +3,7 @@
 import { useState, useRef, useMemo, useEffect, Suspense } from 'react'
 import { useGLTF, Html } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import * as THREE from 'three'
+import { Group, Mesh, MeshStandardMaterial, Color, Vector3 } from 'three'
 import PumaPunkuBlock from './PumaPunkuBlock'
 import PumaPunkuStructure from './PumaPunkuStructure'
 import SelectableObject from './SelectableObject'
@@ -42,7 +42,7 @@ export default function PumaPunkuScene({
 }: { 
   onViracochaSpeak?: () => void
   onPortalEnter?: () => void
-  avatarPositionRef?: React.RefObject<THREE.Vector3>
+  avatarPositionRef?: React.RefObject<Vector3>
 }) {
   return (
     <Suspense fallback={<LoadingPumaPunku />}>
@@ -62,7 +62,7 @@ function PumaPunkuSceneContent({
 }: { 
   onViracochaSpeak?: () => void
   onPortalEnter?: () => void
-  avatarPositionRef?: React.RefObject<THREE.Vector3>
+  avatarPositionRef?: React.RefObject<Vector3>
 }) {
   const { blockMoved } = useObjectSelection()
   
@@ -193,7 +193,7 @@ function ViracochaGuardian({
   magnaBowlCollected: boolean
 }) {
   const { scene } = useGLTF(getAssetPath('/viracocha.glb'))
-  const groupRef = useRef<THREE.Group>(null)
+  const groupRef = useRef<Group>(null)
   const opacityRef = useRef(0)
   const [hovered, setHovered] = useState(false)
   const { camera, gl } = useThree()
@@ -204,12 +204,12 @@ function ViracochaGuardian({
   // Clonar escena y preparar materiales transparentes
   const { cloned, meshes } = useMemo(() => {
     const cloned = scene.clone(true)
-    const meshes: THREE.Mesh[] = []
+    const meshes: Mesh[] = []
     cloned.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.material = (child.material as THREE.Material).clone()
-        ;(child.material as THREE.MeshStandardMaterial).transparent = true
-        ;(child.material as THREE.MeshStandardMaterial).opacity = 0
+      if (child instanceof Mesh) {
+        child.material = (child.material as any).clone()
+        ;(child.material as MeshStandardMaterial).transparent = true
+        ;(child.material as MeshStandardMaterial).opacity = 0
         meshes.push(child)
       }
     })
@@ -223,12 +223,12 @@ function ViracochaGuardian({
     if (revealed && opacityRef.current < 1) {
       opacityRef.current = Math.min(1, opacityRef.current + delta * 0.35)
       meshes.forEach(m => {
-        ;(m.material as THREE.MeshStandardMaterial).opacity = opacityRef.current
+        ;(m.material as MeshStandardMaterial).opacity = opacityRef.current
       })
     } else if (!revealed && opacityRef.current > 0) {
       opacityRef.current = 0
       meshes.forEach(m => {
-        ;(m.material as THREE.MeshStandardMaterial).opacity = 0
+        ;(m.material as MeshStandardMaterial).opacity = 0
       })
     }
 
@@ -236,11 +236,11 @@ function ViracochaGuardian({
     if (revealed && opacityRef.current > 0) {
       meshes.forEach(m => {
         if (hovered) {
-          ;(m.material as THREE.MeshStandardMaterial).emissive = new THREE.Color('#ffd700')
-          ;(m.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.3
+          ;(m.material as MeshStandardMaterial).emissive = new Color('#ffd700')
+          ;(m.material as MeshStandardMaterial).emissiveIntensity = 0.3
         } else {
-          ;(m.material as THREE.MeshStandardMaterial).emissive = new THREE.Color('#000000')
-          ;(m.material as THREE.MeshStandardMaterial).emissiveIntensity = 0
+          ;(m.material as MeshStandardMaterial).emissive = new Color('#000000')
+          ;(m.material as MeshStandardMaterial).emissiveIntensity = 0
         }
       })
     }

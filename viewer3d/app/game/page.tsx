@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import UI from '@/components/UI'
 
@@ -25,6 +26,7 @@ const Scene3D = dynamic(() => import('@/components/Scene3D'), {
           🏛️
         </div>
         <div style={{ fontSize: '1.25rem' }}>
+          Cargando motor 3D...
         </div>
       </div>
     </div>
@@ -32,9 +34,21 @@ const Scene3D = dynamic(() => import('@/components/Scene3D'), {
 })
 
 export default function GamePage() {
+  const [load3D, setLoad3D] = useState(false)
+  
+  // Cargar 3D después del primer render (permite que el bundle inicial sea más liviano)
+  useEffect(() => {
+    // Pequeño delay para que la UI se renderice primero
+    const timer = setTimeout(() => {
+      setLoad3D(true)
+    }, 100)
+    
+    return () => clearTimeout(timer)
+  }, [])
+  
   return (
     <main>
-      <Scene3D />
+      {load3D && <Scene3D />}
       <UI />
     </main>
   )

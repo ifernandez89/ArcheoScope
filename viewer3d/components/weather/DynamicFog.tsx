@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import * as THREE from 'three'
+import { FogExp2, Fog, BufferGeometry, BufferAttribute, NormalBlending } from 'three'
 
 interface DynamicFogProps {
   density: number // 0-1
@@ -27,7 +27,7 @@ export default function DynamicFog({
   // Actualizar fog en la escena
   useEffect(() => {
     if (!scene.fog) {
-      scene.fog = new THREE.FogExp2(color, 0)
+      scene.fog = new FogExp2(color, 0)
     }
     targetDensityRef.current = density
   }, [scene, density, color])
@@ -49,10 +49,10 @@ export default function DynamicFog({
     }
     
     // Aplicar a la niebla
-    if (scene.fog instanceof THREE.FogExp2) {
+    if (scene.fog instanceof FogExp2) {
       scene.fog.density = finalDensity * 0.02 // Escalar para valores razonables
       scene.fog.color.set(color)
-    } else if (scene.fog instanceof THREE.Fog) {
+    } else if (scene.fog instanceof Fog) {
       scene.fog.near = near
       scene.fog.far = far - (finalDensity * 50)
       scene.fog.color.set(color)
@@ -64,7 +64,7 @@ export default function DynamicFog({
 
 // Partículas de niebla volumétrica
 export function FogParticles({ density = 0.5 }: { density: number }) {
-  const pointsRef = useRef<THREE.Points>(null)
+  const pointsRef = useRef<any>(null)
   
   const geometry = useRef(
     (() => {
@@ -80,9 +80,9 @@ export function FogParticles({ density = 0.5 }: { density: number }) {
         scales[i] = Math.random() * 2 + 1
       }
       
-      const geo = new THREE.BufferGeometry()
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-      geo.setAttribute('scale', new THREE.BufferAttribute(scales, 1))
+      const geo = new BufferGeometry()
+      geo.setAttribute('position', new BufferAttribute(positions, 3))
+      geo.setAttribute('scale', new BufferAttribute(scales, 1))
       return geo
     })()
   ).current
@@ -117,7 +117,7 @@ export function FogParticles({ density = 0.5 }: { density: number }) {
         color="#e0e0e0"
         transparent
         opacity={density * 0.3}
-        blending={THREE.NormalBlending}
+        blending={NormalBlending}
         depthWrite={false}
         sizeAttenuation={true}
       />

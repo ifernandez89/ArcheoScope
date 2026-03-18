@@ -2,7 +2,7 @@
 
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
+import { Vector3, BufferGeometry, BufferAttribute, AdditiveBlending } from 'three'
 
 interface WindEffectProps {
   strength: number // 0-1
@@ -17,7 +17,7 @@ export default function WindEffect({
   gustFrequency = 0.5,
   children 
 }: WindEffectProps) {
-  const windVectorRef = useRef(new THREE.Vector3(...direction))
+  const windVectorRef = useRef(new Vector3(...direction))
   const timeRef = useRef(0)
   
   useFrame((state, delta) => {
@@ -49,7 +49,7 @@ export default function WindEffect({
 
 // Partículas de viento (hojas, polvo, etc.)
 export function WindParticles({ strength = 0.5 }: { strength: number }) {
-  const pointsRef = useRef<THREE.Points>(null)
+  const pointsRef = useRef<any>(null)
   const velocitiesRef = useRef<Float32Array>()
   
   const geometry = useRef(
@@ -71,8 +71,8 @@ export function WindParticles({ strength = 0.5 }: { strength: number }) {
       
       velocitiesRef.current = velocities
       
-      const geo = new THREE.BufferGeometry()
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+      const geo = new BufferGeometry()
+      geo.setAttribute('position', new BufferAttribute(positions, 3))
       return geo
     })()
   ).current
@@ -113,7 +113,7 @@ export function WindParticles({ strength = 0.5 }: { strength: number }) {
         color="#d4c5a0"
         transparent
         opacity={0.4}
-        blending={THREE.AdditiveBlending}
+        blending={AdditiveBlending}
         depthWrite={false}
       />
     </points>

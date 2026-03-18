@@ -2,7 +2,7 @@
 
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
+import { BufferGeometry, BufferAttribute, PointsMaterial, NormalBlending } from 'three'
 
 interface TornadoEffectProps {
   position?: [number, number, number]
@@ -89,36 +89,36 @@ export default function TornadoEffect({
   }, [position])
   
   const geometry = useMemo(() => {
-    const geo = new THREE.BufferGeometry()
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    const geo = new BufferGeometry()
+    geo.setAttribute('position', new BufferAttribute(positions, 3))
     return geo
   }, [positions])
   
   const dustGeometry = useMemo(() => {
-    const geo = new THREE.BufferGeometry()
-    geo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3))
+    const geo = new BufferGeometry()
+    geo.setAttribute('position', new BufferAttribute(dustPositions, 3))
     return geo
   }, [dustPositions])
   
   // Material con gradiente (centro oscuro, bordes translúcidos)
   const material = useMemo(() => {
-    return new THREE.PointsMaterial({
+    return new PointsMaterial({
       color: '#4a3a2a',
       size: 0.4,
       transparent: true,
       opacity: 0.7,
-      blending: THREE.NormalBlending,
+      blending: NormalBlending,
       depthWrite: false
     })
   }, [])
   
   const dustMaterial = useMemo(() => {
-    return new THREE.PointsMaterial({
+    return new PointsMaterial({
       color: '#8b7355',
       size: 0.6,
       transparent: true,
       opacity: 0.5,
-      blending: THREE.NormalBlending,
+      blending: NormalBlending,
       depthWrite: false
     })
   }, [])

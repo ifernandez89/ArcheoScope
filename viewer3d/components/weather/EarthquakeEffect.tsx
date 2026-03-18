@@ -11,13 +11,13 @@
 
 import { useRef, useMemo, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import * as THREE from 'three'
+import { Vector3, BufferGeometry, BufferAttribute, PointsMaterial, AdditiveBlending } from 'three'
 
 export default function EarthquakeEffect() {
   const { camera } = useThree()
-  const originRef = useRef(new THREE.Vector3())
+  const originRef = useRef(new Vector3())
   const timeRef = useRef(0)
-  const dustRef = useRef<THREE.Points>(null)
+  const dustRef = useRef<any>(null)
 
   // Guardar posición original de la cámara una sola vez
   const initialized = useRef(false)
@@ -31,7 +31,7 @@ export default function EarthquakeEffect() {
 
   // Partículas de polvo
   const dustGeometry = useMemo(() => {
-    const geo = new THREE.BufferGeometry()
+    const geo = new BufferGeometry()
     const count = 800
     const positions = new Float32Array(count * 3)
     const velocities = new Float32Array(count * 3)
@@ -46,19 +46,19 @@ export default function EarthquakeEffect() {
       velocities[i3 + 1] = 0.02 + Math.random() * 0.06
     }
 
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    geo.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3))
+    geo.setAttribute('position', new BufferAttribute(positions, 3))
+    geo.setAttribute('velocity', new BufferAttribute(velocities, 3))
     return geo
   }, [])
 
-  const dustMaterial = useMemo(() => new THREE.PointsMaterial({
+  const dustMaterial = useMemo(() => new PointsMaterial({
     size: 0.4,
     color: '#c8a96e',
     transparent: true,
     opacity: 0.6,
     sizeAttenuation: true,
     depthWrite: false,
-    blending: THREE.AdditiveBlending
+    blending: AdditiveBlending
   }), [])
 
   useFrame((_, delta) => {

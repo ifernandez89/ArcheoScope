@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import * as THREE from 'three'
+import { Mesh, MeshStandardMaterial } from 'three'
 import VisualLightningBolt from './VisualLightningBolt'
 
 interface LightningEffectProps {
@@ -134,8 +134,8 @@ export default function LightningEffect({
       gl.toneMappingExposure = originalExposureRef.current + flashIntensityRef.current * 0.4
       
       scene.traverse((obj) => {
-        if (obj instanceof THREE.Mesh && obj.material) {
-          const material = obj.material as THREE.MeshStandardMaterial
+        if (obj instanceof Mesh && obj.material) {
+          const material = obj.material as MeshStandardMaterial
           if (material.emissive) {
             material.emissiveIntensity = flashIntensityRef.current * 0.3
           }
