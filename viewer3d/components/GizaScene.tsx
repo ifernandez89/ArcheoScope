@@ -560,23 +560,30 @@ function PyramidionOnTop({ position, rotation }: {
 }) {
   const { scene } = useGLTF(getAssetPath('/piramidon.glb'))
   
+  console.log('🔶 PyramidionOnTop MONTADO - posición:', position)
+  
   // CLONAR la escena para que sea independiente
   const clonedScene = useMemo(() => {
+    console.log('🔶 PyramidionOnTop - Clonando escena...')
     const cloned = scene.clone(true)
-    // Asegurar que los materiales sean visibles
+    // Asegurar que los materiales sean visibles y opacos
     cloned.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh
         if (mesh.material) {
-          // Clonar material para independencia
+          // Clonar material para independencia TOTAL
           mesh.material = (mesh.material as THREE.Material).clone()
           const mat = mesh.material as THREE.MeshStandardMaterial
           mat.transparent = false
           mat.opacity = 1
+          mat.visible = true
           mat.needsUpdate = true
         }
+        mesh.visible = true
       }
     })
+    cloned.visible = true
+    console.log('🔶 PyramidionOnTop - Escena clonada y visible')
     return cloned
   }, [scene])
   
@@ -619,12 +626,14 @@ function Pyramidion({ position, rotation, onCollect, opacity = 1 }: {
   const cachedMeshes = useRef<THREE.Mesh[]>([])
   const meshesCached = useRef(false)
   
-  // Aplicar opacidad inicial (solo una vez)
-  useEffect(() => {
-    scene.traverse((child) => {
+  // CLONAR la escena para no afectar al PyramidionOnTop
+  const clonedScene = useMemo(() => {
+    const cloned = scene.clone(true)
+    cloned.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh
         if (mesh.material) {
+          mesh.material = (mesh.material as THREE.Material).clone()
           const mat = mesh.material as THREE.MeshStandardMaterial
           mat.transparent = true
           mat.opacity = opacity
@@ -632,6 +641,7 @@ function Pyramidion({ position, rotation, onCollect, opacity = 1 }: {
         }
       }
     })
+    return cloned
   }, [scene, opacity])
   
   const scale = 4
@@ -641,16 +651,16 @@ function Pyramidion({ position, rotation, onCollect, opacity = 1 }: {
   
   // Animación de desaparición
   useFrame((state, delta) => {
-    if (isDisappearing && scene) {
+    if (isDisappearing && clonedScene) {
       disappearTimer.current += delta
       
       const progress = Math.min(disappearTimer.current / 1.0, 1)
-      scene.scale.setScalar(scale * (1 + progress * 0.5))
+      clonedScene.scale.setScalar(scale * (1 + progress * 0.5))
       
       // Cache meshes solo una vez
       if (!meshesCached.current) {
         cachedMeshes.current = []
-        scene.traverse((child) => {
+        clonedScene.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
             cachedMeshes.current.push(child as THREE.Mesh)
           }
@@ -690,7 +700,7 @@ function Pyramidion({ position, rotation, onCollect, opacity = 1 }: {
       onPointerOut={() => setIsHovered(false)}
     >
       <primitive 
-        object={scene}
+        object={clonedScene}
         scale={[scale, scale, scale]}
         castShadow
         receiveShadow
