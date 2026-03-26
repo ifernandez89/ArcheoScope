@@ -79,6 +79,12 @@ export default function RealisticSolarSystem({
   const plutoRef = useRef<THREE.Group>(null)
   const plutoMeshRef = useRef<THREE.Mesh>(null)
   
+  // Vector reutilizable para posición lunar (evita clone() cada frame)
+  const moonPosTemp = useRef(new THREE.Vector3())
+  
+  // Cache de índices de planetas para evitar .find() cada frame
+  const planetIndices = useRef<Map<string, number> | null>(null)
+  
   // Actualización del sistema
   useFrame((state, delta) => {
     const solarEngine = solarEngineRef.current
@@ -90,64 +96,73 @@ export default function RealisticSolarSystem({
     // Usar nuestro sistema planetario mejorado para TODOS los planetas
     const planets = calculateAllPlanets(timeInDays, 200) // escala 200 para visualización
     
+    // Construir índice de planetas una sola vez
+    if (!planetIndices.current) {
+      planetIndices.current = new Map()
+      planets.forEach((p, i) => planetIndices.current!.set(p.planet.name, i))
+    }
+    
+    // Acceso directo por índice (O(1) en lugar de O(n) con find)
+    const idx = planetIndices.current
+    
     // Actualizar posiciones de planetas interiores
-    const mercury = planets.find(p => p.planet.name === 'Mercurio')
-    if (mercury && mercuryRef.current) {
-      mercuryRef.current.position.copy(mercury.position)
+    const mercuryIdx = idx.get('Mercurio')
+    if (mercuryIdx !== undefined && mercuryRef.current) {
+      mercuryRef.current.position.copy(planets[mercuryIdx].position)
     }
     if (mercuryMeshRef.current) {
       mercuryMeshRef.current.rotation.y += delta * 0.00017 // Rotación lenta
     }
     
-    const venus = planets.find(p => p.planet.name === 'Venus')
-    if (venus && venusRef.current) {
-      venusRef.current.position.copy(venus.position)
+    const venusIdx = idx.get('Venus')
+    if (venusIdx !== undefined && venusRef.current) {
+      venusRef.current.position.copy(planets[venusIdx].position)
     }
     if (venusMeshRef.current) {
       venusMeshRef.current.rotation.y -= delta * 0.00004 // Retrógrada
     }
     
-    const earth = planets.find(p => p.planet.name === 'Tierra')
-    if (earth && earthGroupRef.current) {
-      earthGroupRef.current.position.copy(earth.position)
+    const earthIdx = idx.get('Tierra')
+    if (earthIdx !== undefined && earthGroupRef.current) {
+      earthGroupRef.current.position.copy(planets[earthIdx].position)
     }
     
-    const mars = planets.find(p => p.planet.name === 'Marte')
-    if (mars && marsRef.current) {
-      marsRef.current.position.copy(mars.position)
+    const marsIdx = idx.get('Marte')
+    if (marsIdx !== undefined && marsRef.current) {
+      marsRef.current.position.copy(planets[marsIdx].position)
     }
     if (marsMeshRef.current) {
       marsMeshRef.current.rotation.y += delta * 0.05
     }
 
     // Planetas exteriores - ahora también usan nuestro sistema
-    const jupiter = planets.find(p => p.planet.name === 'Júpiter')
-    if (jupiter && jupiterRef.current) {
-      jupiterRef.current.position.copy(jupiter.position)
+    const jupiterIdx = idx.get('Júpiter')
+    if (jupiterIdx !== undefined && jupiterRef.current) {
+      jupiterRef.current.position.copy(planets[jupiterIdx].position)
     }
     if (jupiterMeshRef.current) jupiterMeshRef.current.rotation.y += delta * 0.045
 
-    const saturn = planets.find(p => p.planet.name === 'Saturno')
-    if (saturn && saturnRef.current) {
-      saturnRef.current.position.copy(saturn.position)
+    const saturnIdx = idx.get('Saturno')
+    if (saturnIdx !== undefined && saturnRef.current) {
+      saturnRef.current.position.copy(planets[saturnIdx].position)
     }
     if (saturnMeshRef.current) saturnMeshRef.current.rotation.y += delta * 0.043
 
-    const uranus = planets.find(p => p.planet.name === 'Urano')
-    if (uranus && uranusRef.current) {
-      uranusRef.current.position.copy(uranus.position)
+    const uranusIdx = idx.get('Urano')
+    if (uranusIdx !== undefined && uranusRef.current) {
+      uranusRef.current.position.copy(planets[uranusIdx].position)
     }
     if (uranusMeshRef.current) uranusMeshRef.current.rotation.y += delta * 0.03
 
-    const neptune = planets.find(p => p.planet.name === 'Neptuno')
-    if (neptune && neptuneRef.current) {
-      neptuneRef.current.position.copy(neptune.position)
+    const neptuneIdx = idx.get('Neptuno')
+    if (neptuneIdx !== undefined && neptuneRef.current) {
+      neptuneRef.current.position.copy(planets[neptuneIdx].position)
     }
     if (neptuneMeshRef.current) neptuneMeshRef.current.rotation.y += delta * 0.032
     
-    const pluto = planets.find(p => p.planet.name === 'Plutón')
-    if (pluto && plutoRef.current) {
-      plutoRef.current.position.copy(pluto.position)
+    const plutoIdx = idx.get('Plutón')
+    if (plutoIdx !== undefined && plutoRef.current) {
+      plutoRef.current.position.copy(planets[plutoIdx].position)
     }
     if (plutoMeshRef.current) plutoMeshRef.current.rotation.y += delta * 0.02 // Muy lento
     
@@ -161,11 +176,12 @@ export default function RealisticSolarSystem({
       // Luna está a 0.00257 AU = 0.514 unidades de la Tierra
       // Multiplicamos por 10 para visualización (sino es invisible)
       const VISUAL_SCALE = 10
-      const moonPos = lunarState.position.clone().multiplyScalar(VISUAL_SCALE)
+      // Usar vector temporal en lugar de clone()
+      moonPosTemp.current.copy(lunarState.position).multiplyScalar(VISUAL_SCALE)
       moonRef.current.position.set(
-        earthPos.x + moonPos.x,
-        earthPos.y + moonPos.y,
-        earthPos.z + moonPos.z
+        earthPos.x + moonPosTemp.current.x,
+        earthPos.y + moonPosTemp.current.y,
+        earthPos.z + moonPosTemp.current.z
       )
       
       // 🌙 TIDAL LOCKING (Bloqueo por marea)

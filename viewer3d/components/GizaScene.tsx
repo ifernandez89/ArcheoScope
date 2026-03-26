@@ -49,9 +49,28 @@ interface GizaSceneProps {
 export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidionCollect, pyramidionCollected, pyramidionOnTop, onMummyMoved, onScarabCollect, scarabDiscovered, scarabCollected }: GizaSceneProps) {
   console.log('🔶 GizaScene RENDER - pyramidionCollected:', pyramidionCollected, 'pyramidionOnTop:', pyramidionOnTop)
   
-  const [floodLevel, setFloodLevel] = useState(0) // Nivel de inundación (0 a 50m)
+  // Usar ref para nivel de inundación (evita re-renders cada frame)
+  const floodLevelRef = useRef(0)
   const [isFlooding, setIsFlooding] = useState(false)
   const [fadeToBlack, setFadeToBlack] = useState(false)
+  
+  // 🎼 Activar arquitectura de Giza
+  useEffect(() => {
+    import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+      const harmonia = getHarmoniaMundi()
+      if (harmonia.isEnabled()) {
+        harmonia.activateArchitecture('giza')
+        console.log('🏛️ Arquitectura de Giza activada')
+      }
+    })
+    
+    return () => {
+      import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+        const harmonia = getHarmoniaMundi()
+        harmonia.deactivateArchitecture('giza')
+      })
+    }
+  }, [])
   
   // Iniciar inundación cuando se recoge el escarabajo
   useEffect(() => {
@@ -65,12 +84,12 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
   useFrame((state, delta) => {
     if (isFlooding && !fadeToBlack) {
       // Subir agua lentamente (1m por segundo - más rápido)
-      setFloodLevel(prev => Math.min(prev + delta * 1.0, 100))
+      floodLevelRef.current = Math.min(floodLevelRef.current + delta * 1.0, 100)
       
       // Verificar si el agua alcanzó la nave del usuario
       const avatarY = avatarPositionRef.current.y
       
-      if (floodLevel >= avatarY) {
+      if (floodLevelRef.current >= avatarY) {
         // ¡El agua alcanzó al jugador!
         console.log('🌊 El agua ha alcanzado al jugador - Game Over')
         setFadeToBlack(true) // Marcar para evitar múltiples redirecciones
@@ -104,7 +123,6 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
         <GreatPyramid 
           position={[0, 0, 0]}
           rotation={[0, Math.PI / 4, 0]} // Rotación 45° para alinear caras con cardinales
-          pyramidionCollected={pyramidionOnTop || false}
         />
         
         {/* 👑 Akhenaton - Dentro de la pirámide (cámara del rey) - MOVIBLE */}
@@ -134,32 +152,20 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
           />
         )}
         
-        {/* 🔶 Piramidión - Frente a la esfinge (50cm delante) */}
+        {/* 🔶 Piramidión - En el suelo frente a la esfinge */}
         {!pyramidionCollected && (
-          <>
-            {/* Piramidón flotante en la punta de la pirámide - INVISIBLE */}
-            <Pyramidion 
-              position={[0, 44, 0]} // En la punta de la pirámide (altura 44m)
-              rotation={[0, 0, 0]}
-              onCollect={undefined} // NO clickeable
-              opacity={0}
-            />
-            {/* Piramidón en el suelo */}
-            <Pyramidion 
-              position={[100, 0, 35]} // 15m delante de la esfinge, en el suelo
-              rotation={[0, 0, 0]}
-              onCollect={onPyramidionCollect}
-            />
-          </>
+          <Pyramidion 
+            position={[100, 0.5, 35]} // 15m delante de la esfinge, 50cm sobre el suelo
+            rotation={[0, 0, 0]}
+            onCollect={onPyramidionCollect}
+          />
         )}
         
         {/* 🔶 Piramidón en la punta - VISIBLE después de entregarlo a la Esfinge */}
         {pyramidionOnTop && (
-          <Pyramidion 
-            position={[0, 44, 0]} // En la punta de la pirámide
+          <PyramidionOnTop 
+            position={[0, 45.48, 0]} // En la punta de la pirámide
             rotation={[0, 0, 0]}
-            onCollect={undefined} // NO clickeable
-            opacity={1}
           />
         )}
         
@@ -196,8 +202,8 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
         <DesertRocks />
         
         {/* 🌊 INUNDACIÓN - Plano de agua que sube progresivamente */}
-        {isFlooding && floodLevel > 0 && (
-          <FloodWater level={floodLevel} />
+        {isFlooding && (
+          <FloodWater levelRef={floodLevelRef} />
         )}
       </group>
     </Suspense>
@@ -229,10 +235,9 @@ function LoadingGiza() {
  * 🔺 Gran Pirámide de Keops - CON PUNTA PLANA
  * La más grande y precisa - Actualmente sin piramidón
  */
-function GreatPyramid({ position, rotation, pyramidionCollected }: { 
+function GreatPyramid({ position, rotation }: { 
   position: [number, number, number]
   rotation: [number, number, number]
-  pyramidionCollected: boolean
 }) {
   const baseSize = 69 // Reducido a la mitad (30% de 230m real)
   const height = 44 // Reducido a la mitad (30% de 146m real)
@@ -301,15 +306,6 @@ function GreatPyramid({ position, rotation, pyramidionCollected }: {
           metalness={0.1}
         />
       </mesh>
-      
-      {/* 🔶 Piramidón en la punta - Solo visible si fue recolectado */}
-      {pyramidionCollected && (
-        <Pyramidion 
-          position={[0, height, 0]} // En la punta de la pirámide
-          rotation={[0, 0, 0]}
-          onCollect={undefined} // No clickeable cuando está en la pirámide
-        />
-      )}
     </group>
   )
 }
@@ -322,19 +318,12 @@ function GreatPyramid({ position, rotation, pyramidionCollected }: {
  */
 function Sphinx({ position, rotation, onClick }: { position: [number, number, number], rotation: [number, number, number], onClick?: () => void }) {
   const { scene } = useGLTF(getAssetPath('/sphinx_base.glb'))
-  
-  // Clonar la escena para evitar problemas de reutilización
-  const clonedScene = useMemo(() => scene.clone(), [scene])
-  
-  // La Esfinge real mide 73m de largo × 20m de alto
-  // Escala proporcional a la pirámide (60% escala real)
-  // Escala del modelo: ajustar según el tamaño del .glb original
-  const scale = 20 // Ajustar según necesidad
+  const scale = 20
   
   return (
     <group position={position} rotation={rotation} onClick={onClick} onPointerOver={() => document.body.style.cursor = 'pointer'} onPointerOut={() => document.body.style.cursor = 'default'}>
       <primitive 
-        object={clonedScene}
+        object={scene}
         scale={[scale, scale, scale]}
         castShadow
         receiveShadow
@@ -355,13 +344,10 @@ function PharaoStatue({ model, position, rotation, scale }: {
 }) {
   const { scene } = useGLTF(getAssetPath(`/${model}`))
   
-  // Clonar la escena para evitar problemas de reutilización
-  const clonedScene = useMemo(() => scene.clone(), [scene])
-  
   return (
     <group position={position} rotation={rotation}>
       <primitive 
-        object={clonedScene}
+        object={scene}
         scale={[scale, scale, scale]}
         castShadow
         receiveShadow
@@ -373,24 +359,29 @@ function PharaoStatue({ model, position, rotation, scale }: {
 /**
  * 🌊 Agua de inundación - Plano que sube progresivamente
  */
-function FloodWater({ level }: { level: number }) {
+function FloodWater({ levelRef }: { levelRef: React.MutableRefObject<number> }) {
   const waterRef = useRef<THREE.Mesh>(null)
   
-  // Animación de ondulación del agua
+  // Animación de ondulación del agua y actualización de posición
   useFrame((state) => {
-    if (waterRef.current && waterRef.current.material) {
-      const time = state.clock.getElapsedTime()
-      const material = waterRef.current.material as THREE.MeshStandardMaterial
-      // Ondulación sutil usando el shader
-      material.opacity = 0.6 + Math.sin(time * 0.5) * 0.1
+    if (waterRef.current) {
+      // Actualizar posición Y basada en el ref
+      waterRef.current.position.y = levelRef.current
+      
+      if (waterRef.current.material) {
+        const time = state.clock.getElapsedTime()
+        const material = waterRef.current.material as THREE.MeshStandardMaterial
+        // Ondulación sutil
+        material.opacity = 0.6 + Math.sin(time * 0.5) * 0.1
+      }
     }
   })
   
   return (
-    <mesh ref={waterRef} position={[0, level, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh ref={waterRef} position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[1000, 1000, 50, 50]} />
       <meshStandardMaterial
-        color="#1e3a5f" // Azul oscuro del agua del Nilo
+        color="#1e3a5f"
         transparent
         opacity={0.6}
         metalness={0.8}
@@ -475,35 +466,46 @@ function Scarab({ position, onCollect }: {
   const [isDisappearing, setIsDisappearing] = useState(false)
   const disappearTimer = useRef(0)
   
-  const clonedScene = useMemo(() => scene.clone(), [scene])
+  // Cache de meshes para evitar traverse cada frame
+  const cachedMeshes = useRef<THREE.Mesh[]>([])
+  const meshesCached = useRef(false)
   
   const scale = 0.5
   
   // Calcular offset Y para que esté en el suelo
   const yOffset = useMemo(() => {
-    const box = new THREE.Box3().setFromObject(clonedScene)
+    const box = new THREE.Box3().setFromObject(scene)
     const minY = box.min.y
     return -minY * scale
-  }, [clonedScene, scale])
+  }, [scene, scale])
   
   // Animación de desaparición
   useFrame((state, delta) => {
-    if (isDisappearing && clonedScene) {
+    if (isDisappearing && scene) {
       disappearTimer.current += delta
       
       const progress = Math.min(disappearTimer.current / 1.0, 1)
-      clonedScene.scale.setScalar(scale * (1 + progress * 0.5))
+      scene.scale.setScalar(scale * (1 + progress * 0.5))
       
-      clonedScene.traverse((child) => {
-        if ((child as THREE.Mesh).isMesh) {
-          const mesh = child as THREE.Mesh
-          if (mesh.material) {
-            const material = mesh.material as THREE.MeshStandardMaterial
-            material.transparent = true
-            material.opacity = 1 - progress
+      // Cache meshes solo una vez
+      if (!meshesCached.current) {
+        cachedMeshes.current = []
+        scene.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            cachedMeshes.current.push(child as THREE.Mesh)
           }
+        })
+        meshesCached.current = true
+      }
+      
+      // Aplicar fade a meshes cacheados
+      for (const mesh of cachedMeshes.current) {
+        if (mesh.material) {
+          const material = mesh.material as THREE.MeshStandardMaterial
+          material.transparent = true
+          material.opacity = 1 - progress
         }
-      })
+      }
       
       if (progress >= 1 && onCollect) {
         onCollect()
@@ -527,7 +529,7 @@ function Scarab({ position, onCollect }: {
       onPointerOut={() => setIsHovered(false)}
     >
       <primitive 
-        object={clonedScene}
+        object={scene}
         scale={[scale, scale, scale]}
         castShadow
         receiveShadow
@@ -549,6 +551,55 @@ function Scarab({ position, onCollect }: {
 }
 
 /**
+ * 🔶 Piramidón en la punta de la pirámide
+ * Versión especial que CLONA la escena para ser independiente del piramidión del suelo
+ */
+function PyramidionOnTop({ position, rotation }: { 
+  position: [number, number, number]
+  rotation: [number, number, number]
+}) {
+  const { scene } = useGLTF(getAssetPath('/piramidon.glb'))
+  
+  // CLONAR la escena para que sea independiente
+  const clonedScene = useMemo(() => {
+    const cloned = scene.clone(true)
+    // Asegurar que los materiales sean visibles
+    cloned.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh
+        if (mesh.material) {
+          // Clonar material para independencia
+          mesh.material = (mesh.material as THREE.Material).clone()
+          const mat = mesh.material as THREE.MeshStandardMaterial
+          mat.transparent = false
+          mat.opacity = 1
+          mat.needsUpdate = true
+        }
+      }
+    })
+    return cloned
+  }, [scene])
+  
+  const scale = 4
+  
+  // NO usar yOffset - la posición Y=46.6 es la correcta y se aplica directamente
+  
+  return (
+    <group 
+      position={position} 
+      rotation={rotation}
+    >
+      <primitive 
+        object={clonedScene}
+        scale={[scale, scale, scale]}
+        castShadow
+        receiveShadow
+      />
+    </group>
+  )
+}
+
+/**
  * 🔶 Piramidón - Capstone de la Gran Pirámide
  * Objeto seleccionable en el piso, al costado de la pirámide
  * Modelo: piramidon.glb
@@ -564,59 +615,58 @@ function Pyramidion({ position, rotation, onCollect, opacity = 1 }: {
   const [isDisappearing, setIsDisappearing] = useState(false)
   const disappearTimer = useRef(0)
   
-  // Clonar la escena para evitar problemas de reutilización
-  const clonedScene = useMemo(() => scene.clone(), [scene])
+  // Cache de meshes para evitar traverse cada frame
+  const cachedMeshes = useRef<THREE.Mesh[]>([])
+  const meshesCached = useRef(false)
   
-  // Aplicar opacidad inicial
+  // Aplicar opacidad inicial (solo una vez)
   useEffect(() => {
-    clonedScene.traverse((child) => {
+    scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh
         if (mesh.material) {
-          // Clonar el material para evitar afectar otras instancias
-          const material = (mesh.material as THREE.MeshStandardMaterial).clone()
-          material.transparent = true
-          material.opacity = opacity
-          material.needsUpdate = true
-          mesh.material = material
+          const mat = mesh.material as THREE.MeshStandardMaterial
+          mat.transparent = true
+          mat.opacity = opacity
+          mat.needsUpdate = true
         }
       }
     })
-  }, [clonedScene, opacity])
+  }, [scene, opacity])
   
-  // Escala del piramidón - Aumentado al doble
-  const scale = 4 // Duplicado de 2 a 4
+  const scale = 4
   
-  // Calcular el offset Y para que la base esté exactamente en el suelo
-  const yOffset = useMemo(() => {
-    const box = new THREE.Box3().setFromObject(clonedScene)
-    const minY = box.min.y
-    // Retornar el offset necesario para que minY * scale esté en 0
-    return -minY * scale
-  }, [clonedScene, scale])
+  // NO usar yOffset - la posición Y viene directamente del prop
+  // El modelo se posiciona exactamente donde se indica
   
   // Animación de desaparición
   useFrame((state, delta) => {
-    if (isDisappearing && clonedScene) {
+    if (isDisappearing && scene) {
       disappearTimer.current += delta
       
-      // Fade out y escala hacia arriba
-      const progress = Math.min(disappearTimer.current / 1.0, 1) // 1 segundo
-      clonedScene.scale.setScalar(scale * (1 + progress * 0.5)) // Crece un poco
+      const progress = Math.min(disappearTimer.current / 1.0, 1)
+      scene.scale.setScalar(scale * (1 + progress * 0.5))
       
-      // Fade out de todos los materiales
-      clonedScene.traverse((child) => {
-        if ((child as THREE.Mesh).isMesh) {
-          const mesh = child as THREE.Mesh
-          if (mesh.material) {
-            const material = mesh.material as THREE.MeshStandardMaterial
-            material.transparent = true
-            material.opacity = 1 - progress
+      // Cache meshes solo una vez
+      if (!meshesCached.current) {
+        cachedMeshes.current = []
+        scene.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            cachedMeshes.current.push(child as THREE.Mesh)
           }
-        }
-      })
+        })
+        meshesCached.current = true
+      }
       
-      // Llamar callback cuando termine
+      // Aplicar fade a meshes cacheados
+      for (const mesh of cachedMeshes.current) {
+        if (mesh.material) {
+          const material = mesh.material as THREE.MeshStandardMaterial
+          material.transparent = true
+          material.opacity = 1 - progress
+        }
+      }
+      
       if (progress >= 1 && onCollect) {
         onCollect()
       }
@@ -633,14 +683,14 @@ function Pyramidion({ position, rotation, onCollect, opacity = 1 }: {
   
   return (
     <group 
-      position={[position[0], position[1] + yOffset, position[2]]} 
+      position={position} 
       rotation={rotation}
       onClick={handleClick}
       onPointerOver={() => onCollect && !isDisappearing && setIsHovered(true)}
       onPointerOut={() => setIsHovered(false)}
     >
       <primitive 
-        object={clonedScene}
+        object={scene}
         scale={[scale, scale, scale]}
         castShadow
         receiveShadow

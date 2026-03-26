@@ -30,12 +30,24 @@ class WindSystem {
   time: number
   noise3D: ReturnType<typeof createNoise3D>
   
+  // Vectores reutilizables para evitar crear objetos cada frame
+  private tempVec: THREE.Vector3
+  private spatialTurbulence: THREE.Vector3
+  private windResult: THREE.Vector3
+  private rotationAxis: THREE.Vector3
+  
   constructor() {
     this.direction = new THREE.Vector3(1, 0, 0.5).normalize()
     this.strength = 0
     this.turbulence = 0
     this.time = 0
     this.noise3D = createNoise3D()
+    
+    // Pre-alocar vectores
+    this.tempVec = new THREE.Vector3()
+    this.spatialTurbulence = new THREE.Vector3()
+    this.windResult = new THREE.Vector3()
+    this.rotationAxis = new THREE.Vector3(0, 1, 0)
   }
   
   update(delta: number, baseStrength: number, gustFrequency: number, turbulenceScale: number) {
@@ -43,7 +55,7 @@ class WindSystem {
     
     // Rotar dirección lentamente (viento cambia de dirección)
     const rotationSpeed = 0.0005
-    this.direction.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotationSpeed)
+    this.direction.applyAxisAngle(this.rotationAxis, rotationSpeed)
     
     // Ráfagas (gusts) con ruido
     const gust = Math.sin(this.time * gustFrequency) * 0.3
@@ -62,23 +74,23 @@ class WindSystem {
   
   // Obtener fuerza del viento en una posición específica
   getWindAtPosition(position: THREE.Vector3): THREE.Vector3 {
-    // Turbulencia espacial (coherencia espacial)
-    const spatialTurbulence = new THREE.Vector3(
+    // Turbulencia espacial (coherencia espacial) - reutilizar vector
+    this.spatialTurbulence.set(
       this.noise3D(position.x * 0.1, position.z * 0.1, this.time * 0.2),
       this.noise3D(position.x * 0.1 + 100, position.z * 0.1, this.time * 0.2) * 0.3,
       this.noise3D(position.x * 0.1, position.z * 0.1 + 100, this.time * 0.2)
     )
     
-    // Viento base + turbulencia espacial
-    const wind = this.direction.clone()
+    // Viento base + turbulencia espacial - reutilizar vector
+    this.windResult.copy(this.direction)
       .multiplyScalar(this.strength)
-      .add(spatialTurbulence.multiplyScalar(0.3))
+      .add(this.spatialTurbulence.multiplyScalar(0.3))
     
     // Modificar por altura (más fuerte arriba, más débil abajo)
     const heightFactor = Math.min(1, position.y / 10)
-    wind.multiplyScalar(0.6 + heightFactor * 0.4)
+    this.windResult.multiplyScalar(0.6 + heightFactor * 0.4)
     
-    return wind
+    return this.windResult
   }
 }
 
@@ -94,9 +106,14 @@ export default function RealisticWind({
 }: RealisticWindProps) {
   const { scene } = useThree()
   
+  // Cache de objetos afectados por viento
+  const windAffectedObjects = useRef<THREE.Object3D[]>([])
+  const objectsCached = useRef(false)
+  
   // Inicializar dirección base
   useEffect(() => {
     globalWind.direction.set(...baseDirection).normalize()
+    objectsCached.current = false // Invalidar cache si cambia
   }, [baseDirection])
   
   // Actualizar sistema de viento
@@ -105,21 +122,27 @@ export default function RealisticWind({
     
     // Afectar objetos del mundo (árboles, arbustos)
     if (affectObjects) {
-      scene.traverse((object) => {
-        // Detectar árboles y arbustos por nombre o userData
-        if (object.userData.windAffected || 
-            object.name.includes('tree') || 
-            object.name.includes('bush') ||
-            object.name.includes('Tree') ||
-            object.name.includes('Bush')) {
-          
-          const wind = globalWind.getWindAtPosition(object.position)
-          
-          // Rotación sutil por viento
-          const swayAmount = wind.length() * 0.02
-          object.rotation.z = Math.sin(globalWind.time * 2 + object.position.x) * swayAmount
-          object.rotation.x = Math.sin(globalWind.time * 1.5 + object.position.z) * swayAmount * 0.5
-        }
+      // Cachear objetos afectados una sola vez
+      if (!objectsCached.current) {
+        windAffectedObjects.current = []
+        scene.traverse((object) => {
+          if (object.userData.windAffected || 
+              object.name.includes('tree') || 
+              object.name.includes('bush') ||
+              object.name.includes('Tree') ||
+              object.name.includes('Bush')) {
+            windAffectedObjects.current.push(object)
+          }
+        })
+        objectsCached.current = true
+      }
+      
+      // Actualizar solo objetos cacheados
+      windAffectedObjects.current.forEach(object => {
+        const wind = globalWind.getWindAtPosition(object.position)
+        const swayAmount = wind.length() * 0.02
+        object.rotation.z = Math.sin(globalWind.time * 2 + object.position.x) * swayAmount
+        object.rotation.x = Math.sin(globalWind.time * 1.5 + object.position.z) * swayAmount * 0.5
       })
     }
     
@@ -127,7 +150,7 @@ export default function RealisticWind({
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('weather:wind', {
         detail: {
-          direction: globalWind.direction.clone(),
+          direction: globalWind.direction,
           strength: globalWind.strength,
           time: globalWind.time,
           getWindAtPosition: (pos: THREE.Vector3) => globalWind.getWindAtPosition(pos)
@@ -151,15 +174,21 @@ export function WindStreaks({ strength = 0.5 }: { strength: number }) {
     lifetime: number
   }>>([])
   
+  // Vectores reutilizables
+  const tempWind = useRef(new THREE.Vector3())
+  const tempDir = useRef(new THREE.Vector3())
+  const tempLookAt = useRef(new THREE.Vector3())
+  
   useEffect(() => {
     if (!groupRef.current) return
     
     const group = groupRef.current
-    const count = 100 // Menos partículas, más elegantes
+    const count = 100
     
-    // Crear streaks (líneas alargadas)
+    // Geometría y material compartidos
+    const sharedGeometry = new THREE.PlaneGeometry(0.5, 0.05)
+    
     for (let i = 0; i < count; i++) {
-      const geometry = new THREE.PlaneGeometry(0.5, 0.05) // Línea alargada
       const material = new THREE.MeshBasicMaterial({
         color: '#d4c5a0',
         transparent: true,
@@ -168,10 +197,10 @@ export function WindStreaks({ strength = 0.5 }: { strength: number }) {
         side: THREE.DoubleSide
       })
       
-      const mesh = new THREE.Mesh(geometry, material)
+      const mesh = new THREE.Mesh(sharedGeometry, material)
       mesh.position.set(
         (Math.random() - 0.5) * 100,
-        Math.random() * 15 + 1, // Cerca del suelo
+        Math.random() * 15 + 1,
         (Math.random() - 0.5) * 100
       )
       
@@ -189,8 +218,8 @@ export function WindStreaks({ strength = 0.5 }: { strength: number }) {
     }
     
     return () => {
+      sharedGeometry.dispose()
       streaksRef.current.forEach(({ mesh }) => {
-        mesh.geometry.dispose()
         ;(mesh.material as THREE.Material).dispose()
       })
       streaksRef.current = []
@@ -200,21 +229,19 @@ export function WindStreaks({ strength = 0.5 }: { strength: number }) {
   useFrame((state, delta) => {
     if (!groupRef.current) return
     
-    streaksRef.current.forEach(({ mesh, velocity, lifetime }, i) => {
+    streaksRef.current.forEach(({ mesh, velocity, lifetime }) => {
       // Obtener viento en esta posición
       const wind = globalWind.getWindAtPosition(mesh.position)
       
-      // Mover con viento + velocidad propia
-      mesh.position.add(
-        wind.clone().multiplyScalar(delta * 3)
-      )
-      mesh.position.add(
-        velocity.clone().multiplyScalar(delta * strength)
-      )
+      // Mover con viento + velocidad propia (sin crear nuevos vectores)
+      mesh.position.x += wind.x * delta * 3 + velocity.x * delta * strength
+      mesh.position.y += wind.y * delta * 3 + velocity.y * delta * strength
+      mesh.position.z += wind.z * delta * 3 + velocity.z * delta * strength
       
       // Orientar en dirección del movimiento
-      const direction = wind.clone().add(velocity).normalize()
-      mesh.lookAt(mesh.position.clone().add(direction))
+      tempDir.current.copy(wind).add(velocity).normalize()
+      tempLookAt.current.copy(mesh.position).add(tempDir.current)
+      mesh.lookAt(tempLookAt.current)
       
       // Fade in/out según lifetime
       const material = mesh.material as THREE.MeshBasicMaterial
@@ -248,6 +275,9 @@ export function WindDust({ strength = 0.5, biome = 'default' }: {
 }) {
   const pointsRef = useRef<THREE.Points>(null)
   
+  // Vector reutilizable para evitar crear en cada iteración
+  const tempPos = useRef(new THREE.Vector3())
+  
   // Color según bioma
   const dustColor = biome === 'desert' ? '#d4a574' : 
                     biome === 'ice' ? '#e0f0ff' : 
@@ -255,13 +285,13 @@ export function WindDust({ strength = 0.5, biome = 'default' }: {
   
   const geometry = useRef(
     (() => {
-      const count = 500 // Muchas más partículas
+      const count = 500
       const positions = new Float32Array(count * 3)
       
       for (let i = 0; i < count; i++) {
         const i3 = i * 3
         positions[i3] = (Math.random() - 0.5) * 100
-        positions[i3 + 1] = Math.random() * 8 // Más altura para que se vean
+        positions[i3 + 1] = Math.random() * 8
         positions[i3 + 2] = (Math.random() - 0.5) * 100
       }
       
@@ -277,12 +307,13 @@ export function WindDust({ strength = 0.5, biome = 'default' }: {
     const positions = pointsRef.current.geometry.attributes.position.array as Float32Array
     
     for (let i = 0; i < positions.length; i += 3) {
-      const pos = new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2])
-      const wind = globalWind.getWindAtPosition(pos)
+      // Reutilizar vector temporal
+      tempPos.current.set(positions[i], positions[i + 1], positions[i + 2])
+      const wind = globalWind.getWindAtPosition(tempPos.current)
       
       // Mover con viento
       positions[i] += wind.x * delta * 3
-      positions[i + 1] += wind.y * delta * 0.5 // Menos movimiento vertical
+      positions[i + 1] += wind.y * delta * 0.5
       positions[i + 2] += wind.z * delta * 3
       
       // Mantener cerca del suelo
@@ -308,10 +339,10 @@ export function WindDust({ strength = 0.5, biome = 'default' }: {
   return (
     <points ref={pointsRef} geometry={geometry}>
       <pointsMaterial
-        size={0.3} // Más grande para que se vea
+        size={0.3}
         color={dustColor}
         transparent
-        opacity={0.5 * strength} // Más opaco
+        opacity={0.5 * strength}
         blending={THREE.AdditiveBlending}
         depthWrite={false}
         sizeAttenuation={true}

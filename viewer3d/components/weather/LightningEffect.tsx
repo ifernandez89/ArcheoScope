@@ -32,6 +32,10 @@ export default function LightningEffect({
   const { scene, gl } = useThree()
   const originalExposureRef = useRef(1)
   
+  // Cache de meshes con emissive para evitar traverse cada frame
+  const cachedEmissiveMeshes = useRef<{ mesh: Mesh, material: MeshStandardMaterial }[]>([])
+  const meshesCached = useRef(false)
+  
   // Escuchar eventos de rayo
   useEffect(() => {
     if (!enabled) return
@@ -133,14 +137,24 @@ export default function LightningEffect({
     if (flashIntensityRef.current > 0) {
       gl.toneMappingExposure = originalExposureRef.current + flashIntensityRef.current * 0.4
       
-      scene.traverse((obj) => {
-        if (obj instanceof Mesh && obj.material) {
-          const material = obj.material as MeshStandardMaterial
-          if (material.emissive) {
-            material.emissiveIntensity = flashIntensityRef.current * 0.3
+      // Cache meshes con emissive solo una vez
+      if (!meshesCached.current) {
+        cachedEmissiveMeshes.current = []
+        scene.traverse((obj) => {
+          if (obj instanceof Mesh && obj.material) {
+            const material = obj.material as MeshStandardMaterial
+            if (material.emissive) {
+              cachedEmissiveMeshes.current.push({ mesh: obj, material })
+            }
           }
-        }
-      })
+        })
+        meshesCached.current = true
+      }
+      
+      // Aplicar a meshes cacheados
+      for (const { material } of cachedEmissiveMeshes.current) {
+        material.emissiveIntensity = flashIntensityRef.current * 0.3
+      }
     } else {
       gl.toneMappingExposure = originalExposureRef.current
     }

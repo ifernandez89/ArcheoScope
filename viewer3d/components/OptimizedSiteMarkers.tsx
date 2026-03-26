@@ -84,13 +84,15 @@ export default function OptimizedSiteMarkers({
     }
   }, [sitePositions])
 
+  // Objetos reutilizables para useFrame
+  const tempObject = useMemo(() => new THREE.Object3D(), [])
+  const tempColor = useMemo(() => new THREE.Color(), [])
+
   // Animación y hover
   useFrame(({ clock, pointer: framePointer }) => {
     if (!meshRef.current) return
 
     const time = clock.getElapsedTime()
-    const tempObject = new THREE.Object3D()
-    const tempColor = new THREE.Color()
 
     // Raycasting para detectar hover
     raycaster.setFromCamera(framePointer, camera)

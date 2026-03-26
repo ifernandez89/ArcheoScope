@@ -6,7 +6,7 @@
  * NO crea luces, solo las controla
  */
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { SolarEngine, SeasonalLight, MicroMotion, SkyEngine, GeometryField, AtmosphericSound } from '../engines'
@@ -43,6 +43,19 @@ export default function AstronomicalWorld({
   const skyEngine = useRef<SkyEngine | null>(null)
   const geometryField = useRef<GeometryField | null>(null)
   const atmosphericSound = useRef<AtmosphericSound | null>(null)
+  
+  // Cache de luces para evitar traverse cada frame
+  const cachedLights = useRef<{
+    directional: THREE.DirectionalLight[]
+    ambient: THREE.AmbientLight[]
+    hemisphere: THREE.HemisphereLight[]
+    physicalSky: THREE.Object3D | null
+    stars: THREE.Points | null
+  }>({ directional: [], ambient: [], hemisphere: [], physicalSky: null, stars: null })
+  const lightsCached = useRef(false)
+  
+  // Vector reutilizable
+  const sunPos = useMemo(() => new THREE.Vector3(), [])
   
   // Estado de cámara
   const baseCameraPosition = useRef(new THREE.Vector3())
@@ -172,54 +185,67 @@ export default function AstronomicalWorld({
     }
     
     // Buscar y actualizar luces existentes en la escena
-    scene.traverse((object) => {
-      if (object instanceof THREE.DirectionalLight && object.castShadow) {
-        // Actualizar posición del sol basada en cálculos astronómicos reales
-        const sunPos = solarState.sunDirection.clone().multiplyScalar(50)
-        object.position.lerp(sunPos, 0.01)
-        
-        // Color estacional
-        object.color.lerp(seasonalState.lightColor, 0.005)
-        
-        // Intensidad según altura solar REAL
-        const baseIntensity = solarState.isDay ? 2.5 : 0.3
-        const targetIntensity = baseIntensity + motionState.atmosphericPulse
-        object.intensity += (targetIntensity - object.intensity) * 0.01
-      }
-      
-      if (object instanceof THREE.AmbientLight) {
-        const baseAmbient = solarState.isDay ? 0.4 : 0.1
-        const targetIntensity = baseAmbient + motionState.atmosphericPulse
-        object.intensity += (targetIntensity - object.intensity) * 0.01
-      }
-      
-      if (object instanceof THREE.HemisphereLight) {
-        const targetIntensity = seasonalState.ambientIntensity + motionState.atmosphericPulse
-        object.intensity += (targetIntensity - object.intensity) * 0.01
-      }
-      
-      // Actualizar PhysicalSky con posición solar real
-      if (object.name === 'PhysicalSky' && (object as any).material) {
-        const material = (object as any).material
-        if (material.uniforms && material.uniforms.sunPosition) {
-          // Actualizar posición del sol en el shader del cielo
-          material.uniforms.sunPosition.value.copy(solarState.sunDirection)
+    // OPTIMIZACIÓN: Cachear referencias a luces para evitar traverse cada frame
+    if (!lightsCached.current) {
+      cachedLights.current = { directional: [], ambient: [], hemisphere: [], physicalSky: null, stars: null }
+      scene.traverse((object) => {
+        if (object instanceof THREE.DirectionalLight && object.castShadow) {
+          cachedLights.current.directional.push(object)
         }
-      }
-      
-      // Actualizar visibilidad de estrellas según hora del día
-      if (object.name === 'Stars') {
-        const starsGroup = object as THREE.Points
-        if (starsGroup.material) {
-          const material = starsGroup.material as THREE.PointsMaterial
-          // Estrellas visibles solo de noche
-          const targetOpacity = solarState.isDay ? 0 : 0.8
-          if (material.opacity !== undefined) {
-            material.opacity += (targetOpacity - material.opacity) * 0.01
-          }
+        if (object instanceof THREE.AmbientLight) {
+          cachedLights.current.ambient.push(object)
         }
-      }
+        if (object instanceof THREE.HemisphereLight) {
+          cachedLights.current.hemisphere.push(object)
+        }
+        if (object.name === 'PhysicalSky') {
+          cachedLights.current.physicalSky = object
+        }
+        if (object.name === 'Stars') {
+          cachedLights.current.stars = object as THREE.Points
+        }
+      })
+      lightsCached.current = true
+    }
+    
+    // Actualizar luces cacheadas
+    sunPos.copy(solarState.sunDirection).multiplyScalar(50)
+    
+    cachedLights.current.directional.forEach(light => {
+      light.position.lerp(sunPos, 0.01)
+      light.color.lerp(seasonalState.lightColor, 0.005)
+      const baseIntensity = solarState.isDay ? 2.5 : 0.3
+      const targetIntensity = baseIntensity + motionState.atmosphericPulse
+      light.intensity += (targetIntensity - light.intensity) * 0.01
     })
+    
+    cachedLights.current.ambient.forEach(light => {
+      const baseAmbient = solarState.isDay ? 0.4 : 0.1
+      const targetIntensity = baseAmbient + motionState.atmosphericPulse
+      light.intensity += (targetIntensity - light.intensity) * 0.01
+    })
+    
+    cachedLights.current.hemisphere.forEach(light => {
+      const targetIntensity = seasonalState.ambientIntensity + motionState.atmosphericPulse
+      light.intensity += (targetIntensity - light.intensity) * 0.01
+    })
+    
+    // Actualizar PhysicalSky
+    if (cachedLights.current.physicalSky) {
+      const material = (cachedLights.current.physicalSky as any).material
+      if (material?.uniforms?.sunPosition) {
+        material.uniforms.sunPosition.value.copy(solarState.sunDirection)
+      }
+    }
+    
+    // Actualizar estrellas
+    if (cachedLights.current.stars?.material) {
+      const material = cachedLights.current.stars.material as THREE.PointsMaterial
+      const targetOpacity = solarState.isDay ? 0 : 0.8
+      if (material.opacity !== undefined) {
+        material.opacity += (targetOpacity - material.opacity) * 0.01
+      }
+    }
     
     // Micro-oscilación de cámara (solo si no está en modo avatar)
     if (motionState.cameraSway.length() > 0) {

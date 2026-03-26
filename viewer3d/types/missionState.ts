@@ -228,6 +228,31 @@ export function completeMission(siteName: keyof MissionState['sites'], missionId
     state.stats.totalMissionsCompleted++
     saveMissionState(state)
     console.log(`✅ Misión completada en ${siteName}: ${missionId}`)
+    
+    // 🎼 Activar capa de Harmonia Mundi
+    // Las 5 primeras misiones de la Tierra desbloquean capas sonoras
+    if (typeof window !== 'undefined') {
+      import('../systems/HarmoniaMundiSystem').then(async ({ getHarmoniaMundi }) => {
+        const harmonia = getHarmoniaMundi()
+        
+        // Habilitar si es la primera misión
+        if (!harmonia.isEnabled()) {
+          try {
+            await harmonia.enable()
+            console.log('🎼 Harmonia Mundi habilitado por primera misión')
+          } catch (error) {
+            console.error('Error habilitando Harmonia Mundi:', error)
+            return
+          }
+        }
+        
+        const totalMissions = state.stats.totalMissionsCompleted
+        const layerId = `earth_mission_${totalMissions}`
+        harmonia.unlockMissionLayer(layerId)
+        
+        console.log(`🎵 Capa ${layerId} desbloqueada (${totalMissions}/5 misiones completadas)`)
+      })
+    }
   }
 }
 
@@ -300,4 +325,33 @@ export function clearWeather(siteName: keyof MissionState['sites']): void {
 export function isWeatherCleared(siteName: keyof MissionState['sites']): boolean {
   const state = loadMissionState()
   return state.sites[siteName].weatherCleared === true
+}
+
+/**
+ * Marcar misión como fallida (ej: robar el escarabajo en Giza)
+ */
+export function failMission(siteName: keyof MissionState['sites'], missionId: string): void {
+  const state = loadMissionState()
+  const failedId = `FAILED_${missionId}`
+  if (!state.sites[siteName].missionsCompleted.includes(failedId)) {
+    state.sites[siteName].missionsCompleted.push(failedId)
+    saveMissionState(state)
+    console.log(`❌ Misión FALLIDA en ${siteName}: ${missionId}`)
+  }
+}
+
+/**
+ * Verificar si una misión específica está completada
+ */
+export function isMissionCompleted(siteName: keyof MissionState['sites'], missionId: string): boolean {
+  const state = loadMissionState()
+  return state.sites[siteName].missionsCompleted.includes(missionId)
+}
+
+/**
+ * Verificar si una misión específica está fallida
+ */
+export function isMissionFailed(siteName: keyof MissionState['sites'], missionId: string): boolean {
+  const state = loadMissionState()
+  return state.sites[siteName].missionsCompleted.includes(`FAILED_${missionId}`)
 }

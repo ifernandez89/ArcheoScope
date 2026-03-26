@@ -1,25 +1,20 @@
 'use client'
 
-import { useState, useRef, Suspense } from 'react'
+import { useState, useRef, Suspense, useEffect } from 'react'
 import { useGLTF, Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
 import { Group } from 'three'
 import { getAssetPath } from '@/lib/paths'
 
 /**
- * Escena de Teotihuacán
- * Templo de Kukulkán (Chichén Itzá), Templo Mayor Azteca, Calendario Maya y Quetzalcoatl
+ * Escena de Teotihuacán - OPTIMIZADA
  * 
- * Proporciones reales:
- * - Templo de Kukulkán: 30m altura, 55x55m base (escala 0.3)
- *   • Precisión astronómica: 91 escalones × 4 lados + 1 = 365 días
- *   • Fenómeno de equinoccio: sombra de serpiente descendiendo
- * 
- * - Templo Mayor Azteca: 60m altura, 80m base (escala 0.6 - el doble que Kukulkán)
- *   • Doble templo ritual dedicado a Tláloc y Huitzilopochtli
- *   • Centro ceremonial de Tenochtitlán
- * 
- * Relación de tamaños: Templo Mayor es 2x más alto que Kukulkán (60m vs 30m)
+ * Optimizaciones aplicadas:
+ * - Eliminado .clone() de modelos (muy costoso)
+ * - useFrame solo ejecuta cuando es necesario
+ * - Fade-in aplicado correctamente a materiales
+ * - Reducción de re-renders innecesarios
  */
 
 interface TeotihuacanSceneProps {
@@ -41,25 +36,65 @@ function TeotihuacanSceneContent({ avatarPositionRef }: TeotihuacanSceneProps) {
   const calendarioModel = useGLTF(getAssetPath('/calendario_maya.glb'))
   const quetzalcoatlModel = useGLTF(getAssetPath('/quetzalcoatl.glb'))
   
-  console.log('🏛️ Escena de Teotihuacán cargada')
-  
-  // Estados
+  // Estados (solo los que necesitan re-render)
   const [isCalendarioSpinning, setIsCalendarioSpinning] = useState(true)
   const [showQuetzalcoatl, setShowQuetzalcoatl] = useState(false)
-  const [quetzalcoatlOpacity, setQuetzalcoatlOpacity] = useState(0)
+  
+  // Usar ref para opacidad (evita re-renders cada frame)
+  const quetzalcoatlOpacityRef = useRef(0)
   
   const calendarioRef = useRef<Group>(null)
   const quetzalcoatlRef = useRef<Group>(null)
   
-  // Rotación del calendario
+  // Cache de meshes para evitar traverse cada frame
+  const cachedQuetzalcoatlMeshes = useRef<THREE.Mesh[]>([])
+  const meshesCached = useRef(false)
+  
+  // 🎼 Activar arquitectura de Teotihuacán
+  useEffect(() => {
+    import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+      const harmonia = getHarmoniaMundi()
+      if (harmonia.isEnabled()) {
+        harmonia.activateArchitecture('teotihuacan')
+      }
+    })
+    
+    return () => {
+      import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+        const harmonia = getHarmoniaMundi()
+        harmonia.deactivateArchitecture('teotihuacan')
+      })
+    }
+  }, [])
+  
+  // Rotación del calendario - SOLO si está girando
   useFrame((state, delta) => {
     if (calendarioRef.current && isCalendarioSpinning) {
-      calendarioRef.current.rotation.y += delta * 0.5 // Velocidad de rotación
+      calendarioRef.current.rotation.y += delta * 0.5
     }
     
-    // Fade-in de Quetzalcoatl
-    if (showQuetzalcoatl && quetzalcoatlOpacity < 1) {
-      setQuetzalcoatlOpacity(prev => Math.min(prev + delta * 0.3, 1))
+    // Fade-in de Quetzalcoatl - SOLO si está apareciendo (usa ref, no setState)
+    if (showQuetzalcoatl && quetzalcoatlOpacityRef.current < 1 && quetzalcoatlRef.current) {
+      quetzalcoatlOpacityRef.current = Math.min(quetzalcoatlOpacityRef.current + delta * 0.3, 1)
+      
+      // Cachear meshes una sola vez (evita traverse cada frame)
+      if (!meshesCached.current) {
+        cachedQuetzalcoatlMeshes.current = []
+        quetzalcoatlRef.current.traverse((child: any) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true
+            cachedQuetzalcoatlMeshes.current.push(child)
+          }
+        })
+        meshesCached.current = true
+      }
+      
+      // Aplicar opacidad usando cache
+      for (const mesh of cachedQuetzalcoatlMeshes.current) {
+        if (mesh.material && !Array.isArray(mesh.material)) {
+          (mesh.material as THREE.MeshStandardMaterial).opacity = quetzalcoatlOpacityRef.current
+        }
+      }
     }
   })
   
@@ -67,29 +102,21 @@ function TeotihuacanSceneContent({ avatarPositionRef }: TeotihuacanSceneProps) {
   const handleCalendarioClick = () => {
     if (isCalendarioSpinning) {
       setIsCalendarioSpinning(false)
-      console.log('🗓️ Calendario detenido - Iniciando misión de Teotihuacán')
-      
-      // Aparecer Quetzalcoatl después de 1 segundo
-      setTimeout(() => {
-        setShowQuetzalcoatl(true)
-      }, 1000)
+      setTimeout(() => setShowQuetzalcoatl(true), 1000)
     }
   }
   
   return (
     <group>
-      {/* Templo de Kukulkán - Pirámide maya con precisión astronómica (30m altura, 55x55m base) */}
-      <group position={[0, 0, -20]} rotation={[0, 0, 0]}>
-        <primitive 
-          object={kukulkanModel.scene.clone()} 
-          scale={0.3} // Escala base para 30m
-        />
+      {/* Templo de Kukulkán - SIN CLONE (30m altura) */}
+      <group position={[0, 0, -20]}>
+        <primitive object={kukulkanModel.scene} scale={0.3} />
       </group>
       
-      {/* Calendario Maya - Flotando sobre la punta de Kukulkán */}
+      {/* Calendario Maya - SIN CLONE */}
       <group 
         ref={calendarioRef}
-        position={[0, 10, -20]} // Ajustado a la nueva altura de Kukulkán (30m)
+        position={[0, 10, -20]}
         onClick={handleCalendarioClick}
         onPointerOver={(e) => {
           e.stopPropagation()
@@ -100,50 +127,30 @@ function TeotihuacanSceneContent({ avatarPositionRef }: TeotihuacanSceneProps) {
           document.body.style.cursor = 'default'
         }}
       >
-        <primitive 
-          object={calendarioModel.scene.clone()} 
-          scale={1.5}
-        />
+        <primitive object={calendarioModel.scene} scale={1.5} />
       </group>
       
-      {/* Templo Mayor Azteca - El doble de alto que Kukulkán (60m altura, 80m base) */}
+      {/* Templo Mayor Azteca - SIN CLONE (60m altura) */}
       <group position={[25, 0, 10]} rotation={[0, -Math.PI / 3, 0]}>
-        <primitive 
-          object={aztecTempleModel.scene.clone()} 
-          scale={0.26}
-        />
+        <primitive object={aztecTempleModel.scene} scale={0.26} />
       </group>
       
-      {/* Quetzalcoatl - Aparece después de detener el calendario */}
+      {/* Quetzalcoatl - SIN CLONE, con fade-in optimizado */}
       {showQuetzalcoatl && (
-        <group position={[-15, 0, -10]} rotation={[0, Math.PI / 4, 0]}>
-          <primitive 
-            object={quetzalcoatlModel.scene.clone()} 
-            scale={5}
-          />
-          {/* Material con transparencia para fade-in */}
-          <meshStandardMaterial 
-            transparent 
-            opacity={quetzalcoatlOpacity}
-            attach="material"
-          />
+        <group ref={quetzalcoatlRef} position={[-15, 0, -10]} rotation={[0, Math.PI / 4, 0]}>
+          <primitive object={quetzalcoatlModel.scene} scale={5} />
         </group>
       )}
       
-      {/* Iluminación específica para la escena */}
+      {/* Iluminación */}
       <ambientLight intensity={0.6} />
-      <directionalLight position={[10, 15, 5]} intensity={1.0} castShadow />
+      <directionalLight position={[10, 15, 5]} intensity={1.0} />
       <directionalLight position={[-10, 10, -5]} intensity={0.4} />
-      
-      {/* Luz especial para el calendario */}
       <pointLight position={[0, 10, -20]} intensity={1.2} color="#ffd700" distance={15} />
     </group>
   )
 }
 
-/**
- * 🔄 Loading placeholder para Teotihuacán
- */
 function LoadingTeotihuacan() {
   return (
     <Html center>

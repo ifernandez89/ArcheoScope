@@ -11,6 +11,11 @@ interface VisualLightningBoltProps {
   duration?: number
 }
 
+// Vectores reutilizables para subdivideLightning (evita crear en cada llamada recursiva)
+const _mid = new THREE.Vector3()
+const _direction = new THREE.Vector3()
+const _perpendicular = new THREE.Vector3()
+
 // Subdivisión fractal para generar rayo irregular
 function subdivideLightning(
   start: THREE.Vector3,
@@ -22,17 +27,18 @@ function subdivideLightning(
     return [start, end]
   }
 
-  const mid = new THREE.Vector3().lerpVectors(start, end, 0.5)
+  // Usar vectores reutilizables para cálculos intermedios
+  _mid.lerpVectors(start, end, 0.5)
+  _direction.subVectors(end, start)
+  _perpendicular.set(-_direction.z, 0, _direction.x).normalize()
   
-  // Desplazamiento aleatorio perpendicular
-  const direction = new THREE.Vector3().subVectors(end, start)
-  const perpendicular = new THREE.Vector3(-direction.z, 0, direction.x).normalize()
+  // Crear nuevo vector para el punto medio (necesario porque se guarda en el array)
+  const midPoint = _mid.clone()
+  midPoint.addScaledVector(_perpendicular, (Math.random() - 0.5) * displacement)
+  midPoint.y += (Math.random() - 0.5) * displacement * 0.5
   
-  mid.add(perpendicular.multiplyScalar((Math.random() - 0.5) * displacement))
-  mid.y += (Math.random() - 0.5) * displacement * 0.5
-  
-  const left = subdivideLightning(start, mid, depth - 1, displacement * 0.6)
-  const right = subdivideLightning(mid, end, depth - 1, displacement * 0.6)
+  const left = subdivideLightning(start, midPoint, depth - 1, displacement * 0.6)
+  const right = subdivideLightning(midPoint, end, depth - 1, displacement * 0.6)
   
   return [...left.slice(0, -1), ...right]
 }
@@ -73,6 +79,10 @@ export default function VisualLightningBolt({
   const groupRef = useRef<THREE.Group>(null)
   const timeRef = useRef(0)
   const completedRef = useRef(false)
+  
+  // Cache de líneas para evitar traverse cada frame
+  const cachedLines = useRef<THREE.Line[]>([])
+  const linesCached = useRef(false)
   
   // Generar geometría del rayo con subdivisión fractal
   const { mainGeometry, branchGeometries } = useMemo(() => {
@@ -117,6 +127,13 @@ export default function VisualLightningBolt({
     })
   }, [])
   
+  // Crear objetos Line una sola vez en useMemo (no en render)
+  const { mainLine, branchLines } = useMemo(() => {
+    const main = new THREE.Line(mainGeometry, material)
+    const branches = branchGeometries.map(geo => new THREE.Line(geo, branchMaterial))
+    return { mainLine: main, branchLines: branches }
+  }, [mainGeometry, branchGeometries, material, branchMaterial])
+  
   useFrame((state, delta) => {
     if (completedRef.current) return
     
@@ -127,26 +144,28 @@ export default function VisualLightningBolt({
       if (onComplete) onComplete()
     }
     
-    // Fade out
-    if (groupRef.current) {
-      const fadeProgress = timeRef.current / duration
-      groupRef.current.traverse((child) => {
-        if (child instanceof THREE.Line) {
-          const mat = child.material as THREE.LineBasicMaterial
-          mat.opacity = 1 - fadeProgress
-        }
-      })
+    // Cachear líneas una sola vez
+    if (!linesCached.current && groupRef.current) {
+      cachedLines.current = [mainLine, ...branchLines]
+      linesCached.current = true
+    }
+    
+    // Fade out usando cache (sin traverse)
+    const fadeProgress = timeRef.current / duration
+    for (const line of cachedLines.current) {
+      const mat = line.material as THREE.LineBasicMaterial
+      mat.opacity = 1 - fadeProgress
     }
   })
   
   return (
     <group ref={groupRef}>
       {/* Rayo principal */}
-      <primitive object={new THREE.Line(mainGeometry, material)} />
+      <primitive object={mainLine} />
       
       {/* Ramificaciones */}
-      {branchGeometries.map((geo, i) => (
-        <primitive key={i} object={new THREE.Line(geo, branchMaterial)} />
+      {branchLines.map((line, i) => (
+        <primitive key={i} object={line} />
       ))}
       
       {/* Glow adicional en el punto de impacto */}

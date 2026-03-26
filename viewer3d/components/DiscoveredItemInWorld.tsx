@@ -24,6 +24,10 @@ export default function DiscoveredItemInWorld({
   const [isDisappearing, setIsDisappearing] = useState(false)
   const disappearTimer = useRef(0)
   const { camera } = useThree()
+  
+  // Cache de meshes para evitar traverse cada frame
+  const cachedMeshes = useRef<THREE.Mesh[]>([])
+  const meshesCached = useRef(false)
 
   // Configurar modelo
   useEffect(() => {
@@ -71,17 +75,25 @@ export default function DiscoveredItemInWorld({
         const progress = Math.min(disappearTimer.current / 1.0, 1) // 1 segundo
         groupRef.current.scale.setScalar(1 + progress * 0.5) // Crece un poco
         
-        // Fade out de todos los materiales
-        scene.traverse((child) => {
-          if ((child as THREE.Mesh).isMesh) {
-            const mesh = child as THREE.Mesh
-            if (mesh.material) {
-              const material = mesh.material as THREE.MeshStandardMaterial
-              material.transparent = true
-              material.opacity = 1 - progress
+        // Cache meshes solo una vez
+        if (!meshesCached.current) {
+          cachedMeshes.current = []
+          scene.traverse((child) => {
+            if ((child as THREE.Mesh).isMesh) {
+              cachedMeshes.current.push(child as THREE.Mesh)
             }
+          })
+          meshesCached.current = true
+        }
+        
+        // Fade out de meshes cacheados
+        for (const mesh of cachedMeshes.current) {
+          if (mesh.material) {
+            const material = mesh.material as THREE.MeshStandardMaterial
+            material.transparent = true
+            material.opacity = 1 - progress
           }
-        })
+        }
         
         // Llamar callback cuando termine
         if (progress >= 1 && onCollect) {

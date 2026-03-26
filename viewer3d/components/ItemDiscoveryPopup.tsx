@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useGLTF, Html, PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
@@ -263,21 +263,25 @@ export default function ItemDiscoveryPopup({
 function ParticleRing() {
   const particlesRef = useRef<THREE.Points>(null)
 
-  const particlesGeometry = new THREE.BufferGeometry()
-  const particleCount = 50
-  const positions = new Float32Array(particleCount * 3)
+  // Geometría memoizada para evitar recrear cada render
+  const particlesGeometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry()
+    const particleCount = 50
+    const positions = new Float32Array(particleCount * 3)
 
-  for (let i = 0; i < particleCount; i++) {
-    const angle = (i / particleCount) * Math.PI * 2
-    const radius = 3 + Math.random() * 0.5
-    positions[i * 3] = Math.cos(angle) * radius
-    positions[i * 3 + 1] = (Math.random() - 0.5) * 2
-    positions[i * 3 + 2] = Math.sin(angle) * radius
-  }
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (i / particleCount) * Math.PI * 2
+      const radius = 3 + Math.random() * 0.5
+      positions[i * 3] = Math.cos(angle) * radius
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 2
+      positions[i * 3 + 2] = Math.sin(angle) * radius
+    }
 
-  particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    return geo
+  }, [])
 
-  useFrame((state) => {
+  useFrame(() => {
     if (particlesRef.current) {
       particlesRef.current.rotation.y += 0.01
     }

@@ -29,6 +29,9 @@ export function SpatialPartition({
   const { camera } = useThree()
   const chunks = useRef<Map<string, Chunk>>(new Map())
   const activeChunks = useRef<Set<string>>(new Set())
+  
+  // Vector reutilizable para evitar crear en cada frame
+  const tempVec = useMemo(() => new THREE.Vector3(), [])
 
   // Calcular ID de chunk basado en posición
   const getChunkId = (x: number, z: number) => {
@@ -78,7 +81,7 @@ export function SpatialPartition({
         const chunk = getOrCreateChunk(chunkId)
         
         // Verificar si está dentro del radio de visión
-        const chunkCenter = chunk.bounds.getCenter(new THREE.Vector3())
+        const chunkCenter = chunk.bounds.getCenter(tempVec)
         const distance = cameraPos.distanceTo(chunkCenter)
         
         if (distance <= viewDistance) {
@@ -250,11 +253,12 @@ export function useFrustumCulling(objects: THREE.Object3D[], bounds: THREE.Box3)
     objects.forEach(obj => tree.insert(obj))
     return tree
   }, [objects, bounds])
+  
+  // Objetos reutilizables
+  const frustum = useMemo(() => new THREE.Frustum(), [])
+  const projScreenMatrix = useMemo(() => new THREE.Matrix4(), [])
 
   useFrame(() => {
-    const frustum = new THREE.Frustum()
-    const projScreenMatrix = new THREE.Matrix4()
-    
     projScreenMatrix.multiplyMatrices(
       camera.projectionMatrix,
       camera.matrixWorldInverse

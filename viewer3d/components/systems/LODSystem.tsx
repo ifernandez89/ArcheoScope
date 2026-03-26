@@ -84,6 +84,9 @@ export function PlanetLOD({
   const meshRef = useRef<THREE.Mesh>(null)
   const { camera } = useThree()
   
+  // Vector reutilizable
+  const posVec = useMemo(() => new THREE.Vector3(...position), [position])
+  
   // Crear geometrías con diferentes niveles de detalle
   const geometries = useMemo(() => ({
     high: new THREE.SphereGeometry(radius, segments.high, segments.high),
@@ -94,7 +97,7 @@ export function PlanetLOD({
   useFrame(() => {
     if (!meshRef.current) return
 
-    const distance = camera.position.distanceTo(new THREE.Vector3(...position))
+    const distance = camera.position.distanceTo(posVec)
     
     // Cambiar geometría según distancia
     let targetGeometry = geometries.high

@@ -10,7 +10,7 @@
  * Comunicación: evento DOM personalizado "celestial-convergence"
  */
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { SolarEngine } from '@/engines/SolarEngine'
@@ -38,10 +38,14 @@ function auToScene(x: number, y: number, z: number): THREE.Vector3 {
   return new THREE.Vector3(x * VISUAL_SCALE, z * VISUAL_SCALE, y * VISUAL_SCALE)
 }
 
+// Vectores reutilizables para cálculos
+const _dirA = new THREE.Vector3()
+const _dirB = new THREE.Vector3()
+
 function geocentricAngle(earth: THREE.Vector3, a: THREE.Vector3, b: THREE.Vector3): number {
-  const dirA = a.clone().sub(earth).normalize()
-  const dirB = b.clone().sub(earth).normalize()
-  const dot = Math.max(-1, Math.min(1, dirA.dot(dirB)))
+  _dirA.copy(a).sub(earth).normalize()
+  _dirB.copy(b).sub(earth).normalize()
+  const dot = Math.max(-1, Math.min(1, _dirA.dot(_dirB)))
   return THREE.MathUtils.radToDeg(Math.acos(dot))
 }
 
@@ -54,6 +58,15 @@ export function CelestialOverlay3D() {
   const startTimeRef = useRef(new Date())
   const elapsed = useRef(0)
   const [lines, setLines] = useState<LineData[]>([])
+  
+  // Geometría y material reutilizables
+  const lineMaterial = useMemo(() => new THREE.LineBasicMaterial({
+    color: '#00aaff',
+    transparent: true,
+    opacity: 0.55,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  }), [])
 
   useFrame((_, delta) => {
     elapsed.current += delta
@@ -86,7 +99,12 @@ export function CelestialOverlay3D() {
         const angle = geocentricAngle(earth, planets[i].pos, planets[j].pos)
         if (angle <= CONVERGENCE_THRESHOLD) {
           const intensity = 1 - angle / CONVERGENCE_THRESHOLD
-          newLines.push({ from: planets[i].pos.clone(), to: planets[j].pos.clone(), intensity })
+          // Copiar posiciones en lugar de clonar
+          newLines.push({ 
+            from: new THREE.Vector3().copy(planets[i].pos), 
+            to: new THREE.Vector3().copy(planets[j].pos), 
+            intensity 
+          })
           convergences.push({ a: planets[i].name, b: planets[j].name, angle, intensity })
         }
       }
@@ -100,26 +118,21 @@ export function CelestialOverlay3D() {
     }
   })
 
+  // Memoizar las líneas para evitar recrear en cada render
+  const lineObjects = useMemo(() => {
+    return lines.map((l, i) => {
+      const geo = new THREE.BufferGeometry().setFromPoints([l.from, l.to])
+      const mat = lineMaterial.clone()
+      mat.opacity = l.intensity * 0.55
+      return new THREE.Line(geo, mat)
+    })
+  }, [lines, lineMaterial])
+
   return (
     <group>
-      {lines.map((l, i) => {
-        const points = [l.from, l.to]
-        const geo = new THREE.BufferGeometry().setFromPoints(points)
-        return (
-          <primitive key={i} object={
-            (() => {
-              const mat = new THREE.LineBasicMaterial({
-                color: '#00aaff',
-                transparent: true,
-                opacity: l.intensity * 0.55,
-                depthWrite: false,
-                blending: THREE.AdditiveBlending,
-              })
-              return new THREE.Line(geo, mat)
-            })()
-          } />
-        )
-      })}
+      {lineObjects.map((line, i) => (
+        <primitive key={i} object={line} />
+      ))}
     </group>
   )
 }

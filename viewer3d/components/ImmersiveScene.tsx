@@ -96,7 +96,7 @@ const EnhancedMoon = dynamic(() => import('./EnhancedMoon'), { ssr: false })
 import { EnvironmentElementsWithTrees } from './EnvironmentElements'
 import { loadPlayerState, savePlayerState, updatePlayerLocation } from '@/types/player'
 import { loadGameSettings } from '@/types/gameSettings'
-import { collectItem, interactWithNPC, loadMissionState, sphinxReceivePyramidion, hasSphinxReceivedPyramidion, clearWeather, isWeatherCleared, type MissionState } from '@/types/missionState'
+import { collectItem, interactWithNPC, loadMissionState, sphinxReceivePyramidion, hasSphinxReceivedPyramidion, clearWeather, isWeatherCleared, completeMission, failMission, type MissionState } from '@/types/missionState'
 
 interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
@@ -297,6 +297,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // Registrar en el sistema de misiones
     collectItem('giza', 'scarab')
     
+    // ❌ MARCAR MISIÓN COMO FALLIDA - Robar el escarabajo es un acto de profanación
+    failMission('giza', 'return_pyramidion')
+    console.log('❌ Misión "Devolver el Piramidión" FALLIDA - El jugador robó el escarabajo sagrado')
+    
     // Guardar en sessionStorage
     sessionStorage.setItem('item_scarab_collected', 'true')
     
@@ -307,8 +311,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     setShowCollectedMessage(true)
     setTimeout(() => setShowCollectedMessage(false), 3000)
     
-    // INICIAR INUNDACIÓN
-    console.log('🌊 Iniciando inundación de Giza...')
+    // INICIAR INUNDACIÓN como castigo
+    console.log('🌊 Iniciando inundación de Giza como castigo divino...')
     // La inundación se maneja en GizaScene
   }, [])
 
@@ -381,10 +385,16 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         // Verificar si fue entregado a la Esfinge (desde missionState)
         const delivered = hasSphinxReceivedPyramidion()
         
-        // Si fue entregado, el piramidón SIEMPRE debe estar visible en la punta
-        // Si solo fue recolectado (no entregado), también debe estar visible
-        if (collected || delivered) {
+        console.log('🔶 checkPyramidion:', { collectedFromMissions, collectedFromSession, collected, delivered })
+        
+        // Solo marcar como recolectado si REALMENTE fue recolectado
+        if (collected) {
           setPyramidionCollected(true)
+        }
+        
+        // Mostrar en la punta solo si fue entregado a la Esfinge
+        if (delivered) {
+          setPyramidionOnTop(true)
         }
       }
     }
@@ -405,6 +415,12 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         await audioGenerator.enable()
         setAudioEnabled(true)
         loggers.world.info('🔊 Audio habilitado automáticamente')
+        
+        // 🎼 Habilitar Harmonia Mundi también
+        const { getHarmoniaMundi } = await import('@/systems/HarmoniaMundiSystem')
+        const harmonia = getHarmoniaMundi()
+        await harmonia.enable()
+        loggers.world.info('🎼 Harmonia Mundi habilitado')
         
         // Remover listeners después de habilitar
         window.removeEventListener('click', enableAudioOnInteraction)
@@ -833,8 +849,15 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
               sphinxReceivePyramidion()
               console.log('🗿 La Esfinge agradece por devolver el piramidón')
               
-              // REPLICAR EXACTAMENTE el comportamiento del commit anterior
-              // Simplemente activar el estado que hace aparecer el piramidón
+              // ✅ MARCAR MISIÓN COMO COMPLETADA
+              completeMission('giza', 'return_pyramidion')
+              console.log('✅ Misión "Devolver el Piramidión" COMPLETADA')
+              
+              // ☀️ LIMPIAR EL CLIMA - De malo a bueno
+              clearWeather('giza')
+              console.log('☀️ Clima de Giza limpiado - El sol brilla de nuevo')
+              
+              // Activar el estado que hace aparecer el piramidón en la punta
               setPyramidionOnTop(true)
               console.log('🔶 setPyramidionOnTop(true) - Piramidón debe aparecer en la punta')
             }

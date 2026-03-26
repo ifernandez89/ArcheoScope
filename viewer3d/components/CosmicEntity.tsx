@@ -5,7 +5,7 @@
  * No son solo objetos 3D, son puntos de memoria que reaccionan al sol
  */
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -28,6 +28,12 @@ export default function CosmicEntity({
   const [shadowProjection, setShadowProjection] = useState<THREE.Mesh | null>(null)
   const [aura, setAura] = useState<THREE.Mesh | null>(null)
   
+  // Colores reutilizables para useFrame
+  const sunriseColor = useMemo(() => new THREE.Color(0xffa500), [])
+  const middayColor = useMemo(() => new THREE.Color(0xffd700), [])
+  const sunsetColor = useMemo(() => new THREE.Color(0xff6b35), [])
+  const nightColor = useMemo(() => new THREE.Color(0x4a5899), [])
+  const tempVec = useMemo(() => new THREE.Vector3(), [])
   // Crear eje solar (línea desde entidad hacia el sol)
   useEffect(() => {
     if (!groupRef.current || !showSolarAxis) return
@@ -115,25 +121,23 @@ export default function CosmicEntity({
       const geometry = line.geometry as THREE.BufferGeometry
       
       // Dirección hacia el sol (extendida)
-      const solarPoint = solarDirection.clone().multiplyScalar(50)
+      tempVec.copy(solarDirection).multiplyScalar(50)
       const positions = geometry.attributes.position.array as Float32Array
-      positions[3] = solarPoint.x
-      positions[4] = solarPoint.y
-      positions[5] = solarPoint.z
+      positions[3] = tempVec.x
+      positions[4] = tempVec.y
+      positions[5] = tempVec.z
       geometry.attributes.position.needsUpdate = true
       
       // Opacidad según hora del día (más sutil, revelación gradual)
-      const targetOpacity = isDay ? 0.08 : 0.03 // Reducido de 0.15/0.05 a 0.08/0.03
+      const targetOpacity = isDay ? 0.08 : 0.03
       material.opacity += (targetOpacity - material.opacity) * 0.02
       
       // Color según altura solar
       const sunHeight = solarDirection.y
       if (sunHeight < 0.3) {
-        // Amanecer/atardecer: dorado intenso
-        material.color.lerp(new THREE.Color(0xffa500), 0.05)
+        material.color.lerp(sunriseColor, 0.05)
       } else {
-        // Mediodía: dorado suave
-        material.color.lerp(new THREE.Color(0xffd700), 0.05)
+        material.color.lerp(middayColor, 0.05)
       }
     }
     
@@ -158,19 +162,16 @@ export default function CosmicEntity({
       
       // Opacidad según alineación con el sol (más sutil)
       const alignment = Math.max(0, solarDirection.y)
-      const targetOpacity = isDay ? alignment * 0.04 : 0.01 // Reducido de 0.08 a 0.04
+      const targetOpacity = isDay ? alignment * 0.04 : 0.01
       material.opacity += (targetOpacity - material.opacity) * 0.02
       
       // Color según hora
       if (solarDirection.y < 0.3 && solarDirection.y > -0.1) {
-        // Amanecer/atardecer: naranja
-        material.color.lerp(new THREE.Color(0xff6b35), 0.05)
+        material.color.lerp(sunsetColor, 0.05)
       } else if (isDay) {
-        // Día: dorado
-        material.color.lerp(new THREE.Color(0xffd700), 0.05)
+        material.color.lerp(middayColor, 0.05)
       } else {
-        // Noche: azul profundo
-        material.color.lerp(new THREE.Color(0x4a5899), 0.05)
+        material.color.lerp(nightColor, 0.05)
       }
       
       // Rotación lenta

@@ -143,7 +143,7 @@ export default function Sun() {
     
     // Actualizar luz direccional
     if (directionalLightRef.current) {
-      directionalLightRef.current.position.copy(new THREE.Vector3(...sunPosition))
+      directionalLightRef.current.position.set(...sunPosition)
       directionalLightRef.current.target.position.set(0, 0, 0)
       directionalLightRef.current.target.updateMatrixWorld()
     }

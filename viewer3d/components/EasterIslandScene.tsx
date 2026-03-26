@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, Suspense } from 'react'
+import { useRef, Suspense, useEffect } from 'react'
 import { useGLTF, Html } from '@react-three/drei'
 import { Vector3 } from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
@@ -53,6 +53,24 @@ function EasterIslandSceneContent({ avatarPositionRef }: EasterIslandSceneProps)
   const moaiModel = useGLTF(getAssetPath('/moai.glb'))
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
   
+  // 🎼 Activar arquitectura de Isla de Pascua
+  useEffect(() => {
+    import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+      const harmonia = getHarmoniaMundi()
+      if (harmonia.isEnabled()) {
+        harmonia.activateArchitecture('easter-island')
+        console.log('🏛️ Arquitectura de Isla de Pascua activada')
+      }
+    })
+    
+    return () => {
+      import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+        const harmonia = getHarmoniaMundi()
+        harmonia.deactivateArchitecture('easter-island')
+      })
+    }
+  }, [])
+  
   // Posiciones para el sistema de diálogo
   const moaiPosition = new Vector3(-4, 3, 0)
   const atlantePosition = new Vector3(4, 2, 0)
@@ -62,7 +80,7 @@ function EasterIslandSceneContent({ avatarPositionRef }: EasterIslandSceneProps)
       {/* Moai - Lado izquierdo, girado 30° hacia el noroeste desde la dirección original, elevado 3m */}
       <group position={[-4, 3, 0]} rotation={[0, Math.PI / 4 - Math.PI / 6, 0]}>
         <primitive 
-          object={moaiModel.scene.clone()} 
+          object={moaiModel.scene} 
           scale={5}
         />
       </group>
@@ -70,7 +88,7 @@ function EasterIslandSceneContent({ avatarPositionRef }: EasterIslandSceneProps)
       {/* Atlante - Lado derecho, girado 45° hacia el este desde la dirección original, elevado 2m */}
       <group position={[4, 2, 0]} rotation={[0, -Math.PI / 4 + Math.PI / 4, 0]}>
         <primitive 
-          object={atlanteModel.scene.clone()} 
+          object={atlanteModel.scene} 
           scale={5}
         />
       </group>

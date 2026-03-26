@@ -23,6 +23,9 @@ export default function PortalDetector({
 }: PortalDetectorProps) {
   const hasEnteredRef = useRef(false)
   const cooldownRef = useRef(0)
+  
+  // Vector reutilizable para evitar crear en cada frame
+  const portalPosVec = useRef(new THREE.Vector3())
 
   useFrame((_, delta) => {
     if (!enabled || !avatarPositionRef.current) return
@@ -34,10 +37,10 @@ export default function PortalDetector({
     }
 
     const avatarPos = avatarPositionRef.current
-    const portalPos = new THREE.Vector3(...portalPosition)
+    portalPosVec.current.set(portalPosition[0], portalPosition[1], portalPosition[2])
 
     // Calcular distancia al portal
-    const distance = avatarPos.distanceTo(portalPos)
+    const distance = avatarPos.distanceTo(portalPosVec.current)
 
     // Radio de detección basado en el tamaño del portal
     const detectionRadius = portalScale * 2

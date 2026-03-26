@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useGLTF, useAnimations } from '@react-three/drei'
 import * as THREE from 'three'
@@ -46,8 +46,24 @@ export default function WalkableAvatar({
   const { actions, names } = useAnimations(animations, group)
   const { camera } = useThree()
   
-  // Convertir solarDirection de objeto plano a Vector3
-  const solarDirectionVec3 = new THREE.Vector3(solarDirection.x, solarDirection.y, solarDirection.z)
+  // Convertir solarDirection de objeto plano a Vector3 (memoizado)
+  const solarDirectionVec3 = useMemo(() => 
+    new THREE.Vector3(solarDirection.x, solarDirection.y, solarDirection.z),
+    [solarDirection.x, solarDirection.y, solarDirection.z]
+  )
+  
+  // Vectores reutilizables para evitar crear en cada frame
+  const reusableVectors = useRef({
+    moveDirection: new THREE.Vector3(),
+    avatarForward: new THREE.Vector3(),
+    avatarRight: new THREE.Vector3(),
+    upVector: new THREE.Vector3(0, 1, 0),
+    cameraTarget: new THREE.Vector3(),
+    lookAtTarget: new THREE.Vector3(),
+    sunPosition: new THREE.Vector3(),
+    rayOrigin: new THREE.Vector3(),
+    rayDirection: new THREE.Vector3(0, -1, 0)
+  }).current
   
   // Estado del avatar
   const [state, setState] = useState<'idle' | 'walking'>('idle')
@@ -292,43 +308,40 @@ export default function WalkableAvatar({
       const targetPitch = mousePosition.current.y * (Math.PI / 4)  // ±45 grados
       
       // Aplicar rotación suave
-      const currentRotation = group.current.rotation.clone()
-      currentRotation.x = THREE.MathUtils.lerp(currentRotation.x, targetPitch, 0.15)
-      group.current.rotation.x = currentRotation.x
+      group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, targetPitch, 0.15)
       
       // Calcular dirección de movimiento basada en las teclas Y la orientación de la nave
-      const moveDirection = new THREE.Vector3()
+      reusableVectors.moveDirection.set(0, 0, 0)
       
       // Obtener la dirección frontal de la nave (considerando su rotación completa)
-      const avatarForward = new THREE.Vector3(0, 0, 1)
-      avatarForward.applyQuaternion(group.current.quaternion)
-      avatarForward.normalize()
+      reusableVectors.avatarForward.set(0, 0, 1)
+      reusableVectors.avatarForward.applyQuaternion(group.current.quaternion)
+      reusableVectors.avatarForward.normalize()
       
       // Calcular dirección derecha
-      const avatarRight = new THREE.Vector3()
-      avatarRight.crossVectors(avatarForward, new THREE.Vector3(0, 1, 0)).normalize()
+      reusableVectors.avatarRight.crossVectors(reusableVectors.avatarForward, reusableVectors.upVector).normalize()
       
       // Input de teclado (igual que modo normal)
       let isMoving = false
       
       if (keys.current['w']) {
         // Adelante en la dirección que mira (INCLUYE componente vertical)
-        moveDirection.add(avatarForward)
+        reusableVectors.moveDirection.add(reusableVectors.avatarForward)
         isMoving = true
       }
       if (keys.current['s']) {
         // Atrás (opuesto a la dirección)
-        moveDirection.sub(avatarForward)
+        reusableVectors.moveDirection.sub(reusableVectors.avatarForward)
         isMoving = true
       }
       if (keys.current['a']) {
         // Izquierda
-        moveDirection.sub(avatarRight)
+        reusableVectors.moveDirection.sub(reusableVectors.avatarRight)
         isMoving = true
       }
       if (keys.current['d']) {
         // Derecha
-        moveDirection.add(avatarRight)
+        reusableVectors.moveDirection.add(reusableVectors.avatarRight)
         isMoving = true
       }
       
@@ -342,9 +355,9 @@ export default function WalkableAvatar({
       
       // Aplicar movimiento solo si hay input de teclado
       if (isMoving) {
-        moveDirection.normalize()
+        reusableVectors.moveDirection.normalize()
         const flySpeed = moveSpeed * 1.5  // Velocidad aumentada en modo vuelo libre (era 1.2)
-        velocity.current.copy(moveDirection.multiplyScalar(flySpeed * delta))
+        velocity.current.copy(reusableVectors.moveDirection.multiplyScalar(flySpeed * delta))
         group.current.position.add(velocity.current)
       }
       
@@ -361,36 +374,35 @@ export default function WalkableAvatar({
     
     // MODO NORMAL: Movimiento basado en teclado
     // Calcular dirección de movimiento basada en el AVATAR, no en la cámara
-    const moveDirection = new THREE.Vector3()
+    reusableVectors.moveDirection.set(0, 0, 0)
     
     // Obtener la dirección frontal del avatar (hacia donde mira)
     // Por defecto, los modelos miran hacia -Z en Three.js
-    const avatarForward = new THREE.Vector3(0, 0, 1)  // Cambiado de -1 a 1
-    avatarForward.applyQuaternion(group.current.quaternion)
-    avatarForward.y = 0
-    avatarForward.normalize()
+    reusableVectors.avatarForward.set(0, 0, 1)  // Cambiado de -1 a 1
+    reusableVectors.avatarForward.applyQuaternion(group.current.quaternion)
+    reusableVectors.avatarForward.y = 0
+    reusableVectors.avatarForward.normalize()
     
     // Calcular dirección derecha del avatar
-    const avatarRight = new THREE.Vector3()
-    avatarRight.crossVectors(avatarForward, new THREE.Vector3(0, 1, 0)).normalize()
+    reusableVectors.avatarRight.crossVectors(reusableVectors.avatarForward, reusableVectors.upVector).normalize()
     
     // Input de teclado
     let isMoving = false
     
     if (keys.current['w']) {
-      moveDirection.add(avatarForward)  // Adelante
+      reusableVectors.moveDirection.add(reusableVectors.avatarForward)  // Adelante
       isMoving = true
     }
     if (keys.current['s']) {
-      moveDirection.sub(avatarForward)  // Atrás
+      reusableVectors.moveDirection.sub(reusableVectors.avatarForward)  // Atrás
       isMoving = true
     }
     if (keys.current['a']) {
-      moveDirection.sub(avatarRight)  // Izquierda
+      reusableVectors.moveDirection.sub(reusableVectors.avatarRight)  // Izquierda
       isMoving = true
     }
     if (keys.current['d']) {
-      moveDirection.add(avatarRight)  // Derecha
+      reusableVectors.moveDirection.add(reusableVectors.avatarRight)  // Derecha
       isMoving = true
     }
     
@@ -414,8 +426,8 @@ export default function WalkableAvatar({
     
     // Aplicar movimiento
     if (isMoving) {
-      moveDirection.normalize()
-      velocity.current.copy(moveDirection.multiplyScalar(moveSpeed * delta))
+      reusableVectors.moveDirection.normalize()
+      velocity.current.copy(reusableVectors.moveDirection.multiplyScalar(moveSpeed * delta))
       group.current.position.add(velocity.current)
     }
     
@@ -450,14 +462,12 @@ export default function WalkableAvatar({
       let targetHeight = flyingHeight
       
       if (terrainRef?.current) {
-        raycaster.current.set(
-          new THREE.Vector3(
-            group.current.position.x,
-            group.current.position.y + 10,
-            group.current.position.z
-          ),
-          new THREE.Vector3(0, -1, 0)
+        reusableVectors.rayOrigin.set(
+          group.current.position.x,
+          group.current.position.y + 10,
+          group.current.position.z
         )
+        raycaster.current.set(reusableVectors.rayOrigin, reusableVectors.rayDirection)
         
         const intersects = raycaster.current.intersectObject(terrainRef.current, false)  // false = no recursivo, solo terreno
         
@@ -555,14 +565,12 @@ export default function WalkableAvatar({
     
     // Mantener avatar pegado al terreno (solo avatares terrestres)
     if (avatarType !== 'flying' && terrainRef?.current) {
-      raycaster.current.set(
-        new THREE.Vector3(
-          group.current.position.x,
-          group.current.position.y + 10,
-          group.current.position.z
-        ),
-        new THREE.Vector3(0, -1, 0)
+      reusableVectors.rayOrigin.set(
+        group.current.position.x,
+        group.current.position.y + 10,
+        group.current.position.z
       )
+      raycaster.current.set(reusableVectors.rayOrigin, reusableVectors.rayDirection)
       
       const intersects = raycaster.current.intersectObject(terrainRef.current, false)  // false = no recursivo, solo terreno
       
@@ -612,32 +620,28 @@ export default function WalkableAvatar({
       
       // Solo mover cámara si followSpeed > 0
       if (followSpeed > 0) {
-        camera.position.lerp(
-          new THREE.Vector3(cameraX, cameraY, cameraZ),
-          followSpeed
-        )
+        reusableVectors.cameraTarget.set(cameraX, cameraY, cameraZ)
+        camera.position.lerp(reusableVectors.cameraTarget, followSpeed)
       }
       // Si followSpeed = 0: NO TOCAR la cámara (congelada)
       
       // Siempre mirar al avatar (un poco arriba del centro)
-      const lookAtTarget = new THREE.Vector3(
+      reusableVectors.lookAtTarget.set(
         group.current.position.x,
         group.current.position.y + 1.5,
         group.current.position.z
       )
-      camera.lookAt(lookAtTarget)
+      camera.lookAt(reusableVectors.lookAtTarget)
     }
     
     // Actualizar luz del Sol en el espacio para que apunte desde el Sol (0,0,0) hacia el Avenger
     if (disableCameraControl && sunLightRef.current && group.current) {
-      // Calcular dirección desde el Sol hacia el Avenger
-      const sunPosition = new THREE.Vector3(0, 0, 0)
-      const avengerPosition = group.current.position.clone()
-      const direction = avengerPosition.sub(sunPosition).normalize()
+      // Calcular dirección desde el Sol hacia el Avenger (usar vector temporal)
+      reusableVectors.sunPosition.copy(group.current.position).normalize()
       
       // Posicionar la luz en dirección opuesta al Avenger (desde el Sol)
       const lightDistance = 50
-      sunLightRef.current.position.copy(direction.multiplyScalar(-lightDistance))
+      sunLightRef.current.position.copy(reusableVectors.sunPosition.multiplyScalar(-lightDistance))
     }
     
     // Notificar cambio de posición

@@ -13,6 +13,11 @@ export default function CollisionSystem({ enabled, model }: CollisionSystemProps
   const { camera } = useThree()
   const boundingBoxes = useRef<THREE.Box3[]>([])
   
+  // Objetos reutilizables para evitar crear en cada frame
+  const cameraBox = useRef(new THREE.Box3())
+  const cameraSize = useRef(new THREE.Vector3(0.5, 1.8, 0.5))
+  const direction = useRef(new THREE.Vector3())
+  
   useEffect(() => {
     if (!model || !enabled) return
     
@@ -35,17 +40,13 @@ export default function CollisionSystem({ enabled, model }: CollisionSystemProps
     if (!enabled || boundingBoxes.current.length === 0) return
     
     // Verificar colisiones con la cámara
-    const cameraBox = new THREE.Box3().setFromCenterAndSize(
-      camera.position,
-      new THREE.Vector3(0.5, 1.8, 0.5)
-    )
+    cameraBox.current.setFromCenterAndSize(camera.position, cameraSize.current)
     
     for (const box of boundingBoxes.current) {
-      if (cameraBox.intersectsBox(box)) {
+      if (cameraBox.current.intersectsBox(box)) {
         // Retroceder cámara si hay colisión
-        const direction = new THREE.Vector3()
-        camera.getWorldDirection(direction)
-        camera.position.addScaledVector(direction, -0.1)
+        camera.getWorldDirection(direction.current)
+        camera.position.addScaledVector(direction.current, -0.1)
       }
     }
   })

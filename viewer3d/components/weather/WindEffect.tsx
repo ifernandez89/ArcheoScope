@@ -19,6 +19,8 @@ export default function WindEffect({
 }: WindEffectProps) {
   const windVectorRef = useRef(new Vector3(...direction))
   const timeRef = useRef(0)
+  // Vector para dispatch (evita clone cada frame)
+  const dispatchVector = useRef(new Vector3())
   
   useFrame((state, delta) => {
     timeRef.current += delta
@@ -34,9 +36,11 @@ export default function WindEffect({
     
     // Dispatch wind data para que otros componentes lo usen
     if (typeof window !== 'undefined') {
+      // Copiar en lugar de clonar
+      dispatchVector.current.copy(windVectorRef.current)
       window.dispatchEvent(new CustomEvent('weather:wind', {
         detail: {
-          vector: windVectorRef.current.clone(),
+          vector: dispatchVector.current,
           strength: currentStrength,
           time: timeRef.current
         }

@@ -36,14 +36,16 @@ export default function SelectableObject({
   const { selectedId, setSelected, pendingMove, consumeMove } = useObjectSelection()
   const isSelected = selectedId === id
 
-  // Guardar emissive originales para restaurar
+  // Guardar emissive originales para restaurar + cache de meshes
   const originalEmissive = useRef<Map<THREE.Mesh, { color: THREE.Color; intensity: number }>>(new Map())
+  const cachedMeshes = useRef<THREE.Mesh[]>([])
   const initialized = useRef(false)
 
   // Inicializar emissive originales una vez que los meshes están listos
   useEffect(() => {
     if (!groupRef.current || initialized.current) return
     const timer = setTimeout(() => {
+      cachedMeshes.current = []
       groupRef.current?.traverse((child) => {
         if (child instanceof THREE.Mesh && child.material) {
           const mat = child.material as THREE.MeshStandardMaterial
@@ -52,6 +54,7 @@ export default function SelectableObject({
               color: mat.emissive.clone(),
               intensity: mat.emissiveIntensity ?? 0
             })
+            cachedMeshes.current.push(child)
           }
         }
       })
@@ -60,30 +63,28 @@ export default function SelectableObject({
     return () => clearTimeout(timer)
   }, [])
 
-  // Aplicar/quitar highlight en cada frame según estado
+  // Aplicar/quitar highlight en cada frame según estado - OPTIMIZADO: usa cache
   useFrame(() => {
-    if (!groupRef.current || !initialized.current) return
+    if (!initialized.current || cachedMeshes.current.length === 0) return
 
-    groupRef.current.traverse((child) => {
-      if (child instanceof THREE.Mesh && child.material) {
-        const mat = child.material as THREE.MeshStandardMaterial
-        if (mat.emissive === undefined) return
+    for (const mesh of cachedMeshes.current) {
+      const mat = mesh.material as THREE.MeshStandardMaterial
+      if (mat.emissive === undefined) continue
 
-        const orig = originalEmissive.current.get(child)
-        if (!orig) return
+      const orig = originalEmissive.current.get(mesh)
+      if (!orig) continue
 
-        if (isSelected) {
-          mat.emissive.set('#00aaff')
-          mat.emissiveIntensity = 0.6 + Math.sin(Date.now() * 0.004) * 0.2 // pulso
-        } else if (hovered) {
-          mat.emissive.set('#ffdd88')
-          mat.emissiveIntensity = 0.4
-        } else {
-          mat.emissive.copy(orig.color)
-          mat.emissiveIntensity = orig.intensity
-        }
+      if (isSelected) {
+        mat.emissive.set('#00aaff')
+        mat.emissiveIntensity = 0.6 + Math.sin(Date.now() * 0.004) * 0.2 // pulso
+      } else if (hovered) {
+        mat.emissive.set('#ffdd88')
+        mat.emissiveIntensity = 0.4
+      } else {
+        mat.emissive.copy(orig.color)
+        mat.emissiveIntensity = orig.intensity
       }
-    })
+    }
   })
 
   // Consumir movimiento pendiente

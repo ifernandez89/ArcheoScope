@@ -20,7 +20,8 @@ export default function RootLayout({
         {children}
         <AlienCursorTrail />
         <WebVitalsInit />
-        <PerformanceStats />
+        {/* PerformanceStats desactivado - activar solo cuando se necesite debug */}
+        {/* <PerformanceStats enabled={true} /> */}
       </body>
     </html>
   )

@@ -32,6 +32,9 @@ export function OptimizedPlanet({
   const meshRef = useRef<THREE.Mesh>(null)
   const { camera } = useThree()
   
+  // Vector reutilizable para evitar crear objetos cada frame
+  const tempVector = useMemo(() => new THREE.Vector3(), [])
+  
   // Crear geometrías con diferentes niveles de detalle
   const geometries = useMemo(() => ({
     high: new THREE.SphereGeometry(radius, 64, 64),
@@ -61,8 +64,8 @@ export function OptimizedPlanet({
       meshRef.current.rotation.y += delta * rotationSpeed * (retrograde ? -1 : 1)
     }
 
-    // LOD basado en distancia
-    const distance = camera.position.distanceTo(meshRef.current.getWorldPosition(new THREE.Vector3()))
+    // LOD basado en distancia - reutilizar vector
+    const distance = camera.position.distanceTo(meshRef.current.getWorldPosition(tempVector))
     
     let targetGeometry = geometries.high
     if (distance > 200) {
@@ -101,6 +104,9 @@ export function OptimizedAtmosphere({
 }: OptimizedAtmosphereProps) {
   const meshRef = useRef<THREE.Mesh>(null)
   const { camera } = useThree()
+  
+  // Vector reutilizable
+  const tempVector = useMemo(() => new THREE.Vector3(), [])
 
   const geometries = useMemo(() => ({
     high: new THREE.SphereGeometry(radius, 32, 32),
@@ -123,7 +129,7 @@ export function OptimizedAtmosphere({
   useFrame(() => {
     if (!meshRef.current) return
 
-    const distance = camera.position.distanceTo(meshRef.current.getWorldPosition(new THREE.Vector3()))
+    const distance = camera.position.distanceTo(meshRef.current.getWorldPosition(tempVector))
     
     // Ocultar atmósfera si está muy lejos
     if (distance > 300) {

@@ -13,12 +13,9 @@ interface ShipPreviewProps {
 function ShipModel({ modelPath }: { modelPath: string }) {
   const { scene } = useGLTF(getAssetPath(modelPath))
   
-  // Clonar la escena para evitar problemas de reutilización
-  const clonedScene = scene.clone()
-  
   return (
     <primitive 
-      object={clonedScene} 
+      object={scene} 
       scale={2}
       rotation={[0, Math.PI, 0]}
     />

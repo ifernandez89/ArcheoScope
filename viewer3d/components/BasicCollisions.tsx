@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -19,14 +19,17 @@ export default function BasicCollisions({
   const raycaster = useRef(new THREE.Raycaster())
   const minHeight = useRef(1.6) // Altura del jugador (ojos)
   
+  // Vectores reutilizables para evitar crear objetos cada frame
+  const downVector = useMemo(() => new THREE.Vector3(0, -1, 0), [])
+  const obstaclePos = useMemo(() => new THREE.Vector3(), [])
+  const direction = useMemo(() => new THREE.Vector3(), [])
+  const pushPos = useMemo(() => new THREE.Vector3(), [])
+  
   useFrame(() => {
     if (!enabled || !terrainRef?.current) return
     
     // Raycast hacia abajo para mantener jugador sobre terreno
-    raycaster.current.set(
-      camera.position,
-      new THREE.Vector3(0, -1, 0)
-    )
+    raycaster.current.set(camera.position, downVector)
     
     const intersects = raycaster.current.intersectObject(terrainRef.current, true)
     
@@ -50,7 +53,6 @@ export default function BasicCollisions({
     
     // Colisiones simples con obstáculos (bounding spheres)
     obstacles.forEach(obstacle => {
-      const obstaclePos = new THREE.Vector3()
       obstacle.getWorldPosition(obstaclePos)
       
       const distance = camera.position.distanceTo(obstaclePos)
@@ -58,13 +60,9 @@ export default function BasicCollisions({
       
       if (distance < minDistance) {
         // Empujar al jugador fuera del obstáculo
-        const direction = new THREE.Vector3()
-          .subVectors(camera.position, obstaclePos)
-          .normalize()
-        
-        camera.position.copy(
-          obstaclePos.clone().add(direction.multiplyScalar(minDistance))
-        )
+        direction.subVectors(camera.position, obstaclePos).normalize()
+        pushPos.copy(obstaclePos).add(direction.multiplyScalar(minDistance))
+        camera.position.copy(pushPos)
       }
     })
   })

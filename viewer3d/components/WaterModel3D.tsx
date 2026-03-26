@@ -26,21 +26,17 @@ export default function WaterModel3D({
   // Cargar modelo GLB
   const { scene } = useGLTF(getAssetPath('/water_blender.glb'))
   
-  // Clonar el modelo
-  const clonedScene = scene.clone()
-  
   useEffect(() => {
-    if (clonedScene) {
+    if (scene) {
       // Ajustar escala según el tamaño deseado
-      const scale = size / 10 // Ajustar según el tamaño del modelo original
-      clonedScene.scale.set(scale, 1, scale)
+      const scale = size / 10
+      scene.scale.set(scale, 1, scale)
       
       // Configurar materiales
-      clonedScene.traverse((child) => {
+      scene.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.receiveShadow = true
           
-          // Si el material existe, ajustar propiedades
           if (child.material) {
             if (Array.isArray(child.material)) {
               child.material.forEach(mat => {
@@ -63,7 +59,7 @@ export default function WaterModel3D({
         }
       })
     }
-  }, [clonedScene, size, color])
+  }, [scene, size, color])
   
   // Animación sutil de ondulación
   useFrame((state) => {
@@ -74,7 +70,7 @@ export default function WaterModel3D({
   
   return (
     <group ref={groupRef} position={position}>
-      <primitive object={clonedScene} />
+      <primitive object={scene} />
     </group>
   )
 }

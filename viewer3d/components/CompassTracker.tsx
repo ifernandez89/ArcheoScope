@@ -1,6 +1,7 @@
 'use client'
 
 import { useThree, useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
 import * as THREE from 'three'
 
 interface CompassTrackerProps {
@@ -14,13 +15,15 @@ interface CompassTrackerProps {
 export default function CompassTracker({ onRotationChange }: CompassTrackerProps) {
   const { camera } = useThree()
   
+  // Vector reutilizable para evitar crear en cada frame
+  const directionRef = useRef(new THREE.Vector3())
+  
   useFrame(() => {
     // Obtener la dirección hacia donde mira la cámara
-    const direction = new THREE.Vector3()
-    camera.getWorldDirection(direction)
+    camera.getWorldDirection(directionRef.current)
     
     // Calcular el ángulo en el plano horizontal (ignorar Y)
-    const angle = Math.atan2(direction.x, direction.z)
+    const angle = Math.atan2(directionRef.current.x, directionRef.current.z)
     
     // Convertir a grados (0° = Norte, 90° = Este, 180° = Sur, 270° = Oeste)
     let degrees = THREE.MathUtils.radToDeg(angle)

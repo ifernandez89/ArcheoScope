@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { useFrame, useThree, ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -26,17 +26,28 @@ export function InteractionSystem({
   const { camera, scene, raycaster, pointer } = useThree()
   const [hoveredObject, setHoveredObject] = useState<THREE.Object3D | null>(null)
   
+  // Cache de objetos interactivos para evitar recorrer toda la escena
+  const interactiveObjects = useRef<THREE.Object3D[]>([])
+  const objectsCached = useRef(false)
+  const cacheTimer = useRef(0)
+  
+  // Vector reutilizable para raycast
+  const pointerVec = useRef(new THREE.Vector2())
+  
   // Manejar click
   const handleClick = useCallback((event: MouseEvent) => {
-    raycaster.setFromCamera(
-      new THREE.Vector2(
-        (event.clientX / window.innerWidth) * 2 - 1,
-        -(event.clientY / window.innerHeight) * 2 + 1
-      ),
-      camera
+    pointerVec.current.set(
+      (event.clientX / window.innerWidth) * 2 - 1,
+      -(event.clientY / window.innerHeight) * 2 + 1
     )
+    raycaster.setFromCamera(pointerVec.current, camera)
     
-    const intersects = raycaster.intersectObjects(scene.children, true)
+    // Usar objetos cacheados si están disponibles, sino toda la escena
+    const objectsToTest = objectsCached.current && interactiveObjects.current.length > 0 
+      ? interactiveObjects.current 
+      : scene.children
+    
+    const intersects = raycaster.intersectObjects(objectsToTest, true)
     
     if (intersects.length > 0) {
       const intersection = intersects[0]
@@ -53,20 +64,33 @@ export function InteractionSystem({
     }
   }, [camera, scene, raycaster, onTerrainClick, onObjectClick, enableTerrainClick, enableObjectClick])
   
-  // Manejar hover
-  useFrame(() => {
+  // Manejar hover - OPTIMIZADO: solo cada 100ms y con cache
+  useFrame((state, delta) => {
     if (!enableHover) return
     
+    // Actualizar cache cada 2 segundos
+    cacheTimer.current += delta
+    if (!objectsCached.current || cacheTimer.current > 2) {
+      cacheTimer.current = 0
+      interactiveObjects.current = []
+      scene.traverse((obj) => {
+        if (obj.userData.isInteractive) {
+          interactiveObjects.current.push(obj)
+        }
+      })
+      objectsCached.current = true
+    }
+    
+    // Si no hay objetos interactivos, no hacer raycast
+    if (interactiveObjects.current.length === 0) return
+    
     raycaster.setFromCamera(pointer, camera)
-    const intersects = raycaster.intersectObjects(scene.children, true)
+    const intersects = raycaster.intersectObjects(interactiveObjects.current, false) // false = no recursivo
     
     let newHoveredObject: THREE.Object3D | null = null
     
     if (intersects.length > 0) {
-      const object = intersects[0].object
-      if (object.userData.isInteractive) {
-        newHoveredObject = object
-      }
+      newHoveredObject = intersects[0].object
     }
     
     if (newHoveredObject !== hoveredObject) {
@@ -78,11 +102,11 @@ export function InteractionSystem({
     }
   })
   
-  // Registrar event listeners
-  useFrame(() => {
+  // Registrar event listeners UNA SOLA VEZ (no en useFrame!)
+  useEffect(() => {
     window.addEventListener('click', handleClick)
     return () => window.removeEventListener('click', handleClick)
-  })
+  }, [handleClick])
   
   return null
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useMemo } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
@@ -16,6 +16,18 @@ export default function SpaceUfo({ ufoNumber = 1 }: { ufoNumber?: number }) {
   const { camera, size, scene: threeScene } = useThree()
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const { scene } = useGLTF(getAssetPath(`/ufo_${ufoNumber}.glb`))
+  
+  // Objetos reutilizables para evitar crear en cada frame
+  const raycaster = useMemo(() => new THREE.Raycaster(), [])
+  const mouseVec = useMemo(() => new THREE.Vector2(), [])
+  const tempVec = useMemo(() => new THREE.Vector3(), [])
+  const targetPos = useMemo(() => new THREE.Vector3(), [])
+  const lookAtPos = useMemo(() => new THREE.Vector3(), [])
+  const dirVec = useMemo(() => new THREE.Vector3(), [])
+  
+  // Cache de planetas (esferas) para evitar traverse cada frame
+  const cachedPlanets = useRef<THREE.Mesh[]>([])
+  const planetsCached = useRef(false)
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -31,27 +43,37 @@ export default function SpaceUfo({ ufoNumber = 1 }: { ufoNumber?: number }) {
   useFrame(() => {
     if (!ufoRef.current) return
 
-    const raycaster = new THREE.Raycaster()
-    raycaster.setFromCamera(new THREE.Vector2(mousePosition.x, mousePosition.y), camera)
+    mouseVec.set(mousePosition.x, mousePosition.y)
+    raycaster.setFromCamera(mouseVec, camera)
 
-    const targetPosition = raycaster.ray.origin.clone().add(
-      raycaster.ray.direction.multiplyScalar(10)
+    targetPos.copy(raycaster.ray.origin).add(
+      tempVec.copy(raycaster.ray.direction).multiplyScalar(10)
     )
-    ufoRef.current.position.lerp(targetPosition, 0.1)
+    ufoRef.current.position.lerp(targetPos, 0.1)
 
     if (ufoNumber !== 1 && ufoNumber !== 5) {
-      ufoRef.current.lookAt(ufoRef.current.position.clone().add(raycaster.ray.direction))
+      lookAtPos.copy(ufoRef.current.position).add(raycaster.ray.direction)
+      ufoRef.current.lookAt(lookAtPos)
     }
     if (ufoNumber === 1) ufoRef.current.rotation.y += 0.01
     if (ufoNumber === 5) ufoRef.current.rotation.y += 0.005
 
-    // Escala dinámica según distancia a planetas
+    // Cachear planetas una sola vez
+    if (!planetsCached.current) {
+      cachedPlanets.current = []
+      threeScene.traverse((obj) => {
+        if (obj instanceof THREE.Mesh && obj.geometry instanceof THREE.SphereGeometry) {
+          cachedPlanets.current.push(obj)
+        }
+      })
+      planetsCached.current = true
+    }
+
+    // Escala dinámica según distancia a planetas cacheados
     let minDist = Infinity
-    threeScene.traverse((obj) => {
-      if (obj instanceof THREE.Mesh && obj.geometry instanceof THREE.SphereGeometry) {
-        const d = ufoRef.current!.position.distanceTo(obj.getWorldPosition(new THREE.Vector3()))
-        if (d < minDist) minDist = d
-      }
+    cachedPlanets.current.forEach(planet => {
+      const d = ufoRef.current!.position.distanceTo(planet.getWorldPosition(tempVec))
+      if (d < minDist) minDist = d
     })
 
     const normalScale = 1.14
@@ -66,8 +88,8 @@ export default function SpaceUfo({ ufoNumber = 1 }: { ufoNumber?: number }) {
 
     // Luz solar apuntando desde el Sol hacia el OVNI
     if (sunLightRef.current) {
-      const dir = ufoRef.current.position.clone().normalize()
-      sunLightRef.current.position.copy(dir.multiplyScalar(-50))
+      dirVec.copy(ufoRef.current.position).normalize().multiplyScalar(-50)
+      sunLightRef.current.position.copy(dirVec)
     }
   })
 

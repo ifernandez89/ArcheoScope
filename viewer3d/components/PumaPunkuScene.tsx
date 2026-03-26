@@ -66,6 +66,24 @@ function PumaPunkuSceneContent({
 }) {
   const { blockMoved } = useObjectSelection()
   
+  // 🎼 Activar arquitectura de Puma Punku
+  useEffect(() => {
+    import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+      const harmonia = getHarmoniaMundi()
+      if (harmonia.isEnabled()) {
+        harmonia.activateArchitecture('puma-punku')
+        console.log('🏛️ Arquitectura de Puma Punku activada')
+      }
+    })
+    
+    return () => {
+      import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+        const harmonia = getHarmoniaMundi()
+        harmonia.deactivateArchitecture('puma-punku')
+      })
+    }
+  }, [])
+  
   // Cargar estado persistente de la misión
   const [gateRevealed, setGateRevealed] = useState(() => {
     if (typeof window !== 'undefined') {

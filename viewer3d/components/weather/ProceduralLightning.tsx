@@ -10,7 +10,7 @@
  * - Opcional: línea de rayo en el cielo
  */
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { getLightningManager, type LightningStrike } from '@/systems/LightningSystem'
@@ -39,6 +39,10 @@ export default function ProceduralLightning({
   const flashIntensityRef = useRef(0)
   const boltRef = useRef<THREE.Line | null>(null)
   const lightningManager = getLightningManager()
+  
+  // Cache de ambient lights para evitar traverse cada frame
+  const cachedAmbientLights = useRef<THREE.AmbientLight[]>([])
+  const ambientLightsCached = useRef(false)
   
   // Inicializar sistema de rayos
   useEffect(() => {
@@ -143,13 +147,22 @@ export default function ProceduralLightning({
         flashLightRef.current.intensity = flashIntensityRef.current * 3
       }
       
-      // Aplicar a ambient light de la escena (si existe)
-      scene.traverse((object) => {
-        if (object instanceof THREE.AmbientLight) {
-          const baseIntensity = 0.5 // Intensidad base
-          object.intensity = baseIntensity + flashIntensityRef.current * 2
-        }
-      })
+      // Cache ambient lights solo una vez
+      if (!ambientLightsCached.current) {
+        cachedAmbientLights.current = []
+        scene.traverse((object) => {
+          if (object instanceof THREE.AmbientLight) {
+            cachedAmbientLights.current.push(object)
+          }
+        })
+        ambientLightsCached.current = true
+      }
+      
+      // Aplicar a ambient lights cacheadas
+      const baseIntensity = 0.5
+      for (const light of cachedAmbientLights.current) {
+        light.intensity = baseIntensity + flashIntensityRef.current * 2
+      }
       
       // Ajustar exposure del renderer (opcional)
       if (flashIntensityRef.current > 0.5) {

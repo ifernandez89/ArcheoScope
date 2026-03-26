@@ -20,6 +20,12 @@ export default function DynamicSky({ isDay = true, sunPosition, skyColor = '#87c
   const skyRef = useRef<THREE.Mesh>(null)
   const starsRef = useRef<THREE.Points>(null)
   
+  // Colores reutilizables para useFrame
+  const baseColor = useMemo(() => new THREE.Color(), [])
+  const darkColor = useMemo(() => new THREE.Color('#3a3a3a'), [])
+  const nightColor = useMemo(() => new THREE.Color('#000814'), [])
+  const targetColor = useMemo(() => new THREE.Color(), [])
+  
   // Geometría de estrellas
   const starsGeometry = useMemo(() => {
     const geometry = new THREE.BufferGeometry()
@@ -99,15 +105,14 @@ export default function DynamicSky({ isDay = true, sunPosition, skyColor = '#87c
       if (isDay) {
         // Día: cielo con color personalizado, sin estrellas
         // Oscurecer durante tormentas
-        const baseColor = new THREE.Color(skyColor)
-        const darkColor = new THREE.Color('#3a3a3a')
-        const targetColor = baseColor.clone().lerp(darkColor, stormDarkness)
+        baseColor.set(skyColor)
+        targetColor.copy(baseColor).lerp(darkColor, stormDarkness)
         skyMaterial.color.lerp(targetColor, 0.05)
         starsMat.opacity += (0 - starsMat.opacity) * 0.05
       } else {
         // Noche: cielo negro, con estrellas más sutiles
-        skyMaterial.color.lerp(new THREE.Color('#000814'), 0.05)
-        starsMat.opacity += (0.6 - starsMat.opacity) * 0.05 // Reducido de 0.9 a 0.6
+        skyMaterial.color.lerp(nightColor, 0.05)
+        starsMat.opacity += (0.6 - starsMat.opacity) * 0.05
       }
     }
   })
