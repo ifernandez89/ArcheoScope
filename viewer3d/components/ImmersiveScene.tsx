@@ -84,6 +84,7 @@ const EnvironmentElements = dynamic(() => import('./EnvironmentElements'), { ssr
 // COMPONENTES DE DIÁLOGO - LAZY LOADING
 const ViracochaDialogue = dynamic(() => import('./ViracochaDialogue'), { ssr: false })
 const SphinxInteractiveDialogue = dynamic(() => import('./SphinxInteractiveDialogue'), { ssr: false })
+const QuetzalcoatlDialogue = dynamic(() => import('./QuetzalcoatlDialogue'), { ssr: false })
 const DiscoveredItemInWorld = dynamic(() => import('./DiscoveredItemInWorld'), { ssr: false })
 const ItemCollectedMessage = dynamic(() => import('./ItemCollectedMessage'), { ssr: false })
 const Compass = dynamic(() => import('./Compass'), { ssr: false })
@@ -315,6 +316,36 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     console.log('🌊 Iniciando inundación de Giza como castigo divino...')
     // La inundación se maneja en GizaScene
   }, [])
+  
+  // Handler para click en Quetzalcoatl
+  const handleQuetzalcoatlClick = useCallback(() => {
+    console.log('🐍 Quetzalcoatl clickeado!')
+    setShowQuetzalcoatlDialogue(true)
+  }, [])
+  
+  // Handler cuando Quetzalcoatl pide la semilla
+  const handleRequestCornSeed = useCallback(() => {
+    console.log('🌽 Quetzalcoatl pide plantar la semilla!')
+    setShowCornSeed(true)
+  }, [])
+  
+  // Handler para recolectar la semilla de maíz
+  const handleCollectCornSeed = useCallback(() => {
+    console.log('🌽 Semilla de maíz recolectada!')
+    
+    // Registrar en el sistema de misiones
+    collectItem('teotihuacan', 'corn_seed')
+    
+    // Guardar en sessionStorage
+    sessionStorage.setItem('item_corn_seed_collected', 'true')
+    
+    // Marcar como recolectado
+    setCornSeedCollected(true)
+    
+    // Mostrar mensaje
+    setShowCollectedMessage(true)
+    setTimeout(() => setShowCollectedMessage(false), 3000)
+  }, [])
 
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // DirecciÃ³n del sol como objeto plano
   const [solarState, setSolarState] = useState({
@@ -353,6 +384,12 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [pyramidionOnTop, setPyramidionOnTop] = useState(false) // Si el piramidón está en la punta
   const [scarabDiscovered, setScarabDiscovered] = useState(false) // Si se movió la momia
   const [scarabCollected, setScarabCollected] = useState(false) // Si se recogió el escarabajo
+  
+  // 🐍 Estado del diálogo de Quetzalcoatl
+  const [showQuetzalcoatlDialogue, setShowQuetzalcoatlDialogue] = useState(false)
+  const [showQuetzalcoatl, setShowQuetzalcoatl] = useState(false)
+  const [cornSeedCollected, setCornSeedCollected] = useState(false)
+  const [showCornSeed, setShowCornSeed] = useState(false)
 
   // Verificar si la Magna Bowl fue recolectada
   useEffect(() => {
@@ -867,6 +904,20 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           }}
         />
       )}
+      
+      {/* Diálogo de Quetzalcoatl - FUERA del Canvas */}
+      {showQuetzalcoatlDialogue && (
+        <QuetzalcoatlDialogue
+          hasCornSeed={cornSeedCollected}
+          hasPlantedCorn={false}
+          onClose={() => {
+            setShowQuetzalcoatlDialogue(false)
+            // Registrar interacción con Quetzalcoatl
+            interactWithNPC('teotihuacan', 'quetzalcoatl')
+          }}
+          onRequestSeed={handleRequestCornSeed}
+        />
+      )}
 
       <style jsx>{`
         @keyframes fadeIn {
@@ -1300,6 +1351,11 @@ function ModelScene({
       )) && (
         <TeotihuacanScene 
           avatarPositionRef={avatarPositionRef}
+          onQuetzalcoatlClick={handleQuetzalcoatlClick}
+          onQuetzalcoatlAppear={() => setShowQuetzalcoatl(true)}
+          onCornCollect={handleCollectCornSeed}
+          cornCollected={cornSeedCollected}
+          showCornSeed={showCornSeed}
         />
       )}
       
