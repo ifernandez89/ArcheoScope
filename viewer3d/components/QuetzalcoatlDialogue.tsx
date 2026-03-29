@@ -21,7 +21,7 @@ export default function QuetzalcoatlDialogue({
   useEffect(() => {
     if (!hasCornSeed && !hasPlantedCorn) {
       // Primera vez - pedir que plante la semilla
-      setCurrentMessage('🌽 Viajero de las estrellas... El maíz es el regalo de los dioses a la humanidad. Busca la semilla sagrada y plántala en la tierra fértil de Teotihuacán.')
+      setCurrentMessage('🌽 Viajero de las estrellas... El maíz es el regalo de los dioses a la humanidad. Busca la semilla sagrada y plántala en la tierra fértil.')
       setShowOptions(false)
       onRequestSeed()
       
@@ -37,9 +37,12 @@ export default function QuetzalcoatlDialogue({
         onClose()
       }, 4000)
     } else {
-      // Ya plantó el maíz
-      setCurrentMessage('🌾 Has completado el ciclo sagrado del maíz. Los dioses están complacidos. La abundancia fluirá hacia tu pueblo.')
-      setShowOptions(true)
+      // Ya plantó el maíz - agradecimiento
+      setCurrentMessage('🌾 ¡Viajero de las estrellas! Has completado el ciclo sagrado del maíz. Los dioses están complacidos. La tormenta cesa y la abundancia fluirá sobre estas tierras.')
+      setShowOptions(false)
+      setTimeout(() => {
+        onClose()
+      }, 6000)
     }
   }, [hasCornSeed, hasPlantedCorn, onClose, onRequestSeed])
 
@@ -91,7 +94,6 @@ export default function QuetzalcoatlDialogue({
             textShadow: '0 0 10px rgba(124, 252, 0, 0.8)',
           }}
         >
-          QUETZALCÓATL
         </div>
 
         {/* Mensaje principal */}

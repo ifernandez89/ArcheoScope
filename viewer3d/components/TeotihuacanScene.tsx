@@ -24,6 +24,8 @@ interface TeotihuacanSceneProps {
   onCornCollect?: () => void
   cornCollected?: boolean
   showCornSeed?: boolean
+  cornDropPosition?: {x: number, z: number} | null
+  cornPlanted?: boolean
 }
 
 export default function TeotihuacanScene({ 
@@ -32,7 +34,9 @@ export default function TeotihuacanScene({
   onQuetzalcoatlAppear,
   onCornCollect,
   cornCollected,
-  showCornSeed
+  showCornSeed,
+  cornDropPosition,
+  cornPlanted
 }: TeotihuacanSceneProps) {
   return (
     <Suspense fallback={<LoadingTeotihuacan />}>
@@ -43,6 +47,8 @@ export default function TeotihuacanScene({
         onCornCollect={onCornCollect}
         cornCollected={cornCollected}
         showCornSeed={showCornSeed}
+        cornDropPosition={cornDropPosition}
+        cornPlanted={cornPlanted}
       />
     </Suspense>
   )
@@ -54,7 +60,9 @@ function TeotihuacanSceneContent({
   onQuetzalcoatlAppear,
   onCornCollect,
   cornCollected,
-  showCornSeed
+  showCornSeed,
+  cornDropPosition,
+  cornPlanted
 }: TeotihuacanSceneProps) {
   // Cargar modelos
   const kukulkanModel = useGLTF(getAssetPath('/kukulkan.glb'))
@@ -62,6 +70,7 @@ function TeotihuacanSceneContent({
   const calendarioModel = useGLTF(getAssetPath('/calendario_maya.glb'))
   const quetzalcoatlModel = useGLTF(getAssetPath('/quetzalcoatl.glb'))
   const maizModel = useGLTF(getAssetPath('/maiz.glb'))
+  const plantaMaizModel = useGLTF(getAssetPath('/planta_maiz.glb'))
   
   // Estados (solo los que necesitan re-render)
   const [isCalendarioSpinning, setIsCalendarioSpinning] = useState(true)
@@ -101,6 +110,48 @@ function TeotihuacanSceneContent({
     })
     return cloned
   }, [maizModel.scene])
+  
+  // Posiciones de las 20 plantas sobre el parche
+  const PLANT_POSITIONS: [number, number][] = [
+    [-1.5, -1.5], [-0.5, -1.5], [0.5, -1.5], [1.5, -1.5],
+    [-1.5, -0.5], [-0.5, -0.5], [0.5, -0.5], [1.5, -0.5],
+    [-1.5,  0.5], [-0.5,  0.5], [0.5,  0.5], [1.5,  0.5],
+    [-1.5,  1.5], [-0.5,  1.5], [0.5,  1.5], [1.5,  1.5],
+    [-1.0,  0.0], [ 1.0,  0.0], [0.0, -1.0], [0.0,  1.0],
+  ]
+  
+  // Clonar plantas una sola vez (evita clone en cada render)
+  const clonedPlants = useMemo(() => {
+    return PLANT_POSITIONS.map(() => plantaMaizModel.scene.clone(true))
+  }, [plantaMaizModel.scene])
+  
+  // Resetear estado de desaparición cuando el maíz vuelve al piso
+  useEffect(() => {
+    if (showCornSeed && !cornCollected) {
+      setIsCornDisappearing(false)
+      cornDisappearTimer.current = 0
+      cornMeshesCached.current = false
+      
+      // Restaurar opacidad del maíz clonado
+      if (clonedCornScene) {
+        clonedCornScene.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            const mesh = child as THREE.Mesh
+            if (mesh.material) {
+              const mat = mesh.material as THREE.MeshStandardMaterial
+              mat.opacity = 1
+              mat.needsUpdate = true
+            }
+          }
+        })
+      }
+      
+      // Restaurar escala si el ref existe
+      if (cornRef.current) {
+        cornRef.current.scale.setScalar(2)
+      }
+    }
+  }, [showCornSeed, cornCollected, clonedCornScene])
   
   // 🎼 Activar arquitectura de Teotihuacán
   useEffect(() => {
@@ -268,27 +319,18 @@ function TeotihuacanSceneContent({
           }}
         >
           <primitive object={quetzalcoatlModel.scene} scale={5} />
-          
-          {/* Outline cuando está hover */}
-          {isQuetzalcoatlHovered && quetzalcoatlOpacityRef.current > 0.5 && (
-            <mesh position={[0, 2, 0]}>
-              <sphereGeometry args={[3, 16, 16]} />
-              <meshBasicMaterial
-                color="#7cfc00"
-                wireframe
-                transparent
-                opacity={0.3}
-              />
-            </mesh>
-          )}
         </group>
       )}
       
-      {/* Semilla de Maíz - Aparece después de hablar con Quetzalcoatl */}
+      {/* Semilla de Maíz - Posición dinámica (donde cayó o posición inicial) */}
       {showCornSeed && !cornCollected && (
         <group
           ref={cornRef}
-          position={[10, 0.5, 5]}
+          position={[
+            cornDropPosition?.x ?? 35, 
+            1.0, 
+            cornDropPosition?.z ?? 20
+          ]}
           onClick={handleCornClick}
           onPointerOver={() => {
             if (!isCornDisappearing) {
@@ -320,6 +362,39 @@ function TeotihuacanSceneContent({
           <pointLight color="#ffd700" intensity={2} distance={5} />
         </group>
       )}
+      
+      {/* Parche de tierra para plantar - 4m x 4m - Detrás del Templo Azteca hacia el oeste */}
+      <group position={[60, 2.3, 0]}>
+        {/* Base elevada de tierra */}
+        <mesh position={[0, -0.05, 0]}>
+          <boxGeometry args={[9, 0.2, 9]} />
+          <meshStandardMaterial color="#8B4513" roughness={0.9} metalness={0} />
+        </mesh>
+        {/* Tierra marrón principal */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+          <planeGeometry args={[8, 8]} />
+          <meshStandardMaterial color="#CD853F" roughness={1} metalness={0} />
+        </mesh>
+        {/* Surcos en la tierra */}
+        {[-2.4, -0.8, 0.8, 2.4].map((z, i) => (
+          <mesh key={i} position={[0, 0.08, z]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[7, 0.4]} />
+            <meshStandardMaterial color="#8B4513" roughness={1} metalness={0} />
+          </mesh>
+        ))}
+        
+        {/* Planta de maíz cuando está plantado - 20 plantas usando clones pre-calculados */}
+        {cornPlanted && (
+          <>
+            {PLANT_POSITIONS.map(([x, z], i) => (
+              <group key={i} position={[x, 0.3, z]}>
+                <primitive object={clonedPlants[i]} scale={0.8} />
+              </group>
+            ))}
+            <pointLight color="#7cfc00" intensity={2} distance={6} position={[0, 2, 0]} />
+          </>
+        )}
+      </group>
       
       {/* Iluminación */}
       <ambientLight intensity={0.6} />
@@ -355,3 +430,4 @@ useGLTF.preload(getAssetPath('/aztec_temple.glb'))
 useGLTF.preload(getAssetPath('/calendario_maya.glb'))
 useGLTF.preload(getAssetPath('/quetzalcoatl.glb'))
 useGLTF.preload(getAssetPath('/maiz.glb'))
+useGLTF.preload(getAssetPath('/planta_maiz.glb'))

@@ -87,6 +87,7 @@ const SphinxInteractiveDialogue = dynamic(() => import('./SphinxInteractiveDialo
 const QuetzalcoatlDialogue = dynamic(() => import('./QuetzalcoatlDialogue'), { ssr: false })
 const DiscoveredItemInWorld = dynamic(() => import('./DiscoveredItemInWorld'), { ssr: false })
 const ItemCollectedMessage = dynamic(() => import('./ItemCollectedMessage'), { ssr: false })
+const InventoryItem = dynamic(() => import('./InventoryItem'), { ssr: false })
 const Compass = dynamic(() => import('./Compass'), { ssr: false })
 const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
 const CelestialOverlayHUD = dynamic(() => import('./CelestialOverlay').then(m => ({ default: m.CelestialOverlayHUD })), { ssr: false })
@@ -163,6 +164,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const discoveredSites = useRef<Set<string>>(new Set())
   // Ref al sitio actual para evitar stale closure en handleBlockMoved
   const selectedSiteRef = useRef<ArchaeologicalSite | null>(null)
+  // Ref para la posición del avatar (para soltar items)
+  const mainAvatarPositionRef = useRef(new THREE.Vector3())
   const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('avatar') // Modo avatar por defecto
   const [showLocationInfo, setShowLocationInfo] = useState(false)
   const [showGeometryField, setShowGeometryField] = useState(true) // Activado por defecto
@@ -326,27 +329,30 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   // Handler cuando Quetzalcoatl pide la semilla
   const handleRequestCornSeed = useCallback(() => {
     console.log('🌽 Quetzalcoatl pide plantar la semilla!')
-    setShowCornSeed(true)
+    setCornOnGround(true) // Aparece en el piso
   }, [])
   
-  // Handler para recolectar la semilla de maíz
+  // Ref para saber si ya se mostró el mensaje de recolección del maíz
+  const cornMessageShownRef = useRef(false)
+  
+  // Handler para recolectar la semilla de maíz del piso
   const handleCollectCornSeed = useCallback(() => {
-    console.log('🌽 Semilla de maíz recolectada!')
+    console.log('🌽 Semilla de maíz recogida del piso!')
     
-    // Registrar en el sistema de misiones
-    collectItem('teotihuacan', 'corn_seed')
+    // Registrar en el sistema de misiones (solo la primera vez)
+    if (!cornMessageShownRef.current) {
+      collectItem('teotihuacan', 'corn_seed')
+      // Mostrar mensaje solo la primera vez
+      setShowCollectedMessage(true)
+      setTimeout(() => setShowCollectedMessage(false), 3000)
+      cornMessageShownRef.current = true
+    }
     
-    // Guardar en sessionStorage
-    sessionStorage.setItem('item_corn_seed_collected', 'true')
-    
-    // Marcar como recolectado
-    setCornSeedCollected(true)
-    
-    // Mostrar mensaje
-    setShowCollectedMessage(true)
-    setTimeout(() => setShowCollectedMessage(false), 3000)
+    // Mover al inventario
+    setCornOnGround(false)
+    setCornInInventory(true)
   }, [])
-
+  
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // DirecciÃ³n del sol como objeto plano
   const [solarState, setSolarState] = useState({
     altitude: 0,
@@ -388,8 +394,45 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   // 🐍 Estado del diálogo de Quetzalcoatl
   const [showQuetzalcoatlDialogue, setShowQuetzalcoatlDialogue] = useState(false)
   const [showQuetzalcoatl, setShowQuetzalcoatl] = useState(false)
-  const [cornSeedCollected, setCornSeedCollected] = useState(false)
-  const [showCornSeed, setShowCornSeed] = useState(false)
+  const [cornInInventory, setCornInInventory] = useState(false) // Maíz en inventario (rotando)
+  const [cornOnGround, setCornOnGround] = useState(false) // Maíz en el piso (visible en escena)
+  const [cornDropPosition, setCornDropPosition] = useState<{x: number, z: number} | null>(null) // Posición donde cayó el maíz
+  const [cornPlanted, setCornPlanted] = useState(false) // Si el maíz fue plantado en la tierra
+
+  // Handler para soltar el maíz del inventario
+  const handleDropCornSeed = useCallback(() => {
+    console.log('🌽 Soltando maíz al piso!')
+    // Guardar posición donde cae (debajo de la nave)
+    const pos = mainAvatarPositionRef.current
+    const dropX = pos.x
+    const dropZ = pos.z
+    
+    // Posición del parche de tierra: [60, 0, 0], tamaño 8x8
+    const soilCenterX = 60
+    const soilCenterZ = 0
+    const soilSize = 8
+    
+    // Verificar si cayó dentro del parche de tierra
+    const isOnSoil = Math.abs(dropX - soilCenterX) <= soilSize / 2 && 
+                     Math.abs(dropZ - soilCenterZ) <= soilSize / 2
+    
+    if (isOnSoil && !cornPlanted) {
+      console.log('🌱 ¡Maíz plantado en la tierra!')
+      setCornPlanted(true)
+      setCornInInventory(false)
+      setCornOnGround(false)
+      
+      // Completar misión y limpiar clima
+      completeMission('teotihuacan', 'plant_corn')
+      clearWeather('teotihuacan')
+      setWeather(CALM_WEATHER) // Aplicar clima inmediatamente
+      console.log('✅ Misión de Teotihuacán completada! ☀️ Clima limpiado')
+    } else {
+      setCornDropPosition({ x: dropX, z: dropZ })
+      setCornInInventory(false)
+      setCornOnGround(true)
+    }
+  }, [cornPlanted])
 
   // Verificar si la Magna Bowl fue recolectada
   useEffect(() => {
@@ -782,6 +825,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           <Compass rotation={cameraRotation} solarAzimuth={solarState.azimuth} />
         </>
       )}
+      
+      {/* Inventario - Maíz recolectado */}
+      <InventoryItem
+        modelPath="/maiz.glb"
+        itemName="Maíz"
+        show={cornInInventory}
+        onDrop={handleDropCornSeed}
+      />
 
       {/* Escena 3D */}
       {mode === 'globe' ? (
@@ -863,6 +914,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onScarabCollect={handleCollectScarab}
           scarabDiscovered={scarabDiscovered}
           scarabCollected={scarabCollected}
+          onQuetzalcoatlClick={handleQuetzalcoatlClick}
+          onQuetzalcoatlAppear={() => setShowQuetzalcoatl(true)}
+          onCornCollect={handleCollectCornSeed}
+          cornInInventory={cornInInventory}
+          cornOnGround={cornOnGround}
+          cornDropPosition={cornDropPosition}
+          cornPlanted={cornPlanted}
+          mainAvatarPositionRef={mainAvatarPositionRef}
         />
       ) : null}
 
@@ -908,8 +967,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       {/* Diálogo de Quetzalcoatl - FUERA del Canvas */}
       {showQuetzalcoatlDialogue && (
         <QuetzalcoatlDialogue
-          hasCornSeed={cornSeedCollected}
-          hasPlantedCorn={false}
+          hasCornSeed={cornInInventory}
+          hasPlantedCorn={cornPlanted}
           onClose={() => {
             setShowQuetzalcoatlDialogue(false)
             // Registrar interacción con Quetzalcoatl
@@ -1056,7 +1115,15 @@ function ModelScene({
   onMummyMoved,
   onScarabCollect,
   scarabDiscovered,
-  scarabCollected
+  scarabCollected,
+  onQuetzalcoatlClick,
+  onQuetzalcoatlAppear,
+  onCornCollect,
+  cornInInventory,
+  cornOnGround,
+  cornDropPosition,
+  cornPlanted,
+  mainAvatarPositionRef
 }: { 
   modelPath: string
   avatarModel: string
@@ -1107,11 +1174,33 @@ function ModelScene({
   onScarabCollect?: () => void
   scarabDiscovered?: boolean
   scarabCollected?: boolean
+  onQuetzalcoatlClick?: () => void
+  onQuetzalcoatlAppear?: () => void
+  onCornCollect?: () => void
+  cornInInventory?: boolean
+  cornOnGround?: boolean
+  cornDropPosition?: {x: number, z: number} | null
+  cornPlanted?: boolean
+  mainAvatarPositionRef?: React.RefObject<THREE.Vector3>
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
   const [obstacles, setObstacles] = useState<THREE.Object3D[]>([])
   const avatarPositionRef = useRef(new THREE.Vector3())
+  
+  // Sincronizar posición del avatar con la ref principal
+  useEffect(() => {
+    if (mainAvatarPositionRef?.current) {
+      const syncPosition = () => {
+        if (mainAvatarPositionRef.current) {
+          mainAvatarPositionRef.current.copy(avatarPositionRef.current)
+        }
+      }
+      const interval = setInterval(syncPosition, 100)
+      return () => clearInterval(interval)
+    }
+  }, [mainAvatarPositionRef])
+  
   // Detectar bioma basado en ubicaciÃ³n
   const biome = useMemo(() => {
     if (!location) return { type: 'default' as const, name: 'GenÃ©rico', description: '', temperature: 20, humidity: 50 }
@@ -1351,11 +1440,13 @@ function ModelScene({
       )) && (
         <TeotihuacanScene 
           avatarPositionRef={avatarPositionRef}
-          onQuetzalcoatlClick={handleQuetzalcoatlClick}
-          onQuetzalcoatlAppear={() => setShowQuetzalcoatl(true)}
-          onCornCollect={handleCollectCornSeed}
-          cornCollected={cornSeedCollected}
-          showCornSeed={showCornSeed}
+          onQuetzalcoatlClick={onQuetzalcoatlClick}
+          onQuetzalcoatlAppear={onQuetzalcoatlAppear}
+          onCornCollect={onCornCollect}
+          cornCollected={cornInInventory}
+          showCornSeed={cornOnGround}
+          cornDropPosition={cornDropPosition}
+          cornPlanted={cornPlanted}
         />
       )}
       

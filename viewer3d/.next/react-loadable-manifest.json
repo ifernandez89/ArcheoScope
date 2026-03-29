@@ -1,159 +1,181 @@
 {
   "app\\game\\page.tsx -> @/components/Scene3D": {
-    "id": "app\\game\\page.tsx -> @/components/Scene3D",
+    "id": 2555,
     "files": [
-      "static/chunks/three.js",
-      "static/chunks/react-three.js",
-      "static/chunks/engines.js",
-      "static/chunks/vendor.js",
-      "static/chunks/_app-pages-browser_types_missionState_ts-_app-pages-browser_types_player_ts.js",
-      "static/chunks/_app-pages-browser_components_Scene3D_tsx-_app-pages-browser_utils_lunar-system_ts-_app-pages-df5be5.js"
+      "static/chunks/three.815c5b8d93734097.js",
+      "static/chunks/react-three.994f8dbb8dcd66d9.js",
+      "static/chunks/engines.619a09be4e5159a2.js",
+      "static/chunks/vendor-eecfc17bd80708e1.js",
+      "static/chunks/22-60606de3096eecd7.js",
+      "static/chunks/902.bfe1aa919c0a0bc9.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
-    "id": "app\\player-setup\\page.tsx -> @/components/ShipPreview",
+    "id": 2006,
     "files": [
-      "static/chunks/three.js",
-      "static/chunks/react-three.js",
-      "static/chunks/vendor.js",
-      "static/chunks/_app-pages-browser_components_ShipPreview_tsx.js"
+      "static/chunks/three.815c5b8d93734097.js",
+      "static/chunks/react-three.994f8dbb8dcd66d9.js",
+      "static/chunks/vendor-eecfc17bd80708e1.js",
+      "static/chunks/6.c02ecf54fda98c6b.js"
+    ]
+  },
+  "app\\realistic-solar\\page.tsx -> @/components/RealisticSolarSystemScene": {
+    "id": 6982,
+    "files": [
+      "static/chunks/three.815c5b8d93734097.js",
+      "static/chunks/react-three.994f8dbb8dcd66d9.js",
+      "static/chunks/engines.619a09be4e5159a2.js",
+      "static/chunks/vendor-eecfc17bd80708e1.js",
+      "static/chunks/821.c12ca19728b4a704.js",
+      "static/chunks/527.75422bfc51b94128.js"
     ]
   },
   "components\\EasterIslandScene.tsx -> @/systems/HarmoniaMundiSystem": {
-    "id": "components\\EasterIslandScene.tsx -> @/systems/HarmoniaMundiSystem",
+    "id": 2266,
     "files": [
-      "static/chunks/_app-pages-browser_systems_HarmoniaMundiSystem_ts.js"
+      "static/chunks/266.ea1ade8d0b5f590e.js"
     ]
   },
   "components\\GizaScene.tsx -> @/systems/HarmoniaMundiSystem": {
-    "id": "components\\GizaScene.tsx -> @/systems/HarmoniaMundiSystem",
+    "id": 2266,
     "files": [
-      "static/chunks/_app-pages-browser_systems_HarmoniaMundiSystem_ts.js"
+      "static/chunks/266.ea1ade8d0b5f590e.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./BackgroundMountains": {
-    "id": "components\\ImmersiveScene.tsx -> ./BackgroundMountains",
+    "id": 7222,
     "files": [
-      "static/chunks/_app-pages-browser_components_BackgroundMountains_tsx.js"
+      "static/chunks/222.371540ecb5f91251.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./CelestialOverlay": {
-    "id": "components\\ImmersiveScene.tsx -> ./CelestialOverlay",
+    "id": 1353,
     "files": [
-      "static/chunks/_app-pages-browser_components_CelestialOverlay_tsx.js"
+      "static/chunks/353.32045e004d2c1717.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./Compass": {
-    "id": "components\\ImmersiveScene.tsx -> ./Compass",
+    "id": 6660,
     "files": [
-      "static/chunks/_app-pages-browser_components_Compass_tsx.js"
+      "static/chunks/660.3d522d4d3131afc8.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./CompassTracker": {
-    "id": "components\\ImmersiveScene.tsx -> ./CompassTracker",
+    "id": 3843,
     "files": [
-      "static/chunks/_app-pages-browser_components_CompassTracker_tsx.js"
+      "static/chunks/843.e94f2786da1fc548.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./DiscoveredItemInWorld": {
-    "id": "components\\ImmersiveScene.tsx -> ./DiscoveredItemInWorld",
+    "id": 6893,
     "files": [
-      "static/chunks/_app-pages-browser_components_DiscoveredItemInWorld_tsx.js"
+      "static/chunks/893.bdede4a17af7b72c.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EasterIslandScene": {
-    "id": "components\\ImmersiveScene.tsx -> ./EasterIslandScene",
+    "id": 1256,
     "files": [
-      "static/chunks/_app-pages-browser_components_EasterIslandScene_tsx.js"
+      "static/chunks/256.6eafbdf61f055d5a.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EnhancedMoon": {
-    "id": "components\\ImmersiveScene.tsx -> ./EnhancedMoon",
+    "id": 8804,
     "files": [
-      "static/chunks/_app-pages-browser_components_EnhancedMoon_tsx.js"
+      "static/chunks/831.09dbf118487d7fa3.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EnvironmentElements": {
-    "id": "components\\ImmersiveScene.tsx -> ./EnvironmentElements",
+    "id": 7158,
     "files": []
   },
   "components\\ImmersiveScene.tsx -> ./GizaScene": {
-    "id": "components\\ImmersiveScene.tsx -> ./GizaScene",
+    "id": 5178,
     "files": [
-      "static/chunks/_app-pages-browser_components_GizaScene_tsx.js"
+      "static/chunks/178.be0aa46428b28e00.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./InventoryItem": {
+    "id": 4291,
+    "files": [
+      "static/chunks/291.35514d2029632bc0.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./ItemCollectedMessage": {
-    "id": "components\\ImmersiveScene.tsx -> ./ItemCollectedMessage",
+    "id": 9323,
     "files": [
-      "static/chunks/_app-pages-browser_components_ItemCollectedMessage_tsx.js"
+      "static/chunks/323.4bb3d76c6ce8ab1d.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./PumaPunkuScene": {
-    "id": "components\\ImmersiveScene.tsx -> ./PumaPunkuScene",
+    "id": 1175,
     "files": [
-      "static/chunks/_app-pages-browser_components_PumaPunkuScene_tsx.js"
+      "static/chunks/175.d20d77467da70673.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./QuetzalcoatlDialogue": {
+    "id": 5613,
+    "files": [
+      "static/chunks/613.2ce0e04ecf270369.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./RealisticSolarSystem": {
-    "id": "components\\ImmersiveScene.tsx -> ./RealisticSolarSystem",
+    "id": 7821,
     "files": [
-      "static/chunks/_app-pages-browser_components_CelestialOverlay_tsx.js",
-      "static/chunks/_app-pages-browser_components_RealisticSolarSystem_tsx.js"
+      "static/chunks/821.c12ca19728b4a704.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./SpaceUfo": {
-    "id": "components\\ImmersiveScene.tsx -> ./SpaceUfo",
+    "id": 657,
     "files": [
-      "static/chunks/_app-pages-browser_components_SpaceUfo_tsx.js"
+      "static/chunks/657.8b2d9ec4a1053da0.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./SphinxInteractiveDialogue": {
-    "id": "components\\ImmersiveScene.tsx -> ./SphinxInteractiveDialogue",
+    "id": 6064,
     "files": [
-      "static/chunks/_app-pages-browser_components_SphinxInteractiveDialogue_tsx.js"
+      "static/chunks/64.29704ded55697177.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./TeotihuacanScene": {
-    "id": "components\\ImmersiveScene.tsx -> ./TeotihuacanScene",
+    "id": 9624,
     "files": [
-      "static/chunks/_app-pages-browser_components_TeotihuacanScene_tsx.js"
+      "static/chunks/624.c0346a806e551b6d.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./ViracochaDialogue": {
-    "id": "components\\ImmersiveScene.tsx -> ./ViracochaDialogue",
+    "id": 5054,
     "files": [
-      "static/chunks/_app-pages-browser_components_ViracochaDialogue_tsx.js"
+      "static/chunks/54.baa8a6073f25cc00.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> @/systems/HarmoniaMundiSystem": {
-    "id": "components\\ImmersiveScene.tsx -> @/systems/HarmoniaMundiSystem",
+    "id": 2266,
     "files": [
-      "static/chunks/_app-pages-browser_systems_HarmoniaMundiSystem_ts.js"
+      "static/chunks/266.ea1ade8d0b5f590e.js"
     ]
   },
   "components\\PumaPunkuScene.tsx -> @/systems/HarmoniaMundiSystem": {
-    "id": "components\\PumaPunkuScene.tsx -> @/systems/HarmoniaMundiSystem",
+    "id": 2266,
     "files": [
-      "static/chunks/_app-pages-browser_systems_HarmoniaMundiSystem_ts.js"
+      "static/chunks/266.ea1ade8d0b5f590e.js"
     ]
   },
   "components\\TeotihuacanScene.tsx -> @/systems/HarmoniaMundiSystem": {
-    "id": "components\\TeotihuacanScene.tsx -> @/systems/HarmoniaMundiSystem",
+    "id": 2266,
     "files": [
-      "static/chunks/_app-pages-browser_systems_HarmoniaMundiSystem_ts.js"
+      "static/chunks/266.ea1ade8d0b5f590e.js"
     ]
   },
   "types\\missionState.ts -> ../systems/HarmoniaMundiSystem": {
-    "id": "types\\missionState.ts -> ../systems/HarmoniaMundiSystem",
+    "id": 2266,
     "files": [
-      "static/chunks/_app-pages-browser_systems_HarmoniaMundiSystem_ts.js"
+      "static/chunks/266.ea1ade8d0b5f590e.js"
     ]
   },
   "utils\\lazy-systems.ts -> @/components/ProceduralTerrain": {
-    "id": "utils\\lazy-systems.ts -> @/components/ProceduralTerrain",
+    "id": 8851,
     "files": [
-      "static/chunks/_app-pages-browser_components_ProceduralTerrain_tsx.js"
+      "static/chunks/749.8d721470e3ba41f5.js"
     ]
   }
 }

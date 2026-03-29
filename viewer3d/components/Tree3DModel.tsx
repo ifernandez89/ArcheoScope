@@ -60,57 +60,41 @@ export default function Tree3DModel({
   // Clonar el modelo para cada instancia - SOLO UNA VEZ con useMemo
   const clonedScene = useMemo(() => {
     const cloned = scene.clone(true)
-    console.log(`[Tree3DModel] Clonando árbol tipo: ${treeType}`)
+    cloned.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true
+        child.receiveShadow = true
+        if (child.material) {
+          child.material = (child.material as THREE.Material).clone()
+          const material = child.material as THREE.MeshStandardMaterial
+          material.depthWrite = true
+          material.depthTest = true
+          if (material.name && (material.name.toLowerCase().includes('bark') || 
+                                material.name.toLowerCase().includes('trunk') ||
+                                material.name.toLowerCase().includes('wood'))) {
+            material.map = barkTexture1
+            material.needsUpdate = true
+          }
+          if (material.name && (material.name.toLowerCase().includes('leaf') || 
+                                material.name.toLowerCase().includes('leaves'))) {
+            material.map = leavesTexture1
+            material.transparent = true
+            material.alphaTest = 0.5
+            material.side = THREE.DoubleSide
+            material.depthWrite = false
+            material.needsUpdate = true
+          }
+        }
+      }
+    })
     return cloned
-  }, [scene, treeType])
+  }, [scene, treeType, barkTexture1, leavesTexture1])
   
   useEffect(() => {
     if (clonedScene) {
-      // Ajustar escala solamente
       clonedScene.scale.set(scale, scale, scale)
-      
-      // NO aplicar rotación aquí - se aplica en el group contenedor
-      
-      console.log(`[Tree3DModel] Escala aplicada: ${scale}`)
-      
-      // Aplicar texturas y habilitar sombras
-      clonedScene.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.castShadow = true
-          child.receiveShadow = true
-          
-          // Clonar material para evitar compartir entre instancias
-          if (child.material) {
-            child.material = (child.material as THREE.Material).clone()
-            const material = child.material as THREE.MeshStandardMaterial
-            
-            // Prevenir z-fighting
-            material.depthWrite = true
-            material.depthTest = true
-            
-            // Si el material tiene "bark" o "trunk" en el nombre, aplicar textura de corteza
-            if (material.name && (material.name.toLowerCase().includes('bark') || 
-                                  material.name.toLowerCase().includes('trunk') ||
-                                  material.name.toLowerCase().includes('wood'))) {
-              material.map = barkTexture1
-              material.needsUpdate = true
-            }
-            
-            // Si el material tiene "leaf" o "leaves" en el nombre, aplicar textura de hojas
-            if (material.name && (material.name.toLowerCase().includes('leaf') || 
-                                  material.name.toLowerCase().includes('leaves'))) {
-              material.map = leavesTexture1
-              material.transparent = true
-              material.alphaTest = 0.5
-              material.side = THREE.DoubleSide
-              material.depthWrite = false // Las hojas transparentes no escriben profundidad
-              material.needsUpdate = true
-            }
-          }
-        }
-      })
     }
-  }, [clonedScene, scale, barkTexture1, leavesTexture1])
+  }, [clonedScene, scale])
   
   return (
     <group ref={groupRef} position={position} rotation={[

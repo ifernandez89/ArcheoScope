@@ -24,28 +24,22 @@ export default function Rock3DModel({ position, scale = 1, rotation = 0 }: Rock3
   // Clonar el modelo para cada instancia - SOLO UNA VEZ con useMemo
   const clonedScene = useMemo(() => {
     const cloned = scene.clone(true)
-    console.log('[Rock3DModel] Clonando roca')
+    cloned.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true
+        child.receiveShadow = true
+        if (child.material) {
+          child.material = (child.material as THREE.Material).clone()
+        }
+      }
+    })
     return cloned
   }, [scene])
   
   useEffect(() => {
     if (clonedScene) {
-      // Ajustar escala y rotación
       clonedScene.scale.set(scale, scale, scale)
       clonedScene.rotation.y = rotation
-      
-      // Habilitar sombras
-      clonedScene.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.castShadow = true
-          child.receiveShadow = true
-          
-          // Clonar material para evitar compartir entre instancias
-          if (child.material) {
-            child.material = (child.material as THREE.Material).clone()
-          }
-        }
-      })
     }
   }, [clonedScene, scale, rotation])
   
