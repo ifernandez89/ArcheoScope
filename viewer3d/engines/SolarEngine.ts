@@ -33,6 +33,11 @@ export class SolarEngine {
   private targetSunDirection: THREE.Vector3
   private smoothingSpeed: number = 0.01 // Muy lento
   
+  // Cache de estado para evitar cálculos pesados por frame
+  private cachedState: SolarState | null = null
+  private lastUpdateTimer: number = 0
+
+  
   // Sistema de tiempo acelerado
   private simulatedTime: Date
   private timeScale: number = 60 // 1 segundo real = 1 minuto simulado (1 minuto real = 1 hora simulada)
@@ -213,17 +218,24 @@ export class SolarEngine {
     const simulatedSeconds = deltaTime * this.timeScale
     this.simulatedTime = new Date(this.simulatedTime.getTime() + simulatedSeconds * 1000)
     
-    const state = this.calculateSolarState()
+    // Para optimizar rendimiento masivo, solo recalculamos las órbitas y planetas
+    // una vez por segundo real (ya que .lerp suaviza la dirección del sol)
+    this.lastUpdateTimer += deltaTime
+    if (!this.cachedState || this.lastUpdateTimer >= 1.0) {
+      this.cachedState = this.calculateSolarState()
+      this.lastUpdateTimer = 0
+    }
     
     // Actualizar target
-    this.targetSunDirection.copy(state.sunDirection)
+    this.targetSunDirection.copy(this.cachedState.sunDirection)
     
     // Interpolación suave (lerp)
     this.currentSunDirection.lerp(this.targetSunDirection, this.smoothingSpeed)
     
     return {
-      ...state,
-      sunDirection: this.currentSunDirection.clone()
+      ...this.cachedState,
+      sunDirection: this.currentSunDirection.clone(),
+      simulatedTime: new Date(this.simulatedTime) // Opcional: mantener el reloj UI suave
     }
   }
 

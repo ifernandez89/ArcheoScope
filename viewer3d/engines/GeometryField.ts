@@ -103,33 +103,48 @@ export class GeometryField {
    * Actualizar eje solar proyectado
    */
   updateSolarAxis(sunDirection: THREE.Vector3) {
-    // Remover eje solar anterior si existe
-    const oldAxis = this.linesGroup.getObjectByName('SolarAxis')
-    if (oldAxis) {
-      this.linesGroup.remove(oldAxis)
+    // Proyectar dirección solar al plano
+    const sx = sunDirection.x
+    const sz = sunDirection.z
+    const len = Math.sqrt(sx * sx + sz * sz)
+    
+    let targetX = 0
+    let targetZ = 0
+    
+    if (len > 0) {
+      targetX = (sx / len) * 90
+      targetZ = (sz / len) * 90
     }
 
-    // Proyectar dirección solar al plano
-    const solarGround = sunDirection.clone()
-    solarGround.y = 0
-    solarGround.normalize()
-    solarGround.multiplyScalar(90)
+    let solarAxis = this.linesGroup.getObjectByName('SolarAxis') as THREE.Line
 
-    // Crear línea de eje solar
-    const solarAxisGeometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0.02, 0),
-      new THREE.Vector3(solarGround.x, 0.02, solarGround.z)
-    ])
-    const solarMaterial = new THREE.LineBasicMaterial({
-      color: 0xffaa00,
-      transparent: true,
-      opacity: 0.2,
-      depthTest: false,
-      depthWrite: false
-    })
-    const solarAxis = new THREE.Line(solarAxisGeometry, solarMaterial)
-    solarAxis.name = 'SolarAxis'
-    this.linesGroup.add(solarAxis)
+    if (!solarAxis) {
+      // Crear línea de eje solar
+      const solarAxisGeometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0.02, 0),
+        new THREE.Vector3(targetX, 0.02, targetZ)
+      ])
+      const solarMaterial = new THREE.LineBasicMaterial({
+        color: 0xffaa00,
+        transparent: true,
+        opacity: 0.2,
+        depthTest: false,
+        depthWrite: false
+      })
+      solarAxis = new THREE.Line(solarAxisGeometry, solarMaterial)
+      solarAxis.name = 'SolarAxis'
+      this.linesGroup.add(solarAxis)
+    } else {
+      // Reutilizar, actualizando el punto final de la línea directamente
+      const positionAttr = solarAxis.geometry.attributes.position as THREE.BufferAttribute
+      const array = positionAttr.array as Float32Array
+      // array[0-2] = punto origen (0, 0.02, 0)
+      // array[3-5] = punto destino
+      array[3] = targetX
+      array[4] = 0.02
+      array[5] = targetZ
+      positionAttr.needsUpdate = true
+    }
   }
 
   /**

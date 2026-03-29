@@ -18,6 +18,11 @@ export class SeasonalLight {
   private currentColor: THREE.Color
   private targetColor: THREE.Color
   private smoothingSpeed: number = 0.005 // Muy lento
+  
+  // Cache de estado estacional
+  private cachedState: SeasonalState | null = null
+  private lastUpdateTimer: number = 0
+
 
   constructor() {
     // Colores sutiles
@@ -67,16 +72,20 @@ export class SeasonalLight {
    * Actualizar color con interpolación suave
    */
   update(deltaTime: number): SeasonalState {
-    const state = this.calculateSeasonalState()
+    this.lastUpdateTimer += deltaTime
+    if (!this.cachedState || this.lastUpdateTimer >= 1.0) {
+      this.cachedState = this.calculateSeasonalState()
+      this.lastUpdateTimer = 0
+    }
     
     // Actualizar target
-    this.targetColor.copy(state.lightColor)
+    this.targetColor.copy(this.cachedState.lightColor)
     
     // Interpolación suave
     this.currentColor.lerp(this.targetColor, this.smoothingSpeed)
     
     return {
-      ...state,
+      ...this.cachedState,
       lightColor: this.currentColor.clone()
     }
   }

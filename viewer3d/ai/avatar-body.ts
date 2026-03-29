@@ -35,6 +35,12 @@ export class AvatarBody {
   private blinkingInterval: number | null = null
   private subtleMovementInterval: number | null = null
 
+  // Reusable objects for update loop
+  private _targetQuat = new THREE.Quaternion()
+  private _lookAtMatrix = new THREE.Matrix4()
+  private _upVector = new THREE.Vector3(0, 1, 0)
+
+
   constructor(
     model: THREE.Object3D,
     animator: AIAnimator,
@@ -329,13 +335,11 @@ export class AvatarBody {
     
     // Si hay gaze target, mantener mirada
     if (this.gazeTarget && this.presenceConfig.enableGaze) {
-      // Actualización continua de mirada (muy sutil)
-      const targetQuat = new THREE.Quaternion()
-      const lookAtMatrix = new THREE.Matrix4()
-      lookAtMatrix.lookAt(this.model.position, this.gazeTarget, new THREE.Vector3(0, 1, 0))
-      targetQuat.setFromRotationMatrix(lookAtMatrix)
+      // Actualización continua de mirada (muy sutil) sin crear nuevos objetos cada frame
+      this._lookAtMatrix.lookAt(this.model.position, this.gazeTarget, this._upVector)
+      this._targetQuat.setFromRotationMatrix(this._lookAtMatrix)
       
-      this.model.quaternion.slerp(targetQuat, 0.02)
+      this.model.quaternion.slerp(this._targetQuat, 0.02)
     }
   }
 
