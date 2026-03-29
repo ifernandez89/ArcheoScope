@@ -54,6 +54,15 @@ export default function TeotihuacanScene({
   )
 }
 
+// Posiciones de las 20 plantas - nivel módulo para compartir entre componentes
+const PLANT_POSITIONS: [number, number][] = [
+  [-1.5, -1.5], [-0.5, -1.5], [0.5, -1.5], [1.5, -1.5],
+  [-1.5, -0.5], [-0.5, -0.5], [0.5, -0.5], [1.5, -0.5],
+  [-1.5,  0.5], [-0.5,  0.5], [0.5,  0.5], [1.5,  0.5],
+  [-1.5,  1.5], [-0.5,  1.5], [0.5,  1.5], [1.5,  1.5],
+  [-1.0,  0.0], [ 1.0,  0.0], [0.0, -1.0], [0.0,  1.0],
+]
+
 function TeotihuacanSceneContent({ 
   avatarPositionRef,
   onQuetzalcoatlClick,
@@ -64,13 +73,11 @@ function TeotihuacanSceneContent({
   cornDropPosition,
   cornPlanted
 }: TeotihuacanSceneProps) {
-  // Cargar modelos
+  // Cargar modelos base (livianos: kukulkan 0.6MB, aztec 1.9MB, calendario 49.9MB)
   const kukulkanModel = useGLTF(getAssetPath('/kukulkan.glb'))
   const aztecTempleModel = useGLTF(getAssetPath('/aztec_temple.glb'))
   const calendarioModel = useGLTF(getAssetPath('/calendario_maya.glb'))
-  const quetzalcoatlModel = useGLTF(getAssetPath('/quetzalcoatl.glb'))
   const maizModel = useGLTF(getAssetPath('/maiz.glb'))
-  const plantaMaizModel = useGLTF(getAssetPath('/planta_maiz.glb'))
   
   // Estados (solo los que necesitan re-render)
   const [isCalendarioSpinning, setIsCalendarioSpinning] = useState(true)
@@ -110,20 +117,6 @@ function TeotihuacanSceneContent({
     })
     return cloned
   }, [maizModel.scene])
-  
-  // Posiciones de las 20 plantas sobre el parche
-  const PLANT_POSITIONS: [number, number][] = [
-    [-1.5, -1.5], [-0.5, -1.5], [0.5, -1.5], [1.5, -1.5],
-    [-1.5, -0.5], [-0.5, -0.5], [0.5, -0.5], [1.5, -0.5],
-    [-1.5,  0.5], [-0.5,  0.5], [0.5,  0.5], [1.5,  0.5],
-    [-1.5,  1.5], [-0.5,  1.5], [0.5,  1.5], [1.5,  1.5],
-    [-1.0,  0.0], [ 1.0,  0.0], [0.0, -1.0], [0.0,  1.0],
-  ]
-  
-  // Clonar plantas una sola vez (evita clone en cada render)
-  const clonedPlants = useMemo(() => {
-    return PLANT_POSITIONS.map(() => plantaMaizModel.scene.clone(true))
-  }, [plantaMaizModel.scene])
   
   // Resetear estado de desaparición cuando el maíz vuelve al piso
   useEffect(() => {
@@ -300,26 +293,18 @@ function TeotihuacanSceneContent({
         <primitive object={aztecTempleModel.scene} scale={0.26} />
       </group>
       
-      {/* Quetzalcoatl - Clickeable, con fade-in optimizado */}
+      {/* Quetzalcoatl - se carga SOLO cuando el calendario se detiene (42.7MB diferido) */}
       {showQuetzalcoatl && (
-        <group 
-          ref={quetzalcoatlRef} 
-          position={[-15, 0, -10]} 
-          rotation={[0, Math.PI / 4, 0]}
-          onClick={handleQuetzalcoatlClick}
-          onPointerOver={() => {
-            if (quetzalcoatlOpacityRef.current > 0.5) {
-              setIsQuetzalcoatlHovered(true)
-              document.body.style.cursor = 'pointer'
-            }
-          }}
-          onPointerOut={() => {
-            setIsQuetzalcoatlHovered(false)
-            document.body.style.cursor = 'default'
-          }}
-        >
-          <primitive object={quetzalcoatlModel.scene} scale={5} />
-        </group>
+        <Suspense fallback={null}>
+          <QuetzalcoatlModel
+            quetzalcoatlRef={quetzalcoatlRef}
+            quetzalcoatlOpacityRef={quetzalcoatlOpacityRef}
+            cachedQuetzalcoatlMeshes={cachedQuetzalcoatlMeshes}
+            meshesCached={meshesCached}
+            onQuetzalcoatlClick={handleQuetzalcoatlClick}
+            setIsQuetzalcoatlHovered={setIsQuetzalcoatlHovered}
+          />
+        </Suspense>
       )}
       
       {/* Semilla de Maíz - Posición dinámica (donde cayó o posición inicial) */}
@@ -383,16 +368,11 @@ function TeotihuacanSceneContent({
           </mesh>
         ))}
         
-        {/* Planta de maíz cuando está plantado - 20 plantas usando clones pre-calculados */}
+        {/* Planta de maíz cuando está plantado - carga diferida (1.5MB) */}
         {cornPlanted && (
-          <>
-            {PLANT_POSITIONS.map(([x, z], i) => (
-              <group key={i} position={[x, 0.3, z]}>
-                <primitive object={clonedPlants[i]} scale={0.8} />
-              </group>
-            ))}
-            <pointLight color="#7cfc00" intensity={2} distance={6} position={[0, 2, 0]} />
-          </>
+          <Suspense fallback={null}>
+            <CornPlantsModel />
+          </Suspense>
         )}
       </group>
       
@@ -402,6 +382,64 @@ function TeotihuacanSceneContent({
       <directionalLight position={[-10, 10, -5]} intensity={0.4} />
       <pointLight position={[0, 10, -20]} intensity={1.2} color="#ffd700" distance={15} />
     </group>
+  )
+}
+
+// Subcomponente lazy: Quetzalcoatl (42.7MB) - se carga solo al detener el calendario
+function QuetzalcoatlModel({ 
+  quetzalcoatlRef,
+  quetzalcoatlOpacityRef,
+  cachedQuetzalcoatlMeshes,
+  meshesCached,
+  onQuetzalcoatlClick,
+  setIsQuetzalcoatlHovered
+}: {
+  quetzalcoatlRef: React.RefObject<THREE.Group>
+  quetzalcoatlOpacityRef: React.MutableRefObject<number>
+  cachedQuetzalcoatlMeshes: React.MutableRefObject<THREE.Mesh[]>
+  meshesCached: React.MutableRefObject<boolean>
+  onQuetzalcoatlClick: (e: any) => void
+  setIsQuetzalcoatlHovered: (v: boolean) => void
+}) {
+  const quetzalcoatlModel = useGLTF(getAssetPath('/quetzalcoatl.glb'))
+  return (
+    <group
+      ref={quetzalcoatlRef}
+      position={[-15, 0, -10]}
+      rotation={[0, Math.PI / 4, 0]}
+      onClick={onQuetzalcoatlClick}
+      onPointerOver={() => {
+        if (quetzalcoatlOpacityRef.current > 0.5) {
+          setIsQuetzalcoatlHovered(true)
+          document.body.style.cursor = 'pointer'
+        }
+      }}
+      onPointerOut={() => {
+        setIsQuetzalcoatlHovered(false)
+        document.body.style.cursor = 'default'
+      }}
+    >
+      <primitive object={quetzalcoatlModel.scene} scale={5} />
+    </group>
+  )
+}
+
+// Subcomponente lazy: Plantas de maíz (1.5MB) - se cargan solo al plantar
+function CornPlantsModel() {
+  const plantaMaizModel = useGLTF(getAssetPath('/planta_maiz.glb'))
+  const clonedPlants = useMemo(() => 
+    PLANT_POSITIONS.map(() => plantaMaizModel.scene.clone(true))
+  , [plantaMaizModel.scene])
+  
+  return (
+    <>
+      {PLANT_POSITIONS.map(([x, z], i) => (
+        <group key={i} position={[x, 0.3, z]}>
+          <primitive object={clonedPlants[i]} scale={0.8} />
+        </group>
+      ))}
+      <pointLight color="#7cfc00" intensity={2} distance={6} position={[0, 2, 0]} />
+    </>
   )
 }
 

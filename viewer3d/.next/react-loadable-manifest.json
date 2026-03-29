@@ -1,127 +1,279 @@
 {
   "app\\game\\page.tsx -> @/components/Scene3D": {
-    "id": 2555,
+    "id": 5109,
     "files": [
-      "static/chunks/three.815c5b8d93734097.js",
-      "static/chunks/react-three.994f8dbb8dcd66d9.js",
+      "static/chunks/three.609e1d8bcb87d2b3.js",
+      "static/chunks/react-three.fc63ca31250cfe55.js",
       "static/chunks/engines.619a09be4e5159a2.js",
-      "static/chunks/vendor-eecfc17bd80708e1.js",
-      "static/chunks/22-60606de3096eecd7.js",
-      "static/chunks/902.26102a2eadaaade5.js"
+      "static/chunks/vendor-d5f52ee1adae0106.js",
+      "static/chunks/4022-bc0c0086f9e51fb9.js",
+      "static/chunks/4098.47fa38f0a1865ea8.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
     "id": 2006,
     "files": [
-      "static/chunks/three.815c5b8d93734097.js",
-      "static/chunks/react-three.994f8dbb8dcd66d9.js",
-      "static/chunks/vendor-eecfc17bd80708e1.js",
-      "static/chunks/6.c02ecf54fda98c6b.js"
+      "static/chunks/three.609e1d8bcb87d2b3.js",
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/vendor-d5f52ee1adae0106.js",
+      "static/chunks/2006.8851df0649440967.js"
     ]
   },
   "app\\realistic-solar\\page.tsx -> @/components/RealisticSolarSystemScene": {
     "id": 6982,
     "files": [
-      "static/chunks/three.815c5b8d93734097.js",
-      "static/chunks/react-three.994f8dbb8dcd66d9.js",
+      "static/chunks/three.609e1d8bcb87d2b3.js",
+      "static/chunks/react-three.fc63ca31250cfe55.js",
       "static/chunks/engines.619a09be4e5159a2.js",
-      "static/chunks/vendor-eecfc17bd80708e1.js",
-      "static/chunks/821.c12ca19728b4a704.js",
-      "static/chunks/527.75422bfc51b94128.js"
+      "static/chunks/vendor-d5f52ee1adae0106.js",
+      "static/chunks/4604.f3bd8da0128ea3ad.js",
+      "static/chunks/6142.88100da1f089f4e4.js",
+      "static/chunks/2527.029a890d6d5bba3c.js"
     ]
   },
   "components\\EasterIslandScene.tsx -> @/systems/HarmoniaMundiSystem": {
     "id": 2266,
     "files": [
-      "static/chunks/266.ea1ade8d0b5f590e.js"
+      "static/chunks/2266.b62a10428b3d29fb.js"
     ]
   },
   "components\\GizaScene.tsx -> @/systems/HarmoniaMundiSystem": {
     "id": 2266,
     "files": [
-      "static/chunks/266.ea1ade8d0b5f590e.js"
+      "static/chunks/2266.b62a10428b3d29fb.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./AmbientAudio": {
+    "id": 1709,
+    "files": [
+      "static/chunks/1709.93d52e41f7c34eaf.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./AmbientMotion": {
+    "id": 4329,
+    "files": [
+      "static/chunks/4329.bf0574299bf5d252.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./AmbientParticles": {
+    "id": 1342,
+    "files": [
+      "static/chunks/1342.9fbaac67b2f0324a.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./BackgroundMountains": {
     "id": 7222,
     "files": [
-      "static/chunks/222.371540ecb5f91251.js"
+      "static/chunks/7222.be5e99c1665db5a3.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./BasicCollisions": {
+    "id": 991,
+    "files": [
+      "static/chunks/991.e4d80dbddc24c314.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./CelestialOverlay": {
     "id": 1353,
     "files": [
-      "static/chunks/353.32045e004d2c1717.js"
+      "static/chunks/1353.c0c7ae98ee8f0415.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./CinematicZoom": {
+    "id": 9211,
+    "files": [
+      "static/chunks/9211.a5d8d9a22ace331a.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./Compass": {
     "id": 6660,
     "files": [
-      "static/chunks/660.3d522d4d3131afc8.js"
+      "static/chunks/6660.6b9f701e8e96e43a.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./CompassTracker": {
     "id": 3843,
     "files": [
-      "static/chunks/843.e94f2786da1fc548.js"
+      "static/chunks/3843.a4978ca451655e99.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./DiscoveredItemInWorld": {
     "id": 6893,
     "files": [
-      "static/chunks/893.bdede4a17af7b72c.js"
+      "static/chunks/6893.5b11de777a80b7e3.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./EarthOrbitWrapper": {
+    "id": 6532,
+    "files": [
+      "static/chunks/6532.97b6f54143a88a40.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EasterIslandScene": {
     "id": 1256,
     "files": [
-      "static/chunks/256.a1c51d3dfd9969fe.js"
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/1256.74e141accd9d5825.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EnhancedMoon": {
     "id": 8804,
     "files": [
-      "static/chunks/831.09dbf118487d7fa3.js"
+      "static/chunks/7831.8c0d2ac450ee3c19.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./EnhancedTerrain": {
+    "id": 4930,
+    "files": [
+      "static/chunks/engines.619a09be4e5159a2.js",
+      "static/chunks/4930.846db8a1a64dc4f3.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EnvironmentElements": {
-    "id": 7158,
+    "id": 7526,
     "files": []
   },
   "components\\ImmersiveScene.tsx -> ./GizaScene": {
     "id": 5178,
     "files": [
-      "static/chunks/178.a9e332a38da8c842.js"
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/5178.f40684e177c61c11.js"
     ]
+  },
+  "components\\ImmersiveScene.tsx -> ./Globe3D": {
+    "id": 6229,
+    "files": [
+      "static/chunks/6229.f6adc5f27941af80.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./IceTerrain": {
+    "id": 529,
+    "files": []
   },
   "components\\ImmersiveScene.tsx -> ./InventoryItem": {
     "id": 4291,
     "files": [
-      "static/chunks/291.35514d2029632bc0.js"
+      "static/chunks/4291.6dee2d2f8aa8e3f4.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./ItemCollectedMessage": {
     "id": 9323,
     "files": [
-      "static/chunks/323.4bb3d76c6ce8ab1d.js"
+      "static/chunks/9323.1574c211b9359a39.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./LunarOrbitLine": {
+    "id": 8183,
+    "files": [
+      "static/chunks/8183.41dfd73f966d698b.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./Mars": {
+    "id": 1734,
+    "files": [
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/1734.c984d464526fa677.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./Mercury": {
+    "id": 9297,
+    "files": [
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/9297.f3b1390cfe4f1b3d.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./MilkyWayBackground": {
+    "id": 9787,
+    "files": [
+      "static/chunks/9787.7707a4906fbbfe33.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./ModelViewer": {
+    "id": 9483,
+    "files": [
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/9483.ef75902902564f03.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./PlanetaryOrbits": {
+    "id": 6752,
+    "files": [
+      "static/chunks/6752.2a0f3782fb96fb13.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./ProceduralTerrain": {
+    "id": 8851,
+    "files": [
+      "static/chunks/8851.2cf33ab3bf2606b6.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./PumaPunkuBlock": {
+    "id": 3233,
+    "files": [
+      "static/chunks/3233.1c0ff529e7acea3f.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./PumaPunkuScene": {
-    "id": 1175,
+    "id": 2184,
     "files": [
-      "static/chunks/175.f0429689cfcf3499.js"
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/6629.dc1f452501b47f5a.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./PumaPunkuStructure": {
+    "id": 1917,
+    "files": [
+      "static/chunks/1917.06e7a24cd8efe1be.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./QuetzalcoatlDialogue": {
     "id": 5613,
     "files": [
-      "static/chunks/613.2ce0e04ecf270369.js"
+      "static/chunks/5613.34978cf1fb005ef7.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./RealisticSolarSystem": {
-    "id": 7821,
+    "id": 6142,
     "files": [
-      "static/chunks/821.c12ca19728b4a704.js"
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/4604.f3bd8da0128ea3ad.js",
+      "static/chunks/6142.88100da1f089f4e4.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./Rock3DModel": {
+    "id": 8680,
+    "files": []
+  },
+  "components\\ImmersiveScene.tsx -> ./SimpleMoon": {
+    "id": 4464,
+    "files": [
+      "static/chunks/4464.f8038712c8fa434c.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./SiteInfo": {
+    "id": 6861,
+    "files": [
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/6861.c5a50318cd5cebe0.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./SiteMarkers": {
+    "id": 349,
+    "files": [
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/349.7fd5c02637d176db.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./SolarSimulation": {
+    "id": 8711,
+    "files": [
+      "static/chunks/8711.ca76ab3c10f23dbf.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./SolarSystemIntegrated": {
+    "id": 9724,
+    "files": [
+      "static/chunks/9724.ce90f8ca35a8a772.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./SpaceUfo": {
@@ -133,49 +285,90 @@
   "components\\ImmersiveScene.tsx -> ./SphinxInteractiveDialogue": {
     "id": 6064,
     "files": [
-      "static/chunks/64.29704ded55697177.js"
+      "static/chunks/6064.a84889315c15fd36.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./Stars": {
+    "id": 7579,
+    "files": [
+      "static/chunks/7579.6f6b575f7d622b88.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./Sun": {
+    "id": 4604,
+    "files": [
+      "static/chunks/4604.f3bd8da0128ea3ad.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./TeotihuacanScene": {
     "id": 9624,
     "files": [
-      "static/chunks/624.25cd9706fd97d300.js"
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/9624.ef23185d074dbe7d.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./TerrainControl": {
+    "id": 2715,
+    "files": [
+      "static/chunks/2715.631ebd1b7c38c453.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./Tree3DModel": {
+    "id": 2397,
+    "files": []
+  },
+  "components\\ImmersiveScene.tsx -> ./Venus": {
+    "id": 1291,
+    "files": [
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/1291.5994c30cbd7593d2.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./ViracochaDialogue": {
     "id": 5054,
     "files": [
-      "static/chunks/54.baa8a6073f25cc00.js"
+      "static/chunks/5054.b6302225155c8be7.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./VolcanicTerrain": {
+    "id": 2460,
+    "files": []
+  },
+  "components\\ImmersiveScene.tsx -> ./WalkableAvatar": {
+    "id": 7327,
+    "files": [
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/7327.4cdc4d17b13e17e9.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> @/systems/HarmoniaMundiSystem": {
     "id": 2266,
     "files": [
-      "static/chunks/266.ea1ade8d0b5f590e.js"
+      "static/chunks/2266.b62a10428b3d29fb.js"
     ]
   },
   "components\\PumaPunkuScene.tsx -> @/systems/HarmoniaMundiSystem": {
     "id": 2266,
     "files": [
-      "static/chunks/266.ea1ade8d0b5f590e.js"
+      "static/chunks/2266.b62a10428b3d29fb.js"
     ]
   },
   "components\\TeotihuacanScene.tsx -> @/systems/HarmoniaMundiSystem": {
     "id": 2266,
     "files": [
-      "static/chunks/266.ea1ade8d0b5f590e.js"
+      "static/chunks/2266.b62a10428b3d29fb.js"
     ]
   },
   "types\\missionState.ts -> ../systems/HarmoniaMundiSystem": {
     "id": 2266,
     "files": [
-      "static/chunks/266.ea1ade8d0b5f590e.js"
+      "static/chunks/2266.b62a10428b3d29fb.js"
     ]
   },
   "utils\\lazy-systems.ts -> @/components/ProceduralTerrain": {
     "id": 8851,
     "files": [
-      "static/chunks/749.8d721470e3ba41f5.js"
+      "static/chunks/8851.2cf33ab3bf2606b6.js"
     ]
   }
 }

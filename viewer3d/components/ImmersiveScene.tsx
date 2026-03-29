@@ -5,56 +5,24 @@ import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, Html, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
-import Globe3D from './Globe3D'
-import ModelViewer from './ModelViewer'
-import SiteMarkers from './SiteMarkers'
 import CoordinateInput from './CoordinateInput'
 import LocationInfo from './LocationInfo'
-import VolcanicTerrain from './VolcanicTerrain'
-import IceTerrain from './IceTerrain'
 import WeatherControl, { type WeatherState } from './WeatherControl'
-import BasicCollisions from './BasicCollisions'
-import WalkableAvatar from './WalkableAvatar'
-import SolarSystemIntegrated from './SolarSystemIntegrated'
-import SimpleMoon from './SimpleMoon'
-import Sun from './Sun'
-import Mercury from './Mercury'
-import Venus from './Venus'
-import Mars from './Mars'
-import PlanetaryOrbits from './PlanetaryOrbits'
-import EarthOrbitWrapper from './EarthOrbitWrapper'
-import LunarOrbitLine from './LunarOrbitLine'
-import MilkyWayBackground from './MilkyWayBackground'
-const RealisticSolarSystem = dynamic(() => import('./RealisticSolarSystem'), { ssr: false })
-import Stars from './Stars'
-import { 
-  useNarrativeZoom
-} from './NarrativeZoom'
-import { detectBiome, getSkyColorForBiome, getFogColorForBiome } from '@/utils/biome-detector'
-import ProceduralTerrain from './ProceduralTerrain'
-import AmbientMotion from './AmbientMotion'
+import SelectableObject from './SelectableObject'
+import TerrainClickReceiver from './TerrainClickReceiver'
+import { ObjectSelectionProvider, useObjectSelection } from './ObjectSelectionContext'
+import EngineIntegration from './EngineIntegration'
 import { ArcheoEngine, AvatarEngine, type ArchaeologicalSite } from '../engines'
 import { getAssetPath } from '@/lib/paths'
 import { loggers } from '@/core/Logger'
 import { WorldCore } from '../engines/WorldCore'
 import { getProceduralAudio } from '../systems/ProceduralAudio'
 import { getClimateAudio } from '../systems/ClimateAudioSystem'
-
-// SISTEMA DE TERRENO MEJORADO
-import EnhancedTerrain from './EnhancedTerrain'
-import TerrainControl from './TerrainControl'
-
-// MODELOS 3D DE VEGETACIÓN Y ROCAS
-import Tree3DModel, { type TreeType } from './Tree3DModel'
-import Rock3DModel from './Rock3DModel'
-import PumaPunkuBlock from './PumaPunkuBlock'
-import PumaPunkuStructure from './PumaPunkuStructure'
-import SelectableObject from './SelectableObject'
-import TerrainClickReceiver from './TerrainClickReceiver'
-import { ObjectSelectionProvider, useObjectSelection } from './ObjectSelectionContext'
-
-// SISTEMAS DE PERFORMANCE
-import EngineIntegration from './EngineIntegration'
+import { useNarrativeZoom } from './NarrativeZoom'
+import { detectBiome, getSkyColorForBiome, getFogColorForBiome } from '@/utils/biome-detector'
+import { loadPlayerState, savePlayerState, updatePlayerLocation } from '@/types/player'
+import { loadGameSettings } from '@/types/gameSettings'
+import { collectItem, interactWithNPC, loadMissionState, sphinxReceivePyramidion, hasSphinxReceivedPyramidion, clearWeather, isWeatherCleared, completeMission, failMission, type MissionState } from '@/types/missionState'
 
 // SISTEMAS MODULARES LAZY-LOADED
 import {
@@ -65,15 +33,43 @@ import {
   AstronomicalSystem
 } from '@/utils/lazy-systems'
 
-// UI Systems Layer
-import UISystems from './layers/UISystems'
-import AmbientAudio from './AmbientAudio'
-import AmbientParticles from './AmbientParticles'
-import CinematicZoom from './CinematicZoom'
-import SiteInfo from './SiteInfo'
-import SolarSimulation from './SolarSimulation'
+// GLOBO - componentes lazy (solo se usan en modo globo)
+const Globe3D = dynamic(() => import('./Globe3D'), { ssr: false })
+const Stars = dynamic(() => import('./Stars'), { ssr: false, loading: () => null })
+const MilkyWayBackground = dynamic(() => import('./MilkyWayBackground'), { ssr: false, loading: () => null })
+const SolarSystemIntegrated = dynamic(() => import('./SolarSystemIntegrated'), { ssr: false, loading: () => null })
+const SimpleMoon = dynamic(() => import('./SimpleMoon'), { ssr: false, loading: () => null })
+const Sun = dynamic(() => import('./Sun'), { ssr: false, loading: () => null })
+const Mercury = dynamic(() => import('./Mercury'), { ssr: false, loading: () => null })
+const Venus = dynamic(() => import('./Venus'), { ssr: false, loading: () => null })
+const Mars = dynamic(() => import('./Mars'), { ssr: false, loading: () => null })
+const PlanetaryOrbits = dynamic(() => import('./PlanetaryOrbits'), { ssr: false, loading: () => null })
+const EarthOrbitWrapper = dynamic(() => import('./EarthOrbitWrapper'), { ssr: false, loading: () => null })
+const LunarOrbitLine = dynamic(() => import('./LunarOrbitLine'), { ssr: false, loading: () => null })
+const RealisticSolarSystem = dynamic(() => import('./RealisticSolarSystem'), { ssr: false })
 
-// ESCENAS PESADAS - LAZY LOADING (solo se cargan cuando se necesitan)
+// TERRENO - componentes lazy (solo se usan en modo terreno)
+const WalkableAvatar = dynamic(() => import('./WalkableAvatar'), { ssr: false })
+const ModelViewer = dynamic(() => import('./ModelViewer'), { ssr: false })
+const ProceduralTerrain = dynamic(() => import('./ProceduralTerrain'), { ssr: false, loading: () => null })
+const EnhancedTerrain = dynamic(() => import('./EnhancedTerrain'), { ssr: false, loading: () => null })
+const Tree3DModel = dynamic(() => import('./Tree3DModel'), { ssr: false, loading: () => null })
+const Rock3DModel = dynamic(() => import('./Rock3DModel'), { ssr: false, loading: () => null })
+const PumaPunkuBlock = dynamic(() => import('./PumaPunkuBlock'), { ssr: false, loading: () => null })
+const PumaPunkuStructure = dynamic(() => import('./PumaPunkuStructure'), { ssr: false, loading: () => null })
+const AmbientMotion = dynamic(() => import('./AmbientMotion'), { ssr: false, loading: () => null })
+const VolcanicTerrain = dynamic(() => import('./VolcanicTerrain'), { ssr: false, loading: () => null })
+const IceTerrain = dynamic(() => import('./IceTerrain'), { ssr: false, loading: () => null })
+const SiteMarkers = dynamic(() => import('./SiteMarkers'), { ssr: false, loading: () => null })
+const BasicCollisions = dynamic(() => import('./BasicCollisions'), { ssr: false, loading: () => null })
+const TerrainControl = dynamic(() => import('./TerrainControl'), { ssr: false, loading: () => null })
+const SiteInfo = dynamic(() => import('./SiteInfo'), { ssr: false, loading: () => null })
+const SolarSimulation = dynamic(() => import('./SolarSimulation'), { ssr: false, loading: () => null })
+const AmbientAudio = dynamic(() => import('./AmbientAudio'), { ssr: false, loading: () => null })
+const AmbientParticles = dynamic(() => import('./AmbientParticles'), { ssr: false, loading: () => null })
+const CinematicZoom = dynamic(() => import('./CinematicZoom'), { ssr: false, loading: () => null })
+
+// ESCENAS PESADAS - LAZY LOADING
 const SpaceUfo = dynamic(() => import('./SpaceUfo'), { ssr: false })
 const PumaPunkuScene = dynamic(() => import('./PumaPunkuScene'), { ssr: false })
 const GizaScene = dynamic(() => import('./GizaScene'), { ssr: false })
@@ -96,9 +92,6 @@ const EnhancedMoon = dynamic(() => import('./EnhancedMoon'), { ssr: false })
 
 // EnvironmentElementsWithTrees necesita el contexto, importar directamente
 import { EnvironmentElementsWithTrees } from './EnvironmentElements'
-import { loadPlayerState, savePlayerState, updatePlayerLocation } from '@/types/player'
-import { loadGameSettings } from '@/types/gameSettings'
-import { collectItem, interactWithNPC, loadMissionState, sphinxReceivePyramidion, hasSphinxReceivedPyramidion, clearWeather, isWeatherCleared, completeMission, failMission, type MissionState } from '@/types/missionState'
 
 interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
@@ -212,9 +205,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       }
     }
     
-    // Verificar cada 500ms si el volumen cambió
-    const interval = setInterval(checkVolumeChanges, 500)
-    return () => clearInterval(interval)
+    // Escuchar cambios en localStorage en lugar de polling
+    window.addEventListener('storage', checkVolumeChanges)
+    return () => window.removeEventListener('storage', checkVolumeChanges)
   }, [])
   
   // Secuencia de clima al mover un bloque de Puma Punku
@@ -445,7 +438,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     
     // Verificar al montar y cada segundo
     checkMagnaBowl()
-    const interval = setInterval(checkMagnaBowl, 1000)
+    const interval = setInterval(checkMagnaBowl, 5000) // Reducido de 1000ms a 5000ms
     return () => clearInterval(interval)
   }, [])
   
@@ -479,9 +472,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       }
     }
     
-    // Verificar al montar y cada segundo
+    // Verificar al montar y cada 5 segundos (no necesita ser frecuente)
     checkPyramidion()
-    const interval = setInterval(checkPyramidion, 1000)
+    const interval = setInterval(checkPyramidion, 5000)
     return () => clearInterval(interval)
   }, [])
   

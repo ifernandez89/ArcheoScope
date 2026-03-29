@@ -789,7 +789,7 @@ function DesertRocks() {
         >
           <boxGeometry args={[size, height, size * 0.8]} />
           <meshStandardMaterial
-            color={new THREE.Color().setHSL(0.08, 0.15, 0.4 + Math.random() * 0.2)}
+            color={`hsl(28, 15%, ${Math.floor(40 + Math.random() * 20)}%)`}
             roughness={0.9}
           />
         </mesh>
