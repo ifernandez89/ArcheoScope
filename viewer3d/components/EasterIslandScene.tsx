@@ -106,7 +106,3 @@ function EasterIslandSceneContent({ avatarPositionRef }: EasterIslandSceneProps)
     </group>
   )
 }
-
-// Precargar modelos
-useGLTF.preload(getAssetPath('/moai.glb'))
-useGLTF.preload(getAssetPath('/atlante.glb'))

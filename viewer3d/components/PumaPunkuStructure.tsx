@@ -71,5 +71,3 @@ export default function PumaPunkuStructure({
     </group>
   )
 }
-
-useGLTF.preload(getAssetPath('/pm_structure.glb'))

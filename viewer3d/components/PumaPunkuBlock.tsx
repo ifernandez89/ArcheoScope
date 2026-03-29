@@ -52,5 +52,3 @@ export default function PumaPunkuBlock({
     />
   )
 }
-
-useGLTF.preload(getAssetPath('/puma_punku_block.glb'))

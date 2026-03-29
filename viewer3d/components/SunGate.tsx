@@ -59,5 +59,3 @@ export default function SunGate({ position, rotation, revealed }: SunGateProps) 
     </group>
   )
 }
-
-useGLTF.preload(getAssetPath('/puerta del sol front.glb'))

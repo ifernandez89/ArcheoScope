@@ -7,7 +7,7 @@
       "static/chunks/engines.619a09be4e5159a2.js",
       "static/chunks/vendor-eecfc17bd80708e1.js",
       "static/chunks/22-60606de3096eecd7.js",
-      "static/chunks/902.bfe1aa919c0a0bc9.js"
+      "static/chunks/902.26102a2eadaaade5.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -75,7 +75,7 @@
   "components\\ImmersiveScene.tsx -> ./EasterIslandScene": {
     "id": 1256,
     "files": [
-      "static/chunks/256.6eafbdf61f055d5a.js"
+      "static/chunks/256.a1c51d3dfd9969fe.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EnhancedMoon": {
@@ -91,7 +91,7 @@
   "components\\ImmersiveScene.tsx -> ./GizaScene": {
     "id": 5178,
     "files": [
-      "static/chunks/178.be0aa46428b28e00.js"
+      "static/chunks/178.a9e332a38da8c842.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./InventoryItem": {
@@ -109,7 +109,7 @@
   "components\\ImmersiveScene.tsx -> ./PumaPunkuScene": {
     "id": 1175,
     "files": [
-      "static/chunks/175.d20d77467da70673.js"
+      "static/chunks/175.f0429689cfcf3499.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./QuetzalcoatlDialogue": {
@@ -139,7 +139,7 @@
   "components\\ImmersiveScene.tsx -> ./TeotihuacanScene": {
     "id": 9624,
     "files": [
-      "static/chunks/624.c0346a806e551b6d.js"
+      "static/chunks/624.25cd9706fd97d300.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./ViracochaDialogue": {

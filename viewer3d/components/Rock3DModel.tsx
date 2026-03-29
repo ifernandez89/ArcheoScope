@@ -51,4 +51,4 @@ export default function Rock3DModel({ position, scale = 1, rotation = 0 }: Rock3
 }
 
 // Precargar el modelo
-useGLTF.preload(getAssetPath('/rock_blender.glb'))
+// useGLTF.preload(getAssetPath('/rock_blender.glb')) // Se carga al entrar al terreno

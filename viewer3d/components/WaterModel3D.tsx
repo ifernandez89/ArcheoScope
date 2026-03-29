@@ -75,5 +75,4 @@ export default function WaterModel3D({
   )
 }
 
-// Precargar el modelo
-useGLTF.preload(getAssetPath('/water_blender.glb'))
+// useGLTF.preload(getAssetPath('/water_blender.glb')) // Se carga al entrar al terreno

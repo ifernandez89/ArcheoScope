@@ -7,14 +7,7 @@ import { useGLTF, Html } from '@react-three/drei'
 import { getAssetPath } from '@/lib/paths'
 import SelectableObject from './SelectableObject'
 
-// 🚀 PRECARGAR TODOS LOS MODELOS INMEDIATAMENTE
-useGLTF.preload(getAssetPath('/sphinx_base.glb'))
-useGLTF.preload(getAssetPath('/ramses2.glb'))
-useGLTF.preload(getAssetPath('/hatshepsut.glb'))
-useGLTF.preload(getAssetPath('/akenaton.glb'))
-useGLTF.preload(getAssetPath('/momia.glb'))
-useGLTF.preload(getAssetPath('/escab.glb'))
-useGLTF.preload(getAssetPath('/piramidon.glb'))
+// Modelos se cargan bajo demanda al entrar a la escena (no preload global)
 
 interface GizaSceneProps {
   avatarPositionRef: React.MutableRefObject<THREE.Vector3>

@@ -107,17 +107,4 @@ export default function Tree3DModel({
   )
 }
 
-// Precargar todos los modelos
-useGLTF.preload(getAssetPath('/tree_blender.glb'))
-// NOTA: Los árboles pesados (tree_1, tree_2, tree_3) se cargan bajo demanda
-// para mejorar el tiempo de carga inicial (43MB total)
-// useGLTF.preload(getAssetPath('/tree_1.glb'))
-// useGLTF.preload(getAssetPath('/tree_2.glb'))
-// useGLTF.preload(getAssetPath('/tree_3.glb'))
-
-// Precargar texturas
-useTexture.preload(getAssetPath('/BarkDecidious0143_5_S.jpg'))
-useTexture.preload(getAssetPath('/BarkDecidious0194_7_S.jpg'))
-useTexture.preload(getAssetPath('/Leaves0120_35_S.png'))
-useTexture.preload(getAssetPath('/Leaves0142_4_S.png'))
-useTexture.preload(getAssetPath('/Leaves0156_1_S.png'))
+// Árboles y texturas se cargan bajo demanda al entrar al terreno

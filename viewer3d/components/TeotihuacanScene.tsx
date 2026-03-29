@@ -425,9 +425,10 @@ function LoadingTeotihuacan() {
 }
 
 // Precargar modelos
-useGLTF.preload(getAssetPath('/kukulkan.glb'))
-useGLTF.preload(getAssetPath('/aztec_temple.glb'))
-useGLTF.preload(getAssetPath('/calendario_maya.glb'))
-useGLTF.preload(getAssetPath('/quetzalcoatl.glb'))
-useGLTF.preload(getAssetPath('/maiz.glb'))
-useGLTF.preload(getAssetPath('/planta_maiz.glb'))
+// ELIMINADO: Los preloads se hacen solo cuando se entra a la escena
+// useGLTF.preload(getAssetPath('/kukulkan.glb'))
+// useGLTF.preload(getAssetPath('/aztec_temple.glb'))
+// useGLTF.preload(getAssetPath('/calendario_maya.glb'))
+// useGLTF.preload(getAssetPath('/quetzalcoatl.glb'))
+// useGLTF.preload(getAssetPath('/maiz.glb'))
+// useGLTF.preload(getAssetPath('/planta_maiz.glb'))

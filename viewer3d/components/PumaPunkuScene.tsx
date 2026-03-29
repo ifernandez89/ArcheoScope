@@ -299,5 +299,3 @@ function ViracochaGuardian({
     </group>
   )
 }
-
-useGLTF.preload(getAssetPath('/viracocha.glb'))

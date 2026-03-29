@@ -1,81 +1,81 @@
 {
   "pages": {
     "/_not-found/page": [
-      "static/chunks/webpack-7fc00a449484e90d.js",
+      "static/chunks/webpack-a87fc65c97d60a15.js",
       "static/chunks/vendor-eecfc17bd80708e1.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/_not-found/page-4ab590ec801a1eb2.js"
     ],
     "/layout": [
-      "static/chunks/webpack-7fc00a449484e90d.js",
+      "static/chunks/webpack-a87fc65c97d60a15.js",
       "static/chunks/vendor-eecfc17bd80708e1.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/css/249ec7b36a9b822f.css",
       "static/chunks/app/layout-72ece703cc3f1508.js"
     ],
     "/game/page": [
-      "static/chunks/webpack-7fc00a449484e90d.js",
+      "static/chunks/webpack-a87fc65c97d60a15.js",
       "static/chunks/vendor-eecfc17bd80708e1.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/game/page-f3ba1aea65915ec4.js"
     ],
     "/menu/audio/page": [
-      "static/chunks/webpack-7fc00a449484e90d.js",
+      "static/chunks/webpack-a87fc65c97d60a15.js",
       "static/chunks/vendor-eecfc17bd80708e1.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/22-60606de3096eecd7.js",
       "static/chunks/app/menu/audio/page-40fd5d9ae61ce7f7.js"
     ],
-    "/menu/info/page": [
-      "static/chunks/webpack-7fc00a449484e90d.js",
-      "static/chunks/vendor-eecfc17bd80708e1.js",
-      "static/chunks/main-app-a197d865af5093da.js",
-      "static/chunks/app/menu/info/page-8fe5c7c89f569b65.js"
-    ],
     "/menu/controls/page": [
-      "static/chunks/webpack-7fc00a449484e90d.js",
+      "static/chunks/webpack-a87fc65c97d60a15.js",
       "static/chunks/vendor-eecfc17bd80708e1.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/menu/controls/page-a93e934b44e67f7c.js"
     ],
+    "/menu/info/page": [
+      "static/chunks/webpack-a87fc65c97d60a15.js",
+      "static/chunks/vendor-eecfc17bd80708e1.js",
+      "static/chunks/main-app-a197d865af5093da.js",
+      "static/chunks/app/menu/info/page-8fe5c7c89f569b65.js"
+    ],
     "/menu/page": [
-      "static/chunks/webpack-7fc00a449484e90d.js",
+      "static/chunks/webpack-a87fc65c97d60a15.js",
       "static/chunks/vendor-eecfc17bd80708e1.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/menu/page-fec7f47e060326ad.js"
     ],
     "/menu/video/page": [
-      "static/chunks/webpack-7fc00a449484e90d.js",
+      "static/chunks/webpack-a87fc65c97d60a15.js",
       "static/chunks/vendor-eecfc17bd80708e1.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/menu/video/page-39d7b67a6958d98c.js"
     ],
     "/metrics/page": [
-      "static/chunks/webpack-7fc00a449484e90d.js",
+      "static/chunks/webpack-a87fc65c97d60a15.js",
       "static/chunks/vendor-eecfc17bd80708e1.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/metrics/page-597ff9ca23096419.js"
     ],
     "/page": [
-      "static/chunks/webpack-7fc00a449484e90d.js",
+      "static/chunks/webpack-a87fc65c97d60a15.js",
       "static/chunks/vendor-eecfc17bd80708e1.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/page-76fcba8d84fd4118.js"
     ],
-    "/player-setup/page": [
-      "static/chunks/webpack-7fc00a449484e90d.js",
-      "static/chunks/vendor-eecfc17bd80708e1.js",
-      "static/chunks/main-app-a197d865af5093da.js",
-      "static/chunks/app/player-setup/page-972a4e5901806c15.js"
-    ],
     "/realistic-solar/page": [
-      "static/chunks/webpack-7fc00a449484e90d.js",
+      "static/chunks/webpack-a87fc65c97d60a15.js",
       "static/chunks/vendor-eecfc17bd80708e1.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/realistic-solar/page-4b3f564a48c96ed4.js"
     ],
+    "/player-setup/page": [
+      "static/chunks/webpack-a87fc65c97d60a15.js",
+      "static/chunks/vendor-eecfc17bd80708e1.js",
+      "static/chunks/main-app-a197d865af5093da.js",
+      "static/chunks/app/player-setup/page-972a4e5901806c15.js"
+    ],
     "/reset/page": [
-      "static/chunks/webpack-7fc00a449484e90d.js",
+      "static/chunks/webpack-a87fc65c97d60a15.js",
       "static/chunks/vendor-eecfc17bd80708e1.js",
       "static/chunks/main-app-a197d865af5093da.js",
       "static/chunks/app/reset/page-86210a9f1f9a63e0.js"

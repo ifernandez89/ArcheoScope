@@ -138,5 +138,4 @@ export default ModelViewer
 
 import { getAssetPath } from '@/lib/paths'
 
-// Precargar el modelo
-useGLTF.preload(getAssetPath('/warrior.glb'))
+// useGLTF.preload(getAssetPath('/warrior.glb')) // Se carga bajo demanda
