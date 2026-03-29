@@ -40,7 +40,7 @@ export default function SimpleMoon() {
   const moonRef = useRef<THREE.Mesh>(null)
   
   // Cargar textura de la Luna de forma segura
-  const moonTexture = useTexture(getAssetPath('/textures/8k_moon.jpg'), (texture) => {
+  const moonTexture = useTexture(getAssetPath('/textures/2k_moon.jpg'), (texture) => {
     console.log('✅ Textura de Luna cargada')
   })
   

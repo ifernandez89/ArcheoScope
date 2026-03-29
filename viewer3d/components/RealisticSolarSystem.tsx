@@ -37,10 +37,10 @@ export default function RealisticSolarSystem({
   markerPosition 
 }: RealisticSolarSystemProps) {
   // Cargar texturas de planetas
-  const mercuryTexture = useTexture(getAssetPath('/textures/8k_mercury.jpg'))
+  const mercuryTexture = useTexture(getAssetPath('/textures/2k_mercury.jpg'))
   const venusAtmosphereTexture = useTexture(getAssetPath('/textures/4k_venus_atmosphere.jpg'))
-  const marsTexture = useTexture(getAssetPath('/textures/8k_mars.jpg'))
-  const moonTexture = useTexture(getAssetPath('/textures/8k_moon.jpg'))
+  const marsTexture = useTexture(getAssetPath('/textures/2k_mars.jpg'))
+  const moonTexture = useTexture(getAssetPath('/textures/2k_moon.jpg'))
   const jupiterTexture = useTexture(getAssetPath('/textures/2k_jupiter.jpg'))
   const saturnTexture = useTexture(getAssetPath('/textures/2k_saturn.jpg'))
   const saturnRingTexture = useTexture(getAssetPath('/textures/2k_saturn_ring_alpha.png'))

@@ -49,7 +49,7 @@ export default function Sun() {
   const directionalLightRef = useRef<THREE.DirectionalLight>(null)
   
   // Cargar textura del Sol
-  const sunTexture = useTexture(getAssetPath('/textures/8k_sun.jpg'), (texture) => {
+  const sunTexture = useTexture(getAssetPath('/textures/2k_sun.jpg'), (texture) => {
     console.log('☀️ Textura del Sol cargada')
   })
   

@@ -10,7 +10,7 @@ export default function MilkyWayBackground() {
   const sphereRef = useRef<THREE.Mesh>(null)
 
   // UVMapping es el correcto para esfera skybox con BackSide
-  const milkyWayTexture = useTexture(getAssetPath('/textures/8k_stars_milky_way.jpg'), (texture) => {
+  const milkyWayTexture = useTexture(getAssetPath('/textures/2k_stars_milky_way.jpg'), (texture) => {
     texture.mapping = THREE.UVMapping
     texture.colorSpace = THREE.SRGBColorSpace
     texture.needsUpdate = true

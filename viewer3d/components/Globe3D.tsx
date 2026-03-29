@@ -48,7 +48,7 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
     
     // Cargar textura de nubes
     loader.load(
-      getAssetPath('/textures/earth_clouds_8k.jpg'),
+      getAssetPath('/textures/2k_earth_clouds.jpg'),
       (texture) => {
         loggers.world.info('Textura de nubes cargada exitosamente')
         setCloudsTexture(texture)
@@ -59,12 +59,9 @@ export default function Globe3D({ onLocationClick, markerPosition }: Globe3DProp
       }
     )
     
-    // Cargar mapa especular (reflejos en océanos) - Crear proceduralmente si no existe
-    // Por ahora usaremos la textura de la Tierra invertida como especular
-    
     // Cargar mapa nocturno (luces de ciudades)
     loader.load(
-      getAssetPath('/textures/earth_night_8k.jpg'),
+      getAssetPath('/textures/2k_earth_night.jpg'),
       (texture) => {
         loggers.world.info('Mapa nocturno cargado exitosamente')
         setNightTexture(texture)

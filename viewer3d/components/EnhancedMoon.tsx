@@ -35,7 +35,7 @@ export default function EnhancedMoon({
   visible = true 
 }: EnhancedMoonProps) {
   const moonRef = useRef<THREE.Mesh>(null)
-  const moonTexture = useTexture(getAssetPath('/textures/8k_moon.jpg'))
+  const moonTexture = useTexture(getAssetPath('/textures/2k_moon.jpg'))
   
   // Calcular posición y tamaño de la luna
   const { position, scale, color } = useMemo(() => {

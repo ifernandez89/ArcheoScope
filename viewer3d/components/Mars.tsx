@@ -32,7 +32,7 @@ export default function Mars({ earthRadius, visible = true }: MarsProps) {
   const [labelPosition, setLabelPosition] = useState<[number, number, number]>([0, 0, 0])
   
   // Cargar textura de Marte
-  const marsTexture = useTexture(getAssetPath('/textures/8k_mars.jpg'), (texture) => {
+  const marsTexture = useTexture(getAssetPath('/textures/2k_mars.jpg'), (texture) => {
     console.log('🔴 Textura de Marte cargada')
   })
   

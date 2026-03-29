@@ -32,8 +32,8 @@ export default function Mercury({
   const [labelPosition, setLabelPosition] = useState<[number, number, number]>([0, 0, 0])
   
   // Cargar textura de la Luna como placeholder para Mercurio (similar)
-  const mercuryTexture = useTexture(getAssetPath('/textures/8k_moon.jpg'), (texture) => {
-    console.log('☿️ Textura de Mercurio cargada (usando textura lunar)')
+  const mercuryTexture = useTexture(getAssetPath('/textures/2k_mercury.jpg'), (texture) => {
+    console.log('☿️ Textura de Mercurio cargada')
   })
   
   // SISTEMA HÍBRIDO PROFESIONAL
