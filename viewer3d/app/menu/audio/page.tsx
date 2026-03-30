@@ -35,27 +35,29 @@ export default function AudioPage() {
 
   // Guardar cambios
   const handleSave = () => {
-    // Guardar en gameSettings
+    const vol = masterVolume / 100
+    
+    // Guardar en gameSettings (fuente de verdad)
     updateAudioSettings({
-      masterVolume: masterVolume / 100,
-      musicVolume: masterVolume / 100,
-      sfxVolume: masterVolume / 100
+      masterVolume: vol,
+      musicVolume: vol,
+      sfxVolume: vol
     })
     
-    // Aplicar volúmenes a sistemas de audio
-    const proceduralAudio = getProceduralAudio()
-    proceduralAudio.setMasterVolume(masterVolume / 100)
+    // Aplicar a ProceduralAudio (lluvia, viento, clima)
+    getProceduralAudio().setMasterVolume(vol)
     
+    // Aplicar a HarmoniaMundi SIEMPRE (aunque no esté habilitado, guarda el pending)
     const harmoniaMundi = getHarmoniaMundi()
+    harmoniaMundi.setMasterVolume(vol)
     if (harmoniaMundi.isEnabled()) {
-      harmoniaMundi.setMasterVolume(harmoniaVolume / 100)
       harmoniaMundi.setPlanetaryVolume(planetaryVolume / 100)
       harmoniaMundi.setHarmonicVolume(harmonicVolume / 100)
       harmoniaMundi.setPulseVolume(pulseVolume / 100)
       harmoniaMundi.setArchitectureVolume(architectureVolume / 100)
     }
     
-    console.log('🔊 Volúmenes guardados')
+    console.log('🔊 Volúmenes guardados y aplicados:', vol)
     router.push('/menu')
   }
 

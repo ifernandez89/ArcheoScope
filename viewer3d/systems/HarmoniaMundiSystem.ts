@@ -44,6 +44,7 @@ export class HarmoniaMundiSystem {
   private context?: AudioContext
   private masterGain?: GainNode
   private enabled = false
+  private pendingMasterVolume: number = 0.7 // Guarda volumen aunque no esté habilitado
   
   // Capas de volumen separadas
   private planetaryGain?: GainNode      // Drones planetarios
@@ -210,7 +211,21 @@ export class HarmoniaMundiSystem {
     
     // Crear cadena de ganancia
     this.masterGain = this.context.createGain()
-    this.masterGain.gain.value = 0.7 // Volumen master más alto
+    
+    // Leer volumen guardado desde gameSettings
+    let savedVolume = this.pendingMasterVolume
+    try {
+      const gs = localStorage.getItem('game_settings')
+      if (gs) {
+        const parsed = JSON.parse(gs)
+        if (parsed?.audio?.masterVolume !== undefined) {
+          savedVolume = parsed.audio.masterVolume
+          this.pendingMasterVolume = savedVolume
+        }
+      }
+    } catch {}
+    
+    this.masterGain.gain.value = savedVolume
     this.masterGain.connect(this.context.destination)
     
     // Capas de volumen
@@ -408,9 +423,10 @@ export class HarmoniaMundiSystem {
    * Ajustar volúmenes
    */
   setMasterVolume(volume: number): void {
+    this.pendingMasterVolume = Math.max(0, Math.min(1, volume))
     if (this.masterGain && this.context) {
       this.masterGain.gain.linearRampToValueAtTime(
-        Math.max(0, Math.min(1, volume)),
+        this.pendingMasterVolume,
         this.context.currentTime + 0.1
       )
     }

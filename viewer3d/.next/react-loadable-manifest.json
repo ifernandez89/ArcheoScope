@@ -7,7 +7,7 @@
       "static/chunks/engines.0749c2c4a2d3d742.js",
       "static/chunks/vendor-d5f52ee1adae0106.js",
       "static/chunks/4022-bc0c0086f9e51fb9.js",
-      "static/chunks/4098.47fa38f0a1865ea8.js"
+      "static/chunks/4098.fe63d93934f7525b.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -34,13 +34,13 @@
   "components\\EasterIslandScene.tsx -> @/systems/HarmoniaMundiSystem": {
     "id": 2266,
     "files": [
-      "static/chunks/2266.b62a10428b3d29fb.js"
+      "static/chunks/2266.284a8a0496aff6f3.js"
     ]
   },
   "components\\GizaScene.tsx -> @/systems/HarmoniaMundiSystem": {
     "id": 2266,
     "files": [
-      "static/chunks/2266.b62a10428b3d29fb.js"
+      "static/chunks/2266.284a8a0496aff6f3.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./AmbientAudio": {
@@ -344,25 +344,29 @@
   "components\\ImmersiveScene.tsx -> @/systems/HarmoniaMundiSystem": {
     "id": 2266,
     "files": [
-      "static/chunks/2266.b62a10428b3d29fb.js"
+      "static/chunks/2266.284a8a0496aff6f3.js"
     ]
+  },
+  "components\\ImmersiveScene.tsx -> @/types/missionState": {
+    "id": 1947,
+    "files": []
   },
   "components\\PumaPunkuScene.tsx -> @/systems/HarmoniaMundiSystem": {
     "id": 2266,
     "files": [
-      "static/chunks/2266.b62a10428b3d29fb.js"
+      "static/chunks/2266.284a8a0496aff6f3.js"
     ]
   },
   "components\\TeotihuacanScene.tsx -> @/systems/HarmoniaMundiSystem": {
     "id": 2266,
     "files": [
-      "static/chunks/2266.b62a10428b3d29fb.js"
+      "static/chunks/2266.284a8a0496aff6f3.js"
     ]
   },
   "types\\missionState.ts -> ../systems/HarmoniaMundiSystem": {
     "id": 2266,
     "files": [
-      "static/chunks/2266.b62a10428b3d29fb.js"
+      "static/chunks/2266.284a8a0496aff6f3.js"
     ]
   },
   "utils\\lazy-systems.ts -> @/components/ProceduralTerrain": {

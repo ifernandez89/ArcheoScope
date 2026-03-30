@@ -187,27 +187,42 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     }
   }, [])
   
-  // Escuchar cambios en el volumen desde el menú
+  // Escuchar cambios de volumen - polling eficiente con ref para evitar re-renders
   useEffect(() => {
+    let lastVolume = -1
+    
+    const applyVolume = (volume: number) => {
+      // ProceduralAudio (clima, lluvia, viento)
+      const audioGenerator = getProceduralAudio()
+      audioGenerator.setMasterVolume(volume)
+      
+      // ClimateAudio (usa ProceduralAudio internamente, pero forzamos)
+      getClimateAudio().setMasterVolume(volume)
+      
+      // HarmoniaMundi (música cósmica) - siempre guardar aunque no esté habilitado
+      import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+        const harmonia = getHarmoniaMundi()
+        harmonia.setMasterVolume(volume)
+      })
+      
+      console.log('🔊 Volumen aplicado a todos los sistemas:', volume)
+    }
+    
     const checkVolumeChanges = () => {
-      // Cargar desde gameSettings (nueva fuente de verdad)
       const settings = loadGameSettings()
-      if (settings?.audio?.masterVolume !== undefined) {
-        const audioGenerator = getProceduralAudio()
-        const currentVolume = audioGenerator.getMasterVolume()
-        const savedVolume = settings.audio.masterVolume
-        
-        // Solo actualizar si cambió
-        if (Math.abs(currentVolume - savedVolume) > 0.01) {
-          audioGenerator.setMasterVolume(savedVolume)
-          console.log('🔊 Volumen actualizado desde gameSettings:', savedVolume)
-        }
+      const savedVolume = settings?.audio?.masterVolume ?? 0.7
+      if (Math.abs(savedVolume - lastVolume) > 0.005) {
+        lastVolume = savedVolume
+        applyVolume(savedVolume)
       }
     }
     
-    // Escuchar cambios en localStorage en lugar de polling
-    window.addEventListener('storage', checkVolumeChanges)
-    return () => window.removeEventListener('storage', checkVolumeChanges)
+    // Aplicar inmediatamente al montar
+    checkVolumeChanges()
+    
+    // Polling cada 1s (storage event no funciona en misma pestaña)
+    const interval = setInterval(checkVolumeChanges, 1000)
+    return () => clearInterval(interval)
   }, [])
   
   // Secuencia de clima al mover un bloque de Puma Punku
@@ -479,23 +494,37 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   }, [])
   
 
-  // 🎵 Habilitar audio automáticamente en primera interacción
+  // 🎵 Habilitar audio en primera interacción + HarmoniaMundi permanente
   useEffect(() => {
     if (audioEnabled) return
 
     const enableAudioOnInteraction = async () => {
       try {
+        // Habilitar audio climático
         await audioGenerator.enable()
         setAudioEnabled(true)
-        loggers.world.info('🔊 Audio habilitado automáticamente')
+        loggers.world.info('🔊 Audio habilitado')
         
-        // 🎼 Habilitar Harmonia Mundi también
+        // 🎼 Habilitar Harmonia Mundi PERMANENTEMENTE
         const { getHarmoniaMundi } = await import('@/systems/HarmoniaMundiSystem')
         const harmonia = getHarmoniaMundi()
         await harmonia.enable()
-        loggers.world.info('🎼 Harmonia Mundi habilitado')
+        loggers.world.info('🎼 Harmonia Mundi habilitado permanentemente')
         
-        // Remover listeners después de habilitar
+        // Aplicar volumen guardado
+        const settings = loadGameSettings()
+        const vol = settings?.audio?.masterVolume ?? 0.7
+        harmonia.setMasterVolume(vol)
+        
+        // Activar capas ya desbloqueadas por misiones previas
+        const { loadMissionState: loadMS } = await import('@/types/missionState')
+        const ms = loadMS()
+        const totalCompleted = ms.stats.totalMissionsCompleted
+        for (let i = 1; i <= totalCompleted; i++) {
+          harmonia.unlockMissionLayer(`earth_mission_${i}`)
+        }
+        loggers.world.info(`🎵 ${totalCompleted} capas de misión restauradas`)
+        
         window.removeEventListener('click', enableAudioOnInteraction)
         window.removeEventListener('keydown', enableAudioOnInteraction)
       } catch (error) {
@@ -503,7 +532,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       }
     }
 
-    // Escuchar primera interacción
     window.addEventListener('click', enableAudioOnInteraction, { once: true })
     window.addEventListener('keydown', enableAudioOnInteraction, { once: true })
 
