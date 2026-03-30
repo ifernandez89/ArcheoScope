@@ -8,412 +8,114 @@ import { getProceduralAudio } from '@/systems/ProceduralAudio'
 
 export default function AudioPage() {
   const router = useRouter()
-  const [masterVolume, setMasterVolume] = useState(70)
-  const [musicVolume, setMusicVolume] = useState(70)
-  const [sfxVolume, setSfxVolume] = useState(80)
-  
-  // Volúmenes de Harmonia Mundi
-  const [harmoniaVolume, setHarmoniaVolume] = useState(70)
-  const [planetaryVolume, setPlanetaryVolume] = useState(100)
-  const [harmonicVolume, setHarmonicVolume] = useState(80)
-  const [pulseVolume, setPulseVolume] = useState(60)
-  const [architectureVolume, setArchitectureVolume] = useState(100)
+  const [masterVolume, setMasterVolume] = useState(70)   // Clima + efectos
+  const [harmoniaVolume, setHarmoniaVolume] = useState(70) // Música de esferas
 
-  // Cargar volúmenes guardados desde gameSettings
   useEffect(() => {
     const settings = loadGameSettings()
-    const master = Math.round(settings.audio.masterVolume * 100)
-    const music = Math.round(settings.audio.musicVolume * 100)
-    const sfx = Math.round(settings.audio.sfxVolume * 100)
-    
-    setMasterVolume(master)
-    setMusicVolume(music)
-    setSfxVolume(sfx)
-    
-    console.log('🔊 Volúmenes cargados desde gameSettings:', { master, music, sfx })
+    setMasterVolume(Math.round(settings.audio.masterVolume * 100))
+    setHarmoniaVolume(Math.round((settings.audio.musicVolume ?? 0.7) * 100))
   }, [])
 
-  // Guardar cambios
   const handleSave = () => {
     const vol = masterVolume / 100
-    
-    // Guardar en gameSettings (fuente de verdad)
+    const harmVol = harmoniaVolume / 100
+
     updateAudioSettings({
       masterVolume: vol,
-      musicVolume: vol,
+      musicVolume: harmVol,
       sfxVolume: vol
     })
-    
-    // Aplicar a ProceduralAudio (lluvia, viento, clima)
+
+    // Clima, lluvia, viento
     getProceduralAudio().setMasterVolume(vol)
-    
-    // Aplicar a HarmoniaMundi SIEMPRE (aunque no esté habilitado, guarda el pending)
-    const harmoniaMundi = getHarmoniaMundi()
-    harmoniaMundi.setMasterVolume(vol)
-    if (harmoniaMundi.isEnabled()) {
-      harmoniaMundi.setPlanetaryVolume(planetaryVolume / 100)
-      harmoniaMundi.setHarmonicVolume(harmonicVolume / 100)
-      harmoniaMundi.setPulseVolume(pulseVolume / 100)
-      harmoniaMundi.setArchitectureVolume(architectureVolume / 100)
-    }
-    
-    console.log('🔊 Volúmenes guardados y aplicados:', vol)
+
+    // Música de esferas / misiones
+    const harmonia = getHarmoniaMundi()
+    harmonia.setMasterVolume(harmVol)
+
     router.push('/menu')
   }
 
+  const sliderStyle = (value: number, color: string) => ({
+    width: '100%',
+    height: '8px',
+    borderRadius: '4px',
+    outline: 'none',
+    cursor: 'pointer',
+    background: `linear-gradient(to right, ${color} 0%, ${color} ${value}%, #333 ${value}%, #333 100%)`
+  })
+
   return (
     <main style={{
-      width: '100vw',
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: '#000000',
-      margin: 0,
-      padding: 0,
-      overflow: 'hidden',
-      color: '#ffffff'
+      width: '100vw', height: '100vh',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      background: '#000', color: '#fff'
     }}>
-      <h1 style={{
-        fontSize: '48px',
-        marginBottom: '60px',
-        letterSpacing: '4px'
-      }}>
+      <h1 style={{ fontSize: '48px', marginBottom: '60px', letterSpacing: '4px' }}>
         AUDIO
       </h1>
 
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '30px',
-        width: '600px',
-        maxHeight: '70vh',
-        overflowY: 'auto',
-        paddingRight: '20px'
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '40px', width: '600px' }}>
+
         {/* Volumen General */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '15px'
-        }}>
-          <label style={{
-            fontSize: '20px',
-            letterSpacing: '2px',
-            textTransform: 'uppercase'
-          }}>
-            Volumen General: {masterVolume}%
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <label style={{ fontSize: '22px', letterSpacing: '2px', textTransform: 'uppercase' }}>
+            🌦️ Volumen General: {masterVolume}%
           </label>
           <input
-            type="range"
-            min="0"
-            max="100"
-            value={masterVolume}
-            onChange={(e) => {
-              const value = parseInt(e.target.value)
-              setMasterVolume(value)
-              setMusicVolume(value)
-              setSfxVolume(value)
-            }}
-            style={{
-              width: '100%',
-              height: '8px',
-              borderRadius: '4px',
-              outline: 'none',
-              background: `linear-gradient(to right, #4a9eff 0%, #4a9eff ${masterVolume}%, #333333 ${masterVolume}%, #333333 100%)`,
-              cursor: 'pointer'
-            }}
+            type="range" min="0" max="100" value={masterVolume}
+            onChange={(e) => setMasterVolume(parseInt(e.target.value))}
+            style={sliderStyle(masterVolume, '#4a9eff') as React.CSSProperties}
           />
-        </div>
-
-        {/* Volumen Música */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '15px'
-        }}>
-          <label style={{
-            fontSize: '20px',
-            letterSpacing: '2px',
-            textTransform: 'uppercase'
-          }}>
-            Música: {musicVolume}%
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={musicVolume}
-            onChange={(e) => setMusicVolume(parseInt(e.target.value))}
-            style={{
-              width: '100%',
-              height: '8px',
-              borderRadius: '4px',
-              outline: 'none',
-              background: `linear-gradient(to right, #4a9eff 0%, #4a9eff ${musicVolume}%, #333333 ${musicVolume}%, #333333 100%)`,
-              cursor: 'pointer'
-            }}
-          />
-        </div>
-
-        {/* Volumen Efectos */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '15px'
-        }}>
-          <label style={{
-            fontSize: '20px',
-            letterSpacing: '2px',
-            textTransform: 'uppercase'
-          }}>
-            Efectos de Sonido: {sfxVolume}%
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={sfxVolume}
-            onChange={(e) => setSfxVolume(parseInt(e.target.value))}
-            style={{
-              width: '100%',
-              height: '8px',
-              borderRadius: '4px',
-              outline: 'none',
-              background: `linear-gradient(to right, #4a9eff 0%, #4a9eff ${sfxVolume}%, #333333 ${sfxVolume}%, #333333 100%)`,
-              cursor: 'pointer'
-            }}
-          />
+          <span style={{ fontSize: '13px', color: '#888' }}>
+            Controla el clima, lluvia, viento y efectos de sonido
+          </span>
         </div>
 
         {/* Separador */}
-        <div style={{
-          height: '2px',
-          background: '#333333',
-          margin: '20px 0'
-        }} />
+        <div style={{ height: '1px', background: '#333' }} />
 
-        {/* Título Harmonia Mundi */}
-        <h2 style={{
-          fontSize: '28px',
-          letterSpacing: '3px',
-          textTransform: 'uppercase',
-          color: '#FFD700',
-          marginBottom: '-10px'
-        }}>
-          🎼 Harmonia Mundi
-        </h2>
-
-        {/* Volumen Harmonia Mundi Master */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '15px'
-        }}>
-          <label style={{
-            fontSize: '18px',
-            letterSpacing: '2px',
-            textTransform: 'uppercase'
-          }}>
-            Música Cósmica: {harmoniaVolume}%
+        {/* Música de Esferas */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <label style={{ fontSize: '22px', letterSpacing: '2px', textTransform: 'uppercase', color: '#FFD700' }}>
+            🎼 Música de las Esferas: {harmoniaVolume}%
           </label>
           <input
-            type="range"
-            min="0"
-            max="100"
-            value={harmoniaVolume}
+            type="range" min="0" max="100" value={harmoniaVolume}
             onChange={(e) => setHarmoniaVolume(parseInt(e.target.value))}
-            style={{
-              width: '100%',
-              height: '8px',
-              borderRadius: '4px',
-              outline: 'none',
-              background: `linear-gradient(to right, #FFD700 0%, #FFD700 ${harmoniaVolume}%, #333333 ${harmoniaVolume}%, #333333 100%)`,
-              cursor: 'pointer'
-            }}
+            style={sliderStyle(harmoniaVolume, '#FFD700') as React.CSSProperties}
           />
-        </div>
-
-        {/* Volumen Drones Planetarios */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '15px'
-        }}>
-          <label style={{
-            fontSize: '16px',
-            letterSpacing: '1px',
-            color: '#aaaaaa'
-          }}>
-            Drones Planetarios: {planetaryVolume}%
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={planetaryVolume}
-            onChange={(e) => setPlanetaryVolume(parseInt(e.target.value))}
-            style={{
-              width: '100%',
-              height: '6px',
-              borderRadius: '3px',
-              outline: 'none',
-              background: `linear-gradient(to right, #4A90E2 0%, #4A90E2 ${planetaryVolume}%, #333333 ${planetaryVolume}%, #333333 100%)`,
-              cursor: 'pointer'
-            }}
-          />
-        </div>
-
-        {/* Volumen Armónicos */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '15px'
-        }}>
-          <label style={{
-            fontSize: '16px',
-            letterSpacing: '1px',
-            color: '#aaaaaa'
-          }}>
-            Armónicos: {harmonicVolume}%
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={harmonicVolume}
-            onChange={(e) => setHarmonicVolume(parseInt(e.target.value))}
-            style={{
-              width: '100%',
-              height: '6px',
-              borderRadius: '3px',
-              outline: 'none',
-              background: `linear-gradient(to right, #9B59B6 0%, #9B59B6 ${harmonicVolume}%, #333333 ${harmonicVolume}%, #333333 100%)`,
-              cursor: 'pointer'
-            }}
-          />
-        </div>
-
-        {/* Volumen Pulsos Orbitales */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '15px'
-        }}>
-          <label style={{
-            fontSize: '16px',
-            letterSpacing: '1px',
-            color: '#aaaaaa'
-          }}>
-            Pulsos Orbitales: {pulseVolume}%
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={pulseVolume}
-            onChange={(e) => setPulseVolume(parseInt(e.target.value))}
-            style={{
-              width: '100%',
-              height: '6px',
-              borderRadius: '3px',
-              outline: 'none',
-              background: `linear-gradient(to right, #E74C3C 0%, #E74C3C ${pulseVolume}%, #333333 ${pulseVolume}%, #333333 100%)`,
-              cursor: 'pointer'
-            }}
-          />
-        </div>
-
-        {/* Volumen Arquitectura */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '15px'
-        }}>
-          <label style={{
-            fontSize: '16px',
-            letterSpacing: '1px',
-            color: '#aaaaaa'
-          }}>
-            Resonancia Arquitectónica: {architectureVolume}%
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={architectureVolume}
-            onChange={(e) => setArchitectureVolume(parseInt(e.target.value))}
-            style={{
-              width: '100%',
-              height: '6px',
-              borderRadius: '3px',
-              outline: 'none',
-              background: `linear-gradient(to right, #F39C12 0%, #F39C12 ${architectureVolume}%, #333333 ${architectureVolume}%, #333333 100%)`,
-              cursor: 'pointer'
-            }}
-          />
+          <span style={{ fontSize: '13px', color: '#888' }}>
+            Música cósmica procedural — se despierta con cada misión completada
+          </span>
         </div>
       </div>
 
       {/* Botones */}
-      <div style={{
-        display: 'flex',
-        gap: '20px',
-        marginTop: '60px'
-      }}>
+      <div style={{ display: 'flex', gap: '20px', marginTop: '70px' }}>
         <button
           onClick={() => router.push('/menu')}
           style={{
-            padding: '20px 80px',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: '#ffffff',
-            background: 'transparent',
-            border: '2px solid #ffffff',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            width: '350px'
+            padding: '18px 70px', fontSize: '20px', fontWeight: 'bold',
+            color: '#fff', background: 'transparent', border: '2px solid #fff',
+            borderRadius: '8px', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#ffffff'
-            e.currentTarget.style.color = '#000000'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.color = '#ffffff'
-          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#000' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff' }}
         >
           Cancelar
         </button>
-
         <button
           onClick={handleSave}
           style={{
-            padding: '20px 80px',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: '#000000',
-            background: '#4a9eff',
-            border: '2px solid #4a9eff',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            width: '350px'
+            padding: '18px 70px', fontSize: '20px', fontWeight: 'bold',
+            color: '#000', background: '#4a9eff', border: '2px solid #4a9eff',
+            borderRadius: '8px', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#6ab7ff'
-            e.currentTarget.style.borderColor = '#6ab7ff'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#4a9eff'
-            e.currentTarget.style.borderColor = '#4a9eff'
-          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#6ab7ff' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = '#4a9eff' }}
         >
           Guardar
         </button>

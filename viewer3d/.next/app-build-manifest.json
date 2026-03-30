@@ -13,6 +13,13 @@
       "static/css/249ec7b36a9b822f.css",
       "static/chunks/app/layout-dc8847de82b6962c.js"
     ],
+    "/menu/audio/page": [
+      "static/chunks/webpack-f289f72b46a57c95.js",
+      "static/chunks/vendor-d5f52ee1adae0106.js",
+      "static/chunks/main-app-e3b02d0ee76896ea.js",
+      "static/chunks/4022-bc0c0086f9e51fb9.js",
+      "static/chunks/app/menu/audio/page-11ee20b988340b8e.js"
+    ],
     "/game/page": [
       "static/chunks/webpack-f289f72b46a57c95.js",
       "static/chunks/vendor-d5f52ee1adae0106.js",
@@ -25,24 +32,17 @@
       "static/chunks/main-app-e3b02d0ee76896ea.js",
       "static/chunks/app/menu/controls/page-7320c1c69d20f389.js"
     ],
-    "/menu/audio/page": [
+    "/menu/page": [
       "static/chunks/webpack-f289f72b46a57c95.js",
       "static/chunks/vendor-d5f52ee1adae0106.js",
       "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/4022-bc0c0086f9e51fb9.js",
-      "static/chunks/app/menu/audio/page-bd335ddd2c2ec69b.js"
+      "static/chunks/app/menu/page-8bd2399ad522e117.js"
     ],
     "/menu/info/page": [
       "static/chunks/webpack-f289f72b46a57c95.js",
       "static/chunks/vendor-d5f52ee1adae0106.js",
       "static/chunks/main-app-e3b02d0ee76896ea.js",
       "static/chunks/app/menu/info/page-7d1b8b0156778b72.js"
-    ],
-    "/menu/page": [
-      "static/chunks/webpack-f289f72b46a57c95.js",
-      "static/chunks/vendor-d5f52ee1adae0106.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/menu/page-8bd2399ad522e117.js"
     ],
     "/menu/video/page": [
       "static/chunks/webpack-f289f72b46a57c95.js",
