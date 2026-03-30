@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, Suspense, useEffect } from 'react'
+import { useRef, Suspense, useEffect, useMemo } from 'react'
 import { useGLTF, Html } from '@react-three/drei'
 import { Vector3 } from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
@@ -52,6 +52,12 @@ function EasterIslandSceneContent({ avatarPositionRef }: EasterIslandSceneProps)
   // Cargar modelos (optimizados con Draco)
   const moaiModel = useGLTF(getAssetPath('/moai.glb'))
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
+
+  // Clonar escenas para los 4 modelos del borde (cada primitive necesita su propia instancia)
+  const moaiNorth  = useMemo(() => moaiModel.scene.clone(true),   [moaiModel.scene])
+  const moaiEast   = useMemo(() => moaiModel.scene.clone(true),   [moaiModel.scene])
+  const atlanteSouth = useMemo(() => atlanteModel.scene.clone(true), [atlanteModel.scene])
+  const atlanteWest  = useMemo(() => atlanteModel.scene.clone(true), [atlanteModel.scene])
   
   // 🎼 Activar arquitectura de Isla de Pascua
   useEffect(() => {
@@ -75,22 +81,39 @@ function EasterIslandSceneContent({ avatarPositionRef }: EasterIslandSceneProps)
   const moaiPosition = new Vector3(-4, 3, 0)
   const atlantePosition = new Vector3(4, 2, 0)
   
+  // Radio del borde - 1 metro adentro del límite visible
+  const BORDER = 29
+
   return (
     <group>
-      {/* Moai - Lado izquierdo, girado 30° hacia el noroeste desde la dirección original, elevado 3m */}
+      {/* Moai central - posición y rotación ORIGINALES */}
       <group position={[-4, 3, 0]} rotation={[0, Math.PI / 4 - Math.PI / 6, 0]}>
-        <primitive 
-          object={moaiModel.scene} 
-          scale={5}
-        />
+        <primitive object={moaiModel.scene} scale={5} />
       </group>
       
-      {/* Atlante - Lado derecho, girado 45° hacia el este desde la dirección original, elevado 2m */}
-      <group position={[4, 2, 0]} rotation={[0, -Math.PI / 4 + Math.PI / 4, 0]}>
-        <primitive 
-          object={atlanteModel.scene} 
-          scale={5}
-        />
+      {/* Atlante central - posición y rotación ORIGINALES */}
+      <group position={[4, 2, 0]} rotation={[0, 0, 0]}>
+        <primitive object={atlanteModel.scene} scale={5} />
+      </group>
+
+      {/* BORDE NORTE: Moai mirando al sur (hacia el centro) */}
+      <group position={[0, 3, -BORDER]} rotation={[0, Math.PI, 0]}>
+        <primitive object={moaiNorth} scale={5} />
+      </group>
+
+      {/* BORDE SUR: Atlante mirando al norte (hacia el centro) */}
+      <group position={[0, 2, BORDER]} rotation={[0, 0, 0]}>
+        <primitive object={atlanteSouth} scale={5} />
+      </group>
+
+      {/* BORDE ESTE: Moai mirando al oeste (hacia el centro) */}
+      <group position={[BORDER, 3, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <primitive object={moaiEast} scale={5} />
+      </group>
+
+      {/* BORDE OESTE: Atlante mirando al este (hacia el centro) */}
+      <group position={[-BORDER, 2, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <primitive object={atlanteWest} scale={5} />
       </group>
       
       {/* Sistema de diálogo entre Moai y Atlante */}
@@ -100,7 +123,7 @@ function EasterIslandSceneContent({ avatarPositionRef }: EasterIslandSceneProps)
         enabled={true}
       />
       
-      {/* Luz ambiental para iluminar la escena */}
+      {/* Iluminación */}
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} intensity={0.8} />
     </group>
