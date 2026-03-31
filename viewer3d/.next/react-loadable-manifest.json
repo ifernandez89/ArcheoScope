@@ -7,7 +7,7 @@
       "static/chunks/engines.0749c2c4a2d3d742.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/4022-bc0c0086f9e51fb9.js",
-      "static/chunks/4098.2ddf142cb24c5996.js"
+      "static/chunks/4098.007beb3b71df7e0d.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -324,6 +324,13 @@
       "static/chunks/1291.5994c30cbd7593d2.js"
     ]
   },
+  "components\\ImmersiveScene.tsx -> ./VeracruzScene": {
+    "id": 5275,
+    "files": [
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/5275.424415fbaeacb2b1.js"
+    ]
+  },
   "components\\ImmersiveScene.tsx -> ./ViracochaDialogue": {
     "id": 5054,
     "files": [
@@ -358,6 +365,12 @@
     ]
   },
   "components\\TeotihuacanScene.tsx -> @/systems/HarmoniaMundiSystem": {
+    "id": 2266,
+    "files": [
+      "static/chunks/2266.284a8a0496aff6f3.js"
+    ]
+  },
+  "components\\VeracruzScene.tsx -> @/systems/HarmoniaMundiSystem": {
     "id": 2266,
     "files": [
       "static/chunks/2266.284a8a0496aff6f3.js"

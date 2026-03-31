@@ -75,12 +75,14 @@ const PumaPunkuScene = dynamic(() => import('./PumaPunkuScene'), { ssr: false })
 const GizaScene = dynamic(() => import('./GizaScene'), { ssr: false })
 const EasterIslandScene = dynamic(() => import('./EasterIslandScene'), { ssr: false })
 const TeotihuacanScene = dynamic(() => import('./TeotihuacanScene'), { ssr: false })
+const VeracruzScene = dynamic(() => import('./VeracruzScene'), { ssr: false })
 const EnvironmentElements = dynamic(() => import('./EnvironmentElements'), { ssr: false, loading: () => null })
 
 // COMPONENTES DE DIÁLOGO - LAZY LOADING
 const ViracochaDialogue = dynamic(() => import('./ViracochaDialogue'), { ssr: false })
 const SphinxInteractiveDialogue = dynamic(() => import('./SphinxInteractiveDialogue'), { ssr: false })
 const QuetzalcoatlDialogue = dynamic(() => import('./QuetzalcoatlDialogue'), { ssr: false })
+const OlmecDialogue = dynamic(() => import('./VeracruzScene').then(m => ({ default: m.OlmecDialogue })), { ssr: false })
 const DiscoveredItemInWorld = dynamic(() => import('./DiscoveredItemInWorld'), { ssr: false })
 const ItemCollectedMessage = dynamic(() => import('./ItemCollectedMessage'), { ssr: false })
 const InventoryItem = dynamic(() => import('./InventoryItem'), { ssr: false })
@@ -404,6 +406,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   // 🐍 Estado del diálogo de Quetzalcoatl
   const [showQuetzalcoatlDialogue, setShowQuetzalcoatlDialogue] = useState(false)
   const [showQuetzalcoatl, setShowQuetzalcoatl] = useState(false)
+
+  // 🗿 Estado del diálogo Olmeca (Veracruz)
+  const [showOlmecDialogue, setShowOlmecDialogue] = useState(false)
   const [cornInInventory, setCornInInventory] = useState(false) // Maíz en inventario (rotando)
   const [cornOnGround, setCornOnGround] = useState(false) // Maíz en el piso (visible en escena)
   const [cornDropPosition, setCornDropPosition] = useState<{x: number, z: number} | null>(null) // Posición donde cayó el maíz
@@ -966,6 +971,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           cornPlanted={cornPlanted}
           mainAvatarPositionRef={mainAvatarPositionRef}
           onEruptionEnd={handleEruptionEnd}
+          onOlmecClick={() => setShowOlmecDialogue(true)}
         />
       ) : null}
 
@@ -1015,11 +1021,15 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           hasPlantedCorn={cornPlanted}
           onClose={() => {
             setShowQuetzalcoatlDialogue(false)
-            // Registrar interacción con Quetzalcoatl
             interactWithNPC('teotihuacan', 'quetzalcoatl')
           }}
           onRequestSeed={handleRequestCornSeed}
         />
+      )}
+
+      {/* Diálogo Olmeca - FUERA del Canvas */}
+      {showOlmecDialogue && (
+        <OlmecDialogue onClose={() => setShowOlmecDialogue(false)} />
       )}
 
       <style jsx>{`
@@ -1168,7 +1178,8 @@ function ModelScene({
   cornDropPosition,
   cornPlanted,
   mainAvatarPositionRef,
-  onEruptionEnd
+  onEruptionEnd,
+  onOlmecClick
 }: { 
   modelPath: string
   avatarModel: string
@@ -1228,6 +1239,7 @@ function ModelScene({
   cornPlanted?: boolean
   mainAvatarPositionRef?: React.RefObject<THREE.Vector3>
   onEruptionEnd?: () => void
+  onOlmecClick?: () => void
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -1496,6 +1508,15 @@ function ModelScene({
           cornDropPosition={cornDropPosition}
           cornPlanted={cornPlanted}
         />
+      )}
+
+      {/* 🗿 Escena de Veracruz - Cabeza Colosal Olmeca */}
+      {(site?.id === 'tres-zapotes' || (
+        location &&
+        Math.abs(location.lat - 18.4667) < 0.05 &&
+        Math.abs(location.lon - (-95.4500)) < 0.05
+      )) && (
+        <VeracruzScene avatarPositionRef={avatarPositionRef} onOlmecClick={onOlmecClick} />
       )}
       
       {/* Capturar referencias */}
