@@ -92,17 +92,18 @@ function LoadingEasterIsland() {
 interface EasterIslandSceneProps {
   avatarPositionRef?: React.RefObject<Vector3>
   volcanicEruption?: boolean
+  onEruptionEnd?: () => void
 }
 
-export default function EasterIslandScene({ avatarPositionRef, volcanicEruption }: EasterIslandSceneProps) {
+export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd }: EasterIslandSceneProps) {
   return (
     <Suspense fallback={<LoadingEasterIsland />}>
-      <EasterIslandSceneContent avatarPositionRef={avatarPositionRef} volcanicEruption={volcanicEruption} />
+      <EasterIslandSceneContent avatarPositionRef={avatarPositionRef} volcanicEruption={volcanicEruption} onEruptionEnd={onEruptionEnd} />
     </Suspense>
   )
 }
 
-function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption }: EasterIslandSceneProps) {
+function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onEruptionEnd }: EasterIslandSceneProps) {
   const moaiModel = useGLTF(getAssetPath('/moai.glb'))
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
 
@@ -124,22 +125,76 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption }: Easte
   // Ref del grupo raíz para el temblor
   const sceneGroupRef = useRef<THREE.Group>(null)
   const shakeTimeRef = useRef(0)
+  // Refs de los NPCs para hundirlos
+  const moaiCentralRef   = useRef<THREE.Group>(null)
+  const atlanteCentralRef = useRef<THREE.Group>(null)
+  const moaiNorthRef     = useRef<THREE.Group>(null)
+  const moaiEastRef      = useRef<THREE.Group>(null)
+  const atlanteSouthRef  = useRef<THREE.Group>(null)
+  const atlanteWestRef   = useRef<THREE.Group>(null)
+  // Timer para redirect
+  const eruptionTimerRef = useRef(0)
+  const redirectedRef    = useRef(false)
 
-  // Temblor leve durante erupción - solo X y Z, sin rotación
+  // Posiciones Y originales de cada NPC (no tocar si no hay erupción)
+  const ORIGINAL_Y: Record<string, number> = {
+    moaiCentral: 3, atlanteCentral: 2,
+    moaiNorth: 3, atlanteSouth: 2, moaiEast: 3, atlanteWest: 2
+  }
+
   useFrame((_, delta) => {
     if (!sceneGroupRef.current) return
+
     if (volcanicEruption) {
       shakeTimeRef.current += delta
       const intensity = 0.06
       sceneGroupRef.current.position.x = Math.sin(shakeTimeRef.current * 19) * intensity
       sceneGroupRef.current.position.z = Math.cos(shakeTimeRef.current * 13) * intensity
-      sceneGroupRef.current.position.y = 0 // nunca mover Y
-      sceneGroupRef.current.rotation.set(0, 0, 0) // nunca rotar
+      sceneGroupRef.current.position.y = 0
+      sceneGroupRef.current.rotation.set(0, 0, 0)
+
+      // Hundir NPCs desde su Y original hacia -1.5 relativo
+      const sinkSpeed = 0.8 * delta
+      const entries: [React.RefObject<THREE.Group>, number][] = [
+        [moaiCentralRef,    ORIGINAL_Y.moaiCentral    - 1.5],
+        [atlanteCentralRef, ORIGINAL_Y.atlanteCentral - 1.5],
+        [moaiNorthRef,      ORIGINAL_Y.moaiNorth      - 1.5],
+        [moaiEastRef,       ORIGINAL_Y.moaiEast       - 1.5],
+        [atlanteSouthRef,   ORIGINAL_Y.atlanteSouth   - 1.5],
+        [atlanteWestRef,    ORIGINAL_Y.atlanteWest    - 1.5],
+      ]
+      for (const [ref, target] of entries) {
+        if (ref.current && ref.current.position.y > target) {
+          ref.current.position.y = Math.max(target, ref.current.position.y - sinkSpeed)
+        }
+      }
+
+      eruptionTimerRef.current += delta
+      if (eruptionTimerRef.current > 8 && !redirectedRef.current && onEruptionEnd) {
+        redirectedRef.current = true
+        onEruptionEnd()
+      }
     } else {
       sceneGroupRef.current.position.x *= 0.8
       sceneGroupRef.current.position.z *= 0.8
       sceneGroupRef.current.position.y = 0
       sceneGroupRef.current.rotation.set(0, 0, 0)
+      eruptionTimerRef.current = 0
+      redirectedRef.current = false
+      // Restaurar NPCs a su Y original exacta
+      const entries: [React.RefObject<THREE.Group>, number][] = [
+        [moaiCentralRef,    ORIGINAL_Y.moaiCentral],
+        [atlanteCentralRef, ORIGINAL_Y.atlanteCentral],
+        [moaiNorthRef,      ORIGINAL_Y.moaiNorth],
+        [moaiEastRef,       ORIGINAL_Y.moaiEast],
+        [atlanteSouthRef,   ORIGINAL_Y.atlanteSouth],
+        [atlanteWestRef,    ORIGINAL_Y.atlanteWest],
+      ]
+      for (const [ref, target] of entries) {
+        if (ref.current) {
+          ref.current.position.y = target // restaurar inmediatamente sin animación
+        }
+      }
     }
   })
   
@@ -173,32 +228,32 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption }: Easte
       {/* Ceniza volcánica - partículas grises durante erupción */}
       {volcanicEruption && <VolcanicAsh />}
       {/* Moai central - posición y rotación ORIGINALES */}
-      <group position={[-4, 3, 0]} rotation={[0, Math.PI / 4 - Math.PI / 6, 0]}>
+      <group ref={moaiCentralRef} position={[-4, 3, 0]} rotation={[0, Math.PI / 4 - Math.PI / 6, 0]}>
         <primitive object={moaiModel.scene} scale={5} />
       </group>
       
       {/* Atlante central - posición y rotación ORIGINALES */}
-      <group position={[4, 2, 0]} rotation={[0, 0, 0]}>
+      <group ref={atlanteCentralRef} position={[4, 2, 0]} rotation={[0, 0, 0]}>
         <primitive object={atlanteModel.scene} scale={5} />
       </group>
 
       {/* BORDE NORTE: Moai mirando al sur (hacia el centro) */}
-      <group position={[0, 3, -BORDER]} rotation={[0, Math.PI, 0]}>
+      <group ref={moaiNorthRef} position={[0, 3, -BORDER]} rotation={[0, Math.PI, 0]}>
         <primitive object={moaiNorth} scale={5} />
       </group>
 
       {/* BORDE SUR: Atlante mirando al norte (hacia el centro) */}
-      <group position={[0, 2, BORDER]} rotation={[0, 0, 0]}>
+      <group ref={atlanteSouthRef} position={[0, 2, BORDER]} rotation={[0, 0, 0]}>
         <primitive object={atlanteSouth} scale={5} />
       </group>
 
       {/* BORDE ESTE: Moai mirando al oeste (hacia el centro) */}
-      <group position={[BORDER, 3, 0]} rotation={[0, -Math.PI / 2, 0]}>
+      <group ref={moaiEastRef} position={[BORDER, 3, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <primitive object={moaiEast} scale={5} />
       </group>
 
       {/* BORDE OESTE: Atlante mirando al este (hacia el centro) */}
-      <group position={[-BORDER, 2, 0]} rotation={[0, Math.PI / 2, 0]}>
+      <group ref={atlanteWestRef} position={[-BORDER, 2, 0]} rotation={[0, Math.PI / 2, 0]}>
         <primitive object={atlanteWest} scale={5} />
       </group>
       

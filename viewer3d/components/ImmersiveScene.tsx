@@ -22,7 +22,7 @@ import { useNarrativeZoom } from './NarrativeZoom'
 import { detectBiome, getSkyColorForBiome, getFogColorForBiome } from '@/utils/biome-detector'
 import { loadPlayerState, savePlayerState, updatePlayerLocation } from '@/types/player'
 import { loadGameSettings } from '@/types/gameSettings'
-import { collectItem, interactWithNPC, loadMissionState, sphinxReceivePyramidion, hasSphinxReceivedPyramidion, clearWeather, isWeatherCleared, completeMission, failMission, type MissionState } from '@/types/missionState'
+import { collectItem, interactWithNPC, loadMissionState, sphinxReceivePyramidion, hasSphinxReceivedPyramidion, clearWeather, isWeatherCleared, completeMission, failMission, resetMissionState, type MissionState } from '@/types/missionState'
 
 // SISTEMAS MODULARES LAZY-LOADED
 import {
@@ -663,6 +663,26 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     setSelectedSite(null)
   }
 
+  // 🌋 Erupción volcánica: el usuario pierde - reset misiones y redirige al menú
+  const handleEruptionEnd = useCallback(() => {
+    console.log('🌋 ERUPCIÓN VOLCÁNICA - El usuario pierde. Reseteando misiones...')
+    
+    // Resetear todas las misiones
+    resetMissionState()
+    
+    // Limpiar sesión activa → el botón "Continuar" no aparecerá en el menú
+    sessionStorage.removeItem('game_session_active')
+    sessionStorage.clear()
+    
+    // Silenciar audio
+    getClimateAudio().updateWeather({ rain: 0, wind: 0, tornado: 0, snow: 0, thunder: false })
+    
+    // Redirigir al menú después de un breve fade
+    setTimeout(() => {
+      window.location.href = window.location.origin + (window.location.pathname.includes('ArcheoScope') ? '/ArcheoScope/menu' : '/menu')
+    }, 2000)
+  }, [])
+
   // Toggle entre modos de movimiento
   const toggleMovementMode = () => {
     setMovementMode(prev => {
@@ -945,6 +965,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           cornDropPosition={cornDropPosition}
           cornPlanted={cornPlanted}
           mainAvatarPositionRef={mainAvatarPositionRef}
+          onEruptionEnd={handleEruptionEnd}
         />
       ) : null}
 
@@ -1146,7 +1167,8 @@ function ModelScene({
   cornOnGround,
   cornDropPosition,
   cornPlanted,
-  mainAvatarPositionRef
+  mainAvatarPositionRef,
+  onEruptionEnd
 }: { 
   modelPath: string
   avatarModel: string
@@ -1205,6 +1227,7 @@ function ModelScene({
   cornDropPosition?: {x: number, z: number} | null
   cornPlanted?: boolean
   mainAvatarPositionRef?: React.RefObject<THREE.Vector3>
+  onEruptionEnd?: () => void
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -1453,6 +1476,7 @@ function ModelScene({
         <EasterIslandScene 
           avatarPositionRef={avatarPositionRef}
           volcanicEruption={weather.volcanicEruption}
+          onEruptionEnd={onEruptionEnd}
         />
       )}
       

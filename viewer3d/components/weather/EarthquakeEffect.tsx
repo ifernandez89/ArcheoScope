@@ -22,10 +22,14 @@ export default function EarthquakeEffect() {
   // Guardar posición original de la cámara una sola vez
   const initialized = useRef(false)
 
-  // Cleanup: resetear rotación de cámara al desmontar
+  // Cleanup: resetear rotación y posición de cámara al desmontar
   useEffect(() => {
     return () => {
       camera.rotation.z = 0
+      // Restaurar posición original si fue guardada
+      if (initialized.current) {
+        camera.position.copy(originRef.current)
+      }
     }
   }, [camera])
 
@@ -72,19 +76,15 @@ export default function EarthquakeEffect() {
 
     const t = timeRef.current
 
-    // Shake multicapa: onda principal + réplicas + vibración fina
-    // REDUCIDO DRÁSTICAMENTE para evitar mareos (amplitud reducida 90%)
+    // Shake multicapa: solo X y Z, nunca Y ni rotación
     const shakeX = Math.sin(t * 25) * 0.03 + Math.sin(t * 17.3) * 0.015
-    const shakeY = Math.sin(t * 19.7) * 0.012 + Math.sin(t * 31) * 0.006
     const shakeZ = Math.sin(t * 22.1) * 0.025 + Math.sin(t * 13.5) * 0.01
 
-    // Aplicar shake relativo a la posición actual (velocidad reducida 75%)
-    camera.position.x += shakeX * delta * 2
-    camera.position.y += shakeY * delta * 2
-    camera.position.z += shakeZ * delta * 2
-
-    // Leve rotación de cámara para sensación de inestabilidad (reducida 50%)
-    camera.rotation.z = Math.sin(t * 18) * 0.004
+    camera.position.x = originRef.current.x + shakeX
+    camera.position.z = originRef.current.z + shakeZ
+    // NUNCA modificar Y ni rotaciones
+    camera.rotation.z = 0
+    camera.rotation.x = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, camera.rotation.x))
 
     // Animar partículas de polvo
     if (dustRef.current) {
@@ -92,13 +92,10 @@ export default function EarthquakeEffect() {
       const velocities = dustRef.current.geometry.attributes.velocity.array as Float32Array
 
       for (let i = 0; i < positions.length; i += 3) {
-        // Mover hacia arriba
         positions[i + 1] += velocities[i + 1]
-        // Sacudir horizontalmente
         positions[i]     += Math.sin(t * 10 + i) * 0.02
         positions[i + 2] += Math.cos(t * 8  + i) * 0.02
 
-        // Reset cuando llegan muy alto
         if (positions[i + 1] > 12) {
           positions[i]     = (Math.random() - 0.5) * 80
           positions[i + 1] = 0
