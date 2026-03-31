@@ -105,13 +105,15 @@ interface ImmersiveSceneProps {
 const DEFAULT_STORM_WEATHER: WeatherState = {
   snow: false, rainLight: false, rainModerate: false, rainHeavy: true,
   wind: true, fog: false, storm: true, lightning: true,
-  tornado: false, clouds: true, earthquake: false, visibleSun: false
+  tornado: false, clouds: true, earthquake: false, visibleSun: false,
+  volcanicEruption: false
 }
 
 const CALM_WEATHER: WeatherState = {
   snow: false, rainLight: false, rainModerate: false, rainHeavy: false,
   wind: false, fog: false, storm: false, lightning: false,
-  tornado: false, clouds: false, earthquake: false, visibleSun: true
+  tornado: false, clouds: false, earthquake: false, visibleSun: true,
+  volcanicEruption: false
 }
 
 export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false, spaceUfoNumber = 1 }: ImmersiveSceneProps) {
@@ -1450,6 +1452,7 @@ function ModelScene({
       )) && (
         <EasterIslandScene 
           avatarPositionRef={avatarPositionRef}
+          volcanicEruption={weather.volcanicEruption}
         />
       )}
       

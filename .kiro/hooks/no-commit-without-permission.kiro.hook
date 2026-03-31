@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "🚫 NO commit/push sin permiso",
+  "description": "Recordatorio permanente: NUNCA hacer git commit ni git push sin que el usuario lo pida explícitamente después de testear",
+  "version": "1",
+  "when": {
+    "type": "promptSubmit"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "REGLA ABSOLUTA: NUNCA hagas git commit ni git push a menos que el usuario lo pida EXPLÍCITAMENTE. El usuario debe testear primero. Si estás a punto de ejecutar git commit o git push sin que el usuario lo haya pedido en este mensaje, DETENTE."
+  }
+}

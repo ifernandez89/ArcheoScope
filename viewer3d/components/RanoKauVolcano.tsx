@@ -2,17 +2,9 @@
 
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
-
-/**
- * Rano Kau - Volcán de Isla de Pascua
- * Ubicado al suroeste (X negativo, Z positivo) igual que el real
- * 
- * Estados:
- * - 'dormant'  → volcán inactivo, sin lava visible
- * - 'active'   → lava visible en el cráter, humo suave
- * - 'erupting' → erupción con partículas, humo denso, luz roja
- */
+import { getAssetPath } from '@/lib/paths'
 
 export type VolcanoState = 'dormant' | 'active' | 'erupting'
 
@@ -20,183 +12,204 @@ interface RanoKauVolcanoProps {
   state?: VolcanoState
 }
 
-// Partícula de erupción
-interface Particle {
-  position: THREE.Vector3
-  velocity: THREE.Vector3
-  life: number
-  maxLife: number
-  size: number
-  isSmoke: boolean
+// Simplex-like noise 2D (sin dependencias externas)
+function noise2D(x: number, z: number): number {
+  return Math.sin(x * 0.31 + z * 0.17) * 0.5
+       + Math.sin(x * 0.73 - z * 0.41) * 0.3
+       + Math.sin(x * 1.27 + z * 0.89) * 0.15
+       + Math.cos(x * 0.53 + z * 1.13) * 0.05
 }
 
 export default function RanoKauVolcano({ state = 'dormant' }: RanoKauVolcanoProps) {
-  const lavaRef = useRef<THREE.Mesh>(null)
-  const smokeGroupRef = useRef<THREE.Group>(null)
-  const particlesRef = useRef<THREE.InstancedMesh>(null)
-  const lightRef = useRef<THREE.PointLight>(null)
-  const timeRef = useRef(0)
+  const lavaRef    = useRef<THREE.Mesh>(null)
+  const lightRef   = useRef<THREE.PointLight>(null)
+  const partRef    = useRef<THREE.InstancedMesh>(null)
+  const timeRef    = useRef(0)
+  const tempObj    = useMemo(() => new THREE.Object3D(), [])
+  const tempColor  = useMemo(() => new THREE.Color(), [])
 
-  // Partículas de erupción
-  const particles = useRef<Particle[]>([])
-  const MAX_PARTICLES = state === 'erupting' ? 300 : state === 'active' ? 80 : 0
-  const tempObj = useMemo(() => new THREE.Object3D(), [])
-  const tempColor = useMemo(() => new THREE.Color(), [])
+  // Textura volcánica
+  const rockTex = useTexture(getAssetPath('/textures/textura_volcanica.jpg'))
+  rockTex.wrapS = rockTex.wrapT = THREE.RepeatWrapping
+  rockTex.repeat.set(3, 2)
 
-  // Geometría del volcán - cono deformado proceduralmente
-  const volcanoGeometry = useMemo(() => {
-    const geo = new THREE.ConeGeometry(28, 22, 48, 8)
-    const pos = geo.attributes.position
+  const MAX_P = state === 'erupting' ? 180 : state === 'active' ? 50 : 0
+
+  // ── Geometría del volcán con cráter hundido ───────────────────────────────
+  const volcanoGeo = useMemo(() => {
+    const HEIGHT = 36
+    const TOP = HEIGHT / 2
+    const geo = new THREE.ConeGeometry(30, HEIGHT, 48, 12)
+    const pos = geo.attributes.position as THREE.BufferAttribute
+
+    // Agregar vertex colors para oscurecer la cima
+    const colors = new Float32Array(pos.count * 3)
+
     for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i)
-      const y = pos.getY(i)
-      const z = pos.getZ(i)
-      // Deformar vértices para irregularidad natural
-      const noise = Math.sin(x * 0.3 + z * 0.2) * 1.5 + Math.cos(x * 0.15 - z * 0.4) * 1.2
-      pos.setX(i, x + noise * (1 - Math.abs(y) / 11))
-      pos.setZ(i, z + noise * 0.7 * (1 - Math.abs(y) / 11))
+      let x = pos.getX(i)
+      let y = pos.getY(i)
+      let z = pos.getZ(i)
+      const r = Math.sqrt(x * x + z * z)
+
+      // 1. Base más ancha que la cima
+      const heightFactor = (y + TOP) / HEIGHT // 0=base, 1=cima
+      const widthScale = 1 + (1 - heightFactor) * 0.55
+      x *= widthScale
+      z *= widthScale
+
+      // 2. Curvar los lados (convexo hacia afuera)
+      const curve = Math.pow(r + 0.001, 1.15)
+      x += x * curve * 0.018
+      z += z * curve * 0.018
+
+      // 3. Noise lateral para irregularidad
+      const angle = Math.atan2(z, x)
+      const n = noise2D(x * 0.12, z * 0.12)
+      const lateralNoise = n * 3.0 * (1 - heightFactor * 0.7)
+      x += lateralNoise * (x / (r + 0.001))
+      z += lateralNoise * (z / (r + 0.001))
+
+      // 4. Cráter hundido amplio con borde irregular
+      const rFinal = Math.sqrt(x * x + z * z)
+      if (y > TOP * 0.5 && rFinal < 16) {
+        const craterT = Math.max(0, 1 - rFinal / 14)
+        const rimNoise = Math.sin(angle * 6) * Math.cos(angle * 4 + 0.8) * 1.5
+        const dip = craterT * craterT * 18 - rimNoise * craterT * 0.5
+        y -= dip
+      }
+
+      pos.setX(i, x)
+      pos.setY(i, y)
+      pos.setZ(i, z)
+
+      // 5. Vertex color: negro en cima, marrón en base
+      const t = Math.max(0, Math.min(1, (y + TOP) / HEIGHT))
+      // Arriba: gris oscuro/negro (ceniza). Abajo: marrón volcánico
+      const r2 = 0.18 + t * 0.32
+      const g2 = 0.12 + t * 0.22
+      const b2 = 0.08 + t * 0.12
+      colors[i * 3]     = r2
+      colors[i * 3 + 1] = g2
+      colors[i * 3 + 2] = b2
     }
+
     pos.needsUpdate = true
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
     geo.computeVertexNormals()
     return geo
   }, [])
 
-  // Geometría del cráter interior
-  const craterGeometry = useMemo(() => {
-    const geo = new THREE.CylinderGeometry(8, 10, 2, 32)
-    return geo
-  }, [])
+  // Lava en el fondo del cráter
+  const lavaGeo = useMemo(() => new THREE.CircleGeometry(9, 28), [])
 
-  // Geometría del plano de lava
-  const lavaGeometry = useMemo(() => {
-    const geo = new THREE.CircleGeometry(7.5, 32)
-    return geo
-  }, [])
+  // ── Pool de partículas ────────────────────────────────────────────────────
+  type P = { x: number; y: number; z: number; vx: number; vy: number; vz: number; life: number; maxLife: number; size: number; smoke: boolean }
+  const pool = useRef<P[]>([])
 
-  // Inicializar partículas
-  const initParticle = (p: Particle) => {
-    const angle = Math.random() * Math.PI * 2
-    const r = Math.random() * 3
-    p.position.set(r * Math.cos(angle), 0, r * Math.sin(angle))
-    const speed = state === 'erupting' ? 8 + Math.random() * 12 : 2 + Math.random() * 4
-    p.velocity.set(
-      (Math.random() - 0.5) * speed * 0.4,
-      speed,
-      (Math.random() - 0.5) * speed * 0.4
-    )
-    p.maxLife = state === 'erupting' ? 1.5 + Math.random() * 2 : 3 + Math.random() * 4
+  const spawn = (p: P) => {
+    const a = Math.random() * Math.PI * 2
+    const r = Math.random() * 2.5
+    p.x = Math.cos(a) * r; p.y = 0; p.z = Math.sin(a) * r
+    const spd = state === 'erupting' ? 8 + Math.random() * 10 : 1.5 + Math.random() * 2.5
+    p.vx = (Math.random() - 0.5) * spd * 0.35
+    p.vy = spd
+    p.vz = (Math.random() - 0.5) * spd * 0.35
+    p.maxLife = state === 'erupting' ? 1 + Math.random() * 1.5 : 2.5 + Math.random() * 3
     p.life = p.maxLife
-    p.size = state === 'erupting' ? 0.3 + Math.random() * 0.8 : 1 + Math.random() * 2
-    p.isSmoke = Math.random() > 0.4
+    p.size = state === 'erupting' ? 0.25 + Math.random() * 0.5 : 0.5 + Math.random() * 1.0
+    p.smoke = Math.random() > 0.35
   }
 
-  // Inicializar pool de partículas
-  if (particles.current.length === 0 && MAX_PARTICLES > 0) {
-    for (let i = 0; i < MAX_PARTICLES; i++) {
-      const p: Particle = {
-        position: new THREE.Vector3(),
-        velocity: new THREE.Vector3(),
-        life: 0,
-        maxLife: 1,
-        size: 1,
-        isSmoke: false
-      }
-      initParticle(p)
-      p.life = Math.random() * p.maxLife // Distribuir en el tiempo
-      particles.current.push(p)
+  if (pool.current.length === 0 && MAX_P > 0) {
+    for (let i = 0; i < MAX_P; i++) {
+      const p: P = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, life: 0, maxLife: 1, size: 1, smoke: false }
+      spawn(p)
+      p.life = Math.random() * p.maxLife
+      pool.current.push(p)
     }
   }
 
   useFrame((_, delta) => {
     timeRef.current += delta
 
-    // Animar lava
+    // Lava pulsante
     if (lavaRef.current && state !== 'dormant') {
       const mat = lavaRef.current.material as THREE.MeshStandardMaterial
-      mat.emissiveIntensity = 0.6 + Math.sin(timeRef.current * 2) * 0.3
+      mat.emissiveIntensity = 0.65 + Math.sin(timeRef.current * 3) * 0.3
     }
 
-    // Luz pulsante
+    // Luz
     if (lightRef.current) {
-      if (state === 'erupting') {
-        lightRef.current.intensity = 8 + Math.sin(timeRef.current * 5) * 4
-      } else if (state === 'active') {
-        lightRef.current.intensity = 3 + Math.sin(timeRef.current * 1.5) * 1
-      } else {
-        lightRef.current.intensity = 0
-      }
+      lightRef.current.intensity = state === 'erupting'
+        ? 14 + Math.sin(timeRef.current * 7) * 7
+        : state === 'active'
+          ? 4 + Math.sin(timeRef.current * 2) * 1.5
+          : 0
     }
 
-    // Actualizar partículas
-    if (MAX_PARTICLES === 0 || !particlesRef.current) return
+    if (!partRef.current || MAX_P === 0) return
 
-    for (let i = 0; i < particles.current.length; i++) {
-      const p = particles.current[i]
+    for (let i = 0; i < pool.current.length; i++) {
+      const p = pool.current[i]
       p.life -= delta
+      if (p.life <= 0) { spawn(p); continue }
 
-      if (p.life <= 0) {
-        initParticle(p)
-        continue
-      }
-
-      // Física
-      p.velocity.y -= delta * (p.isSmoke ? 0.5 : 4) // gravedad menor para humo
-      p.velocity.x += (Math.random() - 0.5) * delta * 0.5
-      p.velocity.z += (Math.random() - 0.5) * delta * 0.5
-      p.position.addScaledVector(p.velocity, delta)
+      p.vy -= delta * (p.smoke ? 0.15 : 5.5)
+      p.vx += (Math.random() - 0.5) * delta * 0.5
+      p.vz += (Math.random() - 0.5) * delta * 0.5
+      p.x += p.vx * delta
+      p.y += p.vy * delta
+      p.z += p.vz * delta
 
       const t = p.life / p.maxLife
-      const scale = p.isSmoke ? p.size * (2 - t) : p.size * t
-      tempObj.position.copy(p.position)
-      tempObj.scale.setScalar(Math.max(0.01, scale))
+      const sc = p.smoke ? p.size * (1 + (1 - t) * 1.2) : p.size * t
+      tempObj.position.set(p.x, p.y, p.z)
+      tempObj.scale.setScalar(Math.max(0.01, sc))
       tempObj.updateMatrix()
-      particlesRef.current.setMatrixAt(i, tempObj.matrix)
+      partRef.current.setMatrixAt(i, tempObj.matrix)
 
-      // Color: lava = naranja→rojo, humo = gris
-      if (p.isSmoke) {
-        tempColor.setRGB(0.3 + t * 0.2, 0.3 + t * 0.2, 0.3 + t * 0.2)
+      // Lava: naranja brillante → rojo. Ceniza: gris oscuro
+      if (p.smoke) {
+        const g = 0.18 + t * 0.28
+        tempColor.setRGB(g + 0.04, g, g)
       } else {
-        tempColor.setRGB(1, 0.3 + t * 0.4, 0)
+        tempColor.setRGB(1.0, 0.18 + t * 0.42, 0.0)
       }
-      particlesRef.current.setColorAt(i, tempColor)
+      partRef.current.setColorAt(i, tempColor)
     }
-
-    particlesRef.current.instanceMatrix.needsUpdate = true
-    if (particlesRef.current.instanceColor) {
-      particlesRef.current.instanceColor.needsUpdate = true
-    }
+    partRef.current.instanceMatrix.needsUpdate = true
+    if (partRef.current.instanceColor) partRef.current.instanceColor.needsUpdate = true
   })
 
+  // Cima del cono: altura/2 = 18, cráter hunde ~14 unidades en el centro
+  const CRATER_Y = 6
+
   return (
-    // Rano Kau: suroeste de la isla → X=-55, Z=55 en nuestra escena
-    <group position={[-55, 0, 55]}>
-      {/* Cuerpo del volcán */}
-      <mesh geometry={volcanoGeometry} castShadow receiveShadow>
+    <group position={[-55, 0, 55]} scale={[1, 2, 1]}>
+
+      {/* Cuerpo del volcán con textura + vertex colors */}
+      <mesh geometry={volcanoGeo} castShadow receiveShadow>
         <meshStandardMaterial
-          color="#3a3028"
-          roughness={0.95}
-          metalness={0.05}
+          map={rockTex}
+          vertexColors
+          roughness={0.92}
+          metalness={0.04}
         />
       </mesh>
 
-      {/* Borde del cráter */}
-      <mesh geometry={craterGeometry} position={[0, 11.5, 0]}>
-        <meshStandardMaterial color="#2a2020" roughness={1} />
-      </mesh>
-
-      {/* Lava en el cráter - solo si activo o erupcionando */}
+      {/* Lava en el cráter hundido */}
       {state !== 'dormant' && (
         <mesh
           ref={lavaRef}
-          geometry={lavaGeometry}
-          position={[0, 11, 0]}
+          geometry={lavaGeo}
+          position={[0, CRATER_Y, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
         >
           <meshStandardMaterial
-            color="#ff4400"
-            emissive="#ff2200"
+            color="#ff3300"
+            emissive="#ff1100"
             emissiveIntensity={0.8}
-            roughness={0.3}
+            roughness={0.1}
           />
         </mesh>
       )}
@@ -204,27 +217,22 @@ export default function RanoKauVolcano({ state = 'dormant' }: RanoKauVolcanoProp
       {/* Luz de lava */}
       <pointLight
         ref={lightRef}
-        position={[0, 13, 0]}
-        color="#ff4400"
+        position={[0, CRATER_Y + 4, 0]}
+        color="#ff5500"
         intensity={0}
-        distance={60}
+        distance={100}
         decay={2}
       />
 
-      {/* Partículas de erupción/humo */}
-      {MAX_PARTICLES > 0 && (
+      {/* Partículas de lava/ceniza */}
+      {MAX_P > 0 && (
         <instancedMesh
-          ref={particlesRef}
-          args={[undefined, undefined, MAX_PARTICLES]}
-          position={[0, 12, 0]}
+          ref={partRef}
+          args={[undefined, undefined, MAX_P]}
+          position={[0, CRATER_Y + 0.5, 0]}
         >
-          <sphereGeometry args={[0.5, 6, 6]} />
-          <meshStandardMaterial
-            vertexColors
-            transparent
-            opacity={0.7}
-            depthWrite={false}
-          />
+          <sphereGeometry args={[0.5, 5, 5]} />
+          <meshBasicMaterial vertexColors transparent opacity={0.88} depthWrite={false} />
         </instancedMesh>
       )}
     </group>

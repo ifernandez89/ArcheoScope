@@ -14,7 +14,8 @@ export interface WeatherState {
   tornado: boolean
   clouds: boolean
   earthquake: boolean
-  visibleSun: boolean // Sol visible en el cielo
+  visibleSun: boolean
+  volcanicEruption: boolean // 🌋 Erupción volcánica
 }
 
 interface WeatherControlProps {
@@ -36,7 +37,8 @@ export default function WeatherControl({ onWeatherChange, initialWeather }: Weat
     tornado: false,
     clouds: false,
     earthquake: false,
-    visibleSun: false
+    visibleSun: false,
+    volcanicEruption: false
   })
 
   // Sincronizar cuando cambia el clima externo (ej: al llegar a un sitio)
@@ -64,7 +66,15 @@ export default function WeatherControl({ onWeatherChange, initialWeather }: Weat
         newWeather.rainHeavy = true
         newWeather.rainLight = false
         newWeather.rainModerate = false
-        newWeather.lightning = true // Activar rayos con tormenta
+        newWeather.lightning = true
+      }
+    }
+    else if (type === 'volcanicEruption') {
+      newWeather.volcanicEruption = !weather.volcanicEruption
+      if (newWeather.volcanicEruption) {
+        newWeather.earthquake = true // terremoto leve acompaña la erupción
+      } else {
+        newWeather.earthquake = false
       }
     }
     // Para otros efectos, solo toggle
@@ -264,8 +274,15 @@ export default function WeatherControl({ onWeatherChange, initialWeather }: Weat
           <WeatherCheckbox 
             checked={weather.earthquake} 
             onChange={() => handleToggle('earthquake')}
-            icon="🌋"
+            icon="🌍"
             label="Terremoto"
+          />
+
+          <WeatherCheckbox 
+            checked={weather.volcanicEruption} 
+            onChange={() => handleToggle('volcanicEruption')}
+            icon="🌋"
+            label="Erupción Volcánica"
           />
 
           <div style={{ 
