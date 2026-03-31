@@ -3,9 +3,10 @@
 import { useRef, Suspense, useEffect, useMemo } from 'react'
 import { useGLTF, Html } from '@react-three/drei'
 import { Vector3 } from 'three'
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { getAssetPath } from '@/lib/paths'
 import EasterIslandDialogue from './EasterIslandDialogue'
+import RanoKauVolcano, { type VolcanoState } from './RanoKauVolcano'
+import { loadMissionState } from '@/types/missionState'
 
 /**
  * Escena de Isla de Pascua (Rapa Nui)
@@ -49,15 +50,22 @@ export default function EasterIslandScene({ avatarPositionRef }: EasterIslandSce
 }
 
 function EasterIslandSceneContent({ avatarPositionRef }: EasterIslandSceneProps) {
-  // Cargar modelos (optimizados con Draco)
   const moaiModel = useGLTF(getAssetPath('/moai.glb'))
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
 
-  // Clonar escenas para los 4 modelos del borde (cada primitive necesita su propia instancia)
-  const moaiNorth  = useMemo(() => moaiModel.scene.clone(true),   [moaiModel.scene])
-  const moaiEast   = useMemo(() => moaiModel.scene.clone(true),   [moaiModel.scene])
+  const moaiNorth    = useMemo(() => moaiModel.scene.clone(true),    [moaiModel.scene])
+  const moaiEast     = useMemo(() => moaiModel.scene.clone(true),    [moaiModel.scene])
   const atlanteSouth = useMemo(() => atlanteModel.scene.clone(true), [atlanteModel.scene])
   const atlanteWest  = useMemo(() => atlanteModel.scene.clone(true), [atlanteModel.scene])
+
+  // Estado del volcán según misiones completadas
+  const volcanoState = useMemo<VolcanoState>(() => {
+    const ms = loadMissionState()
+    const total = ms.stats.totalMissionsCompleted
+    if (total >= 3) return 'erupting'
+    if (total >= 1) return 'active'
+    return 'dormant'
+  }, [])
   
   // 🎼 Activar arquitectura de Isla de Pascua
   useEffect(() => {
@@ -123,6 +131,9 @@ function EasterIslandSceneContent({ avatarPositionRef }: EasterIslandSceneProps)
         enabled={true}
       />
       
+      {/* 🌋 Volcán Rano Kau - suroeste, igual que el real */}
+      <RanoKauVolcano state={volcanoState} />
+
       {/* Iluminación */}
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} intensity={0.8} />
