@@ -411,8 +411,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   // 🗿 Estado del diálogo Olmeca (Veracruz)
   const [showOlmecDialogue, setShowOlmecDialogue] = useState(false)
   const [olmecStoodUp, setOlmecStoodUp] = useState(false)
-  const [olmecThanked, setOlmecThanked] = useState(false) // Ya dio las gracias
-  const [caveQuestActive, setCaveQuestActive] = useState(false) // Misión de la cueva activa
+  const [olmecThanked, setOlmecThanked] = useState(false)
+  const [caveQuestActive, setCaveQuestActive] = useState(false)
+  // 💚 Jade Mask - item de la misión de Veracruz
+  const [jadeMaskVisible, setJadeMaskVisible] = useState(false)
+  const [jadeMaskInInventory, setJadeMaskInInventory] = useState(false)
   const [cornInInventory, setCornInInventory] = useState(false) // Maíz en inventario (rotando)
   const [cornOnGround, setCornOnGround] = useState(false) // Maíz en el piso (visible en escena)
   const [cornDropPosition, setCornDropPosition] = useState<{x: number, z: number} | null>(null) // Posición donde cayó el maíz
@@ -601,6 +604,18 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     if (lat > -16.5 && lat < -15.5 && lon > -70 && lon < -68.5) {
       return 'pumaPunku'
     }
+    // Teotihuacán
+    if (Math.abs(lat - 19.6925) < 0.05 && Math.abs(lon - (-98.8438)) < 0.05) {
+      return 'teotihuacan'
+    }
+    // Isla de Pascua
+    if (Math.abs(lat - (-27.1254)) < 0.05 && Math.abs(lon - (-109.2778)) < 0.05) {
+      return 'easterIsland'
+    }
+    // Veracruz (Tres Zapotes)
+    if (Math.abs(lat - 18.4667) < 0.05 && Math.abs(lon - (-95.4500)) < 0.05) {
+      return 'veracruz'
+    }
     return null
   }
 
@@ -623,9 +638,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     
     await new Promise(resolve => setTimeout(resolve, 2000))
     
-    // Determinar clima basado en si la misión está completada
+    // Determinar clima: si hay 5+ misiones completas → siempre buen clima en todo el planeta
+    const missionState = loadMissionState()
+    const allMissionsComplete = missionState.stats.totalMissionsCompleted >= 5
     const siteName = getSiteNameFromCoordinates(site.lat, site.lon)
-    const weatherCleared = siteName ? isWeatherCleared(siteName) : discoveredSites.current.has(site.id)
+    const weatherCleared = allMissionsComplete || (siteName ? isWeatherCleared(siteName) : discoveredSites.current.has(site.id))
     setWeather(weatherCleared ? CALM_WEATHER : DEFAULT_STORM_WEATHER)
     setMode('model')
     
@@ -647,9 +664,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // TransiciÃ³n cinematogrÃ¡fica de 2 segundos
     await new Promise(resolve => setTimeout(resolve, 2000))
     
-    // Determinar clima basado en si la misión está completada
+    // Determinar clima: si hay 5+ misiones completas → siempre buen clima
+    const ms = loadMissionState()
+    const allComplete = ms.stats.totalMissionsCompleted >= 5
     const siteName = getSiteNameFromCoordinates(lat, lon)
-    const weatherCleared = siteName ? isWeatherCleared(siteName) : false
+    const weatherCleared = allComplete || (siteName ? isWeatherCleared(siteName) : false)
     setWeather(weatherCleared ? CALM_WEATHER : DEFAULT_STORM_WEATHER)
     setMode('model')
     
@@ -959,6 +978,29 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           magnaBowlCollected={magnaBowlCollected}
           onCameraRotationChange={setCameraRotation}
           onMictlanExit={() => handleLocationClick(-27.1254, -109.2778)}
+          jadeMaskVisible={jadeMaskVisible}
+          jadeMaskInInventory={jadeMaskInInventory}
+          onJadeMaskCollect={() => {
+            console.log('Mascara de Jade recogida!')
+            collectItem('easterIsland', 'jade_mask')
+            setJadeMaskInInventory(true)
+            setJadeMaskVisible(false)
+            setShowCollectedMessage(true)
+            setTimeout(() => setShowCollectedMessage(false), 3000)
+          }}
+          onMerkabaActivate={() => {
+            console.log('Merkaba activado! 5ta mision - juego completado!')
+            completeMission('easterIsland', 'activate_merkaba')
+            // Limpiar clima de TODOS los sitios del planeta
+            clearWeather('pumaPunku')
+            clearWeather('giza')
+            clearWeather('easterIsland')
+            clearWeather('teotihuacan')
+            clearWeather('veracruz')
+            clearWeather('angkorWat')
+            setWeather(CALM_WEATHER)
+            // TODO: mostrar mensaje final de juego completado
+          }}
           onSphinxClick={() => setShowSphinxDialogue(true)}
           onPyramidionCollect={handleCollectPyramidion}
           pyramidionCollected={pyramidionCollected}
@@ -987,10 +1029,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         />
       ) : null}
 
-      {/* Control de clima */}
-      {mode === 'model' && (
+      {/* Control de clima - OCULTO al usuario por defecto */}
+      {/* {mode === 'model' && (
         <WeatherControl onWeatherChange={setWeather} initialWeather={weather} />
-      )}
+      )} */}
       
       {/* Diálogo de la Esfinge - FUERA del Canvas */}
       {showSphinxDialogue && (
@@ -1043,6 +1085,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       {showOlmecDialogue && (
         <OlmecInteractiveDialogue
           hasStoodUp={olmecThanked}
+          hasJadeMask={jadeMaskInInventory}
           onClose={() => {
             setShowOlmecDialogue(false)
             if (olmecStoodUp && !olmecThanked) {
@@ -1051,7 +1094,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           }}
           onEnterCave={() => {
             setCaveQuestActive(true)
-            console.log('🗿 Misión de la cueva activada - vuela sobre la cueva para entrar al Mictlán')
+            setJadeMaskVisible(true)
+          }}
+          onDeliverJade={() => {
+            collectItem('veracruz', 'jade_mask')
+            completeMission('veracruz', 'deliver_jade_mask')
+            clearWeather('veracruz')
+            setWeather(CALM_WEATHER) // Buen clima inmediato
+            setJadeMaskInInventory(false)
           }}
         />
       )}
@@ -1206,7 +1256,11 @@ function ModelScene({
   onOlmecClick,
   caveQuestActive,
   onEnterCave,
-  onMictlanExit
+  onMictlanExit,
+  jadeMaskVisible,
+  jadeMaskInInventory,
+  onJadeMaskCollect,
+  onMerkabaActivate
 }: { 
   modelPath: string
   avatarModel: string
@@ -1270,6 +1324,10 @@ function ModelScene({
   caveQuestActive?: boolean
   onEnterCave?: () => void
   onMictlanExit?: () => void
+  jadeMaskVisible?: boolean
+  jadeMaskInInventory?: boolean
+  onJadeMaskCollect?: () => void
+  onMerkabaActivate?: () => void
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -1523,6 +1581,10 @@ function ModelScene({
           avatarPositionRef={avatarPositionRef}
           volcanicEruption={weather.volcanicEruption}
           onEruptionEnd={onEruptionEnd}
+          showJadeMask={jadeMaskVisible}
+          jadeMaskCollected={jadeMaskInInventory}
+          onJadeMaskCollect={onJadeMaskCollect}
+          onMerkabaActivate={onMerkabaActivate}
         />
       )}
       

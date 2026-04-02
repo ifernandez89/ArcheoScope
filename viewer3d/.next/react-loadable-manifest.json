@@ -1,13 +1,13 @@
 {
   "app\\game\\page.tsx -> @/components/Scene3D": {
-    "id": 5109,
+    "id": 2258,
     "files": [
       "static/chunks/three.609e1d8bcb87d2b3.js",
       "static/chunks/react-three.fc63ca31250cfe55.js",
       "static/chunks/engines.0749c2c4a2d3d742.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/4022-bc0c0086f9e51fb9.js",
-      "static/chunks/4098.7378c23b918612a5.js"
+      "static/chunks/8740.437e409ddc5d2b4a.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -110,10 +110,10 @@
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EasterIslandScene": {
-    "id": 9367,
+    "id": 2920,
     "files": [
       "static/chunks/react-three.fc63ca31250cfe55.js",
-      "static/chunks/9367.498bde73d947e646.js"
+      "static/chunks/2920.0a15777d2b27e5b3.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EnhancedMoon": {
@@ -205,7 +205,7 @@
   "components\\ImmersiveScene.tsx -> ./OlmecInteractiveDialogue": {
     "id": 4715,
     "files": [
-      "static/chunks/4715.08d5b7f412b6c963.js"
+      "static/chunks/4715.07ab8c324092fd4d.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./PlanetaryOrbits": {
@@ -341,7 +341,7 @@
     "id": 7458,
     "files": [
       "static/chunks/react-three.fc63ca31250cfe55.js",
-      "static/chunks/7458.2946cdedd98dcc71.js"
+      "static/chunks/7458.3c43a4f4897393b2.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./ViracochaDialogue": {

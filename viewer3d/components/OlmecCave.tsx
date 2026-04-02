@@ -79,7 +79,7 @@ export default function OlmecCave() {
   const rockMat = <meshStandardMaterial map={rockTex} color="#7a6a58" roughness={0.95} metalness={0.02} />
 
   return (
-    <group position={[-28, 0, 0]} scale={1.4}>
+    <group position={[-28, 0, 0]} scale={[1.4, 1.4, 2.8]}>
 
       {/* Fondo oscuro interior */}
       <mesh position={[0, 3, -2]}>

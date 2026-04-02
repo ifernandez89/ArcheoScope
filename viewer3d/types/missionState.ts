@@ -29,6 +29,7 @@ export interface MissionState {
     easterIsland: SiteProgress
     teotihuacan: SiteProgress
     angkorWat: SiteProgress
+    veracruz: SiteProgress
   }
   
   // Estadísticas globales
@@ -122,6 +123,14 @@ export const DEFAULT_MISSION_STATE: MissionState = {
           missionsCompleted: []
         }
       }
+    },
+    veracruz: {
+      discovered: false,
+      weatherCleared: false,
+      itemsCollected: [],
+      npcsInteracted: [],
+      objectsMoved: [],
+      missionsCompleted: []
     }
   },
   

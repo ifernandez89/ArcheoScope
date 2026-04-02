@@ -3,33 +3,37 @@
 import { useState, useEffect } from 'react'
 
 interface OlmecInteractiveDialogueProps {
-  hasStoodUp: boolean       // Si la cabeza ya se levantó
+  hasStoodUp: boolean
+  hasJadeMask?: boolean
   onClose: () => void
-  onEnterCave?: () => void  // Callback para entrar al inframundo
+  onEnterCave?: () => void
+  onDeliverJade?: () => void
 }
 
 const OLMEC_OPTIONS = [
   {
     id: 1,
     label: '¿Qué necesitas de mí?',
-    response: '🗿 Viajero... En las profundidades del Mictlán yace el Jade del Aliento, una piedra que guarda el soplo de vida de los antiguos. Atraviesa la cueva y tráemelo. Solo así completarás tu misión en estas tierras.'
+    response: 'Viajero... En las profundidades del Mictlán yace el Jade del Aliento, una piedra que guarda el soplo de vida de los antiguos. Atraviesa la cueva y tráemelo.'
   },
   {
     id: 2,
     label: '¿Qué hay dentro de la cueva?',
-    response: '🗿 La cueva es un lugar de prueba para el espíritu. Los olmecas la usaban como portal entre el mundo de los vivos y el de los muertos. Solo los valientes se atreven a cruzar.'
+    response: 'La cueva es un lugar de prueba para el espíritu. Antiguos la usaban como portal entre el mundo de los vivos y el de los muertos. Solo los valientes se atreven a cruzar.'
   },
   {
     id: 3,
     label: '¿Quién es Mictlantecuhtli?',
-    response: '🗿 Mictlantecuhtli gobierna el Mictlán, el nivel más profundo del mundo de los muertos. Su rostro es un cráneo descarnado, y su dominio se extiende por las nueve capas del inframundo. No lo busques... a menos que estés preparado.'
+    response: 'Mictlantecuhtli gobierna el Mictlán, el nivel más profundo del mundo de los muertos. Su rostro es un cráneo descarnado, y su dominio se extiende por las nueve capas del inframundo. No lo busques... a menos que estés preparado.'
   }
 ]
 
 export default function OlmecInteractiveDialogue({ 
   hasStoodUp,
+  hasJadeMask,
   onClose,
-  onEnterCave
+  onEnterCave,
+  onDeliverJade
 }: OlmecInteractiveDialogueProps) {
   const [currentMessage, setCurrentMessage] = useState('')
   const [showOptions, setShowOptions] = useState(false)
@@ -37,14 +41,17 @@ export default function OlmecInteractiveDialogue({
 
   useEffect(() => {
     if (!hasStoodUp) {
-      setCurrentMessage('Gracias, viajero de las estrellas... Dormía desde hace milenios. Te saludo desde el principio de los tiempos.')
+      setCurrentMessage('Gracias, viajero de las estrellas... Dormia desde hace milenios. Te saludo desde el principio de los tiempos.')
       setShowOptions(false)
       setTimeout(() => onClose(), 5000)
+    } else if (hasJadeMask) {
+      setCurrentMessage('Siento la energia del Jade del Aliento... ¿Me lo entregas, viajero?')
+      setShowOptions(true)
     } else {
-      setCurrentMessage('Viajero... ¿Qué deseas saber?')
+      setCurrentMessage('Viajero... ¿Que deseas saber?')
       setShowOptions(true)
     }
-  }, [hasStoodUp, onClose])
+  }, [hasStoodUp, hasJadeMask, onClose])
 
   const handleOptionClick = (optionId: number, response: string) => {
     setSelectedResponse(response)
@@ -110,7 +117,32 @@ export default function OlmecInteractiveDialogue({
         {/* Opciones */}
         {showOptions && !selectedResponse && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {OLMEC_OPTIONS.map((opt) => (
+            {/* Opción especial: entregar jade */}
+            {hasJadeMask && (
+              <button
+                onClick={() => {
+                  setSelectedResponse('Gracias, viajero... El Jade del Aliento regresa a su lugar sagrado. Los antiguos te bendicen.')
+                  setShowOptions(false)
+                  if (onDeliverJade) onDeliverJade()
+                  setTimeout(() => onClose(), 6000)
+                }}
+                style={{
+                  padding: '14px 22px', fontSize: '16px',
+                  color: '#00ff88',
+                  background: 'rgba(0, 255, 136, 0.1)',
+                  border: '2px solid #00ff88',
+                  borderRadius: '8px', cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  fontFamily: '"Cinzel", serif', letterSpacing: '1px',
+                  textAlign: 'left', fontWeight: 'bold'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,255,136,0.3)'; e.currentTarget.style.transform = 'translateX(8px)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,255,136,0.1)'; e.currentTarget.style.transform = 'translateX(0)' }}
+              >
+                Entregar la Mascara de Jade
+              </button>
+            )}
+            {!hasJadeMask && OLMEC_OPTIONS.map((opt) => (
               <button
                 key={opt.id}
                 onClick={() => handleOptionClick(opt.id, opt.response)}

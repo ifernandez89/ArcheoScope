@@ -38,11 +38,8 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
 
   // Coordenadas de sitios seleccionados
   const famousSites = [
-    { name: 'Océano Pacífico', lat: 8.7783, lon: -144.8885, category: 'famous' },
-    { name: 'Antártida', lat: -75.2509, lon: 0.0714, category: 'famous' },
     { name: 'Bolivia', lat: -16.56164569638123, lon: -68.67952141492464, category: 'famous' },
     { name: 'Egipto', lat: 29.9792, lon: 31.1342, category: 'famous' },
-    { name: 'Isla/Chile', lat: -27.1254, lon: -109.2778, category: 'famous' },
     { name: 'México', lat: 19.6925, lon: -98.8438, category: 'famous' },
     { name: 'Veracruz', lat: 18.4667, lon: -95.4500, category: 'famous' },
   ]

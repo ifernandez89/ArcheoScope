@@ -9,6 +9,7 @@ import { getAssetPath } from '@/lib/paths'
 import EasterIslandDialogue from './EasterIslandDialogue'
 import RanoKauVolcano, { type VolcanoState } from './RanoKauVolcano'
 import { loadMissionState } from '@/types/missionState'
+import Merkaba from './Merkaba'
 
 /**
  * Escena de Isla de Pascua (Rapa Nui)
@@ -93,19 +94,30 @@ interface EasterIslandSceneProps {
   avatarPositionRef?: React.RefObject<Vector3>
   volcanicEruption?: boolean
   onEruptionEnd?: () => void
+  showJadeMask?: boolean
+  jadeMaskCollected?: boolean
+  onJadeMaskCollect?: () => void
+  onMerkabaActivate?: () => void
 }
 
-export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd }: EasterIslandSceneProps) {
+export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate }: EasterIslandSceneProps) {
   return (
     <Suspense fallback={<LoadingEasterIsland />}>
-      <EasterIslandSceneContent avatarPositionRef={avatarPositionRef} volcanicEruption={volcanicEruption} onEruptionEnd={onEruptionEnd} />
+      <EasterIslandSceneContent avatarPositionRef={avatarPositionRef} volcanicEruption={volcanicEruption} onEruptionEnd={onEruptionEnd} showJadeMask={showJadeMask} jadeMaskCollected={jadeMaskCollected} onJadeMaskCollect={onJadeMaskCollect} onMerkabaActivate={onMerkabaActivate} />
     </Suspense>
   )
 }
 
-function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onEruptionEnd }: EasterIslandSceneProps) {
+function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate }: EasterIslandSceneProps) {
   const moaiModel = useGLTF(getAssetPath('/moai.glb'))
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
+  const jadeMaskModel = useGLTF(getAssetPath('/jade_mask.glb'))
+
+  // Chequear si hay 4+ misiones completas → merkaba clickeable
+  const merkabaClickable = useMemo(() => {
+    const ms = loadMissionState()
+    return ms.stats.totalMissionsCompleted >= 4
+  }, [])
 
   const moaiNorth    = useMemo(() => moaiModel.scene.clone(true),    [moaiModel.scene])
   const moaiEast     = useMemo(() => moaiModel.scene.clone(true),    [moaiModel.scene])
@@ -266,6 +278,34 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
       
       {/* 🌋 Volcán Rano Kau - suroeste, igual que el real */}
       <RanoKauVolcano state={volcanoState} />
+
+      {/* ✡️ Merkaba - estrella tetraédrica girando en el centro */}
+      <Merkaba
+        position={[0, 12, 0]}
+        size={1.5}
+        color="#ffd700"
+        speed={0.4}
+        clickable={merkabaClickable}
+        onActivate={onMerkabaActivate}
+      />
+
+      {/* Jade Mask - visible cuando la mision de la cueva esta activa */}
+      {showJadeMask && !jadeMaskCollected && (
+        <group
+          position={[15, 0.5, -10]}
+          onClick={(e) => { e.stopPropagation(); if (onJadeMaskCollect) onJadeMaskCollect() }}
+          onPointerOver={() => { document.body.style.cursor = 'pointer' }}
+          onPointerOut={() => { document.body.style.cursor = 'default' }}
+        >
+          <primitive object={jadeMaskModel.scene} scale={2} />
+          {/* Mesh para capturar clicks */}
+          <mesh>
+            <boxGeometry args={[3, 3, 3]} />
+            <meshBasicMaterial color="#00ff88" wireframe transparent opacity={0.3} />
+          </mesh>
+          <pointLight color="#00ff88" intensity={2} distance={8} />
+        </group>
+      )}
 
       {/* Iluminación */}
       <ambientLight intensity={0.5} />
