@@ -7,7 +7,7 @@
       "static/chunks/engines.0749c2c4a2d3d742.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/4022-bc0c0086f9e51fb9.js",
-      "static/chunks/4098.007beb3b71df7e0d.js"
+      "static/chunks/4098.7378c23b918612a5.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -182,6 +182,13 @@
       "static/chunks/9297.f3b1390cfe4f1b3d.js"
     ]
   },
+  "components\\ImmersiveScene.tsx -> ./MictlanScene": {
+    "id": 5901,
+    "files": [
+      "static/chunks/react-three.fc63ca31250cfe55.js",
+      "static/chunks/5901.642cf87f7fe12cb3.js"
+    ]
+  },
   "components\\ImmersiveScene.tsx -> ./MilkyWayBackground": {
     "id": 9787,
     "files": [
@@ -193,6 +200,12 @@
     "files": [
       "static/chunks/react-three.fc63ca31250cfe55.js",
       "static/chunks/9483.ef75902902564f03.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./OlmecInteractiveDialogue": {
+    "id": 4715,
+    "files": [
+      "static/chunks/4715.08d5b7f412b6c963.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./PlanetaryOrbits": {
@@ -325,10 +338,10 @@
     ]
   },
   "components\\ImmersiveScene.tsx -> ./VeracruzScene": {
-    "id": 5275,
+    "id": 7458,
     "files": [
       "static/chunks/react-three.fc63ca31250cfe55.js",
-      "static/chunks/5275.424415fbaeacb2b1.js"
+      "static/chunks/7458.2946cdedd98dcc71.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./ViracochaDialogue": {

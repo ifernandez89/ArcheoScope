@@ -107,6 +107,21 @@ export const ARCHAEOLOGICAL_SITES: ArchaeologicalSite[] = [
     culture: 'Olmeca',
     period: 'Período Preclásico',
     discovered: -1200
+  },
+
+  // Inframundo - Mictlán (coordenadas reservadas)
+  {
+    id: 'mictlan',
+    name: 'Mictlán - Inframundo',
+    description: 'El nivel más profundo del mundo de los muertos. Dominio de Mictlantecuhtli.',
+    coordinates: {
+      latitude: 0.0001,
+      longitude: 0.0001,
+      altitude: -100
+    },
+    culture: 'Olmeca-Mexica',
+    period: 'Atemporal',
+    discovered: -3000
   }
 ]
 

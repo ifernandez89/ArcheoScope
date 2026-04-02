@@ -76,13 +76,14 @@ const GizaScene = dynamic(() => import('./GizaScene'), { ssr: false })
 const EasterIslandScene = dynamic(() => import('./EasterIslandScene'), { ssr: false })
 const TeotihuacanScene = dynamic(() => import('./TeotihuacanScene'), { ssr: false })
 const VeracruzScene = dynamic(() => import('./VeracruzScene'), { ssr: false })
+const MictlanScene = dynamic(() => import('./MictlanScene'), { ssr: false })
 const EnvironmentElements = dynamic(() => import('./EnvironmentElements'), { ssr: false, loading: () => null })
 
 // COMPONENTES DE DIÁLOGO - LAZY LOADING
 const ViracochaDialogue = dynamic(() => import('./ViracochaDialogue'), { ssr: false })
 const SphinxInteractiveDialogue = dynamic(() => import('./SphinxInteractiveDialogue'), { ssr: false })
 const QuetzalcoatlDialogue = dynamic(() => import('./QuetzalcoatlDialogue'), { ssr: false })
-const OlmecDialogue = dynamic(() => import('./VeracruzScene').then(m => ({ default: m.OlmecDialogue })), { ssr: false })
+const OlmecInteractiveDialogue = dynamic(() => import('./OlmecInteractiveDialogue'), { ssr: false })
 const DiscoveredItemInWorld = dynamic(() => import('./DiscoveredItemInWorld'), { ssr: false })
 const ItemCollectedMessage = dynamic(() => import('./ItemCollectedMessage'), { ssr: false })
 const InventoryItem = dynamic(() => import('./InventoryItem'), { ssr: false })
@@ -409,6 +410,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
 
   // 🗿 Estado del diálogo Olmeca (Veracruz)
   const [showOlmecDialogue, setShowOlmecDialogue] = useState(false)
+  const [olmecStoodUp, setOlmecStoodUp] = useState(false)
+  const [olmecThanked, setOlmecThanked] = useState(false) // Ya dio las gracias
+  const [caveQuestActive, setCaveQuestActive] = useState(false) // Misión de la cueva activa
   const [cornInInventory, setCornInInventory] = useState(false) // Maíz en inventario (rotando)
   const [cornOnGround, setCornOnGround] = useState(false) // Maíz en el piso (visible en escena)
   const [cornDropPosition, setCornDropPosition] = useState<{x: number, z: number} | null>(null) // Posición donde cayó el maíz
@@ -954,6 +958,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onPortalEnter={() => handleLocationClick(-16.031003664299448, -69.49975772335767)}
           magnaBowlCollected={magnaBowlCollected}
           onCameraRotationChange={setCameraRotation}
+          onMictlanExit={() => handleLocationClick(-27.1254, -109.2778)}
           onSphinxClick={() => setShowSphinxDialogue(true)}
           onPyramidionCollect={handleCollectPyramidion}
           pyramidionCollected={pyramidionCollected}
@@ -971,7 +976,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           cornPlanted={cornPlanted}
           mainAvatarPositionRef={mainAvatarPositionRef}
           onEruptionEnd={handleEruptionEnd}
-          onOlmecClick={() => setShowOlmecDialogue(true)}
+          onOlmecClick={() => {
+            if (!olmecStoodUp) {
+              setOlmecStoodUp(true)
+            }
+            setShowOlmecDialogue(true)
+          }}
+          caveQuestActive={caveQuestActive}
+          onEnterCave={() => handleLocationClick(0.0001, 0.0001)}
         />
       ) : null}
 
@@ -1027,9 +1039,21 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         />
       )}
 
-      {/* Diálogo Olmeca - FUERA del Canvas */}
+      {/* Diálogo Olmeca Interactivo - FUERA del Canvas */}
       {showOlmecDialogue && (
-        <OlmecDialogue onClose={() => setShowOlmecDialogue(false)} />
+        <OlmecInteractiveDialogue
+          hasStoodUp={olmecThanked}
+          onClose={() => {
+            setShowOlmecDialogue(false)
+            if (olmecStoodUp && !olmecThanked) {
+              setOlmecThanked(true)
+            }
+          }}
+          onEnterCave={() => {
+            setCaveQuestActive(true)
+            console.log('🗿 Misión de la cueva activada - vuela sobre la cueva para entrar al Mictlán')
+          }}
+        />
       )}
 
       <style jsx>{`
@@ -1179,7 +1203,10 @@ function ModelScene({
   cornPlanted,
   mainAvatarPositionRef,
   onEruptionEnd,
-  onOlmecClick
+  onOlmecClick,
+  caveQuestActive,
+  onEnterCave,
+  onMictlanExit
 }: { 
   modelPath: string
   avatarModel: string
@@ -1240,6 +1267,9 @@ function ModelScene({
   mainAvatarPositionRef?: React.RefObject<THREE.Vector3>
   onEruptionEnd?: () => void
   onOlmecClick?: () => void
+  caveQuestActive?: boolean
+  onEnterCave?: () => void
+  onMictlanExit?: () => void
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -1266,6 +1296,9 @@ function ModelScene({
   }, [location])
   
   const isIceBiome = biome.type === 'ice'
+  
+  // Detectar si estamos en el Mictlán (inframundo) - escena vacía
+  const isMictlan = location && Math.abs(location.lat - 0.0001) < 0.01 && Math.abs(location.lon - 0.0001) < 0.01
   
   // Colores dinÃ¡micos segÃºn bioma
   const skyColor = useMemo(() => getSkyColorForBiome(biome.type, isDay), [biome.type, isDay])
@@ -1362,30 +1395,31 @@ function ModelScene({
 
       {/* Sistema de entorno (cielo, niebla, agua) */}
       <EnvironmentSystem
-        isDay={isDay}
-        skyColor={skyColor}
-        fogColor={fogColor}
+        isDay={isMictlan ? false : isDay}
+        skyColor={isMictlan ? '#050505' : skyColor}
+        fogColor={isMictlan ? '#0a0505' : fogColor}
         stormDarkness={
+          isMictlan ? 0.95 :
           weather.storm || weather.tornado ? 0.7 : 
           weather.rainHeavy || weather.lightning ? 0.5 : 
           0
         }
-        fogDensity={biome.type === 'altiplano' ? 0.004 : isIceBiome ? 0.012 : 0.008}
-        showWater={!isIceBiome}
+        fogDensity={isMictlan ? 0.02 : biome.type === 'altiplano' ? 0.004 : isIceBiome ? 0.012 : 0.008}
+        showWater={!isIceBiome && !isMictlan}
         waterPosition={[0, -0.5, 0]}
         waterSize={biome.type === 'altiplano' ? 350 : 150}
         waterColor={biome.type === 'altiplano' ? '#2a5a8f' : '#1e3a5f'}
       />
 
-      {/* Terreno - adaptado al bioma (no lazy porque necesita ref) */}
-      {isIceBiome ? (
+      {/* Terreno - adaptado al bioma (no en Mictlán) */}
+      {!isMictlan && (isIceBiome ? (
         <IceTerrain location={location} ref={terrainRef} />
       ) : (
         <VolcanicTerrain location={location} ref={terrainRef} />
-      )}
+      ))}
       
-      {/* Montañas de fondo para altiplano */}
-      <BackgroundMountains biomeType={biome.type} />
+      {/* Montañas de fondo (no en Mictlán) */}
+      {!isMictlan && <BackgroundMountains biomeType={biome.type} />}
       
       {/* Terreno mejorado con DEM real - se superpone al terreno procedural */}
       {enhancedTerrainEnabled && (
@@ -1416,8 +1450,8 @@ function ModelScene({
       {/* Drone atmosférico - activo en todos los modos */}
       <AmbientAudio />
 
-      {/* Elementos del entorno: rocas y vegetación - NO renderizar sobre océano ni en Giza */}
-      {!isIceBiome && biome.type !== 'ocean' && !(
+      {/* Elementos del entorno: rocas y vegetación - NO en océano, Giza ni Mictlán */}
+      {!isIceBiome && !isMictlan && biome.type !== 'ocean' && !(
         location &&
         Math.abs(location.lat - 29.9792) < 0.05 &&
         Math.abs(location.lon - 31.1342) < 0.05
@@ -1516,7 +1550,24 @@ function ModelScene({
         Math.abs(location.lat - 18.4667) < 0.05 &&
         Math.abs(location.lon - (-95.4500)) < 0.05
       )) && (
-        <VeracruzScene avatarPositionRef={avatarPositionRef} onOlmecClick={onOlmecClick} />
+        <VeracruzScene 
+          avatarPositionRef={avatarPositionRef} 
+          onOlmecClick={onOlmecClick}
+          caveQuestActive={caveQuestActive}
+          onEnterCave={onEnterCave}
+        />
+      )}
+
+      {/* 💀 Escena del Mictlán - Inframundo */}
+      {(site?.id === 'mictlan' || (
+        location &&
+        Math.abs(location.lat - 0.0001) < 0.01 &&
+        Math.abs(location.lon - 0.0001) < 0.01
+      )) && (
+        <MictlanScene 
+          avatarPositionRef={avatarPositionRef}
+          onExit={onMictlanExit}
+        />
       )}
       
       {/* Capturar referencias */}

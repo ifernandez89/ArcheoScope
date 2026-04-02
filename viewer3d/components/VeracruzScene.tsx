@@ -5,21 +5,24 @@ import { useGLTF, Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
+import OlmecCave from './OlmecCave'
 
 interface VeracruzSceneProps {
   avatarPositionRef?: React.RefObject<THREE.Vector3>
   onOlmecClick?: () => void
+  caveQuestActive?: boolean
+  onEnterCave?: () => void
 }
 
-export default function VeracruzScene({ avatarPositionRef, onOlmecClick }: VeracruzSceneProps) {
+export default function VeracruzScene({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave }: VeracruzSceneProps) {
   return (
     <Suspense fallback={<LoadingVeracruz />}>
-      <VeracruzSceneContent avatarPositionRef={avatarPositionRef} onOlmecClick={onOlmecClick} />
+      <VeracruzSceneContent avatarPositionRef={avatarPositionRef} onOlmecClick={onOlmecClick} caveQuestActive={caveQuestActive} onEnterCave={onEnterCave} />
     </Suspense>
   )
 }
 
-function VeracruzSceneContent({ avatarPositionRef, onOlmecClick }: VeracruzSceneProps) {
+function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave }: VeracruzSceneProps) {
   const olmecModel = useGLTF(getAssetPath('/olmec_head.glb'))
   const groupRef = useRef<THREE.Group>(null)
   const [isStanding, setIsStanding] = useState(false)
@@ -42,31 +45,48 @@ function VeracruzSceneContent({ avatarPositionRef, onOlmecClick }: VeracruzScene
   // Ajustada manualmente el 31/03/2026 - esta es la posición correcta para la misión de Veracruz
   const START_Y = -0.74  // hundida 74cm bajo el piso
 
-  // Animación de levantarse
+  const enteredCaveRef = useRef(false)
+
+  // Animación de levantarse + detección de proximidad a la cueva
   useFrame((_, delta) => {
-    if (!groupRef.current || !isStanding) return
-    // Rotar de -PI/2 a 0
-    if (rotationRef.current < -0.01) {
-      rotationRef.current = Math.min(0, rotationRef.current + delta * 1.5)
-      groupRef.current.rotation.x = rotationRef.current
-    } else {
-      groupRef.current.rotation.x = 0
+    if (groupRef.current && isStanding) {
+      if (rotationRef.current < -0.01) {
+        rotationRef.current = Math.min(0, rotationRef.current + delta * 1.5)
+        groupRef.current.rotation.x = rotationRef.current
+      } else {
+        groupRef.current.rotation.x = 0
+      }
+      if (groupRef.current.position.y < standY - 0.01) {
+        groupRef.current.position.y = Math.min(standY, groupRef.current.position.y + delta * 2)
+      } else {
+        groupRef.current.position.y = standY
+      }
     }
-    // Subir de START_Y a standY
-    if (groupRef.current.position.y < standY - 0.01) {
-      groupRef.current.position.y = Math.min(standY, groupRef.current.position.y + delta * 2)
-    } else {
-      groupRef.current.position.y = standY
+
+    // Detectar si la nave está sobre la cueva (posición [-28, Y, 0], radio ~8)
+    if (caveQuestActive && avatarPositionRef?.current && onEnterCave && !enteredCaveRef.current) {
+      const pos = avatarPositionRef.current
+      const dx = pos.x - (-28)
+      const dz = pos.z - 0
+      const dist = Math.sqrt(dx * dx + dz * dz)
+      if (dist < 8) {
+        enteredCaveRef.current = true
+        console.log('🌀 Nave sobre la cueva! Transportando al Mictlán...')
+        onEnterCave()
+      }
     }
   })
 
   const handleClick = (e: any) => {
     e.stopPropagation()
     if (!clicked) {
+      // Primer click: levantarse + diálogo de agradecimiento
       setClicked(true)
       setIsStanding(true)
-      // Notificar al padre para mostrar el diálogo fuera del Canvas
       setTimeout(() => { if (onOlmecClick) onOlmecClick() }, 1500)
+    } else {
+      // Clicks posteriores: diálogo interactivo con 3 opciones
+      if (onOlmecClick) onOlmecClick()
     }
   }
 
@@ -102,6 +122,9 @@ function VeracruzSceneContent({ avatarPositionRef, onOlmecClick }: VeracruzScene
         <pointLight position={[0, 6, -8]} intensity={1} color="#c0d8ff" distance={25} />
         <ambientLight intensity={0.6} />
         <directionalLight position={[10, 15, 5]} intensity={0.9} />
+
+        {/* 🏔️ Cueva olmeca al oeste */}
+        <OlmecCave />
       </group>
     </>
   )
