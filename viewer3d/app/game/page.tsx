@@ -2,47 +2,76 @@
 
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import UI from '@/components/UI'
+
+// Loading screen con logo del juego
+function LoadingScreen() {
+  const [opacity, setOpacity] = useState(0)
+  useEffect(() => {
+    const t = setTimeout(() => setOpacity(1), 50)
+    return () => clearTimeout(t)
+  }, [])
+
+  return (
+    <div style={{
+      width: '100vw', height: '100vh',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)',
+      color: '#fff', fontFamily: 'monospace',
+      opacity, transition: 'opacity 0.5s ease'
+    }}>
+      {/* Logo principal con fade-in */}
+      <div style={{
+        marginBottom: '32px',
+        filter: 'drop-shadow(0 0 20px rgba(102, 126, 234, 0.6))',
+        animation: 'logoPulse 3s ease-in-out infinite'
+      }}>
+        <Image
+          src="/branding/loading/logo-loading.png"
+          alt="Archeoscope: The Forgotten Relics"
+          width={320}
+          height={320}
+          style={{ objectFit: 'contain' }}
+          priority
+        />
+      </div>
+
+      {/* Texto de carga */}
+      <div style={{
+        fontSize: '13px', letterSpacing: '4px',
+        color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase',
+        animation: 'textPulse 1.5s ease-in-out infinite'
+      }}>
+        Cargando motor 3D...
+      </div>
+
+      <style>{`
+        @keyframes logoPulse {
+          0%, 100% { filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.6)); }
+          50% { filter: drop-shadow(0 0 35px rgba(102, 126, 234, 0.9)); }
+        }
+        @keyframes textPulse {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 1; }
+        }
+      `}</style>
+    </div>
+  )
+}
 
 // Importar Scene3D dinámicamente para evitar SSR issues con Three.js
 const Scene3D = dynamic(() => import('@/components/Scene3D'), {
   ssr: false,
-  loading: () => (
-    <div style={{
-      width: '100vw',
-      height: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)',
-      color: '#fff',
-      fontFamily: 'monospace'
-    }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{
-          fontSize: '3rem',
-          marginBottom: '1rem'
-        }}>
-          🏛️
-        </div>
-        <div style={{ fontSize: '1.25rem' }}>
-          Cargando motor 3D...
-        </div>
-      </div>
-    </div>
-  )
+  loading: () => <LoadingScreen />
 })
 
 export default function GamePage() {
   const [load3D, setLoad3D] = useState(false)
   
-  // Cargar 3D después del primer render (permite que el bundle inicial sea más liviano)
   useEffect(() => {
-    // Pequeño delay para que la UI se renderice primero
-    const timer = setTimeout(() => {
-      setLoad3D(true)
-    }, 100)
-    
+    const timer = setTimeout(() => setLoad3D(true), 100)
     return () => clearTimeout(timer)
   }, [])
   
