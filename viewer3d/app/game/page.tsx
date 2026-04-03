@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import Image from 'next/image'
 import UI from '@/components/UI'
+import { getAssetPath } from '@/lib/paths'
 
-// Loading screen con logo del juego
 function LoadingScreen() {
   const [opacity, setOpacity] = useState(0)
   useEffect(() => {
@@ -22,23 +21,17 @@ function LoadingScreen() {
       color: '#fff', fontFamily: 'monospace',
       opacity, transition: 'opacity 0.5s ease'
     }}>
-      {/* Logo principal con fade-in */}
       <div style={{
         marginBottom: '32px',
-        filter: 'drop-shadow(0 0 20px rgba(102, 126, 234, 0.6))',
         animation: 'logoPulse 3s ease-in-out infinite'
       }}>
-        <Image
-          src="/branding/loading/logo-loading.png"
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={getAssetPath('/branding/loading/logo-loading.png')}
           alt="Archeoscope: The Forgotten Relics"
-          width={320}
-          height={320}
-          style={{ objectFit: 'contain' }}
-          priority
+          style={{ width: '280px', height: '280px', objectFit: 'contain' }}
         />
       </div>
-
-      {/* Texto de carga */}
       <div style={{
         fontSize: '13px', letterSpacing: '4px',
         color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase',
@@ -46,7 +39,6 @@ function LoadingScreen() {
       }}>
         Cargando motor 3D...
       </div>
-
       <style>{`
         @keyframes logoPulse {
           0%, 100% { filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.6)); }

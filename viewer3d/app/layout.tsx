@@ -3,6 +3,7 @@ import './globals.css'
 import AlienCursorTrail from '@/components/AlienCursorTrail'
 import WebVitalsInit from '@/components/WebVitalsInit'
 
+const BASE_PATH = process.env.NODE_ENV === 'production' ? '/ArcheoScope' : ''
 const BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://ifernandez89.github.io/ArcheoScope'
   : 'http://localhost:3000'
@@ -12,13 +13,13 @@ export const metadata: Metadata = {
   description: 'Explora civilizaciones antiguas y descubre reliquias olvidadas en un viaje inmersivo por la historia',
   icons: {
     icon: [
-      { url: '/branding/icons/logo-simple.png', sizes: '32x32', type: 'image/png' },
-      { url: '/branding/icons/logo-simple-2.png', sizes: '192x192', type: 'image/png' },
+      { url: `${BASE_PATH}/branding/icons/logo-simple.png`, sizes: '32x32', type: 'image/png' },
+      { url: `${BASE_PATH}/branding/icons/logo-simple-2.png`, sizes: '192x192', type: 'image/png' },
     ],
     apple: [
-      { url: '/branding/icons/logo-simple-3.png', sizes: '180x180', type: 'image/png' },
+      { url: `${BASE_PATH}/branding/icons/logo-simple-3.png`, sizes: '180x180', type: 'image/png' },
     ],
-    shortcut: '/branding/icons/logo-simple.png',
+    shortcut: `${BASE_PATH}/branding/icons/logo-simple.png`,
   },
   openGraph: {
     title: 'Archeoscope: The Forgotten Relics',

@@ -2,10 +2,10 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import { resetPlayerState } from '@/types/player'
 import { resetMissionState } from '@/types/missionState'
 import { resetGameSettings } from '@/types/gameSettings'
+import { getAssetPath } from '@/lib/paths'
 
 export default function MenuPage() {
   const router = useRouter()
@@ -88,16 +88,13 @@ export default function MenuPage() {
         {/* Logo principal con glow sutil */}
         <div style={{
           marginBottom: '10px',
-          filter: 'drop-shadow(0 0 18px rgba(102, 126, 234, 0.5))',
           animation: 'logoPulse 3s ease-in-out infinite'
         }}>
-          <Image
-            src="/branding/logo/logo-main.png"
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={getAssetPath('/branding/logo/logo-main.png')}
             alt="Archeoscope: The Forgotten Relics"
-            width={220}
-            height={220}
-            style={{ objectFit: 'contain' }}
-            priority
+            style={{ width: '200px', height: '200px', objectFit: 'contain' }}
           />
         </div>
 

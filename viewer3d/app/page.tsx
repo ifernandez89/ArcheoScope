@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import Image from 'next/image'
 import { resetPlayerState } from '@/types/player'
+import { getAssetPath } from '@/lib/paths'
 
 export default function Home() {
   const router = useRouter()
@@ -28,18 +28,17 @@ export default function Home() {
       background: '#000', margin: 0, padding: 0, overflow: 'hidden',
       position: 'relative'
     }}>
-      {/* Logo pixel como fondo principal */}
+      {/* Logo pixel como fondo principal - usando img nativo para respetar basePath */}
       <div style={{
         position: 'absolute', inset: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         opacity: 0.85
       }}>
-        <Image
-          src="/branding/icons/logo-pixel.png"
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={getAssetPath('/branding/icons/logo-pixel.png')}
           alt="Archeoscope"
-          fill
-          style={{ objectFit: 'contain', padding: '40px' }}
-          priority
+          style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '40px' }}
         />
       </div>
 
