@@ -114,9 +114,10 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
   const jadeMaskModel = useGLTF(getAssetPath('/jade_mask.glb'))
 
-  // Chequear si las 4 misiones específicas están completas → merkaba clickeable
-  // Se recalcula cada vez que el componente se monta (al entrar a la escena)
   const [merkabaClickable, setMerkabaClickable] = useState(false)
+  const [merkabaActive, setMerkabaActive] = useState(false)
+  const [showEnergySphere, setShowEnergySphere] = useState(false)
+
   useEffect(() => {
     const ms = loadMissionState()
     const pmDone = ms.sites.pumaPunku.missionsCompleted.length > 0
@@ -125,18 +126,13 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
     const verDone = ms.sites.veracruz?.missionsCompleted?.length > 0
     const result = pmDone && gizaDone && teoDone && verDone
     setMerkabaClickable(result)
-    console.log('Merkaba clickable:', result, { pmDone, gizaDone, teoDone, verDone })
+
+    if (ms.sites.easterIsland.missionsCompleted.includes('activate_merkaba')) {
+      setMerkabaActive(true)
+      setShowEnergySphere(true)
+    }
   }, [])
 
-  // Esfera energética aparece al activar el Merkaba
-  const [showEnergySphere, setShowEnergySphere] = useState(false)
-
-  const moaiNorth    = useMemo(() => moaiModel.scene.clone(true),    [moaiModel.scene])
-  const moaiEast     = useMemo(() => moaiModel.scene.clone(true),    [moaiModel.scene])
-  const atlanteSouth = useMemo(() => atlanteModel.scene.clone(true), [atlanteModel.scene])
-  const atlanteWest  = useMemo(() => atlanteModel.scene.clone(true), [atlanteModel.scene])
-
-  // Estado del volcán: erupción climática tiene prioridad sobre misiones
   const volcanoState = useMemo<VolcanoState>(() => {
     if (volcanicEruption) return 'erupting'
     const ms = loadMissionState()
@@ -146,52 +142,79 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
     return 'dormant'
   }, [volcanicEruption])
 
-  // Ref del grupo raíz para el temblor
+  const moaiInstancedRef = useRef<THREE.InstancedMesh>(null)
+  const atlanteInstancedRef = useRef<THREE.InstancedMesh>(null)
+
+  const moaiData = useMemo(() => {
+    let geometry: THREE.BufferGeometry | null = null
+    let material: THREE.Material | null = null
+    moaiModel.scene.traverse((child: any) => {
+      if (child.isMesh && !geometry) {
+        geometry = child.geometry
+        material = child.material
+      }
+    })
+    return { geometry, material }
+  }, [moaiModel])
+
+  const atlanteData = useMemo(() => {
+    let geometry: THREE.BufferGeometry | null = null
+    let material: THREE.Material | null = null
+    atlanteModel.scene.traverse((child: any) => {
+      if (child.isMesh && !geometry) {
+        geometry = child.geometry
+        material = child.material
+      }
+    })
+    return { geometry, material }
+  }, [atlanteModel])
+
+  const npcState = useRef({
+    moai: [
+      { pos: [ -4, 3, 0 ], rot: [ 0, Math.PI / 4 - Math.PI / 6, 0 ], curY: 3, origY: 3 },
+      { pos: [ 0, 3, -29 ], rot: [ 0, Math.PI, 0 ], curY: 3, origY: 3 },
+      { pos: [ 29, 3, 0 ], rot: [ 0, -Math.PI / 2, 0 ], curY: 3, origY: 3 }
+    ],
+    atlante: [
+      { pos: [ 4, 2, 0 ], rot: [ 0, 0, 0 ], curY: 2, origY: 2 },
+      { pos: [ 0, 2, 29 ], rot: [ 0, 0, 0 ], curY: 2, origY: 2 },
+      { pos: [ -29, 2, 0 ], rot: [ 0, Math.PI / 2, 0 ], curY: 2, origY: 2 }
+    ]
+  })
+
   const sceneGroupRef = useRef<THREE.Group>(null)
   const shakeTimeRef = useRef(0)
-  // Refs de los NPCs para hundirlos
-  const moaiCentralRef   = useRef<THREE.Group>(null)
-  const atlanteCentralRef = useRef<THREE.Group>(null)
-  const moaiNorthRef     = useRef<THREE.Group>(null)
-  const moaiEastRef      = useRef<THREE.Group>(null)
-  const atlanteSouthRef  = useRef<THREE.Group>(null)
-  const atlanteWestRef   = useRef<THREE.Group>(null)
-  // Timer para redirect
   const eruptionTimerRef = useRef(0)
-  const redirectedRef    = useRef(false)
-
-  // Posiciones Y originales de cada NPC (no tocar si no hay erupción)
-  const ORIGINAL_Y: Record<string, number> = {
-    moaiCentral: 3, atlanteCentral: 2,
-    moaiNorth: 3, atlanteSouth: 2, moaiEast: 3, atlanteWest: 2
-  }
+  const redirectedRef = useRef(false)
+  const tempObj = useMemo(() => new THREE.Object3D(), [])
 
   useFrame((_, delta) => {
-    if (!sceneGroupRef.current) return
+    if (!sceneGroupRef.current || !moaiInstancedRef.current || !atlanteInstancedRef.current) return
 
     if (volcanicEruption) {
       shakeTimeRef.current += delta
-      const intensity = 0.06
-      sceneGroupRef.current.position.x = Math.sin(shakeTimeRef.current * 19) * intensity
-      sceneGroupRef.current.position.z = Math.cos(shakeTimeRef.current * 13) * intensity
-      sceneGroupRef.current.position.y = 0
-      sceneGroupRef.current.rotation.set(0, 0, 0)
+      sceneGroupRef.current.position.x = Math.sin(shakeTimeRef.current * 19) * 0.06
+      sceneGroupRef.current.position.z = Math.cos(shakeTimeRef.current * 13) * 0.06
 
-      // Hundir NPCs desde su Y original hacia -1.5 relativo
       const sinkSpeed = 0.8 * delta
-      const entries: [React.RefObject<THREE.Group>, number][] = [
-        [moaiCentralRef,    ORIGINAL_Y.moaiCentral    - 1.5],
-        [atlanteCentralRef, ORIGINAL_Y.atlanteCentral - 1.5],
-        [moaiNorthRef,      ORIGINAL_Y.moaiNorth      - 1.5],
-        [moaiEastRef,       ORIGINAL_Y.moaiEast       - 1.5],
-        [atlanteSouthRef,   ORIGINAL_Y.atlanteSouth   - 1.5],
-        [atlanteWestRef,    ORIGINAL_Y.atlanteWest    - 1.5],
-      ]
-      for (const [ref, target] of entries) {
-        if (ref.current && ref.current.position.y > target) {
-          ref.current.position.y = Math.max(target, ref.current.position.y - sinkSpeed)
-        }
-      }
+      npcState.current.moai.forEach((m, i) => {
+        const target = m.origY - 1.5
+        if (m.curY > target) m.curY = Math.max(target, m.curY - sinkSpeed)
+        tempObj.position.set(m.pos[0], m.curY, m.pos[2])
+        tempObj.rotation.set(m.rot[0], m.rot[1], m.rot[2])
+        tempObj.scale.setScalar(5)
+        tempObj.updateMatrix()
+        moaiInstancedRef.current!.setMatrixAt(i, tempObj.matrix)
+      })
+      npcState.current.atlante.forEach((a, i) => {
+        const target = a.origY - 1.5
+        if (a.curY > target) a.curY = Math.max(target, a.curY - sinkSpeed)
+        tempObj.position.set(a.pos[0], a.curY, a.pos[2])
+        tempObj.rotation.set(a.rot[0], a.rot[1], a.rot[2])
+        tempObj.scale.setScalar(5)
+        tempObj.updateMatrix()
+        atlanteInstancedRef.current!.setMatrixAt(i, tempObj.matrix)
+      })
 
       eruptionTimerRef.current += delta
       if (eruptionTimerRef.current > 8 && !redirectedRef.current && onEruptionEnd) {
@@ -201,113 +224,78 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
     } else {
       sceneGroupRef.current.position.x *= 0.8
       sceneGroupRef.current.position.z *= 0.8
-      sceneGroupRef.current.position.y = 0
-      sceneGroupRef.current.rotation.set(0, 0, 0)
-      eruptionTimerRef.current = 0
-      redirectedRef.current = false
-      // Restaurar NPCs a su Y original exacta
-      const entries: [React.RefObject<THREE.Group>, number][] = [
-        [moaiCentralRef,    ORIGINAL_Y.moaiCentral],
-        [atlanteCentralRef, ORIGINAL_Y.atlanteCentral],
-        [moaiNorthRef,      ORIGINAL_Y.moaiNorth],
-        [moaiEastRef,       ORIGINAL_Y.moaiEast],
-        [atlanteSouthRef,   ORIGINAL_Y.atlanteSouth],
-        [atlanteWestRef,    ORIGINAL_Y.atlanteWest],
-      ]
-      for (const [ref, target] of entries) {
-        if (ref.current) {
-          ref.current.position.y = target // restaurar inmediatamente sin animación
-        }
-      }
+
+      npcState.current.moai.forEach((m, i) => {
+        m.curY = m.origY
+        tempObj.position.set(m.pos[0], m.curY, m.pos[2])
+        tempObj.rotation.set(m.rot[0], m.rot[1], m.rot[2])
+        tempObj.scale.setScalar(5)
+        tempObj.updateMatrix()
+        moaiInstancedRef.current!.setMatrixAt(i, tempObj.matrix)
+      })
+      npcState.current.atlante.forEach((a, i) => {
+        a.curY = a.origY
+        tempObj.position.set(a.pos[0], a.curY, a.pos[2])
+        tempObj.rotation.set(a.rot[0], a.rot[1], a.rot[2])
+        tempObj.scale.setScalar(5)
+        tempObj.updateMatrix()
+        atlanteInstancedRef.current!.setMatrixAt(i, tempObj.matrix)
+      })
     }
+
+    moaiInstancedRef.current.instanceMatrix.needsUpdate = true
+    atlanteInstancedRef.current.instanceMatrix.needsUpdate = true
   })
-  
-  // 🎼 Activar arquitectura de Isla de Pascua
+
   useEffect(() => {
     import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
       const harmonia = getHarmoniaMundi()
-      if (harmonia.isEnabled()) {
-        harmonia.activateArchitecture('easter-island')
-        console.log('🏛️ Arquitectura de Isla de Pascua activada')
-      }
+      if (harmonia.isEnabled()) harmonia.activateArchitecture('easter-island')
     })
-    
     return () => {
       import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
-        const harmonia = getHarmoniaMundi()
-        harmonia.deactivateArchitecture('easter-island')
+        getHarmoniaMundi().deactivateArchitecture('easter-island')
       })
     }
   }, [])
-  
-  // Posiciones para el sistema de diálogo (constantes, no recrear cada render)
+
   const moaiPosition = useMemo(() => new Vector3(-4, 3, 0), [])
   const atlantePosition = useMemo(() => new Vector3(4, 2, 0), [])
-  
-  // Radio del borde - 1 metro adentro del límite visible
-  const BORDER = 29
 
   return (
     <group ref={sceneGroupRef}>
-      {/* Ceniza volcánica - partículas grises durante erupción */}
       {volcanicEruption && <VolcanicAsh />}
-      {/* Moai central - posición y rotación ORIGINALES */}
-      <group ref={moaiCentralRef} position={[-4, 3, 0]} rotation={[0, Math.PI / 4 - Math.PI / 6, 0]}>
-        <primitive object={moaiModel.scene} scale={5} />
-      </group>
       
-      {/* Atlante central - posición y rotación ORIGINALES */}
-      <group ref={atlanteCentralRef} position={[4, 2, 0]} rotation={[0, 0, 0]}>
-        <primitive object={atlanteModel.scene} scale={5} />
-      </group>
+      {moaiData.geometry && (
+        <instancedMesh ref={moaiInstancedRef} args={[moaiData.geometry, moaiData.material as unknown as THREE.Material, 3]} frustumCulled={false} />
+      )}
+      {atlanteData.geometry && (
+        <instancedMesh ref={atlanteInstancedRef} args={[atlanteData.geometry, atlanteData.material as unknown as THREE.Material, 3]} frustumCulled={false} />
+      )}
 
-      {/* BORDE NORTE: Moai mirando al sur (hacia el centro) */}
-      <group ref={moaiNorthRef} position={[0, 3, -BORDER]} rotation={[0, Math.PI, 0]}>
-        <primitive object={moaiNorth} scale={5} />
-      </group>
-
-      {/* BORDE SUR: Atlante mirando al norte (hacia el centro) */}
-      <group ref={atlanteSouthRef} position={[0, 2, BORDER]} rotation={[0, 0, 0]}>
-        <primitive object={atlanteSouth} scale={5} />
-      </group>
-
-      {/* BORDE ESTE: Moai mirando al oeste (hacia el centro) */}
-      <group ref={moaiEastRef} position={[BORDER, 3, 0]} rotation={[0, -Math.PI / 2, 0]}>
-        <primitive object={moaiEast} scale={5} />
-      </group>
-
-      {/* BORDE OESTE: Atlante mirando al este (hacia el centro) */}
-      <group ref={atlanteWestRef} position={[-BORDER, 2, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <primitive object={atlanteWest} scale={5} />
-      </group>
-      
-      {/* Sistema de diálogo entre Moai y Atlante - se detiene al activar Merkaba */}
       <EasterIslandDialogue
         moaiPosition={moaiPosition}
         atlantePosition={atlantePosition}
         enabled={!showEnergySphere}
       />
       
-      {/* 🌋 Volcán Rano Kau - suroeste, igual que el real */}
       <RanoKauVolcano state={volcanoState} />
 
-      {/* ✡️ Merkaba - estrella tetraédrica girando en el centro */}
       <Merkaba
         position={[0, 12, 0]}
         size={1.5}
         color="#ffd700"
-        speed={0.4}
+        speed={merkabaActive ? 0 : 0.4}
         clickable={merkabaClickable}
         onActivate={() => {
+          setMerkabaActive(true)
           setShowEnergySphere(true)
           if (onMerkabaActivate) onMerkabaActivate()
         }}
       />
 
-      {/* Esfera energética de estabilización - aparece al completar las 5 misiones */}
       <EnergySphere position={[0, 8, 0]} size={2} visible={showEnergySphere} />
 
-      {/* Jade Mask - visible cuando la mision de la cueva esta activa */}
       {showJadeMask && !jadeMaskCollected && (
         <group
           position={[15, 0.5, -10]}
@@ -316,7 +304,6 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
           onPointerOut={() => { document.body.style.cursor = 'default' }}
         >
           <primitive object={jadeMaskModel.scene} scale={2} />
-          {/* Mesh para capturar clicks */}
           <mesh>
             <boxGeometry args={[3, 3, 3]} />
             <meshBasicMaterial color="#00ff88" wireframe transparent opacity={0.3} />
@@ -325,7 +312,6 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
         </group>
       )}
 
-      {/* Iluminación */}
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} intensity={0.8} />
     </group>

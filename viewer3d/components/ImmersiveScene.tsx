@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import dynamic from 'next/dynamic'
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
@@ -1031,17 +1031,15 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             setTimeout(() => setShowCollectedMessage(false), 3000)
           }}
           onMerkabaActivate={() => {
-            console.log('Merkaba activado! 5ta mision - juego completado!')
+            console.log('✡️ Merkaba activado! 5ta mision - ¡Sincronización Planetaria Completada!')
             completeMission('easterIsland', 'activate_merkaba')
-            // Limpiar clima de TODOS los sitios del planeta
-            clearWeather('pumaPunku')
-            clearWeather('giza')
-            clearWeather('easterIsland')
-            clearWeather('teotihuacan')
-            clearWeather('veracruz')
-            clearWeather('angkorWat')
+            
+            // Limpiar clima de TODOS los sitios del planeta permanentemente
+            const sites: (keyof MissionState['sites'])[] = ['pumaPunku', 'giza', 'easterIsland', 'teotihuacan', 'veracruz', 'angkorWat']
+            sites.forEach(s => clearWeather(s))
+            
             setWeather(CALM_WEATHER)
-            // TODO: mostrar mensaje final de juego completado
+            console.log('🌍 Clima global estabilizado. La esfera energética rosa ha aparecido.')
           }}
           onSphinxClick={() => setShowSphinxDialogue(true)}
           onPyramidionCollect={handleCollectPyramidion}
