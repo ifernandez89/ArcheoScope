@@ -123,7 +123,7 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
     const pmDone = ms.sites.pumaPunku.missionsCompleted.length > 0
     const gizaDone = ms.sites.giza.missionsCompleted.length > 0
     const teoDone = ms.sites.teotihuacan.missionsCompleted.length > 0
-    const verDone = ms.sites.veracruz?.missionsCompleted?.length > 0
+    const verDone = (ms.sites.veracruz?.missionsCompleted?.length || 0) > 0
     const result = pmDone && gizaDone && teoDone && verDone
     setMerkabaClickable(result)
 
@@ -136,10 +136,6 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
   const volcanoState = useMemo<VolcanoState>(() => {
     // 'erupting' SOLO cuando el usuario activa la erupción volcánica manualmente
     if (volcanicEruption) return 'erupting'
-    const ms = loadMissionState()
-    const total = ms.stats.totalMissionsCompleted
-    // Con misiones completadas el volcán se activa (lava visible) pero NO erupciona
-    if (total >= 1) return 'active'
     return 'dormant'
   }, [volcanicEruption])
 
@@ -287,7 +283,7 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
         size={1.5}
         color="#ffd700"
         speed={merkabaActive ? 0 : 0.4}
-        clickable={merkabaClickable}
+        clickable={merkabaClickable && !merkabaActive}
         onActivate={() => {
           setMerkabaActive(true)
           setShowEnergySphere(true)

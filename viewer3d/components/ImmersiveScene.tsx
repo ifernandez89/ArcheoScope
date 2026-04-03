@@ -241,6 +241,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // Marcar este sitio como descubierto
     if (siteId) discoveredSites.current.add(siteId)
     
+    // Completar misión de Puma Punku para que la lógica secuencial funcione correctamente
+    completeMission('pumaPunku', 'reveal_structure')
+    
     // Limpiar clima de Puma Punku
     clearWeather('pumaPunku')
     
