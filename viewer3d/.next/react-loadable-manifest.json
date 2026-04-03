@@ -7,7 +7,7 @@
       "static/chunks/engines.0749c2c4a2d3d742.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/4022-bc0c0086f9e51fb9.js",
-      "static/chunks/8740.8e318a07cf4ab969.js"
+      "static/chunks/8740.f0c2cc28e8d2eea7.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -113,7 +113,7 @@
     "id": 8520,
     "files": [
       "static/chunks/react-three.fc63ca31250cfe55.js",
-      "static/chunks/2063.1360a1ce5adfba59.js"
+      "static/chunks/2063.e1aff672364e59b6.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EnhancedMoon": {

@@ -185,6 +185,28 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
   const redirectedRef = useRef(false)
   const tempObj = useMemo(() => new THREE.Object3D(), [])
 
+  // Inicializar matrices de los NPCs al montar (evita frame inicial en posición incorrecta)
+  useEffect(() => {
+    if (!moaiInstancedRef.current || !atlanteInstancedRef.current) return
+    const t = new THREE.Object3D()
+    npcState.current.moai.forEach((m, i) => {
+      t.position.set(m.pos[0], m.origY, m.pos[2])
+      t.rotation.set(m.rot[0], m.rot[1], m.rot[2])
+      t.scale.setScalar(5)
+      t.updateMatrix()
+      moaiInstancedRef.current!.setMatrixAt(i, t.matrix)
+    })
+    npcState.current.atlante.forEach((a, i) => {
+      t.position.set(a.pos[0], a.origY, a.pos[2])
+      t.rotation.set(a.rot[0], a.rot[1], a.rot[2])
+      t.scale.setScalar(5)
+      t.updateMatrix()
+      atlanteInstancedRef.current!.setMatrixAt(i, t.matrix)
+    })
+    moaiInstancedRef.current.instanceMatrix.needsUpdate = true
+    atlanteInstancedRef.current.instanceMatrix.needsUpdate = true
+  }, [moaiInstancedRef.current, atlanteInstancedRef.current])
+
   useFrame((_, delta) => {
     if (!sceneGroupRef.current || !moaiInstancedRef.current || !atlanteInstancedRef.current) return
 
@@ -221,6 +243,10 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
     } else {
       sceneGroupRef.current.position.x *= 0.8
       sceneGroupRef.current.position.z *= 0.8
+
+      // Solo actualizar matrices si los NPCs no están en su posición original
+      const needsReset = npcState.current.moai.some(m => Math.abs(m.curY - m.origY) > 0.01)
+      if (!needsReset) return
 
       npcState.current.moai.forEach((m, i) => {
         m.curY = m.origY
