@@ -1,84 +1,84 @@
 {
   "pages": {
     "/_not-found/page": [
-      "static/chunks/webpack-5d8e5ff640e54f4e.js",
+      "static/chunks/webpack-d7f1c60551d6ee0a.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/main-app-e3b02d0ee76896ea.js",
       "static/chunks/app/_not-found/page-ce6f35b21306d4c0.js"
     ],
     "/layout": [
-      "static/chunks/webpack-5d8e5ff640e54f4e.js",
+      "static/chunks/webpack-d7f1c60551d6ee0a.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/main-app-e3b02d0ee76896ea.js",
       "static/css/249ec7b36a9b822f.css",
       "static/chunks/app/layout-dc8847de82b6962c.js"
     ],
     "/game/page": [
-      "static/chunks/webpack-5d8e5ff640e54f4e.js",
+      "static/chunks/webpack-d7f1c60551d6ee0a.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/main-app-e3b02d0ee76896ea.js",
       "static/chunks/app/game/page-c85e71a8042f96af.js"
     ],
+    "/menu/controls/page": [
+      "static/chunks/webpack-d7f1c60551d6ee0a.js",
+      "static/chunks/vendor-1e8f5f4198c8f225.js",
+      "static/chunks/main-app-e3b02d0ee76896ea.js",
+      "static/chunks/app/menu/controls/page-d45895b982516bb4.js"
+    ],
     "/menu/audio/page": [
-      "static/chunks/webpack-5d8e5ff640e54f4e.js",
+      "static/chunks/webpack-d7f1c60551d6ee0a.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/main-app-e3b02d0ee76896ea.js",
       "static/chunks/4022-bc0c0086f9e51fb9.js",
-      "static/chunks/app/menu/audio/page-11ee20b988340b8e.js"
+      "static/chunks/app/menu/audio/page-32cb6c2e08cff4e9.js"
     ],
-    "/menu/controls/page": [
-      "static/chunks/webpack-5d8e5ff640e54f4e.js",
+    "/menu/page": [
+      "static/chunks/webpack-d7f1c60551d6ee0a.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/menu/controls/page-7320c1c69d20f389.js"
+      "static/chunks/app/menu/page-e515c13f07f2938a.js"
     ],
     "/menu/info/page": [
-      "static/chunks/webpack-5d8e5ff640e54f4e.js",
+      "static/chunks/webpack-d7f1c60551d6ee0a.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/main-app-e3b02d0ee76896ea.js",
       "static/chunks/app/menu/info/page-7d1b8b0156778b72.js"
     ],
-    "/menu/page": [
-      "static/chunks/webpack-5d8e5ff640e54f4e.js",
-      "static/chunks/vendor-1e8f5f4198c8f225.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/menu/page-d3b712a708cb390b.js"
-    ],
     "/menu/video/page": [
-      "static/chunks/webpack-5d8e5ff640e54f4e.js",
+      "static/chunks/webpack-d7f1c60551d6ee0a.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/main-app-e3b02d0ee76896ea.js",
       "static/chunks/app/menu/video/page-e0d210599a28fa80.js"
     ],
+    "/page": [
+      "static/chunks/webpack-d7f1c60551d6ee0a.js",
+      "static/chunks/vendor-1e8f5f4198c8f225.js",
+      "static/chunks/main-app-e3b02d0ee76896ea.js",
+      "static/chunks/app/page-3f9d4f50df4a0d82.js"
+    ],
     "/metrics/page": [
-      "static/chunks/webpack-5d8e5ff640e54f4e.js",
+      "static/chunks/webpack-d7f1c60551d6ee0a.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/main-app-e3b02d0ee76896ea.js",
       "static/chunks/app/metrics/page-dda465f030da62e9.js"
     ],
     "/player-setup/page": [
-      "static/chunks/webpack-5d8e5ff640e54f4e.js",
+      "static/chunks/webpack-d7f1c60551d6ee0a.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/main-app-e3b02d0ee76896ea.js",
       "static/chunks/app/player-setup/page-4a43b0cdd6525d7b.js"
     ],
-    "/page": [
-      "static/chunks/webpack-5d8e5ff640e54f4e.js",
-      "static/chunks/vendor-1e8f5f4198c8f225.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/page-3f9d4f50df4a0d82.js"
-    ],
-    "/realistic-solar/page": [
-      "static/chunks/webpack-5d8e5ff640e54f4e.js",
-      "static/chunks/vendor-1e8f5f4198c8f225.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/realistic-solar/page-39cea19f1bb1a4c8.js"
-    ],
     "/reset/page": [
-      "static/chunks/webpack-5d8e5ff640e54f4e.js",
+      "static/chunks/webpack-d7f1c60551d6ee0a.js",
       "static/chunks/vendor-1e8f5f4198c8f225.js",
       "static/chunks/main-app-e3b02d0ee76896ea.js",
       "static/chunks/app/reset/page-35b98b34b24ed550.js"
+    ],
+    "/realistic-solar/page": [
+      "static/chunks/webpack-d7f1c60551d6ee0a.js",
+      "static/chunks/vendor-1e8f5f4198c8f225.js",
+      "static/chunks/main-app-e3b02d0ee76896ea.js",
+      "static/chunks/app/realistic-solar/page-39cea19f1bb1a4c8.js"
     ]
   }
 }

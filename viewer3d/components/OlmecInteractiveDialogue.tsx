@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 interface OlmecInteractiveDialogueProps {
   hasStoodUp: boolean
   hasJadeMask?: boolean
+  missionCompleted?: boolean
   onClose: () => void
   onEnterCave?: () => void
   onDeliverJade?: () => void
@@ -28,9 +29,28 @@ const OLMEC_OPTIONS = [
   }
 ]
 
+const OLMEC_OPTIONS_COMPLETED = [
+  {
+    id: 1,
+    label: '¿Qué es la Máscara de Jade?',
+    response: 'La Máscara de Jade representa el aliento de vida. El jade era más valioso que el oro, simbolizaba la eternidad, el agua y la vegetación. Los gobernantes la usaban para comunicarse con los dioses y asegurar su paso al más allá.'
+  },
+  {
+    id: 2,
+    label: '¿Qué hay dentro de la cueva?',
+    response: 'La cueva es un lugar de prueba para el espíritu. Antiguos la usaban como portal entre el mundo de los vivos y el de los muertos. Solo los valientes se atreven a cruzar.'
+  },
+  {
+    id: 3,
+    label: '¿Quién es Mictlantecuhtli?',
+    response: 'Mictlantecuhtli gobierna el Mictlán, el nivel más profundo del mundo de los muertos. Su rostro es un cráneo descarnado, y su dominio se extiende por las nueve capas del inframundo. No lo busques... a menos que estés preparado.'
+  }
+]
+
 export default function OlmecInteractiveDialogue({ 
   hasStoodUp,
   hasJadeMask,
+  missionCompleted,
   onClose,
   onEnterCave,
   onDeliverJade
@@ -57,8 +77,8 @@ export default function OlmecInteractiveDialogue({
     setSelectedResponse(response)
     setShowOptions(false)
 
-    // Si eligió la opción 1 (buscar objeto), activar misión de la cueva
-    if (optionId === 1 && onEnterCave) {
+    // Si eligió la opción 1 y la misión NO está completada, activar cueva
+    if (optionId === 1 && onEnterCave && !missionCompleted) {
       onEnterCave()
       setTimeout(() => onClose(), 5000)
       return
@@ -142,7 +162,7 @@ export default function OlmecInteractiveDialogue({
                 Entregar la Mascara de Jade
               </button>
             )}
-            {!hasJadeMask && OLMEC_OPTIONS.map((opt) => (
+            {!hasJadeMask && (missionCompleted ? OLMEC_OPTIONS_COMPLETED : OLMEC_OPTIONS).map((opt) => (
               <button
                 key={opt.id}
                 onClick={() => handleOptionClick(opt.id, opt.response)}

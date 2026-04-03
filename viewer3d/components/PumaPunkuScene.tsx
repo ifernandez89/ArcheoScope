@@ -4,6 +4,10 @@ import { useState, useRef, useMemo, useEffect, Suspense } from 'react'
 import { useGLTF, Html } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Group, Mesh, MeshStandardMaterial, Color, Vector3 } from 'three'
+
+// Colores reutilizables (evita crear en cada frame)
+const HOVER_COLOR = new Color('#ffd700')
+const DEFAULT_COLOR = new Color('#000000')
 import PumaPunkuBlock from './PumaPunkuBlock'
 import PumaPunkuStructure from './PumaPunkuStructure'
 import SelectableObject from './SelectableObject'
@@ -254,10 +258,10 @@ function ViracochaGuardian({
     if (revealed && opacityRef.current > 0) {
       meshes.forEach(m => {
         if (hovered) {
-          ;(m.material as MeshStandardMaterial).emissive = new Color('#ffd700')
+          ;(m.material as MeshStandardMaterial).emissive = HOVER_COLOR
           ;(m.material as MeshStandardMaterial).emissiveIntensity = 0.3
         } else {
-          ;(m.material as MeshStandardMaterial).emissive = new Color('#000000')
+          ;(m.material as MeshStandardMaterial).emissive = DEFAULT_COLOR
           ;(m.material as MeshStandardMaterial).emissiveIntensity = 0
         }
       })

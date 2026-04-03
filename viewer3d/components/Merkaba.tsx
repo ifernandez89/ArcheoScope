@@ -110,6 +110,12 @@ export default function Merkaba({
       {/* Tetraedro inferior */}
       <mesh geometry={downGeo}>{mat}</mesh>
 
+      {/* Esfera invisible para capturar clicks */}
+      <mesh>
+        <sphereGeometry args={[size * 2, 8, 8]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+
       {/* Aristas del tetraedro superior */}
       {faces.map(([a, b, c], i) => (
         <lineSegments key={`u-${i}`}>

@@ -156,6 +156,14 @@ export default function ControlsPage() {
               <span style={{ color: '#888' }}>Q / E</span>
               <span>Rotar Avatar</span>
             </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#888' }}>SHIFT + MOUSE UP</span>
+              <span>Vuelo hacia arriba</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#888' }}>SHIFT + MOUSE DOWN</span>
+              <span>Vuelo hacia abajo</span>
+            </div>
           </div>
         </div>
 

@@ -42,8 +42,8 @@ export default function PortalDetector({
     // Calcular distancia al portal
     const distance = avatarPos.distanceTo(portalPosVec.current)
 
-    // Radio de detección basado en el tamaño del portal
-    const detectionRadius = portalScale * 2
+    // Radio de detección: muy cerca del portal (3 unidades = ~3 metros)
+    const detectionRadius = 3
 
     // Si el avatar está dentro del radio del portal
     if (distance < detectionRadius && !hasEnteredRef.current) {

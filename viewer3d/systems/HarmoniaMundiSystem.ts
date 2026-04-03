@@ -187,6 +187,15 @@ export class HarmoniaMundiSystem {
       Q: 5,
       gain: 1.8,
       description: 'Resuenan en frecuencia sagrada'
+    }],
+    ['veracruz', {
+      siteId: 'veracruz',
+      name: 'Tres Zapotes',
+      filterType: 'notch' as BiquadFilterType,
+      frequency: 110,
+      Q: 4,
+      gain: 1.6,
+      description: 'Resonancia olmeca del inframundo'
     }]
   ])
   

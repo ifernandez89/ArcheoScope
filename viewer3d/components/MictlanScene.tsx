@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useMemo, useRef, useState } from 'react'
+import { Suspense, useMemo, useRef, useState, useEffect } from 'react'
 import { useGLTF, Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
@@ -27,6 +27,19 @@ function MictlanSceneContent({ avatarPositionRef, onExit }: MictlanSceneProps) {
   const flashPlaneRef = useRef<THREE.Mesh>(null)
   const appearanceCountRef = useRef(0)
   const exitTriggeredRef = useRef(false)
+
+  // Activar arquitectura olmeca del inframundo
+  useEffect(() => {
+    import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+      const h = getHarmoniaMundi()
+      if (h.isEnabled()) h.activateArchitecture('veracruz')
+    })
+    return () => {
+      import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+        getHarmoniaMundi().deactivateArchitecture('veracruz')
+      })
+    }
+  }, [])
 
   // Timers para relámpagos y visibilidad
   const nextLightningRef = useRef(3 + Math.random() * 5) // primer rayo entre 3-8s

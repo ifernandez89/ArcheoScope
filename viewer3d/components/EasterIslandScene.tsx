@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, Suspense, useEffect, useMemo } from 'react'
+import { useRef, Suspense, useEffect, useMemo, useState } from 'react'
 import { useGLTF, Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { Vector3 } from 'three'
@@ -10,6 +10,7 @@ import EasterIslandDialogue from './EasterIslandDialogue'
 import RanoKauVolcano, { type VolcanoState } from './RanoKauVolcano'
 import { loadMissionState } from '@/types/missionState'
 import Merkaba from './Merkaba'
+import EnergySphere from './EnergySphere'
 
 /**
  * Escena de Isla de Pascua (Rapa Nui)
@@ -113,11 +114,22 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
   const jadeMaskModel = useGLTF(getAssetPath('/jade_mask.glb'))
 
-  // Chequear si hay 4+ misiones completas → merkaba clickeable
-  const merkabaClickable = useMemo(() => {
+  // Chequear si las 4 misiones específicas están completas → merkaba clickeable
+  // Se recalcula cada vez que el componente se monta (al entrar a la escena)
+  const [merkabaClickable, setMerkabaClickable] = useState(false)
+  useEffect(() => {
     const ms = loadMissionState()
-    return ms.stats.totalMissionsCompleted >= 4
+    const pmDone = ms.sites.pumaPunku.missionsCompleted.length > 0
+    const gizaDone = ms.sites.giza.missionsCompleted.length > 0
+    const teoDone = ms.sites.teotihuacan.missionsCompleted.length > 0
+    const verDone = ms.sites.veracruz?.missionsCompleted?.length > 0
+    const result = pmDone && gizaDone && teoDone && verDone
+    setMerkabaClickable(result)
+    console.log('Merkaba clickable:', result, { pmDone, gizaDone, teoDone, verDone })
   }, [])
+
+  // Esfera energética aparece al activar el Merkaba
+  const [showEnergySphere, setShowEnergySphere] = useState(false)
 
   const moaiNorth    = useMemo(() => moaiModel.scene.clone(true),    [moaiModel.scene])
   const moaiEast     = useMemo(() => moaiModel.scene.clone(true),    [moaiModel.scene])
@@ -228,9 +240,9 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
     }
   }, [])
   
-  // Posiciones para el sistema de diálogo
-  const moaiPosition = new Vector3(-4, 3, 0)
-  const atlantePosition = new Vector3(4, 2, 0)
+  // Posiciones para el sistema de diálogo (constantes, no recrear cada render)
+  const moaiPosition = useMemo(() => new Vector3(-4, 3, 0), [])
+  const atlantePosition = useMemo(() => new Vector3(4, 2, 0), [])
   
   // Radio del borde - 1 metro adentro del límite visible
   const BORDER = 29
@@ -269,11 +281,11 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
         <primitive object={atlanteWest} scale={5} />
       </group>
       
-      {/* Sistema de diálogo entre Moai y Atlante */}
+      {/* Sistema de diálogo entre Moai y Atlante - se detiene al activar Merkaba */}
       <EasterIslandDialogue
         moaiPosition={moaiPosition}
         atlantePosition={atlantePosition}
-        enabled={true}
+        enabled={!showEnergySphere}
       />
       
       {/* 🌋 Volcán Rano Kau - suroeste, igual que el real */}
@@ -286,8 +298,14 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
         color="#ffd700"
         speed={0.4}
         clickable={merkabaClickable}
-        onActivate={onMerkabaActivate}
+        onActivate={() => {
+          setShowEnergySphere(true)
+          if (onMerkabaActivate) onMerkabaActivate()
+        }}
       />
+
+      {/* Esfera energética de estabilización - aparece al completar las 5 misiones */}
+      <EnergySphere position={[0, 8, 0]} size={2} visible={showEnergySphere} />
 
       {/* Jade Mask - visible cuando la mision de la cueva esta activa */}
       {showJadeMask && !jadeMaskCollected && (

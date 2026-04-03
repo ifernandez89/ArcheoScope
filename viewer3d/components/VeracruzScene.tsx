@@ -93,11 +93,11 @@ function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive
   useEffect(() => {
     import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
       const h = getHarmoniaMundi()
-      if (h.isEnabled()) h.activateArchitecture('easter-island')
+      if (h.isEnabled()) h.activateArchitecture('veracruz')
     })
     return () => {
       import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
-        getHarmoniaMundi().deactivateArchitecture('easter-island')
+        getHarmoniaMundi().deactivateArchitecture('veracruz')
       })
     }
   }, [])

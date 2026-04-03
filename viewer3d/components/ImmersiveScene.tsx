@@ -22,7 +22,7 @@ import { useNarrativeZoom } from './NarrativeZoom'
 import { detectBiome, getSkyColorForBiome, getFogColorForBiome } from '@/utils/biome-detector'
 import { loadPlayerState, savePlayerState, updatePlayerLocation } from '@/types/player'
 import { loadGameSettings } from '@/types/gameSettings'
-import { collectItem, interactWithNPC, loadMissionState, sphinxReceivePyramidion, hasSphinxReceivedPyramidion, clearWeather, isWeatherCleared, completeMission, failMission, resetMissionState, type MissionState } from '@/types/missionState'
+import { collectItem, interactWithNPC, loadMissionState, sphinxReceivePyramidion, hasSphinxReceivedPyramidion, clearWeather, isWeatherCleared, completeMission, failMission, resetMissionState, isMissionCompleted, type MissionState } from '@/types/missionState'
 
 // SISTEMAS MODULARES LAZY-LOADED
 import {
@@ -416,6 +416,48 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   // 💚 Jade Mask - item de la misión de Veracruz
   const [jadeMaskVisible, setJadeMaskVisible] = useState(false)
   const [jadeMaskInInventory, setJadeMaskInInventory] = useState(false)
+
+  // Restaurar estados de TODAS las misiones desde missionState al montar
+  useEffect(() => {
+    const ms = loadMissionState()
+
+    // ── VERACRUZ ──
+    const veracruzItems = ms.sites.veracruz?.itemsCollected || []
+    const veracruzNpcs = ms.sites.veracruz?.npcsInteracted || []
+    const veracruzMissions = ms.sites.veracruz?.missionsCompleted || []
+    const easterItems = ms.sites.easterIsland?.itemsCollected || []
+
+    if (veracruzNpcs.includes('olmec_head')) {
+      setOlmecStoodUp(true)
+      setOlmecThanked(true)
+    }
+
+    const jadeCollected = easterItems.includes('jade_mask')
+    const veracruzDone = veracruzMissions.includes('deliver_jade_mask')
+    const questActivated = veracruzItems.includes('cave_quest_active')
+
+    if (jadeCollected || veracruzDone || questActivated) {
+      setCaveQuestActive(true)
+    }
+    if (jadeCollected && !veracruzDone) {
+      setJadeMaskInInventory(true)
+    }
+    if (questActivated && !jadeCollected && !veracruzDone) {
+      setJadeMaskVisible(true)
+    }
+
+    // ── TEOTIHUACAN ──
+    const teoItems = ms.sites.teotihuacan?.itemsCollected || []
+    const teoMissions = ms.sites.teotihuacan?.missionsCompleted || []
+    if (teoItems.includes('corn_seed') && !teoMissions.includes('plant_corn')) {
+      setCornInInventory(true)
+    }
+    if (teoMissions.includes('plant_corn')) {
+      setCornPlanted(true)
+    }
+
+    console.log('📜 Estados restaurados desde missionState')
+  }, [])
   const [cornInInventory, setCornInInventory] = useState(false) // Maíz en inventario (rotando)
   const [cornOnGround, setCornOnGround] = useState(false) // Maíz en el piso (visible en escena)
   const [cornDropPosition, setCornDropPosition] = useState<{x: number, z: number} | null>(null) // Posición donde cayó el maíz
@@ -1021,6 +1063,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onOlmecClick={() => {
             if (!olmecStoodUp) {
               setOlmecStoodUp(true)
+              interactWithNPC('veracruz', 'olmec_head')
             }
             setShowOlmecDialogue(true)
           }}
@@ -1086,6 +1129,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         <OlmecInteractiveDialogue
           hasStoodUp={olmecThanked}
           hasJadeMask={jadeMaskInInventory}
+          missionCompleted={isMissionCompleted('veracruz', 'deliver_jade_mask')}
           onClose={() => {
             setShowOlmecDialogue(false)
             if (olmecStoodUp && !olmecThanked) {
@@ -1095,6 +1139,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onEnterCave={() => {
             setCaveQuestActive(true)
             setJadeMaskVisible(true)
+            // Persistir: registrar que la quest de la cueva fue activada
+            collectItem('veracruz', 'cave_quest_active')
           }}
           onDeliverJade={() => {
             collectItem('veracruz', 'jade_mask')
