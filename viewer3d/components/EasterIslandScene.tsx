@@ -134,10 +134,11 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
   }, [])
 
   const volcanoState = useMemo<VolcanoState>(() => {
+    // 'erupting' SOLO cuando el usuario activa la erupción volcánica manualmente
     if (volcanicEruption) return 'erupting'
     const ms = loadMissionState()
     const total = ms.stats.totalMissionsCompleted
-    if (total >= 3) return 'erupting'
+    // Con misiones completadas el volcán se activa (lava visible) pero NO erupciona
     if (total >= 1) return 'active'
     return 'dormant'
   }, [volcanicEruption])

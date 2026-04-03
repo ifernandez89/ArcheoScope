@@ -529,8 +529,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         // Verificar si fue entregado a la Esfinge (desde missionState)
         const delivered = hasSphinxReceivedPyramidion()
         
-        console.log('🔶 checkPyramidion:', { collectedFromMissions, collectedFromSession, collected, delivered })
-        
         // Solo marcar como recolectado si REALMENTE fue recolectado
         if (collected) {
           setPyramidionCollected(true)
@@ -1378,18 +1376,7 @@ function ModelScene({
   const [obstacles, setObstacles] = useState<THREE.Object3D[]>([])
   const avatarPositionRef = useRef(new THREE.Vector3())
   
-  // Sincronizar posición del avatar con la ref principal
-  useEffect(() => {
-    if (mainAvatarPositionRef?.current) {
-      const syncPosition = () => {
-        if (mainAvatarPositionRef.current) {
-          mainAvatarPositionRef.current.copy(avatarPositionRef.current)
-        }
-      }
-      const interval = setInterval(syncPosition, 100)
-      return () => clearInterval(interval)
-    }
-  }, [mainAvatarPositionRef])
+  // La posición del avatar se sincroniza en onPositionChange de WalkableAvatar
   
   // Detectar bioma basado en ubicaciÃ³n
   const biome = useMemo(() => {
@@ -1570,7 +1557,10 @@ function ModelScene({
           solarDirection={solarDirection}
           isDay={isDay}
           showCosmicEffects={true}
-          onPositionChange={(pos) => avatarPositionRef.current.copy(pos)}
+          onPositionChange={(pos) => {
+            avatarPositionRef.current.copy(pos)
+            if (mainAvatarPositionRef?.current) mainAvatarPositionRef.current.copy(pos)
+          }}
         />
       ) : (
         <ModelViewer modelPath={avatarModel} ref={modelRef} />

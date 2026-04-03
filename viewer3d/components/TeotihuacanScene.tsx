@@ -123,23 +123,23 @@ function TeotihuacanSceneContent({
     if (showCornSeed && !cornCollected) {
       setIsCornDisappearing(false)
       cornDisappearTimer.current = 0
-      cornMeshesCached.current = false
       
-      // Restaurar opacidad del maíz clonado
-      if (clonedCornScene) {
+      // Restaurar opacidad usando cache si existe, sino traverse una vez
+      if (cachedCornMeshes.current.length > 0) {
+        for (const mesh of cachedCornMeshes.current) {
+          if (mesh.material) {
+            (mesh.material as THREE.MeshStandardMaterial).opacity = 1
+          }
+        }
+      } else if (clonedCornScene) {
         clonedCornScene.traverse((child) => {
-          if ((child as THREE.Mesh).isMesh) {
-            const mesh = child as THREE.Mesh
-            if (mesh.material) {
-              const mat = mesh.material as THREE.MeshStandardMaterial
-              mat.opacity = 1
-              mat.needsUpdate = true
-            }
+          if ((child as THREE.Mesh).isMesh && (child as THREE.Mesh).material) {
+            ((child as THREE.Mesh).material as THREE.MeshStandardMaterial).opacity = 1
           }
         })
       }
+      cornMeshesCached.current = false
       
-      // Restaurar escala si el ref existe
       if (cornRef.current) {
         cornRef.current.scale.setScalar(2)
       }

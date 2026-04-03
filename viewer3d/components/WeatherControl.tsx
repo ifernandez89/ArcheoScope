@@ -41,11 +41,13 @@ export default function WeatherControl({ onWeatherChange, initialWeather }: Weat
     volcanicEruption: false
   })
 
-  // Sincronizar cuando cambia el clima externo (ej: al llegar a un sitio)
+  // Sincronizar cuando cambia el clima externo - NUNCA propagar volcanicEruption automáticamente
   useEffect(() => {
     if (!initialWeather) return
-    setWeather(initialWeather)
-    onWeatherChange(initialWeather)
+    // Forzar volcanicEruption a false en sincronizaciones automáticas
+    const safeWeather = { ...initialWeather, volcanicEruption: false }
+    setWeather(safeWeather)
+    onWeatherChange(safeWeather)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialWeather])
 

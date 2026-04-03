@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -42,47 +42,38 @@ export default function Merkaba({
     if (onActivate) onActivate()
   }
 
-  // Tetraedro regular: punta arriba, base equilátera abajo
-  const h = size * 1.2 // altura total
-  const base = size     // radio de la base
+  // Geometrías en useMemo para evitar recalcular en cada render
+  const { upGeo, downGeo, upVerts, downVerts, faces } = useMemo(() => {
+    const h2 = size * 1.2
+    const b = size
 
-  // Tetraedro apuntando ARRIBA (punta en +Y)
-  const upVerts: [number, number, number][] = [
-    [0, h, 0],                                              // punta arriba
-    [-base, -h * 0.33, base * 0.577],                       // base izq-frente
-    [ base, -h * 0.33, base * 0.577],                       // base der-frente
-    [0, -h * 0.33, -base * 1.155],                          // base atrás
-  ]
+    const uVerts: [number, number, number][] = [
+      [0, h2, 0],
+      [-b, -h2 * 0.33, b * 0.577],
+      [ b, -h2 * 0.33, b * 0.577],
+      [0, -h2 * 0.33, -b * 1.155],
+    ]
+    const dVerts: [number, number, number][] = [
+      [0, -h2, 0],
+      [-b, h2 * 0.33, -b * 0.577],
+      [ b, h2 * 0.33, -b * 0.577],
+      [0, h2 * 0.33, b * 1.155],
+    ]
+    const f = [[0,1,2],[0,2,3],[0,3,1],[1,3,2]]
 
-  // Tetraedro apuntando ABAJO (punta en -Y)
-  const downVerts: [number, number, number][] = [
-    [0, -h, 0],                                             // punta abajo
-    [-base, h * 0.33, -base * 0.577],                       // base izq-atrás
-    [ base, h * 0.33, -base * 0.577],                       // base der-atrás
-    [0, h * 0.33, base * 1.155],                            // base frente
-  ]
-
-  // Caras de un tetraedro: 4 triángulos
-  const faces = [
-    [0, 1, 2],
-    [0, 2, 3],
-    [0, 3, 1],
-    [1, 3, 2],
-  ]
-
-  const buildGeo = (verts: [number, number, number][]) => {
-    const positions: number[] = []
-    for (const [a, b, c] of faces) {
-      positions.push(...verts[a], ...verts[b], ...verts[c])
+    const buildGeo = (verts: [number, number, number][]) => {
+      const positions: number[] = []
+      for (const [a, bc, c] of f) {
+        positions.push(...verts[a], ...verts[bc], ...verts[c])
+      }
+      const geo = new THREE.BufferGeometry()
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+      geo.computeVertexNormals()
+      return geo
     }
-    const geo = new THREE.BufferGeometry()
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-    geo.computeVertexNormals()
-    return geo
-  }
 
-  const upGeo   = buildGeo(upVerts)
-  const downGeo = buildGeo(downVerts)
+    return { upGeo: buildGeo(uVerts), downGeo: buildGeo(dVerts), upVerts: uVerts, downVerts: dVerts, faces: f }
+  }, [size])
 
   const mat = (
     <meshPhysicalMaterial

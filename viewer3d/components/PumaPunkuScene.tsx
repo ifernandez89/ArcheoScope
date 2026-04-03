@@ -111,8 +111,8 @@ function PumaPunkuSceneContent({
         setMagnaBowlCollected(collected)
       }
       
-      // Verificar cada segundo si se recolectó el item
-      const interval = setInterval(checkMagnaBowl, 1000)
+      // Verificar cada 5 segundos si se recolectó el item
+      const interval = setInterval(checkMagnaBowl, 5000)
       return () => clearInterval(interval)
     }
   }, [])
