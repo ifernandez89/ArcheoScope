@@ -1,5 +1,4 @@
 {
-  "/menu/page": "app/menu/page.js",
-  "/player-setup/page": "app/player-setup/page.js",
-  "/game/page": "app/game/page.js"
+  "/game/page": "app/game/page.js",
+  "/player-setup/page": "app/player-setup/page.js"
 }

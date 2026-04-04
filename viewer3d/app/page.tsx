@@ -34,16 +34,28 @@ export default function Home() {
       position: 'relative'
     }}>
       {/* Logo pixel como fondo principal */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        opacity: 0.85
-      }}>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none", // no bloquea clicks del menú
+          opacity: 0.9
+        }}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={LOGO_PATH}
           alt="Archeoscope"
-          style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '40px' }}
+          style={{
+            maxWidth: "60vw",
+            maxHeight: "60vh",
+            objectFit: "contain",
+            filter: "drop-shadow(0 0 25px rgba(0,255,255,0.4))",
+            userSelect: "none"
+          }}
         />
       </div>
 

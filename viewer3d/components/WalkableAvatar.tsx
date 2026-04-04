@@ -17,6 +17,8 @@ interface WalkableAvatarProps {
   showCosmicEffects?: boolean
   disableCameraControl?: boolean // Nuevo prop para deshabilitar control de cámara
   initialPosition?: [number, number, number] // Posición inicial
+  abilityActive?: boolean // Estado de la habilidad especial
+  currentUfo?: number // Número de UFO actual
 }
 
 // Detectar tipo de avatar según el path
@@ -37,7 +39,9 @@ export default function WalkableAvatar({
   isDay = true,
   showCosmicEffects = true,  // Reactivado
   disableCameraControl = false, // Por defecto controla la cámara
-  initialPosition = [0, 0, 0] // Posición inicial por defecto
+  initialPosition = [0, 0, 0], // Posición inicial por defecto
+  abilityActive = false,
+  currentUfo = 1
 }: WalkableAvatarProps) {
   const group = useRef<THREE.Group>(null)
   const modelRef = useRef<THREE.Group>(null) // Ref para el modelo interno (solo para rotación)
@@ -83,6 +87,15 @@ export default function WalkableAvatar({
   useEffect(() => {
     raycaster.current.layers.set(0)
   }, [])
+  // ✨ Estados para efectos de UFO 3 (Vector)
+  const trailPoints = useRef<THREE.Vector3[]>([])
+  const [particles] = useState(() => {
+    const pts = new Float32Array(30 * 3) // 30 partículas
+    const vels = new Float32Array(30 * 3)
+    return { pts, vels }
+  })
+  const particlesRef = useRef<THREE.Points>(null)
+
   const idleTimer = useRef(0)  // Timer para detectar cuando está quieto
   const timeAccumulator = useRef(0)  // Para animaciones procedurales
   const avatarType = getAvatarType(modelPath)
@@ -427,8 +440,67 @@ export default function WalkableAvatar({
     // Aplicar movimiento
     if (isMoving) {
       reusableVectors.moveDirection.normalize()
-      velocity.current.copy(reusableVectors.moveDirection.multiplyScalar(moveSpeed * delta))
+      
+      // 🚀 UFO 3: Velocidad x2 cuando la habilidad está activa
+      const currentMoveSpeed = (currentUfo === 3 && abilityActive) ? moveSpeed * 2.5 : moveSpeed
+      
+      velocity.current.copy(reusableVectors.moveDirection.multiplyScalar(currentMoveSpeed * delta))
       group.current.position.add(velocity.current)
+    }
+
+    // ⚡ Actualizar Trail y Partículas para UFO 3 (Vector)
+    if (currentUfo === 3 && abilityActive) {
+      // Trail: Añadir posición actual
+      const pos = group.current.position.clone()
+      // Offset hacia atrás
+      reusableVectors.avatarForward.set(0, 0, -1.5).applyQuaternion(group.current.quaternion)
+      pos.add(reusableVectors.avatarForward)
+      
+      trailPoints.current.push(pos)
+      if (trailPoints.current.length > 20) trailPoints.current.shift()
+      
+      // Partículas
+      if (particlesRef.current) {
+        const positions = particlesRef.current.geometry.attributes.position.array as Float32Array
+        for (let i = 0; i < 30; i++) {
+          const idx = i * 3
+          // Si la partícula "murió" (opacidad 0 o muy lejos, o simplemente spawn nuevo)
+          if (Math.random() > 0.9) {
+            positions[idx] = group.current.position.x + (Math.random() - 0.5) * 0.5
+            positions[idx+1] = group.current.position.y + (Math.random() - 0.5) * 0.5
+            positions[idx+2] = group.current.position.z + (Math.random() - 0.5) * 0.5
+            
+            // Dirección opuesta al movimiento
+            particles.vels[idx] = -velocity.current.x * 2 + (Math.random() - 0.5) * 0.2
+            particles.vels[idx+1] = -velocity.current.y * 2 + (Math.random() - 0.5) * 0.2
+            particles.vels[idx+2] = -velocity.current.z * 2 + (Math.random() - 0.5) * 0.2
+          }
+          
+          positions[idx] += particles.vels[idx]
+          positions[idx+1] += particles.vels[idx+1]
+          positions[idx+2] += particles.vels[idx+2]
+        }
+        particlesRef.current.geometry.attributes.position.needsUpdate = true
+      }
+    } else {
+      if (trailPoints.current.length > 0) trailPoints.current.shift()
+    }
+    
+    // ✨ Actualizar GLOW (Emissive) dinámicamente
+    if (modelRef.current) {
+      modelRef.current.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mat = (child as THREE.Mesh).material as THREE.MeshStandardMaterial
+          if (mat && mat.emissive) {
+            if (abilityActive && (currentUfo === 3 || currentUfo === 2)) {
+              mat.emissive.set(currentUfo === 3 ? "#0066ff" : "#00ffff")
+              mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, 2, 0.1)
+            } else {
+              mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, 0, 0.1)
+            }
+          }
+        }
+      })
     }
     
     // Física de salto (solo para avatares terrestres)
@@ -719,6 +791,77 @@ export default function WalkableAvatar({
             
             {/* Luz lateral derecha */}
             <pointLight position={[4, 3, 0]} intensity={3.0} color="#ffe8d0" distance={10} />
+          </>
+        )}
+
+        {/* 🛡️ Aegis: EM Shield Mesh (UFO 2) */}
+        {currentUfo === 2 && abilityActive && (
+          <mesh scale={[1.8, 1.8, 1.8]}>
+            <sphereGeometry args={[1, 32, 32]} />
+            <meshStandardMaterial
+              color="#00ffff"
+              transparent
+              opacity={0.3}
+              emissive="#00ffff"
+              emissiveIntensity={2}
+              side={THREE.DoubleSide}
+              blending={THREE.AdditiveBlending}
+            />
+            {/* Capa externa con aura */}
+            <mesh scale={[1.05, 1.05, 1.05]}>
+              <sphereGeometry args={[1, 32, 32]} />
+              <meshStandardMaterial
+                color="#0088ff"
+                transparent
+                opacity={0.15}
+                emissive="#0088ff"
+                emissiveIntensity={1}
+                wireframe
+              />
+            </mesh>
+          </mesh>
+        )}
+
+        {/* ⚡ Vector: Comet Trail & Particles (UFO 3) */}
+        {currentUfo === 3 && (
+          <>
+            {/* Trail */}
+            {trailPoints.current.length > 1 && (
+              <primitive object={(() => {
+                const curve = new THREE.CatmullRomCurve3(trailPoints.current)
+                const geometry = new THREE.TubeGeometry(curve, 10, 0.15, 8, false)
+                const material = new THREE.MeshBasicMaterial({ 
+                  color: "#00ccff", 
+                  transparent: true, 
+                  opacity: abilityActive ? 0.6 : 0,
+                  blending: THREE.AdditiveBlending
+                })
+                const mesh = new THREE.Mesh(geometry, material)
+                // Cleanup geometry after render if possible or use a more efficient way
+                // For now this is fine for a few points
+                return mesh
+              })()} />
+            )}
+            
+            {/* Partículas */}
+            <points ref={particlesRef}>
+              <bufferGeometry>
+                <bufferAttribute
+                  attach="attributes-position"
+                  count={30}
+                  array={particles.pts}
+                  itemSize={3}
+                />
+              </bufferGeometry>
+              <pointsMaterial
+                size={0.2}
+                color="#88ccff"
+                transparent
+                opacity={abilityActive ? 0.8 : 0}
+                blending={THREE.AdditiveBlending}
+                sizeAttenuation
+              />
+            </points>
           </>
         )}
       </group>

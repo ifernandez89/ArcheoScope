@@ -5,7 +5,6 @@
       "static/chunks/react-three.js",
       "static/chunks/engines.js",
       "static/chunks/vendor.js",
-      "static/chunks/_app-pages-browser_types_missionState_ts-_app-pages-browser_types_player_ts.js",
       "static/chunks/_app-pages-browser_components_Scene3D_tsx-_app-pages-browser_utils_lunar-system_ts-_app-pages-df5be5.js"
     ]
   },
@@ -245,6 +244,12 @@
   "components\\ImmersiveScene.tsx -> ./Rock3DModel": {
     "id": "components\\ImmersiveScene.tsx -> ./Rock3DModel",
     "files": []
+  },
+  "components\\ImmersiveScene.tsx -> ./ShipAbilities": {
+    "id": "components\\ImmersiveScene.tsx -> ./ShipAbilities",
+    "files": [
+      "static/chunks/_app-pages-browser_components_ShipAbilities_tsx.js"
+    ]
   },
   "components\\ImmersiveScene.tsx -> ./SimpleMoon": {
     "id": "components\\ImmersiveScene.tsx -> ./SimpleMoon",

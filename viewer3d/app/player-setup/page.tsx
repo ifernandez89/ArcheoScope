@@ -26,45 +26,45 @@ const ShipPreview = dynamic(() => import('@/components/ShipPreview'), {
 })
 
 const ships = [
-  { 
-    id: 'ufo_1', 
-    name: '🌫️ Phantom', 
+  {
+    id: 'ufo_1',
+    name: '🌫️',
     model: '/ufo_1.glb',
     specialty: 'Cloaking / Invisibilidad',
     description: 'Especialidad: infiltración y espionaje',
     ability: 'Habilidad principal: camuflaje óptico',
     missions: 'Tipo de misiones: infiltración, espionaje, recuperar artefactos, entrar a ruinas antiguas'
   },
-  { 
-    id: 'ufo_2', 
-    name: '🛡️ Aegis', 
+  {
+    id: 'ufo_2',
+    name: '🛡️',
     model: '/ufo_2.glb',
     specialty: 'Defensa / Campo EM',
     description: 'Especialidad: protección y control físico',
     ability: 'Habilidad principal: campo electromagnético',
     missions: 'Tipo de misiones: atravesar campos de asteroides, rescates, misiones de escolta, limpiar escombros espaciales'
   },
-  { 
-    id: 'ufo_3', 
-    name: '⚡ Vector', 
+  {
+    id: 'ufo_3',
+    name: '⚡',
     model: '/ufo_3.glb',
     specialty: 'Velocidad / Teletransporte',
     description: 'Especialidad: movilidad extrema',
     ability: 'Habilidad principal: salto cuántico',
     missions: 'Tipo de misiones: carreras, persecuciones, exploración, entrega urgente'
   },
-  { 
-    id: 'ufo_4', 
-    name: '🔬 Oracle', 
+  {
+    id: 'ufo_4',
+    name: '🔬',
     model: '/ufo_4.glb',
     specialty: 'Ciencia / Escaneo',
     description: 'Especialidad: conocimiento y análisis',
     ability: 'Habilidad principal: escáner cuántico',
     missions: 'Tipo de misiones: exploración planetaria, arqueología alienígena, investigación, cartografía'
   },
-  { 
-    id: 'ufo_5', 
-    name: '💣 Titan', 
+  {
+    id: 'ufo_5',
+    name: '💣',
     model: '/ufo_5.glb',
     specialty: 'Fuerza Bruta / Impacto',
     description: 'Especialidad: potencia y resistencia',
@@ -96,19 +96,19 @@ export default function PlayerSetupPage() {
         createdAt: new Date().toISOString(),
         lastPlayed: new Date().toISOString()
       }
-      
+
       // Guardar estado completo en localStorage
       savePlayerState(playerState)
-      
+
       // También guardar referencias individuales para compatibilidad
       localStorage.setItem('playerName', playerName)
       localStorage.setItem('selectedShip', ships[selectedShip].model)
-      
+
       // Activar flag de sesión activa (solo para esta sesión)
       sessionStorage.setItem('game_session_active', 'true')
-      
+
       console.log('🎮 Jugador configurado:', playerState)
-      
+
       // Ir al juego
       router.push('/game')
     }
@@ -141,9 +141,9 @@ export default function PlayerSetupPage() {
         }}>
           ðŸŒ
         </h2>
-        
+
         {/* Visor con flechas de navegación */}
-        <div style={{ 
+        <div style={{
           flex: 1,
           position: 'relative',
           display: 'flex',
@@ -215,7 +215,7 @@ export default function PlayerSetupPage() {
             ›
           </button>
         </div>
-        
+
         <div style={{
           color: '#ffffff',
           fontSize: '28px',
@@ -308,7 +308,7 @@ export default function PlayerSetupPage() {
           }}>
             {ships[selectedShip].specialty}
           </div>
-          
+
           <div style={{
             color: '#ffffff',
             fontSize: '18px',
@@ -317,7 +317,7 @@ export default function PlayerSetupPage() {
           }}>
             {ships[selectedShip].description}
           </div>
-          
+
           <div style={{
             color: '#ffffff',
             fontSize: '18px',
@@ -328,7 +328,7 @@ export default function PlayerSetupPage() {
               {ships[selectedShip].ability}
             </span>
           </div>
-          
+
           <div style={{
             color: '#cccccc',
             fontSize: '16px',
@@ -374,7 +374,7 @@ export default function PlayerSetupPage() {
           >
             Volver
           </button>
-          
+
           <button
             onClick={handleStart}
             disabled={!playerName.trim()}

@@ -88,6 +88,7 @@ const DiscoveredItemInWorld = dynamic(() => import('./DiscoveredItemInWorld'), {
 const ItemCollectedMessage = dynamic(() => import('./ItemCollectedMessage'), { ssr: false })
 const InventoryItem = dynamic(() => import('./InventoryItem'), { ssr: false })
 const Compass = dynamic(() => import('./Compass'), { ssr: false })
+const ShipAbilities = dynamic(() => import('./ShipAbilities'), { ssr: false })
 const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
 const CelestialOverlayHUD = dynamic(() => import('./CelestialOverlay').then(m => ({ default: m.CelestialOverlayHUD })), { ssr: false })
 const BackgroundMountains = dynamic(() => import('./BackgroundMountains'), { ssr: false, loading: () => null })
@@ -122,7 +123,7 @@ const CALM_WEATHER: WeatherState = {
 export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false, spaceUfoNumber = 1 }: ImmersiveSceneProps) {
   // Cargar estado del jugador
   const playerState = loadPlayerState()
-  
+
   // Cargar modo inicial según última ubicación
   const [mode, setMode] = useState<'globe' | 'transition' | 'model' | 'exploration'>(() => {
     if (playerState?.lastLocation && playerState.lastLocation.mode === 'model') {
@@ -130,9 +131,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     }
     return 'globe'
   })
-  
+
   const [selectedModel, setSelectedModel] = useState<string>(getAssetPath('/moai.glb'))
-  
+
   // Cargar nave del jugador si existe, sino usar UFO 1 por defecto
   const [avatarModel, setAvatarModel] = useState<string>(() => {
     if (playerState?.ship?.model) {
@@ -140,7 +141,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     }
     return getAssetPath('/ufo_1.glb')
   })
-  
+
   const [currentUfo, setCurrentUfo] = useState<number>(() => {
     if (playerState?.ship?.id) {
       const ufoNum = parseInt(playerState.ship.id.split('_')[1])
@@ -148,7 +149,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     }
     return 1
   })
-  
+
   // Cargar última ubicación si existe
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lon: number } | null>(() => {
     if (playerState?.lastLocation) {
@@ -156,7 +157,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     }
     return null
   })
-  
+
   const [selectedSite, setSelectedSite] = useState<ArchaeologicalSite | null>(null)
   // Sitios donde ya se descubrió la estructura megalítica — persiste durante la sesión
   const discoveredSites = useRef<Set<string>>(new Set())
@@ -172,7 +173,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [weather, setWeather] = useState<WeatherState>(DEFAULT_STORM_WEATHER) // Estado del clima
   const [cameraRotation, setCameraRotation] = useState(0) // Rotación de la cámara para la brújula
   const [showSphinxDialogue, setShowSphinxDialogue] = useState(false) // Diálogo de la Esfinge en Giza
-  
+
   // Mostrar información del jugador al cargar
   useEffect(() => {
     if (playerState) {
@@ -182,7 +183,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     } else {
       console.log('⚠️ No hay estado de jugador guardado')
     }
-    
+
     // Aplicar volumen guardado desde gameSettings
     const settings = loadGameSettings()
     const audioGenerator = getProceduralAudio()
@@ -191,28 +192,28 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       console.log('🔊 Volumen aplicado al iniciar desde gameSettings:', settings.audio.masterVolume)
     }
   }, [])
-  
+
   // Escuchar cambios de volumen - polling eficiente con ref para evitar re-renders
   useEffect(() => {
     let lastVolume = -1
-    
+
     const applyVolume = (volume: number) => {
       // ProceduralAudio (clima, lluvia, viento)
       const audioGenerator = getProceduralAudio()
       audioGenerator.setMasterVolume(volume)
-      
+
       // ClimateAudio (usa ProceduralAudio internamente, pero forzamos)
       getClimateAudio().setMasterVolume(volume)
-      
+
       // HarmoniaMundi (música cósmica) - siempre guardar aunque no esté habilitado
       import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
         const harmonia = getHarmoniaMundi()
         harmonia.setMasterVolume(volume)
       })
-      
+
       console.log('🔊 Volumen aplicado a todos los sistemas:', volume)
     }
-    
+
     const checkVolumeChanges = () => {
       const settings = loadGameSettings()
       const savedVolume = settings?.audio?.masterVolume ?? 0.7
@@ -221,15 +222,15 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         applyVolume(savedVolume)
       }
     }
-    
+
     // Aplicar inmediatamente al montar
     checkVolumeChanges()
-    
+
     // Polling cada 1s (storage event no funciona en misma pestaña)
     const interval = setInterval(checkVolumeChanges, 1000)
     return () => clearInterval(interval)
   }, [])
-  
+
   // Secuencia de clima al mover un bloque de Puma Punku
   // Mantener ref sincronizado con el estado
   useEffect(() => {
@@ -240,13 +241,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     const siteId = selectedSiteRef.current?.id
     // Marcar este sitio como descubierto
     if (siteId) discoveredSites.current.add(siteId)
-    
+
     // Completar misión de Puma Punku para que la lógica secuencial funcione correctamente
     completeMission('pumaPunku', 'reveal_structure')
-    
+
     // Limpiar clima de Puma Punku
     clearWeather('pumaPunku')
-    
+
     // 1. Activar terremoto inmediatamente (coincide con inicio del fade-in de la estructura)
     setWeather(prev => ({ ...prev, earthquake: true }))
     // 2. Después de ~3.2s (duración del fade-in), calma total
@@ -261,41 +262,41 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     console.log('📦 Item recolectado!')
     setItemCollected(true)
     setShowCollectedMessage(true)
-    
+
     // Guardar en sessionStorage
     sessionStorage.setItem('item_magna_bowl_collected', 'true')
   }, [])
-  
+
   // Handler para recolectar el piramidón
   const handleCollectPyramidion = useCallback(() => {
     console.log('🔶 Piramidón recolectado!')
-    
+
     // Registrar en el sistema de misiones
     collectItem('giza', 'pyramidion')
-    
+
     // Guardar en sessionStorage que fue recolectado
     sessionStorage.setItem('item_pyramidion_collected', 'true')
-    
+
     // NO colocar en la punta todavía - solo marcar como recolectado
     setPyramidionCollected(true)
-    
+
     // Mostrar mensaje
     setShowCollectedMessage(true)
     setTimeout(() => setShowCollectedMessage(false), 3000)
-    
+
     // Desencadenar secuencia de misión completada
     console.log('🗿 Iniciando secuencia de misión completada...')
-    
+
     // 1. PRIMERO: Clima mejora inmediatamente
     clearWeather('giza')
     setWeather(CALM_WEATHER)
     console.log('☀️ Clima de Giza desbloqueado')
-    
+
     // 2. SEGUNDO: Mini terremoto (500ms después del clima)
     setTimeout(() => {
       setWeather(prev => ({ ...prev, earthquake: true }))
       console.log('🌍 Mini terremoto activado')
-      
+
       // 3. TERCERO: Terminar terremoto (3.2s)
       setTimeout(() => {
         setWeather(CALM_WEATHER)
@@ -303,13 +304,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       }, 3200)
     }, 500)
   }, [])
-  
+
   // Handler para cuando se mueve la momia
   const handleMummyMoved = useCallback(() => {
     console.log('🏺 Momia movida! Revelando escarabajo...')
     setScarabDiscovered(true)
   }, [])
-  
+
   // Handler para recolectar el escarabajo
   const handleCollectScarab = useCallback(() => {
     // Verificar si se completaron las 5 misiones previas
@@ -322,35 +323,35 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       setScarabCollected(true)
       setScarabInInventory(true)
       setScarabOnGround(false)
-      
+
       setShowCollectedMessage(true)
       setTimeout(() => setShowCollectedMessage(false), 3000)
     } else {
       console.log('🪲 Escarabajo recolectado! (ROBADO)')
-      
+
       // Registrar en el sistema de misiones
       collectItem('giza', 'scarab')
-      
+
       // ❌ MARCAR MISIÓN COMO FALLIDA - Robar el escarabajo es un acto de profanación
       failMission('giza', 'return_pyramidion')
       console.log('❌ Misión "Devolver el Piramidión" FALLIDA - El jugador robó el escarabajo sagrado')
-      
+
       // Guardar en sessionStorage
       sessionStorage.setItem('item_scarab_collected', 'true')
-      
+
       // Marcar como recolectado
       setScarabCollected(true)
-      
+
       // Mostrar mensaje
       setShowCollectedMessage(true)
       setTimeout(() => setShowCollectedMessage(false), 3000)
-      
+
       // INICIAR INUNDACIÓN como castigo
       console.log('🌊 Iniciando inundación de Giza como castigo divino...')
       setWeather(prev => ({ ...prev, volcanicEruption: false, storm: true, rainHeavy: true })) // Forzar tormenta para inundación
     }
   }, [])
-  
+
   // Handler para recolectar la calavera de cristal
   const handleCollectSkull = useCallback(() => {
     const ms = loadMissionState()
@@ -361,7 +362,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       collectItem('easterIsland', 'crystal_skull')
       setSkullInInventory(true)
       setSkullOnGround(false)
-      
+
       setShowCollectedMessage(true)
       setTimeout(() => setShowCollectedMessage(false), 3000)
     } else {
@@ -369,26 +370,26 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       setWeather(prev => ({ ...prev, volcanicEruption: true }))
     }
   }, [])
-  
+
   // Handler para click en Quetzalcoatl
   const handleQuetzalcoatlClick = useCallback(() => {
     console.log('🐍 Quetzalcoatl clickeado!')
     setShowQuetzalcoatlDialogue(true)
   }, [])
-  
+
   // Handler cuando Quetzalcoatl pide la semilla
   const handleRequestCornSeed = useCallback(() => {
     console.log('🌽 Quetzalcoatl pide plantar la semilla!')
     setCornOnGround(true) // Aparece en el piso
   }, [])
-  
+
   // Ref para saber si ya se mostró el mensaje de recolección del maíz
   const cornMessageShownRef = useRef(false)
-  
+
   // Handler para recolectar la semilla de maíz del piso
   const handleCollectCornSeed = useCallback(() => {
     console.log('🌽 Semilla de maíz recogida del piso!')
-    
+
     // Registrar en el sistema de misiones (solo la primera vez)
     if (!cornMessageShownRef.current) {
       collectItem('teotihuacan', 'corn_seed')
@@ -397,12 +398,12 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       setTimeout(() => setShowCollectedMessage(false), 3000)
       cornMessageShownRef.current = true
     }
-    
+
     // Mover al inventario
     setCornOnGround(false)
     setCornInInventory(true)
   }, [])
-  
+
   const [solarDirection, setSolarDirection] = useState({ x: 0, y: 1, z: 0 }) // DirecciÃ³n del sol como objeto plano
   const [solarState, setSolarState] = useState({
     altitude: 0,
@@ -417,7 +418,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     eclipse: null as any,
     simulatedTime: new Date()
   })
-  
+
   // Estado del terreno mejorado - DESHABILITADO (terreno procedural por defecto)
   const [enhancedTerrainEnabled] = useState(false)
   const [terrainExaggeration] = useState(1.5)
@@ -432,7 +433,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [itemDiscovered, setItemDiscovered] = useState(false)
   const [itemCollected, setItemCollected] = useState(false)
   const [showCollectedMessage, setShowCollectedMessage] = useState(false)
-  
+
   // 🗿 Estado del diálogo de Viracocha
   const [showViracochaDialogue, setShowViracochaDialogue] = useState(false)
   const [magnaBowlCollected, setMagnaBowlCollected] = useState(false)
@@ -442,12 +443,42 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [scarabCollected, setScarabCollected] = useState(false) // Si se recogió el escarabajo (para erupción/lógica)
   const [scarabInInventory, setScarabInInventory] = useState(false) // Si está físicamente en el inventario
   const [scarabOnGround, setScarabOnGround] = useState(false) // Para soltar/recoger
-  const [scarabDropPosition, setScarabDropPosition] = useState<{x: number, z: number} | null>(null)
-  
+  const [scarabDropPosition, setScarabDropPosition] = useState<{ x: number, z: number } | null>(null)
+
   const [skullInInventory, setSkullInInventory] = useState(false)
   const [skullOnGround, setSkullOnGround] = useState(false)
-  const [skullDropPosition, setSkullDropPosition] = useState<{x: number, z: number} | null>(null)
-  
+  const [skullDropPosition, setSkullDropPosition] = useState<{ x: number, z: number } | null>(null)
+
+  // 🛸 Estado de habilidades de nave
+  const [abilityActive, setAbilityActive] = useState(false)
+  const [abilityCooldown, setAbilityCooldown] = useState(false)
+  const [isShaking, setIsShaking] = useState(false)
+
+  const toggleAbility = useCallback(() => {
+    if (abilityCooldown) return
+
+    setAbilityActive(prev => {
+      const newState = !prev
+      
+      // Lógica especial para UFO 3 (Boost con duración y cooldown)
+      if (currentUfo === 3 && newState) {
+        // Duración: 1.8 segundos
+        setTimeout(() => {
+          setAbilityActive(false)
+          // Empezar cooldown: 4 segundos
+          setAbilityCooldown(true)
+          setTimeout(() => setAbilityCooldown(false), 4000)
+        }, 1800)
+      }
+      
+      return newState
+    })
+
+    // Efecto de sacudida universal al activar cualquier habilidad
+    setIsShaking(true)
+    setTimeout(() => setIsShaking(false), 500)
+  }, [currentUfo, abilityCooldown])
+
   // 🐍 Estado del diálogo de Quetzalcoatl
   const [showQuetzalcoatlDialogue, setShowQuetzalcoatlDialogue] = useState(false)
   const [showQuetzalcoatl, setShowQuetzalcoatl] = useState(false)
@@ -516,7 +547,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   }, [])
   const [cornInInventory, setCornInInventory] = useState(false) // Maíz en inventario (rotando)
   const [cornOnGround, setCornOnGround] = useState(false) // Maíz en el piso (visible en escena)
-  const [cornDropPosition, setCornDropPosition] = useState<{x: number, z: number} | null>(null) // Posición donde cayó el maíz
+  const [cornDropPosition, setCornDropPosition] = useState<{ x: number, z: number } | null>(null) // Posición donde cayó el maíz
   const [cornPlanted, setCornPlanted] = useState(false) // Si el maíz fue plantado en la tierra
 
   // Handler para soltar el maíz del inventario
@@ -530,14 +561,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     if (!pos) return
     const dropX = pos.x
     const dropZ = pos.z
-    
+
     const soilCenterX = 60
     const soilCenterZ = 0
     const soilSize = 8
-    
-    const isOnSoil = Math.abs(dropX - soilCenterX) <= soilSize / 2 && 
-                     Math.abs(dropZ - soilCenterZ) <= soilSize / 2
-    
+
+    const isOnSoil = Math.abs(dropX - soilCenterX) <= soilSize / 2 &&
+      Math.abs(dropZ - soilCenterZ) <= soilSize / 2
+
     if (isOnSoil && !cornPlanted) {
       console.log('🌱 ¡Maíz plantado en la tierra!')
       setCornPlanted(true)
@@ -589,13 +620,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         setMagnaBowlCollected(collected)
       }
     }
-    
+
     // Verificar al montar y cada segundo
     checkMagnaBowl()
     const interval = setInterval(checkMagnaBowl, 5000) // Reducido de 1000ms a 5000ms
     return () => clearInterval(interval)
   }, [])
-  
+
   // Verificar si el Piramidón fue recolectado Y entregado a la Esfinge
   useEffect(() => {
     const checkPyramidion = () => {
@@ -603,33 +634,33 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         // Verificar desde missionState (fuente de verdad)
         const missionState = loadMissionState()
         const collectedFromMissions = missionState.sites.giza.itemsCollected.includes('pyramidion')
-        
+
         // También verificar sessionStorage para compatibilidad
         const collectedFromSession = sessionStorage.getItem('item_pyramidion_collected') === 'true'
-        
+
         const collected = collectedFromMissions || collectedFromSession
-        
+
         // Verificar si fue entregado a la Esfinge (desde missionState)
         const delivered = hasSphinxReceivedPyramidion()
-        
+
         // Solo marcar como recolectado si REALMENTE fue recolectado
         if (collected) {
           setPyramidionCollected(true)
         }
-        
+
         // Mostrar en la punta solo si fue entregado a la Esfinge
         if (delivered) {
           setPyramidionOnTop(true)
         }
       }
     }
-    
+
     // Verificar al montar y cada 5 segundos (no necesita ser frecuente)
     checkPyramidion()
     const interval = setInterval(checkPyramidion, 5000)
     return () => clearInterval(interval)
   }, [])
-  
+
 
   // 🎵 Habilitar audio en primera interacción + HarmoniaMundi permanente
   useEffect(() => {
@@ -641,18 +672,18 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         await audioGenerator.enable()
         setAudioEnabled(true)
         loggers.world.info('🔊 Audio habilitado')
-        
+
         // 🎼 Habilitar Harmonia Mundi PERMANENTEMENTE
         const { getHarmoniaMundi } = await import('@/systems/HarmoniaMundiSystem')
         const harmonia = getHarmoniaMundi()
         await harmonia.enable()
         loggers.world.info('🎼 Harmonia Mundi habilitado permanentemente')
-        
+
         // Aplicar volumen guardado
         const settings = loadGameSettings()
         const vol = settings?.audio?.masterVolume ?? 0.7
         harmonia.setMasterVolume(vol)
-        
+
         // Activar capas ya desbloqueadas por misiones previas
         const { loadMissionState: loadMS } = await import('@/types/missionState')
         const ms = loadMS()
@@ -661,7 +692,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           harmonia.unlockMissionLayer(`earth_mission_${i}`)
         }
         loggers.world.info(`🎵 ${totalCompleted} capas de misión restauradas`)
-        
+
         window.removeEventListener('click', enableAudioOnInteraction)
         window.removeEventListener('keydown', enableAudioOnInteraction)
       } catch (error) {
@@ -690,13 +721,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     if (mode === 'globe') {
       WorldCore.setActiveWorld('globe', undefined, { type: 'globe' })
     } else if (mode === 'model') {
-      WorldCore.setActiveWorld('terrain', undefined, { 
+      WorldCore.setActiveWorld('terrain', undefined, {
         type: 'terrain',
         location: selectedLocation || undefined
       })
     }
     // mode === 'transition' no registra mundo (estado intermedio)
-    
+
     // Cleanup al desmontar el componente completo
     return () => {
       loggers.world.info('🗑️ ImmersiveScene desmontado, limpiando mundos...')
@@ -745,7 +776,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   // Manejar click en sitio arqueolÃ³gico
   const handleSiteClick = async (site: ArchaeologicalSite) => {
     loggers.world.info(`Sitio seleccionado: ${site.name}`)
-    
+
     // Actualizar contexto del avatar
     AvatarEngine.setContext({
       siteName: site.name,
@@ -753,14 +784,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       period: site.period,
       location: { lat: site.lat, lon: site.lon }
     })
-    
+
     setSelectedLocation({ lat: site.lat, lon: site.lon })
     setSelectedModel(site.model)
     setSelectedSite(site)
     setMode('transition')
-    
+
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
     // Determinar clima: si hay 5+ misiones completas → siempre buen clima en todo el planeta
     const missionState = loadMissionState()
     const allMissionsComplete = missionState.stats.totalMissionsCompleted >= 5
@@ -768,25 +799,41 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     const weatherCleared = allMissionsComplete || (siteName ? isWeatherCleared(siteName) : discoveredSites.current.has(site.id))
     setWeather(weatherCleared ? CALM_WEATHER : DEFAULT_STORM_WEATHER)
     setMode('model')
-    
+
     loggers.world.info('Teletransporte a sitio arqueolÃ³gico completado')
   }
+
+  // 🖱️ Evento de teclado para habilidades de nave
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignorar si se está escribiendo en un input o si no estamos en modo modelo
+      if (mode !== 'model' || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+
+      if (e.code === 'Space' || e.key.toLowerCase() === 'e') {
+        e.preventDefault()
+        toggleAbility()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [mode, toggleAbility])
 
   // Manejar click en ubicaciÃ³n del globo
   const handleLocationClick = async (lat: number, lon: number) => {
     loggers.world.info(`Iniciando teletransporte a: lat=${lat.toFixed(4)}, lon=${lon.toFixed(4)}`)
-    
+
     setSelectedLocation({ lat, lon })
     setSelectedModel(getAssetPath('/moai.glb'))
     setSelectedSite(null)
     setMode('transition')
-    
+
     // Guardar ubicación en el estado del jugador
     updatePlayerLocation(lat, lon, 'model')
-    
+
     // TransiciÃ³n cinematogrÃ¡fica de 2 segundos
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
     // Determinar clima: si hay 5+ misiones completas → siempre buen clima
     const ms = loadMissionState()
     const allComplete = ms.stats.totalMissionsCompleted >= 5
@@ -794,7 +841,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     const weatherCleared = allComplete || (siteName ? isWeatherCleared(siteName) : false)
     setWeather(weatherCleared ? CALM_WEATHER : DEFAULT_STORM_WEATHER)
     setMode('model')
-    
+
     loggers.world.info('Teletransporte completado', { lat, lon })
   }
 
@@ -804,10 +851,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     getClimateAudio().updateWeather({ rain: 0, wind: 0, tornado: 0, snow: 0, thunder: false })
     setWeather(CALM_WEATHER)
     setMode('transition')
-    
+
     // Guardar que volvió al globo
     updatePlayerLocation(0, 0, 'globe')
-    
+
     await new Promise(resolve => setTimeout(resolve, 1500))
     setMode('globe')
     setSelectedLocation(null)
@@ -817,17 +864,17 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   // 🌋 Erupción volcánica: el usuario pierde - reset misiones y redirige al menú
   const handleEruptionEnd = useCallback(() => {
     console.log('🌋 ERUPCIÓN VOLCÁNICA - El usuario pierde. Reseteando misiones...')
-    
+
     // Resetear todas las misiones
     resetMissionState()
-    
+
     // Limpiar sesión activa → el botón "Continuar" no aparecerá en el menú
     sessionStorage.removeItem('game_session_active')
     sessionStorage.clear()
-    
+
     // Silenciar audio
     getClimateAudio().updateWeather({ rain: 0, wind: 0, tornado: 0, snow: 0, thunder: false })
-    
+
     // Redirigir al menú después de un breve fade
     setTimeout(() => {
       window.location.href = window.location.origin + (window.location.pathname.includes('ArcheoScope') ? '/ArcheoScope/menu' : '/menu')
@@ -848,7 +895,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     console.log('🛸 Cambiando UFO:', ufoNumber, 'Path:', newPath)
     setCurrentUfo(ufoNumber)
     setAvatarModel(newPath)
-    
+
     // Actualizar estado del jugador si existe
     const currentState = loadPlayerState()
     if (currentState) {
@@ -860,7 +907,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         { id: 'ufo_4', name: '🔬 Oracle', model: '/ufo_4.glb', specialty: 'Ciencia / Escaneo', description: 'Especialidad: conocimiento y análisis', ability: 'Habilidad principal: escáner cuántico', missions: 'Tipo de misiones: exploración planetaria, arqueología alienígena, investigación, cartografía' },
         { id: 'ufo_5', name: '💣 Titan', model: '/ufo_5.glb', specialty: 'Fuerza Bruta / Impacto', description: 'Especialidad: potencia y resistencia', ability: 'Habilidad principal: masa + potencia', missions: 'Tipo de misiones: combate, minería pesada, abrir rutas, destruir obstáculos' }
       ]
-      
+
       const newShip = ships[ufoNumber - 1]
       if (newShip) {
         currentState.ship = newShip
@@ -873,14 +920,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       {/* Input de coordenadas */}
-      <CoordinateInput 
+      <CoordinateInput
         onCoordinateSubmit={handleLocationClick}
         currentLocation={selectedLocation}
       />
 
       {/* InformaciÃ³n de ubicaciÃ³n (desplegable) */}
       {mode === 'model' && showLocationInfo && (
-        <LocationInfo 
+        <LocationInfo
           location={selectedLocation}
           site={selectedSite}
         />
@@ -927,10 +974,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             fontWeight: 'bold',
             textShadow: '0 0 20px rgba(102, 126, 234, 0.8)'
           }}>
-            {selectedSite 
-              ? `Viajando a ${selectedSite.name}...` 
-              : selectedLocation 
-                ? 'Teletransportando...' 
+            {selectedSite
+              ? `Viajando a ${selectedSite.name}...`
+              : selectedLocation
+                ? 'Teletransportando...'
                 : 'Regresando al globo...'}
           </div>
           {selectedLocation && (
@@ -988,7 +1035,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             ðŸŒ Volver al Globo
           </button>
 
-                    {/* BotÃ³n para mostrar/ocultar informaciÃ³n de ubicaciÃ³n */}
+          {/* BotÃ³n para mostrar/ocultar informaciÃ³n de ubicaciÃ³n */}
           <button
             onClick={() => setShowLocationInfo(!showLocationInfo)}
             style={{
@@ -1007,13 +1054,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
               boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = showLocationInfo 
-                ? 'rgba(102, 126, 234, 1)' 
+              e.currentTarget.style.background = showLocationInfo
+                ? 'rgba(102, 126, 234, 1)'
                 : 'rgba(75, 85, 99, 0.9)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = showLocationInfo 
-                ? 'rgba(102, 126, 234, 0.9)' 
+              e.currentTarget.style.background = showLocationInfo
+                ? 'rgba(102, 126, 234, 0.9)'
                 : 'rgba(75, 85, 99, 0.7)'
             }}
           >
@@ -1031,7 +1078,108 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           <Compass rotation={cameraRotation} solarAzimuth={solarState.azimuth} />
         </>
       )}
-      
+
+      {/* 🛸 Botón de Habilidad Especial */}
+      {mode === 'model' && (
+        <div style={{
+          position: 'fixed',
+          bottom: '100px',
+          left: '20px',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: '5px'
+        }}>
+          <button
+            onClick={toggleAbility}
+            disabled={abilityCooldown}
+            style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              background: abilityCooldown 
+                ? 'rgba(50, 50, 50, 0.8)'
+                : abilityActive 
+                  ? 'linear-gradient(135deg, #4a9eff, #667eea)' 
+                  : 'rgba(30, 41, 59, 0.8)',
+              border: `3px solid ${abilityCooldown ? '#333' : abilityActive ? '#fff' : '#4a9eff'}`,
+              color: abilityCooldown ? '#555' : 'white',
+              fontSize: '28px',
+              cursor: abilityCooldown ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: abilityActive ? '0 0 25px #4a9eff' : '0 4px 10px rgba(0,0,0,0.5)',
+              transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              padding: 0,
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+            title={abilityCooldown ? "Enfriamiento..." : "Activar Habilidad Especial (Espacio / E)"}
+          >
+            {currentUfo === 1 && '🌫️'}
+            {currentUfo === 2 && '🛡️'}
+            {currentUfo === 3 && '⚡'}
+            {currentUfo === 4 && '🔬'}
+            {currentUfo === 5 && '💣'}
+            {abilityCooldown && (
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'rgba(0,0,0,0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '12px'
+              }}>
+                ⏳
+              </div>
+            )}
+          </button>
+          <div style={{
+            color: 'white',
+            fontSize: '10px',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            fontWeight: 'bold',
+            textShadow: '0 1px 3px rgba(0,0,0,0.8)'
+          }}>
+            [ Espacio ]
+          </div>
+        </div>
+      )}
+
+      {/* 🎭 Efectos de Habilidades */}
+      <ShipAbilities
+        ufoNumber={currentUfo}
+        active={abilityActive}
+        onActionComplete={currentUfo >= 4 ? () => setAbilityActive(false) : undefined}
+      />
+
+      {/* Estilo para Screen Shake Universal */}
+      <style jsx global>{`
+        .screen-shake-active {
+          animation: screenShake 0.4s ease-in-out infinite;
+        }
+
+        @keyframes screenShake {
+          0%, 100% { transform: translate(0, 0); }
+          20% { transform: translate(-4px, 2px); }
+          40% { transform: translate(4px, -2px); }
+          60% { transform: translate(-3px, 1px); }
+          80% { transform: translate(3px, -1px); }
+        }
+      `}</style>
+
+      {/* Contenedor Principal con Sacudida */}
+      <div className={isShaking ? 'screen-shake-active' : ''} style={{
+        position: 'fixed',
+        inset: 0,
+        pointerEvents: 'none',
+        zIndex: 998
+      }} />
+
       {/* Inventario - Items recolectados apilados */}
       <div style={{
         position: 'fixed',
@@ -1067,7 +1215,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
 
       {/* Escena 3D */}
       {mode === 'globe' ? (
-        <GlobeScene 
+        <GlobeScene
           onLocationClick={handleLocationClick}
           onSiteClick={handleSiteClick}
           markerPosition={selectedLocation}
@@ -1075,7 +1223,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           spaceUfoNumber={spaceUfoNumber}
         />
       ) : mode === 'model' ? (
-        <ModelScene 
+        <ModelScene
+          abilityActive={abilityActive}
+          currentUfo={currentUfo}
           modelPath={selectedModel}
           avatarModel={avatarModel}
           onModelLoaded={onModelLoaded}
@@ -1106,9 +1256,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
               })
             } else {
               // Fallback al formato anterior
-              setSolarState({ 
-                altitude, 
-                azimuth, 
+              setSolarState({
+                altitude,
+                azimuth,
                 declination,
                 season: 'spring',
                 dayOfYear: 1,
@@ -1155,11 +1305,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onMerkabaActivate={() => {
             console.log('✡️ Merkaba activado! 5ta mision - ¡Sincronización Planetaria Completada!')
             completeMission('easterIsland', 'activate_merkaba')
-            
+
             // Limpiar clima de TODOS los sitios del planeta permanentemente
             const sites: (keyof MissionState['sites'])[] = ['pumaPunku', 'giza', 'easterIsland', 'teotihuacan', 'veracruz', 'angkorWat']
             sites.forEach(s => clearWeather(s))
-            
+
             setWeather(CALM_WEATHER)
             console.log('🌍 Clima global estabilizado. La esfera energética rosa ha aparecido.')
           }}
@@ -1200,7 +1350,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       {/* {mode === 'model' && (
         <WeatherControl onWeatherChange={setWeather} initialWeather={weather} />
       )} */}
-      
+
       {/* Diálogo de la Esfinge - FUERA del Canvas */}
       {showSphinxDialogue && (
         <SphinxInteractiveDialogue
@@ -1210,20 +1360,20 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             setShowSphinxDialogue(false)
             // Registrar interacción con la Esfinge
             interactWithNPC('giza', 'sphinx')
-            
+
             // Si tiene el piramidón y aún no se lo ha dado, marcarlo como entregado
             if (pyramidionCollected && !hasSphinxReceivedPyramidion()) {
               sphinxReceivePyramidion()
               console.log('🗿 La Esfinge agradece por devolver el piramidón')
-              
+
               // ✅ MARCAR MISIÓN COMO COMPLETADA
               completeMission('giza', 'return_pyramidion')
               console.log('✅ Misión "Devolver el Piramidión" COMPLETADA')
-              
+
               // ☀️ LIMPIAR EL CLIMA - De malo a bueno
               clearWeather('giza')
               console.log('☀️ Clima de Giza limpiado - El sol brilla de nuevo')
-              
+
               // Activar el estado que hace aparecer el piramidón en la punta
               setPyramidionOnTop(true)
               console.log('🔶 setPyramidionOnTop(true) - Piramidón debe aparecer en la punta')
@@ -1234,7 +1384,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           }}
         />
       )}
-      
+
       {/* Diálogo de Quetzalcoatl - FUERA del Canvas */}
       {showQuetzalcoatlDialogue && (
         <QuetzalcoatlDialogue
@@ -1297,13 +1447,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
 
 
 // Escena del globo
-function GlobeScene({ 
+function GlobeScene({
   onLocationClick,
   onSiteClick,
   markerPosition,
   spaceUfoActive = false,
   spaceUfoNumber = 1
-}: { 
+}: {
   onLocationClick: (lat: number, lon: number) => void
   onSiteClick: (site: ArchaeologicalSite) => void
   markerPosition?: { lat: number, lon: number } | null
@@ -1315,42 +1465,42 @@ function GlobeScene({
       <CelestialOverlayHUD />
       <Canvas
         camera={{ position: [0, 0, 15], fov: 50 }}
-        style={{ 
+        style={{
           background: '#000',
           cursor: spaceUfoActive ? 'none' : 'default' // Ocultar cursor cuando Avenger estÃ¡ activo
         }}
       >
-      {/* ðŸŽ® SISTEMAS DE PERFORMANCE - ÃšNICO useFrame */}
-      <EngineIntegration />
-      
-      <PerspectiveCamera makeDefault position={[0, 0, 15]} fov={50} />
-      <OrbitControls
-        enableDamping={false}
-        minDistance={8}
-        maxDistance={8000} // Neptuno está a ~6010 unidades (30.05 AU × 200)
-        autoRotate={false}
-      />
-      
-      {/* Sistema de Zoom Narrativo */}
-      <NarrativeZoomContent 
-        onLocationClick={onLocationClick}
-        markerPosition={markerPosition}
-      />
-      
-      {/* Avenger Espacial controlado por mouse */}
-      {spaceUfoActive && (
-        <SpaceUfo key={spaceUfoNumber} ufoNumber={spaceUfoNumber} />
-      )}
-      
-      {/* Marcadores de sitios arqueolÃ³gicos - Temporalmente deshabilitados */}
-      {/* <SiteMarkers onSiteClick={onSiteClick} /> */}
+        {/* ðŸŽ® SISTEMAS DE PERFORMANCE - ÃšNICO useFrame */}
+        <EngineIntegration />
+
+        <PerspectiveCamera makeDefault position={[0, 0, 15]} fov={50} />
+        <OrbitControls
+          enableDamping={false}
+          minDistance={8}
+          maxDistance={8000} // Neptuno está a ~6010 unidades (30.05 AU × 200)
+          autoRotate={false}
+        />
+
+        {/* Sistema de Zoom Narrativo */}
+        <NarrativeZoomContent
+          onLocationClick={onLocationClick}
+          markerPosition={markerPosition}
+        />
+
+        {/* Avenger Espacial controlado por mouse */}
+        {spaceUfoActive && (
+          <SpaceUfo key={spaceUfoNumber} ufoNumber={spaceUfoNumber} />
+        )}
+
+        {/* Marcadores de sitios arqueolÃ³gicos - Temporalmente deshabilitados */}
+        {/* <SiteMarkers onSiteClick={onSiteClick} /> */}
       </Canvas>
     </div>
   )
 }
 
 // Contenido que responde al zoom narrativo - AHORA CON SISTEMA REALISTA
-function NarrativeZoomContent({ 
+function NarrativeZoomContent({
   onLocationClick,
   markerPosition
 }: {
@@ -1361,12 +1511,12 @@ function NarrativeZoomContent({
     <>
       {/* Fondo de la VÃ­a LÃ¡ctea - Esfera envolvente con textura */}
       <MilkyWayBackground />
-      
+
       {/* Estrellas procedurales */}
       <Stars />
-      
+
       {/* Sistema Solar Realista con posiciones astronÃ³micas reales */}
-      <RealisticSolarSystem 
+      <RealisticSolarSystem
         onLocationClick={onLocationClick}
         markerPosition={markerPosition}
       />
@@ -1375,10 +1525,10 @@ function NarrativeZoomContent({
 }
 
 // Escena del modelo con zoom cinematogrÃ¡fico
-function ModelScene({ 
-  modelPath, 
+function ModelScene({
+  modelPath,
   avatarModel,
-  onModelLoaded, 
+  onModelLoaded,
   onCameraReady,
   movementMode,
   location,
@@ -1438,8 +1588,12 @@ function ModelScene({
   jadeMaskVisible,
   jadeMaskInInventory,
   onJadeMaskCollect,
-  onMerkabaActivate
-}: { 
+  onMerkabaActivate,
+  abilityActive,
+  currentUfo
+}: {
+  abilityActive: boolean
+  currentUfo: number
   modelPath: string
   avatarModel: string
   onModelLoaded?: (model: THREE.Object3D) => void
@@ -1451,9 +1605,9 @@ function ModelScene({
   isDay: boolean
   onDayNightChange: (isDay: boolean) => void
   solarDirection: { x: number, y: number, z: number }
-  solarState: { 
-    altitude: number, 
-    azimuth: number, 
+  solarState: {
+    altitude: number,
+    azimuth: number,
     declination: number,
     season?: 'spring' | 'summer' | 'autumn' | 'winter',
     dayOfYear?: number,
@@ -1494,18 +1648,18 @@ function ModelScene({
   onCornCollect?: () => void
   cornInInventory?: boolean
   cornOnGround?: boolean
-  cornDropPosition?: {x: number, z: number} | null
+  cornDropPosition?: { x: number, z: number } | null
   cornPlanted?: boolean
   mainAvatarPositionRef?: React.RefObject<THREE.Vector3>
   onEruptionEnd?: () => void
   skullInInventory?: boolean
   showSkull?: boolean
-  skullDropPosition?: {x: number, z: number} | null
+  skullDropPosition?: { x: number, z: number } | null
   onSkullCollect?: () => void
   onTriggerEruption?: () => void
   scarabInInventory?: boolean
   showScarab?: boolean
-  scarabDropPosition?: {x: number, z: number} | null
+  scarabDropPosition?: { x: number, z: number } | null
   onOlmecClick?: () => void
   caveQuestActive?: boolean
   onEnterCave?: () => void
@@ -1519,24 +1673,24 @@ function ModelScene({
   const modelRef = useRef<THREE.Group>(null)
   const [obstacles, setObstacles] = useState<THREE.Object3D[]>([])
   const avatarPositionRef = useRef(new THREE.Vector3())
-  
+
   // La posición del avatar se sincroniza en onPositionChange de WalkableAvatar
-  
+
   // Detectar bioma basado en ubicaciÃ³n
   const biome = useMemo(() => {
     if (!location) return { type: 'default' as const, name: 'GenÃ©rico', description: '', temperature: 20, humidity: 50 }
     return detectBiome(location.lat, location.lon)
   }, [location])
-  
+
   const isIceBiome = biome.type === 'ice'
-  
+
   // Detectar si estamos en el Mictlán (inframundo) - escena vacía
   const isMictlan = location && Math.abs(location.lat - 0.0001) < 0.01 && Math.abs(location.lon - 0.0001) < 0.01
-  
+
   // Colores dinÃ¡micos segÃºn bioma
   const skyColor = useMemo(() => getSkyColorForBiome(biome.type, isDay), [biome.type, isDay])
   const fogColor = useMemo(() => getFogColorForBiome(biome.type), [biome.type])
-  
+
   // Log del bioma detectado
   useEffect(() => {
     if (location) {
@@ -1546,324 +1700,326 @@ function ModelScene({
       })
     }
   }, [biome, location])
-  
+
   // Actualizar obstÃ¡culos cuando el modelo cargue
   useEffect(() => {
     if (modelRef.current) {
       setObstacles([modelRef.current])
     }
   }, [modelRef.current])
-  
+
   return (
     <>
-    <ObjectSelectionProvider onBlockMoved={onBlockMoved}>
-    <Canvas
-      shadows
-      camera={{ position: [8, 4, 8], fov: 60 }}
-      gl={{ 
-        antialias: true,
-        alpha: false,
-        powerPreference: 'high-performance',
-        toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1.2
-      }}
-    >
-      {/* 🎮 SISTEMAS DE PERFORMANCE - ÚNICO useFrame */}
-      <EngineIntegration />
-      
-      {/* 🧭 Rastreador de rotación de cámara para la brújula */}
-      {onCameraRotationChange && <CompassTracker onRotationChange={onCameraRotationChange} />}
-      
-      <PerspectiveCamera makeDefault position={[8, 4, 8]} fov={60} />
-      
-      {/* Controles segÃºn modo */}
-      {movementMode === 'orbit' ? (
-        <OrbitControls
-          enableDamping={false}
-          minDistance={3}
-          maxDistance={30}
-          minPolarAngle={Math.PI / 8}
-          maxPolarAngle={Math.PI / 2.2}
-          enablePan={true}
-          panSpeed={0.8}
-          rotateSpeed={0.6}
-          zoomSpeed={0.8}
-          target={[0, 1, 0]}
-        />
-      ) : null}
-      {/* En modo avatar, la cÃ¡mara es controlada por WalkableAvatar */}
-
-      {/* Sistema astronómico-geométrico vivo - SOLO en modo órbita */}
-      {movementMode === 'orbit' && (
-        <AstronomicalSystem
-          location={location}
-          enabled={true}
-          showGeometry={showGeometryField}
-          onDayNightChange={onDayNightChange}
-          onSolarUpdate={onSolarUpdate}
-          solarState={solarState}
-          isDay={isDay}
-          showTrajectory={true}
-        />
-      )}
-      
-      {/* Luna mejorada con fases y eclipses - SOLO en modo órbita */}
-      {movementMode === 'orbit' && solarState.lunarState && (
-        <EnhancedMoon
-          lunarState={solarState.lunarState}
-          eclipse={solarState.eclipse}
-          solarDirection={solarDirection}
-          visible={true}
-        />
-      )}
-
-      {/* IluminaciÃ³n cinematogrÃ¡fica - adaptada al bioma */}
-      <LightingSystem
-        biomeType={biome.type}
-        solarDirection={solarDirection}
-        enableShadows={true}
-        sunIntensity={2.5}
-        hemisphereIntensity={1.2}
-      />
-
-      {/* Sistema de entorno (cielo, niebla, agua) */}
-      <EnvironmentSystem
-        isDay={isMictlan ? false : isDay}
-        skyColor={isMictlan ? '#050505' : skyColor}
-        fogColor={isMictlan ? '#0a0505' : fogColor}
-        stormDarkness={
-          isMictlan ? 0.95 :
-          weather.storm || weather.tornado ? 0.7 : 
-          weather.rainHeavy || weather.lightning ? 0.5 : 
-          0
-        }
-        fogDensity={isMictlan ? 0.02 : biome.type === 'altiplano' ? 0.004 : isIceBiome ? 0.012 : 0.008}
-        showWater={!isIceBiome && !isMictlan}
-        waterPosition={[0, -0.5, 0]}
-        waterSize={biome.type === 'altiplano' ? 350 : 150}
-        waterColor={biome.type === 'altiplano' ? '#2a5a8f' : '#1e3a5f'}
-      />
-
-      {/* Terreno - adaptado al bioma (no en Mictlán) */}
-      {!isMictlan && (isIceBiome ? (
-        <IceTerrain location={location} ref={terrainRef} />
-      ) : (
-        <VolcanicTerrain location={location} ref={terrainRef} />
-      ))}
-      
-      {/* Montañas de fondo (no en Mictlán) */}
-      {!isMictlan && <BackgroundMountains biomeType={biome.type} />}
-      
-      {/* Terreno mejorado con DEM real - se superpone al terreno procedural */}
-      {enhancedTerrainEnabled && (
-        <EnhancedTerrain
-          location={location}
-          enabled={enhancedTerrainEnabled}
-          radius={0.05}
-          resolution={256}
-          exaggeration={terrainExaggeration || 1.5}
-          enableLOD={terrainLOD !== false}
-          enableHydrography={false}
-          onLoadingChange={onTerrainLoadingChange}
-        />
-      )}
-
-      {/* Grid sutil para referencia de movimiento - OCULTO */}
-      <gridHelper 
-        args={[200, 100, '#3a3a3a', '#2a2a2a']} 
-        position={[0, 0.01, 0]}
-        material-opacity={0}
-        material-transparent={true}
-        visible={false}
-      />
-
-      {/* Sistema climÃ¡tico completo */}
-      <WeatherSystem weather={weather} isIceBiome={isIceBiome} solarDirection={solarDirection} />
-
-      {/* Drone atmosférico - activo en todos los modos */}
-      <AmbientAudio />
-
-      {/* Elementos del entorno: rocas y vegetación - NO en océano, Giza ni Mictlán */}
-      {!isIceBiome && !isMictlan && biome.type !== 'ocean' && !(
-        location &&
-        Math.abs(location.lat - 29.9792) < 0.05 &&
-        Math.abs(location.lon - 31.1342) < 0.05
-      ) && (
-        <EnvironmentElementsWithTrees location={location} />
-      )}
-
-      {/* Modelo 3D o Avatar según modo */}
-      {movementMode === 'avatar' ? (
-        <WalkableAvatar 
-          key={avatarModel}  // Key para forzar re-mount cuando cambia el modelo
-          modelPath={avatarModel}
-          terrainRef={terrainRef}
-          solarDirection={solarDirection}
-          isDay={isDay}
-          showCosmicEffects={true}
-          onPositionChange={(pos) => {
-            avatarPositionRef.current.copy(pos)
-            if (mainAvatarPositionRef?.current) mainAvatarPositionRef.current.copy(pos)
+      <ObjectSelectionProvider onBlockMoved={onBlockMoved}>
+        <Canvas
+          shadows
+          camera={{ position: [8, 4, 8], fov: 60 }}
+          gl={{
+            antialias: true,
+            alpha: false,
+            powerPreference: 'high-performance',
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 1.2
           }}
-        />
-      ) : (
-        <ModelViewer modelPath={avatarModel} ref={modelRef} />
-      )}
-      
-      {/* Colisiones bÃ¡sicas ya no son necesarias, WalkableAvatar las maneja */}
-      
-      {/* Info del sitio */}
-      {site && (
-        <SiteInfo site={site} />
+        >
+          {/* 🎮 SISTEMAS DE PERFORMANCE - ÚNICO useFrame */}
+          <EngineIntegration />
+
+          {/* 🧭 Rastreador de rotación de cámara para la brújula */}
+          {onCameraRotationChange && <CompassTracker onRotationChange={onCameraRotationChange} />}
+
+          <PerspectiveCamera makeDefault position={[8, 4, 8]} fov={60} />
+
+          {/* Controles segÃºn modo */}
+          {movementMode === 'orbit' ? (
+            <OrbitControls
+              enableDamping={false}
+              minDistance={3}
+              maxDistance={30}
+              minPolarAngle={Math.PI / 8}
+              maxPolarAngle={Math.PI / 2.2}
+              enablePan={true}
+              panSpeed={0.8}
+              rotateSpeed={0.6}
+              zoomSpeed={0.8}
+              target={[0, 1, 0]}
+            />
+          ) : null}
+          {/* En modo avatar, la cÃ¡mara es controlada por WalkableAvatar */}
+
+          {/* Sistema astronómico-geométrico vivo - SOLO en modo órbita */}
+          {movementMode === 'orbit' && (
+            <AstronomicalSystem
+              location={location}
+              enabled={true}
+              showGeometry={showGeometryField}
+              onDayNightChange={onDayNightChange}
+              onSolarUpdate={onSolarUpdate}
+              solarState={solarState}
+              isDay={isDay}
+              showTrajectory={true}
+            />
+          )}
+
+          {/* Luna mejorada con fases y eclipses - SOLO en modo órbita */}
+          {movementMode === 'orbit' && solarState.lunarState && (
+            <EnhancedMoon
+              lunarState={solarState.lunarState}
+              eclipse={solarState.eclipse}
+              solarDirection={solarDirection}
+              visible={true}
+            />
+          )}
+
+          {/* IluminaciÃ³n cinematogrÃ¡fica - adaptada al bioma */}
+          <LightingSystem
+            biomeType={biome.type}
+            solarDirection={solarDirection}
+            enableShadows={true}
+            sunIntensity={2.5}
+            hemisphereIntensity={1.2}
+          />
+
+          {/* Sistema de entorno (cielo, niebla, agua) */}
+          <EnvironmentSystem
+            isDay={isMictlan ? false : isDay}
+            skyColor={isMictlan ? '#050505' : skyColor}
+            fogColor={isMictlan ? '#0a0505' : fogColor}
+            stormDarkness={
+              isMictlan ? 0.95 :
+                weather.storm || weather.tornado ? 0.7 :
+                  weather.rainHeavy || weather.lightning ? 0.5 :
+                    0
+            }
+            fogDensity={isMictlan ? 0.02 : biome.type === 'altiplano' ? 0.004 : isIceBiome ? 0.012 : 0.008}
+            showWater={!isIceBiome && !isMictlan}
+            waterPosition={[0, -0.5, 0]}
+            waterSize={biome.type === 'altiplano' ? 350 : 150}
+            waterColor={biome.type === 'altiplano' ? '#2a5a8f' : '#1e3a5f'}
+          />
+
+          {/* Terreno - adaptado al bioma (no en Mictlán) */}
+          {!isMictlan && (isIceBiome ? (
+            <IceTerrain location={location} ref={terrainRef} />
+          ) : (
+            <VolcanicTerrain location={location} ref={terrainRef} />
+          ))}
+
+          {/* Montañas de fondo (no en Mictlán) */}
+          {!isMictlan && <BackgroundMountains biomeType={biome.type} />}
+
+          {/* Terreno mejorado con DEM real - se superpone al terreno procedural */}
+          {enhancedTerrainEnabled && (
+            <EnhancedTerrain
+              location={location}
+              enabled={enhancedTerrainEnabled}
+              radius={0.05}
+              resolution={256}
+              exaggeration={terrainExaggeration || 1.5}
+              enableLOD={terrainLOD !== false}
+              enableHydrography={false}
+              onLoadingChange={onTerrainLoadingChange}
+            />
+          )}
+
+          {/* Grid sutil para referencia de movimiento - OCULTO */}
+          <gridHelper
+            args={[200, 100, '#3a3a3a', '#2a2a2a']}
+            position={[0, 0.01, 0]}
+            material-opacity={0}
+            material-transparent={true}
+            visible={false}
+          />
+
+          {/* Sistema climÃ¡tico completo */}
+          <WeatherSystem weather={weather} isIceBiome={isIceBiome} solarDirection={solarDirection} />
+
+          {/* Drone atmosférico - activo en todos los modos */}
+          <AmbientAudio />
+
+          {/* Elementos del entorno: rocas y vegetación - NO en océano, Giza ni Mictlán */}
+          {!isIceBiome && !isMictlan && biome.type !== 'ocean' && !(
+            location &&
+            Math.abs(location.lat - 29.9792) < 0.05 &&
+            Math.abs(location.lon - 31.1342) < 0.05
+          ) && (
+              <EnvironmentElementsWithTrees location={location} />
+            )}
+
+          {/* Modelo 3D o Avatar según modo */}
+          {movementMode === 'avatar' ? (
+            <WalkableAvatar
+              key={avatarModel}  // Key para forzar re-mount cuando cambia el modelo
+              modelPath={avatarModel}
+              terrainRef={terrainRef}
+              solarDirection={solarDirection}
+              isDay={isDay}
+              showCosmicEffects={true}
+              abilityActive={abilityActive}
+              currentUfo={currentUfo}
+              onPositionChange={(pos) => {
+                avatarPositionRef.current.copy(pos)
+                if (mainAvatarPositionRef?.current) mainAvatarPositionRef.current.copy(pos)
+              }}
+            />
+          ) : (
+            <ModelViewer modelPath={avatarModel} ref={modelRef} />
+          )}
+
+          {/* Colisiones bÃ¡sicas ya no son necesarias, WalkableAvatar las maneja */}
+
+          {/* Info del sitio */}
+          {site && (
+            <SiteInfo site={site} />
+          )}
+
+          {/* 🗿 Escena de Puma Punku - estructura + bloques dispersos */}
+          {(site?.id === 'puma-punku' || (
+            location &&
+            Math.abs(location.lat - (-16.5616)) < 0.05 &&
+            Math.abs(location.lon - (-68.6795)) < 0.05
+          )) && (
+              <PumaPunkuScene
+                onViracochaSpeak={onViracochaSpeak}
+                onPortalEnter={onPortalEnter}
+                avatarPositionRef={avatarPositionRef}
+              />
+            )}
+
+          {/* 🏜️ Escena de Giza - Gran Pirámide alineada astronómicamente */}
+          {(location &&
+            Math.abs(location.lat - 29.9792) < 0.05 &&
+            Math.abs(location.lon - 31.1342) < 0.05
+          ) && (
+              <GizaScene
+                key="giza-scene-permanent"
+                avatarPositionRef={avatarPositionRef}
+                onSphinxClick={onSphinxClick}
+                onPyramidionCollect={onPyramidionCollect}
+                pyramidionCollected={pyramidionCollected || false}
+                pyramidionOnTop={pyramidionOnTop || false}
+                onMummyMoved={onMummyMoved}
+                onScarabCollect={onScarabCollect}
+                scarabDiscovered={scarabDiscovered || false}
+                scarabCollected={scarabCollected || false}
+                scarabInInventory={scarabInInventory}
+                showScarab={showScarab}
+                scarabDropPosition={scarabDropPosition}
+                totalMissionsCompleted={loadMissionState().stats.totalMissionsCompleted}
+              />
+            )}
+
+          {/* 🗿 Escena de Isla de Pascua - Moai y Atlante "charlando" */}
+          {(site?.id === 'rapa-nui-ahu-tongariki' || (
+            location &&
+            Math.abs(location.lat - (-27.1254)) < 0.05 &&
+            Math.abs(location.lon - (-109.2778)) < 0.05
+          )) && (
+              <EasterIslandScene
+                avatarPositionRef={avatarPositionRef}
+                volcanicEruption={weather.volcanicEruption}
+                onEruptionEnd={onEruptionEnd}
+                showJadeMask={jadeMaskVisible}
+                jadeMaskCollected={jadeMaskInInventory}
+                onJadeMaskCollect={onJadeMaskCollect}
+                onMerkabaActivate={onMerkabaActivate}
+                onTriggerEruption={onTriggerEruption}
+                skullInInventory={skullInInventory}
+                showSkull={showSkull}
+                skullDropPosition={skullDropPosition}
+                onSkullCollect={onSkullCollect}
+              />
+            )}
+
+          {/* 🏛️ Escena de Teotihuacán - Pirámide del Sol y Templo Mayor */}
+          {(site?.id === 'teotihuacan' || (
+            location &&
+            Math.abs(location.lat - 19.6925) < 0.05 &&
+            Math.abs(location.lon - (-98.8438)) < 0.05
+          )) && (
+              <TeotihuacanScene
+                avatarPositionRef={avatarPositionRef}
+                onQuetzalcoatlClick={onQuetzalcoatlClick}
+                onQuetzalcoatlAppear={onQuetzalcoatlAppear}
+                onCornCollect={onCornCollect}
+                cornCollected={cornInInventory}
+                showCornSeed={cornOnGround}
+                cornDropPosition={cornDropPosition}
+                cornPlanted={cornPlanted}
+              />
+            )}
+
+          {/* 🗿 Escena de Veracruz - Cabeza Colosal Olmeca */}
+          {(site?.id === 'tres-zapotes' || (
+            location &&
+            Math.abs(location.lat - 18.4667) < 0.05 &&
+            Math.abs(location.lon - (-95.4500)) < 0.05
+          )) && (
+              <VeracruzScene
+                avatarPositionRef={avatarPositionRef}
+                onOlmecClick={onOlmecClick}
+                caveQuestActive={caveQuestActive}
+                onEnterCave={onEnterCave}
+              />
+            )}
+
+          {/* 💀 Escena del Mictlán - Inframundo */}
+          {(site?.id === 'mictlan' || (
+            location &&
+            Math.abs(location.lat - 0.0001) < 0.01 &&
+            Math.abs(location.lon - 0.0001) < 0.01
+          )) && (
+              <MictlanScene
+                avatarPositionRef={avatarPositionRef}
+                onExit={onMictlanExit}
+              />
+            )}
+
+          {/* Capturar referencias */}
+          <CameraCapture onReady={onCameraReady} />
+          <ModelCapture onLoaded={onModelLoaded} />
+
+          {/* Zoom cinematogrÃ¡fico al entrar - SOLO en modo Ã³rbita */}
+          {movementMode === 'orbit' && <CinematicZoom />}
+
+          {/* Post-processing modular */}
+          <PostProcessingSystem
+            enableBloom={true}
+            enableVignette={true}
+            bloomIntensity={0.3}
+            vignetteIntensity={0.4}
+          />
+
+          {/* Receptor de clicks en terreno para mover objetos seleccionados */}
+          <TerrainClickReceiver />
+          {/* Item descubierto flotando en el mundo - SIEMPRE VISIBLE en Lago Titicaca */}
+          {!itemCollected && location &&
+            location.lat > -16.5 && location.lat < -15.5 &&
+            location.lon > -70 && location.lon < -68.5 && onCollectItem && (
+              <DiscoveredItemInWorld
+                modelPath={getAssetPath('/magna_bowl.glb')}
+                position={[0, 0.5, 0]}
+                onCollect={onCollectItem}
+              />
+            )}
+        </Canvas>
+      </ObjectSelectionProvider>
+
+      {/* Mensaje de item recolectado - FUERA del Canvas */}
+      {showCollectedMessage && onCloseMessage && (
+        <ItemCollectedMessage onClose={onCloseMessage} />
       )}
 
-      {/* 🗿 Escena de Puma Punku - estructura + bloques dispersos */}
-      {(site?.id === 'puma-punku' || (
-        location &&
-        Math.abs(location.lat - (-16.5616)) < 0.05 &&
-        Math.abs(location.lon - (-68.6795)) < 0.05
-      )) && (
-        <PumaPunkuScene 
-          onViracochaSpeak={onViracochaSpeak}
-          onPortalEnter={onPortalEnter}
-          avatarPositionRef={avatarPositionRef}
-        />
-      )}
-      
-      {/* 🏜️ Escena de Giza - Gran Pirámide alineada astronómicamente */}
-      {(location &&
-        Math.abs(location.lat - 29.9792) < 0.05 &&
-        Math.abs(location.lon - 31.1342) < 0.05
-      ) && (
-        <GizaScene 
-          key="giza-scene-permanent"
-          avatarPositionRef={avatarPositionRef}
-          onSphinxClick={onSphinxClick}
-          onPyramidionCollect={onPyramidionCollect}
-          pyramidionCollected={pyramidionCollected || false}
-          pyramidionOnTop={pyramidionOnTop || false}
-          onMummyMoved={onMummyMoved}
-          onScarabCollect={onScarabCollect}
-          scarabDiscovered={scarabDiscovered || false}
-          scarabCollected={scarabCollected || false}
-          scarabInInventory={scarabInInventory}
-          showScarab={showScarab}
-          scarabDropPosition={scarabDropPosition}
-          totalMissionsCompleted={loadMissionState().stats.totalMissionsCompleted}
-        />
-      )}
-      
-      {/* 🗿 Escena de Isla de Pascua - Moai y Atlante "charlando" */}
-      {(site?.id === 'rapa-nui-ahu-tongariki' || (
-        location &&
-        Math.abs(location.lat - (-27.1254)) < 0.05 &&
-        Math.abs(location.lon - (-109.2778)) < 0.05
-      )) && (
-        <EasterIslandScene 
-          avatarPositionRef={avatarPositionRef}
-          volcanicEruption={weather.volcanicEruption}
-          onEruptionEnd={onEruptionEnd}
-          showJadeMask={jadeMaskVisible}
-          jadeMaskCollected={jadeMaskInInventory}
-          onJadeMaskCollect={onJadeMaskCollect}
-          onMerkabaActivate={onMerkabaActivate}
-          onTriggerEruption={onTriggerEruption}
-          skullInInventory={skullInInventory}
-          showSkull={showSkull}
-          skullDropPosition={skullDropPosition}
-          onSkullCollect={onSkullCollect}
-        />
-      )}
-      
-      {/* 🏛️ Escena de Teotihuacán - Pirámide del Sol y Templo Mayor */}
-      {(site?.id === 'teotihuacan' || (
-        location &&
-        Math.abs(location.lat - 19.6925) < 0.05 &&
-        Math.abs(location.lon - (-98.8438)) < 0.05
-      )) && (
-        <TeotihuacanScene 
-          avatarPositionRef={avatarPositionRef}
-          onQuetzalcoatlClick={onQuetzalcoatlClick}
-          onQuetzalcoatlAppear={onQuetzalcoatlAppear}
-          onCornCollect={onCornCollect}
-          cornCollected={cornInInventory}
-          showCornSeed={cornOnGround}
-          cornDropPosition={cornDropPosition}
-          cornPlanted={cornPlanted}
+      {/* Diálogo de Viracocha - FUERA del Canvas */}
+      {showViracochaDialogue && onCloseViracochaDialogue && (
+        <ViracochaDialogue
+          message={magnaBowlCollected
+            ? "¡Gracias, viajero! Has traído lo que necesitaba."
+            : "¡Atraviesa el portal, y tráeme lo que necesito!"}
+          onComplete={onCloseViracochaDialogue}
         />
       )}
 
-      {/* 🗿 Escena de Veracruz - Cabeza Colosal Olmeca */}
-      {(site?.id === 'tres-zapotes' || (
-        location &&
-        Math.abs(location.lat - 18.4667) < 0.05 &&
-        Math.abs(location.lon - (-95.4500)) < 0.05
-      )) && (
-        <VeracruzScene 
-          avatarPositionRef={avatarPositionRef} 
-          onOlmecClick={onOlmecClick}
-          caveQuestActive={caveQuestActive}
-          onEnterCave={onEnterCave}
-        />
-      )}
-
-      {/* 💀 Escena del Mictlán - Inframundo */}
-      {(site?.id === 'mictlan' || (
-        location &&
-        Math.abs(location.lat - 0.0001) < 0.01 &&
-        Math.abs(location.lon - 0.0001) < 0.01
-      )) && (
-        <MictlanScene 
-          avatarPositionRef={avatarPositionRef}
-          onExit={onMictlanExit}
-        />
-      )}
-      
-      {/* Capturar referencias */}
-      <CameraCapture onReady={onCameraReady} />
-      <ModelCapture onLoaded={onModelLoaded} />
-      
-      {/* Zoom cinematogrÃ¡fico al entrar - SOLO en modo Ã³rbita */}
-      {movementMode === 'orbit' && <CinematicZoom />}
-
-      {/* Post-processing modular */}
-      <PostProcessingSystem
-        enableBloom={true}
-        enableVignette={true}
-        bloomIntensity={0.3}
-        vignetteIntensity={0.4}
-      />
-
-      {/* Receptor de clicks en terreno para mover objetos seleccionados */}
-      <TerrainClickReceiver />
-      {/* Item descubierto flotando en el mundo - SIEMPRE VISIBLE en Lago Titicaca */}
-      {!itemCollected && location && 
-       location.lat > -16.5 && location.lat < -15.5 && 
-       location.lon > -70 && location.lon < -68.5 && onCollectItem && (
-        <DiscoveredItemInWorld
-          modelPath={getAssetPath('/magna_bowl.glb')}
-          position={[0, 0.5, 0]}
-          onCollect={onCollectItem}
-        />
-      )}
-    </Canvas>
-    </ObjectSelectionProvider>
-    
-    {/* Mensaje de item recolectado - FUERA del Canvas */}
-    {showCollectedMessage && onCloseMessage && (
-      <ItemCollectedMessage onClose={onCloseMessage} />
-    )}
-    
-    {/* Diálogo de Viracocha - FUERA del Canvas */}
-    {showViracochaDialogue && onCloseViracochaDialogue && (
-      <ViracochaDialogue
-        message={magnaBowlCollected 
-          ? "¡Gracias, viajero! Has traído lo que necesitaba." 
-          : "¡Atraviesa el portal, y tráeme lo que necesito!"}
-        onComplete={onCloseViracochaDialogue}
-      />
-    )}
-    
     </>
   )
 }
