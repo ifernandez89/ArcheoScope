@@ -165,6 +165,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const selectedSiteRef = useRef<ArchaeologicalSite | null>(null)
   // Ref para la posición del avatar (para soltar items)
   const mainAvatarPositionRef = useRef(new THREE.Vector3())
+  // Ref para la ubicación actual (evita stale closures en toggleAbility)
+  const selectedLocationRef = useRef<{ lat: number, lon: number } | null>(null)
   const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('avatar') // Modo avatar por defecto
   const [showLocationInfo, setShowLocationInfo] = useState(false)
   const [showGeometryField, setShowGeometryField] = useState(true) // Activado por defecto
@@ -236,6 +238,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   useEffect(() => {
     selectedSiteRef.current = selectedSite
   }, [selectedSite])
+
+  // Mantener ref de ubicación sincronizada para evitar stale closure en Oracle scanner
+  useEffect(() => {
+    selectedLocationRef.current = selectedLocation
+  }, [selectedLocation])
 
   const handleBlockMoved = useCallback(() => {
     const siteId = selectedSiteRef.current?.id
@@ -485,58 +492,72 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       }
 
       // 🔬 Lógica UFO 4: Scan con detección de NPCs (2.0s duration)
+      // IMPORTANTE: Lee desde refs para evitar stale closures
       if (currentUfo === 4 && newState) {
-        // Detectar NPC según el sitio actual o proximidad
-        let foundNPC = null
-        const siteId = selectedSite?.id || ''
+        const currentSite = selectedSiteRef.current
+        const currentLocation = selectedLocationRef.current
+        const siteId = currentSite?.id || ''
+        let foundNPC: string | null = null
 
-        if (siteId === 'puma-punku' || siteId === 'pumaPunku') foundNPC = 'Viracocha'
-        else if (siteId === 'pyramids-giza' || siteId === 'giza') {
-          // Giza tiene varios NPCs, calculamos cuál es el más cercano
+        if (siteId === 'puma-punku' || siteId === 'pumaPunku') {
+          foundNPC = 'Viracocha'
+        } else if (siteId === 'pyramids-giza' || siteId === 'giza') {
+          // Giza: elegir el NPC más cercano por distancia horizontal XZ
           const gizaNPCs = [
-            { name: 'Sphinx', pos: new THREE.Vector3(100, 5, 50) },
-            { name: 'Ramses', pos: new THREE.Vector3(-20, 0, -50) },
-            { name: 'Hatshepsut', pos: new THREE.Vector3(20, 0, -50) },
-            { name: 'Akenaton', pos: new THREE.Vector3(0, 0, 0) },
-            { name: 'Mummy', pos: new THREE.Vector3(-72, 0, -2) }
+            { name: 'Sphinx',     x: 100,  z: 50  },
+            { name: 'Ramses',     x: -20,  z: -50 },
+            { name: 'Hatshepsut', x: 20,   z: -50 },
+            { name: 'Akenaton',   x: 0,    z: 0   },
+            { name: 'Mummy',      x: -72,  z: -2  }
           ]
-          
-          let minDistance = Infinity
-          let closest = null
-          
-          if (mainAvatarPositionRef.current) {
-            const playerPos = mainAvatarPositionRef.current
-            gizaNPCs.forEach(npc => {
-              // Calcular distancia horizontal (ignorando Y) para mayor precisión en vuelo
-              const dx = playerPos.x - npc.pos.x
-              const dz = playerPos.z - npc.pos.z
-              const distSq = dx * dx + dz * dz
-              
-              if (distSq < minDistance) {
-                minDistance = distSq
-                closest = npc.name
-              }
-            })
-          }
-          foundNPC = closest || gizaNPCs[0].name // Fallback al primero solo si no hay posición
-        }
-        else if (siteId === 'moai-easter-island' || siteId === 'easterIsland' || siteId === 'easter-island') foundNPC = 'Moai'
-        else if (siteId === 'teotihuacan') foundNPC = 'Quetzalcoatl'
-        else if (siteId === 'tres-zapotes' || siteId === 'veracruz') {
-          if (selectedLocation && Math.abs(selectedLocation.lat - 0.0001) < 0.001) {
+          let minDistSq = Infinity
+          const px = mainAvatarPositionRef.current.x
+          const pz = mainAvatarPositionRef.current.z
+          gizaNPCs.forEach(npc => {
+            const distSq = (px - npc.x) ** 2 + (pz - npc.z) ** 2
+            if (distSq < minDistSq) {
+              minDistSq = distSq
+              foundNPC = npc.name
+            }
+          })
+        } else if (siteId === 'moai-easter-island' || siteId === 'easter-island') {
+          foundNPC = 'Moai'
+        } else if (siteId === 'teotihuacan') {
+          foundNPC = 'Quetzalcoatl'
+        } else if (siteId === 'tres-zapotes') {
+          // Veracruz: Atlante en superficie, Mictlantecuhtli en la cueva (lat≈0)
+          if (currentLocation && Math.abs(currentLocation.lat) < 0.001) {
             foundNPC = 'Mictlantecuhtli'
           } else {
             foundNPC = 'Atlante'
           }
-        }
-        // Fallback por coordenadas si no hay sitio seleccionado
-        else if (selectedLocation) {
-          const lat = selectedLocation.lat
-          const lon = selectedLocation.lon
+        } else if (currentLocation) {
+          // Fallback por coordenadas GPS (para sitios sin id exacto)
+          const { lat, lon } = currentLocation
           if (Math.abs(lat - (-16.5616)) < 0.1 && Math.abs(lon - (-68.6795)) < 0.1) foundNPC = 'Viracocha'
-          else if (Math.abs(lat - 29.9792) < 0.1) foundNPC = 'Sphinx'
+          else if (Math.abs(lat - 29.9792) < 0.1 && Math.abs(lon - 31.1342) < 0.1) {
+            // En Giza por coordenadas: buscar más cercano igual que arriba
+            const gizaNPCs = [
+              { name: 'Sphinx',     x: 100,  z: 50  },
+              { name: 'Ramses',     x: -20,  z: -50 },
+              { name: 'Hatshepsut', x: 20,   z: -50 },
+              { name: 'Akenaton',   x: 0,    z: 0   },
+              { name: 'Mummy',      x: -72,  z: -2  }
+            ]
+            let minDistSq = Infinity
+            const px = mainAvatarPositionRef.current.x
+            const pz = mainAvatarPositionRef.current.z
+            gizaNPCs.forEach(npc => {
+              const distSq = (px - npc.x) ** 2 + (pz - npc.z) ** 2
+              if (distSq < minDistSq) {
+                minDistSq = distSq
+                foundNPC = npc.name
+              }
+            })
+          }
           else if (Math.abs(lat - (-27.1254)) < 0.1) foundNPC = 'Moai'
           else if (Math.abs(lat - 19.6925) < 0.1) foundNPC = 'Quetzalcoatl'
+          else if (Math.abs(lat - 18.4667) < 0.1) foundNPC = 'Atlante'
         }
 
         if (foundNPC) {
@@ -557,6 +578,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // Efecto de sacudida universal al activar cualquier habilidad
     setIsShaking(true)
     setTimeout(() => setIsShaking(false), 500)
+  // Solo depende de currentUfo y abilityCooldown — site/location se leen por ref
   }, [currentUfo, abilityCooldown])
 
   // 🐍 Estado del diálogo de Quetzalcoatl
@@ -884,12 +906,15 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   }
 
   // 🖱️ Evento de teclado para habilidades de nave
+  // Solo Space activa la habilidad — 'e' está reservado para rotar la nave
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignorar si se está escribiendo en un input o si no estamos en modo modelo
-      if (mode !== 'model' || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      // Ignorar si se está escribiendo en un input, no estamos en modo modelo, o es key-repeat
+      if (mode !== 'model') return
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (e.repeat) return // ← evita que mantener Space dispare múltiples veces
 
-      if (e.code === 'Space' || e.key.toLowerCase() === 'e') {
+      if (e.code === 'Space') {
         e.preventDefault()
         toggleAbility()
       }
