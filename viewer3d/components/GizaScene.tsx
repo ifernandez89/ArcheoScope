@@ -6,6 +6,8 @@ import * as THREE from 'three'
 import { useGLTF, Html } from '@react-three/drei'
 import { getAssetPath } from '@/lib/paths'
 import SelectableObject from './SelectableObject'
+import CropCircle from './CropCircle'
+import { isMissionCompleted } from '@/types/missionState'
 
 // Modelos se cargan bajo demanda al entrar a la escena (no preload global)
 
@@ -64,6 +66,9 @@ export default function GizaScene({
   const floodLevelRef = useRef(0)
   const [isFlooding, setIsFlooding] = useState(false)
   const [fadeToBlack, setFadeToBlack] = useState(false)
+  
+  // Verificar si la misión está completa para el Crop Circle
+  const missionDone = useMemo(() => isMissionCompleted('giza', 'return_pyramidion'), [pyramidionOnTop])
   
   // 🎼 Activar arquitectura de Giza
   useEffect(() => {
@@ -186,6 +191,14 @@ export default function GizaScene({
           position={[100, 5, 50]}
           rotation={[0, Math.PI / 2, 0]} // Mira hacia el Este (salida del sol)
           onClick={onSphinxClick}
+        />
+        
+        {/* 💠 Crop Circle: Toroide Energético (Generador Antiguo) */}
+        <CropCircle 
+          type="toroid" 
+          position={[100, 0.1, 75]} 
+          scale={25} 
+          visible={missionDone} 
         />
         
         {/* 👑 Estatuas de faraones - Frente a la pirámide, mirando al sur */}

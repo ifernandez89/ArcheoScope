@@ -6,6 +6,8 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Group } from 'three'
 import { getAssetPath } from '@/lib/paths'
+import CropCircle from './CropCircle'
+import { isMissionCompleted } from '@/types/missionState'
 
 /**
  * Escena de Teotihuacán - OPTIMIZADA
@@ -99,6 +101,9 @@ function TeotihuacanSceneContent({
   const cachedCornMeshes = useRef<THREE.Mesh[]>([])
   const meshesCached = useRef(false)
   const cornMeshesCached = useRef(false)
+  
+  // Verificar si la misión está completa para el Crop Circle
+  const missionDone = useMemo(() => isMissionCompleted('teotihuacan', 'plant_corn'), [cornPlanted])
   
   // Clonar escena del maíz para independencia
   const clonedCornScene = useMemo(() => {
@@ -270,6 +275,14 @@ function TeotihuacanSceneContent({
       <group position={[0, 0, -20]}>
         <primitive object={kukulkanModel.scene} scale={0.3} />
       </group>
+      
+      {/* 💠 Crop Circle: Mandala Solar (Activación de Pirámide) */}
+      <CropCircle 
+        type="toroid" 
+        position={[30, 2.4, 0]} 
+        scale={22} 
+        visible={missionDone} 
+      />
       
       {/* Calendario Maya - SIN CLONE */}
       <group 

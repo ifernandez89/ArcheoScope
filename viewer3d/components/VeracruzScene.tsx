@@ -6,6 +6,8 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
 import OlmecCave from './OlmecCave'
+import CropCircle from './CropCircle'
+import { isMissionCompleted } from '@/types/missionState'
 
 interface VeracruzSceneProps {
   avatarPositionRef?: React.RefObject<THREE.Vector3>
@@ -44,6 +46,16 @@ function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive
   // Cabeza acostada de espaldas, cara mirando al cielo, parcialmente hundida en la tierra
   // Ajustada manualmente el 31/03/2026 - esta es la posición correcta para la misión de Veracruz
   const START_Y = -0.74  // hundida 74cm bajo el piso
+
+  // Verificar si la misión está completa para el Crop Circle
+  const [missionDone, setMissionDone] = useState(false)
+  useEffect(() => {
+    // Verificar periódicamente o al inicio
+    const check = () => setMissionDone(isMissionCompleted('veracruz', 'deliver_jade_mask'))
+    check()
+    const interval = setInterval(check, 5000)
+    return () => clearInterval(interval)
+  }, [])
 
   const enteredCaveRef = useRef(false)
 
@@ -125,6 +137,14 @@ function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive
 
         {/* 🏔️ Cueva olmeca al oeste */}
         <OlmecCave />
+
+        {/* 💠 Crop Circle: Julia Set Fractal (Portal Dimensional) */}
+        <CropCircle 
+          type="julia" 
+          position={[14, 0.1, 12]} 
+          scale={18} 
+          visible={missionDone} 
+        />
       </group>
     </>
   )

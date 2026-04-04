@@ -15,6 +15,8 @@ import { useObjectSelection } from './ObjectSelectionContext'
 import { getAssetPath } from '@/lib/paths'
 import SunGate from './SunGate'
 import PortalDetector from './PortalDetector'
+import CropCircle from './CropCircle'
+import { isMissionCompleted } from '@/types/missionState'
 
 /**
  * 🔄 Loading placeholder para Puma Punku
@@ -142,6 +144,12 @@ function PumaPunkuSceneContent({
     { id: 'pp-b8', pos: [ 10, 0, -22], rot: 0.2 },
   ]
 
+  // Verificar si la misión está completada para mostrar el Crop Circle permanente
+  const [missionDone, setMissionDone] = useState(false)
+  useEffect(() => {
+    setMissionDone(isMissionCompleted('pumaPunku', 'reveal_structure'))
+  }, [blockMoved]) // Re-verificar cuando se mueve un bloque
+
   return (
     <>
       {/* Estructura megalítica — fija, se revela al mover un bloque */}
@@ -159,6 +167,14 @@ function PumaPunkuSceneContent({
         position={[70, 8, 60]} 
         rotation={[0, -Math.PI / 2 - Math.PI / 12 + Math.PI / 6 + Math.PI / 12, 0]} 
         revealed={gateRevealed} 
+      />
+
+      {/* 💠 Crop Circle: Cubo de Metatrón (Tecnología Alienígena) */}
+      <CropCircle 
+        type="metatron" 
+        position={[25, 0.1, 10]} 
+        scale={20} 
+        visible={missionDone} 
       />
 
       {/* Detector de portal - teletransporta al Lago Titicaca */}

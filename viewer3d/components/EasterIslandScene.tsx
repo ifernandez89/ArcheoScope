@@ -11,6 +11,8 @@ import RanoKauVolcano, { type VolcanoState } from './RanoKauVolcano'
 import { loadMissionState } from '@/types/missionState'
 import Merkaba from './Merkaba'
 import EnergySphere from './EnergySphere'
+import CropCircle from './CropCircle'
+import { isMissionCompleted } from '@/types/missionState'
 
 /**
  * Escena de Isla de Pascua (Rapa Nui)
@@ -150,6 +152,9 @@ function EasterIslandSceneContent({
   const [merkabaActive, setMerkabaActive] = useState(false)
   const [showEnergySphere, setShowEnergySphere] = useState(false)
   const [skullStolen, setSkullStolen] = useState(false)
+
+  // Verificar si la misión está completa para el Crop Circle
+  const missionDone = useMemo(() => isMissionCompleted('easterIsland', 'activate_merkaba'), [merkabaActive])
 
   useEffect(() => {
     const ms = loadMissionState()
@@ -357,6 +362,14 @@ function EasterIslandSceneContent({
       />
 
       <EnergySphere position={[0, 8, 0]} size={2} visible={showEnergySphere} />
+
+      {/* 💠 Crop Circle: Flower of Life (Resonancia Energética) */}
+      <CropCircle 
+        type="flower" 
+        position={[25, 3.1, 25]} 
+        scale={20} 
+        visible={missionDone} 
+      />
 
       {showJadeMask && !jadeMaskCollected && (
         <group
