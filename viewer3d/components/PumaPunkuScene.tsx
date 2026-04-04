@@ -44,11 +44,13 @@ function LoadingPumaPunku() {
 export default function PumaPunkuScene({ 
   onViracochaSpeak,
   onPortalEnter,
-  avatarPositionRef
+  avatarPositionRef,
+  showViracochaDialogue
 }: { 
   onViracochaSpeak?: () => void
   onPortalEnter?: () => void
   avatarPositionRef?: React.RefObject<Vector3>
+  showViracochaDialogue?: boolean
 }) {
   return (
     <Suspense fallback={<LoadingPumaPunku />}>
@@ -56,6 +58,7 @@ export default function PumaPunkuScene({
         onViracochaSpeak={onViracochaSpeak}
         onPortalEnter={onPortalEnter}
         avatarPositionRef={avatarPositionRef}
+        showViracochaDialogue={showViracochaDialogue}
       />
     </Suspense>
   )
@@ -64,11 +67,13 @@ export default function PumaPunkuScene({
 function PumaPunkuSceneContent({ 
   onViracochaSpeak,
   onPortalEnter,
-  avatarPositionRef
+  avatarPositionRef,
+  showViracochaDialogue
 }: { 
   onViracochaSpeak?: () => void
   onPortalEnter?: () => void
   avatarPositionRef?: React.RefObject<Vector3>
+  showViracochaDialogue?: boolean
 }) {
   const { blockMoved } = useObjectSelection()
   
@@ -144,11 +149,18 @@ function PumaPunkuSceneContent({
     { id: 'pp-b8', pos: [ 10, 0, -22], rot: 0.2 },
   ]
 
-  // Verificar si la misión está completada para mostrar el Crop Circle permanente
+  // Verificar si la misión está en progreso o completada para el Crop Circle
   const [missionDone, setMissionDone] = useState(false)
   useEffect(() => {
-    setMissionDone(isMissionCompleted('pumaPunku', 'reveal_structure'))
-  }, [blockMoved]) // Re-verificar cuando se mueve un bloque
+    const check = () => {
+      const done = isMissionCompleted('pumaPunku', 'reveal_structure') || 
+                   isMissionCompleted('pumaPunku', 'deliver_magna_bowl')
+      setMissionDone(done)
+    }
+    check()
+    const interval = setInterval(check, 3000)
+    return () => clearInterval(interval)
+  }, [showViracochaDialogue])
 
   return (
     <>
@@ -172,8 +184,8 @@ function PumaPunkuSceneContent({
       {/* 💠 Crop Circle: Cubo de Metatrón (Tecnología Alienígena) */}
       <CropCircle 
         type="metatron" 
-        position={[25, 0.1, 10]} 
-        scale={20} 
+        position={[25, 0.4, 10]} 
+        scale={22} 
         visible={missionDone} 
       />
 
