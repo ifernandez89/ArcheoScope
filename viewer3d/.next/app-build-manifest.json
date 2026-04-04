@@ -1,12 +1,10 @@
 {
   "pages": {
-    "/game/page": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/vendor.js",
       "static/chunks/main-app.js",
-      "static/chunks/three.js",
-      "static/chunks/react-three.js",
-      "static/chunks/app/game/page.js"
+      "static/chunks/app/page.js"
     ],
     "/layout": [
       "static/chunks/webpack.js",
@@ -15,11 +13,26 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
+    "/menu/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/chunks/_app-pages-browser_types_missionState_ts-_app-pages-browser_types_player_ts.js",
+      "static/chunks/app/menu/page.js"
+    ],
     "/player-setup/page": [
       "static/chunks/webpack.js",
       "static/chunks/vendor.js",
       "static/chunks/main-app.js",
       "static/chunks/app/player-setup/page.js"
+    ],
+    "/game/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/chunks/three.js",
+      "static/chunks/react-three.js",
+      "static/chunks/app/game/page.js"
     ]
   }
 }

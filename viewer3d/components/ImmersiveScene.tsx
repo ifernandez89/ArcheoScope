@@ -453,24 +453,104 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [abilityActive, setAbilityActive] = useState(false)
   const [abilityCooldown, setAbilityCooldown] = useState(false)
   const [isShaking, setIsShaking] = useState(false)
+  const [scannedEntity, setScannedEntity] = useState<{ name: string, desc: string } | null>(null)
+
+  // 📝 Datos de escaneo (Nave 4 - Oracle)
+  const SCAN_DATA = {
+    'Viracocha': "Arquitecto de la realidad tangible. Su función es el ordenamiento del caos primordial a través de la geometría.",
+    'Sphinx': "Eterno observador del tiempo. Su silencio guarda la respuesta a la pregunta que aún no has formulado.",
+    'Ramses': "El poder de la voluntad manifestada en piedra. La verdadera herencia no es el monumento, sino la visión.",
+    'Hatshepsut': "Navegante de los mares internos. La autoridad nace de la sabiduría profunda, no de la imposición.",
+    'Akenaton': "Foco de la unidad absoluta. Mira hacia la fuente única de luz que anima toda existencia consciente.",
+    'Mummy': "Recipiente de la memoria biológica. El cuerpo es el templo que guarda el código del ser a través de los eones.",
+    'Moai': "Rostros que miran al infinito. Su silencio es comunicación; su inmovilidad es el eje de un mundo en cambio.",
+    'Quetzalcoatl': "Unión de la materia terrestre y el espíritu celeste. La evolución es el equilibrio entre tus alas y tus raíces.",
+    'Atlante': "Pilar del conocimiento estelar. Sostiene la carga del cielo para que la tierra pueda florecer en paz.",
+    'Mictlantecuhtli': "Transformador de la energía vital. El fin de un ciclo es solo la transmutación necesaria para el nuevo inicio."
+  }
 
   const toggleAbility = useCallback(() => {
     if (abilityCooldown) return
 
     setAbilityActive(prev => {
       const newState = !prev
-      
-      // Lógica especial para UFO 3 (Boost con duración y cooldown)
+
+      // 🚀 Lógica UFO 3: Boost con duración y cooldown (1.8s / 4s)
       if (currentUfo === 3 && newState) {
-        // Duración: 1.8 segundos
         setTimeout(() => {
           setAbilityActive(false)
-          // Empezar cooldown: 4 segundos
           setAbilityCooldown(true)
           setTimeout(() => setAbilityCooldown(false), 4000)
         }, 1800)
       }
-      
+
+      // 🔬 Lógica UFO 4: Scan con detección de NPCs (2.0s duration)
+      if (currentUfo === 4 && newState) {
+        // Detectar NPC según el sitio actual o proximidad
+        let foundNPC = null
+        const siteId = selectedSite?.id || ''
+
+        if (siteId === 'puma-punku' || siteId === 'pumaPunku') foundNPC = 'Viracocha'
+        else if (siteId === 'pyramids-giza' || siteId === 'giza') {
+          // Giza tiene varios NPCs, calculamos cuál es el más cercano
+          const gizaNPCs = [
+            { name: 'Sphinx', pos: new THREE.Vector3(100, 5, 50) },
+            { name: 'Ramses', pos: new THREE.Vector3(-20, 0, -50) },
+            { name: 'Hatshepsut', pos: new THREE.Vector3(20, 0, -50) },
+            { name: 'Akenaton', pos: new THREE.Vector3(0, 0, 0) },
+            { name: 'Mummy', pos: new THREE.Vector3(-72, 0, -2) }
+          ]
+          
+          let minDistance = Infinity
+          let closest = null
+          
+          if (mainAvatarPositionRef.current) {
+            const playerPos = mainAvatarPositionRef.current
+            gizaNPCs.forEach(npc => {
+              // Calcular distancia horizontal (ignorando Y) para mayor precisión en vuelo
+              const dx = playerPos.x - npc.pos.x
+              const dz = playerPos.z - npc.pos.z
+              const distSq = dx * dx + dz * dz
+              
+              if (distSq < minDistance) {
+                minDistance = distSq
+                closest = npc.name
+              }
+            })
+          }
+          foundNPC = closest || gizaNPCs[0].name // Fallback al primero solo si no hay posición
+        }
+        else if (siteId === 'moai-easter-island' || siteId === 'easterIsland' || siteId === 'easter-island') foundNPC = 'Moai'
+        else if (siteId === 'teotihuacan') foundNPC = 'Quetzalcoatl'
+        else if (siteId === 'tres-zapotes' || siteId === 'veracruz') {
+          if (selectedLocation && Math.abs(selectedLocation.lat - 0.0001) < 0.001) {
+            foundNPC = 'Mictlantecuhtli'
+          } else {
+            foundNPC = 'Atlante'
+          }
+        }
+        // Fallback por coordenadas si no hay sitio seleccionado
+        else if (selectedLocation) {
+          const lat = selectedLocation.lat
+          const lon = selectedLocation.lon
+          if (Math.abs(lat - (-16.5616)) < 0.1 && Math.abs(lon - (-68.6795)) < 0.1) foundNPC = 'Viracocha'
+          else if (Math.abs(lat - 29.9792) < 0.1) foundNPC = 'Sphinx'
+          else if (Math.abs(lat - (-27.1254)) < 0.1) foundNPC = 'Moai'
+          else if (Math.abs(lat - 19.6925) < 0.1) foundNPC = 'Quetzalcoatl'
+        }
+
+        if (foundNPC) {
+          setScannedEntity({ name: foundNPC, desc: SCAN_DATA[foundNPC as keyof typeof SCAN_DATA] })
+        }
+
+        setTimeout(() => {
+          setAbilityActive(false)
+          setScannedEntity(null)
+          setAbilityCooldown(true)
+          setTimeout(() => setAbilityCooldown(false), 3000)
+        }, 2000)
+      }
+
       return newState
     })
 
@@ -1089,7 +1169,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-end',
-          gap: '5px'
+          gap: '4px'
         }}>
           <button
             onClick={toggleAbility}
@@ -1098,10 +1178,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
               width: '60px',
               height: '60px',
               borderRadius: '50%',
-              background: abilityCooldown 
+              background: abilityCooldown
                 ? 'rgba(50, 50, 50, 0.8)'
-                : abilityActive 
-                  ? 'linear-gradient(135deg, #4a9eff, #667eea)' 
+                : abilityActive
+                  ? 'linear-gradient(135deg, #4a9eff, #667eea)'
                   : 'rgba(30, 41, 59, 0.8)',
               border: `3px solid ${abilityCooldown ? '#333' : abilityActive ? '#fff' : '#4a9eff'}`,
               color: abilityCooldown ? '#555' : 'white',
@@ -1157,20 +1237,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         onActionComplete={currentUfo >= 4 ? () => setAbilityActive(false) : undefined}
       />
 
-      {/* Estilo para Screen Shake Universal */}
-      <style jsx global>{`
-        .screen-shake-active {
-          animation: screenShake 0.4s ease-in-out infinite;
-        }
-
-        @keyframes screenShake {
-          0%, 100% { transform: translate(0, 0); }
-          20% { transform: translate(-4px, 2px); }
-          40% { transform: translate(4px, -2px); }
-          60% { transform: translate(-3px, 1px); }
-          80% { transform: translate(3px, -1px); }
-        }
-      `}</style>
 
       {/* Contenedor Principal con Sacudida */}
       <div className={isShaking ? 'screen-shake-active' : ''} style={{
@@ -1426,6 +1492,68 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         />
       )}
 
+      {/* 🔬 Oracle: Scan HUD Overlay (Nave 4) */}
+      {currentUfo === 4 && abilityActive && scannedEntity && (
+        <div style={{
+          position: 'fixed',
+          top: '20%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(0, 16, 32, 0.9)',
+          borderLeft: '4px solid #00ffff',
+          padding: '24px',
+          borderRadius: '2px 12px 12px 2px',
+          color: '#00ffff',
+          fontFamily: 'monospace',
+          zIndex: 9999,
+          minWidth: '400px',
+          boxShadow: '0 0 40px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+          textTransform: 'uppercase',
+          animation: 'scanHUDIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+        }}>
+          <div style={{ fontSize: '10px', marginBottom: '8px', opacity: 0.8, letterSpacing: '2px' }}>
+            📡 ORACLE_SCAN // SIGNATURE_IDENTIFIED
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '900', marginBottom: '12px', letterSpacing: '4px', textShadow: '0 0 10px #00ffff' }}>
+            {scannedEntity.name}
+          </div>
+          <div style={{
+            fontSize: '15px',
+            lineHeight: '1.6',
+            color: '#e0faff',
+            borderTop: '1px solid rgba(0, 255, 255, 0.4)',
+            paddingTop: '15px',
+            textTransform: 'none',
+            letterSpacing: '0.5px'
+          }}>
+            {scannedEntity.desc}
+          </div>
+          <div style={{ marginTop: '20px', height: '4px', background: 'rgba(0, 255, 255, 0.2)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{
+              position: 'absolute',
+              top: 0, left: 0, height: '100%', width: '100%',
+              background: 'linear-gradient(90deg, #00ffff, #0088ff)',
+              animation: 'scanHUDBar 2s linear forwards'
+            }} />
+          </div>
+
+        </div>
+      )}
+
+      {/* Estilos Globales y de Componente */}
+      <style jsx global>{`
+        .screen-shake-active {
+          animation: screenShake 0.4s ease-in-out infinite;
+        }
+        @keyframes screenShake {
+          0%, 100% { transform: translate(0, 0); }
+          20% { transform: translate(-4px, 2px); }
+          40% { transform: translate(4px, -2px); }
+          60% { transform: translate(-3px, 1px); }
+          80% { transform: translate(3px, -1px); }
+        }
+      `}</style>
       <style jsx>{`
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -1438,6 +1566,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes scanHUDIn {
+          from { opacity: 0; transform: translate(-50%, -40px) scale(0.9); }
+          to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+        }
+        @keyframes scanHUDBar {
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
         }
       `}</style>
     </div>

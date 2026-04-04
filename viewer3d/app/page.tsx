@@ -29,7 +29,7 @@ export default function Home() {
     <main style={{
       width: '100vw', height: '100vh',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#061a19',
+      background: '#011613', //061a19
       margin: 0, padding: 0, overflow: 'hidden',
       position: 'relative'
     }}>
@@ -50,8 +50,8 @@ export default function Home() {
           src={LOGO_PATH}
           alt="Archeoscope"
           style={{
-            maxWidth: "60vw",
-            maxHeight: "60vh",
+            maxWidth: "90vw",
+            maxHeight: "90vh",
             objectFit: "contain",
             filter: "drop-shadow(0 0 25px rgba(0,255,255,0.4))",
             userSelect: "none"
