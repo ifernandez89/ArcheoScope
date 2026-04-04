@@ -99,24 +99,57 @@ interface EasterIslandSceneProps {
   jadeMaskCollected?: boolean
   onJadeMaskCollect?: () => void
   onMerkabaActivate?: () => void
+  onTriggerEruption?: () => void
+  skullInInventory?: boolean
+  showSkull?: boolean
+  skullDropPosition?: {x: number, z: number} | null
+  onSkullCollect?: () => void
 }
 
-export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate }: EasterIslandSceneProps) {
+export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate, onTriggerEruption, skullInInventory, showSkull, skullDropPosition, onSkullCollect }: EasterIslandSceneProps) {
   return (
     <Suspense fallback={<LoadingEasterIsland />}>
-      <EasterIslandSceneContent avatarPositionRef={avatarPositionRef} volcanicEruption={volcanicEruption} onEruptionEnd={onEruptionEnd} showJadeMask={showJadeMask} jadeMaskCollected={jadeMaskCollected} onJadeMaskCollect={onJadeMaskCollect} onMerkabaActivate={onMerkabaActivate} />
+      <EasterIslandSceneContent 
+        avatarPositionRef={avatarPositionRef} 
+        volcanicEruption={volcanicEruption} 
+        onEruptionEnd={onEruptionEnd} 
+        showJadeMask={showJadeMask} 
+        jadeMaskCollected={jadeMaskCollected} 
+        onJadeMaskCollect={onJadeMaskCollect} 
+        onMerkabaActivate={onMerkabaActivate} 
+        onTriggerEruption={onTriggerEruption}
+        skullInInventory={skullInInventory}
+        showSkull={showSkull}
+        skullDropPosition={skullDropPosition}
+        onSkullCollect={onSkullCollect}
+      />
     </Suspense>
   )
 }
 
-function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate }: EasterIslandSceneProps) {
+function EasterIslandSceneContent({ 
+  avatarPositionRef, 
+  volcanicEruption, 
+  onEruptionEnd, 
+  showJadeMask, 
+  jadeMaskCollected, 
+  onJadeMaskCollect, 
+  onMerkabaActivate, 
+  onTriggerEruption,
+  skullInInventory,
+  showSkull,
+  skullDropPosition,
+  onSkullCollect
+}: EasterIslandSceneProps) {
   const moaiModel = useGLTF(getAssetPath('/moai.glb'))
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
   const jadeMaskModel = useGLTF(getAssetPath('/jade_mask.glb'))
+  const crystalSkullModel = useGLTF(getAssetPath('/crystal-skull.glb'))
 
   const [merkabaClickable, setMerkabaClickable] = useState(false)
   const [merkabaActive, setMerkabaActive] = useState(false)
   const [showEnergySphere, setShowEnergySphere] = useState(false)
+  const [skullStolen, setSkullStolen] = useState(false)
 
   useEffect(() => {
     const ms = loadMissionState()
@@ -173,9 +206,9 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
       { pos: [ 29, 3, 0 ], rot: [ 0, -Math.PI / 2, 0 ], curY: 3, origY: 3 }
     ],
     atlante: [
-      { pos: [ 4, 2, 0 ], rot: [ -Math.PI / 2, 0, 0 ], curY: 2, origY: 2 },
-      { pos: [ 0, 2, 29 ], rot: [ -Math.PI / 2, 0, 0 ], curY: 2, origY: 2 },
-      { pos: [ -29, 2, 0 ], rot: [ -Math.PI / 2, Math.PI / 2, 0 ], curY: 2, origY: 2 }
+      { pos: [ 4, 2, 0 ], rot: [ Math.PI / 2, 0, -Math.PI / 4 ], curY: 2, origY: 2 },
+      { pos: [ 0, 2, 29 ], rot: [ Math.PI / 2, 0, 0 ], curY: 2, origY: 2 },
+      { pos: [ -29, 2, 0 ], rot: [ Math.PI / 2, 0, Math.PI / 2 ], curY: 2, origY: 2 }
     ]
   })
 
@@ -183,6 +216,7 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
   const shakeTimeRef = useRef(0)
   const eruptionTimerRef = useRef(0)
   const redirectedRef = useRef(false)
+  const skullGroupRef = useRef<THREE.Group>(null)
   const tempObj = useMemo(() => new THREE.Object3D(), [])
 
   // Inicializar matrices de los NPCs al montar (evita frame inicial en posición incorrecta)
@@ -207,7 +241,12 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
     atlanteInstancedRef.current.instanceMatrix.needsUpdate = true
   }, [moaiInstancedRef.current, atlanteInstancedRef.current])
 
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
+    if (skullGroupRef.current) {
+      skullGroupRef.current.position.y = 16 + Math.sin(clock.elapsedTime * 2) * 0.5
+      skullGroupRef.current.rotation.y += delta * 0.5
+    }
+
     if (!sceneGroupRef.current || !moaiInstancedRef.current || !atlanteInstancedRef.current) return
 
     if (volcanicEruption) {
@@ -332,6 +371,26 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
             <meshBasicMaterial color="#00ff88" wireframe transparent opacity={0.3} />
           </mesh>
           <pointLight color="#00ff88" intensity={2} distance={8} />
+        </group>
+      )}
+
+      {!skullInInventory && (showSkull ? true : true) && crystalSkullModel.scene && (
+        <group
+          ref={skullGroupRef}
+          position={showSkull && skullDropPosition ? [skullDropPosition.x, 16, skullDropPosition.z] : [-55, 16, 55]}
+          onClick={(e) => {
+            e.stopPropagation()
+            if (onSkullCollect) onSkullCollect()
+          }}
+          onPointerOver={() => { document.body.style.cursor = 'pointer' }}
+          onPointerOut={() => { document.body.style.cursor = 'default' }}
+        >
+          <primitive object={crystalSkullModel.scene} scale={1.5} />
+          <mesh>
+            <boxGeometry args={[2, 2, 2]} />
+            <meshBasicMaterial color="#ff00ff" wireframe transparent opacity={0.3} />
+          </mesh>
+          <pointLight color="#ff00ff" intensity={2} distance={10} />
         </group>
       )}
 

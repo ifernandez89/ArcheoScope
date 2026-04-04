@@ -19,6 +19,10 @@ interface GizaSceneProps {
   onScarabCollect?: () => void
   scarabDiscovered?: boolean
   scarabCollected?: boolean
+  scarabInInventory?: boolean
+  showScarab?: boolean
+  scarabDropPosition?: {x: number, z: number} | null
+  totalMissionsCompleted?: number
 }
 
 /**
@@ -39,7 +43,21 @@ interface GizaSceneProps {
  * - Niebla amarillenta atmosférica
  * - Piedras dispersas
  */
-export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidionCollect, pyramidionCollected, pyramidionOnTop, onMummyMoved, onScarabCollect, scarabDiscovered, scarabCollected }: GizaSceneProps) {
+export default function GizaScene({ 
+  avatarPositionRef, 
+  onSphinxClick, 
+  onPyramidionCollect, 
+  pyramidionCollected, 
+  pyramidionOnTop, 
+  onMummyMoved, 
+  onScarabCollect, 
+  scarabDiscovered, 
+  scarabCollected,
+  scarabInInventory,
+  showScarab,
+  scarabDropPosition,
+  totalMissionsCompleted = 0
+}: GizaSceneProps) {
   console.log('🔶 GizaScene RENDER - pyramidionCollected:', pyramidionCollected, 'pyramidionOnTop:', pyramidionOnTop)
   
   // Usar ref para nivel de inundación (evita re-renders cada frame)
@@ -67,11 +85,12 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
   
   // Iniciar inundación cuando se recoge el escarabajo
   useEffect(() => {
-    if (scarabCollected && !isFlooding) {
-      console.log('🌊 Escarabajo recogido - Iniciando inundación...')
+    // Solo inundar si se recogió el escarabajo Y NO se han completado las 5 misiones
+    if (scarabCollected && !isFlooding && totalMissionsCompleted < 5) {
+      console.log('🌊 Escarabajo recogido (ROBADO) - Iniciando inundación como castigo...')
       setIsFlooding(true)
     }
-  }, [scarabCollected, isFlooding])
+  }, [scarabCollected, isFlooding, totalMissionsCompleted])
   
   // Animación de inundación progresiva
   useFrame((state, delta) => {
@@ -137,10 +156,10 @@ export default function GizaScene({ avatarPositionRef, onSphinxClick, onPyramidi
           onMove={onMummyMoved}
         />
         
-        {/* 🪲 Escarabajo - Aparece cuando se mueve la momia */}
-        {scarabDiscovered && !scarabCollected && (
+        {/* 🪲 Escarabajo - Aparece cuando se mueve la momia O si fue soltado */}
+        {((scarabDiscovered && !scarabCollected) || showScarab) && !scarabInInventory && (
           <Scarab 
-            position={[-72, 1, -2]} // Encima de donde estaba la momia
+            position={showScarab && scarabDropPosition ? [scarabDropPosition.x, 1, scarabDropPosition.z] : [-72, 1, -2]} 
             onCollect={onScarabCollect}
           />
         )}

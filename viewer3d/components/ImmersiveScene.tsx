@@ -312,28 +312,62 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   
   // Handler para recolectar el escarabajo
   const handleCollectScarab = useCallback(() => {
-    console.log('🪲 Escarabajo recolectado!')
-    
-    // Registrar en el sistema de misiones
-    collectItem('giza', 'scarab')
-    
-    // ❌ MARCAR MISIÓN COMO FALLIDA - Robar el escarabajo es un acto de profanación
-    failMission('giza', 'return_pyramidion')
-    console.log('❌ Misión "Devolver el Piramidión" FALLIDA - El jugador robó el escarabajo sagrado')
-    
-    // Guardar en sessionStorage
-    sessionStorage.setItem('item_scarab_collected', 'true')
-    
-    // Marcar como recolectado
-    setScarabCollected(true)
-    
-    // Mostrar mensaje
-    setShowCollectedMessage(true)
-    setTimeout(() => setShowCollectedMessage(false), 3000)
-    
-    // INICIAR INUNDACIÓN como castigo
-    console.log('🌊 Iniciando inundación de Giza como castigo divino...')
-    // La inundación se maneja en GizaScene
+    // Verificar si se completaron las 5 misiones previas
+    const ms = loadMissionState()
+    const allMissionsComplete = ms.stats.totalMissionsCompleted >= 5
+
+    if (allMissionsComplete) {
+      console.log('🪲 Escarabajo recolectado legalmente! Añadiendo al inventario...')
+      collectItem('giza', 'scarab')
+      setScarabCollected(true)
+      setScarabInInventory(true)
+      setScarabOnGround(false)
+      
+      setShowCollectedMessage(true)
+      setTimeout(() => setShowCollectedMessage(false), 3000)
+    } else {
+      console.log('🪲 Escarabajo recolectado! (ROBADO)')
+      
+      // Registrar en el sistema de misiones
+      collectItem('giza', 'scarab')
+      
+      // ❌ MARCAR MISIÓN COMO FALLIDA - Robar el escarabajo es un acto de profanación
+      failMission('giza', 'return_pyramidion')
+      console.log('❌ Misión "Devolver el Piramidión" FALLIDA - El jugador robó el escarabajo sagrado')
+      
+      // Guardar en sessionStorage
+      sessionStorage.setItem('item_scarab_collected', 'true')
+      
+      // Marcar como recolectado
+      setScarabCollected(true)
+      
+      // Mostrar mensaje
+      setShowCollectedMessage(true)
+      setTimeout(() => setShowCollectedMessage(false), 3000)
+      
+      // INICIAR INUNDACIÓN como castigo
+      console.log('🌊 Iniciando inundación de Giza como castigo divino...')
+      setWeather(prev => ({ ...prev, volcanicEruption: false, storm: true, rainHeavy: true })) // Forzar tormenta para inundación
+    }
+  }, [])
+  
+  // Handler para recolectar la calavera de cristal
+  const handleCollectSkull = useCallback(() => {
+    const ms = loadMissionState()
+    const allMissionsComplete = ms.stats.totalMissionsCompleted >= 5
+
+    if (allMissionsComplete) {
+      console.log('💀 Calavera de cristal recolectada legalmente! Añadiendo al inventario...')
+      collectItem('easterIsland', 'crystal_skull')
+      setSkullInInventory(true)
+      setSkullOnGround(false)
+      
+      setShowCollectedMessage(true)
+      setTimeout(() => setShowCollectedMessage(false), 3000)
+    } else {
+      console.log('💀 Calavera robada! DISPARANDO EVENTO DE ERUPCIÓN...')
+      setWeather(prev => ({ ...prev, volcanicEruption: true }))
+    }
   }, [])
   
   // Handler para click en Quetzalcoatl
@@ -405,7 +439,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [pyramidionCollected, setPyramidionCollected] = useState(false)
   const [pyramidionOnTop, setPyramidionOnTop] = useState(false) // Si el piramidón está en la punta
   const [scarabDiscovered, setScarabDiscovered] = useState(false) // Si se movió la momia
-  const [scarabCollected, setScarabCollected] = useState(false) // Si se recogió el escarabajo
+  const [scarabCollected, setScarabCollected] = useState(false) // Si se recogió el escarabajo (para erupción/lógica)
+  const [scarabInInventory, setScarabInInventory] = useState(false) // Si está físicamente en el inventario
+  const [scarabOnGround, setScarabOnGround] = useState(false) // Para soltar/recoger
+  const [scarabDropPosition, setScarabDropPosition] = useState<{x: number, z: number} | null>(null)
+  
+  const [skullInInventory, setSkullInInventory] = useState(false)
+  const [skullOnGround, setSkullOnGround] = useState(false)
+  const [skullDropPosition, setSkullDropPosition] = useState<{x: number, z: number} | null>(null)
   
   // 🐍 Estado del diálogo de Quetzalcoatl
   const [showQuetzalcoatlDialogue, setShowQuetzalcoatlDialogue] = useState(false)
@@ -459,6 +500,18 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       setCornPlanted(true)
     }
 
+    // ── ITEMS ESPECIALES ──
+    const gizaItems = ms.sites.giza?.itemsCollected || []
+    const easterItemsCollected = ms.sites.easterIsland?.itemsCollected || []
+
+    if (gizaItems.includes('scarab')) {
+      setScarabInInventory(true)
+      setScarabCollected(true)
+    }
+    if (easterItemsCollected.includes('crystal_skull')) {
+      setSkullInInventory(true)
+    }
+
     console.log('📜 Estados restaurados desde missionState')
   }, [])
   const [cornInInventory, setCornInInventory] = useState(false) // Maíz en inventario (rotando)
@@ -468,18 +521,20 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
 
   // Handler para soltar el maíz del inventario
   const handleDropCornSeed = useCallback(() => {
+    if (mode === 'globe') {
+      console.log('🚫 No se puede soltar el maíz en el espacio!')
+      return
+    }
     console.log('🌽 Soltando maíz al piso!')
-    // Guardar posición donde cae (debajo de la nave)
     const pos = mainAvatarPositionRef.current
+    if (!pos) return
     const dropX = pos.x
     const dropZ = pos.z
     
-    // Posición del parche de tierra: [60, 0, 0], tamaño 8x8
     const soilCenterX = 60
     const soilCenterZ = 0
     const soilSize = 8
     
-    // Verificar si cayó dentro del parche de tierra
     const isOnSoil = Math.abs(dropX - soilCenterX) <= soilSize / 2 && 
                      Math.abs(dropZ - soilCenterZ) <= soilSize / 2
     
@@ -488,18 +543,43 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       setCornPlanted(true)
       setCornInInventory(false)
       setCornOnGround(false)
-      
-      // Completar misión y limpiar clima
       completeMission('teotihuacan', 'plant_corn')
       clearWeather('teotihuacan')
-      setWeather(CALM_WEATHER) // Aplicar clima inmediatamente
-      console.log('✅ Misión de Teotihuacán completada! ☀️ Clima limpiado')
+      setWeather(CALM_WEATHER)
     } else {
       setCornDropPosition({ x: dropX, z: dropZ })
       setCornInInventory(false)
       setCornOnGround(true)
     }
-  }, [cornPlanted])
+  }, [cornPlanted, mode])
+
+  const handleDropSkull = useCallback(() => {
+    if (mode === 'globe') {
+      console.log('🚫 No se puede soltar la calavera en el espacio!')
+      return
+    }
+    console.log('💀 Soltando calavera al piso!')
+    const pos = mainAvatarPositionRef.current
+    if (pos) {
+      setSkullDropPosition({ x: pos.x, z: pos.z })
+      setSkullInInventory(false)
+      setSkullOnGround(true)
+    }
+  }, [mode])
+
+  const handleDropScarab = useCallback(() => {
+    if (mode === 'globe') {
+      console.log('🚫 No se puede soltar el escarabajo en el espacio!')
+      return
+    }
+    console.log('🪲 Soltando escarabajo al piso!')
+    const pos = mainAvatarPositionRef.current
+    if (pos) {
+      setScarabDropPosition({ x: pos.x, z: pos.z })
+      setScarabInInventory(false)
+      setScarabOnGround(true)
+    }
+  }, [mode])
 
   // Verificar si la Magna Bowl fue recolectada
   useEffect(() => {
@@ -952,13 +1032,38 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         </>
       )}
       
-      {/* Inventario - Maíz recolectado */}
-      <InventoryItem
-        modelPath="/maiz.glb"
-        itemName="Maíz"
-        show={cornInInventory}
-        onDrop={handleDropCornSeed}
-      />
+      {/* Inventario - Items recolectados apilados */}
+      <div style={{
+        position: 'fixed',
+        top: '280px',
+        right: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        zIndex: 1000
+      }}>
+        <InventoryItem
+          modelPath="/maiz.glb"
+          itemName="Maíz"
+          show={cornInInventory}
+          onDrop={handleDropCornSeed}
+          dropDisabled={mode === 'globe'}
+        />
+        <InventoryItem
+          modelPath="/crystal-skull.glb"
+          itemName="Skull"
+          show={skullInInventory}
+          onDrop={handleDropSkull}
+          dropDisabled={mode === 'globe'}
+        />
+        <InventoryItem
+          modelPath="/escab.glb"
+          itemName="Scarab"
+          show={scarabInInventory}
+          onDrop={handleDropScarab}
+          dropDisabled={mode === 'globe'}
+        />
+      </div>
 
       {/* Escena 3D */}
       {mode === 'globe' ? (
@@ -1043,6 +1148,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             setShowCollectedMessage(true)
             setTimeout(() => setShowCollectedMessage(false), 3000)
           }}
+          skullInInventory={skullInInventory}
+          showSkull={skullOnGround}
+          skullDropPosition={skullDropPosition}
+          onSkullCollect={handleCollectSkull}
           onMerkabaActivate={() => {
             console.log('✡️ Merkaba activado! 5ta mision - ¡Sincronización Planetaria Completada!')
             completeMission('easterIsland', 'activate_merkaba')
@@ -1062,6 +1171,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onScarabCollect={handleCollectScarab}
           scarabDiscovered={scarabDiscovered}
           scarabCollected={scarabCollected}
+          scarabInInventory={scarabInInventory}
+          showScarab={scarabOnGround}
+          scarabDropPosition={scarabDropPosition}
           onQuetzalcoatlClick={handleQuetzalcoatlClick}
           onQuetzalcoatlAppear={() => setShowQuetzalcoatl(true)}
           onCornCollect={handleCollectCornSeed}
@@ -1071,6 +1183,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           cornPlanted={cornPlanted}
           mainAvatarPositionRef={mainAvatarPositionRef}
           onEruptionEnd={handleEruptionEnd}
+          onTriggerEruption={handleCollectSkull}
           onOlmecClick={() => {
             if (!olmecStoodUp) {
               setOlmecStoodUp(true)
@@ -1310,6 +1423,14 @@ function ModelScene({
   cornPlanted,
   mainAvatarPositionRef,
   onEruptionEnd,
+  skullInInventory,
+  showSkull,
+  skullDropPosition,
+  onSkullCollect,
+  onTriggerEruption,
+  scarabInInventory,
+  showScarab,
+  scarabDropPosition,
   onOlmecClick,
   caveQuestActive,
   onEnterCave,
@@ -1377,6 +1498,14 @@ function ModelScene({
   cornPlanted?: boolean
   mainAvatarPositionRef?: React.RefObject<THREE.Vector3>
   onEruptionEnd?: () => void
+  skullInInventory?: boolean
+  showSkull?: boolean
+  skullDropPosition?: {x: number, z: number} | null
+  onSkullCollect?: () => void
+  onTriggerEruption?: () => void
+  scarabInInventory?: boolean
+  showScarab?: boolean
+  scarabDropPosition?: {x: number, z: number} | null
   onOlmecClick?: () => void
   caveQuestActive?: boolean
   onEnterCave?: () => void
@@ -1617,6 +1746,10 @@ function ModelScene({
           onScarabCollect={onScarabCollect}
           scarabDiscovered={scarabDiscovered || false}
           scarabCollected={scarabCollected || false}
+          scarabInInventory={scarabInInventory}
+          showScarab={showScarab}
+          scarabDropPosition={scarabDropPosition}
+          totalMissionsCompleted={loadMissionState().stats.totalMissionsCompleted}
         />
       )}
       
@@ -1634,6 +1767,11 @@ function ModelScene({
           jadeMaskCollected={jadeMaskInInventory}
           onJadeMaskCollect={onJadeMaskCollect}
           onMerkabaActivate={onMerkabaActivate}
+          onTriggerEruption={onTriggerEruption}
+          skullInInventory={skullInInventory}
+          showSkull={showSkull}
+          skullDropPosition={skullDropPosition}
+          onSkullCollect={onSkullCollect}
         />
       )}
       

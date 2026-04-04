@@ -11,6 +11,7 @@ interface InventoryItemProps {
   itemName: string
   onDrop?: () => void
   show: boolean
+  dropDisabled?: boolean
 }
 
 function RotatingModel({ modelPath, scale = 1 }: { modelPath: string, scale?: number }) {
@@ -18,7 +19,15 @@ function RotatingModel({ modelPath, scale = 1 }: { modelPath: string, scale?: nu
   const groupRef = useRef<THREE.Group>(null)
   
   // Clonar UNA sola vez con useMemo
-  const clonedScene = useMemo(() => scene.clone(true), [scene])
+  const clonedScene = useMemo(() => {
+    const clone = scene.clone(true)
+    if (modelPath.includes('escab')) {
+      // Ajuste específico para el escarabajo: rotar para verlo desde arriba/espalda
+      clone.rotation.x = Math.PI / 2
+      clone.rotation.z = Math.PI
+    }
+    return clone
+  }, [scene, modelPath])
   
   useFrame((state, delta) => {
     if (groupRef.current) {
@@ -26,14 +35,17 @@ function RotatingModel({ modelPath, scale = 1 }: { modelPath: string, scale?: nu
     }
   })
   
+  // Escalar el escarabajo un poco más para que se vea bien en la pequeña ventana
+  const finalScale = modelPath.includes('escab') ? scale * 3.5 : scale
+  
   return (
     <group ref={groupRef}>
-      <primitive object={clonedScene} scale={scale} />
+      <primitive object={clonedScene} scale={finalScale} />
     </group>
   )
 }
 
-export default function InventoryItem({ modelPath, itemName, onDrop, show }: InventoryItemProps) {
+export default function InventoryItem({ modelPath, itemName, onDrop, show, dropDisabled }: InventoryItemProps) {
   const [isHovered, setIsHovered] = useState(false)
   
   if (!show) return null
@@ -41,23 +53,27 @@ export default function InventoryItem({ modelPath, itemName, onDrop, show }: Inv
   return (
     <div
       style={{
-        position: 'fixed',
-        top: '280px',
-        right: '20px',
+        position: 'relative',
         width: '80px',
         height: '80px',
-        background: isHovered ? 'rgba(255, 215, 0, 0.3)' : 'rgba(0, 0, 0, 0.7)',
+        background: isHovered 
+          ? (dropDisabled ? 'rgba(150, 0, 0, 0.3)' : 'rgba(255, 215, 0, 0.3)') 
+          : 'rgba(0, 0, 0, 0.7)',
         borderRadius: '12px',
-        border: isHovered ? '3px solid #ffd700' : '2px solid #ffd700',
+        border: dropDisabled && isHovered 
+          ? '3px solid #ff4444' 
+          : (isHovered ? '3px solid #ffd700' : '2px solid #ffd700'),
         overflow: 'visible',
-        cursor: 'pointer',
+        cursor: dropDisabled ? 'not-allowed' : 'pointer',
         zIndex: 1000,
         transition: 'all 0.2s ease',
         transform: isHovered ? 'scale(1.1)' : 'scale(1)',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onDrop}
+      onClick={() => {
+        if (!dropDisabled && onDrop) onDrop()
+      }}
     >
       <Canvas
         camera={{ position: [0, 0, 3], fov: 50 }}
@@ -68,7 +84,7 @@ export default function InventoryItem({ modelPath, itemName, onDrop, show }: Inv
         <RotatingModel modelPath={modelPath} scale={0.8} />
       </Canvas>
       
-      {/* Tooltip "Soltar" cuando hover */}
+      {/* Tooltip cuando hover */}
       {isHovered && (
         <div
           style={{
@@ -76,20 +92,20 @@ export default function InventoryItem({ modelPath, itemName, onDrop, show }: Inv
             top: '-35px',
             left: '50%',
             transform: 'translateX(-50%)',
-            background: 'rgba(0, 0, 0, 0.95)',
-            color: '#ffd700',
+            background: dropDisabled ? 'rgba(50, 0, 0, 0.95)' : 'rgba(0, 0, 0, 0.95)',
+            color: dropDisabled ? '#ff4444' : '#ffd700',
             padding: '8px 16px',
             borderRadius: '8px',
             fontSize: '14px',
             fontWeight: 'bold',
             fontFamily: '"Cinzel", serif',
             whiteSpace: 'nowrap',
-            border: '2px solid #ffd700',
-            boxShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
+            border: dropDisabled ? '2px solid #ff4444' : '2px solid #ffd700',
+            boxShadow: dropDisabled ? '0 0 10px rgba(255, 0, 0, 0.5)' : '0 0 10px rgba(255, 215, 0, 0.5)',
             animation: 'pulse 1s infinite',
           }}
         >
-          🌱 Soltar
+          {dropDisabled ? '🚫 Solo en Tierra' : '🌱 Soltar'}
         </div>
       )}
       
