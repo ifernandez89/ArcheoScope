@@ -98,6 +98,20 @@ export default function EnvironmentElements({
     // Detectar si estamos en Giza
     const isGiza = location && Math.abs(location.lat - 29.9792) < 0.05 && Math.abs(location.lon - 31.1342) < 0.05
     
+    // Detectar si estamos en Teotihuacán
+    const isTeotihuacan = location && Math.abs(location.lat - 19.6925) < 0.05 && Math.abs(location.lon - (-98.8438)) < 0.05
+    
+    // Detectar si estamos en Veracruz (Tres Zapotes)
+    const isVeracruz = location && Math.abs(location.lat - 18.4667) < 0.05 && Math.abs(location.lon - (-95.4500)) < 0.05
+    
+    // Detectar si estamos en Isla de Pascua
+    const isEasterIsland = location && Math.abs(location.lat - (-27.1254)) < 0.05 && Math.abs(location.lon - (-109.2778)) < 0.05
+    
+    // Reducir árboles en sitios específicos
+    if ((isTeotihuacan || isVeracruz || isEasterIsland) && count.trees) {
+      count.trees = 15
+    }
+    
     // En Puma Punku: proteger estructura y Viracocha con radios GRANDES
     if (isPumaPunku) {
       occupied.push([8, -8, 25])       // Estructura principal (radio muy amplio)

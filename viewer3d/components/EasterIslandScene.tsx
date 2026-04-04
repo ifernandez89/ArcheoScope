@@ -173,9 +173,9 @@ function EasterIslandSceneContent({ avatarPositionRef, volcanicEruption, onErupt
       { pos: [ 29, 3, 0 ], rot: [ 0, -Math.PI / 2, 0 ], curY: 3, origY: 3 }
     ],
     atlante: [
-      { pos: [ 4, 2, 0 ], rot: [ 0, 0, 0 ], curY: 2, origY: 2 },
-      { pos: [ 0, 2, 29 ], rot: [ 0, 0, 0 ], curY: 2, origY: 2 },
-      { pos: [ -29, 2, 0 ], rot: [ 0, Math.PI / 2, 0 ], curY: 2, origY: 2 }
+      { pos: [ 4, 2, 0 ], rot: [ -Math.PI / 2, 0, 0 ], curY: 2, origY: 2 },
+      { pos: [ 0, 2, 29 ], rot: [ -Math.PI / 2, 0, 0 ], curY: 2, origY: 2 },
+      { pos: [ -29, 2, 0 ], rot: [ -Math.PI / 2, Math.PI / 2, 0 ], curY: 2, origY: 2 }
     ]
   })
 

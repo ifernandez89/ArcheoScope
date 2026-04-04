@@ -823,12 +823,24 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           animation: 'fadeIn 0.5s ease-in-out'
         }}>
           <div style={{
-            fontSize: '48px',
-            marginBottom: '20px',
-            animation: 'pulse 1.5s infinite'
+            marginBottom: '24px',
+            animation: 'logoPulse 2s ease-in-out infinite'
           }}>
-            ðŸŒ
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={process.env.NODE_ENV === 'production'
+                ? '/ArcheoScope/branding/icons/logo-simple-3.png'
+                : '/branding/icons/logo-simple-3.png'}
+              alt="Archeoscope"
+              style={{ width: '120px', height: '120px', objectFit: 'contain' }}
+            />
           </div>
+          <style>{`
+            @keyframes logoPulse {
+              0%, 100% { filter: drop-shadow(0 0 15px rgba(102,126,234,0.7)); transform: scale(1); }
+              50% { filter: drop-shadow(0 0 28px rgba(102,126,234,1)); transform: scale(1.05); }
+            }
+          `}</style>
           <div style={{
             color: 'white',
             fontSize: '24px',
