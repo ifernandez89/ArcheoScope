@@ -154,13 +154,7 @@ function EasterIslandSceneContent({
   const [skullStolen, setSkullStolen] = useState(false)
 
   // Verificar si la misión está completa para el Crop Circle
-  const [missionDone, setMissionDone] = useState(false)
-  useEffect(() => {
-    const check = () => setMissionDone(isMissionCompleted('easterIsland', 'activate_merkaba'))
-    check()
-    const interval = setInterval(check, 3000)
-    return () => clearInterval(interval)
-  }, [merkabaActive])
+  const missionDone = useMemo(() => isMissionCompleted('easterIsland', 'activate_merkaba'), [merkabaActive])
 
   useEffect(() => {
     const ms = loadMissionState()

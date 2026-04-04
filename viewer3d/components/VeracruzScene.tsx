@@ -141,7 +141,7 @@ function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive
         {/* 💠 Crop Circle: Julia Set Fractal (Portal Dimensional) */}
         <CropCircle 
           type="julia" 
-          position={[14, 0.4, 12]} 
+          position={[14, 0.1, 12]} 
           scale={18} 
           visible={missionDone} 
         />

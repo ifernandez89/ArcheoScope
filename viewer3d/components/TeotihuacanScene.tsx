@@ -103,13 +103,7 @@ function TeotihuacanSceneContent({
   const cornMeshesCached = useRef(false)
   
   // Verificar si la misión está completa para el Crop Circle
-  const [missionDone, setMissionDone] = useState(false)
-  useEffect(() => {
-    const check = () => setMissionDone(isMissionCompleted('teotihuacan', 'plant_corn'))
-    check()
-    const interval = setInterval(check, 3000)
-    return () => clearInterval(interval)
-  }, [cornPlanted])
+  const missionDone = useMemo(() => isMissionCompleted('teotihuacan', 'plant_corn'), [cornPlanted])
   
   // Clonar escena del maíz para independencia
   const clonedCornScene = useMemo(() => {
@@ -284,9 +278,9 @@ function TeotihuacanSceneContent({
       
       {/* 💠 Crop Circle: Mandala Solar (Activación de Pirámide) */}
       <CropCircle 
-        type="flower" 
-        position={[30, 2.7, 0]} 
-        scale={24} 
+        type="toroid" 
+        position={[30, 2.4, 0]} 
+        scale={22} 
         visible={missionDone} 
       />
       

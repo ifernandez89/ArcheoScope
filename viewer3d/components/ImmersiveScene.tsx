@@ -504,11 +504,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         } else if (siteId === 'pyramids-giza' || siteId === 'giza') {
           // Giza: elegir el NPC más cercano por distancia horizontal XZ
           const gizaNPCs = [
-            { name: 'Sphinx', x: 100, z: 50 },
-            { name: 'Ramses', x: -20, z: -50 },
-            { name: 'Hatshepsut', x: 20, z: -50 },
-            { name: 'Akenaton', x: 0, z: 0 },
-            { name: 'Mummy', x: -72, z: -2 }
+            { name: 'Sphinx',     x: 100,  z: 50  },
+            { name: 'Ramses',     x: -20,  z: -50 },
+            { name: 'Hatshepsut', x: 20,   z: -50 },
+            { name: 'Akenaton',   x: 0,    z: 0   },
+            { name: 'Mummy',      x: -72,  z: -2  }
           ]
           let minDistSq = Infinity
           const px = mainAvatarPositionRef.current.x
@@ -538,11 +538,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           else if (Math.abs(lat - 29.9792) < 0.1 && Math.abs(lon - 31.1342) < 0.1) {
             // En Giza por coordenadas: buscar más cercano igual que arriba
             const gizaNPCs = [
-              { name: 'Sphinx', x: 100, z: 50 },
-              { name: 'Ramses', x: -20, z: -50 },
-              { name: 'Hatshepsut', x: 20, z: -50 },
-              { name: 'Akenaton', x: 0, z: 0 },
-              { name: 'Mummy', x: -72, z: -2 }
+              { name: 'Sphinx',     x: 100,  z: 50  },
+              { name: 'Ramses',     x: -20,  z: -50 },
+              { name: 'Hatshepsut', x: 20,   z: -50 },
+              { name: 'Akenaton',   x: 0,    z: 0   },
+              { name: 'Mummy',      x: -72,  z: -2  }
             ]
             let minDistSq = Infinity
             const px = mainAvatarPositionRef.current.x
@@ -578,7 +578,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // Efecto de sacudida universal al activar cualquier habilidad
     setIsShaking(true)
     setTimeout(() => setIsShaking(false), 500)
-    // Solo depende de currentUfo y abilityCooldown — site/location se leen por ref
+  // Solo depende de currentUfo y abilityCooldown — site/location se leen por ref
   }, [currentUfo, abilityCooldown])
 
   // 🐍 Estado del diálogo de Quetzalcoatl
@@ -1009,7 +1009,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         { id: 'ufo_1', name: '🌫️ Phantom', model: '/ufo_1.glb', specialty: 'Cloaking / Invisibilidad', description: 'Especialidad: infiltración y espionaje', ability: 'Habilidad principal: camuflaje óptico', missions: 'Tipo de misiones: infiltración, espionaje, recuperar artefactos, entrar a ruinas antiguas' },
         { id: 'ufo_2', name: '🛡️ Aegis', model: '/ufo_2.glb', specialty: 'Defensa / Campo EM', description: 'Especialidad: protección y control físico', ability: 'Habilidad principal: campo electromagnético', missions: 'Tipo de misiones: atravesar campos de asteroides, rescates, misiones de escolta, limpiar escombros espaciales' },
         { id: 'ufo_3', name: '⚡ Vector', model: '/ufo_3.glb', specialty: 'Velocidad / Teletransporte', description: 'Especialidad: movilidad extrema', ability: 'Habilidad principal: salto cuántico', missions: 'Tipo de misiones: carreras, persecuciones, exploración, entrega urgente' },
-        { id: 'ufo_4', name: '🔬 Oracle', model: '/ufo_4.glb', specialty: 'Ciencia / Escaneo', description: 'Especialidad: conocimiento y análisis', ability: 'Habilidad principal: escáner cuántico', missions: 'Tipo de misiones: exploración planetaria, arqueología, investigación, cartografía' },
+        { id: 'ufo_4', name: '🔬 Oracle', model: '/ufo_4.glb', specialty: 'Ciencia / Escaneo', description: 'Especialidad: conocimiento y análisis', ability: 'Habilidad principal: escáner cuántico', missions: 'Tipo de misiones: exploración planetaria, arqueología alienígena, investigación, cartografía' },
         { id: 'ufo_5', name: '💣 Titan', model: '/ufo_5.glb', specialty: 'Fuerza Bruta / Impacto', description: 'Especialidad: potencia y resistencia', ability: 'Habilidad principal: masa + potencia', missions: 'Tipo de misiones: combate, minería pesada, abrir rutas, destruir obstáculos' }
       ]
 
@@ -1373,12 +1373,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           showCollectedMessage={showCollectedMessage}
           onCloseMessage={() => setShowCollectedMessage(false)}
           showViracochaDialogue={showViracochaDialogue}
-          onViracochaSpeak={() => {
-            setShowViracochaDialogue(true)
-            if (magnaBowlCollected) {
-              completeMission('pumaPunku', 'deliver_magna_bowl')
-            }
-          }}
+          onViracochaSpeak={() => setShowViracochaDialogue(true)}
           onCloseViracochaDialogue={() => setShowViracochaDialogue(false)}
           onPortalEnter={() => handleLocationClick(-16.031003664299448, -69.49975772335767)}
           magnaBowlCollected={magnaBowlCollected}
