@@ -1,9 +1,13 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { resetPlayerState } from '@/types/player'
-import { getAssetPath } from '@/lib/paths'
+
+// Ruta del logo resuelta en cliente para evitar problemas SSR
+const LOGO_PATH = process.env.NODE_ENV === 'production'
+  ? '/ArcheoScope/branding/icons/logo-pixel.png'
+  : '/branding/icons/logo-pixel.png'
 
 export default function Home() {
   const router = useRouter()
@@ -25,10 +29,11 @@ export default function Home() {
     <main style={{
       width: '100vw', height: '100vh',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#000', margin: 0, padding: 0, overflow: 'hidden',
+      background: '#061a19',
+      margin: 0, padding: 0, overflow: 'hidden',
       position: 'relative'
     }}>
-      {/* Logo pixel como fondo principal - usando img nativo para respetar basePath */}
+      {/* Logo pixel como fondo principal */}
       <div style={{
         position: 'absolute', inset: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -36,7 +41,7 @@ export default function Home() {
       }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={getAssetPath('/branding/icons/logo-pixel.png')}
+          src={LOGO_PATH}
           alt="Archeoscope"
           style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '40px' }}
         />

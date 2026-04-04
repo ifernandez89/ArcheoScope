@@ -7,6 +7,10 @@ import { resetMissionState } from '@/types/missionState'
 import { resetGameSettings } from '@/types/gameSettings'
 import { getAssetPath } from '@/lib/paths'
 
+const LOGO_MAIN = process.env.NODE_ENV === 'production'
+  ? '/ArcheoScope/branding/logo/logo-main.png'
+  : '/branding/logo/logo-main.png'
+
 export default function MenuPage() {
   const router = useRouter()
   const [hasActiveGame, setHasActiveGame] = useState(false)
@@ -92,7 +96,7 @@ export default function MenuPage() {
         }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={getAssetPath('/branding/logo/logo-main.png')}
+            src={LOGO_MAIN}
             alt="Archeoscope: The Forgotten Relics"
             style={{ width: '200px', height: '200px', objectFit: 'contain' }}
           />

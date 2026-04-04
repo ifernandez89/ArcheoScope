@@ -22,6 +22,11 @@ const nextConfig = {
     unoptimized: true,
   },
   
+  // Eliminar console.log en producción automáticamente
+  compiler: {
+    removeConsole: isProd ? { exclude: ['error'] } : false,
+  },
+  
   // Optimizaciones de performance
   swcMinify: true,
   

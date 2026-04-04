@@ -126,6 +126,24 @@ export default function ControlsPage() {
           </div>
         </div>
 
+        {/* Cómo Jugar */}
+        <div style={{
+          background: 'rgba(102, 126, 234, 0.08)',
+          padding: '20px', borderRadius: '8px',
+          border: '1px solid rgba(102, 126, 234, 0.3)'
+        }}>
+          <h2 style={{ fontSize: '20px', marginBottom: '15px', color: '#a78bfa', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span>🎮</span> Cómo Jugar
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '15px', lineHeight: '1.6' }}>
+            <p style={{ color: '#ccc', margin: 0 }}>🌍 Explora el globo terráqueo y viaja a sitios arqueológicos.</p>
+            <p style={{ color: '#ccc', margin: 0 }}>🗿 Interactúa con los NPCs haciendo <strong style={{color:'#fff'}}>click</strong> sobre ellos.</p>
+            <p style={{ color: '#ccc', margin: 0 }}>📦 Recoge objetos sagrados y complétalos misiones en cada sitio.</p>
+            <p style={{ color: '#ccc', margin: 0 }}>🌋 Completa las 4 misiones principales y activa el Merkaba en Isla de Pascua.</p>
+            <p style={{ color: '#ccc', margin: 0 }}>⚠️ Cuidado: algunas acciones tienen consecuencias irreversibles.</p>
+          </div>
+        </div>
+
         {/* Controles de Movimiento */}
         <div style={{
           background: 'rgba(255, 255, 255, 0.05)',

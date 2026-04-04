@@ -3,9 +3,14 @@
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import UI from '@/components/UI'
-import { getAssetPath } from '@/lib/paths'
+import { useProgress } from '@react-three/drei'
+
+const LOGO_LOADING = process.env.NODE_ENV === 'production'
+  ? '/ArcheoScope/branding/loading/logo-loading.png'
+  : '/branding/loading/logo-loading.png'
 
 function LoadingScreen() {
+  const { progress, active } = useProgress()
   const [opacity, setOpacity] = useState(0)
   useEffect(() => {
     const t = setTimeout(() => setOpacity(1), 50)
@@ -27,26 +32,41 @@ function LoadingScreen() {
       }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={getAssetPath('/branding/loading/logo-loading.png')}
+          src={LOGO_LOADING}
           alt="Archeoscope: The Forgotten Relics"
-          style={{ width: '280px', height: '280px', objectFit: 'contain' }}
+          style={{ width: '240px', height: '240px', objectFit: 'contain' }}
         />
       </div>
-      <div style={{
-        fontSize: '13px', letterSpacing: '4px',
-        color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase',
-        animation: 'textPulse 1.5s ease-in-out infinite'
-      }}>
-        Cargando motor 3D...
+
+      {/* Barra de progreso */}
+      <div style={{ width: '320px', marginBottom: '16px' }}>
+        <div style={{
+          width: '100%', height: '4px',
+          background: 'rgba(255,255,255,0.1)',
+          borderRadius: '2px', overflow: 'hidden'
+        }}>
+          <div style={{
+            height: '100%',
+            width: `${progress}%`,
+            background: 'linear-gradient(90deg, #667eea, #764ba2)',
+            borderRadius: '2px',
+            transition: 'width 0.3s ease',
+            boxShadow: '0 0 8px rgba(102,126,234,0.8)'
+          }} />
+        </div>
       </div>
+
+      <div style={{
+        fontSize: '12px', letterSpacing: '3px',
+        color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase'
+      }}>
+        {active ? `Cargando... ${Math.round(progress)}%` : 'Iniciando mundo...'}
+      </div>
+
       <style>{`
         @keyframes logoPulse {
           0%, 100% { filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.6)); }
           50% { filter: drop-shadow(0 0 35px rgba(102, 126, 234, 0.9)); }
-        }
-        @keyframes textPulse {
-          0%, 100% { opacity: 0.5; }
-          50% { opacity: 1; }
         }
       `}</style>
     </div>
