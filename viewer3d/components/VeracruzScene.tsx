@@ -16,17 +16,18 @@ interface VeracruzSceneProps {
   onEnterCave?: () => void
   jadeMissionDone?: boolean
   onShipChange?: (ufoNumber: number) => void
+  currentUfo?: number
 }
 
-export default function VeracruzScene({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave, jadeMissionDone, onShipChange }: VeracruzSceneProps) {
+export default function VeracruzScene({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave, jadeMissionDone, onShipChange, currentUfo }: VeracruzSceneProps) {
   return (
     <Suspense fallback={<LoadingVeracruz />}>
-      <VeracruzSceneContent avatarPositionRef={avatarPositionRef} onOlmecClick={onOlmecClick} caveQuestActive={caveQuestActive} onEnterCave={onEnterCave} jadeMissionDone={jadeMissionDone} onShipChange={onShipChange} />
+      <VeracruzSceneContent avatarPositionRef={avatarPositionRef} onOlmecClick={onOlmecClick} caveQuestActive={caveQuestActive} onEnterCave={onEnterCave} jadeMissionDone={jadeMissionDone} onShipChange={onShipChange} currentUfo={currentUfo} />
     </Suspense>
   )
 }
 
-function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave, jadeMissionDone, onShipChange }: VeracruzSceneProps) {
+function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave, jadeMissionDone, onShipChange, currentUfo }: VeracruzSceneProps) {
   const olmecModel = useGLTF(getAssetPath('/olmec_head.glb'))
   const groupRef = useRef<THREE.Group>(null)
   const [isStanding, setIsStanding] = useState(false)
@@ -142,19 +143,20 @@ function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive
         {/* 🏔️ Cueva olmeca al oeste */}
         <OlmecCave />
 
-        {/* 💠 Crop Circle: Hilbert - Nave 4 Oracle (Veracruz) */}
+        {/* 💠 Crop Circle: Polígono Estelar - Nave 5 Titan (Veracruz) */}
         <CropCircle 
-          type="hilbert" 
+          type="polygon" 
           position={[83, 1, 67]} 
           scale={1.5} 
           visible={missionDone} 
         />
         <CropCirclePortal
           position={[83, 1, 67]}
-          ufoNumber={4}
+          ufoNumber={5}
           missionDone={missionDone}
           avatarPositionRef={avatarPositionRef}
           onShipChange={onShipChange}
+          currentUfo={currentUfo}
         />
       </group>
     </>

@@ -11,7 +11,7 @@ interface ModelInfoProps {
 
 const MODEL_DESCRIPTIONS: Record<string, { title: string; description: string; origin: string }> = {
   'moai': {
-    title: 'Moai de Rapa Nui',
+    title: 'Hotu Matua - Rapa Nui',
     description: 'Estatuas monolíticas talladas por el pueblo Rapa Nui en la Isla de Pascua entre 1250 y 1500 d.C.',
     origin: 'Isla de Pascua, Chile'
   },

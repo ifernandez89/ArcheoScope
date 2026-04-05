@@ -69,7 +69,7 @@ const ships = [
     specialty: 'Fuerza Bruta / Impacto',
     description: 'Especialidad: potencia y resistencia',
     ability: 'Habilidad principal: masa + potencia',
-    missions: 'Tipo de misiones: combate, minería pesada, abrir rutas, destruir obstáculos'
+    missions: 'Tipo de misiones: combate, minería pesada, abrir rutas, destruir o detener objetos'
   }
 ]
 

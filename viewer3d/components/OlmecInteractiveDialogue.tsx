@@ -71,15 +71,18 @@ export default function OlmecInteractiveDialogue({
       setCurrentMessage('Viajero... ¿Que deseas saber?')
       setShowOptions(true)
     }
-  }, [hasStoodUp, hasJadeMask, onClose])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasStoodUp, hasJadeMask])
 
   const handleOptionClick = (optionId: number, response: string) => {
     setSelectedResponse(response)
     setShowOptions(false)
 
-    // Si eligió la opción 1 y la misión NO está completada, activar cueva
+    // Si eligió la opción 1 y la misión NO está completada, activar cueva después de mostrar respuesta
     if (optionId === 1 && onEnterCave && !missionCompleted) {
-      onEnterCave()
+      setTimeout(() => {
+        if (onEnterCave) onEnterCave()
+      }, 3000) // Dar tiempo a leer la respuesta
       setTimeout(() => onClose(), 5000)
       return
     }

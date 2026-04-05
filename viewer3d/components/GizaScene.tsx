@@ -26,6 +26,7 @@ interface GizaSceneProps {
   scarabDropPosition?: {x: number, z: number} | null
   totalMissionsCompleted?: number
   onShipChange?: (ufoNumber: number) => void
+  currentUfo?: number
 }
 
 /**
@@ -60,7 +61,8 @@ export default function GizaScene({
   showScarab,
   scarabDropPosition,
   totalMissionsCompleted = 0,
-  onShipChange
+  onShipChange,
+  currentUfo
 }: GizaSceneProps) {
   console.log('🔶 GizaScene RENDER - pyramidionCollected:', pyramidionCollected, 'pyramidionOnTop:', pyramidionOnTop)
   
@@ -214,6 +216,7 @@ export default function GizaScene({
           missionDone={missionDone}
           avatarPositionRef={avatarPositionRef}
           onShipChange={onShipChange}
+          currentUfo={currentUfo}
         />
         
         {/* 👑 Estatuas de faraones - Frente a la pirámide, mirando al sur */}

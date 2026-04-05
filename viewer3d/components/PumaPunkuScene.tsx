@@ -45,12 +45,14 @@ export default function PumaPunkuScene({
   onViracochaSpeak,
   onPortalEnter,
   avatarPositionRef,
-  onShipChange
+  onShipChange,
+  currentUfo
 }: { 
   onViracochaSpeak?: () => void
   onPortalEnter?: () => void
   avatarPositionRef?: React.RefObject<Vector3>
   onShipChange?: (ufoNumber: number) => void
+  currentUfo?: number
 }) {
   return (
     <Suspense fallback={<LoadingPumaPunku />}>
@@ -59,6 +61,7 @@ export default function PumaPunkuScene({
         onPortalEnter={onPortalEnter}
         avatarPositionRef={avatarPositionRef}
         onShipChange={onShipChange}
+        currentUfo={currentUfo}
       />
     </Suspense>
   )
@@ -68,12 +71,14 @@ function PumaPunkuSceneContent({
   onViracochaSpeak,
   onPortalEnter,
   avatarPositionRef,
-  onShipChange
+  onShipChange,
+  currentUfo
 }: { 
   onViracochaSpeak?: () => void
   onPortalEnter?: () => void
   avatarPositionRef?: React.RefObject<Vector3>
   onShipChange?: (ufoNumber: number) => void
+  currentUfo?: number
 }) {
   const { blockMoved } = useObjectSelection()
   
@@ -187,6 +192,7 @@ function PumaPunkuSceneContent({
         missionDone={missionDone}
         avatarPositionRef={avatarPositionRef}
         onShipChange={onShipChange}
+        currentUfo={currentUfo}
       />
 
       {/* Detector de portal - teletransporta al Lago Titicaca */}

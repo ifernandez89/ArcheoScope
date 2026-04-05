@@ -29,6 +29,8 @@ interface TeotihuacanSceneProps {
   cornDropPosition?: {x: number, z: number} | null
   cornPlanted?: boolean
   onShipChange?: (ufoNumber: number) => void
+  currentUfo?: number
+  abilityActive?: boolean
 }
 
 export default function TeotihuacanScene({ 
@@ -40,7 +42,9 @@ export default function TeotihuacanScene({
   showCornSeed,
   cornDropPosition,
   cornPlanted,
-  onShipChange
+  onShipChange,
+  currentUfo,
+  abilityActive
 }: TeotihuacanSceneProps) {
   return (
     <Suspense fallback={<LoadingTeotihuacan />}>
@@ -54,6 +58,8 @@ export default function TeotihuacanScene({
         cornDropPosition={cornDropPosition}
         cornPlanted={cornPlanted}
         onShipChange={onShipChange}
+        currentUfo={currentUfo}
+        abilityActive={abilityActive}
       />
     </Suspense>
   )
@@ -77,7 +83,9 @@ function TeotihuacanSceneContent({
   showCornSeed,
   cornDropPosition,
   cornPlanted,
-  onShipChange
+  onShipChange,
+  currentUfo,
+  abilityActive
 }: TeotihuacanSceneProps) {
   // Cargar modelos base (livianos: kukulkan 0.6MB, aztec 1.9MB, calendario 49.9MB)
   const kukulkanModel = useGLTF(getAssetPath('/kukulkan.glb'))
@@ -246,18 +254,26 @@ function TeotihuacanSceneContent({
     }
   })
   
-  // Handler para click en calendario
+  // Handler para calendario — solo Titan (nave 5) con habilidad activa y en proximidad
   const handleCalendarioClick = () => {
-    if (isCalendarioSpinning) {
+    // Click directo deshabilitado — requiere pulso de Titan
+  }
+
+  // Detectar pulso de Titan cerca del calendario
+  useEffect(() => {
+    if (currentUfo !== 5 || !abilityActive || !isCalendarioSpinning) return
+    // Verificar proximidad al calendario [0, 10, -20]
+    const av = avatarPositionRef?.current
+    if (!av) return
+    const distSq = av.x ** 2 + (av.z + 20) ** 2
+    if (distSq < 900) { // radio 30
       setIsCalendarioSpinning(false)
       setTimeout(() => {
         setShowQuetzalcoatl(true)
-        if (onQuetzalcoatlAppear) {
-          onQuetzalcoatlAppear()
-        }
+        if (onQuetzalcoatlAppear) onQuetzalcoatlAppear()
       }, 1000)
     }
-  }
+  }, [abilityActive])
   
   // Handler para click en Quetzalcoatl
   const handleQuetzalcoatlClick = (e: any) => {
@@ -296,6 +312,7 @@ function TeotihuacanSceneContent({
         missionDone={missionDone}
         avatarPositionRef={avatarPositionRef}
         onShipChange={onShipChange}
+        currentUfo={currentUfo}
       />
       
       {/* Calendario Maya - SIN CLONE */}
@@ -305,7 +322,7 @@ function TeotihuacanSceneContent({
         onClick={handleCalendarioClick}
         onPointerOver={(e) => {
           e.stopPropagation()
-          document.body.style.cursor = 'pointer'
+          document.body.style.cursor = isCalendarioSpinning && currentUfo === 5 ? 'pointer' : 'default'
         }}
         onPointerOut={(e) => {
           e.stopPropagation()
@@ -314,6 +331,23 @@ function TeotihuacanSceneContent({
       >
         <primitive object={calendarioModel.scene} scale={1.5} />
       </group>
+
+      {/* Detector de pulso Titan para detener el Calendario */}
+      <TitanPulseDetector
+        position={[0, 10, -20]}
+        radius={30}
+        currentUfo={currentUfo}
+        abilityActive={abilityActive}
+        avatarPositionRef={avatarPositionRef}
+        enabled={isCalendarioSpinning}
+        onActivate={() => {
+          setIsCalendarioSpinning(false)
+          setTimeout(() => {
+            setShowQuetzalcoatl(true)
+            if (onQuetzalcoatlAppear) onQuetzalcoatlAppear()
+          }, 1000)
+        }}
+      />
       
       {/* Templo Mayor Azteca - SIN CLONE (60m altura) */}
       <group position={[25, 0, 10]} rotation={[0, -Math.PI / 3, 0]}>
@@ -497,3 +531,40 @@ function LoadingTeotihuacan() {
 // useGLTF.preload(getAssetPath('/quetzalcoatl.glb'))
 // useGLTF.preload(getAssetPath('/maiz.glb'))
 // useGLTF.preload(getAssetPath('/planta_maiz.glb'))
+
+// ─── TITAN PULSE DETECTOR ─────────────────────────────────────────────────────
+function TitanPulseDetector({
+  position,
+  radius,
+  currentUfo,
+  abilityActive,
+  avatarPositionRef,
+  enabled,
+  onActivate
+}: {
+  position: [number, number, number]
+  radius: number
+  currentUfo?: number
+  abilityActive?: boolean
+  avatarPositionRef?: React.RefObject<THREE.Vector3>
+  enabled: boolean
+  onActivate: () => void
+}) {
+  const firedRef = useRef(false)
+
+  useEffect(() => {
+    if (!enabled || firedRef.current) return
+    if (currentUfo !== 5 || !abilityActive) return
+    const av = avatarPositionRef?.current
+    if (!av) return
+    const dx = av.x - position[0]
+    const dz = av.z - position[2]
+    if (dx * dx + dz * dz < radius * radius) {
+      firedRef.current = true
+      onActivate()
+      console.log('💥 Titan pulse detuvo el Calendario!')
+    }
+  }, [abilityActive])
+
+  return null
+}

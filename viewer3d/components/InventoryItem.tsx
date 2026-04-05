@@ -18,15 +18,22 @@ function RotatingModel({ modelPath, scale = 1 }: { modelPath: string, scale?: nu
   const { scene } = useGLTF(getAssetPath(modelPath))
   const groupRef = useRef<THREE.Group>(null)
   
-  // Clonar UNA sola vez con useMemo
-  const clonedScene = useMemo(() => {
+  // Clonar y centrar automáticamente
+  const { clonedScene, autoScale } = useMemo(() => {
     const clone = scene.clone(true)
     if (modelPath.includes('escab')) {
-      // Ajuste específico para el escarabajo: rotar para verlo desde arriba/espalda
       clone.rotation.x = Math.PI / 2
       clone.rotation.z = Math.PI
     }
-    return clone
+    // Auto-centrar: calcular bounding box y mover al origen
+    const box = new THREE.Box3().setFromObject(clone)
+    const center = box.getCenter(new THREE.Vector3())
+    const size = box.getSize(new THREE.Vector3())
+    clone.position.sub(center) // centrar en origen
+    // Auto-escalar para que quepa en la ventana (max dimension = 2 unidades)
+    const maxDim = Math.max(size.x, size.y, size.z)
+    const autoSc = maxDim > 0 ? 2 / maxDim : 1
+    return { clonedScene: clone, autoScale: autoSc }
   }, [scene, modelPath])
   
   useFrame((state, delta) => {
@@ -35,8 +42,7 @@ function RotatingModel({ modelPath, scale = 1 }: { modelPath: string, scale?: nu
     }
   })
   
-  // Escalar el escarabajo un poco más para que se vea bien en la pequeña ventana
-  const finalScale = modelPath.includes('escab') ? scale * 3.5 : scale
+  const finalScale = scale * autoScale
   
   return (
     <group ref={groupRef}>

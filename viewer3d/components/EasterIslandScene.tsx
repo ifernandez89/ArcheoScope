@@ -108,9 +108,11 @@ interface EasterIslandSceneProps {
   onSkullCollect?: () => void
   merkabaMissionDone?: boolean
   onShipChange?: (ufoNumber: number) => void
+  currentUfo?: number
+  abilityActive?: boolean
 }
 
-export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate, onTriggerEruption, skullInInventory, showSkull, skullDropPosition, onSkullCollect, merkabaMissionDone, onShipChange }: EasterIslandSceneProps) {
+export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate, onTriggerEruption, skullInInventory, showSkull, skullDropPosition, onSkullCollect, merkabaMissionDone, onShipChange, currentUfo, abilityActive }: EasterIslandSceneProps) {
   return (
     <Suspense fallback={<LoadingEasterIsland />}>
       <EasterIslandSceneContent 
@@ -128,6 +130,8 @@ export default function EasterIslandScene({ avatarPositionRef, volcanicEruption,
         onSkullCollect={onSkullCollect}
         merkabaMissionDone={merkabaMissionDone}
         onShipChange={onShipChange}
+        currentUfo={currentUfo}
+        abilityActive={abilityActive}
       />
     </Suspense>
   )
@@ -147,7 +151,9 @@ function EasterIslandSceneContent({
   skullDropPosition,
   onSkullCollect,
   merkabaMissionDone,
-  onShipChange
+  onShipChange,
+  currentUfo,
+  abilityActive
 }: EasterIslandSceneProps) {
   const moaiModel = useGLTF(getAssetPath('/moai.glb'))
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
@@ -362,7 +368,22 @@ function EasterIslandSceneContent({
         size={1.5}
         color="#ffd700"
         speed={merkabaActive ? 0 : 0.4}
-        clickable={merkabaClickable && !merkabaActive}
+        clickable={false}
+        onActivate={() => {
+          setMerkabaActive(true)
+          setShowEnergySphere(true)
+          if (onMerkabaActivate) onMerkabaActivate()
+        }}
+      />
+
+      {/* Detector de pulso Titan para activar Merkaba */}
+      <TitanPulseDetector
+        position={[0, 12, 0]}
+        radius={25}
+        currentUfo={currentUfo}
+        abilityActive={abilityActive}
+        avatarPositionRef={avatarPositionRef}
+        enabled={merkabaClickable && !merkabaActive}
         onActivate={() => {
           setMerkabaActive(true)
           setShowEnergySphere(true)
@@ -372,20 +393,21 @@ function EasterIslandSceneContent({
 
       <EnergySphere position={[0, 8, 0]} size={2} visible={showEnergySphere} />
 
-      {/* 💠 Crop Circle: Polígono Estelar - Nave 5 Titan (Isla de Pascua) */}
+      {/* 💠 Crop Circle: Hilbert - Nave 4 Oracle (Isla de Pascua) */}
       {/* Volcán en [-55, 0, 55] → crop circle en esquina opuesta */}
       <CropCircle 
-        type="polygon" 
+        type="hilbert" 
         position={[55, 1, -55]} 
         scale={1.5} 
         visible={missionDone} 
       />
       <CropCirclePortal
         position={[55, 1, -55]}
-        ufoNumber={5}
+        ufoNumber={4}
         missionDone={missionDone}
         avatarPositionRef={avatarPositionRef}
         onShipChange={onShipChange}
+        currentUfo={currentUfo}
       />
 
       {showJadeMask && !jadeMaskCollected && (
@@ -428,4 +450,42 @@ function EasterIslandSceneContent({
       <directionalLight position={[10, 10, 5]} intensity={0.8} />
     </group>
   )
+}
+
+// ─── TITAN PULSE DETECTOR ─────────────────────────────────────────────────────
+// Solo Titan (nave 5) con habilidad activa y en proximidad puede activar el objeto
+function TitanPulseDetector({
+  position,
+  radius,
+  currentUfo,
+  abilityActive,
+  avatarPositionRef,
+  enabled,
+  onActivate
+}: {
+  position: [number, number, number]
+  radius: number
+  currentUfo?: number
+  abilityActive?: boolean
+  avatarPositionRef?: React.RefObject<THREE.Vector3>
+  enabled: boolean
+  onActivate: () => void
+}) {
+  const firedRef = useRef(false)
+
+  useEffect(() => {
+    if (!enabled || firedRef.current) return
+    if (currentUfo !== 5 || !abilityActive) return
+    const av = avatarPositionRef?.current
+    if (!av) return
+    const dx = av.x - position[0]
+    const dz = av.z - position[2]
+    if (dx * dx + dz * dz < radius * radius) {
+      firedRef.current = true
+      onActivate()
+      console.log('💥 Titan pulse activó el Merkaba!')
+    }
+  }, [abilityActive])
+
+  return null
 }

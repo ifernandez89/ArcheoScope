@@ -2,9 +2,12 @@
 
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF } from '@react-three/drei'
-import { Suspense } from 'react'
+import { Suspense, useMemo } from 'react'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
+
+// Configurar Draco decoder para modelos comprimidos
+useGLTF.setDecoderPath(getAssetPath('/draco/'))
 
 interface ShipPreviewProps {
   shipModel: string
@@ -12,15 +15,21 @@ interface ShipPreviewProps {
 
 function ShipModel({ modelPath }: { modelPath: string }) {
   const { scene } = useGLTF(getAssetPath(modelPath))
-  
+
+  // Clonar siempre para evitar conflictos de referencia entre cambios de nave
+  const cloned = useMemo(() => scene.clone(true), [scene])
+
   return (
     <primitive 
-      object={scene} 
+      object={cloned} 
       scale={2}
       rotation={[0, Math.PI, 0]}
     />
   )
 }
+
+// Precargar todas las naves para que el cambio sea instantáneo
+;[1,2,3,4,5].forEach(n => useGLTF.preload(getAssetPath(`/ufo_${n}.glb`)))
 
 export default function ShipPreview({ shipModel }: ShipPreviewProps) {
   return (
@@ -32,24 +41,19 @@ export default function ShipPreview({ shipModel }: ShipPreviewProps) {
       borderRadius: '8px',
       overflow: 'hidden'
     }}>
+      {/* key={shipModel} fuerza remount del Canvas al cambiar nave — limpia referencias */}
       <Canvas
+        key={shipModel}
         camera={{ position: [0, 2, 8], fov: 50 }}
         style={{ background: '#0a0a0a' }}
       >
-        {/* Luz ambiente más intensa */}
         <ambientLight intensity={1.6} />
-        
-        {/* Luces direccionales principales */}
         <directionalLight position={[10, 10, 10]} intensity={3.0} color="#ffffff" />
         <directionalLight position={[-10, 10, -10]} intensity={2.4} color="#ffffff" />
         <directionalLight position={[0, -10, 0]} intensity={1.6} color="#ffffff" />
-        
-        {/* Luces de relleno para detalles */}
         <pointLight position={[5, 0, 5]} intensity={2.0} color="#4a9eff" />
         <pointLight position={[-5, 0, -5]} intensity={2.0} color="#4a9eff" />
         <pointLight position={[0, 5, 0]} intensity={1.6} color="#ffffff" />
-        
-        {/* Luz de acento desde abajo */}
         <spotLight 
           position={[0, -5, 0]} 
           intensity={3.0} 

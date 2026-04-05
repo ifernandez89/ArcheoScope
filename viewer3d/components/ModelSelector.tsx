@@ -19,7 +19,7 @@ const AVAILABLE_MODELS: Model[] = [
   },
   {
     id: 'moai',
-    name: 'Moai (Rapa Nui)',
+    name: 'Hotu Matua (Rapa Nui)',
     path: getAssetPath('/moai.glb'),
     thumbnail: '🗿'
   },

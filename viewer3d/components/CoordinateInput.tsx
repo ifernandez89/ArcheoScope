@@ -38,10 +38,11 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
 
   // Coordenadas de sitios seleccionados
   const famousSites = [
-    { name: 'Bolivia', lat: -16.56164569638123, lon: -68.67952141492464, category: 'famous' },
-    { name: 'Egipto', lat: 29.9792, lon: 31.1342, category: 'famous' },
-    { name: 'México', lat: 19.6925, lon: -98.8438, category: 'famous' },
-    { name: 'Veracruz', lat: 18.4667, lon: -95.4500, category: 'famous' },
+    { lat: -16.56164569638123, lon: -68.67952141492464, category: 'famous' },
+    { lat: 29.9792, lon: 31.1342, category: 'famous' },
+    { lat: 19.6925, lon: -98.8438, category: 'famous' },
+    { lat: 18.4667, lon: -95.4500, category: 'famous' },
+    { lat: -27.1254, lon: -109.2778, category: 'famous' },
   ]
 
   return (
@@ -215,9 +216,9 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
               gap: '6px',
               marginBottom: '20px'
             }}>
-              {famousSites.filter(s => s.category === 'famous').map((site) => (
+              {famousSites.filter(s => s.category === 'famous').map((site, i) => (
                 <button
-                  key={site.name}
+                  key={i}
                   onClick={() => {
                     setLat(site.lat.toFixed(4))
                     setLon(site.lon.toFixed(4))
@@ -242,7 +243,7 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
                     e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
                   }}
                 >
-                  {site.name}
+                  {site.lat.toFixed(4)}°, {site.lon.toFixed(4)}°
                 </button>
               ))}
             </div>

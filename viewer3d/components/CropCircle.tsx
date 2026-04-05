@@ -462,7 +462,8 @@ function PolygonStar() {
 
 // ─── PORTAL DE NAVE ───────────────────────────────────────────────────────────
 // Detecta cuando el avatar se posiciona sobre el crop circle y cambia la nave.
-// Una vez activado, persiste en localStorage y deja de evaluar proximidad.
+// Solo actúa si la nave actual NO es la del portal.
+// Se puede reactivar si el jugador cambió de nave y vuelve al portal.
 
 interface CropCirclePortalProps {
   position: [number, number, number]
@@ -470,6 +471,7 @@ interface CropCirclePortalProps {
   missionDone: boolean
   avatarPositionRef?: React.RefObject<THREE.Vector3>
   onShipChange?: (ufoNumber: number) => void
+  currentUfo?: number   // nave actual del jugador
   radius?: number
 }
 
@@ -479,38 +481,54 @@ export function CropCirclePortal({
   missionDone,
   avatarPositionRef,
   onShipChange,
+  currentUfo,
   radius = 12
 }: CropCirclePortalProps) {
-  const storageKey = `portal_ufo_${ufoNumber}_activated`
-
-  // Si ya fue activado en cualquier sesión anterior, no evaluar nada
-  const alreadyDone = useRef(
-    typeof window !== 'undefined' && localStorage.getItem(storageKey) === 'true'
-  )
+  // Cooldown para evitar activaciones repetidas mientras está dentro del radio
+  const cooldownRef = useRef(false)
+  const insideRef = useRef(false)
 
   useFrame(() => {
-    // Cortocircuito: misión no completa, sin ref, sin callback, o ya activado
     if (!missionDone || !avatarPositionRef?.current || !onShipChange) return
-    if (alreadyDone.current) return
 
     const av = avatarPositionRef.current
     const dx = av.x - position[0]
     const dz = av.z - position[2]
+    const inside = dx * dx + dz * dz < radius * radius
 
-    if (dx * dx + dz * dz < radius * radius) {
-      alreadyDone.current = true
-      if (typeof window !== 'undefined') localStorage.setItem(storageKey, 'true')
-      onShipChange(ufoNumber)
-      console.log(`🛸 Portal activado → nave ${ufoNumber}`)
+    if (inside && !insideRef.current) {
+      // Acaba de entrar al radio
+      insideRef.current = true
+
+      // Si ya tiene la nave correcta, no hacer nada
+      if (currentUfo === ufoNumber) {
+        console.log(`🛸 Portal ${ufoNumber}: nave ya activa, sin cambio`)
+        return
+      }
+
+      // Cambiar a la nave del portal
+      if (!cooldownRef.current) {
+        cooldownRef.current = true
+        onShipChange(ufoNumber)
+        console.log(`🛸 Portal activado → nave ${ufoNumber} (era nave ${currentUfo})`)
+        // Cooldown de 3s para evitar spam
+        setTimeout(() => { cooldownRef.current = false }, 3000)
+      }
+    } else if (!inside) {
+      // Salió del radio — resetear para permitir reactivación
+      insideRef.current = false
     }
   })
 
   if (!missionDone) return null
 
+  // Color del anillo según si la nave actual coincide con el portal
+  const ringColor = currentUfo === ufoNumber ? '#00ff88' : '#ffffff'
+
   return (
     <mesh position={[position[0], position[1] + 0.1, position[2]]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[radius * 0.85, radius, 48]} />
-      <meshBasicMaterial color="#ffffff" transparent opacity={0.04} depthWrite={false} />
+      <meshBasicMaterial color={ringColor} transparent opacity={currentUfo === ufoNumber ? 0.08 : 0.04} depthWrite={false} />
     </mesh>
   )
 }

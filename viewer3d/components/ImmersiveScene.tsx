@@ -456,6 +456,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [skullOnGround, setSkullOnGround] = useState(false)
   const [skullDropPosition, setSkullDropPosition] = useState<{ x: number, z: number } | null>(null)
 
+  // 🌞 Tonatiuh — figurilla oculta en el Mictlán
+  const [tonatiuhInInventory, setTonatiuhInInventory] = useState(false)
+  const [tonatiuhOnGround, setTonatiuhOnGround] = useState(false)
+  const [tonatiuhDropPosition, setTonatiuhDropPosition] = useState<{ x: number, z: number } | null>(null)
+
   // 🛸 Estado de habilidades de nave
   const [abilityActive, setAbilityActive] = useState(false)
   const [abilityCooldown, setAbilityCooldown] = useState(false)
@@ -466,14 +471,17 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const SCAN_DATA = {
     'Viracocha': "Arquitecto de la realidad tangible. Su función es el ordenamiento del caos primordial a través de la geometría.",
     'Sphinx': "Eterno observador del tiempo. Su silencio guarda la respuesta a la pregunta que aún no has formulado.",
-    'Ramses': "El poder de la voluntad manifestada en piedra. La verdadera herencia no es el monumento, sino la visión.",
+    'Ramesses': "El poder de la voluntad manifestada en piedra. La verdadera herencia no es el monumento, sino la visión.",
     'Hatshepsut': "Navegante de los mares internos. La autoridad nace de la sabiduría profunda, no de la imposición.",
-    'Akenaton': "Foco de la unidad absoluta. Mira hacia la fuente única de luz que anima toda existencia consciente.",
+    'Akhenaten': "Foco de la unidad absoluta. Mira hacia la fuente única de luz que anima toda existencia consciente.",
     'Mummy': "Recipiente de la memoria biológica. El cuerpo es el templo que guarda el código del ser a través de los eones.",
-    'Moai': "Rostros que miran al infinito. Su silencio es comunicación; su inmovilidad es el eje de un mundo en cambio.",
+    'Hotu Matua': "Rostros que miran al infinito. Su silencio es comunicación; su inmovilidad es el eje de un mundo en cambio.",
     'Quetzalcoatl': "Unión de la materia terrestre y el espíritu celeste. La evolución es el equilibrio entre tus alas y tus raíces.",
     'Atlante': "Pilar del conocimiento estelar. Sostiene la carga del cielo para que la tierra pueda florecer en paz.",
-    'Mictlantecuhtli': "Transformador de la energía vital. El fin de un ciclo es solo la transmutación necesaria para el nuevo inicio."
+    'Mictlantecuhtli': "Transformador de la energía vital. El fin de un ciclo es solo la transmutación necesaria para el nuevo inicio.",
+    'FuenteMagna': "Para la diosa Nia, recipiente sagrado. Este cuenco se consagra para libaciones eternas — que la diosa reciba la ofrenda del viajero que despierta.",
+    'CalendarioMaya': "Registro de 5125 ciclos solares. Cada giro codifica el pulso del cosmos: nacimiento, apogeo, disolución. El tiempo no avanza — regresa.",
+    'Merkaba': "Campo de luz giratoria en perfecta resonancia. Vehículo de ascensión entre planos de existencia. Su activación sincroniza la red energética planetaria."
   }
 
   const toggleAbility = useCallback(() => {
@@ -500,14 +508,19 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         let foundNPC: string | null = null
 
         if (siteId === 'puma-punku' || siteId === 'pumaPunku') {
-          foundNPC = 'Viracocha'
+          // Puma Punku: Viracocha o Fuente Magna según proximidad
+          const px = mainAvatarPositionRef.current.x
+          const pz = mainAvatarPositionRef.current.z
+          const distFuente = (px - 0) ** 2 + (pz - 0) ** 2  // Fuente Magna cerca del centro
+          const distViracocha = (px - 14.5) ** 2 + (pz - 0.83) ** 2
+          foundNPC = distFuente < distViracocha ? 'FuenteMagna' : 'Viracocha'
         } else if (siteId === 'pyramids-giza' || siteId === 'giza') {
           // Giza: elegir el NPC más cercano por distancia horizontal XZ
           const gizaNPCs = [
             { name: 'Sphinx',     x: 100,  z: 50  },
-            { name: 'Ramses',     x: -20,  z: -50 },
+            { name: 'Ramesses',   x: -20,  z: -50 },
             { name: 'Hatshepsut', x: 20,   z: -50 },
-            { name: 'Akenaton',   x: 0,    z: 0   },
+            { name: 'Akhenaten',  x: 0,    z: 0   },
             { name: 'Mummy',      x: -72,  z: -2  }
           ]
           let minDistSq = Infinity
@@ -521,9 +534,17 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             }
           })
         } else if (siteId === 'moai-easter-island' || siteId === 'easter-island') {
-          foundNPC = 'Moai'
+          // Isla de Pascua: Hotu Matua o Merkaba según proximidad
+          const px = mainAvatarPositionRef.current.x
+          const pz = mainAvatarPositionRef.current.z
+          const distMerkaba = px ** 2 + pz ** 2  // Merkaba en [0,12,0]
+          foundNPC = distMerkaba < 400 ? 'Merkaba' : 'Hotu Matua'  // radio ~20
         } else if (siteId === 'teotihuacan') {
-          foundNPC = 'Quetzalcoatl'
+          // Teotihuacán: Quetzalcoatl o Calendario según proximidad
+          const px = mainAvatarPositionRef.current.x
+          const pz = mainAvatarPositionRef.current.z
+          const distCalendario = px ** 2 + (pz + 20) ** 2  // Calendario en [0,10,-20]
+          foundNPC = distCalendario < 625 ? 'CalendarioMaya' : 'Quetzalcoatl'  // radio ~25
         } else if (siteId === 'tres-zapotes') {
           // Veracruz: Atlante en superficie, Mictlantecuhtli en la cueva (lat≈0)
           if (currentLocation && Math.abs(currentLocation.lat) < 0.001) {
@@ -539,9 +560,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             // En Giza por coordenadas: buscar más cercano igual que arriba
             const gizaNPCs = [
               { name: 'Sphinx',     x: 100,  z: 50  },
-              { name: 'Ramses',     x: -20,  z: -50 },
+              { name: 'Ramesses',   x: -20,  z: -50 },
               { name: 'Hatshepsut', x: 20,   z: -50 },
-              { name: 'Akenaton',   x: 0,    z: 0   },
+              { name: 'Akhenaten',  x: 0,    z: 0   },
               { name: 'Mummy',      x: -72,  z: -2  }
             ]
             let minDistSq = Infinity
@@ -555,7 +576,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
               }
             })
           }
-          else if (Math.abs(lat - (-27.1254)) < 0.1) foundNPC = 'Moai'
+          else if (Math.abs(lat - (-27.1254)) < 0.1) foundNPC = 'Hotu Matua'
           else if (Math.abs(lat - 19.6925) < 0.1) foundNPC = 'Quetzalcoatl'
           else if (Math.abs(lat - 18.4667) < 0.1) foundNPC = 'Atlante'
         }
@@ -711,6 +732,20 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       setScarabDropPosition({ x: pos.x, z: pos.z })
       setScarabInInventory(false)
       setScarabOnGround(true)
+    }
+  }, [mode])
+
+  const handleDropTonatiuh = useCallback(() => {
+    if (mode === 'globe') {
+      console.log('🚫 No se puede soltar Tonatiuh en el espacio!')
+      return
+    }
+    console.log('🌞 Soltando Tonatiuh al piso!')
+    const pos = mainAvatarPositionRef.current
+    if (pos) {
+      setTonatiuhDropPosition({ x: pos.x, z: pos.z })
+      setTonatiuhInInventory(false)
+      setTonatiuhOnGround(true)
     }
   }, [mode])
 
@@ -1010,7 +1045,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         { id: 'ufo_2', name: '🛡️ Aegis', model: '/ufo_2.glb', specialty: 'Defensa / Campo EM', description: 'Especialidad: protección y control físico', ability: 'Habilidad principal: campo electromagnético', missions: 'Tipo de misiones: atravesar campos de asteroides, rescates, misiones de escolta, limpiar escombros espaciales' },
         { id: 'ufo_3', name: '⚡ Vector', model: '/ufo_3.glb', specialty: 'Velocidad / Teletransporte', description: 'Especialidad: movilidad extrema', ability: 'Habilidad principal: salto cuántico', missions: 'Tipo de misiones: carreras, persecuciones, exploración, entrega urgente' },
         { id: 'ufo_4', name: '🔬 Oracle', model: '/ufo_4.glb', specialty: 'Ciencia / Escaneo', description: 'Especialidad: conocimiento y análisis', ability: 'Habilidad principal: escáner cuántico', missions: 'Tipo de misiones: exploración planetaria, arqueología alienígena, investigación, cartografía' },
-        { id: 'ufo_5', name: '💣 Titan', model: '/ufo_5.glb', specialty: 'Fuerza Bruta / Impacto', description: 'Especialidad: potencia y resistencia', ability: 'Habilidad principal: masa + potencia', missions: 'Tipo de misiones: combate, minería pesada, abrir rutas, destruir obstáculos' }
+        { id: 'ufo_5', name: '💣 Titan', model: '/ufo_5.glb', specialty: 'Fuerza Bruta / Impacto', description: 'Especialidad: potencia y resistencia', ability: 'Habilidad principal: masa + potencia', missions: 'Tipo de misiones: combate, minería pesada, abrir rutas, destruir o detener objetos' }
       ]
 
       const newShip = ships[ufoNumber - 1]
@@ -1301,6 +1336,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onDrop={handleDropScarab}
           dropDisabled={mode === 'globe'}
         />
+        <InventoryItem
+          modelPath="/tonatiuh.glb"
+          itemName="Tonatiuh"
+          show={tonatiuhInInventory}
+          onDrop={handleDropTonatiuh}
+          dropDisabled={mode === 'globe'}
+        />
       </div>
 
       {/* Escena 3D */}
@@ -1434,6 +1476,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           caveQuestActive={caveQuestActive}
           onEnterCave={() => handleLocationClick(0.0001, 0.0001)}
           onShipChange={handleUfoChange}
+          tonatiuhInInventory={tonatiuhInInventory}
+          tonatiuhOnGround={tonatiuhOnGround}
+          tonatiuhDropPosition={tonatiuhDropPosition}
+          onTonatiuhCollect={() => {
+            setTonatiuhInInventory(true)
+            setTonatiuhOnGround(false)
+          }}
         />
       ) : null}
 
@@ -1752,7 +1801,11 @@ function ModelScene({
   onMerkabaActivate,
   abilityActive,
   currentUfo,
-  onShipChange
+  onShipChange,
+  tonatiuhInInventory,
+  tonatiuhOnGround,
+  tonatiuhDropPosition,
+  onTonatiuhCollect
 }: {
   abilityActive: boolean
   currentUfo: number
@@ -1831,6 +1884,10 @@ function ModelScene({
   onJadeMaskCollect?: () => void
   onMerkabaActivate?: () => void
   onShipChange?: (ufoNumber: number) => void
+  tonatiuhInInventory?: boolean
+  tonatiuhOnGround?: boolean
+  tonatiuhDropPosition?: { x: number, z: number } | null
+  onTonatiuhCollect?: () => void
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -2047,6 +2104,7 @@ function ModelScene({
                 onPortalEnter={onPortalEnter}
                 avatarPositionRef={avatarPositionRef}
                 onShipChange={onShipChange}
+                currentUfo={currentUfo}
               />
             )}
 
@@ -2071,6 +2129,7 @@ function ModelScene({
                 scarabDropPosition={scarabDropPosition}
                 totalMissionsCompleted={loadMissionState().stats.totalMissionsCompleted}
                 onShipChange={onShipChange}
+                currentUfo={currentUfo}
               />
             )}
 
@@ -2095,6 +2154,8 @@ function ModelScene({
                 onSkullCollect={onSkullCollect}
                 merkabaMissionDone={isMissionCompleted('easterIsland', 'activate_merkaba')}
                 onShipChange={onShipChange}
+                currentUfo={currentUfo}
+                abilityActive={abilityActive}
               />
             )}
 
@@ -2114,6 +2175,8 @@ function ModelScene({
                 cornDropPosition={cornDropPosition}
                 cornPlanted={cornPlanted}
                 onShipChange={onShipChange}
+                currentUfo={currentUfo}
+                abilityActive={abilityActive}
               />
             )}
 
@@ -2130,6 +2193,7 @@ function ModelScene({
                 onEnterCave={onEnterCave}
                 jadeMissionDone={isMissionCompleted('veracruz', 'deliver_jade_mask')}
                 onShipChange={onShipChange}
+                currentUfo={currentUfo}
               />
             )}
 
@@ -2142,6 +2206,12 @@ function ModelScene({
               <MictlanScene
                 avatarPositionRef={avatarPositionRef}
                 onExit={onMictlanExit}
+                currentUfo={currentUfo}
+                abilityActive={abilityActive}
+                tonatiuhInInventory={tonatiuhInInventory}
+                tonatiuhOnGround={tonatiuhOnGround}
+                tonatiuhDropPosition={tonatiuhDropPosition}
+                onTonatiuhCollect={onTonatiuhCollect}
               />
             )}
 
