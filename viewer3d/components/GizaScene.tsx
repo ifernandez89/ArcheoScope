@@ -67,8 +67,14 @@ export default function GizaScene({
   const [isFlooding, setIsFlooding] = useState(false)
   const [fadeToBlack, setFadeToBlack] = useState(false)
   
-  // Verificar si la misión está completa para el Crop Circle
-  const missionDone = useMemo(() => isMissionCompleted('giza', 'return_pyramidion'), [pyramidionOnTop])
+  // Verificar si la misión está completa - lee de localStorage al montar
+  const [missionDone, setMissionDone] = useState(false)
+  useEffect(() => {
+    if (isMissionCompleted('giza', 'return_pyramidion') || !!pyramidionOnTop) setMissionDone(true)
+  }, [pyramidionOnTop])
+  useEffect(() => {
+    if (pyramidionOnTop) setMissionDone(true)
+  }, [pyramidionOnTop])
   
   // 🎼 Activar arquitectura de Giza
   useEffect(() => {
@@ -193,11 +199,11 @@ export default function GizaScene({
           onClick={onSphinxClick}
         />
         
-        {/* 💠 Crop Circle: Toroide Energético (Generador Antiguo) */}
+        {/* 💠 Crop Circle: Estrella Piramidal (Alineación Astronómica) */}
         <CropCircle 
-          type="toroid" 
-          position={[100, 0.1, 75]} 
-          scale={25} 
+          type="pyramidStar" 
+          position={[83, 3, 67]} 
+          scale={1.5} 
           visible={missionDone} 
         />
         

@@ -144,11 +144,11 @@ function PumaPunkuSceneContent({
     { id: 'pp-b8', pos: [ 10, 0, -22], rot: 0.2 },
   ]
 
-  // Verificar si la misión está completada para mostrar el Crop Circle permanente
+  // Verificar si la misión está completa - lee de localStorage al montar
   const [missionDone, setMissionDone] = useState(false)
   useEffect(() => {
     setMissionDone(isMissionCompleted('pumaPunku', 'reveal_structure'))
-  }, [blockMoved]) // Re-verificar cuando se mueve un bloque
+  }, [blockMoved])
 
   return (
     <>
@@ -169,11 +169,11 @@ function PumaPunkuSceneContent({
         revealed={gateRevealed} 
       />
 
-      {/* 💠 Crop Circle: Cubo de Metatrón (Tecnología Alienígena) */}
+      {/* 💠 Crop Circle: Grid Modular H-Blocks (Tecnología Alienígena) */}
       <CropCircle 
-        type="metatron" 
-        position={[25, 0.1, 10]} 
-        scale={20} 
+        type="hBlock" 
+        position={[83, 0.3, 67]} 
+        scale={1.5} 
         visible={missionDone} 
       />
 

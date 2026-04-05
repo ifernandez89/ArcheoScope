@@ -102,8 +102,11 @@ function TeotihuacanSceneContent({
   const meshesCached = useRef(false)
   const cornMeshesCached = useRef(false)
   
-  // Verificar si la misión está completa para el Crop Circle
-  const missionDone = useMemo(() => isMissionCompleted('teotihuacan', 'plant_corn'), [cornPlanted])
+  // Verificar si la misión está completa - lee de localStorage al montar
+  const [missionDone, setMissionDone] = useState(false)
+  useEffect(() => {
+    if (isMissionCompleted('teotihuacan', 'plant_corn') || cornPlanted) setMissionDone(true)
+  }, [cornPlanted])
   
   // Clonar escena del maíz para independencia
   const clonedCornScene = useMemo(() => {
@@ -276,11 +279,11 @@ function TeotihuacanSceneContent({
         <primitive object={kukulkanModel.scene} scale={0.3} />
       </group>
       
-      {/* 💠 Crop Circle: Mandala Solar (Activación de Pirámide) */}
+      {/* 💠 Crop Circle: Mandala Solar (Pirámide del Sol) */}
       <CropCircle 
-        type="toroid" 
-        position={[30, 2.4, 0]} 
-        scale={22} 
+        type="solarMandala" 
+        position={[83, 0.3, 67]} 
+        scale={1.5} 
         visible={missionDone} 
       />
       

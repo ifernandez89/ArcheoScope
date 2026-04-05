@@ -14,17 +14,18 @@ interface VeracruzSceneProps {
   onOlmecClick?: () => void
   caveQuestActive?: boolean
   onEnterCave?: () => void
+  jadeMissionDone?: boolean
 }
 
-export default function VeracruzScene({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave }: VeracruzSceneProps) {
+export default function VeracruzScene({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave, jadeMissionDone }: VeracruzSceneProps) {
   return (
     <Suspense fallback={<LoadingVeracruz />}>
-      <VeracruzSceneContent avatarPositionRef={avatarPositionRef} onOlmecClick={onOlmecClick} caveQuestActive={caveQuestActive} onEnterCave={onEnterCave} />
+      <VeracruzSceneContent avatarPositionRef={avatarPositionRef} onOlmecClick={onOlmecClick} caveQuestActive={caveQuestActive} onEnterCave={onEnterCave} jadeMissionDone={jadeMissionDone} />
     </Suspense>
   )
 }
 
-function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave }: VeracruzSceneProps) {
+function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave, jadeMissionDone }: VeracruzSceneProps) {
   const olmecModel = useGLTF(getAssetPath('/olmec_head.glb'))
   const groupRef = useRef<THREE.Group>(null)
   const [isStanding, setIsStanding] = useState(false)
@@ -47,15 +48,17 @@ function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive
   // Ajustada manualmente el 31/03/2026 - esta es la posición correcta para la misión de Veracruz
   const START_Y = -0.74  // hundida 74cm bajo el piso
 
-  // Verificar si la misión está completa para el Crop Circle
+  // Verificar si la misión está completa - lee de localStorage al montar o via prop
   const [missionDone, setMissionDone] = useState(false)
   useEffect(() => {
-    // Verificar periódicamente o al inicio
-    const check = () => setMissionDone(isMissionCompleted('veracruz', 'deliver_jade_mask'))
+    const check = () => { if (isMissionCompleted('veracruz', 'deliver_jade_mask')) setMissionDone(true) }
     check()
     const interval = setInterval(check, 5000)
     return () => clearInterval(interval)
   }, [])
+  useEffect(() => {
+    if (jadeMissionDone) setMissionDone(true)
+  }, [jadeMissionDone])
 
   const enteredCaveRef = useRef(false)
 
@@ -138,11 +141,11 @@ function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive
         {/* 🏔️ Cueva olmeca al oeste */}
         <OlmecCave />
 
-        {/* 💠 Crop Circle: Julia Set Fractal (Portal Dimensional) */}
+        {/* 💠 Crop Circle: Espiral Serpiente (Energía Mesoamericana) */}
         <CropCircle 
-          type="julia" 
-          position={[14, 0.1, 12]} 
-          scale={18} 
+          type="serpentSpiral" 
+          position={[83, 1, 67]} 
+          scale={1.5} 
           visible={missionDone} 
         />
       </group>

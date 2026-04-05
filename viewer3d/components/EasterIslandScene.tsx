@@ -106,9 +106,10 @@ interface EasterIslandSceneProps {
   showSkull?: boolean
   skullDropPosition?: {x: number, z: number} | null
   onSkullCollect?: () => void
+  merkabaMissionDone?: boolean
 }
 
-export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate, onTriggerEruption, skullInInventory, showSkull, skullDropPosition, onSkullCollect }: EasterIslandSceneProps) {
+export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate, onTriggerEruption, skullInInventory, showSkull, skullDropPosition, onSkullCollect, merkabaMissionDone }: EasterIslandSceneProps) {
   return (
     <Suspense fallback={<LoadingEasterIsland />}>
       <EasterIslandSceneContent 
@@ -124,6 +125,7 @@ export default function EasterIslandScene({ avatarPositionRef, volcanicEruption,
         showSkull={showSkull}
         skullDropPosition={skullDropPosition}
         onSkullCollect={onSkullCollect}
+        merkabaMissionDone={merkabaMissionDone}
       />
     </Suspense>
   )
@@ -141,7 +143,8 @@ function EasterIslandSceneContent({
   skullInInventory,
   showSkull,
   skullDropPosition,
-  onSkullCollect
+  onSkullCollect,
+  merkabaMissionDone
 }: EasterIslandSceneProps) {
   const moaiModel = useGLTF(getAssetPath('/moai.glb'))
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
@@ -153,8 +156,11 @@ function EasterIslandSceneContent({
   const [showEnergySphere, setShowEnergySphere] = useState(false)
   const [skullStolen, setSkullStolen] = useState(false)
 
-  // Verificar si la misión está completa para el Crop Circle
-  const missionDone = useMemo(() => isMissionCompleted('easterIsland', 'activate_merkaba'), [merkabaActive])
+  // Verificar si la misión está completa - lee de localStorage al montar o via prop
+  const [missionDone, setMissionDone] = useState(false)
+  useEffect(() => {
+    if (merkabaActive || merkabaMissionDone || isMissionCompleted('easterIsland', 'activate_merkaba')) setMissionDone(true)
+  }, [merkabaActive, merkabaMissionDone])
 
   useEffect(() => {
     const ms = loadMissionState()
@@ -363,11 +369,12 @@ function EasterIslandSceneContent({
 
       <EnergySphere position={[0, 8, 0]} size={2} visible={showEnergySphere} />
 
-      {/* 💠 Crop Circle: Flower of Life (Resonancia Energética) */}
+      {/* 💠 Crop Circle: Red de Nodos (Guardianes de Rapa Nui) */}
+      {/* Volcán en [-55, 0, 55] → crop circle en esquina opuesta */}
       <CropCircle 
-        type="flower" 
-        position={[25, 3.1, 25]} 
-        scale={20} 
+        type="nodeNetwork" 
+        position={[55, 1, -55]} 
+        scale={1.5} 
         visible={missionDone} 
       />
 

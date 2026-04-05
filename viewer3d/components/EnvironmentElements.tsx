@@ -109,7 +109,7 @@ export default function EnvironmentElements({
     
     // Reducir árboles en sitios específicos
     if ((isTeotihuacan || isVeracruz || isEasterIsland) && count.trees) {
-      count.trees = 15
+      count.trees = isEasterIsland ? 5 : 15
     }
     
     // En Puma Punku: proteger estructura y Viracocha con radios GRANDES

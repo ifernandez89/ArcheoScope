@@ -1250,7 +1250,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             fontWeight: 'bold',
             textShadow: '0 1px 3px rgba(0,0,0,0.8)'
           }}>
-            [ Espacio ]
           </div>
         </div>
       )}
@@ -2089,6 +2088,7 @@ function ModelScene({
                 showSkull={showSkull}
                 skullDropPosition={skullDropPosition}
                 onSkullCollect={onSkullCollect}
+                merkabaMissionDone={isMissionCompleted('easterIsland', 'activate_merkaba')}
               />
             )}
 
@@ -2121,6 +2121,7 @@ function ModelScene({
                 onOlmecClick={onOlmecClick}
                 caveQuestActive={caveQuestActive}
                 onEnterCave={onEnterCave}
+                jadeMissionDone={isMissionCompleted('veracruz', 'deliver_jade_mask')}
               />
             )}
 

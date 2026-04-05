@@ -5,7 +5,7 @@
       "static/chunks/react-three-d5369d14ea5375a2.js",
       "static/chunks/engines.ef45ed77d58adea0.js",
       "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/8740.26479b35fe7d5a56.js"
+      "static/chunks/8740.e080534067a82df7.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -111,7 +111,7 @@
     "id": 8520,
     "files": [
       "static/chunks/react-three-d5369d14ea5375a2.js",
-      "static/chunks/2063.c3d72e173171f07f.js"
+      "static/chunks/2063.19efd38fb28130c6.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EnhancedMoon": {
@@ -135,7 +135,7 @@
     "id": 5178,
     "files": [
       "static/chunks/react-three-d5369d14ea5375a2.js",
-      "static/chunks/5178.d4f81c96d362c3e4.js"
+      "static/chunks/5178.9788a3194846779c.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./Globe3D": {
@@ -228,7 +228,7 @@
     "id": 2184,
     "files": [
       "static/chunks/react-three-d5369d14ea5375a2.js",
-      "static/chunks/6629.e836534b98eb11e4.js"
+      "static/chunks/6629.4f4e9ebf5c4629eb.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./PumaPunkuStructure": {
@@ -321,7 +321,7 @@
     "id": 9624,
     "files": [
       "static/chunks/react-three-d5369d14ea5375a2.js",
-      "static/chunks/9624.1d3764c72bedcb0a.js"
+      "static/chunks/9624.59f38120a340bf2c.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./TerrainControl": {
@@ -345,7 +345,7 @@
     "id": 7458,
     "files": [
       "static/chunks/react-three-d5369d14ea5375a2.js",
-      "static/chunks/7458.b1a556979af48450.js"
+      "static/chunks/7458.9784c34e14126310.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./ViracochaDialogue": {

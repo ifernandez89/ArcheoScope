@@ -139,7 +139,7 @@ export default function ControlsPage() {
             <p style={{ color: '#ccc', margin: 0 }}>🌍 Explora el globo terráqueo y viaja a sitios arqueológicos.</p>
             <p style={{ color: '#ccc', margin: 0 }}>🗿 Interactúa con los NPCs haciendo <strong style={{color:'#fff'}}>click</strong> sobre ellos.</p>
             <p style={{ color: '#ccc', margin: 0 }}>📦 Recoge objetos sagrados y complétalos misiones en cada sitio.</p>
-            <p style={{ color: '#ccc', margin: 0 }}>🌋 Completa las 4 misiones principales y activa el Merkaba en Isla de Pascua.</p>
+            <p style={{ color: '#ccc', margin: 0 }}>🌋 Completa las 4 misiones principales y activa la final.</p>
             <p style={{ color: '#ccc', margin: 0 }}>⚠️ Cuidado: algunas acciones tienen consecuencias irreversibles.</p>
           </div>
         </div>
@@ -181,6 +181,10 @@ export default function ControlsPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#888' }}>SHIFT + MOUSE DOWN</span>
               <span>Vuelo hacia abajo</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#888' }}>BARRA ESPACIADORA</span>
+              <span>Habilidad Espacial</span>
             </div>
           </div>
         </div>
