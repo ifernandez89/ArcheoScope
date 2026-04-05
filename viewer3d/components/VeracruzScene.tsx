@@ -6,7 +6,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
 import OlmecCave from './OlmecCave'
-import CropCircle from './CropCircle'
+import CropCircle, { CropCirclePortal } from './CropCircle'
 import { isMissionCompleted } from '@/types/missionState'
 
 interface VeracruzSceneProps {
@@ -15,17 +15,18 @@ interface VeracruzSceneProps {
   caveQuestActive?: boolean
   onEnterCave?: () => void
   jadeMissionDone?: boolean
+  onShipChange?: (ufoNumber: number) => void
 }
 
-export default function VeracruzScene({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave, jadeMissionDone }: VeracruzSceneProps) {
+export default function VeracruzScene({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave, jadeMissionDone, onShipChange }: VeracruzSceneProps) {
   return (
     <Suspense fallback={<LoadingVeracruz />}>
-      <VeracruzSceneContent avatarPositionRef={avatarPositionRef} onOlmecClick={onOlmecClick} caveQuestActive={caveQuestActive} onEnterCave={onEnterCave} jadeMissionDone={jadeMissionDone} />
+      <VeracruzSceneContent avatarPositionRef={avatarPositionRef} onOlmecClick={onOlmecClick} caveQuestActive={caveQuestActive} onEnterCave={onEnterCave} jadeMissionDone={jadeMissionDone} onShipChange={onShipChange} />
     </Suspense>
   )
 }
 
-function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave, jadeMissionDone }: VeracruzSceneProps) {
+function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive, onEnterCave, jadeMissionDone, onShipChange }: VeracruzSceneProps) {
   const olmecModel = useGLTF(getAssetPath('/olmec_head.glb'))
   const groupRef = useRef<THREE.Group>(null)
   const [isStanding, setIsStanding] = useState(false)
@@ -141,12 +142,19 @@ function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive
         {/* 🏔️ Cueva olmeca al oeste */}
         <OlmecCave />
 
-        {/* 💠 Crop Circle: Espiral Serpiente (Energía Mesoamericana) */}
+        {/* 💠 Crop Circle: Hilbert - Nave 4 Oracle (Veracruz) */}
         <CropCircle 
-          type="serpentSpiral" 
+          type="hilbert" 
           position={[83, 1, 67]} 
           scale={1.5} 
           visible={missionDone} 
+        />
+        <CropCirclePortal
+          position={[83, 1, 67]}
+          ufoNumber={4}
+          missionDone={missionDone}
+          avatarPositionRef={avatarPositionRef}
+          onShipChange={onShipChange}
         />
       </group>
     </>

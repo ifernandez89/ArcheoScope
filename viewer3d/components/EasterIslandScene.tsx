@@ -11,7 +11,7 @@ import RanoKauVolcano, { type VolcanoState } from './RanoKauVolcano'
 import { loadMissionState } from '@/types/missionState'
 import Merkaba from './Merkaba'
 import EnergySphere from './EnergySphere'
-import CropCircle from './CropCircle'
+import CropCircle, { CropCirclePortal } from './CropCircle'
 import { isMissionCompleted } from '@/types/missionState'
 
 /**
@@ -107,9 +107,10 @@ interface EasterIslandSceneProps {
   skullDropPosition?: {x: number, z: number} | null
   onSkullCollect?: () => void
   merkabaMissionDone?: boolean
+  onShipChange?: (ufoNumber: number) => void
 }
 
-export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate, onTriggerEruption, skullInInventory, showSkull, skullDropPosition, onSkullCollect, merkabaMissionDone }: EasterIslandSceneProps) {
+export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate, onTriggerEruption, skullInInventory, showSkull, skullDropPosition, onSkullCollect, merkabaMissionDone, onShipChange }: EasterIslandSceneProps) {
   return (
     <Suspense fallback={<LoadingEasterIsland />}>
       <EasterIslandSceneContent 
@@ -126,6 +127,7 @@ export default function EasterIslandScene({ avatarPositionRef, volcanicEruption,
         skullDropPosition={skullDropPosition}
         onSkullCollect={onSkullCollect}
         merkabaMissionDone={merkabaMissionDone}
+        onShipChange={onShipChange}
       />
     </Suspense>
   )
@@ -144,7 +146,8 @@ function EasterIslandSceneContent({
   showSkull,
   skullDropPosition,
   onSkullCollect,
-  merkabaMissionDone
+  merkabaMissionDone,
+  onShipChange
 }: EasterIslandSceneProps) {
   const moaiModel = useGLTF(getAssetPath('/moai.glb'))
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
@@ -369,13 +372,20 @@ function EasterIslandSceneContent({
 
       <EnergySphere position={[0, 8, 0]} size={2} visible={showEnergySphere} />
 
-      {/* 💠 Crop Circle: Red de Nodos (Guardianes de Rapa Nui) */}
+      {/* 💠 Crop Circle: Polígono Estelar - Nave 5 Titan (Isla de Pascua) */}
       {/* Volcán en [-55, 0, 55] → crop circle en esquina opuesta */}
       <CropCircle 
-        type="nodeNetwork" 
+        type="polygon" 
         position={[55, 1, -55]} 
         scale={1.5} 
         visible={missionDone} 
+      />
+      <CropCirclePortal
+        position={[55, 1, -55]}
+        ufoNumber={5}
+        missionDone={missionDone}
+        avatarPositionRef={avatarPositionRef}
+        onShipChange={onShipChange}
       />
 
       {showJadeMask && !jadeMaskCollected && (

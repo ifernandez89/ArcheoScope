@@ -1,85 +1,38 @@
 {
   "pages": {
-    "/_not-found/page": [
-      "static/chunks/webpack-b8bf43ada190312a.js",
-      "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/_not-found/page-ce6f35b21306d4c0.js"
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
     ],
     "/layout": [
-      "static/chunks/webpack-b8bf43ada190312a.js",
-      "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/css/249ec7b36a9b822f.css",
-      "static/chunks/app/layout-bf4ab352fbbdacda.js"
-    ],
-    "/game/page": [
-      "static/chunks/webpack-b8bf43ada190312a.js",
-      "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/three-0df476381cd548ce.js",
-      "static/chunks/react-three-d5369d14ea5375a2.js",
-      "static/chunks/app/game/page-71c225b109868fbf.js"
-    ],
-    "/menu/audio/page": [
-      "static/chunks/webpack-b8bf43ada190312a.js",
-      "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/menu/audio/page-35e4ada4c372a0e2.js"
-    ],
-    "/menu/controls/page": [
-      "static/chunks/webpack-b8bf43ada190312a.js",
-      "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/menu/controls/page-1bfed81a164e9a5f.js"
-    ],
-    "/menu/info/page": [
-      "static/chunks/webpack-b8bf43ada190312a.js",
-      "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/menu/info/page-7d1b8b0156778b72.js"
-    ],
-    "/menu/video/page": [
-      "static/chunks/webpack-b8bf43ada190312a.js",
-      "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/menu/video/page-e0d210599a28fa80.js"
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/css/app/layout.css",
+      "static/chunks/app/layout.js"
     ],
     "/menu/page": [
-      "static/chunks/webpack-b8bf43ada190312a.js",
-      "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/menu/page-0b60eabfec6de660.js"
-    ],
-    "/metrics/page": [
-      "static/chunks/webpack-b8bf43ada190312a.js",
-      "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/metrics/page-cb745e836004e24b.js"
-    ],
-    "/page": [
-      "static/chunks/webpack-b8bf43ada190312a.js",
-      "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/page-6aecf68bd1ffa313.js"
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/chunks/_app-pages-browser_types_missionState_ts-_app-pages-browser_types_player_ts.js",
+      "static/chunks/app/menu/page.js"
     ],
     "/player-setup/page": [
-      "static/chunks/webpack-b8bf43ada190312a.js",
-      "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/player-setup/page-fd4c3054ecd81019.js"
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/player-setup/page.js"
     ],
-    "/realistic-solar/page": [
-      "static/chunks/webpack-b8bf43ada190312a.js",
-      "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/realistic-solar/page-39cea19f1bb1a4c8.js"
-    ],
-    "/reset/page": [
-      "static/chunks/webpack-b8bf43ada190312a.js",
-      "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/main-app-e3b02d0ee76896ea.js",
-      "static/chunks/app/reset/page-713bba08879550e7.js"
+    "/game/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendor.js",
+      "static/chunks/main-app.js",
+      "static/chunks/three.js",
+      "static/chunks/react-three.js",
+      "static/chunks/app/game/page.js"
     ]
   }
 }

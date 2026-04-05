@@ -6,7 +6,8 @@ import * as THREE from 'three'
 
 type CropPattern = 'flowerOfLife' | 'metatronCube' | 'spiral' | 'toroid' | 'fractalJulia' |
                    'flower' | 'metatron' | 'julia' |
-                   'pyramidStar' | 'hBlock' | 'serpentSpiral' | 'solarMandala' | 'nodeNetwork'
+                   'pyramidStar' | 'hBlock' | 'serpentSpiral' | 'solarMandala' | 'nodeNetwork' |
+                   'lissajous' | 'hilbert' | 'polygon'
 
 interface CropCircleProps {
   pattern?: CropPattern
@@ -91,28 +92,18 @@ function addLine(pts: number[], x0: number, z0: number, x1: number, z1: number, 
 export default function CropCircle({ pattern, type, position = [0, 0.02, 0], scale = 1.5, visible = false }: CropCircleProps) {
   if (!visible) return null
   const p = pattern || type || 'solarMandala'
-  // Normalizar aliases
-  const resolved =
-    p === 'flower' ? 'flowerOfLife' :
-    p === 'metatron' ? 'metatronCube' :
-    p === 'julia' ? 'fractalJulia' :
-    p === 'toroid' ? 'pyramidStar' :       // Giza: toroid → estrella piramidal
-    p === 'spiral' ? 'serpentSpiral' :      // Veracruz: spiral → serpiente
-    p
 
   return (
     <group position={position} scale={scale}>
-      {resolved === 'pyramidStar'   && <PyramidStar />}
-      {resolved === 'metatronCube'  && <HBlockGrid />}
-      {resolved === 'serpentSpiral' && <SerpentSpiral />}
-      {resolved === 'solarMandala'  && <SolarMandala />}
-      {resolved === 'flowerOfLife'  && <NodeNetwork />}
-      {resolved === 'fractalJulia'  && <SerpentSpiral />}
-      {resolved === 'fractalJulia'  && <SerpentSpiral />}
-      {/* fallbacks explícitos por nombre nuevo */}
-      {resolved === 'nodeNetwork'   && <NodeNetwork />}
-      {resolved === 'hBlock'        && <HBlockGrid />}
-      {resolved === 'serpentSpiral' && null}
+      {p === 'lissajous'                          && <Lissajous />}
+      {p === 'toroid'                             && <Toroid />}
+      {(p === 'spiral' || p === 'serpentSpiral')  && <SerpentSpiral />}
+      {p === 'hilbert'                            && <Hilbert />}
+      {(p === 'polygon' || p === 'pyramidStar')   && <PolygonStar />}
+      {p === 'solarMandala'                       && <SolarMandala />}
+      {(p === 'hBlock' || p === 'metatronCube' || p === 'metatron') && <HBlockGrid />}
+      {(p === 'nodeNetwork' || p === 'flowerOfLife' || p === 'flower') && <NodeNetwork />}
+      {(p === 'fractalJulia' || p === 'julia')    && <Lissajous />}
     </group>
   )
 }
@@ -339,5 +330,187 @@ function NodeNetwork() {
       <CropLines points={points} />
       <GlowLight color="#aa44ff" />
     </>
+  )
+}
+
+// ─── NAVE 1 PHANTOM: Lissajous (Cloaking / alienígena) ───────────────────────
+// x = sin(at + δ), z = sin(bt)
+function Lissajous() {
+  const points = useMemo(() => {
+    const pts: number[] = []
+    const freqA = 3, freqB = 4, delta = Math.PI / 4, R = 6
+    const steps = 500
+    for (let j = 0; j < steps; j++) {
+      const t0 = (j / steps) * Math.PI * 2
+      const t1 = ((j + 1) / steps) * Math.PI * 2
+      pts.push(
+        Math.sin(freqA * t0 + delta) * R, 0.02, Math.sin(freqB * t0) * R,
+        Math.sin(freqA * t1 + delta) * R, 0.02, Math.sin(freqB * t1) * R
+      )
+    }
+    // Segunda curva entrelazada
+    const freqC = 5, freqD = 3, delta2 = Math.PI / 3
+    for (let j = 0; j < steps; j++) {
+      const t0 = (j / steps) * Math.PI * 2
+      const t1 = ((j + 1) / steps) * Math.PI * 2
+      pts.push(
+        Math.sin(freqC * t0 + delta2) * R * 0.7, 0.02, Math.sin(freqD * t0) * R * 0.7,
+        Math.sin(freqC * t1 + delta2) * R * 0.7, 0.02, Math.sin(freqD * t1) * R * 0.7
+      )
+    }
+    addCircle(pts, 0, 0, R * 1.05)
+    return pts
+  }, [])
+  return (
+    <>
+      <CropLines points={points} />
+      <GlowLight color="#00ccff" />
+    </>
+  )
+}
+
+// ─── NAVE 2 AEGIS: Toroid (Defensa / campo EM) ────────────────────────────────
+function Toroid() {
+  const points = useMemo(() => {
+    const pts: number[] = []
+    const N = 32, ringR = 5, circR = 5
+    for (let i = 0; i < N; i++) {
+      const angle = (i / N) * Math.PI * 2
+      addCircle(pts, Math.cos(angle) * ringR, Math.sin(angle) * ringR, circR)
+    }
+    addCircle(pts, 0, 0, circR * 0.4)
+    addCircle(pts, 0, 0, ringR + circR)
+    return pts
+  }, [])
+  return (
+    <>
+      <CropLines points={points} />
+      <GlowLight color="#88aaff" />
+    </>
+  )
+}
+
+// ─── NAVE 4 ORACLE: Hilbert (Ciencia / fractal) ───────────────────────────────
+function Hilbert() {
+  const points = useMemo(() => {
+    const pts: number[] = []
+    const size = 7
+    const hilbertPts: [number, number][] = []
+
+    function hilbert(x: number, y: number, ax: number, ay: number, bx: number, by: number, level: number) {
+      if (level <= 0) {
+        hilbertPts.push([x + (ax + bx) / 2, y + (ay + by) / 2])
+        return
+      }
+      hilbert(x, y, bx/2, by/2, ax/2, ay/2, level - 1)
+      hilbert(x + ax/2, y + ay/2, ax/2, ay/2, bx/2, by/2, level - 1)
+      hilbert(x + ax/2 + bx/2, y + ay/2 + by/2, ax/2, ay/2, bx/2, by/2, level - 1)
+      hilbert(x + ax/2 + bx, y + ay/2 + by, -bx/2, -by/2, -ax/2, -ay/2, level - 1)
+    }
+
+    hilbert(0, 0, size, 0, 0, size, 4)
+    const cx = size / 2, cz = size / 2
+    for (let i = 0; i < hilbertPts.length - 1; i++) {
+      pts.push(hilbertPts[i][0] - cx, 0.02, hilbertPts[i][1] - cz)
+      pts.push(hilbertPts[i+1][0] - cx, 0.02, hilbertPts[i+1][1] - cz)
+    }
+    addCircle(pts, 0, 0, size * 0.62)
+    return pts
+  }, [])
+  return (
+    <>
+      <CropLines points={points} />
+      <GlowLight color="#ffdd00" />
+    </>
+  )
+}
+
+// ─── NAVE 5 TITAN: Polígono Estelar (Fuerza / mandala) ───────────────────────
+function PolygonStar() {
+  const points = useMemo(() => {
+    const pts: number[] = []
+    const R = 6
+    const layers = [
+      { sides: 5, skip: 2 },
+      { sides: 7, skip: 3 },
+      { sides: 9, skip: 4 },
+    ]
+    layers.forEach(({ sides, skip }, li) => {
+      const r = R * (0.4 + li * 0.3)
+      for (let i = 0; i < sides; i++) {
+        const a0 = (i / sides) * Math.PI * 2 - Math.PI / 2
+        const a1 = (((i + skip) % sides) / sides) * Math.PI * 2 - Math.PI / 2
+        addLine(pts, Math.cos(a0) * r, Math.sin(a0) * r, Math.cos(a1) * r, Math.sin(a1) * r)
+      }
+      addCircle(pts, 0, 0, r)
+    })
+    // Rayos al centro
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2
+      addLine(pts, 0, 0, Math.cos(a) * R, Math.sin(a) * R)
+    }
+    addCircle(pts, 0, 0, R * 1.05)
+    return pts
+  }, [])
+  return (
+    <>
+      <CropLines points={points} />
+      <GlowLight color="#ff4400" />
+    </>
+  )
+}
+
+// ─── PORTAL DE NAVE ───────────────────────────────────────────────────────────
+// Detecta cuando el avatar se posiciona sobre el crop circle y cambia la nave.
+// Una vez activado, persiste en localStorage y deja de evaluar proximidad.
+
+interface CropCirclePortalProps {
+  position: [number, number, number]
+  ufoNumber: number
+  missionDone: boolean
+  avatarPositionRef?: React.RefObject<THREE.Vector3>
+  onShipChange?: (ufoNumber: number) => void
+  radius?: number
+}
+
+export function CropCirclePortal({
+  position,
+  ufoNumber,
+  missionDone,
+  avatarPositionRef,
+  onShipChange,
+  radius = 12
+}: CropCirclePortalProps) {
+  const storageKey = `portal_ufo_${ufoNumber}_activated`
+
+  // Si ya fue activado en cualquier sesión anterior, no evaluar nada
+  const alreadyDone = useRef(
+    typeof window !== 'undefined' && localStorage.getItem(storageKey) === 'true'
+  )
+
+  useFrame(() => {
+    // Cortocircuito: misión no completa, sin ref, sin callback, o ya activado
+    if (!missionDone || !avatarPositionRef?.current || !onShipChange) return
+    if (alreadyDone.current) return
+
+    const av = avatarPositionRef.current
+    const dx = av.x - position[0]
+    const dz = av.z - position[2]
+
+    if (dx * dx + dz * dz < radius * radius) {
+      alreadyDone.current = true
+      if (typeof window !== 'undefined') localStorage.setItem(storageKey, 'true')
+      onShipChange(ufoNumber)
+      console.log(`🛸 Portal activado → nave ${ufoNumber}`)
+    }
+  })
+
+  if (!missionDone) return null
+
+  return (
+    <mesh position={[position[0], position[1] + 0.1, position[2]]} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[radius * 0.85, radius, 48]} />
+      <meshBasicMaterial color="#ffffff" transparent opacity={0.04} depthWrite={false} />
+    </mesh>
   )
 }

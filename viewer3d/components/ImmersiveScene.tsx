@@ -1433,6 +1433,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           }}
           caveQuestActive={caveQuestActive}
           onEnterCave={() => handleLocationClick(0.0001, 0.0001)}
+          onShipChange={handleUfoChange}
         />
       ) : null}
 
@@ -1750,7 +1751,8 @@ function ModelScene({
   onJadeMaskCollect,
   onMerkabaActivate,
   abilityActive,
-  currentUfo
+  currentUfo,
+  onShipChange
 }: {
   abilityActive: boolean
   currentUfo: number
@@ -1828,6 +1830,7 @@ function ModelScene({
   jadeMaskInInventory?: boolean
   onJadeMaskCollect?: () => void
   onMerkabaActivate?: () => void
+  onShipChange?: (ufoNumber: number) => void
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -2043,6 +2046,7 @@ function ModelScene({
                 onViracochaSpeak={onViracochaSpeak}
                 onPortalEnter={onPortalEnter}
                 avatarPositionRef={avatarPositionRef}
+                onShipChange={onShipChange}
               />
             )}
 
@@ -2066,6 +2070,7 @@ function ModelScene({
                 showScarab={showScarab}
                 scarabDropPosition={scarabDropPosition}
                 totalMissionsCompleted={loadMissionState().stats.totalMissionsCompleted}
+                onShipChange={onShipChange}
               />
             )}
 
@@ -2089,6 +2094,7 @@ function ModelScene({
                 skullDropPosition={skullDropPosition}
                 onSkullCollect={onSkullCollect}
                 merkabaMissionDone={isMissionCompleted('easterIsland', 'activate_merkaba')}
+                onShipChange={onShipChange}
               />
             )}
 
@@ -2107,6 +2113,7 @@ function ModelScene({
                 showCornSeed={cornOnGround}
                 cornDropPosition={cornDropPosition}
                 cornPlanted={cornPlanted}
+                onShipChange={onShipChange}
               />
             )}
 
@@ -2122,6 +2129,7 @@ function ModelScene({
                 caveQuestActive={caveQuestActive}
                 onEnterCave={onEnterCave}
                 jadeMissionDone={isMissionCompleted('veracruz', 'deliver_jade_mask')}
+                onShipChange={onShipChange}
               />
             )}
 

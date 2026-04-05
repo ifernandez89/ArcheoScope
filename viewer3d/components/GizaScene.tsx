@@ -6,7 +6,7 @@ import * as THREE from 'three'
 import { useGLTF, Html } from '@react-three/drei'
 import { getAssetPath } from '@/lib/paths'
 import SelectableObject from './SelectableObject'
-import CropCircle from './CropCircle'
+import CropCircle, { CropCirclePortal } from './CropCircle'
 import { isMissionCompleted } from '@/types/missionState'
 
 // Modelos se cargan bajo demanda al entrar a la escena (no preload global)
@@ -25,6 +25,7 @@ interface GizaSceneProps {
   showScarab?: boolean
   scarabDropPosition?: {x: number, z: number} | null
   totalMissionsCompleted?: number
+  onShipChange?: (ufoNumber: number) => void
 }
 
 /**
@@ -58,7 +59,8 @@ export default function GizaScene({
   scarabInInventory,
   showScarab,
   scarabDropPosition,
-  totalMissionsCompleted = 0
+  totalMissionsCompleted = 0,
+  onShipChange
 }: GizaSceneProps) {
   console.log('🔶 GizaScene RENDER - pyramidionCollected:', pyramidionCollected, 'pyramidionOnTop:', pyramidionOnTop)
   
@@ -199,12 +201,19 @@ export default function GizaScene({
           onClick={onSphinxClick}
         />
         
-        {/* 💠 Crop Circle: Estrella Piramidal (Alineación Astronómica) */}
+        {/* 💠 Crop Circle: Lissajous - Nave 1 Phantom (Giza) */}
         <CropCircle 
-          type="pyramidStar" 
+          type="lissajous" 
           position={[83, 3, 67]} 
           scale={1.5} 
           visible={missionDone} 
+        />
+        <CropCirclePortal
+          position={[83, 3, 67]}
+          ufoNumber={1}
+          missionDone={missionDone}
+          avatarPositionRef={avatarPositionRef}
+          onShipChange={onShipChange}
         />
         
         {/* 👑 Estatuas de faraones - Frente a la pirámide, mirando al sur */}

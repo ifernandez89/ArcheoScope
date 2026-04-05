@@ -6,7 +6,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Group } from 'three'
 import { getAssetPath } from '@/lib/paths'
-import CropCircle from './CropCircle'
+import CropCircle, { CropCirclePortal } from './CropCircle'
 import { isMissionCompleted } from '@/types/missionState'
 
 /**
@@ -28,6 +28,7 @@ interface TeotihuacanSceneProps {
   showCornSeed?: boolean
   cornDropPosition?: {x: number, z: number} | null
   cornPlanted?: boolean
+  onShipChange?: (ufoNumber: number) => void
 }
 
 export default function TeotihuacanScene({ 
@@ -38,7 +39,8 @@ export default function TeotihuacanScene({
   cornCollected,
   showCornSeed,
   cornDropPosition,
-  cornPlanted
+  cornPlanted,
+  onShipChange
 }: TeotihuacanSceneProps) {
   return (
     <Suspense fallback={<LoadingTeotihuacan />}>
@@ -51,6 +53,7 @@ export default function TeotihuacanScene({
         showCornSeed={showCornSeed}
         cornDropPosition={cornDropPosition}
         cornPlanted={cornPlanted}
+        onShipChange={onShipChange}
       />
     </Suspense>
   )
@@ -73,7 +76,8 @@ function TeotihuacanSceneContent({
   cornCollected,
   showCornSeed,
   cornDropPosition,
-  cornPlanted
+  cornPlanted,
+  onShipChange
 }: TeotihuacanSceneProps) {
   // Cargar modelos base (livianos: kukulkan 0.6MB, aztec 1.9MB, calendario 49.9MB)
   const kukulkanModel = useGLTF(getAssetPath('/kukulkan.glb'))
@@ -279,12 +283,19 @@ function TeotihuacanSceneContent({
         <primitive object={kukulkanModel.scene} scale={0.3} />
       </group>
       
-      {/* 💠 Crop Circle: Mandala Solar (Pirámide del Sol) */}
+      {/* 💠 Crop Circle: Espiral - Nave 3 Vector (Teotihuacán) */}
       <CropCircle 
-        type="solarMandala" 
+        type="spiral" 
         position={[83, 0.3, 67]} 
         scale={1.5} 
         visible={missionDone} 
+      />
+      <CropCirclePortal
+        position={[83, 0.3, 67]}
+        ufoNumber={3}
+        missionDone={missionDone}
+        avatarPositionRef={avatarPositionRef}
+        onShipChange={onShipChange}
       />
       
       {/* Calendario Maya - SIN CLONE */}

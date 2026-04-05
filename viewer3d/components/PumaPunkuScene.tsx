@@ -15,7 +15,7 @@ import { useObjectSelection } from './ObjectSelectionContext'
 import { getAssetPath } from '@/lib/paths'
 import SunGate from './SunGate'
 import PortalDetector from './PortalDetector'
-import CropCircle from './CropCircle'
+import CropCircle, { CropCirclePortal } from './CropCircle'
 import { isMissionCompleted } from '@/types/missionState'
 
 /**
@@ -44,11 +44,13 @@ function LoadingPumaPunku() {
 export default function PumaPunkuScene({ 
   onViracochaSpeak,
   onPortalEnter,
-  avatarPositionRef
+  avatarPositionRef,
+  onShipChange
 }: { 
   onViracochaSpeak?: () => void
   onPortalEnter?: () => void
   avatarPositionRef?: React.RefObject<Vector3>
+  onShipChange?: (ufoNumber: number) => void
 }) {
   return (
     <Suspense fallback={<LoadingPumaPunku />}>
@@ -56,6 +58,7 @@ export default function PumaPunkuScene({
         onViracochaSpeak={onViracochaSpeak}
         onPortalEnter={onPortalEnter}
         avatarPositionRef={avatarPositionRef}
+        onShipChange={onShipChange}
       />
     </Suspense>
   )
@@ -64,11 +67,13 @@ export default function PumaPunkuScene({
 function PumaPunkuSceneContent({ 
   onViracochaSpeak,
   onPortalEnter,
-  avatarPositionRef
+  avatarPositionRef,
+  onShipChange
 }: { 
   onViracochaSpeak?: () => void
   onPortalEnter?: () => void
   avatarPositionRef?: React.RefObject<Vector3>
+  onShipChange?: (ufoNumber: number) => void
 }) {
   const { blockMoved } = useObjectSelection()
   
@@ -169,12 +174,19 @@ function PumaPunkuSceneContent({
         revealed={gateRevealed} 
       />
 
-      {/* 💠 Crop Circle: Grid Modular H-Blocks (Tecnología Alienígena) */}
+      {/* 💠 Crop Circle: Toroid - Nave 2 Aegis (Puma Punku) */}
       <CropCircle 
-        type="hBlock" 
+        type="toroid" 
         position={[83, 0.3, 67]} 
         scale={1.5} 
         visible={missionDone} 
+      />
+      <CropCirclePortal
+        position={[83, 0.3, 67]}
+        ufoNumber={2}
+        missionDone={missionDone}
+        avatarPositionRef={avatarPositionRef}
+        onShipChange={onShipChange}
       />
 
       {/* Detector de portal - teletransporta al Lago Titicaca */}
