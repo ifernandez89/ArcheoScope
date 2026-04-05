@@ -65,7 +65,7 @@ export default function Home() {
         style={{
           position: 'absolute', bottom: '40px', right: '40px', zIndex: 10,
           padding: '16px 48px', fontSize: '20px', fontWeight: 'bold',
-          color: '#ffffff', background: 'rgba(0,0,0,0.6)',
+          color: '#ffffff', background: '#011613',
           border: '2px solid #ffffff', borderRadius: '8px',
           cursor: 'pointer', transition: 'all 0.3s ease',
           fontFamily: 'inherit', letterSpacing: '2px', textTransform: 'uppercase',
@@ -73,10 +73,10 @@ export default function Home() {
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.background = '#ffffff'
-          e.currentTarget.style.color = '#000000'
+          e.currentTarget.style.color = '#011613'
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(0,0,0,0.6)'
+          e.currentTarget.style.background = '#011613'
           e.currentTarget.style.color = '#ffffff'
         }}
       >
