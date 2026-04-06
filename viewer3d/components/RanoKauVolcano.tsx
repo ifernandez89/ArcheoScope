@@ -185,7 +185,7 @@ export default function RanoKauVolcano({ state = 'dormant' }: RanoKauVolcanoProp
   const CRATER_Y = 6
 
   return (
-    <group position={[-55, 0, 55]} scale={[1, 2, 1]}>
+    <group position={[-55, 2, 55]} scale={[1, 2, 1]}>
 
       {/* Cuerpo del volcán con textura + vertex colors */}
       <mesh geometry={volcanoGeo} castShadow receiveShadow>

@@ -5,7 +5,7 @@
       "static/chunks/react-three-d5369d14ea5375a2.js",
       "static/chunks/engines.ef45ed77d58adea0.js",
       "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/8740.adfefb8a1be11645.js"
+      "static/chunks/8740.d942545d28ac1fda.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -112,7 +112,7 @@
     "files": [
       "static/chunks/react-three-d5369d14ea5375a2.js",
       "static/chunks/1250.bdffb02c3157f59f.js",
-      "static/chunks/2063.37fb4db7b305eb5a.js"
+      "static/chunks/2063.37360809a1b2b7e1.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EnhancedMoon": {
@@ -153,7 +153,7 @@
   "components\\ImmersiveScene.tsx -> ./InventoryItem": {
     "id": 4291,
     "files": [
-      "static/chunks/4291.82134885c681a70d.js"
+      "static/chunks/4291.01a7a4102db58ac2.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./ItemCollectedMessage": {

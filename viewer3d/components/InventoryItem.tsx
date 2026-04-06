@@ -25,6 +25,10 @@ function RotatingModel({ modelPath, scale = 1 }: { modelPath: string, scale?: nu
       clone.rotation.x = Math.PI / 2
       clone.rotation.z = Math.PI
     }
+    if (modelPath.includes('tonatiuh')) {
+      // Tonatiuh: rotar para verlo de frente
+      clone.rotation.y = Math.PI
+    }
     // Auto-centrar: calcular bounding box y mover al origen
     const box = new THREE.Box3().setFromObject(clone)
     const center = box.getCenter(new THREE.Vector3())
@@ -85,8 +89,10 @@ export default function InventoryItem({ modelPath, itemName, onDrop, show, dropD
         camera={{ position: [0, 0, 3], fov: 50 }}
         style={{ background: 'transparent' }}
       >
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[2, 2, 2]} intensity={1} />
+        <ambientLight intensity={1.5} />
+        <directionalLight position={[2, 2, 2]} intensity={2} />
+        <directionalLight position={[-2, 1, -2]} intensity={1} />
+        <pointLight position={[0, 3, 2]} intensity={1.5} color="#ffffff" />
         <RotatingModel modelPath={modelPath} scale={0.8} />
       </Canvas>
       

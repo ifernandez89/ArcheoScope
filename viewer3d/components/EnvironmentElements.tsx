@@ -84,7 +84,7 @@ export default function EnvironmentElements({
     const counts: Record<string, Record<string, number>> = {
       tropical:  { trees: 25, bushes: 20, rocks: 10, palms: 8 },
       temperate: { trees: 25, bushes: 15, rocks: 15, logs: 5 },
-      altiplano: { trees: 10, bushes: 25, rocks: 20, logs: 3 }, // Reducido a la mitad para evitar bugs
+      altiplano: { trees: 5, bushes: 25, rocks: 20, logs: 3 }, // Reducido para Titicaca
       desert:    { trees: 15, bushes: 5,  rocks: 25, cacti: 12, crystals: 8 },  // Menos árboles en desierto
       arctic:    { trees: 20, bushes: 8,  rocks: 30, crystals: 5 }
     }
