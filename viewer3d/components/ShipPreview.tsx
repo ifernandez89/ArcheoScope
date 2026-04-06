@@ -2,7 +2,7 @@
 
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF } from '@react-three/drei'
-import { Suspense, useMemo, useEffect } from 'react'
+import { Suspense, useMemo } from 'react'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
 
@@ -23,12 +23,6 @@ function ShipModel({ modelPath }: { modelPath: string }) {
 }
 
 export default function ShipPreview({ shipModel }: ShipPreviewProps) {
-  // Configurar Draco y precargar naves en el cliente (donde window está disponible)
-  useEffect(() => {
-    useGLTF.setDecoderPath(getAssetPath('/draco/'))
-    ;[1,2,3,4,5].forEach(n => useGLTF.preload(getAssetPath(`/ufo_${n}.glb`)))
-  }, [])
-
   return (
     <div style={{
       width: '100%',
@@ -38,6 +32,7 @@ export default function ShipPreview({ shipModel }: ShipPreviewProps) {
       borderRadius: '8px',
       overflow: 'hidden'
     }}>
+      {/* key={shipModel} fuerza remount del Canvas al cambiar nave */}
       <Canvas
         key={shipModel}
         camera={{ position: [0, 2, 8], fov: 50 }}
