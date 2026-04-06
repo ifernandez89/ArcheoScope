@@ -2,12 +2,9 @@
 
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF } from '@react-three/drei'
-import { Suspense, useMemo } from 'react'
+import { Suspense, useMemo, useEffect } from 'react'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
-
-// Configurar Draco decoder para modelos comprimidos
-useGLTF.setDecoderPath(getAssetPath('/draco/'))
 
 interface ShipPreviewProps {
   shipModel: string
@@ -15,10 +12,7 @@ interface ShipPreviewProps {
 
 function ShipModel({ modelPath }: { modelPath: string }) {
   const { scene } = useGLTF(getAssetPath(modelPath))
-
-  // Clonar siempre para evitar conflictos de referencia entre cambios de nave
   const cloned = useMemo(() => scene.clone(true), [scene])
-
   return (
     <primitive 
       object={cloned} 
@@ -28,10 +22,13 @@ function ShipModel({ modelPath }: { modelPath: string }) {
   )
 }
 
-// Precargar todas las naves para que el cambio sea instantáneo
-;[1,2,3,4,5].forEach(n => useGLTF.preload(getAssetPath(`/ufo_${n}.glb`)))
-
 export default function ShipPreview({ shipModel }: ShipPreviewProps) {
+  // Configurar Draco y precargar naves en el cliente (donde window está disponible)
+  useEffect(() => {
+    useGLTF.setDecoderPath(getAssetPath('/draco/'))
+    ;[1,2,3,4,5].forEach(n => useGLTF.preload(getAssetPath(`/ufo_${n}.glb`)))
+  }, [])
+
   return (
     <div style={{
       width: '100%',
@@ -41,7 +38,6 @@ export default function ShipPreview({ shipModel }: ShipPreviewProps) {
       borderRadius: '8px',
       overflow: 'hidden'
     }}>
-      {/* key={shipModel} fuerza remount del Canvas al cambiar nave — limpia referencias */}
       <Canvas
         key={shipModel}
         camera={{ position: [0, 2, 8], fov: 50 }}
@@ -61,11 +57,9 @@ export default function ShipPreview({ shipModel }: ShipPreviewProps) {
           penumbra={0.5}
           color="#6ab7ff"
         />
-        
         <Suspense fallback={null}>
           <ShipModel modelPath={shipModel} />
         </Suspense>
-        
         <OrbitControls 
           enableZoom={true}
           enablePan={false}

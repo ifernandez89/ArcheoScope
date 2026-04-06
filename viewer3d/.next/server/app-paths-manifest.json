@@ -1,17 +1,17 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/api/log/route": "app/api/log/route.js",
-  "/game/page": "app/game/page.js",
-  "/api/openrouter-key/route": "app/api/openrouter-key/route.js",
   "/api/metrics/route": "app/api/metrics/route.js",
-  "/menu/controls/page": "app/menu/controls/page.js",
+  "/game/page": "app/game/page.js",
   "/menu/audio/page": "app/menu/audio/page.js",
-  "/menu/page": "app/menu/page.js",
+  "/menu/controls/page": "app/menu/controls/page.js",
   "/menu/info/page": "app/menu/info/page.js",
+  "/menu/page": "app/menu/page.js",
   "/menu/video/page": "app/menu/video/page.js",
-  "/page": "app/page.js",
   "/metrics/page": "app/metrics/page.js",
+  "/api/openrouter-key/route": "app/api/openrouter-key/route.js",
+  "/page": "app/page.js",
+  "/player-setup/page": "app/player-setup/page.js",
   "/realistic-solar/page": "app/realistic-solar/page.js",
-  "/reset/page": "app/reset/page.js",
-  "/player-setup/page": "app/player-setup/page.js"
+  "/reset/page": "app/reset/page.js"
 }
