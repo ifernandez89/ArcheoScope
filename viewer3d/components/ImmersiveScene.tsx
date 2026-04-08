@@ -77,10 +77,12 @@ const EasterIslandScene = dynamic(() => import('./EasterIslandScene'), { ssr: fa
 const TeotihuacanScene = dynamic(() => import('./TeotihuacanScene'), { ssr: false })
 const VeracruzScene = dynamic(() => import('./VeracruzScene'), { ssr: false })
 const MictlanScene = dynamic(() => import('./MictlanScene'), { ssr: false })
+const GobekliTepeScene = dynamic(() => import('./GobekliTepeScene'), { ssr: false })
 const EnvironmentElements = dynamic(() => import('./EnvironmentElements'), { ssr: false, loading: () => null })
 
 // COMPONENTES DE DIÁLOGO - LAZY LOADING
 const ViracochaDialogue = dynamic(() => import('./ViracochaDialogue'), { ssr: false })
+const ViracochaInteractiveDialogue = dynamic(() => import('./ViracochaInteractiveDialogue'), { ssr: false })
 const SphinxInteractiveDialogue = dynamic(() => import('./SphinxInteractiveDialogue'), { ssr: false })
 const QuetzalcoatlDialogue = dynamic(() => import('./QuetzalcoatlDialogue'), { ssr: false })
 const OlmecInteractiveDialogue = dynamic(() => import('./OlmecInteractiveDialogue'), { ssr: false })
@@ -443,7 +445,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
 
   // 🗿 Estado del diálogo de Viracocha
   const [showViracochaDialogue, setShowViracochaDialogue] = useState(false)
+  const [showViracochaInteractive, setShowViracochaInteractive] = useState(false)
   const [magnaBowlCollected, setMagnaBowlCollected] = useState(false)
+  const [magnaBowlLent, setMagnaBowlLent] = useState(false) // Fuente Magna prestada por Viracocha
   const [pyramidionCollected, setPyramidionCollected] = useState(false)
   const [pyramidionOnTop, setPyramidionOnTop] = useState(false) // Si el piramidón está en la punta
   const [scarabDiscovered, setScarabDiscovered] = useState(false) // Si se movió la momia
@@ -460,6 +464,16 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [tonatiuhInInventory, setTonatiuhInInventory] = useState(false)
   const [tonatiuhOnGround, setTonatiuhOnGround] = useState(false)
   const [tonatiuhDropPosition, setTonatiuhDropPosition] = useState<{ x: number, z: number } | null>(null)
+
+  // 🪨 Roca — recolectable del entorno, solo una a la vez
+  const [rockInInventory, setRockInInventory] = useState(false)
+  const [rockOnGround, setRockOnGround] = useState(false)
+  const [rockDropPosition, setRockDropPosition] = useState<{ x: number, z: number } | null>(null)
+
+  // 🏺 Fuente Magna prestada por Viracocha
+  const [magnaBowlLentInInventory, setMagnaBowlLentInInventory] = useState(false)
+  const [magnaBowlOnGround, setMagnaBowlOnGround] = useState(false)
+  const [magnaBowlDropPosition, setMagnaBowlDropPosition] = useState<{ x: number, z: number } | null>(null)
 
   // 🛸 Estado de habilidades de nave
   const [abilityActive, setAbilityActive] = useState(false)
@@ -746,6 +760,28 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       setTonatiuhDropPosition({ x: pos.x, z: pos.z })
       setTonatiuhInInventory(false)
       setTonatiuhOnGround(true)
+    }
+  }, [mode])
+
+  const handleDropRock = useCallback(() => {
+    if (mode === 'globe') return
+    console.log('🪨 Soltando roca al piso!')
+    const pos = mainAvatarPositionRef.current
+    if (pos) {
+      setRockDropPosition({ x: pos.x, z: pos.z })
+      setRockInInventory(false)
+      setRockOnGround(true)
+    }
+  }, [mode])
+
+  const handleDropMagnaBowl = useCallback(() => {
+    if (mode === 'globe') return
+    console.log('🏺 Soltando Fuente Magna al piso!')
+    const pos = mainAvatarPositionRef.current
+    if (pos) {
+      setMagnaBowlDropPosition({ x: pos.x, z: pos.z })
+      setMagnaBowlLent(false) // ya no en inventario
+      setMagnaBowlOnGround(true)
     }
   }, [mode])
 
@@ -1337,10 +1373,24 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           dropDisabled={mode === 'globe'}
         />
         <InventoryItem
-          modelPath="/tonatiuh.glb"
+          modelPath="/tonatiuh_aztec_sun.glb"
           itemName="Tonatiuh"
           show={tonatiuhInInventory}
           onDrop={handleDropTonatiuh}
+          dropDisabled={mode === 'globe'}
+        />
+        <InventoryItem
+          modelPath="/rock_blender.glb"
+          itemName="Roca"
+          show={rockInInventory}
+          onDrop={handleDropRock}
+          dropDisabled={mode === 'globe'}
+        />
+        <InventoryItem
+          modelPath="/magna_bowl.glb"
+          itemName="Fuente Magna"
+          show={magnaBowlLentInInventory}
+          onDrop={handleDropMagnaBowl}
           dropDisabled={mode === 'globe'}
         />
       </div>
@@ -1414,7 +1464,16 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           showCollectedMessage={showCollectedMessage}
           onCloseMessage={() => setShowCollectedMessage(false)}
           showViracochaDialogue={showViracochaDialogue}
-          onViracochaSpeak={() => setShowViracochaDialogue(true)}
+          onViracochaSpeak={() => {
+            const pumaDone = isMissionCompleted('pumaPunku', 'reveal_structure')
+            if (pumaDone && magnaBowlCollected) {
+              // Misión completa y fuente devuelta → diálogo interactivo
+              setShowViracochaInteractive(true)
+            } else {
+              // Primera vez o sin misión → diálogo simple
+              setShowViracochaDialogue(true)
+            }
+          }}
           onCloseViracochaDialogue={() => setShowViracochaDialogue(false)}
           onPortalEnter={() => handleLocationClick(-16.031003664299448, -69.49975772335767)}
           magnaBowlCollected={magnaBowlCollected}
@@ -1482,6 +1541,22 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onTonatiuhCollect={() => {
             setTonatiuhInInventory(true)
             setTonatiuhOnGround(false)
+          }}
+          scarabOnGround={scarabOnGround}
+          skullOnGround={skullOnGround}
+          rockInInventory={rockInInventory}
+          rockOnGround={rockOnGround}
+          rockDropPosition={rockDropPosition}
+          onRockCollect={() => { setRockInInventory(true); setRockOnGround(false) }}
+          magnaBowlLentInInventory={magnaBowlLentInInventory}
+          magnaBowlOnGround={magnaBowlOnGround}
+          magnaBowlDropPosition={magnaBowlDropPosition}
+          onObeliskActivate={() => handleLocationClick(37.2231, 38.9225)}
+          showViracochaInteractive={showViracochaInteractive}
+          onCloseViracochaInteractive={() => setShowViracochaInteractive(false)}
+          onLendMagnaBowl={() => {
+            setMagnaBowlLentInInventory(true)
+            setMagnaBowlOnGround(false)
           }}
         />
       ) : null}
@@ -1805,7 +1880,20 @@ function ModelScene({
   tonatiuhInInventory,
   tonatiuhOnGround,
   tonatiuhDropPosition,
-  onTonatiuhCollect
+  onTonatiuhCollect,
+  scarabOnGround,
+  skullOnGround,
+  rockInInventory,
+  rockOnGround,
+  rockDropPosition,
+  onRockCollect,
+  magnaBowlLentInInventory,
+  magnaBowlOnGround,
+  magnaBowlDropPosition,
+  onObeliskActivate,
+  showViracochaInteractive,
+  onCloseViracochaInteractive,
+  onLendMagnaBowl
 }: {
   abilityActive: boolean
   currentUfo: number
@@ -1875,6 +1963,8 @@ function ModelScene({
   scarabInInventory?: boolean
   showScarab?: boolean
   scarabDropPosition?: { x: number, z: number } | null
+  scarabOnGround?: boolean
+  skullOnGround?: boolean
   onOlmecClick?: () => void
   caveQuestActive?: boolean
   onEnterCave?: () => void
@@ -1888,6 +1978,17 @@ function ModelScene({
   tonatiuhOnGround?: boolean
   tonatiuhDropPosition?: { x: number, z: number } | null
   onTonatiuhCollect?: () => void
+  rockInInventory?: boolean
+  rockOnGround?: boolean
+  rockDropPosition?: { x: number, z: number } | null
+  onRockCollect?: () => void
+  magnaBowlLentInInventory?: boolean
+  magnaBowlOnGround?: boolean
+  magnaBowlDropPosition?: { x: number, z: number } | null
+  onObeliskActivate?: () => void
+  showViracochaInteractive?: boolean
+  onCloseViracochaInteractive?: () => void
+  onLendMagnaBowl?: () => void
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -2063,8 +2164,17 @@ function ModelScene({
             Math.abs(location.lat - 29.9792) < 0.05 &&
             Math.abs(location.lon - 31.1342) < 0.05
           ) && (
-              <EnvironmentElementsWithTrees location={location} />
+              <EnvironmentElementsWithTrees location={location} rockInInventory={rockInInventory} onRockCollect={onRockCollect} />
             )}
+
+          {/* 🪨 Roca soltada del inventario */}
+          {rockOnGround && rockDropPosition && (
+            <DroppedRock
+              position={[rockDropPosition.x, 0, rockDropPosition.z]}
+              onCollect={onRockCollect}
+              canCollect={!rockInInventory}
+            />
+          )}
 
           {/* Modelo 3D o Avatar según modo */}
           {movementMode === 'avatar' ? (
@@ -2156,6 +2266,7 @@ function ModelScene({
                 onShipChange={onShipChange}
                 currentUfo={currentUfo}
                 abilityActive={abilityActive}
+                onObeliskActivate={onObeliskActivate}
               />
             )}
 
@@ -2215,6 +2326,24 @@ function ModelScene({
               />
             )}
 
+          {/* 🏛️ Göbekli Tepe — solo accesible via obelisco de Isla de Pascua */}
+          {location &&
+            Math.abs(location.lat - 37.2231) < 0.05 &&
+            Math.abs(location.lon - 38.9225) < 0.05 && (
+              <GobekliTepeScene
+                tonatiuhDropPosition={tonatiuhDropPosition}
+                tonatiuhOnGround={tonatiuhOnGround}
+                scarabDropPosition={scarabDropPosition}
+                scarabOnGround={scarabOnGround}
+                skullDropPosition={skullDropPosition}
+                skullOnGround={skullOnGround}
+                magnaBowlCollected={magnaBowlLentInInventory || magnaBowlOnGround}
+                magnaBowlDropPosition={magnaBowlDropPosition}
+                magnaBowlOnGround={magnaBowlOnGround}
+                avatarPositionRef={avatarPositionRef}
+              />
+            )}
+
           {/* Capturar referencias */}
           <CameraCapture onReady={onCameraReady} />
           <ModelCapture onLoaded={onModelLoaded} />
@@ -2251,7 +2380,7 @@ function ModelScene({
       )}
 
       {/* Diálogo de Viracocha - FUERA del Canvas */}
-      {showViracochaDialogue && onCloseViracochaDialogue && (
+      {showViracochaDialogue && (
         <ViracochaDialogue
           message={magnaBowlCollected
             ? "¡Gracias, viajero! Has traído lo que necesitaba."
@@ -2260,10 +2389,48 @@ function ModelScene({
         />
       )}
 
+      {/* Diálogo Interactivo de Viracocha */}
+      {showViracochaInteractive && (
+        <ViracochaInteractiveDialogue
+          missionCompleted={isMissionCompleted('pumaPunku', 'reveal_structure')}
+          allMissionsCompleted={loadMissionState().stats.totalMissionsCompleted >= 5}
+          magnaBowlReturned={magnaBowlCollected}
+          onClose={onCloseViracochaInteractive || (() => {})}
+          onLendMagnaBowl={onLendMagnaBowl}
+        />
+      )}
+
     </>
   )
 }
 
+
+// Roca soltada del inventario — clickeable para recoger
+function DroppedRock({ position, onCollect, canCollect }: {
+  position: [number, number, number]
+  onCollect?: () => void
+  canCollect?: boolean
+}) {
+  const { scene } = useGLTF(getAssetPath('/rock_blender.glb'))
+  const cloned = useMemo(() => scene.clone(true), [scene])
+  const [hovered, setHovered] = useState(false)
+  return (
+    <group
+      position={position}
+      onClick={(e) => { if (!canCollect || !onCollect) return; e.stopPropagation(); onCollect() }}
+      onPointerOver={() => { if (canCollect) { setHovered(true); document.body.style.cursor = 'pointer' } }}
+      onPointerOut={() => { setHovered(false); document.body.style.cursor = 'default' }}
+    >
+      <primitive object={cloned} scale={0.3} />
+      {hovered && canCollect && (
+        <mesh>
+          <sphereGeometry args={[0.8, 12, 12]} />
+          <meshBasicMaterial color="#ffff00" wireframe transparent opacity={0.3} />
+        </mesh>
+      )}
+    </group>
+  )
+}
 
 // Capturar cámara
 function CameraCapture({ onReady }: { onReady?: (camera: THREE.Camera) => void }) {

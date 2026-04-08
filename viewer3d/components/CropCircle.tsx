@@ -7,7 +7,7 @@ import * as THREE from 'three'
 type CropPattern = 'flowerOfLife' | 'metatronCube' | 'spiral' | 'toroid' | 'fractalJulia' |
                    'flower' | 'metatron' | 'julia' |
                    'pyramidStar' | 'hBlock' | 'serpentSpiral' | 'solarMandala' | 'nodeNetwork' |
-                   'lissajous' | 'hilbert' | 'polygon'
+                   'lissajous' | 'hilbert' | 'polygon' | 'metatron3d'
 
 interface CropCircleProps {
   pattern?: CropPattern
@@ -101,6 +101,7 @@ export default function CropCircle({ pattern, type, position = [0, 0.02, 0], sca
       {p === 'hilbert'                            && <Hilbert />}
       {(p === 'polygon' || p === 'pyramidStar')   && <PolygonStar />}
       {p === 'solarMandala'                       && <SolarMandala />}
+      {p === 'metatron3d'                         && <MetatronCube3D />}
       {(p === 'hBlock' || p === 'metatronCube' || p === 'metatron') && <HBlockGrid />}
       {(p === 'nodeNetwork' || p === 'flowerOfLife' || p === 'flower') && <NodeNetwork />}
       {(p === 'fractalJulia' || p === 'julia')    && <Lissajous />}
@@ -530,5 +531,56 @@ export function CropCirclePortal({
       <ringGeometry args={[radius * 0.85, radius, 48]} />
       <meshBasicMaterial color={ringColor} transparent opacity={currentUfo === ufoNumber ? 0.08 : 0.04} depthWrite={false} />
     </mesh>
+  )
+}
+
+// ─── PUMA PUNKU: Cubo de Metatrón ────────────────────────────────────────────
+// 13 círculos (1 central + 6 internos + 6 externos) + todas las líneas entre nodos
+// Visualmente alienígena — tecnología sagrada
+function MetatronCube3D() {
+  const points = useMemo(() => {
+    const pts: number[] = []
+    const R = 5  // radio del anillo de nodos
+
+    // 13 nodos: centro + 12 en círculo
+    const nodes: [number, number][] = [[0, 0]]
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2
+      nodes.push([Math.cos(angle) * R, Math.sin(angle) * R])
+    }
+
+    // Círculo en cada nodo (radio = R/2 para los externos, R*0.3 para el central)
+    addCircle(pts, 0, 0, R * 0.3)           // nodo central
+    for (let i = 1; i < 13; i++) {
+      addCircle(pts, nodes[i][0], nodes[i][1], R * 0.28)
+    }
+
+    // Líneas conectando TODOS los nodos entre sí (grafo completo)
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        addLine(pts, nodes[i][0], nodes[i][1], nodes[j][0], nodes[j][1])
+      }
+    }
+
+    // Anillo exterior
+    addCircle(pts, 0, 0, R * 1.15)
+
+    // Hexágono interior (6 nodos internos conectados)
+    for (let i = 0; i < 6; i++) {
+      const a0 = (i / 6) * Math.PI * 2
+      const a1 = ((i + 1) / 6) * Math.PI * 2
+      addLine(pts,
+        Math.cos(a0) * R * 0.5, Math.sin(a0) * R * 0.5,
+        Math.cos(a1) * R * 0.5, Math.sin(a1) * R * 0.5
+      )
+    }
+
+    return pts
+  }, [])
+  return (
+    <>
+      <CropLines points={points} />
+      <GlowLight color="#00ccff" />
+    </>
   )
 }

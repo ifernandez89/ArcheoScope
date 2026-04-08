@@ -221,7 +221,7 @@ function TonatiuhItem({ position, onCollect }: {
   position: [number, number, number]
   onCollect?: () => void
 }) {
-  const { scene } = useGLTF(getAssetPath('/tonatiuh.glb'))
+  const { scene } = useGLTF(getAssetPath('/tonatiuh_aztec_sun.glb'))
   const groupRef = useRef<THREE.Group>(null)
   const [hovered, setHovered] = useState(false)
   const [collecting, setCollecting] = useState(false)

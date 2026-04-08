@@ -110,9 +110,10 @@ interface EasterIslandSceneProps {
   onShipChange?: (ufoNumber: number) => void
   currentUfo?: number
   abilityActive?: boolean
+  onObeliskActivate?: () => void
 }
 
-export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate, onTriggerEruption, skullInInventory, showSkull, skullDropPosition, onSkullCollect, merkabaMissionDone, onShipChange, currentUfo, abilityActive }: EasterIslandSceneProps) {
+export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate, onTriggerEruption, skullInInventory, showSkull, skullDropPosition, onSkullCollect, merkabaMissionDone, onShipChange, currentUfo, abilityActive, onObeliskActivate }: EasterIslandSceneProps) {
   return (
     <Suspense fallback={<LoadingEasterIsland />}>
       <EasterIslandSceneContent 
@@ -132,6 +133,7 @@ export default function EasterIslandScene({ avatarPositionRef, volcanicEruption,
         onShipChange={onShipChange}
         currentUfo={currentUfo}
         abilityActive={abilityActive}
+        onObeliskActivate={onObeliskActivate}
       />
     </Suspense>
   )
@@ -153,7 +155,8 @@ function EasterIslandSceneContent({
   merkabaMissionDone,
   onShipChange,
   currentUfo,
-  abilityActive
+  abilityActive,
+  onObeliskActivate
 }: EasterIslandSceneProps) {
   const moaiModel = useGLTF(getAssetPath('/moai.glb'))
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
@@ -410,6 +413,16 @@ function EasterIslandSceneContent({
         currentUfo={currentUfo}
       />
 
+      {/* 🗿 Obelisco Lanzón Chavín — aparece al completar las 5 misiones */}
+      {missionDone && (
+        <Suspense fallback={null}>
+          <LanzonObelisk
+            avatarPositionRef={avatarPositionRef}
+            onActivate={onObeliskActivate}
+          />
+        </Suspense>
+      )}
+
       {showJadeMask && !jadeMaskCollected && (
         <group
           position={[15, 0.5, -10]}
@@ -488,4 +501,69 @@ function TitanPulseDetector({
   }, [abilityActive])
 
   return null
+}
+
+// ─── LANZÓN CHAVÍN — Obelisco sagrado ────────────────────────────────────────
+// Aparece en la esquina noreste (opuesta al volcán en [-55,2,55])
+// Solo visible al completar las 5 misiones
+// Se activa por PROXIMIDAD del avatar — no por click
+function LanzonObelisk({ avatarPositionRef, onActivate }: {
+  avatarPositionRef?: React.RefObject<THREE.Vector3>
+  onActivate?: () => void
+}) {
+  const { scene } = useGLTF(getAssetPath('/lanzon_chavin.glb'))
+  const groupRef = useRef<THREE.Group>(null)
+  const activatedRef = useRef(false)
+  const OBELISK_POS = [55, 0, -55] as const
+  const RADIUS = 15  // metros de proximidad
+
+  const { scale, yOffset } = useMemo(() => {
+    const box = new THREE.Box3().setFromObject(scene)
+    const size = box.getSize(new THREE.Vector3())
+    const sc = 12 / size.y
+    const yo = -box.min.y * sc
+    return { scale: sc, yOffset: yo }
+  }, [scene])
+
+  const cloned = useMemo(() => scene.clone(true), [scene])
+
+  const lightRef = useRef<THREE.PointLight>(null)
+  const [nearPlayer, setNearPlayer] = useState(false)
+
+  useFrame(({ clock }) => {
+    // Pulso de luz — más intenso cuando el avatar está cerca
+    if (lightRef.current) {
+      lightRef.current.intensity = (nearPlayer ? 3 : 0.5) + Math.sin(clock.elapsedTime * 0.8) * 0.3
+    }
+
+    // Detección de proximidad
+    if (!avatarPositionRef?.current || !onActivate || activatedRef.current) return
+    const av = avatarPositionRef.current
+    const dx = av.x - OBELISK_POS[0]
+    const dz = av.z - OBELISK_POS[2]
+    const distSq = dx * dx + dz * dz
+    const isNear = distSq < RADIUS * RADIUS
+
+    if (isNear !== nearPlayer) setNearPlayer(isNear)
+
+    if (isNear) {
+      activatedRef.current = true
+      console.log('🏛️ Obelisco activado — viajando a Göbekli Tepe')
+      setTimeout(() => onActivate(), 1500) // pequeño delay dramático
+    }
+  })
+
+  return (
+    <group ref={groupRef} position={[OBELISK_POS[0], yOffset, OBELISK_POS[2]]}>
+      <primitive object={cloned} scale={scale} />
+      <pointLight ref={lightRef} color="#ffcc44" intensity={0.5} distance={40} position={[0, 6, 0]} />
+      {/* Anillo de proximidad visible */}
+      {nearPlayer && (
+        <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[RADIUS * 0.8, RADIUS, 48]} />
+          <meshBasicMaterial color="#ffcc44" transparent opacity={0.15} depthWrite={false} />
+        </mesh>
+      )}
+    </group>
+  )
 }

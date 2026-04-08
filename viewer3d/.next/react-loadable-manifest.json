@@ -5,7 +5,7 @@
       "static/chunks/react-three-d5369d14ea5375a2.js",
       "static/chunks/engines.ef45ed77d58adea0.js",
       "static/chunks/vendor-e652fae1dbdf1157.js",
-      "static/chunks/8740.d942545d28ac1fda.js"
+      "static/chunks/8740.61ae77adbf5aae1c.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -111,8 +111,8 @@
     "id": 8520,
     "files": [
       "static/chunks/react-three-d5369d14ea5375a2.js",
-      "static/chunks/1250.bdffb02c3157f59f.js",
-      "static/chunks/2063.37360809a1b2b7e1.js"
+      "static/chunks/1250.73933847e8d5d87f.js",
+      "static/chunks/2063.9d2bc9c025384de3.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./EnhancedMoon": {
@@ -136,7 +136,7 @@
     "id": 5178,
     "files": [
       "static/chunks/react-three-d5369d14ea5375a2.js",
-      "static/chunks/1250.bdffb02c3157f59f.js",
+      "static/chunks/1250.73933847e8d5d87f.js",
       "static/chunks/5178.23e309418318e898.js"
     ]
   },
@@ -144,6 +144,14 @@
     "id": 6229,
     "files": [
       "static/chunks/6229.f6adc5f27941af80.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./GobekliTepeScene": {
+    "id": 6097,
+    "files": [
+      "static/chunks/react-three-d5369d14ea5375a2.js",
+      "static/chunks/1250.73933847e8d5d87f.js",
+      "static/chunks/6097.9afbd7102533be3c.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./IceTerrain": {
@@ -186,7 +194,7 @@
     "id": 5901,
     "files": [
       "static/chunks/react-three-d5369d14ea5375a2.js",
-      "static/chunks/5901.b6bf59a15e3a9e4c.js"
+      "static/chunks/5901.8a50804210035a4c.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./MilkyWayBackground": {
@@ -230,8 +238,8 @@
     "id": 2184,
     "files": [
       "static/chunks/react-three-d5369d14ea5375a2.js",
-      "static/chunks/1250.bdffb02c3157f59f.js",
-      "static/chunks/6629.eaf6a7083f44b4c6.js"
+      "static/chunks/1250.73933847e8d5d87f.js",
+      "static/chunks/6629.0b82fd48568b299e.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./PumaPunkuStructure": {
@@ -324,7 +332,7 @@
     "id": 9624,
     "files": [
       "static/chunks/react-three-d5369d14ea5375a2.js",
-      "static/chunks/1250.bdffb02c3157f59f.js",
+      "static/chunks/1250.73933847e8d5d87f.js",
       "static/chunks/9624.c65f7af92d71ba59.js"
     ]
   },
@@ -349,7 +357,7 @@
     "id": 7458,
     "files": [
       "static/chunks/react-three-d5369d14ea5375a2.js",
-      "static/chunks/1250.bdffb02c3157f59f.js",
+      "static/chunks/1250.73933847e8d5d87f.js",
       "static/chunks/7458.0feb2222e03d4523.js"
     ]
   },
@@ -357,6 +365,12 @@
     "id": 5054,
     "files": [
       "static/chunks/5054.b6302225155c8be7.js"
+    ]
+  },
+  "components\\ImmersiveScene.tsx -> ./ViracochaInteractiveDialogue": {
+    "id": 628,
+    "files": [
+      "static/chunks/628.0e8183b3aeba63cd.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./VolcanicTerrain": {

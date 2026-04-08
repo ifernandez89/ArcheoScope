@@ -19,32 +19,57 @@ function MovableTree({ id, initialPosition, scale, rotation, treeType }: {
   )
 }
 
-function MovableRock({ id, initialPosition, scale, rotation }: {
+function MovableRock({ id, initialPosition, scale, rotation, canCollect, onCollect }: {
   id: string; initialPosition: [number, number, number]; scale: number; rotation: number
+  canCollect?: boolean
+  onCollect?: () => void
 }) {
   const [pos, setPos] = useState<[number, number, number]>(initialPosition)
+  const [collected, setCollected] = useState(false)
+
+  if (collected) return null
+
   return (
     <SelectableObject id={id} position={pos} onMove={setPos}>
-      <Rock3DModel position={[0, 0, 0]} scale={scale} rotation={rotation} />
+      <group
+        onClick={(e) => {
+          if (!canCollect || !onCollect) return
+          e.stopPropagation()
+          setCollected(true)
+          onCollect()
+        }}
+        onPointerOver={() => { if (canCollect) document.body.style.cursor = 'pointer' }}
+        onPointerOut={() => { document.body.style.cursor = 'default' }}
+      >
+        <Rock3DModel position={[0, 0, 0]} scale={scale} rotation={rotation} />
+      </group>
     </SelectableObject>
   )
 }
 
 // ─── Wrapper que lee blockMoved dentro del ObjectSelectionProvider ────────────
 
-export function EnvironmentElementsWithTrees({ location }: { location?: { lat: number; lon: number } | null }) {
+export function EnvironmentElementsWithTrees({ location, rockInInventory, onRockCollect }: { 
+  location?: { lat: number; lon: number } | null
+  rockInInventory?: boolean
+  onRockCollect?: () => void
+}) {
   const { blockMoved } = useObjectSelection()
-  return <EnvironmentElements location={location} treeMultiplier={blockMoved ? 3 : 1} />
+  return <EnvironmentElements location={location} treeMultiplier={blockMoved ? 3 : 1} rockInInventory={rockInInventory} onRockCollect={onRockCollect} />
 }
 
 // ─── Generador procedural principal ──────────────────────────────────────────
 
 export default function EnvironmentElements({
   location,
-  treeMultiplier = 1
+  treeMultiplier = 1,
+  rockInInventory = false,
+  onRockCollect
 }: {
   location?: { lat: number; lon: number } | null
   treeMultiplier?: number
+  rockInInventory?: boolean
+  onRockCollect?: () => void
 }) {
   const seed = useMemo(() => {
     if (!location) return 0
@@ -254,7 +279,10 @@ export default function EnvironmentElements({
           case 'rock':
             return (
               <MovableRock key={`rock-${seed}-${i}`} id={`rock-${seed}-${i}`}
-                initialPosition={[item.x, 0, item.z]} scale={item.scale * 0.5} rotation={item.rotation} />
+                initialPosition={[item.x, 0, item.z]} scale={item.scale * 0.5} rotation={item.rotation}
+                canCollect={!rockInInventory}
+                onCollect={onRockCollect}
+              />
             )
           case 'crystal':
             return (

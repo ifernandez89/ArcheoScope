@@ -179,9 +179,9 @@ function PumaPunkuSceneContent({
         revealed={gateRevealed} 
       />
 
-      {/* 💠 Crop Circle: Toroid - Nave 2 Aegis (Puma Punku) */}
+      {/* 💠 Crop Circle: Cubo de Metatrón - Nave 2 Aegis (Puma Punku) */}
       <CropCircle 
-        type="toroid" 
+        type="metatron3d" 
         position={[83, 0.3, 67]} 
         scale={1.5} 
         visible={missionDone} 

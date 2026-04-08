@@ -26,7 +26,7 @@ function RotatingModel({ modelPath, scale = 1 }: { modelPath: string, scale?: nu
       clone.rotation.z = Math.PI
     }
     if (modelPath.includes('tonatiuh')) {
-      // Tonatiuh: rotar para verlo de frente
+      // tonatiuh_aztec_sun: rotar para verlo de frente
       clone.rotation.y = Math.PI
     }
     // Auto-centrar: calcular bounding box y mover al origen
