@@ -43,6 +43,8 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
     { lat: 19.6925, lon: -98.8438, category: 'famous' },
     { lat: 18.4667, lon: -95.4500, category: 'famous' },
     { lat: -27.1254, lon: -109.2778, category: 'famous' },
+    { lat: -75.2509, lon: 0.0714, category: 'famous' },
+    { lat: 8.7783, lon: -144.8885, category: 'famous' },
   ]
 
   return (
