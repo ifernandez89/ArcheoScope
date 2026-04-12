@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { isMissionCompleted } from '@/types/missionState'
 
 interface ViracochaInteractiveDialogueProps {
-  missionCompleted: boolean       // misión de puma punku completada
-  allMissionsCompleted: boolean   // las 5 misiones completas
-  magnaBowlReturned: boolean      // fuente magna ya fue devuelta
+  missionCompleted: boolean
+  allMissionsCompleted: boolean
+  magnaBowlReturned: boolean      // true = ya devolvió la fuente y Viracocha agradeció
   onClose: () => void
-  onLendMagnaBowl?: () => void    // callback cuando presta la fuente magna
+  onLendMagnaBowl?: () => void
 }
 
 const ACCENT = '#ffd700'
@@ -20,12 +19,15 @@ const OPTIONS = [
 ]
 
 const RESPONSES: Record<number, (allDone: boolean) => string> = {
-  1: () => 'El cosmos aguarda tu despertar. Nodos de energía duermen en la Tierra. Todos deben vibrar en armonía.',
-  2: () => 'La Fuente Magna es un recipiente sagrado. Sus inscripciones invocan a una diosa. Fue creada para canalizar energías cósmicas en rituales.',
+  1: () => 'El cosmos aguarda tu despertar. Cinco nodos de energía duermen en la Tierra — Puma Punku, Giza, Teotihuacán, Veracruz, Rapa Nui. Cuando todos vibren en armonía, el portal se abrirá.',
+  2: () => 'La Fuente Magna es un recipiente sagrado de más de 5000 años. Sus inscripciones proto-sumerias invocan a la diosa Nia. Fue creada para canalizar energías cósmicas en rituales de alineación planetaria.',
   3: (allDone) => allDone
-    ? 'Has demostrado ser digno, viajero. Los cinco nodos resuenan. Toma la Fuente Magna.'
-    : 'Aún no, viajero. La Fuente Magna solo puede ser portada por quien ha despertado nodos de la Tierra. Completa tu misión y regresa.',
+    ? 'Has demostrado ser digno, viajero. Los cinco nodos resuenan. Toma la Fuente Magna — llévala al lugar donde el tiempo comenzó.'
+    : 'Aún no, viajero. La Fuente Magna solo puede ser portada por quien ha despertado los cinco nodos de la Tierra. Completa tu misión y regresa.',
 }
+
+// Mensaje de agradecimiento — se muestra la primera vez que devuelve la fuente
+const THANKS_MESSAGE = '¡Gracias, viajero! La Fuente Magna regresa a su lugar sagrado. Los antiguos te bendicen. Cuando hayas completado tu misión, regresa a mí.'
 
 export default function ViracochaInteractiveDialogue({
   missionCompleted,
@@ -34,19 +36,18 @@ export default function ViracochaInteractiveDialogue({
   onClose,
   onLendMagnaBowl
 }: ViracochaInteractiveDialogueProps) {
-  const [selectedResponse, setSelectedResponse] = useState<string | null>(null)
-  const [showOptions, setShowOptions] = useState(true)
+  // Si magnaBowlReturned es FALSE → mostrar agradecimiento (primera vez que devuelve)
+  // Si magnaBowlReturned es TRUE → mostrar opciones (ya agradeció antes)
+  const [selectedResponse, setSelectedResponse] = useState<string | null>(
+    !magnaBowlReturned ? THANKS_MESSAGE : null
+  )
+  const [showOptions, setShowOptions] = useState(magnaBowlReturned)
 
-  // Mensaje inicial según estado
-  const initialMessage = magnaBowlReturned
-    ? '¿Qué deseas?'
-    : 'Gracias por devolver la Fuente Magna a su lugar sagrado. Los antiguos te bendicen.'
-
+  // Si es el agradecimiento, cerrar automáticamente después de 6s
   useEffect(() => {
-    // Si la fuente no fue devuelta aún, mostrar agradecimiento y cerrar
     if (!magnaBowlReturned) {
-      setShowOptions(false)
-      setTimeout(() => onClose(), 5000)
+      const timer = setTimeout(() => onClose(), 6000)
+      return () => clearTimeout(timer)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -56,15 +57,10 @@ export default function ViracochaInteractiveDialogue({
     setSelectedResponse(response)
     setShowOptions(false)
 
-    // Si presta la fuente magna y todas las misiones están completas
     if (id === 3 && allMissionsCompleted && onLendMagnaBowl) {
-      setTimeout(() => {
-        onLendMagnaBowl()
-        onClose()
-      }, 4000)
+      setTimeout(() => { onLendMagnaBowl(); onClose() }, 4000)
       return
     }
-
     setTimeout(() => onClose(), 5000)
   }
 
@@ -72,7 +68,7 @@ export default function ViracochaInteractiveDialogue({
     <div
       style={{
         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-        background: 'rgba(0,0,0,0.75)',
+        background: 'rgba(0, 0, 0, 0.75)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         zIndex: 2000, animation: 'fadeIn 0.3s ease-out'
       }}
@@ -81,71 +77,80 @@ export default function ViracochaInteractiveDialogue({
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: 'rgba(10, 8, 25, 0.97)',
+          background: 'rgba(20, 15, 10, 0.95)',
           border: `2px solid ${ACCENT}`,
           borderRadius: '12px',
           padding: '30px 40px',
           maxWidth: '620px',
           width: '90%',
-          boxShadow: `0 0 40px rgba(255,215,0,0.4)`,
+          boxShadow: `0 0 30px rgba(255, 215, 0, 0.6)`,
           animation: 'scaleIn 0.3s ease-out'
         }}
       >
         {/* Icono */}
-        <div style={{ textAlign: 'center', fontSize: '42px', marginBottom: '12px' }}></div>
+        <div style={{ textAlign: 'center', marginBottom: '15px', fontSize: '42px' }}>🗿</div>
 
         {/* Nombre */}
         <div style={{
-          color: ACCENT, fontSize: '20px', fontWeight: 'bold',
-          textAlign: 'center', marginBottom: '18px',
-          fontFamily: '"Cinzel", serif', letterSpacing: '3px',
-          textShadow: `0 0 10px rgba(255,215,0,0.8)`
+          color: ACCENT,
+          fontSize: '22px',
+          fontWeight: 'bold',
+          textAlign: 'center',
+          marginBottom: '20px',
+          fontFamily: '"Cinzel", "Trajan Pro", serif',
+          letterSpacing: '3px',
+          textShadow: `0 0 10px rgba(255, 215, 0, 0.8)`,
         }}>
-          
+          Viracocha
         </div>
 
         {/* Mensaje */}
         <div style={{
-          color: '#fff', fontSize: '17px', textAlign: 'center',
-          marginBottom: showOptions && !selectedResponse ? '24px' : '0',
-          fontFamily: '"Cinzel", serif', lineHeight: '1.6',
-          textShadow: `0 0 5px rgba(255,215,0,0.2)`
+          color: '#ffffff',
+          fontSize: '18px',
+          textAlign: 'center',
+          marginBottom: showOptions && !selectedResponse ? '25px' : '0',
+          fontFamily: '"Cinzel", serif',
+          letterSpacing: '1px',
+          lineHeight: '1.6',
+          textShadow: `0 0 5px rgba(255, 215, 0, 0.3)`,
         }}>
-          {selectedResponse || initialMessage}
+          {selectedResponse || '¿Qué deseas saber, viajero?'}
         </div>
 
         {/* Opciones */}
-        {showOptions && !selectedResponse && magnaBowlReturned && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '8px' }}>
-            {OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => handleOption(opt.id)}
-                style={{
-                  padding: '13px 20px', fontSize: '15px',
-                  color: opt.id === 3 && allMissionsCompleted ? '#00ff88' : ACCENT,
-                  background: opt.id === 3 && allMissionsCompleted
-                    ? 'rgba(0,255,136,0.08)' : `rgba(255,215,0,0.08)`,
-                  border: `2px solid ${opt.id === 3 && allMissionsCompleted ? '#00ff88' : ACCENT}`,
-                  borderRadius: '8px', cursor: 'pointer',
-                  fontFamily: '"Cinzel", serif', letterSpacing: '1px',
-                  textAlign: 'left', transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = opt.id === 3 && allMissionsCompleted
-                    ? 'rgba(0,255,136,0.25)' : 'rgba(255,215,0,0.2)'
-                  e.currentTarget.style.transform = 'translateX(6px)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = opt.id === 3 && allMissionsCompleted
-                    ? 'rgba(0,255,136,0.08)' : 'rgba(255,215,0,0.08)'
-                  e.currentTarget.style.transform = 'translateX(0)'
-                }}
-              >
-                {opt.id}. {opt.label}
-                {opt.id === 3 && allMissionsCompleted && ' ✨'}
-              </button>
-            ))}
+        {showOptions && !selectedResponse && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {OPTIONS.map((opt) => {
+              const isLend = opt.id === 3
+              const lendReady = isLend && allMissionsCompleted
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => handleOption(opt.id)}
+                  style={{
+                    padding: '14px 22px', fontSize: '16px',
+                    color: lendReady ? '#00ff88' : ACCENT,
+                    background: lendReady ? 'rgba(0,255,136,0.1)' : `rgba(255,215,0,0.1)`,
+                    border: `2px solid ${lendReady ? '#00ff88' : ACCENT}`,
+                    borderRadius: '8px', cursor: 'pointer',
+                    fontFamily: '"Cinzel", serif', letterSpacing: '1px',
+                    textAlign: 'left', transition: 'all 0.3s ease',
+                    fontWeight: lendReady ? 'bold' : 'normal'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = lendReady ? 'rgba(0,255,136,0.3)' : 'rgba(255,215,0,0.3)'
+                    e.currentTarget.style.transform = 'translateX(8px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = lendReady ? 'rgba(0,255,136,0.1)' : 'rgba(255,215,0,0.1)'
+                    e.currentTarget.style.transform = 'translateX(0)'
+                  }}
+                >
+                  {opt.id}. {opt.label}{lendReady ? ' ✨' : ''}
+                </button>
+              )
+            })}
           </div>
         )}
 
@@ -154,12 +159,12 @@ export default function ViracochaInteractiveDialogue({
           <button
             onClick={onClose}
             style={{
-              marginTop: '20px', padding: '10px 30px', fontSize: '14px',
+              marginTop: '20px', padding: '10px 30px', fontSize: '16px',
               color: ACCENT, background: 'transparent',
               border: `2px solid ${ACCENT}`, borderRadius: '8px',
               cursor: 'pointer', fontFamily: '"Cinzel", serif',
               letterSpacing: '2px', display: 'block', margin: '20px auto 0',
-              transition: 'all 0.2s'
+              transition: 'all 0.3s ease'
             }}
             onMouseEnter={(e) => { e.currentTarget.style.background = ACCENT; e.currentTarget.style.color = '#000' }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = ACCENT }}

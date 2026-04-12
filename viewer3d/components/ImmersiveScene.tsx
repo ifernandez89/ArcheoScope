@@ -1528,13 +1528,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           showViracochaDialogue={showViracochaDialogue}
           onViracochaSpeak={() => {
             const pumaDone = isMissionCompleted('pumaPunku', 'reveal_structure')
-            if (pumaDone && magnaBowlCollected && !magnaBowlThanked) {
-              // Primera vez que regresa con la fuente → agradecimiento
-              setMagnaBowlThanked(true)
-              if (typeof window !== 'undefined') localStorage.setItem('magna_bowl_thanked', 'true')
-              setShowViracochaDialogue(true)
-            } else if (pumaDone && magnaBowlCollected && magnaBowlThanked) {
-              // Ya agradeció → diálogo interactivo
+            if (pumaDone && magnaBowlCollected) {
+              // Siempre usar el diálogo interactivo cuando la misión está completa
+              // magnaBowlThanked controla si muestra agradecimiento o opciones
               setShowViracochaInteractive(true)
             } else {
               // Sin misión o sin fuente → diálogo simple
@@ -1620,7 +1616,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           magnaBowlDropPosition={magnaBowlDropPosition}
           onObeliskActivate={() => handleLocationClick(37.2231, 38.9225)}
           showViracochaInteractive={showViracochaInteractive}
-          onCloseViracochaInteractive={() => setShowViracochaInteractive(false)}
+          onCloseViracochaInteractive={() => {
+            setShowViracochaInteractive(false)
+            // Marcar que ya agradeció (para próximas visitas ir directo a opciones)
+            if (!magnaBowlThanked) {
+              setMagnaBowlThanked(true)
+              if (typeof window !== 'undefined') localStorage.setItem('magna_bowl_thanked', 'true')
+            }
+          }}
           onLendMagnaBowl={() => {
             setMagnaBowlLentInInventory(true)
             setMagnaBowlOnGround(false)
