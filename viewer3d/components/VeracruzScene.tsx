@@ -7,6 +7,7 @@ import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
 import OlmecCave from './OlmecCave'
 import CropCircle, { CropCirclePortal } from './CropCircle'
+import Geoglyph from './Geoglyph'
 import { isMissionCompleted } from '@/types/missionState'
 
 interface VeracruzSceneProps {
@@ -41,7 +42,7 @@ function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive
     const sc = 8 / size.y
     // Cuando rotation.x=0, la base del modelo (box.min.y) debe estar en Y=0
     const sy = -box.min.y * sc
-    console.log('🗿 Olmec standY:', sy, 'scale:', sc, 'box.min.y:', box.min.y)
+    console.log('Olmec standY:', sy, 'scale:', sc, 'box.min.y:', box.min.y)
     return { scale: sc, standY: sy }
   }, [olmecModel.scene])
 
@@ -142,6 +143,9 @@ function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive
 
         {/* 🏔️ Cueva olmeca al oeste */}
         <OlmecCave />
+
+        {/* 🐕 Geoglifo: Perro de Nazca */}
+        <Geoglyph svgPath="/geoglyphs/perro.svg" position={[-83, 1, -67]} size={18} />
 
         {/* 💠 Crop Circle: Polígono Estelar - Nave 5 Titan (Veracruz) */}
         <CropCircle 

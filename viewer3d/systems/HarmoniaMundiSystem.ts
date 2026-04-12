@@ -147,6 +147,15 @@ export class HarmoniaMundiSystem {
       type: 'resonance',
       intensity: 0.12,
       unlocked: false
+    }],
+    ['earth_mission_6', {
+      id: 'earth_mission_6',
+      name: 'Khepri Despierta',
+      description: 'El escarabajo sagrado abre el portal final — Göbekli Tepe activado',
+      frequency: 45, // Wingbeat grave — criatura antigua
+      type: 'texture',
+      intensity: 0.18,
+      unlocked: false
     }]
   ])
   
@@ -196,6 +205,15 @@ export class HarmoniaMundiSystem {
       Q: 4,
       gain: 1.6,
       description: 'Resonancia olmeca del inframundo'
+    }],
+    ['gobekli-tepe', {
+      siteId: 'gobekli-tepe',
+      name: 'Göbekli Tepe',
+      filterType: 'bandpass' as BiquadFilterType,
+      frequency: 45,
+      Q: 8,
+      gain: 3.0,
+      description: 'Portal primordial — frecuencia del escarabajo sagrado'
     }]
   ])
   
@@ -428,6 +446,89 @@ export class HarmoniaMundiSystem {
     console.log(`🏛️ Arquitectura desactivada: ${siteId}`)
   }
   
+  /**
+   * 🪲 KHEPRI DESPIERTA — Sonido del escarabajo sagrado
+   * Se activa al completar Göbekli Tepe (6ta misión)
+   * 3 capas: wingbeat oscillator + noise turbulence + harmonic buzz
+   * Efecto cinematográfico: zumbido lejano → crescendo → enjambre
+   */
+  playBeetleSound(): void {
+    if (!this.enabled || !this.context) return
+
+    const ctx = this.context
+    const now = ctx.currentTime
+    const master = this.masterGain!
+
+    // ── Capa 1: Wingbeat oscillator (alas graves) ─────────────────────────
+    const wingOsc = ctx.createOscillator()
+    const wingGain = ctx.createGain()
+    const wingFilter = ctx.createBiquadFilter()
+
+    wingOsc.type = 'sawtooth'
+    wingOsc.frequency.value = 45  // Grave — criatura antigua
+    wingFilter.type = 'lowpass'
+    wingFilter.frequency.value = 300
+    wingFilter.Q.value = 2
+
+    wingGain.gain.setValueAtTime(0, now)
+    wingGain.gain.linearRampToValueAtTime(0.18, now + 4)   // fade in lento
+    wingGain.gain.linearRampToValueAtTime(0.28, now + 10)  // crescendo
+    wingGain.gain.linearRampToValueAtTime(0.35, now + 18)  // enjambre
+    wingGain.gain.linearRampToValueAtTime(0.15, now + 30)  // settle
+
+    wingOsc.connect(wingFilter)
+    wingFilter.connect(wingGain)
+    wingGain.connect(master)
+    wingOsc.start(now)
+
+    // Microinestabilidad natural del aleteo
+    const jitterInterval = setInterval(() => {
+      if (!this.enabled) { clearInterval(jitterInterval); return }
+      wingOsc.frequency.value = 42 + Math.random() * 10
+    }, 50)
+
+    // ── Capa 2: LFO modulación de amplitud (pulso de alas) ────────────────
+    const lfo = ctx.createOscillator()
+    const lfoGain = ctx.createGain()
+
+    lfo.type = 'sine'
+    lfo.frequency.value = 80  // 80 pulsos/seg = aleteo rápido
+    lfoGain.gain.setValueAtTime(0, now)
+    lfoGain.gain.linearRampToValueAtTime(0.12, now + 3)
+    lfoGain.gain.linearRampToValueAtTime(0.22, now + 12)
+
+    lfo.connect(lfoGain)
+    lfoGain.connect(wingGain.gain)  // modula la amplitud del wingbeat
+    lfo.start(now)
+
+    // ── Capa 3: Harmonic buzz (300-400 Hz — armónicos aerodinámicos) ──────
+    const buzzOsc = ctx.createOscillator()
+    const buzzGain = ctx.createGain()
+    const buzzFilter = ctx.createBiquadFilter()
+
+    buzzOsc.type = 'square'
+    buzzOsc.frequency.value = 320
+    buzzFilter.type = 'bandpass'
+    buzzFilter.frequency.value = 350
+    buzzFilter.Q.value = 3
+
+    buzzGain.gain.setValueAtTime(0, now)
+    buzzGain.gain.linearRampToValueAtTime(0.06, now + 6)
+    buzzGain.gain.linearRampToValueAtTime(0.12, now + 15)
+    buzzGain.gain.linearRampToValueAtTime(0.08, now + 30)
+
+    buzzOsc.connect(buzzFilter)
+    buzzFilter.connect(buzzGain)
+    buzzGain.connect(master)
+    buzzOsc.start(now)
+
+    // Guardar referencias para cleanup
+    this.activeOscillators.set('beetle_wing', { osc: wingOsc, gain: wingGain, lfo, lfoGain })
+    this.activeOscillators.set('beetle_buzz', { osc: buzzOsc, gain: buzzGain })
+
+    console.log('🪲 Khepri despierta — sonido del escarabajo sagrado activado')
+  }
+
   /**
    * Ajustar volúmenes
    */

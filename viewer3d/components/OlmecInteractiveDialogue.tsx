@@ -68,7 +68,7 @@ export default function OlmecInteractiveDialogue({
       setCurrentMessage('Siento la energia del Jade del Aliento... ¿Me lo entregas, viajero?')
       setShowOptions(true)
     } else {
-      setCurrentMessage('Viajero... ¿Que deseas saber?')
+      setCurrentMessage('¿Que deseas?')
       setShowOptions(true)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

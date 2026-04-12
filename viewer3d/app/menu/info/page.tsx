@@ -117,6 +117,74 @@ export default function InfoPage() {
             — Registro atribuido a un investigador previo a la desaparición.
           </div>
         </section>
+
+        {/* Sistemas Técnicos */}
+        {[
+          {
+            icon: '🎵',
+            title: 'Sistema de Sonido — Harmonia Mundi',
+            color: '#a78bfa',
+            border: 'rgba(167, 139, 250, 0.3)',
+            bg: 'rgba(167, 139, 250, 0.08)',
+            text: 'Motor de audio procedural basado en frecuencias cósmicas reales. Cada misión completada desbloquea una nueva capa sonora construida sobre la frecuencia orbital de la Tierra (136.10 Hz). Los sitios arqueológicos actúan como amplificadores: filtros de resonancia únicos que modifican el espectro sonoro en tiempo real. Al completar Göbekli Tepe, el sistema activa el sonido del escarabajo sagrado — tres capas de síntesis (wingbeat, modulación LFO, armónicos aerodinámicos) que evocan a Khepri, el dios del renacimiento solar.'
+          },
+          {
+            icon: '⭐',
+            title: 'Sistema de Cálculo Estelar',
+            color: '#fbbf24',
+            border: 'rgba(251, 191, 36, 0.3)',
+            bg: 'rgba(251, 191, 36, 0.08)',
+            text: 'Motor astronómico de alta precisión que calcula la posición real del Sol para cualquier coordenada geográfica y fecha. Implementa las ecuaciones de declinación solar, ángulo horario y altitud/azimut con correcciones de refracción atmosférica. Simula los equinoccios, solsticios y la precesión axial de la Tierra a lo largo de ciclos de 26,000 años — el mismo ciclo que las civilizaciones antiguas codificaron en sus monumentos.'
+          },
+          {
+            icon: '🪐',
+            title: 'Sistema Orbital y de Planetas',
+            color: '#34d399',
+            border: 'rgba(52, 211, 153, 0.3)',
+            bg: 'rgba(52, 211, 153, 0.08)',
+            text: 'Simulación del sistema solar con órbitas keplerianas calculadas en tiempo real. Cada planeta se posiciona según su período orbital real (Mercurio 88 días, Venus 225, Marte 687, etc.). El sistema incluye fases lunares, eclipses y la posición de la Vía Láctea. La iluminación de cada escena responde dinámicamente a la posición solar calculada, recreando las condiciones lumínicas exactas de cada sitio arqueológico.'
+          },
+          {
+            icon: '🎮',
+            title: 'Sistema 3D y Gráficos',
+            color: '#60a5fa',
+            border: 'rgba(96, 165, 250, 0.3)',
+            bg: 'rgba(96, 165, 250, 0.08)',
+            text: 'Motor de renderizado basado en Three.js / React Three Fiber con optimizaciones avanzadas: instanced meshes para vegetación y NPCs, carga diferida de modelos por escena, compresión de geometría, LOD dinámico para terrenos y frustum culling. Los modelos 3D de sitios arqueológicos son reconstrucciones procedurales o digitalizaciones de alta fidelidad. El sistema climático genera lluvia, nieve, tormentas y erupciones volcánicas en tiempo real mediante sistemas de partículas.'
+          },
+          {
+            icon: '🔷',
+            title: 'Sistema de Geometría Sagrada',
+            color: '#f472b6',
+            border: 'rgba(244, 114, 182, 0.3)',
+            bg: 'rgba(244, 114, 182, 0.08)',
+            text: 'Generador procedural de patrones geométricos basados en matemáticas antiguas. Cada sitio arqueológico tiene asignado un patrón único: Lissajous (Giza), Cubo de Metatrón (Puma Punku), Espiral galáctica (Teotihuacán), Polígono estelar (Veracruz), Curva de Hilbert (Isla de Pascua). Al completar una misión, el patrón se graba en el terreno como crop circle. El sistema Sacred Geometry Engine genera además patrones únicos basados en la nave utilizada y las coordenadas del sitio — cada combinación produce una firma energética irrepetible.'
+          }
+        ].map((s) => (
+          <section key={s.title} style={{
+            marginBottom: '20px',
+            padding: '25px',
+            background: s.bg,
+            border: `1px solid ${s.border}`,
+            borderRadius: '12px'
+          }}>
+            <h2 style={{
+              fontSize: '20px',
+              marginBottom: '14px',
+              color: s.color,
+              letterSpacing: '1px'
+            }}>
+              {s.icon} {s.title}
+            </h2>
+            <p style={{
+              fontSize: '15px',
+              lineHeight: '1.8',
+              opacity: 0.88
+            }}>
+              {s.text}
+            </p>
+          </section>
+        ))}
       </div>
       
       <button

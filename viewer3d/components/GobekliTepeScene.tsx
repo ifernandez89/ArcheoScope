@@ -6,6 +6,8 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
 import CropCircle from './CropCircle'
+import ToroidalSphere from './ToroidalSphere'
+import Geoglyph from './Geoglyph'
 
 export const GOBEKLI_TEPE_COORDS = { lat: 37.2231, lon: 38.9225 }
 
@@ -94,6 +96,31 @@ function GobekliTepeContent({
 
   const allActivated = activated.tonatiuh && activated.scarab && activated.skull && activated.magna
 
+  // Activar arquitectura de Göbekli Tepe y sonido del escarabajo al completar
+  useEffect(() => {
+    import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+      const harmonia = getHarmoniaMundi()
+      if (harmonia.isEnabled()) harmonia.activateArchitecture('gobekli-tepe')
+    })
+    return () => {
+      import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+        getHarmoniaMundi().deactivateArchitecture('gobekli-tepe')
+      })
+    }
+  }, [])
+
+  // Cuando los 4 altares se activan → desbloquear capa 6 + sonido del escarabajo
+  useEffect(() => {
+    if (!allActivated) return
+    import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+      const harmonia = getHarmoniaMundi()
+      if (!harmonia.isEnabled()) return
+      harmonia.unlockMissionLayer('earth_mission_6')
+      harmonia.playBeetleSound()
+      console.log('🪲 Göbekli Tepe completado — Khepri despierta!')
+    })
+  }, [allActivated])
+
   return (
     <group>
       <fog attach="fog" args={['#1a1208', 30, 200]} />
@@ -109,6 +136,13 @@ function GobekliTepeContent({
         <primitive object={cloned} scale={scale} />
       </group>
 
+      {/* Esfera toroidal — aparece al completar los 4 altares */}
+      <ToroidalSphere
+        position={[0, yOffset + 12, 0]}
+        size={10}
+        visible={allActivated}
+      />
+
       {/* Luz central */}
       <pointLight ref={lightRef} position={[0, 15, 0]} color="#ffaa33" intensity={1.5} distance={80} decay={2} />
       <ambientLight intensity={0.3} color="#332211" />
@@ -123,6 +157,9 @@ function GobekliTepeContent({
           activated={activated[altar.itemKey]}
         />
       ))}
+
+      {/* 👽 Geoglifo: Astronauta de Nazca */}
+      <Geoglyph svgPath="/geoglyphs/astronauta.svg" position={[-55, 0.1, -55]} size={18} />
 
       {/* Crop Circle Toroide — aparece debajo del modelo cuando los 4 están activados */}
       <CropCircle

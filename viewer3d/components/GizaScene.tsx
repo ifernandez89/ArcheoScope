@@ -7,6 +7,7 @@ import { useGLTF, Html } from '@react-three/drei'
 import { getAssetPath } from '@/lib/paths'
 import SelectableObject from './SelectableObject'
 import CropCircle, { CropCirclePortal } from './CropCircle'
+import Geoglyph from './Geoglyph'
 import { isMissionCompleted } from '@/types/missionState'
 
 // Modelos se cargan bajo demanda al entrar a la escena (no preload global)
@@ -203,6 +204,9 @@ export default function GizaScene({
           onClick={onSphinxClick}
         />
         
+        {/* 🕷️ Geoglifo: Araña de Nazca */}
+        <Geoglyph svgPath="/geoglyphs/araña.svg" position={[-83, 3, -67]} size={18} />
+
         {/* 💠 Crop Circle: Lissajous - Nave 1 Phantom (Giza) */}
         <CropCircle 
           type="lissajous" 
@@ -930,7 +934,7 @@ function ValleyTemple({ position }: { position: [number, number, number] }) {
       <Column position={[0, 3, 8]} />
       <Column position={[8, 3, 8]} />
       
-      {/* 🗿 Altar central */}
+      {/* Altar central */}
       <mesh position={[0, 0.75, 0]} castShadow receiveShadow>
         <boxGeometry args={[4, 1.5, 4]} />
         <meshStandardMaterial

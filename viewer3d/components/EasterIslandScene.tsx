@@ -12,6 +12,7 @@ import { loadMissionState } from '@/types/missionState'
 import Merkaba from './Merkaba'
 import EnergySphere from './EnergySphere'
 import CropCircle, { CropCirclePortal } from './CropCircle'
+import Geoglyph from './Geoglyph'
 import { isMissionCompleted } from '@/types/missionState'
 
 /**
@@ -396,6 +397,9 @@ function EasterIslandSceneContent({
 
       <EnergySphere position={[0, 8, 0]} size={2} visible={showEnergySphere} />
 
+      {/* 🐳 Geoglifo: Ballena de Nazca — esquina suroeste (opuesta al crop circle) */}
+      <Geoglyph svgPath="/geoglyphs/ballena.svg" position={[-55, 1, 55]} size={18} />
+
       {/* 💠 Crop Circle: Hilbert - Nave 4 Oracle (Isla de Pascua) */}
       {/* Volcán en [-55, 0, 55] → crop circle en esquina opuesta */}
       <CropCircle 
@@ -413,7 +417,7 @@ function EasterIslandSceneContent({
         currentUfo={currentUfo}
       />
 
-      {/* 🗿 Obelisco Lanzón Chavín — aparece al completar las 5 misiones */}
+      {/* Obelisco Lanzón Chavín — aparece al completar las 5 misiones */}
       {missionDone && (
         <Suspense fallback={null}>
           <LanzonObelisk

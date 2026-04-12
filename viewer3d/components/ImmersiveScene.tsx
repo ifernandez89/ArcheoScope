@@ -79,6 +79,7 @@ const VeracruzScene = dynamic(() => import('./VeracruzScene'), { ssr: false })
 const MictlanScene = dynamic(() => import('./MictlanScene'), { ssr: false })
 const GobekliTepeScene = dynamic(() => import('./GobekliTepeScene'), { ssr: false })
 const EnvironmentElements = dynamic(() => import('./EnvironmentElements'), { ssr: false, loading: () => null })
+const Geoglyph = dynamic(() => import('./Geoglyph'), { ssr: false, loading: () => null })
 
 // COMPONENTES DE DIÁLOGO - LAZY LOADING
 const ViracochaDialogue = dynamic(() => import('./ViracochaDialogue'), { ssr: false })
@@ -98,6 +99,7 @@ const EnhancedMoon = dynamic(() => import('./EnhancedMoon'), { ssr: false })
 
 // EnvironmentElementsWithTrees necesita el contexto, importar directamente
 import { EnvironmentElementsWithTrees } from './EnvironmentElements'
+import GeoglyphDirect from './Geoglyph'
 
 interface ImmersiveSceneProps {
   onModelLoaded?: (model: THREE.Object3D) => void
@@ -177,6 +179,37 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [weather, setWeather] = useState<WeatherState>(DEFAULT_STORM_WEATHER) // Estado del clima
   const [cameraRotation, setCameraRotation] = useState(0) // Rotación de la cámara para la brújula
   const [showSphinxDialogue, setShowSphinxDialogue] = useState(false) // Diálogo de la Esfinge en Giza
+
+  // 🌬️ Viento aleatorio en escenas terrestres
+  useEffect(() => {
+    if (mode !== 'model') return
+
+    let windTimer: ReturnType<typeof setTimeout>
+
+    const scheduleWind = () => {
+      // Esperar entre 20-60 segundos antes del próximo evento de viento
+      const delay = (20 + Math.random() * 40) * 1000
+      windTimer = setTimeout(() => {
+        // 60% de probabilidad de que haya viento
+        if (Math.random() < 0.6) {
+          setWeather(prev => {
+            // No activar si hay tormenta activa (ya tiene viento implícito)
+            if (prev.storm || prev.volcanicEruption) return prev
+            return { ...prev, wind: true }
+          })
+          // Duración del viento: 8-25 segundos
+          const duration = (8 + Math.random() * 17) * 1000
+          setTimeout(() => {
+            setWeather(prev => ({ ...prev, wind: false }))
+          }, duration)
+        }
+        scheduleWind() // programar el siguiente
+      }, delay)
+    }
+
+    scheduleWind()
+    return () => clearTimeout(windTimer)
+  }, [mode])
 
   // Mostrar información del jugador al cargar
   useEffect(() => {
@@ -294,7 +327,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     setTimeout(() => setShowCollectedMessage(false), 3000)
 
     // Desencadenar secuencia de misión completada
-    console.log('🗿 Iniciando secuencia de misión completada...')
+    console.log('Iniciando secuencia de misión completada...')
 
     // 1. PRIMERO: Clima mejora inmediatamente
     clearWeather('giza')
@@ -443,10 +476,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [itemCollected, setItemCollected] = useState(false)
   const [showCollectedMessage, setShowCollectedMessage] = useState(false)
 
-  // 🗿 Estado del diálogo de Viracocha
+  // Estado del diálogo de Viracocha
   const [showViracochaDialogue, setShowViracochaDialogue] = useState(false)
   const [showViracochaInteractive, setShowViracochaInteractive] = useState(false)
   const [magnaBowlCollected, setMagnaBowlCollected] = useState(false)
+  const [magnaBowlThanked, setMagnaBowlThanked] = useState(() =>
+    typeof window !== 'undefined' && localStorage.getItem('magna_bowl_thanked') === 'true'
+  )
   const [magnaBowlLent, setMagnaBowlLent] = useState(false) // Fuente Magna prestada por Viracocha
   const [pyramidionCollected, setPyramidionCollected] = useState(false)
   const [pyramidionOnTop, setPyramidionOnTop] = useState(false) // Si el piramidón está en la punta
@@ -495,7 +531,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     'Mictlantecuhtli': "Transformador de la energía vital. El fin de un ciclo es solo la transmutación necesaria para el nuevo inicio.",
     'FuenteMagna': "Para la diosa Nia, recipiente sagrado. Este cuenco se consagra para libaciones eternas — que la diosa reciba la ofrenda del viajero que despierta.",
     'CalendarioMaya': "Registro de 5125 ciclos solares. Cada giro codifica el pulso del cosmos: nacimiento, apogeo, disolución. El tiempo no avanza — regresa.",
-    'Merkaba': "Campo de luz giratoria en perfecta resonancia. Vehículo de ascensión entre planos de existencia. Su activación sincroniza la red energética planetaria."
+    'Merkaba': "Campo de luz giratoria en perfecta resonancia. Vehículo de ascensión entre planos de existencia. Su activación sincroniza la red energética planetaria.",
+    'Araña': "Geoglifo de Nazca — 46 metros de envergadura. Sus ocho patas trazan constelaciones del hemisferio sur. Algunos investigadores la vinculan con el sistema de Orión. Guardiana de los portales estelares.",
+    'Cóndor': "Geoglifo de Nazca — 130 metros de ala a ala. El cóndor era mensajero entre el mundo de los vivos y el de los dioses en las culturas andinas. Su vuelo marca los ejes cardinales del altiplano.",
+    'Monos': "Geoglifo de Nazca — 55 metros. La cola en espiral es un símbolo de energía cósmica en rotación. Algunos astrónomos lo asocian con la constelación de la Osa Mayor. Guardián del agua y la fertilidad.",
+    'Colibrí': "Geoglifo de Nazca — 96 metros. El colibrí era símbolo de resurrección solar en Mesoamérica. Su pico apunta hacia el solsticio de verano. Mensajero entre el sol y la tierra.",
+    'Perro': "Geoglifo de Nazca — 51 metros. En las culturas mesoamericanas el perro guiaba las almas al inframundo. Este geoglifo marca el umbral entre el mundo visible y el Mictlán.",
+    'Ballena': "Geoglifo de Nazca — uno de los más antiguos, circa 200 a.C. La ballena orca era deidad del mar en las culturas Paracas. Representa el origen de la vida y los ciclos oceánicos de la Tierra.",
+    'Astronauta': "Geoglifo de Nazca — figura humanoide de 30 metros conocida como El Astronauta. Mira hacia el cielo con el brazo levantado. Su casco y traje sugieren, para algunos investigadores, contacto con inteligencias no terrestres."
   }
 
   const toggleAbility = useCallback(() => {
@@ -522,12 +565,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         let foundNPC: string | null = null
 
         if (siteId === 'puma-punku' || siteId === 'pumaPunku') {
-          // Puma Punku: Viracocha o Fuente Magna según proximidad
+          // Puma Punku: Viracocha, Fuente Magna o Cóndor según proximidad
           const px = mainAvatarPositionRef.current.x
           const pz = mainAvatarPositionRef.current.z
-          const distFuente = (px - 0) ** 2 + (pz - 0) ** 2  // Fuente Magna cerca del centro
+          const distCondor = (px + 83) ** 2 + (pz + 67) ** 2
+          const distFuente = px ** 2 + pz ** 2
           const distViracocha = (px - 14.5) ** 2 + (pz - 0.83) ** 2
-          foundNPC = distFuente < distViracocha ? 'FuenteMagna' : 'Viracocha'
+          if (distCondor < 400) foundNPC = 'Cóndor'
+          else foundNPC = distFuente < distViracocha ? 'FuenteMagna' : 'Viracocha'
         } else if (siteId === 'pyramids-giza' || siteId === 'giza') {
           // Giza: elegir el NPC más cercano por distancia horizontal XZ
           const gizaNPCs = [
@@ -540,32 +585,35 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           let minDistSq = Infinity
           const px = mainAvatarPositionRef.current.x
           const pz = mainAvatarPositionRef.current.z
-          gizaNPCs.forEach(npc => {
-            const distSq = (px - npc.x) ** 2 + (pz - npc.z) ** 2
-            if (distSq < minDistSq) {
-              minDistSq = distSq
-              foundNPC = npc.name
-            }
-          })
-        } else if (siteId === 'moai-easter-island' || siteId === 'easter-island') {
-          // Isla de Pascua: Hotu Matua o Merkaba según proximidad
-          const px = mainAvatarPositionRef.current.x
-          const pz = mainAvatarPositionRef.current.z
-          const distMerkaba = px ** 2 + pz ** 2  // Merkaba en [0,12,0]
-          foundNPC = distMerkaba < 400 ? 'Merkaba' : 'Hotu Matua'  // radio ~20
-        } else if (siteId === 'teotihuacan') {
-          // Teotihuacán: Quetzalcoatl o Calendario según proximidad
-          const px = mainAvatarPositionRef.current.x
-          const pz = mainAvatarPositionRef.current.z
-          const distCalendario = px ** 2 + (pz + 20) ** 2  // Calendario en [0,10,-20]
-          foundNPC = distCalendario < 625 ? 'CalendarioMaya' : 'Quetzalcoatl'  // radio ~25
-        } else if (siteId === 'tres-zapotes') {
-          // Veracruz: Atlante en superficie, Mictlantecuhtli en la cueva (lat≈0)
-          if (currentLocation && Math.abs(currentLocation.lat) < 0.001) {
-            foundNPC = 'Mictlantecuhtli'
-          } else {
-            foundNPC = 'Atlante'
+          // Geoglifo araña en [-83, 3, -67]
+          const distArana = (px + 83) ** 2 + (pz + 67) ** 2
+          if (distArana < 400) { foundNPC = 'Araña' } else {
+            gizaNPCs.forEach(npc => {
+              const distSq = (px - npc.x) ** 2 + (pz - npc.z) ** 2
+              if (distSq < minDistSq) { minDistSq = distSq; foundNPC = npc.name }
+            })
           }
+        } else if (siteId === 'moai-easter-island' || siteId === 'easter-island') {
+          const px = mainAvatarPositionRef.current.x
+          const pz = mainAvatarPositionRef.current.z
+          const distBallena = (px + 55) ** 2 + (pz - 55) ** 2  // ballena en [-55,1,55]
+          const distMerkaba = px ** 2 + pz ** 2
+          if (distBallena < 400) foundNPC = 'Ballena'
+          else foundNPC = distMerkaba < 400 ? 'Merkaba' : 'Hotu Matua'
+        } else if (siteId === 'teotihuacan') {
+          const px = mainAvatarPositionRef.current.x
+          const pz = mainAvatarPositionRef.current.z
+          const distColibri = (px + 83) ** 2 + (pz + 67) ** 2  // colibrí en [-83,0.3,-67]
+          const distCalendario = px ** 2 + (pz + 20) ** 2
+          if (distColibri < 400) foundNPC = 'Colibrí'
+          else foundNPC = distCalendario < 625 ? 'CalendarioMaya' : 'Quetzalcoatl'
+        } else if (siteId === 'tres-zapotes') {
+          const px = mainAvatarPositionRef.current.x
+          const pz = mainAvatarPositionRef.current.z
+          const distPerro = (px + 83) ** 2 + (pz + 67) ** 2  // perro en [-83,1,-67]
+          if (distPerro < 400) foundNPC = 'Perro'
+          else if (currentLocation && Math.abs(currentLocation.lat) < 0.001) foundNPC = 'Mictlantecuhtli'
+          else foundNPC = 'Atlante'
         } else if (currentLocation) {
           // Fallback por coordenadas GPS (para sitios sin id exacto)
           const { lat, lon } = currentLocation
@@ -593,6 +641,20 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           else if (Math.abs(lat - (-27.1254)) < 0.1) foundNPC = 'Hotu Matua'
           else if (Math.abs(lat - 19.6925) < 0.1) foundNPC = 'Quetzalcoatl'
           else if (Math.abs(lat - 18.4667) < 0.1) foundNPC = 'Atlante'
+          else if (Math.abs(lat - 37.2231) < 0.1 && Math.abs(lon - 38.9225) < 0.1) {
+            // Göbekli Tepe: astronauta en [-55,0.1,-55]
+            const px = mainAvatarPositionRef.current.x
+            const pz = mainAvatarPositionRef.current.z
+            const distAstro = (px + 55) ** 2 + (pz + 55) ** 2
+            foundNPC = distAstro < 400 ? 'Astronauta' : 'Viracocha'
+          }
+          else if (lat > -16.5 && lat < -15.5 && lon > -70 && lon < -68.5) {
+            // Titicaca: monos en [-83,0.3,-67]
+            const px = mainAvatarPositionRef.current.x
+            const pz = mainAvatarPositionRef.current.z
+            const distMonos = (px + 83) ** 2 + (pz + 67) ** 2
+            foundNPC = distMonos < 400 ? 'Monos' : 'Viracocha'
+          }
         }
 
         if (foundNPC) {
@@ -1466,11 +1528,16 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           showViracochaDialogue={showViracochaDialogue}
           onViracochaSpeak={() => {
             const pumaDone = isMissionCompleted('pumaPunku', 'reveal_structure')
-            if (pumaDone && magnaBowlCollected) {
-              // Misión completa y fuente devuelta → diálogo interactivo
+            if (pumaDone && magnaBowlCollected && !magnaBowlThanked) {
+              // Primera vez que regresa con la fuente → agradecimiento
+              setMagnaBowlThanked(true)
+              if (typeof window !== 'undefined') localStorage.setItem('magna_bowl_thanked', 'true')
+              setShowViracochaDialogue(true)
+            } else if (pumaDone && magnaBowlCollected && magnaBowlThanked) {
+              // Ya agradeció → diálogo interactivo
               setShowViracochaInteractive(true)
             } else {
-              // Primera vez o sin misión → diálogo simple
+              // Sin misión o sin fuente → diálogo simple
               setShowViracochaDialogue(true)
             }
           }}
@@ -1595,7 +1662,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             }
           }}
           onOptionSelected={(optionId) => {
-            console.log(`🗿 Opción seleccionada: ${optionId}`)
+            console.log(` Opción seleccionada: ${optionId}`)
           }}
         />
       )}
@@ -2203,7 +2270,7 @@ function ModelScene({
             <SiteInfo site={site} />
           )}
 
-          {/* 🗿 Escena de Puma Punku - estructura + bloques dispersos */}
+          {/* Escena de Puma Punku - estructura + bloques dispersos */}
           {(site?.id === 'puma-punku' || (
             location &&
             Math.abs(location.lat - (-16.5616)) < 0.05 &&
@@ -2291,7 +2358,7 @@ function ModelScene({
               />
             )}
 
-          {/* 🗿 Escena de Veracruz - Cabeza Colosal Olmeca */}
+          {/* Escena de Veracruz - Cabeza Colosal Olmeca */}
           {(site?.id === 'tres-zapotes' || (
             location &&
             Math.abs(location.lat - 18.4667) < 0.05 &&
@@ -2371,6 +2438,13 @@ function ModelScene({
                 onCollect={onCollectItem}
               />
             )}
+
+          {/* 🐒 Geoglifo: Monos de Nazca — Lago Titicaca, sobre la montaña */}
+          {location &&
+            location.lat > -16.5 && location.lat < -15.5 &&
+            location.lon > -70 && location.lon < -68.5 && (
+              <TerrainGeoglyph svgPath="/geoglyphs/monos.svg" x={-83} z={-67} size={18} seed={Math.floor(location.lat * 1000 + location.lon * 1000)} />
+            )}
         </Canvas>
       </ObjectSelectionProvider>
 
@@ -2449,4 +2523,36 @@ function ModelCapture({ onLoaded }: { onLoaded?: (model: THREE.Object3D) => void
     if (model && onLoaded) onLoaded(model)
   }, [scene, onLoaded])
   return null
+}
+
+// Geoglifo posicionado sobre el terreno altiplano
+// Replica la función de ruido de VolcanicTerrain para calcular la altura exacta
+function TerrainGeoglyph({ svgPath, x, z, size, seed }: {
+  svgPath: string; x: number; z: number; size: number; seed: number
+}) {
+  const terrainHeight = useMemo(() => {
+    const noise = (px: number, py: number, scale: number, offset: number) =>
+      Math.sin((px + offset) * scale) * Math.cos((py + offset) * scale)
+
+    const amplitudeFactor = 22.0
+    const roughnessFactor = 1.4
+    const s = seed * 0.001
+
+    const baseNoise = (
+      noise(x, z, 0.02, s) * 0.5 +
+      noise(x, z, 0.05, s * 1.3) * 0.3 +
+      noise(x, z, 0.1, s * 0.7) * 0.15 +
+      noise(x, z, 0.35, s * 0.05) * 0.05
+    ) * amplitudeFactor
+
+    const ridgeNoise = (
+      Math.abs(noise(x, z, 0.03, s * 2)) * 0.6 +
+      Math.abs(noise(x, z, 0.08, s * 1.5)) * 0.25 +
+      Math.abs(noise(x, z, 0.2, s * 0.8)) * 0.15
+    ) * amplitudeFactor * roughnessFactor
+
+    return baseNoise * 0.5 + ridgeNoise * 0.5 + 0.5 // +0.5 margen sobre la superficie
+  }, [x, z, seed])
+
+  return <GeoglyphDirect svgPath={svgPath} position={[x, terrainHeight + 3, z]} size={size} vertical={true} />
 }

@@ -40,7 +40,7 @@ export class SolarEngine {
   
   // Sistema de tiempo acelerado
   private simulatedTime: Date
-  private timeScale: number = 60 // 1 segundo real = 1 minuto simulado (1 minuto real = 1 hora simulada)
+  private timeScale: number = 120 // 1s real = 2min simulados → ciclo 24h en 12min reales
   private startTime: Date // Tiempo de referencia para cálculos orbitales
   
   // Constantes astronómicas
@@ -49,12 +49,18 @@ export class SolarEngine {
   private readonly REFERENCE_YEAR = 2000 // Año de referencia (J2000.0)
 
   constructor(latitude: number = 0, longitude: number = 0) {
-    this.latitude = latitude * (Math.PI / 180) // Convertir a radianes
+    this.latitude = latitude * (Math.PI / 180)
     this.longitude = longitude
     this.currentSunDirection = new THREE.Vector3(0, 1, 0)
     this.targetSunDirection = new THREE.Vector3(0, 1, 0)
-    this.simulatedTime = new Date() // Iniciar con hora actual
-    this.startTime = new Date(this.simulatedTime) // Referencia para órbitas
+
+    // Fijar hora de inicio al amanecer (6:00 AM local) para ciclo predecible
+    // 12 min reales de día + 12 min de noche = ciclo de 24 min = 24h simuladas
+    // timeScale = 120 → 1s real = 2min simulados → 24h en 12min reales
+    const dawn = new Date()
+    dawn.setUTCHours(6 - Math.round(longitude / 15), 0, 0, 0) // 6 AM hora local
+    this.simulatedTime = dawn
+    this.startTime = new Date(dawn)
   }
 
   setLatitude(lat: number) {
@@ -68,6 +74,12 @@ export class SolarEngine {
   setLocation(lat: number, lon: number) {
     this.latitude = lat * (Math.PI / 180)
     this.longitude = lon
+    // Resetear al amanecer local al cambiar de sitio
+    const dawn = new Date()
+    dawn.setUTCHours(6 - Math.round(lon / 15), 0, 0, 0)
+    this.simulatedTime = dawn
+    this.startTime = new Date(dawn)
+    this.cachedState = null // Forzar recálculo
   }
 
   /**

@@ -20,11 +20,11 @@ const OPTIONS = [
 ]
 
 const RESPONSES: Record<number, (allDone: boolean) => string> = {
-  1: () => 'El cosmos aguarda tu despertar. Cinco nodos de energía duermen en la Tierra — Puma Punku, Giza, Teotihuacán, Veracruz, Rapa Nui. Cuando todos vibren en armonía, el portal se abrirá.',
-  2: () => 'La Fuente Magna es un recipiente sagrado de más de 5000 años. Sus inscripciones proto-sumerias invocan a la diosa Nia. Fue creada para canalizar energías cósmicas en rituales de alineación planetaria.',
+  1: () => 'El cosmos aguarda tu despertar. Nodos de energía duermen en la Tierra. Todos deben vibrar en armonía.',
+  2: () => 'La Fuente Magna es un recipiente sagrado. Sus inscripciones invocan a una diosa. Fue creada para canalizar energías cósmicas en rituales.',
   3: (allDone) => allDone
-    ? 'Has demostrado ser digno, viajero. Los cinco nodos resuenan. Toma la Fuente Magna — llévala al lugar donde el tiempo comenzó.'
-    : 'Aún no, viajero. La Fuente Magna solo puede ser portada por quien ha despertado los cinco nodos de la Tierra. Completa tu misión y regresa.',
+    ? 'Has demostrado ser digno, viajero. Los cinco nodos resuenan. Toma la Fuente Magna.'
+    : 'Aún no, viajero. La Fuente Magna solo puede ser portada por quien ha despertado nodos de la Tierra. Completa tu misión y regresa.',
 }
 
 export default function ViracochaInteractiveDialogue({
@@ -39,7 +39,7 @@ export default function ViracochaInteractiveDialogue({
 
   // Mensaje inicial según estado
   const initialMessage = magnaBowlReturned
-    ? 'Viajero... ¿Qué deseas saber?'
+    ? '¿Qué deseas?'
     : 'Gracias por devolver la Fuente Magna a su lugar sagrado. Los antiguos te bendicen.'
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export default function ViracochaInteractiveDialogue({
         }}
       >
         {/* Icono */}
-        <div style={{ textAlign: 'center', fontSize: '42px', marginBottom: '12px' }}>🗿</div>
+        <div style={{ textAlign: 'center', fontSize: '42px', marginBottom: '12px' }}></div>
 
         {/* Nombre */}
         <div style={{
@@ -101,7 +101,7 @@ export default function ViracochaInteractiveDialogue({
           fontFamily: '"Cinzel", serif', letterSpacing: '3px',
           textShadow: `0 0 10px rgba(255,215,0,0.8)`
         }}>
-          Viracocha
+          
         </div>
 
         {/* Mensaje */}

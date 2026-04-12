@@ -16,6 +16,7 @@ import { getAssetPath } from '@/lib/paths'
 import SunGate from './SunGate'
 import PortalDetector from './PortalDetector'
 import CropCircle, { CropCirclePortal } from './CropCircle'
+import Geoglyph from './Geoglyph'
 import { isMissionCompleted } from '@/types/missionState'
 
 /**
@@ -33,7 +34,7 @@ function LoadingPumaPunku() {
         textAlign: 'center',
         border: '2px solid rgba(255, 215, 0, 0.3)'
       }}>
-        <div style={{ fontSize: '48px', marginBottom: '10px' }}>🗿</div>
+        <div style={{ fontSize: '48px', marginBottom: '10px' }}></div>
         <div>Cargando Puma Punku...</div>
       </div>
     </Html>
@@ -178,6 +179,9 @@ function PumaPunkuSceneContent({
         rotation={[0, -Math.PI / 2 - Math.PI / 12 + Math.PI / 6 + Math.PI / 12, 0]} 
         revealed={gateRevealed} 
       />
+
+      {/* 🦅 Geoglifo: Cóndor de Nazca */}
+      <Geoglyph svgPath="/geoglyphs/condor.svg" position={[-83, 0.3, -67]} size={18} />
 
       {/* 💠 Crop Circle: Cubo de Metatrón - Nave 2 Aegis (Puma Punku) */}
       <CropCircle 

@@ -7,6 +7,7 @@ import * as THREE from 'three'
 import { Group } from 'three'
 import { getAssetPath } from '@/lib/paths'
 import CropCircle, { CropCirclePortal } from './CropCircle'
+import Geoglyph from './Geoglyph'
 import { isMissionCompleted } from '@/types/missionState'
 
 /**
@@ -299,6 +300,9 @@ function TeotihuacanSceneContent({
         <primitive object={kukulkanModel.scene} scale={0.3} />
       </group>
       
+      {/* 🐦 Geoglifo: Colibrí de Nazca */}
+      <Geoglyph svgPath="/geoglyphs/colibri.svg" position={[-83, 0.3, -67]} size={18} />
+
       {/* 💠 Crop Circle: Espiral - Nave 3 Vector (Teotihuacán) */}
       <CropCircle 
         type="spiral" 
