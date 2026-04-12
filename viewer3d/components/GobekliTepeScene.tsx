@@ -132,7 +132,7 @@ function GobekliTepeContent({
       </mesh>
 
       {/* Modelo central */}
-      <group position={[0, yOffset, 0]}>
+      <group position={[0, yOffset - 2, 0]}>
         <primitive object={cloned} scale={scale} />
       </group>
 
@@ -204,25 +204,6 @@ function AltarCircle({ label, icon, x, z, color, activated }: {
 
       {/* Luz */}
       <pointLight ref={lightRef} color={activated ? '#ffffff' : color} intensity={0.4} distance={18} position={[0, 1, 0]} />
-
-      {/* Label */}
-      <Html position={[0, 3.5, 0]} center distanceFactor={12} style={{ pointerEvents: 'none' }}>
-        <div style={{
-          background: activated ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.75)',
-          border: `1px solid ${activated ? '#ffffff' : color}`,
-          borderRadius: '8px',
-          padding: '6px 12px',
-          color: activated ? '#ffffff' : color,
-          fontSize: '13px',
-          fontFamily: '"Cinzel", serif',
-          whiteSpace: 'nowrap',
-          textShadow: `0 0 8px ${color}`,
-          boxShadow: activated ? `0 0 20px ${color}` : `0 0 10px ${color}44`,
-          transition: 'all 0.3s'
-        }}>
-          {activated ? '✓ ' : ''}{icon} {label}
-        </div>
-      </Html>
     </group>
   )
 }

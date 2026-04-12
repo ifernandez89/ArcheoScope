@@ -397,8 +397,8 @@ function EasterIslandSceneContent({
 
       <EnergySphere position={[0, 8, 0]} size={2} visible={showEnergySphere} />
 
-      {/* 🐳 Geoglifo: Ballena de Nazca — esquina suroeste (opuesta al crop circle) */}
-      <Geoglyph svgPath="/geoglyphs/ballena.svg" position={[-55, 1, 55]} size={18} />
+      {/* 🐳 Geoglifo: Ballena de Nazca — esquina noreste (opuesta al volcán en suroeste) */}
+      <Geoglyph svgPath="/geoglyphs/ballena.svg" position={[55, 1, -55]} size={18} />
 
       {/* 💠 Crop Circle: Hilbert - Nave 4 Oracle (Isla de Pascua) */}
       {/* Volcán en [-55, 0, 55] → crop circle en esquina opuesta */}

@@ -205,7 +205,7 @@ export default function GizaScene({
         />
         
         {/* 🕷️ Geoglifo: Araña de Nazca */}
-        <Geoglyph svgPath="/geoglyphs/araña.svg" position={[-83, 3, -67]} size={18} />
+        <Geoglyph svgPath="/geoglyphs/araña.svg" position={[-83, 0, -67]} size={18} />
 
         {/* 💠 Crop Circle: Lissajous - Nave 1 Phantom (Giza) */}
         <CropCircle 

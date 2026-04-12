@@ -17,40 +17,31 @@ interface InventoryItemProps {
 function RotatingModel({ modelPath, scale = 1 }: { modelPath: string, scale?: number }) {
   const { scene } = useGLTF(getAssetPath(modelPath))
   const groupRef = useRef<THREE.Group>(null)
-  
-  // Clonar y centrar automáticamente
-  const { clonedScene, autoScale } = useMemo(() => {
-    const clone = scene.clone(true)
-    if (modelPath.includes('escab')) {
-      clone.rotation.x = Math.PI / 2
-      clone.rotation.z = Math.PI
-    }
-    if (modelPath.includes('tonatiuh')) {
-      // tonatiuh_aztec_sun: rotar para verlo de frente
-      clone.rotation.y = Math.PI
-    }
-    // Auto-centrar: calcular bounding box y mover al origen
-    const box = new THREE.Box3().setFromObject(clone)
-    const center = box.getCenter(new THREE.Vector3())
+
+  // Configuración específica por modelo — evita problemas de bounding box
+  const config = useMemo(() => {
+    if (modelPath.includes('escab'))         return { sc: 8,    rx: Math.PI/2, ry: 0,          rz: Math.PI,  cy: 0 }
+    if (modelPath.includes('tonatiuh'))      return { sc: 0.015, rx: -Math.PI/6, ry: Math.PI/4, rz: 0,        cy: 0 }
+    if (modelPath.includes('magna_bowl'))    return { sc: 1.2,  rx: 0,         ry: 0,          rz: 0,        cy: 0 }
+    if (modelPath.includes('crystal-skull')) return { sc: 1.0,  rx: 0,         ry: 0,          rz: 0,        cy: 0 }
+    if (modelPath.includes('maiz'))          return { sc: 0.8,  rx: 0,         ry: 0,          rz: 0,        cy: 0 }
+    if (modelPath.includes('rock_blender'))  return { sc: 3.0,  rx: 0,         ry: 0,          rz: 0,        cy: 0 }
+    // Fallback: auto-scale desde bounding box
+    const box = new THREE.Box3().setFromObject(scene)
     const size = box.getSize(new THREE.Vector3())
-    clone.position.sub(center) // centrar en origen
-    // Auto-escalar para que quepa en la ventana (max dimension = 2 unidades)
     const maxDim = Math.max(size.x, size.y, size.z)
-    const autoSc = maxDim > 0 ? 2 / maxDim : 1
-    return { clonedScene: clone, autoScale: autoSc }
+    return { sc: maxDim > 0 ? 1.8 / maxDim : 1, rx: 0, ry: 0, rz: 0, cy: 0 }
   }, [scene, modelPath])
-  
-  useFrame((state, delta) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 1.5
-    }
+
+  const clonedScene = useMemo(() => scene.clone(true), [scene])
+
+  useFrame((_, delta) => {
+    if (groupRef.current) groupRef.current.rotation.y += delta * 1.5
   })
-  
-  const finalScale = scale * autoScale
-  
+
   return (
-    <group ref={groupRef}>
-      <primitive object={clonedScene} scale={finalScale} />
+    <group ref={groupRef} rotation={[config.rx, config.ry, config.rz]}>
+      <primitive object={clonedScene} scale={scale * config.sc} />
     </group>
   )
 }
@@ -86,13 +77,15 @@ export default function InventoryItem({ modelPath, itemName, onDrop, show, dropD
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 3], fov: 50 }}
+        key={modelPath}
+        camera={{ position: [0, 0.5, 3], fov: 50 }}
         style={{ background: 'transparent' }}
       >
-        <ambientLight intensity={1.5} />
-        <directionalLight position={[2, 2, 2]} intensity={2} />
-        <directionalLight position={[-2, 1, -2]} intensity={1} />
-        <pointLight position={[0, 3, 2]} intensity={1.5} color="#ffffff" />
+        <ambientLight intensity={2.5} />
+        <directionalLight position={[2, 2, 2]} intensity={3} />
+        <directionalLight position={[-2, 1, -2]} intensity={1.5} />
+        <directionalLight position={[0, -2, 2]} intensity={1} />
+        <pointLight position={[0, 3, 2]} intensity={2} color="#ffffff" />
         <RotatingModel modelPath={modelPath} scale={0.8} />
       </Canvas>
       

@@ -131,10 +131,16 @@ export default function EnvironmentElements({
     
     // Detectar si estamos en Isla de Pascua
     const isEasterIsland = location && Math.abs(location.lat - (-27.1254)) < 0.05 && Math.abs(location.lon - (-109.2778)) < 0.05
+
+    // Detectar si estamos en Göbekli Tepe
+    const isGobekli = location && Math.abs(location.lat - 37.2231) < 0.05 && Math.abs(location.lon - 38.9225) < 0.05
     
     // Reducir árboles en sitios específicos
     if ((isTeotihuacan || isVeracruz || isEasterIsland) && count.trees) {
-      count.trees = isEasterIsland ? 5 : 15
+      count.trees = isEasterIsland ? 5 : isTeotihuacan ? 10 : isVeracruz ? 10 : 15
+    }
+    if (isGobekli && count.trees) {
+      count.trees = 5
     }
     
     // En Puma Punku: proteger estructura y Viracocha con radios GRANDES

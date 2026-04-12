@@ -529,16 +529,17 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     'Quetzalcoatl': "Unión de la materia terrestre y el espíritu celeste. La evolución es el equilibrio entre tus alas y tus raíces.",
     'Atlante': "Pilar del conocimiento estelar. Sostiene la carga del cielo para que la tierra pueda florecer en paz.",
     'Mictlantecuhtli': "Transformador de la energía vital. El fin de un ciclo es solo la transmutación necesaria para el nuevo inicio.",
-    'FuenteMagna': "Para la diosa Nia, recipiente sagrado. Este cuenco se consagra para libaciones eternas — que la diosa reciba la ofrenda del viajero que despierta.",
-    'CalendarioMaya': "Registro de 5125 ciclos solares. Cada giro codifica el pulso del cosmos: nacimiento, apogeo, disolución. El tiempo no avanza — regresa.",
+    'FuenteMagna': "Recipiente sagrado de origen desconocido. Sus inscripciones invocan a una diosa olvidada. Fue creado para canalizar energías cósmicas en rituales de alineación planetaria.",
+    'CalendarioMaya': "Registro de ciclos solares grabado en piedra. Cada giro codifica el pulso del cosmos: nacimiento, apogeo, disolución. El tiempo no avanza — regresa.",
     'Merkaba': "Campo de luz giratoria en perfecta resonancia. Vehículo de ascensión entre planos de existencia. Su activación sincroniza la red energética planetaria.",
-    'Araña': "Geoglifo de Nazca — 46 metros de envergadura. Sus ocho patas trazan constelaciones del hemisferio sur. Algunos investigadores la vinculan con el sistema de Orión. Guardiana de los portales estelares.",
-    'Cóndor': "Geoglifo de Nazca — 130 metros de ala a ala. El cóndor era mensajero entre el mundo de los vivos y el de los dioses en las culturas andinas. Su vuelo marca los ejes cardinales del altiplano.",
-    'Monos': "Geoglifo de Nazca — 55 metros. La cola en espiral es un símbolo de energía cósmica en rotación. Algunos astrónomos lo asocian con la constelación de la Osa Mayor. Guardián del agua y la fertilidad.",
-    'Colibrí': "Geoglifo de Nazca — 96 metros. El colibrí era símbolo de resurrección solar en Mesoamérica. Su pico apunta hacia el solsticio de verano. Mensajero entre el sol y la tierra.",
-    'Perro': "Geoglifo de Nazca — 51 metros. En las culturas mesoamericanas el perro guiaba las almas al inframundo. Este geoglifo marca el umbral entre el mundo visible y el Mictlán.",
-    'Ballena': "Geoglifo de Nazca — uno de los más antiguos, circa 200 a.C. La ballena orca era deidad del mar en las culturas Paracas. Representa el origen de la vida y los ciclos oceánicos de la Tierra.",
-    'Astronauta': "Geoglifo de Nazca — figura humanoide de 30 metros conocida como El Astronauta. Mira hacia el cielo con el brazo levantado. Su casco y traje sugieren, para algunos investigadores, contacto con inteligencias no terrestres."
+    'Araña': "Figura trazada sobre la tierra árida, visible solo desde las alturas. Sus líneas conectan puntos del cielo con puntos del suelo. Guardiana de portales que el ojo humano no puede ver.",
+    'Cóndor': "Mensajero entre mundos, grabado en la tierra con precisión imposible. Sus alas abarcan un horizonte que ningún ser humano podría trazar desde el suelo. Marca los ejes invisibles del altiplano.",
+    'Monos': "Figura espiral trazada con una sola línea continua. Su cola describe la rotación de energías cósmicas. Guardián del agua y los ciclos de la vida.",
+    'Colibrí': "Símbolo de resurrección solar grabado en la tierra. Su pico apunta hacia un punto del horizonte que solo se alinea en momentos precisos del año. Mensajero entre el sol y la tierra.",
+    'Perro': "Guardián del umbral entre el mundo visible y el invisible. Su figura marca el paso hacia territorios que los vivos no deberían cruzar sin guía.",
+    'Ballena': "Una de las figuras más antiguas grabadas en la tierra. Representa el origen de la vida y los ciclos oceánicos que gobiernan el planeta. Su boca abierta devora el tiempo.",
+    'Astronauta': "Figura humanoide que mira hacia el cielo con el brazo levantado. Su forma sugiere algo que los trazadores de líneas conocían y que nosotros apenas comenzamos a intuir.",
+    'MonolitoGobekli': "Monolito de origen lejano, traído aquí intencionalmente. Representa una deidad de forma híbrida — entre lo animal y lo divino. Su presencia en este lugar es un anacronismo sagrado: un nexo entre dos puntos del tiempo que nunca deberían haberse tocado."
   }
 
   const toggleAbility = useCallback(() => {
@@ -642,18 +643,21 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           else if (Math.abs(lat - 19.6925) < 0.1) foundNPC = 'Quetzalcoatl'
           else if (Math.abs(lat - 18.4667) < 0.1) foundNPC = 'Atlante'
           else if (Math.abs(lat - 37.2231) < 0.1 && Math.abs(lon - 38.9225) < 0.1) {
-            // Göbekli Tepe: astronauta en [-55,0.1,-55]
+            // Göbekli Tepe: astronauta en [-55,0.1,-55] o monolito central
             const px = mainAvatarPositionRef.current.x
             const pz = mainAvatarPositionRef.current.z
             const distAstro = (px + 55) ** 2 + (pz + 55) ** 2
-            foundNPC = distAstro < 400 ? 'Astronauta' : 'Viracocha'
+            const distMonolito = px ** 2 + pz ** 2  // monolito en [0,0,0]
+            if (distAstro < 400) foundNPC = 'Astronauta'
+            else if (distMonolito < 900) foundNPC = 'MonolitoGobekli'
+            else foundNPC = 'Astronauta' // default Göbekli
           }
           else if (lat > -16.5 && lat < -15.5 && lon > -70 && lon < -68.5) {
             // Titicaca: monos en [-83,0.3,-67]
             const px = mainAvatarPositionRef.current.x
             const pz = mainAvatarPositionRef.current.z
             const distMonos = (px + 83) ** 2 + (pz + 67) ** 2
-            foundNPC = distMonos < 400 ? 'Monos' : 'Viracocha'
+            foundNPC = distMonos < 400 ? 'Monos' : 'FuenteMagna'
           }
         }
 
