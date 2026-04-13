@@ -1,7 +1,7 @@
 'use client'
 
-import { useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useRef, useEffect, useState } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { SolarEngine } from '@/engines/SolarEngine'
@@ -15,6 +15,22 @@ import RealisticLunarOrbit from './RealisticLunarOrbit'
 import CelestialTooltip from './CelestialTooltip'
 import { CelestialOverlay3D } from './CelestialOverlay'
 import AsteroidBelt3D from './AsteroidBelt3D'
+import { getCosmicResonance } from '@/systems/CosmicResonanceSystem'
+import { getKeplerHarmonices } from '@/systems/KeplerHarmonicesSystem'
+import { MultiPlanetWaves } from './SoundWaveVisualization'
+import SaturnRings from './SaturnRings'
+
+// Importar datos de colores de planetas de Kepler
+const KEPLER_PLANETARY_DATA = new Map([
+  ['mercury', { color: '#9c9c9c' }],
+  ['venus', { color: '#f5e6d3' }],
+  ['earth', { color: '#4A90E2' }],
+  ['mars', { color: '#E27B58' }],
+  ['jupiter', { color: '#D4A574' }],
+  ['saturn', { color: '#FAD5A5' }],
+  ['uranus', { color: '#4FD0E7' }],
+  ['neptune', { color: '#4166F5' }]
+])
 
 /**
  * Sistema Solar Realista
@@ -30,12 +46,17 @@ import AsteroidBelt3D from './AsteroidBelt3D'
 interface RealisticSolarSystemProps {
   onLocationClick?: (lat: number, lon: number) => void
   markerPosition?: { lat: number, lon: number } | null
+  showWaves?: boolean
 }
 
 export default function RealisticSolarSystem({ 
   onLocationClick, 
-  markerPosition 
+  markerPosition,
+  showWaves = true
 }: RealisticSolarSystemProps) {
+  // Three.js scene para el sistema de resonancia
+  const { scene } = useThree()
+  
   // Cargar texturas de planetas
   const mercuryTexture = useTexture(getAssetPath('/textures/2k_mercury.jpg'))
   const venusAtmosphereTexture = useTexture(getAssetPath('/textures/4k_venus_atmosphere.jpg'))
@@ -47,6 +68,24 @@ export default function RealisticSolarSystem({
   const uranusTexture = useTexture(getAssetPath('/textures/2k_uranus.jpg'))
   const neptuneTexture = useTexture(getAssetPath('/textures/2k_neptune.jpg'))
   const plutoTexture = useTexture(getAssetPath('/textures/1k_pluto.png'))
+  
+  // 🌌 Sistema de Resonancia Cósmica
+  const cosmicRef = useRef(getCosmicResonance())
+  
+  // 🎼 Sistema de Harmonices Mundi de Kepler
+  const keplerRef = useRef(getKeplerHarmonices())
+  
+  // 🌊 Estado de ondas sonoras para visualización
+  const [soundWaves, setSoundWaves] = useState<Array<{
+    id: string
+    position: THREE.Vector3
+    frequency: number
+    amplitude: number
+    color: string
+  }>>([])
+  
+  // Usar prop externa para controlar visualización
+  const wavesEnabled = showWaves
   
   // Sistema astronómico actualizado
   const solarEngineRef = useRef<SolarEngine>(
@@ -85,10 +124,120 @@ export default function RealisticSolarSystem({
   // Cache de índices de planetas para evitar .find() cada frame
   const planetIndices = useRef<Map<string, number> | null>(null)
   
+  // 🌌 Inicializar sistema de resonancia cósmica
+  useEffect(() => {
+    const cosmic = cosmicRef.current
+    const kepler = keplerRef.current
+    
+    // Verificar si ya fue descubierto
+    if (cosmic.isDiscovered()) {
+      cosmic.enable(scene)
+      console.log('🌌 Sistema de Resonancia Cósmica habilitado')
+    }
+    
+    // 🎼 Habilitar sistema de Kepler Harmonices
+    kepler.enable().then(() => {
+      console.log('🎼 Kepler Harmonices System habilitado')
+      // Activar modo Kepler automáticamente
+      kepler.activateKeplerMode(scene)
+    })
+    
+    // Registrar planetas en el sistema de resonancia
+    // Datos astronómicos reales
+    cosmic.registerCelestialBody({
+      id: 'mercury',
+      name: 'Mercurio',
+      position: new THREE.Vector3(0, 0, 0), // Se actualiza cada frame
+      orbitalPeriod: 88,
+      orbitalFrequency: 1 / 88,
+      audioFrequency: 141.27, // Hz (C#)
+      color: '#9c9c9c'
+    })
+    
+    cosmic.registerCelestialBody({
+      id: 'venus',
+      name: 'Venus',
+      position: new THREE.Vector3(0, 0, 0),
+      orbitalPeriod: 225,
+      orbitalFrequency: 1 / 225,
+      audioFrequency: 221.23, // Hz (A)
+      color: '#f5e6d3'
+    })
+    
+    cosmic.registerCelestialBody({
+      id: 'earth',
+      name: 'Tierra',
+      position: new THREE.Vector3(0, 0, 0),
+      orbitalPeriod: 365.25,
+      orbitalFrequency: 1 / 365.25,
+      audioFrequency: 136.10, // Hz (C# - "Om cósmico")
+      color: '#4A90E2'
+    })
+    
+    cosmic.registerCelestialBody({
+      id: 'mars',
+      name: 'Marte',
+      position: new THREE.Vector3(0, 0, 0),
+      orbitalPeriod: 687,
+      orbitalFrequency: 1 / 687,
+      audioFrequency: 144.72, // Hz (D)
+      color: '#E27B58'
+    })
+    
+    cosmic.registerCelestialBody({
+      id: 'jupiter',
+      name: 'Júpiter',
+      position: new THREE.Vector3(0, 0, 0),
+      orbitalPeriod: 4333,
+      orbitalFrequency: 1 / 4333,
+      audioFrequency: 183.58, // Hz (F#)
+      color: '#D4A574'
+    })
+    
+    cosmic.registerCelestialBody({
+      id: 'saturn',
+      name: 'Saturno',
+      position: new THREE.Vector3(0, 0, 0),
+      orbitalPeriod: 10759,
+      orbitalFrequency: 1 / 10759,
+      audioFrequency: 147.85, // Hz (D)
+      color: '#FAD5A5'
+    })
+    
+    cosmic.registerCelestialBody({
+      id: 'uranus',
+      name: 'Urano',
+      position: new THREE.Vector3(0, 0, 0),
+      orbitalPeriod: 30687,
+      orbitalFrequency: 1 / 30687,
+      audioFrequency: 207.36, // Hz (G#)
+      color: '#4FD0E7'
+    })
+    
+    cosmic.registerCelestialBody({
+      id: 'neptune',
+      name: 'Neptuno',
+      position: new THREE.Vector3(0, 0, 0),
+      orbitalPeriod: 60190,
+      orbitalFrequency: 1 / 60190,
+      audioFrequency: 211.44, // Hz (G#)
+      color: '#4166F5'
+    })
+    
+    console.log('🪐 8 planetas registrados en el sistema de resonancia cósmica')
+    
+    return () => {
+      cosmic.dispose()
+      kepler.dispose()
+    }
+  }, [scene])
+  
   // Actualización del sistema
   useFrame((state, delta) => {
     const solarEngine = solarEngineRef.current
     const solarState = solarEngine.update(delta)
+    const cosmic = cosmicRef.current
+    const kepler = keplerRef.current
     
     // Calcular tiempo en días desde el inicio
     const timeInDays = (solarState.simulatedTime.getTime() - startTimeRef.current.getTime()) / (1000 * 60 * 60 * 24)
@@ -105,10 +254,21 @@ export default function RealisticSolarSystem({
     // Acceso directo por índice (O(1) en lugar de O(n) con find)
     const idx = planetIndices.current
     
+    // Función helper para calcular fase orbital (0-1)
+    const calculatePhase = (position: THREE.Vector3): number => {
+      const angle = Math.atan2(position.z, position.x)
+      return (angle + Math.PI) / (Math.PI * 2)
+    }
+    
     // Actualizar posiciones de planetas interiores
     const mercuryIdx = idx.get('Mercurio')
     if (mercuryIdx !== undefined && mercuryRef.current) {
       mercuryRef.current.position.copy(planets[mercuryIdx].position)
+      // 🌌 Actualizar posición en sistema de resonancia
+      cosmic.updateBodyPosition('mercury', mercuryRef.current.position)
+      // 🎼 Actualizar sistema de Kepler con fase orbital
+      const phase = calculatePhase(mercuryRef.current.position)
+      kepler.updatePlanet('mercury', mercuryRef.current.position, phase)
     }
     if (mercuryMeshRef.current) {
       mercuryMeshRef.current.rotation.y += delta * 0.00017 // Rotación lenta
@@ -117,6 +277,11 @@ export default function RealisticSolarSystem({
     const venusIdx = idx.get('Venus')
     if (venusIdx !== undefined && venusRef.current) {
       venusRef.current.position.copy(planets[venusIdx].position)
+      // 🌌 Actualizar posición en sistema de resonancia
+      cosmic.updateBodyPosition('venus', venusRef.current.position)
+      // 🎼 Actualizar sistema de Kepler
+      const phase = calculatePhase(venusRef.current.position)
+      kepler.updatePlanet('venus', venusRef.current.position, phase)
     }
     if (venusMeshRef.current) {
       venusMeshRef.current.rotation.y -= delta * 0.00004 // Retrógrada
@@ -125,11 +290,21 @@ export default function RealisticSolarSystem({
     const earthIdx = idx.get('Tierra')
     if (earthIdx !== undefined && earthGroupRef.current) {
       earthGroupRef.current.position.copy(planets[earthIdx].position)
+      // 🌌 Actualizar posición en sistema de resonancia
+      cosmic.updateBodyPosition('earth', earthGroupRef.current.position)
+      // 🎼 Actualizar sistema de Kepler
+      const phase = calculatePhase(earthGroupRef.current.position)
+      kepler.updatePlanet('earth', earthGroupRef.current.position, phase)
     }
     
     const marsIdx = idx.get('Marte')
     if (marsIdx !== undefined && marsRef.current) {
       marsRef.current.position.copy(planets[marsIdx].position)
+      // 🌌 Actualizar posición en sistema de resonancia
+      cosmic.updateBodyPosition('mars', marsRef.current.position)
+      // 🎼 Actualizar sistema de Kepler
+      const phase = calculatePhase(marsRef.current.position)
+      kepler.updatePlanet('mars', marsRef.current.position, phase)
     }
     if (marsMeshRef.current) {
       marsMeshRef.current.rotation.y += delta * 0.05
@@ -139,24 +314,44 @@ export default function RealisticSolarSystem({
     const jupiterIdx = idx.get('Júpiter')
     if (jupiterIdx !== undefined && jupiterRef.current) {
       jupiterRef.current.position.copy(planets[jupiterIdx].position)
+      // 🌌 Actualizar posición en sistema de resonancia
+      cosmic.updateBodyPosition('jupiter', jupiterRef.current.position)
+      // 🎼 Actualizar sistema de Kepler
+      const phase = calculatePhase(jupiterRef.current.position)
+      kepler.updatePlanet('jupiter', jupiterRef.current.position, phase)
     }
     if (jupiterMeshRef.current) jupiterMeshRef.current.rotation.y += delta * 0.045
 
     const saturnIdx = idx.get('Saturno')
     if (saturnIdx !== undefined && saturnRef.current) {
       saturnRef.current.position.copy(planets[saturnIdx].position)
+      // 🌌 Actualizar posición en sistema de resonancia
+      cosmic.updateBodyPosition('saturn', saturnRef.current.position)
+      // 🎼 Actualizar sistema de Kepler
+      const phase = calculatePhase(saturnRef.current.position)
+      kepler.updatePlanet('saturn', saturnRef.current.position, phase)
     }
     if (saturnMeshRef.current) saturnMeshRef.current.rotation.y += delta * 0.043
 
     const uranusIdx = idx.get('Urano')
     if (uranusIdx !== undefined && uranusRef.current) {
       uranusRef.current.position.copy(planets[uranusIdx].position)
+      // 🌌 Actualizar posición en sistema de resonancia
+      cosmic.updateBodyPosition('uranus', uranusRef.current.position)
+      // 🎼 Actualizar sistema de Kepler
+      const phase = calculatePhase(uranusRef.current.position)
+      kepler.updatePlanet('uranus', uranusRef.current.position, phase)
     }
     if (uranusMeshRef.current) uranusMeshRef.current.rotation.y += delta * 0.03
 
     const neptuneIdx = idx.get('Neptuno')
     if (neptuneIdx !== undefined && neptuneRef.current) {
       neptuneRef.current.position.copy(planets[neptuneIdx].position)
+      // 🌌 Actualizar posición en sistema de resonancia
+      cosmic.updateBodyPosition('neptune', neptuneRef.current.position)
+      // 🎼 Actualizar sistema de Kepler
+      const phase = calculatePhase(neptuneRef.current.position)
+      kepler.updatePlanet('neptune', neptuneRef.current.position, phase)
     }
     if (neptuneMeshRef.current) neptuneMeshRef.current.rotation.y += delta * 0.032
     
@@ -165,6 +360,38 @@ export default function RealisticSolarSystem({
       plutoRef.current.position.copy(planets[plutoIdx].position)
     }
     if (plutoMeshRef.current) plutoMeshRef.current.rotation.y += delta * 0.02 // Muy lento
+    
+    // 🌌 Actualizar sistema de resonancia cósmica
+    if (cosmic.isEnabled()) {
+      cosmic.update(delta)
+      
+      // Obtener eventos activos (opcional: hacer algo con ellos)
+      const events = cosmic.getActiveEvents()
+      if (events.length > 0) {
+        // Los eventos se muestran en el UI, pero aquí podrías añadir efectos
+        // Por ejemplo: sonidos, partículas, etc.
+      }
+    }
+    
+    // 🎼 Analizar acorde cósmico cada 5 segundos
+    if (kepler.isKeplerModeActive() && Math.floor(timeInDays * 10) % 50 === 0) {
+      const chord = kepler.analyzeCosmicChord()
+      if (chord && chord.consonance > 0.7) {
+        console.log(`🎵 ${chord.description}: ${chord.harmonicRatio}`)
+      }
+    }
+    
+    // 🌊 Actualizar ondas sonoras para visualización
+    if (kepler.isKeplerModeActive()) {
+      const planetaryStates = kepler.getPlanetaryStates()
+      setSoundWaves(planetaryStates.map(state => ({
+        id: state.id,
+        position: state.position.clone(),
+        frequency: state.frequency,
+        amplitude: 0.5,  // Amplitud constante
+        color: KEPLER_PLANETARY_DATA.get(state.id)?.color || '#ffffff'
+      })))
+    }
     
     // Luna usando nuestro sistema lunar - POSICIÓN ABSOLUTA CON ESCALA CONSISTENTE
     const lunarState = calculateLunarPhase(timeInDays)
@@ -425,41 +652,20 @@ export default function RealisticSolarSystem({
       </group>
 
       {/* ── Saturno + anillos ────────────────────────────────────────────── */}
-      {/* saturnRef mueve el grupo en el plano orbital */}
       <group ref={saturnRef}>
-        {/* Subgrupo con tilt axial real de Saturno (26.7°) + leve rotación Y para perspectiva */}
-        <group rotation={[0, 0.3, THREE.MathUtils.degToRad(26.7)]}>
-          {/* Planeta */}
-          <mesh ref={saturnMeshRef} castShadow>
-            <sphereGeometry args={[38, 64, 64]} />
-            <meshStandardMaterial map={saturnTexture} roughness={0.9} metalness={0.0} />
-          </mesh>
-          {/* Anillos — en el plano ecuatorial del planeta (XZ), heredan el tilt del grupo */}
-          <mesh rotation={[Math.PI / 2, 0, 0]} receiveShadow>
-            <ringGeometry args={[46, 88, 128]} />
-            <meshStandardMaterial
-              map={saturnRingTexture}
-              alphaMap={saturnRingTexture}
-              side={THREE.DoubleSide}
-              transparent
-              opacity={0.85}
-              depthWrite={false}
-              roughness={0.8}
-              metalness={0.0}
-            />
-          </mesh>
-          {/* Segunda capa sutil para sensación de volumen */}
-          <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0.4, 0]}>
-            <ringGeometry args={[46, 88, 128]} />
-            <meshBasicMaterial
-              map={saturnRingTexture}
-              side={THREE.DoubleSide}
-              transparent
-              opacity={0.18}
-              depthWrite={false}
-            />
-          </mesh>
-        </group>
+        {/* Planeta */}
+        <mesh ref={saturnMeshRef} castShadow>
+          <sphereGeometry args={[38, 64, 64]} />
+          <meshStandardMaterial map={saturnTexture} roughness={0.9} metalness={0.0} />
+        </mesh>
+        
+        {/* 🪐 Anillos con mapeo UV correcto e inclinación real */}
+        <SaturnRings 
+          saturnRadius={38}
+          ringTexture={saturnRingTexture}
+          tilt={26.7}
+        />
+        
         <CelestialTooltip name="Saturno" symbol="♄" type="Gigante gaseoso"
           data={{ orbitalPeriod: "29.46 años", day: "10h 42m", diameter: "116.460 km",
             temperature: "-140°C", moons: "146 conocidas", atmosphere: "H₂, He",
@@ -529,6 +735,14 @@ export default function RealisticSolarSystem({
           color="#8c7853" 
         />
       </group>
+      
+      {/* 🌊 Ondas Sonoras Visuales - Representación gráfica de frecuencias */}
+      {wavesEnabled && soundWaves.length > 0 && (
+        <MultiPlanetWaves 
+          planets={soundWaves}
+          enabled={wavesEnabled}
+        />
+      )}
     </group>
   )
 }

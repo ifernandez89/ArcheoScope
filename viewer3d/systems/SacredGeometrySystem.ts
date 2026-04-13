@@ -1,32 +1,208 @@
 /**
  * 🔷 Sacred Geometry System
  * 
+ * BASE CONCEPTUAL: SÓLIDOS PLATÓNICOS
+ * ─────────────────────────────────────
+ * Los 5 sólidos platónicos son las formas primordiales del universo.
+ * Toda geometría sagrada deriva de ellos.
+ * 
+ * ┌─────────────────┬──────────────┬──────────────────────────────────────┐
+ * │ Sólido          │ Elemento     │ Principio                            │
+ * ├─────────────────┼──────────────┼──────────────────────────────────────┤
+ * │ Tetraedro       │ Fuego        │ 4 caras — transformación, voluntad   │
+ * │ Hexaedro (Cubo) │ Tierra       │ 6 caras — estabilidad, materia       │
+ * │ Octaedro        │ Aire         │ 8 caras — equilibrio, pensamiento    │
+ * │ Dodecaedro      │ Éter/Prana   │ 12 caras — cosmos, conciencia        │
+ * │ Icosaedro       │ Agua         │ 20 caras — fluidez, emoción          │
+ * │ Esfera          │ Vacío/Void   │ ∞ caras — origen, totalidad          │
+ * └─────────────────┴──────────────┴──────────────────────────────────────┘
+ * 
+ * JERARQUÍA GENERATIVA:
+ * Esfera → contiene todos los sólidos
+ * Dodecaedro → genera el icosaedro (duales)
+ * Cubo → genera el octaedro (duales)
+ * Tetraedro → es dual de sí mismo
+ * 
+ * CONEXIÓN CON LAS NAVES:
+ * - Phantom (Cloaking)  → Icosaedro  (Agua — fluidez, invisibilidad)
+ * - Aegis (Defensa)     → Cubo       (Tierra — solidez, protección)
+ * - Vector (Velocidad)  → Tetraedro  (Fuego — impulso, transformación)
+ * - Oracle (Ciencia)    → Dodecaedro (Éter — conocimiento, cosmos)
+ * - Titan (Fuerza)      → Octaedro   (Aire — equilibrio de fuerzas)
+ * 
+ * CONEXIÓN CON LOS SITIOS:
+ * - Puma Punku    → Cubo/Hexaedro  (bloques H, geometría modular)
+ * - Giza          → Tetraedro      (pirámide = tetraedro truncado)
+ * - Teotihuacán   → Octaedro       (pirámide del sol, equilibrio)
+ * - Veracruz      → Icosaedro      (agua, serpiente, fluidez)
+ * - Isla de Pascua→ Dodecaedro     (éter, red energética planetaria)
+ * - Göbekli Tepe  → Esfera/Void    (origen, el primer templo)
+ * 
  * Genera patrones de geometría sagrada procedurales basados en:
  * - Semilla del sitio (coordenadas + nombre)
  * - Tipo de nave utilizada
  * - Misión completada
  * - Bioma/planeta
  * 
- * Cada patrón es único e irrepetible. Se guarda en un "Codex de Geometría"
- * persistente en localStorage.
- * 
  * ESTADO: DESACTIVADO — listo para activar cuando se integre al gameplay.
  * 
- * Familias matemáticas:
- * - Roseta:    r = cos(kθ)           → armonía, flores energéticas
- * - Espiral:   r = a + bθ            → evolución, galaxias
- * - Toroide:   círculos concéntricos → energía, campos EM
- * - Lissajous: x=sin(at+δ), y=sin(bt)→ resonancia, patrones alienígenas
- * - Polígono:  θ = 2π/n              → estrellas, mandalas, cristales
- * - Hilbert:   curva fractal         → análisis, ciencia
+ * Familias matemáticas (derivadas de los sólidos platónicos):
+ * - Roseta:    r = cos(kθ)            → Dodecaedro (5 pétalos = pentágono)
+ * - Espiral:   r = a + bθ             → Tetraedro  (expansión desde el fuego)
+ * - Toroide:   círculos concéntricos  → Icosaedro  (agua, flujo circular)
+ * - Lissajous: x=sin(at+δ), y=sin(bt) → Cubo       (resonancia ortogonal)
+ * - Polígono:  θ = 2π/n               → Octaedro   (simetría de 8)
+ * - Hilbert:   curva fractal           → Esfera     (infinito contenido)
  * 
- * Conexión nave → geometría:
- * - Cloaking  → Lissajous (fractales alienígenas)
- * - Defensa   → Toroide (campos electromagnéticos)
- * - Velocidad → Espiral (movimiento, galaxias)
- * - Ciencia   → Hilbert (análisis fractal)
- * - Fuerza    → Polígono estelar (estrellas, mandalas)
+ * Conexión nave → geometría → sólido platónico:
+ * - Cloaking  → Lissajous → Cubo       (resonancia, campo EM)
+ * - Defensa   → Toroide   → Icosaedro  (agua, protección fluida)
+ * - Velocidad → Espiral   → Tetraedro  (fuego, impulso)
+ * - Ciencia   → Hilbert   → Dodecaedro (éter, conocimiento fractal)
+ * - Fuerza    → Polígono  → Octaedro   (aire, equilibrio de fuerzas)
  */
+
+// ─── SÓLIDOS PLATÓNICOS — BASE GENERATIVA ────────────────────────────────────
+
+export type PlatonicSolid = 'tetrahedron' | 'hexahedron' | 'octahedron' | 'dodecahedron' | 'icosahedron' | 'sphere'
+
+export interface PlatonicSolidData {
+  name: string
+  element: string
+  faces: number
+  vertices: number
+  edges: number
+  dualSolid: PlatonicSolid
+  siteId: string        // sitio arqueológico asociado
+  shipType: string      // nave asociada
+  frequency: number     // frecuencia de resonancia (Hz)
+  color: string         // color energético
+  meaning: string
+}
+
+export const PLATONIC_SOLIDS: Record<PlatonicSolid, PlatonicSolidData> = {
+  tetrahedron: {
+    name: 'Tetraedro', element: 'Fuego',
+    faces: 4, vertices: 4, edges: 6,
+    dualSolid: 'tetrahedron', // autodual
+    siteId: 'giza', shipType: 'speed',
+    frequency: 396, // Hz — liberación, transformación
+    color: '#ff6600',
+    meaning: 'Transformación primordial. El fuego que convierte la materia en energía.'
+  },
+  hexahedron: {
+    name: 'Hexaedro (Cubo)', element: 'Tierra',
+    faces: 6, vertices: 8, edges: 12,
+    dualSolid: 'octahedron',
+    siteId: 'pumaPunku', shipType: 'defense',
+    frequency: 432, // Hz — frecuencia sagrada de la Tierra
+    color: '#88aa44',
+    meaning: 'Estabilidad absoluta. La matriz de la materia física.'
+  },
+  octahedron: {
+    name: 'Octaedro', element: 'Aire',
+    faces: 8, vertices: 6, edges: 12,
+    dualSolid: 'hexahedron',
+    siteId: 'teotihuacan', shipType: 'force',
+    frequency: 528, // Hz — reparación, equilibrio
+    color: '#44aaff',
+    meaning: 'Equilibrio perfecto. El pensamiento que ordena el caos.'
+  },
+  dodecahedron: {
+    name: 'Dodecaedro', element: 'Éter/Prana',
+    faces: 12, vertices: 20, edges: 30,
+    dualSolid: 'icosahedron',
+    siteId: 'easterIsland', shipType: 'science',
+    frequency: 639, // Hz — conexión, conciencia cósmica
+    color: '#aa44ff',
+    meaning: 'El cosmos mismo. Doce pentágonos que mapean el universo.'
+  },
+  icosahedron: {
+    name: 'Icosaedro', element: 'Agua',
+    faces: 20, vertices: 12, edges: 30,
+    dualSolid: 'dodecahedron',
+    siteId: 'veracruz', shipType: 'cloaking',
+    frequency: 741, // Hz — intuición, fluidez
+    color: '#4488ff',
+    meaning: 'Fluidez universal. El agua que toma la forma de todo recipiente.'
+  },
+  sphere: {
+    name: 'Esfera', element: 'Vacío/Void',
+    faces: Infinity, vertices: Infinity, edges: Infinity,
+    dualSolid: 'sphere', // autodual
+    siteId: 'gobekliTepe', shipType: 'default',
+    frequency: 852, // Hz — intuición espiritual, origen
+    color: '#ffffff',
+    meaning: 'El origen de todo. Contiene todos los sólidos en potencia.'
+  }
+}
+
+/** Obtener el sólido platónico asociado a un sitio */
+export function getSolidForSite(siteId: string): PlatonicSolidData {
+  const entry = Object.values(PLATONIC_SOLIDS).find(s => s.siteId === siteId)
+  return entry || PLATONIC_SOLIDS.sphere
+}
+
+/** Obtener el sólido platónico asociado a una nave */
+export function getSolidForShip(shipType: string): PlatonicSolidData {
+  const entry = Object.values(PLATONIC_SOLIDS).find(s => s.shipType === shipType)
+  return entry || PLATONIC_SOLIDS.sphere
+}
+
+/** Generar vértices de un sólido platónico escalado */
+export function getPlatonicVertices(solid: PlatonicSolid, radius: number = 1): [number, number, number][] {
+  const r = radius
+  const phi = (1 + Math.sqrt(5)) / 2 // proporción áurea
+
+  switch (solid) {
+    case 'tetrahedron':
+      return [
+        [1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]
+      ].map(([x, y, z]) => [x * r / Math.sqrt(3), y * r / Math.sqrt(3), z * r / Math.sqrt(3)])
+
+    case 'hexahedron':
+      return [
+        [1,1,1],[1,1,-1],[1,-1,1],[1,-1,-1],
+        [-1,1,1],[-1,1,-1],[-1,-1,1],[-1,-1,-1]
+      ].map(([x, y, z]) => [x * r / Math.sqrt(3), y * r / Math.sqrt(3), z * r / Math.sqrt(3)])
+
+    case 'octahedron':
+      return [[r,0,0],[-r,0,0],[0,r,0],[0,-r,0],[0,0,r],[0,0,-r]]
+
+    case 'dodecahedron': {
+      const verts: [number, number, number][] = []
+      const s = r / Math.sqrt(3)
+      // 8 vértices del cubo
+      for (const x of [-1,1]) for (const y of [-1,1]) for (const z of [-1,1]) verts.push([x*s, y*s, z*s])
+      // 12 vértices de los rectángulos áureos
+      const t = phi * s
+      for (const a of [-1,1]) for (const b of [-1,1]) {
+        verts.push([0, a*s, b*t])
+        verts.push([a*s, b*t, 0])
+        verts.push([b*t, 0, a*s])
+      }
+      return verts
+    }
+
+    case 'icosahedron': {
+      const verts: [number, number, number][] = []
+      const n = r / Math.sqrt(1 + phi * phi)
+      const m = phi * n
+      for (const a of [-1,1]) for (const b of [-1,1]) {
+        verts.push([0, a*n, b*m])
+        verts.push([a*n, b*m, 0])
+        verts.push([b*m, 0, a*n])
+      }
+      return verts
+    }
+
+    case 'sphere':
+    default: {
+      // 12 puntos distribuidos en la esfera (icosaedro inscrito)
+      return getPlatonicVertices('icosahedron', radius)
+    }
+  }
+}
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
 

@@ -2,9 +2,12 @@
 
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
+import { useRef, useState } from 'react'
+import * as THREE from 'three'
 import RealisticSolarSystem from './RealisticSolarSystem'
 import MilkyWayBackground from './MilkyWayBackground'
 import Stars from './Stars'
+import CosmicResonanceDemo from './CosmicResonanceDemo'
 
 /**
  * Escena de prueba para el Sistema Solar Realista
@@ -22,6 +25,9 @@ export default function RealisticSolarSystemScene({
   onLocationClick,
   markerPosition
 }: RealisticSolarSystemSceneProps) {
+  const sceneRef = useRef<THREE.Scene | null>(null)
+  const [showWaves, setShowWaves] = useState(true)
+  
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       {/* Instrucciones */}
@@ -49,6 +55,9 @@ export default function RealisticSolarSystemScene({
           ✅ Posiciones reales por fecha<br/>
           ✅ Velocidades orbitales reales<br/>
           ✅ Time-scale configurable<br/>
+          ✅ Sistema de Resonancia Cósmica<br/>
+          ✅ Música de Kepler (Harmonices Mundi)<br/>
+          ✅ Ondas sonoras visuales<br/>
           ❌ Distancias escaladas visualmente<br/>
           ❌ Tamaños artísticos
         </div>
@@ -57,6 +66,9 @@ export default function RealisticSolarSystemScene({
       <Canvas
         camera={{ position: [0, 300, 1200], fov: 50 }}
         style={{ background: '#000' }}
+        onCreated={({ scene }) => {
+          sceneRef.current = scene
+        }}
       >
         <PerspectiveCamera makeDefault position={[0, 300, 1200]} fov={50} />
         <OrbitControls
@@ -75,11 +87,22 @@ export default function RealisticSolarSystemScene({
         <RealisticSolarSystem 
           onLocationClick={onLocationClick}
           markerPosition={markerPosition}
+          showWaves={showWaves}
         />
         
         {/* Iluminación */}
         <ambientLight intensity={0.3} />
       </Canvas>
+      
+      {/* 🌌 UI de Resonancia Cósmica */}
+      {sceneRef.current && (
+        <CosmicResonanceDemo 
+          scene={sceneRef.current} 
+          enabled={true}
+          onToggleWaves={setShowWaves}
+          showWaves={showWaves}
+        />
+      )}
     </div>
   )
 }
