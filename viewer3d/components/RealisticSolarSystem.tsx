@@ -19,6 +19,7 @@ import { getCosmicResonance } from '@/systems/CosmicResonanceSystem'
 import { getKeplerHarmonices } from '@/systems/KeplerHarmonicesSystem'
 import { MultiPlanetWaves } from './SoundWaveVisualization'
 import SaturnRings from './SaturnRings'
+import OrbitalGenerativeArt from './OrbitalGenerativeArt'
 
 // Importar datos de colores de planetas de Kepler
 const KEPLER_PLANETARY_DATA = new Map([
@@ -82,6 +83,13 @@ export default function RealisticSolarSystem({
     frequency: number
     amplitude: number
     color: string
+  }>>([])
+  
+  // 🎨 Estado de arte generativo orbital
+  const [orbitalArtData, setOrbitalArtData] = useState<Array<{
+    position: THREE.Vector3
+    color: string
+    orbitalPeriod: number
   }>>([])
   
   // Usar prop externa para controlar visualización
@@ -392,6 +400,52 @@ export default function RealisticSolarSystem({
         color: KEPLER_PLANETARY_DATA.get(state.id)?.color || '#ffffff'
       })))
     }
+    
+    // 🎨 Actualizar datos para arte generativo orbital
+    const artData: Array<{ position: THREE.Vector3; color: string; orbitalPeriod: number }> = []
+    
+    if (mercuryRef.current) artData.push({ 
+      position: mercuryRef.current.position.clone(), 
+      color: '#9c9c9c', 
+      orbitalPeriod: 88 
+    })
+    if (venusRef.current) artData.push({ 
+      position: venusRef.current.position.clone(), 
+      color: '#f5e6d3', 
+      orbitalPeriod: 225 
+    })
+    if (earthGroupRef.current) artData.push({ 
+      position: earthGroupRef.current.position.clone(), 
+      color: '#4A90E2', 
+      orbitalPeriod: 365.25 
+    })
+    if (marsRef.current) artData.push({ 
+      position: marsRef.current.position.clone(), 
+      color: '#E27B58', 
+      orbitalPeriod: 687 
+    })
+    if (jupiterRef.current) artData.push({ 
+      position: jupiterRef.current.position.clone(), 
+      color: '#D4A574', 
+      orbitalPeriod: 4333 
+    })
+    if (saturnRef.current) artData.push({ 
+      position: saturnRef.current.position.clone(), 
+      color: '#FAD5A5', 
+      orbitalPeriod: 10759 
+    })
+    if (uranusRef.current) artData.push({ 
+      position: uranusRef.current.position.clone(), 
+      color: '#4FD0E7', 
+      orbitalPeriod: 30687 
+    })
+    if (neptuneRef.current) artData.push({ 
+      position: neptuneRef.current.position.clone(), 
+      color: '#4166F5', 
+      orbitalPeriod: 60190 
+    })
+    
+    setOrbitalArtData(artData)
     
     // Luna usando nuestro sistema lunar - POSICIÓN ABSOLUTA CON ESCALA CONSISTENTE
     const lunarState = calculateLunarPhase(timeInDays)
@@ -741,6 +795,15 @@ export default function RealisticSolarSystem({
         <MultiPlanetWaves 
           planets={soundWaves}
           enabled={wavesEnabled}
+        />
+      )}
+      
+      {/* 🎨 Arte Generativo Cósmico - Mandalas gravitacionales y patrones orbitales */}
+      {orbitalArtData.length > 0 && (
+        <OrbitalGenerativeArt
+          planets={orbitalArtData}
+          enabled={true}
+          intensity={0.3}
         />
       )}
     </group>

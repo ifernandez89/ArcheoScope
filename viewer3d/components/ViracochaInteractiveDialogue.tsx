@@ -19,15 +19,13 @@ const OPTIONS = [
 ]
 
 const RESPONSES: Record<number, (allDone: boolean) => string> = {
-  1: () => 'El cosmos aguarda tu despertar. Cinco nodos de energía duermen en la Tierra — Puma Punku, Giza, Teotihuacán, Veracruz, Rapa Nui. Cuando todos vibren en armonía, el portal se abrirá.',
-  2: () => 'La Fuente Magna es un recipiente sagrado de más de 5000 años. Sus inscripciones proto-sumerias invocan a la diosa Nia. Fue creada para canalizar energías cósmicas en rituales de alineación planetaria.',
-  3: (allDone) => allDone
-    ? 'Has demostrado ser digno, viajero. Los cinco nodos resuenan. Toma la Fuente Magna — llévala al lugar donde el tiempo comenzó.'
-    : 'Aún no, viajero. La Fuente Magna solo puede ser portada por quien ha despertado los cinco nodos de la Tierra. Completa tu misión y regresa.',
+  1: () => 'Debes completar las cinco misiones sagradas para demostrar tu valía. Solo entonces serás digno de portar la Fuente Magna en tu viaje a Göbekli Tepe.',
+  2: () => 'La Fuente Magna es un recipiente sagrado de más de 5000 años. Sus inscripciones invocan a la diosa Nia. Fue creada para canalizar energías cósmicas en rituales de alineación planetaria.',
+  3: () => 'Has demostrado ser digno, viajero. Los cinco nodos sagrados resuenan con tu energía. Toma la Fuente Magna y úsala sabiamente en Göbekli Tepe. Que los antiguos guíen tu camino.',
 }
 
 // Mensaje de agradecimiento — se muestra la primera vez que devuelve la fuente
-const THANKS_MESSAGE = '¡Gracias, viajero! La Fuente Magna regresa a su lugar sagrado. Los antiguos te bendicen. Cuando hayas completado tu misión, regresa a mí.'
+const THANKS_MESSAGE = '¡Gracias, viajero! La Fuente Magna regresa a su lugar sagrado. Los antiguos te bendicen. Completa las cinco misiones sagradas y regresa. Solo entonces serás digno de portarla en tu viaje a Göbekli Tepe.'
 
 export default function ViracochaInteractiveDialogue({
   missionCompleted,
@@ -53,14 +51,20 @@ export default function ViracochaInteractiveDialogue({
   }, [])
 
   const handleOption = (id: number) => {
-    const response = RESPONSES[id](allMissionsCompleted)
+    const response = RESPONSES[id]()
     setSelectedResponse(response)
     setShowOptions(false)
 
-    if (id === 3 && allMissionsCompleted && onLendMagnaBowl) {
-      setTimeout(() => { onLendMagnaBowl(); onClose() }, 4000)
+    // Opción 3: Prestar la Fuente Magna (siempre positivo porque el diálogo solo aparece con 5 misiones completas)
+    if (id === 3 && onLendMagnaBowl) {
+      setTimeout(() => { 
+        onLendMagnaBowl()
+        onClose() 
+      }, 5000) // Dar tiempo para leer el mensaje
       return
     }
+    
+    // Para otras opciones, cerrar después de 5s
     setTimeout(() => onClose(), 5000)
   }
 
@@ -123,31 +127,33 @@ export default function ViracochaInteractiveDialogue({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {OPTIONS.map((opt) => {
               const isLend = opt.id === 3
-              const lendReady = isLend && allMissionsCompleted
+              
               return (
                 <button
                   key={opt.id}
                   onClick={() => handleOption(opt.id)}
                   style={{
                     padding: '14px 22px', fontSize: '16px',
-                    color: lendReady ? '#00ff88' : ACCENT,
-                    background: lendReady ? 'rgba(0,255,136,0.1)' : `rgba(255,215,0,0.1)`,
-                    border: `2px solid ${lendReady ? '#00ff88' : ACCENT}`,
-                    borderRadius: '8px', cursor: 'pointer',
+                    color: isLend ? '#00ff88' : ACCENT,
+                    background: isLend ? 'rgba(0,255,136,0.1)' : `rgba(255,215,0,0.1)`,
+                    border: `2px solid ${isLend ? '#00ff88' : ACCENT}`,
+                    borderRadius: '8px', 
+                    cursor: 'pointer',
                     fontFamily: '"Cinzel", serif', letterSpacing: '1px',
                     textAlign: 'left', transition: 'all 0.3s ease',
-                    fontWeight: lendReady ? 'bold' : 'normal'
+                    fontWeight: isLend ? 'bold' : 'normal'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = lendReady ? 'rgba(0,255,136,0.3)' : 'rgba(255,215,0,0.3)'
+                    e.currentTarget.style.background = isLend ? 'rgba(0,255,136,0.3)' : 'rgba(255,215,0,0.3)'
                     e.currentTarget.style.transform = 'translateX(8px)'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = lendReady ? 'rgba(0,255,136,0.1)' : 'rgba(255,215,0,0.1)'
+                    e.currentTarget.style.background = isLend ? 'rgba(0,255,136,0.1)' : 'rgba(255,215,0,0.1)'
                     e.currentTarget.style.transform = 'translateX(0)'
                   }}
                 >
-                  {opt.id}. {opt.label}{lendReady ? ' ✨' : ''}
+                  {opt.id}. {opt.label}
+                  {isLend && ' ✨'}
                 </button>
               )
             })}

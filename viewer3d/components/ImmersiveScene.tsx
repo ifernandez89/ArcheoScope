@@ -1532,12 +1532,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           showViracochaDialogue={showViracochaDialogue}
           onViracochaSpeak={() => {
             const pumaDone = isMissionCompleted('pumaPunku', 'reveal_structure')
-            if (pumaDone && magnaBowlCollected) {
-              // Siempre usar el diálogo interactivo cuando la misión está completa
-              // magnaBowlThanked controla si muestra agradecimiento o opciones
+            const allMissionsDone = loadMissionState().stats.totalMissionsCompleted >= 5
+            
+            // Solo permitir diálogo interactivo si las 5 misiones están completas
+            if (pumaDone && magnaBowlCollected && allMissionsDone) {
+              // Diálogo interactivo: usuario es digno de obtener la fuente prestada
               setShowViracochaInteractive(true)
             } else {
-              // Sin misión o sin fuente → diálogo simple
+              // Sin todas las misiones → diálogo simple
               setShowViracochaDialogue(true)
             }
           }}

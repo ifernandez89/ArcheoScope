@@ -1,1 +1,0 @@
-# ArcheoScope Ice Detection Module

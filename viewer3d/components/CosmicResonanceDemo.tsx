@@ -24,7 +24,12 @@ interface CosmicResonanceDemoProps {
   showWaves?: boolean
 }
 
-export default function CosmicResonanceDemo({ scene, enabled = false, onToggleWaves, showWaves = true }: CosmicResonanceDemoProps) {
+export default function CosmicResonanceDemo({ 
+  scene, 
+  enabled = false, 
+  onToggleWaves, 
+  showWaves = true
+}: CosmicResonanceDemoProps) {
   const [isDiscovered, setIsDiscovered] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
   const [activeEvents, setActiveEvents] = useState<ResonanceEvent[]>([])

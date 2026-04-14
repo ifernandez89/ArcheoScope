@@ -58,6 +58,7 @@ export default function RealisticSolarSystemScene({
           ✅ Sistema de Resonancia Cósmica<br/>
           ✅ Música de Kepler (Harmonices Mundi)<br/>
           ✅ Ondas sonoras visuales<br/>
+          ✅ Arte generativo orbital<br/>
           ❌ Distancias escaladas visualmente<br/>
           ❌ Tamaños artísticos
         </div>
