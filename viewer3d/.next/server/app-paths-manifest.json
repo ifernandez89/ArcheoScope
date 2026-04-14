@@ -1,7 +1,7 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/api/log/route": "app/api/log/route.js",
   "/api/metrics/route": "app/api/metrics/route.js",
+  "/api/log/route": "app/api/log/route.js",
   "/api/openrouter-key/route": "app/api/openrouter-key/route.js",
   "/game/page": "app/game/page.js",
   "/menu/audio/page": "app/menu/audio/page.js",

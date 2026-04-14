@@ -18,7 +18,7 @@ const OPTIONS = [
   { id: 3, label: '¿Me prestas la Fuente Magna?' },
 ]
 
-const RESPONSES: Record<number, (allDone: boolean) => string> = {
+const RESPONSES: Record<number, () => string> = {
   1: () => 'Debes completar las cinco misiones sagradas para demostrar tu valía. Solo entonces serás digno de portar la Fuente Magna en tu viaje a Göbekli Tepe.',
   2: () => 'La Fuente Magna es un recipiente sagrado de más de 5000 años. Sus inscripciones invocan a la diosa Nia. Fue creada para canalizar energías cósmicas en rituales de alineación planetaria.',
   3: () => 'Has demostrado ser digno, viajero. Los cinco nodos sagrados resuenan con tu energía. Toma la Fuente Magna y úsala sabiamente en Göbekli Tepe. Que los antiguos guíen tu camino.',

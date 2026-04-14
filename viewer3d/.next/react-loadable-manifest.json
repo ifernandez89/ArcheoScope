@@ -6,7 +6,7 @@
       "static/chunks/react-three-b5fd49bf114ca54a.js",
       "static/chunks/engines.d2ad4c915ea965b7.js",
       "static/chunks/vendor-17f252905371c9a3.js",
-      "static/chunks/8740.aff3aa2eee41899d.js"
+      "static/chunks/8740.659dcbb584b82dee.js"
     ]
   },
   "app\\player-setup\\page.tsx -> @/components/ShipPreview": {
@@ -26,8 +26,8 @@
       "static/chunks/engines.d2ad4c915ea965b7.js",
       "static/chunks/vendor-17f252905371c9a3.js",
       "static/chunks/4604.45684cc7a8df63f1.js",
-      "static/chunks/8743.0d488668476278e7.js",
-      "static/chunks/6161.48a089e1bcdb6acf.js"
+      "static/chunks/8743.1e2206332922964f.js",
+      "static/chunks/6161.b6c7ee346deafec8.js"
     ]
   },
   "components\\EasterIslandScene.tsx -> @/systems/HarmoniaMundiSystem": {
@@ -270,7 +270,7 @@
     "files": [
       "static/chunks/react-three-b5fd49bf114ca54a.js",
       "static/chunks/4604.45684cc7a8df63f1.js",
-      "static/chunks/8743.0d488668476278e7.js"
+      "static/chunks/8743.1e2206332922964f.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./Rock3DModel": {
@@ -381,7 +381,7 @@
   "components\\ImmersiveScene.tsx -> ./ViracochaInteractiveDialogue": {
     "id": 628,
     "files": [
-      "static/chunks/628.25c6cae60128dbb3.js"
+      "static/chunks/628.9a5a34821f1c5cd2.js"
     ]
   },
   "components\\ImmersiveScene.tsx -> ./VolcanicTerrain": {
