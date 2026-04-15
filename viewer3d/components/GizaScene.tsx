@@ -9,6 +9,7 @@ import SelectableObject from './SelectableObject'
 import CropCircle, { CropCirclePortal } from './CropCircle'
 import Geoglyph from './Geoglyph'
 import { isMissionCompleted } from '@/types/missionState'
+import DroppableItem from './DroppableItem'
 
 // Modelos se cargan bajo demanda al entrar a la escena (no preload global)
 
@@ -174,10 +175,20 @@ export default function GizaScene({
         
         {/* 🪲 Escarabajo - Aparece cuando se mueve la momia O si fue soltado */}
         {((scarabDiscovered && !scarabCollected) || showScarab) && !scarabInInventory && (
-          <Scarab 
-            position={showScarab && scarabDropPosition ? [scarabDropPosition.x, 1, scarabDropPosition.z] : [-72, 1, -2]} 
-            onCollect={onScarabCollect}
-          />
+          showScarab && scarabDropPosition
+            ? <DroppableItem
+                modelPath="/escab.glb"
+                position={[scarabDropPosition.x, 0, scarabDropPosition.z]}
+                onCollect={onScarabCollect}
+                scale={1.5}
+                floatHeight={1.5}
+                glowColor="#44cc44"
+                itemName="Escarabajo"
+              />
+            : <Scarab 
+                position={[-72, 1, -2]}
+                onCollect={onScarabCollect}
+              />
         )}
         
         {/* 🔶 Piramidión - En el suelo frente a la esfinge */}

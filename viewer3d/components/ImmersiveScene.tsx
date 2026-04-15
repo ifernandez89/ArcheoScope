@@ -500,7 +500,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [tonatiuhInInventory, setTonatiuhInInventory] = useState(false)
   const [tonatiuhOnGround, setTonatiuhOnGround] = useState(false)
   const [tonatiuhDropPosition, setTonatiuhDropPosition] = useState<{ x: number, z: number } | null>(null)
-
   // 🪨 Roca — recolectable del entorno, solo una a la vez
   const [rockInInventory, setRockInInventory] = useState(false)
   const [rockOnGround, setRockOnGround] = useState(false)
@@ -514,6 +513,21 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   // 🛸 Estado de habilidades de nave
   const [abilityActive, setAbilityActive] = useState(false)
   const [abilityCooldown, setAbilityCooldown] = useState(false)
+  
+  // 💀 Detectar si estamos en Mictlán (atrapados hasta 10 apariciones)
+  const isMictlanLocation = !!(selectedLocation && 
+    Math.abs(selectedLocation.lat - 0.0001) < 0.01 && 
+    Math.abs(selectedLocation.lon - 0.0001) < 0.01)
+  const [mictlanCompleted, setMictlanCompleted] = useState(false)
+  const trappedInMictlan = isMictlanLocation && !mictlanCompleted
+
+  // 🌞 Spawn automático de Tonatiuh al entrar al Mictlán
+  useEffect(() => {
+    if (isMictlanLocation && !tonatiuhInInventory && !tonatiuhOnGround) {
+      setTonatiuhDropPosition({ x: 3, z: -4 })
+      setTonatiuhOnGround(true)
+    }
+  }, [isMictlanLocation])
   const [isShaking, setIsShaking] = useState(false)
   const [scannedEntity, setScannedEntity] = useState<{ name: string, desc: string } | null>(null)
 
@@ -846,7 +860,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     const pos = mainAvatarPositionRef.current
     if (pos) {
       setMagnaBowlDropPosition({ x: pos.x, z: pos.z })
-      setMagnaBowlLent(false) // ya no en inventario
+      setMagnaBowlLentInInventory(false)
       setMagnaBowlOnGround(true)
     }
   }, [mode])
@@ -1161,10 +1175,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      {/* Input de coordenadas */}
+      {/* Input de coordenadas - DESHABILITADO en Mictlán */}
       <CoordinateInput
         onCoordinateSubmit={handleLocationClick}
         currentLocation={selectedLocation}
+        disabled={trappedInMictlan}
       />
 
       {/* InformaciÃ³n de ubicaciÃ³n (desplegable) */}
@@ -1256,9 +1271,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         }}>
           <button
             onClick={handleBackToGlobe}
+            disabled={trappedInMictlan}
             style={{
               padding: '12px 24px',
-              background: 'rgba(102, 126, 234, 0.9)',
+              background: trappedInMictlan ? 'rgba(60, 60, 60, 0.5)' : 'rgba(102, 126, 234, 0.9)',
               border: '1px solid rgba(255,255,255,0.3)',
               borderRadius: '8px',
               color: 'white',
@@ -1547,7 +1563,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onPortalEnter={() => handleLocationClick(-16.031003664299448, -69.49975772335767)}
           magnaBowlCollected={magnaBowlCollected}
           onCameraRotationChange={setCameraRotation}
-          onMictlanExit={() => handleLocationClick(-27.1254, -109.2778)}
+          onMictlanExit={() => {
+            setMictlanCompleted(true)
+            handleLocationClick(-27.1254, -109.2778)
+          }}
           jadeMaskVisible={jadeMaskVisible}
           jadeMaskInInventory={jadeMaskInInventory}
           onJadeMaskCollect={() => {
@@ -1620,6 +1639,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           magnaBowlLentInInventory={magnaBowlLentInInventory}
           magnaBowlOnGround={magnaBowlOnGround}
           magnaBowlDropPosition={magnaBowlDropPosition}
+          onMagnaBowlCollect={() => {
+            setMagnaBowlLentInInventory(true)
+            setMagnaBowlOnGround(false)
+          }}
           onObeliskActivate={() => handleLocationClick(37.2231, 38.9225)}
           showViracochaInteractive={showViracochaInteractive}
           onCloseViracochaInteractive={() => {
@@ -1957,6 +1980,7 @@ function ModelScene({
   tonatiuhOnGround,
   tonatiuhDropPosition,
   onTonatiuhCollect,
+  onMagnaBowlCollect,
   scarabOnGround,
   skullOnGround,
   rockInInventory,
@@ -2054,6 +2078,7 @@ function ModelScene({
   tonatiuhOnGround?: boolean
   tonatiuhDropPosition?: { x: number, z: number } | null
   onTonatiuhCollect?: () => void
+  onMagnaBowlCollect?: () => void
   rockInInventory?: boolean
   rockOnGround?: boolean
   rockDropPosition?: { x: number, z: number } | null
@@ -2343,6 +2368,14 @@ function ModelScene({
                 currentUfo={currentUfo}
                 abilityActive={abilityActive}
                 onObeliskActivate={onObeliskActivate}
+                tonatiuhInInventory={tonatiuhInInventory}
+                tonatiuhOnGround={tonatiuhOnGround}
+                tonatiuhDropPosition={tonatiuhDropPosition}
+                onTonatiuhCollect={onTonatiuhCollect}
+                magnaBowlLentInInventory={magnaBowlLentInInventory}
+                magnaBowlOnGround={magnaBowlOnGround}
+                magnaBowlDropPosition={magnaBowlDropPosition}
+                onMagnaBowlCollect={onMagnaBowlCollect}
               />
             )}
 
@@ -2409,13 +2442,17 @@ function ModelScene({
               <GobekliTepeScene
                 tonatiuhDropPosition={tonatiuhDropPosition}
                 tonatiuhOnGround={tonatiuhOnGround}
+                onTonatiuhCollect={onTonatiuhCollect}
                 scarabDropPosition={scarabDropPosition}
                 scarabOnGround={scarabOnGround}
+                onScarabCollect={() => { /* no recoger en Göbekli — solo dejar en altar */ }}
                 skullDropPosition={skullDropPosition}
                 skullOnGround={skullOnGround}
+                onSkullCollect={() => { /* no recoger en Göbekli — solo dejar en altar */ }}
                 magnaBowlCollected={magnaBowlLentInInventory || magnaBowlOnGround}
                 magnaBowlDropPosition={magnaBowlDropPosition}
                 magnaBowlOnGround={magnaBowlOnGround}
+                onMagnaBowlCollect={onMagnaBowlCollect}
                 avatarPositionRef={avatarPositionRef}
               />
             )}

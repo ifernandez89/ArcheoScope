@@ -8,6 +8,7 @@ import { getAssetPath } from '@/lib/paths'
 import CropCircle from './CropCircle'
 import ToroidalSphere from './ToroidalSphere'
 import Geoglyph from './Geoglyph'
+import DroppableItem from './DroppableItem'
 
 export const GOBEKLI_TEPE_COORDS = { lat: 37.2231, lon: 38.9225 }
 
@@ -21,18 +22,22 @@ const ALTARS = [
 ] as const
 
 type ItemKey = 'tonatiuh' | 'scarab' | 'skull' | 'magna'
-const ALTAR_RADIUS = 9  // radio amplio para detección
+const ALTAR_RADIUS = 14  // radio amplio para detección generosa
 
 export interface GobekliTepeSceneProps {
   tonatiuhDropPosition?: { x: number, z: number } | null
   tonatiuhOnGround?: boolean
+  onTonatiuhCollect?: () => void
   scarabDropPosition?: { x: number, z: number } | null
   scarabOnGround?: boolean
+  onScarabCollect?: () => void
   skullDropPosition?: { x: number, z: number } | null
   skullOnGround?: boolean
+  onSkullCollect?: () => void
   magnaBowlCollected?: boolean
   magnaBowlDropPosition?: { x: number, z: number } | null
   magnaBowlOnGround?: boolean
+  onMagnaBowlCollect?: () => void
   avatarPositionRef?: React.RefObject<THREE.Vector3>
 }
 
@@ -45,10 +50,10 @@ export default function GobekliTepeScene(props: GobekliTepeSceneProps) {
 }
 
 function GobekliTepeContent({
-  tonatiuhDropPosition, tonatiuhOnGround,
-  scarabDropPosition, scarabOnGround,
-  skullDropPosition, skullOnGround,
-  magnaBowlCollected, magnaBowlDropPosition, magnaBowlOnGround,
+  tonatiuhDropPosition, tonatiuhOnGround, onTonatiuhCollect,
+  scarabDropPosition, scarabOnGround, onScarabCollect,
+  skullDropPosition, skullOnGround, onSkullCollect,
+  magnaBowlCollected, magnaBowlDropPosition, magnaBowlOnGround, onMagnaBowlCollect,
   avatarPositionRef
 }: GobekliTepeSceneProps) {
   const { scene } = useGLTF(getAssetPath('/gobekli_tepe.glb'))
@@ -168,6 +173,57 @@ function GobekliTepeContent({
         scale={2}
         visible={allActivated}
       />
+
+      {/* ─── ITEMS SOLTADOS EN EL SUELO ─────────────────────────────── */}
+      {/* Si caen sobre su altar → flotan a 2.5m; si no → 1.5m */}
+
+      {tonatiuhOnGround && tonatiuhDropPosition && (
+        <DroppableItem
+          modelPath="/tonatiuh_aztec_sun.glb"
+          position={[tonatiuhDropPosition.x, 0, tonatiuhDropPosition.z]}
+          onCollect={onTonatiuhCollect}
+          scale={1.5}
+          floatHeight={activated.tonatiuh ? 2.5 : 1.5}
+          glowColor={activated.tonatiuh ? '#ffffff' : '#ffaa00'}
+          itemName="Tonatiuh"
+        />
+      )}
+
+      {scarabOnGround && scarabDropPosition && (
+        <DroppableItem
+          modelPath="/escab.glb"
+          position={[scarabDropPosition.x, 0, scarabDropPosition.z]}
+          onCollect={onScarabCollect}
+          scale={1.5}
+          floatHeight={activated.scarab ? 2.5 : 1.5}
+          glowColor={activated.scarab ? '#ffffff' : '#44cc44'}
+          itemName="Escarabajo"
+        />
+      )}
+
+      {skullOnGround && skullDropPosition && (
+        <DroppableItem
+          modelPath="/crystal-skull.glb"
+          position={[skullDropPosition.x, 0, skullDropPosition.z]}
+          onCollect={onSkullCollect}
+          scale={1.5}
+          floatHeight={activated.skull ? 2.5 : 1.5}
+          glowColor={activated.skull ? '#ffffff' : '#aa44ff'}
+          itemName="Calavera de Cristal"
+        />
+      )}
+
+      {magnaBowlOnGround && magnaBowlDropPosition && (
+        <DroppableItem
+          modelPath="/magna_bowl.glb"
+          position={[magnaBowlDropPosition.x, 0, magnaBowlDropPosition.z]}
+          onCollect={onMagnaBowlCollect}
+          scale={1.5}
+          floatHeight={activated.magna ? 2.5 : 1.5}
+          glowColor={activated.magna ? '#ffffff' : '#4488ff'}
+          itemName="Fuente Magna"
+        />
+      )}
     </group>
   )
 }
@@ -189,7 +245,7 @@ function AltarCircle({ label, icon, x, z, color, activated }: {
   const activeColor = activated ? '#ffffff' : color
 
   return (
-    <group position={[x, 0.05, z]}>
+    <group position={[x, 1.0, z]}>
       {/* Anillo exterior */}
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[ALTAR_RADIUS - 0.5, ALTAR_RADIUS, 64]} />

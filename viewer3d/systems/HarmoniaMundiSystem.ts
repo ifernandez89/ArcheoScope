@@ -63,8 +63,25 @@ export class HarmoniaMundiSystem {
   // Filtros de arquitectura activos
   private activeFilters: Map<string, BiquadFilterNode> = new Map()
   
-  // Configuración de cuerpos celestes (preparado para expansión)
+  // Configuración de cuerpos celestes - TODOS LOS PLANETAS ACTIVOS
+  // Frecuencias basadas en período orbital transpuestas al rango audible
   private celestialBodies: Map<string, CelestialBody> = new Map([
+    ['mercury', {
+      id: 'mercury',
+      name: 'Mercurio',
+      frequency: 141.27, // C# (88 días)
+      note: 'C#',
+      orbitalPeriod: 88,
+      color: '#8C7853'
+    }],
+    ['venus', {
+      id: 'venus',
+      name: 'Venus',
+      frequency: 221.23, // A (225 días)
+      note: 'A',
+      orbitalPeriod: 225,
+      color: '#FFC649'
+    }],
     ['earth', {
       id: 'earth',
       name: 'Tierra',
@@ -73,11 +90,10 @@ export class HarmoniaMundiSystem {
       orbitalPeriod: 365.25,
       color: '#4A90E2'
     }],
-    // Preparado para V2+
     ['mars', {
       id: 'mars',
       name: 'Marte',
-      frequency: 144.72,
+      frequency: 144.72, // D (687 días)
       note: 'D',
       orbitalPeriod: 687,
       color: '#E27B58'
@@ -85,10 +101,42 @@ export class HarmoniaMundiSystem {
     ['jupiter', {
       id: 'jupiter',
       name: 'Júpiter',
-      frequency: 183.58,
+      frequency: 183.58, // F# (4333 días)
       note: 'F#',
       orbitalPeriod: 4333,
       color: '#D4A574'
+    }],
+    ['saturn', {
+      id: 'saturn',
+      name: 'Saturno',
+      frequency: 147.85, // D (10759 días)
+      note: 'D',
+      orbitalPeriod: 10759,
+      color: '#FAD5A5'
+    }],
+    ['uranus', {
+      id: 'uranus',
+      name: 'Urano',
+      frequency: 207.36, // G# (30687 días)
+      note: 'G#',
+      orbitalPeriod: 30687,
+      color: '#4FD0E7'
+    }],
+    ['neptune', {
+      id: 'neptune',
+      name: 'Neptuno',
+      frequency: 211.44, // G# (60190 días)
+      note: 'G#',
+      orbitalPeriod: 60190,
+      color: '#4166F5'
+    }],
+    ['pluto', {
+      id: 'pluto',
+      name: 'Plutón',
+      frequency: 140.25, // C# (90560 días) - ¡El más grave!
+      note: 'C#',
+      orbitalPeriod: 90560,
+      color: '#A0826D'
     }]
   ])
   
@@ -285,6 +333,45 @@ export class HarmoniaMundiSystem {
   }
   
   /**
+   * 🪐 ACTIVAR TODOS LOS PLANETAS
+   * Crea drones para todos los cuerpos celestes del sistema solar
+   * Incluye frecuencias infrasonoras (< 20 Hz) que se transponen automáticamente
+   */
+  activateAllPlanets(): void {
+    if (!this.enabled || !this.context) {
+      console.warn('Sistema no habilitado. Llama a enable() primero.')
+      return
+    }
+    
+    console.log('🪐 Activando todos los planetas del sistema solar...')
+    
+    this.celestialBodies.forEach((body, id) => {
+      // Calcular frecuencia transpuesta (3 octavas abajo para drones profundos)
+      const droneFreq = body.frequency / 8 // Divide por 8 = 3 octavas abajo
+      
+      // Crear capa de drone para este planeta
+      const planetLayer: MissionLayer = {
+        id: `planet_${id}`,
+        name: `Drone de ${body.name}`,
+        description: `Frecuencia orbital: ${body.orbitalPeriod} días`,
+        frequency: droneFreq,
+        type: 'drone',
+        intensity: 0.08, // Sutil para no saturar
+        unlocked: true
+      }
+      
+      // Crear oscilador (se ajustará automáticamente al rango audible)
+      this.createLayerOscillator(planetLayer)
+      
+      const finalFreq = droneFreq < 20 ? droneFreq * Math.pow(2, Math.ceil(Math.log2(20 / droneFreq))) : droneFreq
+      
+      console.log(`  🎵 ${body.name}: ${body.frequency.toFixed(2)} Hz → ${droneFreq.toFixed(2)} Hz → ${finalFreq.toFixed(2)} Hz (${body.note})`)
+    })
+    
+    console.log('✅ Todos los planetas activados - Harmonia Mundi completa')
+  }
+  
+  /**
    * Desbloquear capa de misión (V1: solo Tierra)
    */
   unlockMissionLayer(missionId: string): void {
@@ -316,6 +403,7 @@ export class HarmoniaMundiSystem {
   
   /**
    * Crear oscilador para una capa
+   * AJUSTADO: Transpone frecuencias al límite audible (20 Hz mínimo)
    */
   private createLayerOscillator(layer: MissionLayer): void {
     if (!this.context) return
@@ -323,30 +411,48 @@ export class HarmoniaMundiSystem {
     const osc = this.context.createOscillator()
     const gain = this.context.createGain()
     
+    // 🎵 AJUSTE DINÁMICO: Transponer al rango audible
+    let finalFreq = layer.frequency
+    
+    // Si está por debajo de 20 Hz, subir octavas hasta ser audible
+    while (finalFreq < 20 && finalFreq > 0) {
+      finalFreq *= 2
+    }
+    
+    // Si está por encima de 2000 Hz, bajar octavas para mantener drone
+    while (finalFreq > 2000) {
+      finalFreq /= 2
+    }
+    
     // Configurar según tipo
     switch (layer.type) {
       case 'drone':
         osc.type = 'sine'
-        osc.frequency.value = layer.frequency
+        osc.frequency.value = finalFreq
         gain.gain.value = 0
         gain.connect(this.planetaryGain!)
         break
         
       case 'harmonic':
         osc.type = 'triangle' // Más armónicos
-        osc.frequency.value = layer.frequency
+        osc.frequency.value = finalFreq
         gain.gain.value = 0
         gain.connect(this.harmonicGain!)
         break
         
       case 'pulse':
         osc.type = 'sine'
-        osc.frequency.value = layer.frequency * 100 // Más audible
+        // Para pulsos, asegurar que sea audible
+        let pulseFreq = layer.frequency * 100
+        while (pulseFreq < 40) {
+          pulseFreq *= 2
+        }
+        osc.frequency.value = pulseFreq
         gain.gain.value = 0
         
         // LFO para pulso
         const lfo = this.context.createOscillator()
-        lfo.frequency.value = layer.frequency
+        lfo.frequency.value = Math.max(0.1, layer.frequency) // Mínimo 0.1 Hz para LFO
         lfo.type = 'sine'
         
         const lfoGain = this.context.createGain()
@@ -367,18 +473,20 @@ export class HarmoniaMundiSystem {
           layer.intensity,
           this.context.currentTime + 3
         )
+        
+        console.log(`🎵 Pulso creado: ${finalFreq.toFixed(2)} Hz (original: ${layer.frequency.toFixed(4)} Hz)`)
         return
         
       case 'texture':
         osc.type = 'sawtooth' // Más textura
-        osc.frequency.value = layer.frequency
+        osc.frequency.value = finalFreq
         gain.gain.value = 0
         gain.connect(this.harmonicGain!)
         break
         
       case 'resonance':
         osc.type = 'sine'
-        osc.frequency.value = layer.frequency
+        osc.frequency.value = finalFreq
         gain.gain.value = 0
         gain.connect(this.planetaryGain!)
         break
@@ -392,6 +500,11 @@ export class HarmoniaMundiSystem {
       layer.intensity,
       this.context.currentTime + 3
     )
+    
+    // Log para debug
+    if (finalFreq !== layer.frequency) {
+      console.log(`🎵 Frecuencia ajustada: ${layer.frequency.toFixed(2)} Hz → ${finalFreq.toFixed(2)} Hz (${layer.type})`)
+    }
     
     // Guardar referencia
     this.activeOscillators.set(layer.id, { osc, gain })
@@ -593,6 +706,41 @@ export class HarmoniaMundiSystem {
       description: layer.description,
       unlocked: layer.unlocked
     }))
+  }
+  
+  /**
+   * 🪐 Obtener información de todos los planetas
+   */
+  getAllPlanetsInfo(): Array<{
+    id: string
+    name: string
+    frequency: number
+    note: string
+    orbitalPeriod: number
+    droneFrequency: number
+    audibleFrequency: number
+    isInfrasound: boolean
+  }> {
+    return Array.from(this.celestialBodies.values()).map(body => {
+      const droneFreq = body.frequency / 8
+      let audibleFreq = droneFreq
+      
+      // Calcular frecuencia audible
+      while (audibleFreq < 20 && audibleFreq > 0) {
+        audibleFreq *= 2
+      }
+      
+      return {
+        id: body.id,
+        name: body.name,
+        frequency: body.frequency,
+        note: body.note,
+        orbitalPeriod: body.orbitalPeriod,
+        droneFrequency: droneFreq,
+        audibleFrequency: audibleFreq,
+        isInfrasound: droneFreq < 20
+      }
+    })
   }
   
   /**

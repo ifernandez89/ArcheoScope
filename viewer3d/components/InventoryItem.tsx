@@ -21,7 +21,7 @@ function RotatingModel({ modelPath, scale = 1 }: { modelPath: string, scale?: nu
   // Configuración específica por modelo — evita problemas de bounding box
   const config = useMemo(() => {
     if (modelPath.includes('escab'))         return { sc: 8,    rx: Math.PI/2, ry: 0,          rz: Math.PI,  cy: 0 }
-    if (modelPath.includes('tonatiuh'))      return { sc: 0.015, rx: -Math.PI/6, ry: Math.PI/4, rz: 0,        cy: 0 }
+    if (modelPath.includes('tonatiuh'))      return { sc: 0.8,  rx: 0,         ry: 0,          rz: 0,        cy: 0 }
     if (modelPath.includes('magna_bowl'))    return { sc: 1.2,  rx: 0,         ry: 0,          rz: 0,        cy: 0 }
     if (modelPath.includes('crystal-skull')) return { sc: 1.0,  rx: 0,         ry: 0,          rz: 0,        cy: 0 }
     if (modelPath.includes('maiz'))          return { sc: 0.8,  rx: 0,         ry: 0,          rz: 0,        cy: 0 }

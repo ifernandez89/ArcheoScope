@@ -6,6 +6,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
 import { getDeathWhistle } from '@/systems/DeathWhistleAudio'
+import DroppableItem from './DroppableItem'
 
 interface MictlanSceneProps {
   avatarPositionRef?: React.RefObject<THREE.Vector3>
@@ -16,13 +17,21 @@ interface MictlanSceneProps {
   tonatiuhOnGround?: boolean
   tonatiuhDropPosition?: {x: number, z: number} | null
   onTonatiuhCollect?: () => void
-  onTonatiuhDrop?: () => void
 }
 
 export default function MictlanScene({ avatarPositionRef, onExit, currentUfo, abilityActive, tonatiuhInInventory, tonatiuhOnGround, tonatiuhDropPosition, onTonatiuhCollect }: MictlanSceneProps) {
   return (
     <Suspense fallback={<LoadingMictlan />}>
-      <MictlanSceneContent avatarPositionRef={avatarPositionRef} onExit={onExit} currentUfo={currentUfo} abilityActive={abilityActive} tonatiuhInInventory={tonatiuhInInventory} tonatiuhOnGround={tonatiuhOnGround} tonatiuhDropPosition={tonatiuhDropPosition} onTonatiuhCollect={onTonatiuhCollect} />
+      <MictlanSceneContent 
+        avatarPositionRef={avatarPositionRef} 
+        onExit={onExit} 
+        currentUfo={currentUfo} 
+        abilityActive={abilityActive} 
+        tonatiuhInInventory={tonatiuhInInventory} 
+        tonatiuhOnGround={tonatiuhOnGround} 
+        tonatiuhDropPosition={tonatiuhDropPosition} 
+        onTonatiuhCollect={onTonatiuhCollect}
+      />
     </Suspense>
   )
 }
@@ -41,6 +50,7 @@ function MictlanSceneContent({ avatarPositionRef, onExit, currentUfo, abilityAct
       const h = getHarmoniaMundi()
       if (h.isEnabled()) h.activateArchitecture('veracruz')
     })
+    
     return () => {
       import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
         getHarmoniaMundi().deactivateArchitecture('veracruz')
@@ -93,6 +103,7 @@ function MictlanSceneContent({ avatarPositionRef, onExit, currentUfo, abilityAct
       // A la 10ª aparición → redirigir a Isla de Pascua
       if (appearanceCountRef.current >= 10 && !exitTriggeredRef.current && onExit) {
         exitTriggeredRef.current = true
+        console.log('💀 ¡10 apariciones completadas! Liberando al jugador del Mictlán...')
         setTimeout(() => onExit(), 2000) // pequeño delay tras el último flash
       }
 
@@ -142,6 +153,23 @@ function MictlanSceneContent({ avatarPositionRef, onExit, currentUfo, abilityAct
 
   return (
     <group>
+      {/* Niebla del inframundo - densa desde la cámara */}
+      <fogExp2 attach="fog" args={['#1a0505', 0.06]} />
+
+      {/* Niebla volumétrica al nivel del piso — capas de planos semitransparentes */}
+      {[0.05, 0.3, 0.6, 1.0, 1.5].map((y, i) => (
+        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, y, 0]} renderOrder={i}>
+          <planeGeometry args={[200, 200]} />
+          <meshBasicMaterial
+            color="#1a0505"
+            transparent
+            opacity={0.18 - i * 0.03}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ))}
+      
       {/* Mictlantecuhtli - solo visible durante relámpagos */}
       <group
         ref={groupRef}
@@ -187,12 +215,15 @@ function MictlanSceneContent({ avatarPositionRef, onExit, currentUfo, abilityAct
       <ambientLight intensity={0.04} color="#220000" />
 
       {/* 🌞 Tonatiuh — visible SOLO cuando Mictlantecuhtli no está visible Y Phantom activo */}
-      {!isVisible && currentUfo === 1 && abilityActive && !tonatiuhInInventory && (
-        <TonatiuhItem
-          position={tonatiuhOnGround && tonatiuhDropPosition
-            ? [tonatiuhDropPosition.x, 0, tonatiuhDropPosition.z]
-            : [0, 0, 0]}
+      {!isVisible && currentUfo === 1 && abilityActive && !tonatiuhInInventory && tonatiuhOnGround && tonatiuhDropPosition && (
+        <DroppableItem
+          modelPath="/tonatiuh_aztec_sun.glb"
+          position={[tonatiuhDropPosition.x, 0, tonatiuhDropPosition.z]}
           onCollect={onTonatiuhCollect}
+          scale={1.5}
+          floatHeight={1.5}
+          glowColor="#ffaa00"
+          itemName="Tonatiuh"
         />
       )}
     </group>
@@ -212,79 +243,5 @@ function LoadingMictlan() {
         <div>Entrando al Mictlán...</div>
       </div>
     </Html>
-  )
-}
-
-// ─── TONATIUH ITEM ────────────────────────────────────────────────────────────
-// Figurilla de Tonatiuh girando — solo visible con Phantom activo y sin Mictlantecuhtli
-function TonatiuhItem({ position, onCollect }: {
-  position: [number, number, number]
-  onCollect?: () => void
-}) {
-  const { scene } = useGLTF(getAssetPath('/tonatiuh_aztec_sun.glb'))
-  const groupRef = useRef<THREE.Group>(null)
-  const [hovered, setHovered] = useState(false)
-  const [collecting, setCollecting] = useState(false)
-  const collectTimerRef = useRef(0)
-
-  // Calcular Y correcto sobre el piso
-  const { scale, yOffset } = useMemo(() => {
-    const box = new THREE.Box3().setFromObject(scene)
-    const size = box.getSize(new THREE.Vector3())
-    const sc = 1.5 / size.y  // 1.5m de alto
-    const yo = -box.min.y * sc
-    return { scale: sc, yOffset: yo }
-  }, [scene])
-
-  // Clonar para independencia
-  const cloned = useMemo(() => scene.clone(true), [scene])
-
-  useFrame(({ clock }, delta) => {
-    if (!groupRef.current) return
-    // Rotación continua
-    groupRef.current.rotation.y = clock.elapsedTime * 1.2
-
-    // Animación de recolección (escala + fade)
-    if (collecting) {
-      collectTimerRef.current += delta
-      const progress = Math.min(collectTimerRef.current / 0.8, 1)
-      groupRef.current.scale.setScalar(scale * (1 + progress * 0.5))
-      cloned.traverse((child) => {
-        if ((child as THREE.Mesh).isMesh) {
-          const mat = (child as THREE.Mesh).material as THREE.MeshStandardMaterial
-          if (mat) { mat.transparent = true; mat.opacity = 1 - progress }
-        }
-      })
-      if (progress >= 1 && onCollect) onCollect()
-    }
-  })
-
-  const handleClick = (e: any) => {
-    if (collecting) return
-    e.stopPropagation()
-    setCollecting(true)
-    console.log('🌞 Tonatiuh recogido!')
-  }
-
-  return (
-    <group
-      ref={groupRef}
-      position={[position[0], position[1] + yOffset, position[2]]}
-      scale={scale}
-      onClick={handleClick}
-      onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer' }}
-      onPointerOut={() => { setHovered(false); document.body.style.cursor = 'default' }}
-    >
-      <primitive object={cloned} />
-      {/* Glow dorado */}
-      <pointLight color="#ffaa00" intensity={hovered ? 3 : 1.5} distance={8} />
-      {/* Outline hover */}
-      {hovered && (
-        <mesh>
-          <sphereGeometry args={[0.8, 16, 16]} />
-          <meshBasicMaterial color="#ffaa00" wireframe transparent opacity={0.3} />
-        </mesh>
-      )}
-    </group>
   )
 }

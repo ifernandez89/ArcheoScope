@@ -14,6 +14,7 @@ import EnergySphere from './EnergySphere'
 import CropCircle, { CropCirclePortal } from './CropCircle'
 import Geoglyph from './Geoglyph'
 import { isMissionCompleted } from '@/types/missionState'
+import DroppableItem from './DroppableItem'
 
 /**
  * Escena de Isla de Pascua (Rapa Nui)
@@ -112,9 +113,17 @@ interface EasterIslandSceneProps {
   currentUfo?: number
   abilityActive?: boolean
   onObeliskActivate?: () => void
+  tonatiuhInInventory?: boolean
+  tonatiuhOnGround?: boolean
+  tonatiuhDropPosition?: {x: number, z: number} | null
+  onTonatiuhCollect?: () => void
+  magnaBowlLentInInventory?: boolean
+  magnaBowlOnGround?: boolean
+  magnaBowlDropPosition?: {x: number, z: number} | null
+  onMagnaBowlCollect?: () => void
 }
 
-export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate, onTriggerEruption, skullInInventory, showSkull, skullDropPosition, onSkullCollect, merkabaMissionDone, onShipChange, currentUfo, abilityActive, onObeliskActivate }: EasterIslandSceneProps) {
+export default function EasterIslandScene({ avatarPositionRef, volcanicEruption, onEruptionEnd, showJadeMask, jadeMaskCollected, onJadeMaskCollect, onMerkabaActivate, onTriggerEruption, skullInInventory, showSkull, skullDropPosition, onSkullCollect, merkabaMissionDone, onShipChange, currentUfo, abilityActive, onObeliskActivate, tonatiuhInInventory, tonatiuhOnGround, tonatiuhDropPosition, onTonatiuhCollect, magnaBowlLentInInventory, magnaBowlOnGround, magnaBowlDropPosition, onMagnaBowlCollect }: EasterIslandSceneProps) {
   return (
     <Suspense fallback={<LoadingEasterIsland />}>
       <EasterIslandSceneContent 
@@ -135,6 +144,14 @@ export default function EasterIslandScene({ avatarPositionRef, volcanicEruption,
         currentUfo={currentUfo}
         abilityActive={abilityActive}
         onObeliskActivate={onObeliskActivate}
+        tonatiuhInInventory={tonatiuhInInventory}
+        tonatiuhOnGround={tonatiuhOnGround}
+        tonatiuhDropPosition={tonatiuhDropPosition}
+        onTonatiuhCollect={onTonatiuhCollect}
+        magnaBowlLentInInventory={magnaBowlLentInInventory}
+        magnaBowlOnGround={magnaBowlOnGround}
+        magnaBowlDropPosition={magnaBowlDropPosition}
+        onMagnaBowlCollect={onMagnaBowlCollect}
       />
     </Suspense>
   )
@@ -157,7 +174,15 @@ function EasterIslandSceneContent({
   onShipChange,
   currentUfo,
   abilityActive,
-  onObeliskActivate
+  onObeliskActivate,
+  tonatiuhInInventory,
+  tonatiuhOnGround,
+  tonatiuhDropPosition,
+  onTonatiuhCollect,
+  magnaBowlLentInInventory,
+  magnaBowlOnGround,
+  magnaBowlDropPosition,
+  onMagnaBowlCollect
 }: EasterIslandSceneProps) {
   const moaiModel = useGLTF(getAssetPath('/moai.glb'))
   const atlanteModel = useGLTF(getAssetPath('/atlante.glb'))
@@ -461,6 +486,32 @@ function EasterIslandSceneContent({
           </mesh>
           <pointLight color="#ff00ff" intensity={2} distance={10} />
         </group>
+      )}
+
+      {/* 🌞 Tonatiuh soltado en el suelo */}
+      {!tonatiuhInInventory && tonatiuhOnGround && tonatiuhDropPosition && (
+        <DroppableItem
+          modelPath="/tonatiuh_aztec_sun.glb"
+          position={[tonatiuhDropPosition.x, 0, tonatiuhDropPosition.z]}
+          onCollect={onTonatiuhCollect}
+          scale={1.5}
+          floatHeight={1.5}
+          glowColor="#ffaa00"
+          itemName="Tonatiuh"
+        />
+      )}
+
+      {/* 🏺 Fuente Magna prestada — soltada en el suelo */}
+      {!magnaBowlLentInInventory && magnaBowlOnGround && magnaBowlDropPosition && (
+        <DroppableItem
+          modelPath="/magna_bowl.glb"
+          position={[magnaBowlDropPosition.x, 0, magnaBowlDropPosition.z]}
+          onCollect={onMagnaBowlCollect}
+          scale={1.5}
+          floatHeight={1.5}
+          glowColor="#4488ff"
+          itemName="Fuente Magna"
+        />
       )}
 
       <ambientLight intensity={0.5} />

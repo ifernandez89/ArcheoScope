@@ -5,9 +5,10 @@ import { useState } from 'react'
 interface CoordinateInputProps {
   onCoordinateSubmit: (lat: number, lon: number) => void
   currentLocation?: { lat: number, lon: number } | null
+  disabled?: boolean
 }
 
-export default function CoordinateInput({ onCoordinateSubmit, currentLocation }: CoordinateInputProps) {
+export default function CoordinateInput({ onCoordinateSubmit, currentLocation, disabled = false }: CoordinateInputProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [lat, setLat] = useState(currentLocation?.lat.toFixed(4) || '')
   const [lon, setLon] = useState(currentLocation?.lon.toFixed(4) || '')
@@ -44,37 +45,38 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation }:
     { lat: 18.4667, lon: -95.4500, category: 'famous' },
     { lat: -27.1254, lon: -109.2778, category: 'famous' },
     { lat: -75.2509, lon: 0.0714, category: 'famous' },
-    { lat: 8.7783, lon: -144.8885, category: 'famous' },
   ]
 
   return (
     <>
-      {/* Botón para abrir panel */}
+      {/* Botón para abrir panel - DESHABILITADO si está atrapado */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        disabled={disabled}
         style={{
           position: 'fixed',
           top: '20px',
           right: '20px',
           zIndex: 1001,
           padding: '12px 20px',
-          background: 'rgba(102, 126, 234, 0.9)',
+          background: disabled ? 'rgba(60, 60, 60, 0.5)' : 'rgba(102, 126, 234, 0.9)',
           border: '1px solid rgba(255,255,255,0.3)',
           borderRadius: '8px',
-          color: 'white',
+          color: disabled ? 'rgba(255,255,255,0.3)' : 'white',
           fontSize: '14px',
           fontWeight: 'bold',
-          cursor: 'pointer',
+          cursor: disabled ? 'not-allowed' : 'pointer',
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
           transition: 'all 0.2s',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          opacity: disabled ? 0.5 : 1
         }}
-        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(102, 126, 234, 1)'}
-        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(102, 126, 234, 0.9)'}
+        onMouseEnter={(e) => !disabled && (e.currentTarget.style.background = 'rgba(102, 126, 234, 1)')}
+        onMouseLeave={(e) => !disabled && (e.currentTarget.style.background = 'rgba(102, 126, 234, 0.9)')}
       >
-        Coordenadas
+        {disabled ? '🔒 Bloqueado' : 'Coordenadas'}
       </button>
 
       {/* Panel de coordenadas */}
