@@ -80,7 +80,8 @@ export default function HelpPanel() {
             background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
+            backgroundClip: 'text',
+            fontFamily: 'Archeoscope, serif'
           }}>
             🎮 Guía de Controles
           </h2>
@@ -89,19 +90,20 @@ export default function HelpPanel() {
             display: 'flex',
             flexDirection: 'column',
             gap: '16px',
-            fontSize: '14px',
+            fontSize: '17px',
             color: '#ccc'
           }}>
             {/* Navegación */}
             <section>
               <h3 style={{
-                fontSize: '14px',
+                fontSize: '17px',
                 fontWeight: 'bold',
                 color: '#8b5cf6',
                 marginBottom: '8px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                fontFamily: 'Archeoscope, serif'
               }}>
                 <span>🧭</span> Navegación
               </h3>
@@ -124,13 +126,14 @@ export default function HelpPanel() {
             {/* Interacción */}
             <section>
               <h3 style={{
-                fontSize: '14px',
+                fontSize: '17px',
                 fontWeight: 'bold',
                 color: '#ec4899',
                 marginBottom: '8px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                fontFamily: 'Archeoscope, serif'
               }}>
                 <span>🖱️</span> Interacción
               </h3>
@@ -149,13 +152,14 @@ export default function HelpPanel() {
             {/* Atajos de teclado */}
             <section>
               <h3 style={{
-                fontSize: '14px',
+                fontSize: '17px',
                 fontWeight: 'bold',
                 color: '#3b82f6',
                 marginBottom: '8px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                fontFamily: 'Archeoscope, serif'
               }}>
                 <span>⌨️</span> Controles de Movimiento
               </h3>
@@ -182,13 +186,14 @@ export default function HelpPanel() {
             {/* Features */}
             <section>
               <h3 style={{
-                fontSize: '14px',
+                fontSize: '17px',
                 fontWeight: 'bold',
                 color: '#10b981',
                 marginBottom: '8px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                fontFamily: 'Archeoscope, serif'
               }}>
                 <span>✨</span> Features
               </h3>
@@ -214,13 +219,14 @@ export default function HelpPanel() {
               borderTop: '1px solid rgba(255, 255, 255, 0.1)'
             }}>
               <h3 style={{
-                fontSize: '14px',
+                fontSize: '17px',
                 fontWeight: 'bold',
                 color: '#f59e0b',
                 marginBottom: '8px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                fontFamily: 'Archeoscope, serif'
               }}>
                 <span>📚</span> Documentación
               </h3>

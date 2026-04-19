@@ -1,3 +1,0 @@
-# ArcheoScope Performance Logs
-# This file will be updated automatically
-# Session will start when you load the game

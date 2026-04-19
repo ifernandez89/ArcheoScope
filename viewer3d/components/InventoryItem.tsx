@@ -17,31 +17,24 @@ interface InventoryItemProps {
 function RotatingModel({ modelPath, scale = 1 }: { modelPath: string, scale?: number }) {
   const { scene } = useGLTF(getAssetPath(modelPath))
   const groupRef = useRef<THREE.Group>(null)
-
-  // Configuración específica por modelo — evita problemas de bounding box
-  const config = useMemo(() => {
-    if (modelPath.includes('escab'))         return { sc: 8,    rx: Math.PI/2, ry: 0,          rz: Math.PI,  cy: 0 }
-    if (modelPath.includes('tonatiuh'))      return { sc: 0.8,  rx: 0,         ry: 0,          rz: 0,        cy: 0 }
-    if (modelPath.includes('magna_bowl'))    return { sc: 1.2,  rx: 0,         ry: 0,          rz: 0,        cy: 0 }
-    if (modelPath.includes('crystal-skull')) return { sc: 1.0,  rx: 0,         ry: 0,          rz: 0,        cy: 0 }
-    if (modelPath.includes('maiz'))          return { sc: 0.8,  rx: 0,         ry: 0,          rz: 0,        cy: 0 }
-    if (modelPath.includes('rock_blender'))  return { sc: 3.0,  rx: 0,         ry: 0,          rz: 0,        cy: 0 }
-    // Fallback: auto-scale desde bounding box
-    const box = new THREE.Box3().setFromObject(scene)
-    const size = box.getSize(new THREE.Vector3())
-    const maxDim = Math.max(size.x, size.y, size.z)
-    return { sc: maxDim > 0 ? 1.8 / maxDim : 1, rx: 0, ry: 0, rz: 0, cy: 0 }
-  }, [scene, modelPath])
-
   const clonedScene = useMemo(() => scene.clone(true), [scene])
+
+  // Configuración por modelo basada en dimensiones reales inspeccionadas
+  // escab:      bbox ~1x0.95x0.14 — acostado, necesita rotación
+  // magna_bowl: bbox ~1x0.22x0.84 — ya centrado
+  // tonatiuh:   auto
+  // crystal-skull: auto
+  const isEscab = modelPath.includes('escab')
+  const rx = isEscab ? Math.PI / 2 : 0
+  const rz = isEscab ? Math.PI : 0
 
   useFrame((_, delta) => {
     if (groupRef.current) groupRef.current.rotation.y += delta * 1.5
   })
 
   return (
-    <group ref={groupRef} rotation={[config.rx, config.ry, config.rz]}>
-      <primitive object={clonedScene} scale={scale * config.sc} />
+    <group ref={groupRef} rotation={[rx, 0, rz]} scale={scale}>
+      <primitive object={clonedScene} />
     </group>
   )
 }
@@ -78,7 +71,7 @@ export default function InventoryItem({ modelPath, itemName, onDrop, show, dropD
     >
       <Canvas
         key={modelPath}
-        camera={{ position: [0, 0.5, 3], fov: 50 }}
+        camera={{ position: [0, 0, 2.5], fov: 45 }}
         style={{ background: 'transparent' }}
       >
         <ambientLight intensity={2.5} />

@@ -3,6 +3,7 @@
 import { Suspense, useMemo, useRef, useState, useEffect } from 'react'
 import { useGLTF, Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
+import { useRouter } from 'next/navigation'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
 import CropCircle from './CropCircle'
@@ -58,6 +59,8 @@ function GobekliTepeContent({
 }: GobekliTepeSceneProps) {
   const { scene } = useGLTF(getAssetPath('/gobekli_tepe.glb'))
   const lightRef = useRef<THREE.PointLight>(null)
+  const router = useRouter()
+  const [showMessage, setShowMessage] = useState(false)
 
   const { scale, yOffset } = useMemo(() => {
     const box = new THREE.Box3().setFromObject(scene)
@@ -114,7 +117,7 @@ function GobekliTepeContent({
     }
   }, [])
 
-  // Cuando los 4 altares se activan → desbloquear capa 6 + sonido del escarabajo
+  // Cuando los 4 altares se activan → secuencia final
   useEffect(() => {
     if (!allActivated) return
     import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
@@ -124,6 +127,16 @@ function GobekliTepeContent({
       harmonia.playBeetleSound()
       console.log('🪲 Göbekli Tepe completado — Khepri despierta!')
     })
+    // Mostrar mensaje a los 3 segundos (cuando la esfera ya está visible)
+    const msgTimer = setTimeout(() => setShowMessage(true), 3000)
+    // Redirigir a créditos a los 13 segundos (animación ~11s + margen)
+    const redirectTimer = setTimeout(() => {
+      router.push('/menu/info?credits=true')
+    }, 13000)
+    return () => {
+      clearTimeout(msgTimer)
+      clearTimeout(redirectTimer)
+    }
   }, [allActivated])
 
   return (
@@ -141,9 +154,9 @@ function GobekliTepeContent({
         <primitive object={cloned} scale={scale} />
       </group>
 
-      {/* Esfera toroidal — aparece al completar los 4 altares */}
+      {/* Esfera toroidal — emerge del piso al completar los 4 altares */}
       <ToroidalSphere
-        position={[0, yOffset + 12, 0]}
+        position={[0, 0, 0]}
         size={10}
         visible={allActivated}
       />
@@ -173,6 +186,45 @@ function GobekliTepeContent({
         scale={2}
         visible={allActivated}
       />
+
+      {/* Mensaje final — overlay HTML centrado */}
+      {showMessage && (
+        <Html center zIndexRange={[100, 0]}>
+          <div style={{
+            textAlign: 'center',
+            animation: 'fadeInMsg 2s ease forwards',
+            pointerEvents: 'none',
+          }}>
+            <p style={{
+              fontSize: '42px',
+              fontFamily: 'Archeoscope, serif',
+              color: '#ffffff',
+              letterSpacing: '6px',
+              textTransform: 'uppercase',
+              textShadow: '0 0 30px #44aaff, 0 0 60px #44aaff',
+              margin: 0,
+            }}>
+              Archeoscope
+            </p>
+            <p style={{
+              fontSize: '28px',
+              fontFamily: 'Archeoscope, serif',
+              color: '#88ccff',
+              letterSpacing: '4px',
+              textShadow: '0 0 20px #44aaff',
+              marginTop: '12px',
+            }}>
+              Regresará...
+            </p>
+            <style>{`
+              @keyframes fadeInMsg {
+                from { opacity: 0; transform: scale(0.8); }
+                to   { opacity: 1; transform: scale(1); }
+              }
+            `}</style>
+          </div>
+        </Html>
+      )}
 
       {/* ─── ITEMS SOLTADOS EN EL SUELO ─────────────────────────────── */}
       {/* Si caen sobre su altar → flotan a 2.5m; si no → 1.5m */}

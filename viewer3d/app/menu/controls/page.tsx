@@ -43,7 +43,8 @@ export default function ControlsPage() {
       <h1 style={{
         fontSize: '48px',
         marginBottom: '40px',
-        letterSpacing: '4px'
+        letterSpacing: '4px',
+        fontFamily: 'Archeoscope, serif'
       }}>
         CONTROLES
       </h1>
@@ -69,11 +70,12 @@ export default function ControlsPage() {
             color: '#8b5cf6',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px'
+            gap: '10px',
+            fontFamily: 'Archeoscope, serif'
           }}>
             <span>🧭</span> Navegación
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '19px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#888' }}>Click Izq + Arrastrar</span>
               <span>Rotar</span>
@@ -102,11 +104,12 @@ export default function ControlsPage() {
             color: '#ec4899',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px'
+            gap: '10px',
+            fontFamily: 'Archeoscope, serif'
           }}>
             <span>🖱️</span> Interacción
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '19px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#888' }}>Click en Modelo</span>
               <span>Toggle Auto-Rotación</span>
@@ -132,10 +135,10 @@ export default function ControlsPage() {
           padding: '20px', borderRadius: '8px',
           border: '1px solid rgba(102, 126, 234, 0.3)'
         }}>
-          <h2 style={{ fontSize: '20px', marginBottom: '15px', color: '#a78bfa', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h2 style={{ fontSize: '20px', marginBottom: '15px', color: '#a78bfa', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'Archeoscope, serif' }}>
             <span>🎮</span> Cómo Jugar
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '15px', lineHeight: '1.6' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '18px', lineHeight: '1.6' }}>
             <p style={{ color: '#ccc', margin: 0 }}>🌍 Explora el globo terráqueo y viaja a sitios arqueológicos.</p>
             <p style={{ color: '#ccc', margin: 0 }}>🗿 Interactúa con los NPCs haciendo <strong style={{color:'#fff'}}>click</strong> sobre ellos.</p>
             <p style={{ color: '#ccc', margin: 0 }}>📦 Recoge objetos sagrados y complétalos misiones en cada sitio.</p>
@@ -157,11 +160,12 @@ export default function ControlsPage() {
             color: '#3b82f6',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px'
+            gap: '10px',
+            fontFamily: 'Archeoscope, serif'
           }}>
             <span>⌨️</span> Controles de Movimiento
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '19px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#888' }}>W / S</span>
               <span>Adelante / Atrás</span>
@@ -202,7 +206,8 @@ export default function ControlsPage() {
             color: '#10b981',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px'
+            gap: '10px',
+            fontFamily: 'Archeoscope, serif'
           }}>
             <span>✨</span> Features del Motor
           </h2>
@@ -212,7 +217,7 @@ export default function ControlsPage() {
             display: 'flex',
             flexDirection: 'column',
             gap: '6px',
-            fontSize: '16px'
+            fontSize: '19px'
           }}>
             <li>Core Engine Profesional</li>
             <li>Iluminación Dinámica</li>
@@ -236,7 +241,8 @@ export default function ControlsPage() {
             color: '#f59e0b',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px'
+            gap: '10px',
+            fontFamily: 'Archeoscope, serif'
           }}>
             <span>⚙️</span> Configuración
           </h2>
@@ -247,7 +253,7 @@ export default function ControlsPage() {
             gap: '15px'
           }}>
             <label style={{
-              fontSize: '16px',
+              fontSize: '19px',
               letterSpacing: '1px'
             }}>
               Sensibilidad del Mouse: {mouseSensitivity.toFixed(1)}x
@@ -285,7 +291,7 @@ export default function ControlsPage() {
                   cursor: 'pointer'
                 }}
               />
-              <label style={{ fontSize: '16px' }}>
+              <label style={{ fontSize: '19px' }}>
                 Invertir Eje Y
               </label>
             </div>

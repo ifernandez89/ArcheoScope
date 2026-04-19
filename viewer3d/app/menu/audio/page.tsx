@@ -53,7 +53,7 @@ export default function AudioPage() {
       alignItems: 'center', justifyContent: 'center',
       background: '#000', color: '#fff'
     }}>
-      <h1 style={{ fontSize: '48px', marginBottom: '60px', letterSpacing: '4px' }}>
+      <h1 style={{ fontSize: '48px', marginBottom: '60px', letterSpacing: '4px', fontFamily: 'Archeoscope, serif' }}>
         AUDIO
       </h1>
 
@@ -69,7 +69,7 @@ export default function AudioPage() {
             onChange={(e) => setMasterVolume(parseInt(e.target.value))}
             style={sliderStyle(masterVolume, '#4a9eff') as React.CSSProperties}
           />
-          <span style={{ fontSize: '13px', color: '#888' }}>
+          <span style={{ fontSize: '16px', color: '#888' }}>
             Controla el clima, lluvia, viento y efectos de sonido
           </span>
         </div>
@@ -87,7 +87,7 @@ export default function AudioPage() {
             onChange={(e) => setHarmoniaVolume(parseInt(e.target.value))}
             style={sliderStyle(harmoniaVolume, '#FFD700') as React.CSSProperties}
           />
-          <span style={{ fontSize: '13px', color: '#888' }}>
+          <span style={{ fontSize: '16px', color: '#888' }}>
             Música cósmica procedural — se despierta con cada misión completada
           </span>
         </div>

@@ -14,12 +14,10 @@ interface MictlanSceneProps {
   currentUfo?: number
   abilityActive?: boolean
   tonatiuhInInventory?: boolean
-  tonatiuhOnGround?: boolean
-  tonatiuhDropPosition?: {x: number, z: number} | null
   onTonatiuhCollect?: () => void
 }
 
-export default function MictlanScene({ avatarPositionRef, onExit, currentUfo, abilityActive, tonatiuhInInventory, tonatiuhOnGround, tonatiuhDropPosition, onTonatiuhCollect }: MictlanSceneProps) {
+export default function MictlanScene({ avatarPositionRef, onExit, currentUfo, abilityActive, tonatiuhInInventory, onTonatiuhCollect }: MictlanSceneProps) {
   return (
     <Suspense fallback={<LoadingMictlan />}>
       <MictlanSceneContent 
@@ -28,15 +26,13 @@ export default function MictlanScene({ avatarPositionRef, onExit, currentUfo, ab
         currentUfo={currentUfo} 
         abilityActive={abilityActive} 
         tonatiuhInInventory={tonatiuhInInventory} 
-        tonatiuhOnGround={tonatiuhOnGround} 
-        tonatiuhDropPosition={tonatiuhDropPosition} 
         onTonatiuhCollect={onTonatiuhCollect}
       />
     </Suspense>
   )
 }
 
-function MictlanSceneContent({ avatarPositionRef, onExit, currentUfo, abilityActive, tonatiuhInInventory, tonatiuhOnGround, tonatiuhDropPosition, onTonatiuhCollect }: MictlanSceneProps) {
+function MictlanSceneContent({ avatarPositionRef, onExit, currentUfo, abilityActive, tonatiuhInInventory, onTonatiuhCollect }: MictlanSceneProps) {
   const model = useGLTF(getAssetPath('/mictlantecuhtli.glb'))
   const groupRef = useRef<THREE.Group>(null)
   const flashLightRef = useRef<THREE.PointLight>(null)
@@ -215,10 +211,10 @@ function MictlanSceneContent({ avatarPositionRef, onExit, currentUfo, abilityAct
       <ambientLight intensity={0.04} color="#220000" />
 
       {/* 🌞 Tonatiuh — visible SOLO cuando Mictlantecuhtli no está visible Y Phantom activo */}
-      {!isVisible && currentUfo === 1 && abilityActive && !tonatiuhInInventory && tonatiuhOnGround && tonatiuhDropPosition && (
+      {!isVisible && currentUfo === 1 && abilityActive && !tonatiuhInInventory && (
         <DroppableItem
           modelPath="/tonatiuh_aztec_sun.glb"
-          position={[tonatiuhDropPosition.x, 0, tonatiuhDropPosition.z]}
+          position={[3, 0, -4]}
           onCollect={onTonatiuhCollect}
           scale={1.5}
           floatHeight={1.5}

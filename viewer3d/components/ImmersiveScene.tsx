@@ -488,27 +488,52 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [pyramidionOnTop, setPyramidionOnTop] = useState(false) // Si el piramidón está en la punta
   const [scarabDiscovered, setScarabDiscovered] = useState(false) // Si se movió la momia
   const [scarabCollected, setScarabCollected] = useState(false) // Si se recogió el escarabajo (para erupción/lógica)
-  const [scarabInInventory, setScarabInInventory] = useState(false) // Si está físicamente en el inventario
+  const [scarabInInventory, setScarabInInventory] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('inv_scarab') === 'true'
+    return false
+  })
   const [scarabOnGround, setScarabOnGround] = useState(false) // Para soltar/recoger
   const [scarabDropPosition, setScarabDropPosition] = useState<{ x: number, z: number } | null>(null)
 
-  const [skullInInventory, setSkullInInventory] = useState(false)
+  const [skullInInventory, setSkullInInventory] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('inv_skull') === 'true'
+    return false
+  })
   const [skullOnGround, setSkullOnGround] = useState(false)
   const [skullDropPosition, setSkullDropPosition] = useState<{ x: number, z: number } | null>(null)
 
   // 🌞 Tonatiuh — figurilla oculta en el Mictlán
-  const [tonatiuhInInventory, setTonatiuhInInventory] = useState(false)
+  const [tonatiuhInInventory, setTonatiuhInInventory] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('inv_tonatiuh') === 'true'
+    return false
+  })
   const [tonatiuhOnGround, setTonatiuhOnGround] = useState(false)
   const [tonatiuhDropPosition, setTonatiuhDropPosition] = useState<{ x: number, z: number } | null>(null)
   // 🪨 Roca — recolectable del entorno, solo una a la vez
-  const [rockInInventory, setRockInInventory] = useState(false)
+  const [rockInInventory, setRockInInventory] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('inv_rock') === 'true'
+    return false
+  })
   const [rockOnGround, setRockOnGround] = useState(false)
   const [rockDropPosition, setRockDropPosition] = useState<{ x: number, z: number } | null>(null)
 
   // 🏺 Fuente Magna prestada por Viracocha
-  const [magnaBowlLentInInventory, setMagnaBowlLentInInventory] = useState(false)
+  const [magnaBowlLentInInventory, setMagnaBowlLentInInventory] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('inv_magna_bowl') === 'true'
+    return false
+  })
   const [magnaBowlOnGround, setMagnaBowlOnGround] = useState(false)
   const [magnaBowlDropPosition, setMagnaBowlDropPosition] = useState<{ x: number, z: number } | null>(null)
+
+  // 💾 Persistir inventario en localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    localStorage.setItem('inv_scarab', String(scarabInInventory))
+    localStorage.setItem('inv_skull', String(skullInInventory))
+    localStorage.setItem('inv_tonatiuh', String(tonatiuhInInventory))
+    localStorage.setItem('inv_rock', String(rockInInventory))
+    localStorage.setItem('inv_magna_bowl', String(magnaBowlLentInInventory))
+  }, [scarabInInventory, skullInInventory, tonatiuhInInventory, rockInInventory, magnaBowlLentInInventory])
 
   // 🛸 Estado de habilidades de nave
   const [abilityActive, setAbilityActive] = useState(false)
@@ -521,13 +546,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [mictlanCompleted, setMictlanCompleted] = useState(false)
   const trappedInMictlan = isMictlanLocation && !mictlanCompleted
 
-  // 🌞 Spawn automático de Tonatiuh al entrar al Mictlán
-  useEffect(() => {
-    if (isMictlanLocation && !tonatiuhInInventory && !tonatiuhOnGround) {
-      setTonatiuhDropPosition({ x: 3, z: -4 })
-      setTonatiuhOnGround(true)
-    }
-  }, [isMictlanLocation])
   const [isShaking, setIsShaking] = useState(false)
   const [scannedEntity, setScannedEntity] = useState<{ name: string, desc: string } | null>(null)
 
@@ -1598,6 +1616,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           pyramidionOnTop={pyramidionOnTop}
           onMummyMoved={handleMummyMoved}
           onScarabCollect={handleCollectScarab}
+          onScarabPickup={() => { setScarabInInventory(true); setScarabOnGround(false) }}
           scarabDiscovered={scarabDiscovered}
           scarabCollected={scarabCollected}
           scarabInInventory={scarabInInventory}
@@ -1946,6 +1965,7 @@ function ModelScene({
   pyramidionOnTop,
   onMummyMoved,
   onScarabCollect,
+  onScarabPickup,
   scarabDiscovered,
   scarabCollected,
   onQuetzalcoatlClick,
@@ -2044,6 +2064,7 @@ function ModelScene({
   pyramidionOnTop?: boolean
   onMummyMoved?: () => void
   onScarabCollect?: () => void
+  onScarabPickup?: () => void
   scarabDiscovered?: boolean
   scarabCollected?: boolean
   onQuetzalcoatlClick?: () => void
@@ -2333,6 +2354,7 @@ function ModelScene({
                 pyramidionOnTop={pyramidionOnTop || false}
                 onMummyMoved={onMummyMoved}
                 onScarabCollect={onScarabCollect}
+                onScarabPickup={onScarabPickup}
                 scarabDiscovered={scarabDiscovered || false}
                 scarabCollected={scarabCollected || false}
                 scarabInInventory={scarabInInventory}
@@ -2429,8 +2451,6 @@ function ModelScene({
                 currentUfo={currentUfo}
                 abilityActive={abilityActive}
                 tonatiuhInInventory={tonatiuhInInventory}
-                tonatiuhOnGround={tonatiuhOnGround}
-                tonatiuhDropPosition={tonatiuhDropPosition}
                 onTonatiuhCollect={onTonatiuhCollect}
               />
             )}

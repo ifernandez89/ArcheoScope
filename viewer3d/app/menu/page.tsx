@@ -54,6 +54,12 @@ export default function MenuPage() {
     // Limpiar sessionStorage
     if (typeof window !== 'undefined') {
       sessionStorage.clear()
+      // Limpiar inventario
+      localStorage.removeItem('inv_scarab')
+      localStorage.removeItem('inv_skull')
+      localStorage.removeItem('inv_tonatiuh')
+      localStorage.removeItem('inv_rock')
+      localStorage.removeItem('inv_magna_bowl')
     }
     
     console.log('✅ Todos los estados reseteados - Comenzando nueva partida')
@@ -67,7 +73,6 @@ export default function MenuPage() {
     { label: 'Nueva', path: null, action: handleNewGame },
     { label: 'Audio', path: '/menu/audio', action: null },
     { label: 'Controles', path: '/menu/controls', action: null },
-    { label: 'Video', path: '/menu/video', action: null },
     { label: 'Información', path: '/menu/info', action: null }
   ]
 

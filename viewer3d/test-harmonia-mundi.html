@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎼 Test Harmonia Mundi - Todos los Planetas</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Courier New', monospace;
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 100%);
+      color: #fff;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+      background: linear-gradient(45deg, #a855f7, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .controls {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    
+    button {
+      background: linear-gradient(45deg, #a855f7, #3b82f6);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 5px;
+      transition: transform 0.2s;
+    }
+    
+    button:hover {
+      transform: scale(1.05);
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .planet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .planet-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      border-radius: 10px;
+      padding: 15px;
+      transition: all 0.3s;
+    }
+    
+    .planet-card:hover {
+      border-color: rgba(168, 85, 247, 0.6);
+      transform: translateY(-5px);
+    }
+    
+    .planet-card.active {
+      border-color: #10b981;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+    }
+    
+    .planet-name {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #a855f7;
+    }
+    
+    .planet-info {
+      font-size: 0.9em;
+      line-height: 1.6;
+    }
+    
+    .freq-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 0;
+      padding: 5px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+    }
+    
+    .freq-label {
+      color: #9ca3af;
+    }
+    
+    .freq-value {
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .freq-base { color: #a855f7; }
+    .freq-drone { color: #3b82f6; }
+    .freq-audible { color: #10b981; }
+    
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 0.75em;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    
+    .badge-infrasound {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+    
+    .badge-audible {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+    
+    .log {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 30px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-size: 0.9em;
+    }
+    
+    .log-entry {
+      margin: 5px 0;
+      padding: 5px;
+      border-left: 3px solid #a855f7;
+      padding-left: 10px;
+    }
+    
+    .status {
+      text-align: center;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+    
+    .status-inactive {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+    
+    .status-active {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎼 Harmonia Mundi - Test Completo</h1>
+    
+    <div class="controls">
+      <h2>🎛️ Controles</h2>
+      <button id="enableBtn" onclick="enableSystem()">🎵 Activar Sistema de Audio</button>
+      <button id="activateAllBtn" onclick="activateAllPlanets()" disabled>🪐 Activar Todos los Planetas</button>
+      <button id="stopBtn" onclick="stopSystem()" disabled>⏹️ Detener Sistema</button>
+      
+      <div style="margin-top: 15px;">
+        <label for="volumeSlider">🔊 Volumen Master: <span id="volumeValue">70%</span></label>
+        <input type="range" id="volumeSlider" min="0" max="100" value="70" 
+               oninput="setVolume(this.value)" style="width: 100%; margin-top: 10px;">
+      </div>
+    </div>
+    
+    <div id="status" class="status status-inactive">
+      ⚠️ Sistema Inactivo - Haz clic en "Activar Sistema de Audio"
+    </div>
+    
+    <div id="planetGrid" class="planet-grid">
+      <!-- Se llenará dinámicamente -->
+    </div>
+    
+    <div class="log">
+      <h3>📋 Log del Sistema</h3>
+      <div id="logContainer"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Simulación del sistema HarmoniaMundi para testing
+    class HarmoniaMundiTest {
+      constructor() {
+        this.context = null
+        this.enabled = false
+        this.oscillators = new Map()
+        this.masterGain = null
+        
+        this.planets = [
+          { id: 'mercury', name: 'Mercurio', frequency: 141.27, note: 'C#', orbitalPeriod: 88, color: '#8C7853' },
+          { id: 'venus', name: 'Venus', frequency: 221.23, note: 'A', orbitalPeriod: 225, color: '#FFC649' },
+          { id: 'earth', name: 'Tierra', frequency: 136.10, note: 'C#', orbitalPeriod: 365.25, color: '#4A90E2' },
+          { id: 'mars', name: 'Marte', frequency: 144.72, note: 'D', orbitalPeriod: 687, color: '#E27B58' },
+          { id: 'jupiter', name: 'Júpiter', frequency: 183.58, note: 'F#', orbitalPeriod: 4333, color: '#D4A574' },
+          { id: 'saturn', name: 'Saturno', frequency: 147.85, note: 'D', orbitalPeriod: 10759, color: '#FAD5A5' },
+          { id: 'uranus', name: 'Urano', frequency: 207.36, note: 'G#', orbitalPeriod: 30687, color: '#4FD0E7' },
+          { id: 'neptune', name: 'Neptuno', frequency: 211.44, note: 'G#', orbitalPeriod: 60190, color: '#4166F5' },
+          { id: 'pluto', name: 'Plutón', frequency: 140.25, note: 'C#', orbitalPeriod: 90560, color: '#A0826D' }
+        ]
+      }
+      
+      async enable() {
+        this.context = new (window.AudioContext || window.webkitAudioContext)()
+        
+        if (this.context.state === 'suspended') {
+          await this.context.resume()
+        }
+        
+        this.masterGain = this.context.createGain()
+        this.masterGain.gain.value = 0.7
+        this.masterGain.connect(this.context.destination)
+        
+        this.enabled = true
+        log('🎼 Sistema Harmonia Mundi habilitado')
+      }
+      
+      activateAllPlanets() {
+        log('🪐 Activando todos los planetas del sistema solar...')
+        
+        this.planets.forEach(planet => {
+          const droneFreq = planet.frequency / 8
+          let audibleFreq = droneFreq
+          
+          // Transponer al rango audible
+          while (audibleFreq < 20) {
+            audibleFreq *= 2
+          }
+          
+          const isInfrasound = droneFreq < 20
+          const octavesTransposed = Math.round(Math.log2(audibleFreq / droneFreq))
+          
+          // Crear oscilador
+          const osc = this.context.createOscillator()
+          const gain = this.context.createGain()
+          
+          osc.type = 'sine'
+          osc.frequency.value = audibleFreq
+          gain.gain.value = 0
+          
+          osc.connect(gain)
+          gain.connect(this.masterGain)
+          osc.start()
+          
+          // Fade in
+          gain.gain.linearRampToValueAtTime(0.08, this.context.currentTime + 3)
+          
+          this.oscillators.set(planet.id, { osc, gain })
+          
+          log(`  🎵 ${planet.name}: ${planet.frequency.toFixed(2)} Hz → ${droneFreq.toFixed(2)} Hz → ${audibleFreq.toFixed(2)} Hz (${planet.note})`)
+          
+          if (isInfrasound) {
+            log(`     ⚠️ Transpuesto ${octavesTransposed} octavas para audibilidad`)
+          }
+          
+          // Actualizar UI
+          updatePlanetCard(planet.id, true)
+        })
+        
+        log('✅ Todos los planetas activados - Harmonia Mundi completa')
+      }
+      
+      setVolume(value) {
+        if (this.masterGain) {
+          this.masterGain.gain.linearRampToValueAtTime(
+            value,
+            this.context.currentTime + 0.1
+          )
+        }
+      }
+      
+      stop() {
+        this.oscillators.forEach(({ osc }) => {
+          try {
+            osc.stop()
+            osc.disconnect()
+          } catch (e) {}
+        })
+        
+        this.oscillators.clear()
+        
+        if (this.context) {
+          this.context.close()
+          this.context = null
+        }
+        
+        this.enabled = false
+        log('⏹️ Sistema detenido')
+      }
+      
+      getPlanetsInfo() {
+        return this.planets.map(planet => {
+          const droneFreq = planet.frequency / 8
+          let audibleFreq = droneFreq
+          
+          while (audibleFreq < 20) {
+            audibleFreq *= 2
+          }
+          
+          return {
+            ...planet,
+            droneFrequency: droneFreq,
+            audibleFrequency: audibleFreq,
+            isInfrasound: droneFreq < 20
+          }
+        })
+      }
+    }
+    
+    // Instancia global
+    window.harmonia = new HarmoniaMundiTest()
+    
+    // Funciones globales
+    window.enableSystem = async function() {
+      await harmonia.enable()
+      document.getElementById('enableBtn').disabled = true
+      document.getElementById('activateAllBtn').disabled = false
+      document.getElementById('stopBtn').disabled = false
+      document.getElementById('status').className = 'status status-active'
+      document.getElementById('status').textContent = '✅ Sistema Activo - Listo para activar planetas'
+      renderPlanets()
+    }
+    
+    window.activateAllPlanets = function() {
+      harmonia.activateAllPlanets()
+      document.getElementById('activateAllBtn').disabled = true
+      document.getElementById('status').textContent = '🎵 Todos los Planetas Sonando - Escucha la Sinfonía del Sistema Solar'
+    }
+    
+    window.stopSystem = function() {
+      harmonia.stop()
+      document.getElementById('enableBtn').disabled = false
+      document.getElementById('activateAllBtn').disabled = true
+      document.getElementById('stopBtn').disabled = true
+      document.getElementById('status').className = 'status status-inactive'
+      document.getElementById('status').textContent = '⚠️ Sistema Detenido'
+      
+      // Resetear cards
+      document.querySelectorAll('.planet-card').forEach(card => {
+        card.classList.remove('active')
+      })
+    }
+    
+    window.setVolume = function(value) {
+      harmonia.setVolume(value / 100)
+      document.getElementById('volumeValue').textContent = value + '%'
+    }
+    
+    function log(message) {
+      const logContainer = document.getElementById('logContainer')
+      const entry = document.createElement('div')
+      entry.className = 'log-entry'
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`
+      logContainer.appendChild(entry)
+      logContainer.scrollTop = logContainer.scrollHeight
+    }
+    
+    function renderPlanets() {
+      const grid = document.getElementById('planetGrid')
+      const planets = harmonia.getPlanetsInfo()
+      
+      grid.innerHTML = planets.map(planet => `
+        <div class="planet-card" id="card-${planet.id}">
+          <div class="planet-name">${planet.name}</div>
+          <div class="planet-info">
+            <div class="freq-row">
+              <span class="freq-label">Nota:</span>
+              <span class="freq-value">${planet.note}</span>
+            </div>
+            <div class="freq-row">
+              <span class="freq-label">Órbita:</span>
+              <span class="freq-value">${planet.orbitalPeriod.toLocaleString()} días</span>
+            </div>
+            <div class="freq-row">
+              <span class="freq-label">Base:</span>
+              <span class="freq-value freq-base">${planet.frequency.toFixed(2)} Hz</span>
+            </div>
+            <div class="freq-row">
+              <span class="freq-label">Drone:</span>
+              <span class="freq-value freq-drone">${planet.droneFrequency.toFixed(2)} Hz</span>
+            </div>
+            <div class="freq-row">
+              <span class="freq-label">Audible:</span>
+              <span class="freq-value freq-audible">${planet.audibleFrequency.toFixed(2)} Hz</span>
+            </div>
+            <span class="badge ${planet.isInfrasound ? 'badge-infrasound' : 'badge-audible'}">
+              ${planet.isInfrasound ? '⚠️ Infrasonido' : '✅ Audible'}
+            </span>
+          </div>
+        </div>
+      `).join('')
+    }
+    
+    function updatePlanetCard(planetId, active) {
+      const card = document.getElementById(`card-${planetId}`)
+      if (card) {
+        if (active) {
+          card.classList.add('active')
+        } else {
+          card.classList.remove('active')
+        }
+      }
+    }
+    
+    // Log inicial
+    log('🎼 Test de Harmonia Mundi cargado')
+    log('📊 9 planetas configurados')
+    log('⚡ Listo para activar')
+  </script>
+</body>
+</html>

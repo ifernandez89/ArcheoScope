@@ -43,7 +43,8 @@ export default function ResetPage() {
             fontSize: '48px',
             marginBottom: '20px',
             letterSpacing: '4px',
-            textAlign: 'center'
+            textAlign: 'center',
+            fontFamily: 'Archeoscope, serif'
           }}>
             RESETEAR JUEGO
           </h1>
@@ -124,7 +125,8 @@ export default function ResetPage() {
           <h1 style={{
             fontSize: '48px',
             color: '#4ade80',
-            letterSpacing: '4px'
+            letterSpacing: '4px',
+            fontFamily: 'Archeoscope, serif'
           }}>
             ✓ DATOS ELIMINADOS
           </h1>

@@ -1,7 +1,15 @@
 import type { Metadata } from 'next'
+import localFont from 'next/font/local'
 import './globals.css'
 import AlienCursorTrail from '@/components/AlienCursorTrail'
 import WebVitalsInit from '@/components/WebVitalsInit'
+
+// Cargar fuente Archeoscope usando Next.js Font API
+const archeoscope = localFont({
+  src: '../public/fonts/Archeoscope-Regular.ttf',
+  variable: '--font-archeoscope',
+  display: 'swap',
+})
 
 const BASE_PATH = process.env.NODE_ENV === 'production' ? '/ArcheoScope' : ''
 const BASE_URL = process.env.NODE_ENV === 'production'
@@ -51,8 +59,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es">
-      <body>
+    <html lang="es" className={archeoscope.variable}>
+      <body className={archeoscope.className}>
         {children}
         <AlienCursorTrail />
         <WebVitalsInit />

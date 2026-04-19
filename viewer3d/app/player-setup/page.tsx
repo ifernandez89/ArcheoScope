@@ -137,7 +137,8 @@ export default function PlayerSetupPage() {
           fontSize: '32px',
           margin: 0,
           letterSpacing: '2px',
-          textAlign: 'center'
+          textAlign: 'center',
+          fontFamily: 'Archeoscope, serif'
         }}>
           ðŸŒ
         </h2>
@@ -241,7 +242,8 @@ export default function PlayerSetupPage() {
           fontSize: '48px',
           margin: 0,
           letterSpacing: '4px',
-          textAlign: 'center'
+          textAlign: 'center',
+          fontFamily: 'Archeoscope, serif'
         }}>
           CONFIGURACIÓN
         </h1>
@@ -256,7 +258,8 @@ export default function PlayerSetupPage() {
             color: '#ffffff',
             fontSize: '20px',
             letterSpacing: '2px',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
+            fontFamily: 'Archeoscope, serif'
           }}>
             Nombre del Piloto
           </label>

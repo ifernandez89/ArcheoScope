@@ -14,15 +14,19 @@ interface InGameMenuProps {
 export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
   const router = useRouter()
   const [showAudioSettings, setShowAudioSettings] = useState(false)
-  const [masterVolume, setMasterVolume] = useState(70)
+  const [masterVolume, setMasterVolume] = useState(70)   // Clima + efectos
+  const [harmoniaVolume, setHarmoniaVolume] = useState(70) // Música de esferas
 
   // Cargar volumen guardado cuando se abre el menú
   useEffect(() => {
     if (isOpen) {
       const settings = loadGameSettings()
-      const volume = Math.round(settings.audio.masterVolume * 100)
-      setMasterVolume(volume)
-      console.log('🔊 Volumen cargado en InGameMenu desde gameSettings:', volume)
+      setMasterVolume(Math.round(settings.audio.masterVolume * 100))
+      setHarmoniaVolume(Math.round((settings.audio.musicVolume ?? 0.7) * 100))
+      console.log('🔊 Volúmenes cargados en InGameMenu:', {
+        master: settings.audio.masterVolume,
+        harmonia: settings.audio.musicVolume
+      })
     }
   }, [isOpen])
 
@@ -43,14 +47,17 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
 
   // Guardar volumen
   const handleSaveVolume = () => {
+    const vol = masterVolume / 100
+    const harmVol = harmoniaVolume / 100
+
     // Guardar en gameSettings
     updateAudioSettings({
-      masterVolume: masterVolume / 100,
-      musicVolume: masterVolume / 100,
-      sfxVolume: masterVolume / 100
+      masterVolume: vol,
+      musicVolume: harmVol,
+      sfxVolume: vol
     })
     
-    console.log('🔊 Volumen guardado desde InGameMenu en gameSettings:', masterVolume / 100)
+    console.log('🔊 Volúmenes guardados desde InGameMenu:', { master: vol, harmonia: harmVol })
     setShowAudioSettings(false)
   }
 
@@ -110,7 +117,8 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
             fontSize: '48px',
             margin: '0',
             letterSpacing: '4px',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
+            fontFamily: 'Archeoscope, serif'
           }}>
             Audio
           </h1>
@@ -119,7 +127,7 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
             display: 'flex',
             flexDirection: 'column',
             gap: '40px',
-            width: '500px'
+            width: '600px'
           }}>
             {/* Volumen General */}
             <div style={{
@@ -129,45 +137,11 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
             }}>
               <label style={{
                 color: '#ffffff',
-                fontSize: '20px',
+                fontSize: '22px',
                 letterSpacing: '2px',
                 textTransform: 'uppercase'
               }}>
-                Volumen General: {masterVolume}%
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={masterVolume}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value)
-                  setMasterVolume(value)
-                }}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  outline: 'none',
-                  background: `linear-gradient(to right, #4a9eff 0%, #4a9eff ${masterVolume}%, #333333 ${masterVolume}%, #333333 100%)`,
-                  cursor: 'pointer'
-                }}
-              />
-            </div>
-
-            {/* Volumen Música */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '15px'
-            }}>
-              <label style={{
-                color: '#ffffff',
-                fontSize: '20px',
-                letterSpacing: '2px',
-                textTransform: 'uppercase'
-              }}>
-                Música: {masterVolume}%
+                🌦️ Volumen General: {masterVolume}%
               </label>
               <input
                 type="range"
@@ -184,37 +158,46 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
                   cursor: 'pointer'
                 }}
               />
+              <span style={{ fontSize: '16px', color: '#888' }}>
+                Controla el clima, lluvia, viento y efectos de sonido
+              </span>
             </div>
 
-            {/* Volumen Efectos */}
+            {/* Separador */}
+            <div style={{ height: '1px', background: '#333' }} />
+
+            {/* Música de Esferas */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '15px'
             }}>
               <label style={{
-                color: '#ffffff',
-                fontSize: '20px',
+                color: '#FFD700',
+                fontSize: '22px',
                 letterSpacing: '2px',
                 textTransform: 'uppercase'
               }}>
-                Efectos de Sonido: {masterVolume}%
+                🎼 Música de las Esferas: {harmoniaVolume}%
               </label>
               <input
                 type="range"
                 min="0"
                 max="100"
-                value={masterVolume}
-                onChange={(e) => setMasterVolume(parseInt(e.target.value))}
+                value={harmoniaVolume}
+                onChange={(e) => setHarmoniaVolume(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
                   outline: 'none',
-                  background: `linear-gradient(to right, #4a9eff 0%, #4a9eff ${masterVolume}%, #333333 ${masterVolume}%, #333333 100%)`,
+                  background: `linear-gradient(to right, #FFD700 0%, #FFD700 ${harmoniaVolume}%, #333333 ${harmoniaVolume}%, #333333 100%)`,
                   cursor: 'pointer'
                 }}
               />
+              <span style={{ fontSize: '16px', color: '#888' }}>
+                Música cósmica procedural — se despierta con cada misión completada
+              </span>
             </div>
           </div>
 
@@ -278,7 +261,7 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
 
           <div style={{
             color: '#888888',
-            fontSize: '14px',
+            fontSize: '17px',
             marginTop: '10px',
             letterSpacing: '1px'
           }}>
@@ -305,7 +288,6 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
     { label: 'Nueva', action: handleNewGame },
     { label: 'Audio', action: () => setShowAudioSettings(true) },
     { label: 'Controles', action: () => router.push('/menu/controls') },
-    { label: 'Video', action: () => router.push('/menu/video') },
     { label: 'Información', action: () => router.push('/menu/info') }
   ]
 
@@ -341,7 +323,8 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
           fontSize: '48px',
           margin: '0 0 20px 0',
           letterSpacing: '4px',
-          textTransform: 'uppercase'
+          textTransform: 'uppercase',
+          fontFamily: 'Archeoscope, serif'
         }}>
           Menú
         </h1>
@@ -380,7 +363,7 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
 
         <div style={{
           color: '#888888',
-          fontSize: '14px',
+          fontSize: '17px',
           marginTop: '20px',
           letterSpacing: '1px'
         }}>

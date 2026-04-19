@@ -21,6 +21,7 @@ interface GizaSceneProps {
   pyramidionOnTop?: boolean
   onMummyMoved?: () => void
   onScarabCollect?: () => void
+  onScarabPickup?: () => void  // Recoger del suelo cuando ya estaba en inventario
   scarabDiscovered?: boolean
   scarabCollected?: boolean
   scarabInInventory?: boolean
@@ -56,7 +57,8 @@ export default function GizaScene({
   pyramidionCollected, 
   pyramidionOnTop, 
   onMummyMoved, 
-  onScarabCollect, 
+  onScarabCollect,
+  onScarabPickup,
   scarabDiscovered, 
   scarabCollected,
   scarabInInventory,
@@ -179,7 +181,7 @@ export default function GizaScene({
             ? <DroppableItem
                 modelPath="/escab.glb"
                 position={[scarabDropPosition.x, 0, scarabDropPosition.z]}
-                onCollect={onScarabCollect}
+                onCollect={onScarabPickup}
                 scale={1.5}
                 floatHeight={1.5}
                 glowColor="#44cc44"
