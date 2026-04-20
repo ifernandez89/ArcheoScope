@@ -129,10 +129,10 @@ function GobekliTepeContent({
     })
     // Mostrar mensaje a los 8 segundos (esfera ya visible y subiendo)
     const msgTimer = setTimeout(() => setShowMessage(true), 8000)
-    // Redirigir a créditos a los 25 segundos (animación 20s + margen)
+    // Redirigir a créditos a los 38 segundos (animación 30s + margen)
     const redirectTimer = setTimeout(() => {
       router.push('/menu/info?credits=true')
-    }, 25000)
+    }, 38000)
     return () => {
       clearTimeout(msgTimer)
       clearTimeout(redirectTimer)
@@ -233,7 +233,7 @@ function GobekliTepeContent({
         <DroppableItem
           modelPath="/tonatiuh_aztec_sun.glb"
           position={[tonatiuhDropPosition.x, 0, tonatiuhDropPosition.z]}
-          onCollect={onTonatiuhCollect}
+          onCollect={allActivated ? undefined : onTonatiuhCollect}
           scale={1.5}
           floatHeight={activated.tonatiuh ? 2.5 : 1.5}
           glowColor={activated.tonatiuh ? '#ffffff' : '#ffaa00'}
@@ -245,7 +245,7 @@ function GobekliTepeContent({
         <DroppableItem
           modelPath="/escarabajo.glb"
           position={[scarabDropPosition.x, 0, scarabDropPosition.z]}
-          onCollect={onScarabCollect}
+          onCollect={allActivated ? undefined : onScarabCollect}
           scale={1.5}
           floatHeight={activated.scarab ? 2.5 : 1.5}
           glowColor={activated.scarab ? '#ffffff' : '#44cc44'}
@@ -257,7 +257,7 @@ function GobekliTepeContent({
         <DroppableItem
           modelPath="/crystal-skull.glb"
           position={[skullDropPosition.x, 0, skullDropPosition.z]}
-          onCollect={onSkullCollect}
+          onCollect={allActivated ? undefined : onSkullCollect}
           scale={1.5}
           floatHeight={activated.skull ? 2.5 : 1.5}
           glowColor={activated.skull ? '#ffffff' : '#aa44ff'}
@@ -269,7 +269,7 @@ function GobekliTepeContent({
         <DroppableItem
           modelPath="/fuente_magna.glb"
           position={[magnaBowlDropPosition.x, 0, magnaBowlDropPosition.z]}
-          onCollect={onMagnaBowlCollect}
+          onCollect={allActivated ? undefined : onMagnaBowlCollect}
           scale={1.5}
           floatHeight={activated.magna ? 2.5 : 1.5}
           glowColor={activated.magna ? '#ffffff' : '#4488ff'}

@@ -1715,6 +1715,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             setTonatiuhInInventory(true)
             setTonatiuhOnGround(false)
           }}
+          onGobekliTonatiuhCollect={() => { setTonatiuhInInventory(true); setTonatiuhOnGround(false) }}
+          onGobekliScarabCollect={() => { setScarabInInventory(true); setScarabOnGround(false) }}
+          onGobekliSkullCollect={() => { setSkullInInventory(true); setSkullOnGround(false) }}
+          onGobekliMagnaCollect={() => { setMagnaBowlLentInInventory(true); setMagnaBowlOnGround(false) }}
           scarabOnGround={scarabOnGround}
           skullOnGround={skullOnGround}
           rockInInventory={rockInInventory}
@@ -2073,6 +2077,10 @@ function ModelScene({
   tonatiuhDropPosition,
   onTonatiuhCollect,
   onMagnaBowlCollect,
+  onGobekliTonatiuhCollect,
+  onGobekliScarabCollect,
+  onGobekliSkullCollect,
+  onGobekliMagnaCollect,
   scarabOnGround,
   skullOnGround,
   rockInInventory,
@@ -2172,6 +2180,10 @@ function ModelScene({
   tonatiuhDropPosition?: { x: number, z: number } | null
   onTonatiuhCollect?: () => void
   onMagnaBowlCollect?: () => void
+  onGobekliTonatiuhCollect?: () => void
+  onGobekliScarabCollect?: () => void
+  onGobekliSkullCollect?: () => void
+  onGobekliMagnaCollect?: () => void
   rockInInventory?: boolean
   rockOnGround?: boolean
   rockDropPosition?: { x: number, z: number } | null
@@ -2538,13 +2550,17 @@ function ModelScene({
               <GobekliTepeScene
                 tonatiuhDropPosition={tonatiuhDropPosition}
                 tonatiuhOnGround={tonatiuhOnGround}
+                onTonatiuhCollect={onGobekliTonatiuhCollect}
                 scarabDropPosition={scarabDropPosition}
                 scarabOnGround={scarabOnGround}
+                onScarabCollect={onGobekliScarabCollect}
                 skullDropPosition={skullDropPosition}
                 skullOnGround={skullOnGround}
+                onSkullCollect={onGobekliSkullCollect}
                 magnaBowlCollected={magnaBowlCollected}
                 magnaBowlDropPosition={magnaBowlDropPosition}
                 magnaBowlOnGround={magnaBowlOnGround}
+                onMagnaBowlCollect={onGobekliMagnaCollect}
                 avatarPositionRef={avatarPositionRef}
               />
             )}

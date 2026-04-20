@@ -23,7 +23,7 @@ export default function ToroidalSphere({
   const toroid3Ref = useRef<THREE.Mesh>(null)
   const lightRef = useRef<THREE.PointLight>(null)
   const startTimeRef = useRef<number | null>(null)
-  const ASCENT_DURATION = 20
+  const ASCENT_DURATION = 30
 
   const { sphereGeo, torusGeo, torusGeo2, torusGeo3 } = useMemo(() => {
     const R = size

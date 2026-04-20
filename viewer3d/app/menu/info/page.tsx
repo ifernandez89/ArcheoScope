@@ -15,8 +15,8 @@ function InfoContent() {
     const el = scrollRef.current
     const totalHeight = el.scrollHeight - el.clientHeight
     if (totalHeight <= 0) return
-    // Scroll suave: ~60px por segundo
-    const duration = (totalHeight / 60) * 1000
+    // Scroll suave: ~25px por segundo
+    const duration = (totalHeight / 25) * 1000
     const start = performance.now()
     let raf: number
     const step = (now: number) => {
