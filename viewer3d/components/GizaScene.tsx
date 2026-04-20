@@ -130,6 +130,14 @@ export default function GizaScene({
           // Limpiar sessionStorage
           sessionStorage.clear()
           
+          // Limpiar inventario del localStorage
+          localStorage.removeItem('inv_scarab')
+          localStorage.removeItem('inv_skull')
+          localStorage.removeItem('inv_tonatiuh')
+          localStorage.removeItem('inv_rock')
+          localStorage.removeItem('inv_magna_bowl')
+          localStorage.removeItem('inv_magna_bowl_original')
+          
           // Limpiar flag de sesión activa para ocultar "Continuar"
           sessionStorage.removeItem('game_session_active')
           
@@ -179,7 +187,7 @@ export default function GizaScene({
         {((scarabDiscovered && !scarabCollected) || showScarab) && !scarabInInventory && (
           showScarab && scarabDropPosition
             ? <DroppableItem
-                modelPath="/escab.glb"
+                modelPath="/escarabajo.glb"
                 position={[scarabDropPosition.x, 0, scarabDropPosition.z]}
                 onCollect={onScarabPickup}
                 scale={1.5}
@@ -521,7 +529,7 @@ function Scarab({ position, onCollect }: {
   position: [number, number, number]
   onCollect?: () => void
 }) {
-  const { scene } = useGLTF(getAssetPath('/escab.glb'))
+  const { scene } = useGLTF(getAssetPath('/escarabajo.glb'))
   const [isHovered, setIsHovered] = useState(false)
   const [isDisappearing, setIsDisappearing] = useState(false)
   const disappearTimer = useRef(0)
@@ -530,27 +538,45 @@ function Scarab({ position, onCollect }: {
   const cachedMeshes = useRef<THREE.Mesh[]>([])
   const meshesCached = useRef(false)
   
+  // Clonar la escena y sus materiales
+  const clonedScene = useMemo(() => {
+    const cloned = scene.clone(true)
+    cloned.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh
+        if (mesh.material) {
+          mesh.material = (mesh.material as THREE.Material).clone()
+          const mat = mesh.material as THREE.MeshStandardMaterial
+          mat.transparent = true
+          mat.opacity = 1
+          mat.needsUpdate = true
+        }
+      }
+    })
+    return cloned
+  }, [scene])
+  
   const scale = 0.5
   
   // Calcular offset Y para que esté en el suelo
   const yOffset = useMemo(() => {
-    const box = new THREE.Box3().setFromObject(scene)
+    const box = new THREE.Box3().setFromObject(clonedScene)
     const minY = box.min.y
     return -minY * scale
-  }, [scene, scale])
+  }, [clonedScene, scale])
   
   // Animación de desaparición
   useFrame((state, delta) => {
-    if (isDisappearing && scene) {
+    if (isDisappearing && clonedScene) {
       disappearTimer.current += delta
       
       const progress = Math.min(disappearTimer.current / 1.0, 1)
-      scene.scale.setScalar(scale * (1 + progress * 0.5))
+      clonedScene.scale.setScalar(scale * (1 + progress * 0.5))
       
       // Cache meshes solo una vez
       if (!meshesCached.current) {
         cachedMeshes.current = []
-        scene.traverse((child) => {
+        clonedScene.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
             cachedMeshes.current.push(child as THREE.Mesh)
           }
@@ -589,7 +615,7 @@ function Scarab({ position, onCollect }: {
       onPointerOut={() => setIsHovered(false)}
     >
       <primitive 
-        object={scene}
+        object={clonedScene}
         scale={[scale, scale, scale]}
         castShadow
         receiveShadow

@@ -243,7 +243,7 @@ function GobekliTepeContent({
 
       {scarabOnGround && scarabDropPosition && (
         <DroppableItem
-          modelPath="/escab.glb"
+          modelPath="/escarabajo.glb"
           position={[scarabDropPosition.x, 0, scarabDropPosition.z]}
           onCollect={onScarabCollect}
           scale={1.5}
@@ -267,7 +267,7 @@ function GobekliTepeContent({
 
       {magnaBowlOnGround && magnaBowlDropPosition && (
         <DroppableItem
-          modelPath="/magna_bowl.glb"
+          modelPath="/fuente_magna.glb"
           position={[magnaBowlDropPosition.x, 0, magnaBowlDropPosition.z]}
           onCollect={onMagnaBowlCollect}
           scale={1.5}

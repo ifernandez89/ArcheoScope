@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useMemo } from 'react'
+import { useRef, useState, useMemo, useEffect, Suspense } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
@@ -19,21 +19,12 @@ function RotatingModel({ modelPath, scale = 1 }: { modelPath: string, scale?: nu
   const groupRef = useRef<THREE.Group>(null)
   const clonedScene = useMemo(() => scene.clone(true), [scene])
 
-  // Configuración por modelo basada en dimensiones reales inspeccionadas
-  // escab:      bbox ~1x0.95x0.14 — acostado, necesita rotación
-  // magna_bowl: bbox ~1x0.22x0.84 — ya centrado
-  // tonatiuh:   auto
-  // crystal-skull: auto
-  const isEscab = modelPath.includes('escab')
-  const rx = isEscab ? Math.PI / 2 : 0
-  const rz = isEscab ? Math.PI : 0
-
   useFrame((_, delta) => {
     if (groupRef.current) groupRef.current.rotation.y += delta * 1.5
   })
 
   return (
-    <group ref={groupRef} rotation={[rx, 0, rz]} scale={scale}>
+    <group ref={groupRef} scale={scale}>
       <primitive object={clonedScene} />
     </group>
   )
@@ -41,21 +32,31 @@ function RotatingModel({ modelPath, scale = 1 }: { modelPath: string, scale?: nu
 
 export default function InventoryItem({ modelPath, itemName, onDrop, show, dropDisabled }: InventoryItemProps) {
   const [isHovered, setIsHovered] = useState(false)
-  
+  const [mountKey, setMountKey] = useState(0)
+  const prevShowRef = useRef(show)
+
+  // Forzar remontaje del Canvas cuando show cambia de false→true
+  useEffect(() => {
+    if (show && !prevShowRef.current) {
+      setMountKey(k => k + 1)
+    }
+    prevShowRef.current = show
+  }, [show])
+
   if (!show) return null
-  
+
   return (
     <div
       style={{
         position: 'relative',
         width: '80px',
         height: '80px',
-        background: isHovered 
-          ? (dropDisabled ? 'rgba(150, 0, 0, 0.3)' : 'rgba(255, 215, 0, 0.3)') 
+        background: isHovered
+          ? (dropDisabled ? 'rgba(150, 0, 0, 0.3)' : 'rgba(255, 215, 0, 0.3)')
           : 'rgba(0, 0, 0, 0.7)',
         borderRadius: '12px',
-        border: dropDisabled && isHovered 
-          ? '3px solid #ff4444' 
+        border: dropDisabled && isHovered
+          ? '3px solid #ff4444'
           : (isHovered ? '3px solid #ffd700' : '2px solid #ffd700'),
         overflow: 'visible',
         cursor: dropDisabled ? 'not-allowed' : 'pointer',
@@ -70,19 +71,24 @@ export default function InventoryItem({ modelPath, itemName, onDrop, show, dropD
       }}
     >
       <Canvas
-        key={modelPath}
+        key={`inv-${modelPath}-${mountKey}`}
         camera={{ position: [0, 0, 2.5], fov: 45 }}
         style={{ background: 'transparent' }}
+        frameloop="always"
       >
         <ambientLight intensity={2.5} />
         <directionalLight position={[2, 2, 2]} intensity={3} />
         <directionalLight position={[-2, 1, -2]} intensity={1.5} />
         <directionalLight position={[0, -2, 2]} intensity={1} />
         <pointLight position={[0, 3, 2]} intensity={2} color="#ffffff" />
-        <RotatingModel modelPath={modelPath} scale={0.8} />
+        <Suspense fallback={null}>
+          <RotatingModel
+            modelPath={modelPath}
+            scale={modelPath.includes('fuente_magna') ? 0.55 : 0.8}
+          />
+        </Suspense>
       </Canvas>
-      
-      {/* Tooltip cuando hover */}
+
       {isHovered && (
         <div
           style={{
@@ -100,14 +106,12 @@ export default function InventoryItem({ modelPath, itemName, onDrop, show, dropD
             whiteSpace: 'nowrap',
             border: dropDisabled ? '2px solid #ff4444' : '2px solid #ffd700',
             boxShadow: dropDisabled ? '0 0 10px rgba(255, 0, 0, 0.5)' : '0 0 10px rgba(255, 215, 0, 0.5)',
-            animation: 'pulse 1s infinite',
           }}
         >
-          {dropDisabled ? '🚫 Solo en Tierra' : '🌱 Soltar'}
+          {dropDisabled ? '🚫 Bloqueado' : '🌱 Soltar'}
         </div>
       )}
-      
-      {/* Nombre del item */}
+
       <div
         style={{
           position: 'absolute',
@@ -123,13 +127,6 @@ export default function InventoryItem({ modelPath, itemName, onDrop, show, dropD
       >
         {itemName}
       </div>
-      
-      <style jsx>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
-          50% { opacity: 0.8; transform: translateX(-50%) scale(1.05); }
-        }
-      `}</style>
     </div>
   )
 }

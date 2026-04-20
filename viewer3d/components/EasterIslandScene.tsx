@@ -504,7 +504,7 @@ function EasterIslandSceneContent({
       {/* 🏺 Fuente Magna prestada — soltada en el suelo */}
       {!magnaBowlLentInInventory && magnaBowlOnGround && magnaBowlDropPosition && (
         <DroppableItem
-          modelPath="/magna_bowl.glb"
+          modelPath="/fuente_magna.glb"
           position={[magnaBowlDropPosition.x, 0, magnaBowlDropPosition.z]}
           onCollect={onMagnaBowlCollect}
           scale={1.5}

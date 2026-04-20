@@ -89,7 +89,7 @@ const QuetzalcoatlDialogue = dynamic(() => import('./QuetzalcoatlDialogue'), { s
 const OlmecInteractiveDialogue = dynamic(() => import('./OlmecInteractiveDialogue'), { ssr: false })
 const DiscoveredItemInWorld = dynamic(() => import('./DiscoveredItemInWorld'), { ssr: false })
 const ItemCollectedMessage = dynamic(() => import('./ItemCollectedMessage'), { ssr: false })
-const InventoryItem = dynamic(() => import('./InventoryItem'), { ssr: false })
+import InventoryItem from './InventoryItem'
 const Compass = dynamic(() => import('./Compass'), { ssr: false })
 const ShipAbilities = dynamic(() => import('./ShipAbilities'), { ssr: false })
 const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
@@ -303,6 +303,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const handleCollectItem = useCallback(() => {
     console.log('📦 Item recolectado!')
     setItemCollected(true)
+    setMagnaBowlOriginalInInventory(true)
     setShowCollectedMessage(true)
 
     // Guardar en sessionStorage
@@ -369,28 +370,28 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       setShowCollectedMessage(true)
       setTimeout(() => setShowCollectedMessage(false), 3000)
     } else {
-      console.log('🪲 Escarabajo recolectado! (ROBADO)')
+      console.log('🪲 Escarabajo ROBADO — castigo divino activado')
 
-      // Registrar en el sistema de misiones
       collectItem('giza', 'scarab')
-
-      // ❌ MARCAR MISIÓN COMO FALLIDA - Robar el escarabajo es un acto de profanación
       failMission('giza', 'return_pyramidion')
       console.log('❌ Misión "Devolver el Piramidión" FALLIDA - El jugador robó el escarabajo sagrado')
 
-      // Guardar en sessionStorage
       sessionStorage.setItem('item_scarab_collected', 'true')
 
-      // Marcar como recolectado
+      // Poner en inventario (aunque sea robado, lo tiene)
       setScarabCollected(true)
+      setScarabInInventory(true)
+      setScarabOnGround(false)
 
-      // Mostrar mensaje
+      // Bloquear navegación — el jugador no puede escapar de la inundación
+      setScarabStolenFlood(true)
+
       setShowCollectedMessage(true)
       setTimeout(() => setShowCollectedMessage(false), 3000)
 
       // INICIAR INUNDACIÓN como castigo
       console.log('🌊 Iniciando inundación de Giza como castigo divino...')
-      setWeather(prev => ({ ...prev, volcanicEruption: false, storm: true, rainHeavy: true })) // Forzar tormenta para inundación
+      setWeather(prev => ({ ...prev, volcanicEruption: false, storm: true, rainHeavy: true }))
     }
   }, [])
 
@@ -525,6 +526,12 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [magnaBowlOnGround, setMagnaBowlOnGround] = useState(false)
   const [magnaBowlDropPosition, setMagnaBowlDropPosition] = useState<{ x: number, z: number } | null>(null)
 
+  // 🏺 Fuente Magna original del lago Titicaca — no se puede soltar hasta entregar a Viracocha
+  const [magnaBowlOriginalInInventory, setMagnaBowlOriginalInInventory] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('inv_magna_bowl_original') === 'true'
+    return false
+  })
+
   // 💾 Persistir inventario en localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -533,18 +540,25 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     localStorage.setItem('inv_tonatiuh', String(tonatiuhInInventory))
     localStorage.setItem('inv_rock', String(rockInInventory))
     localStorage.setItem('inv_magna_bowl', String(magnaBowlLentInInventory))
-  }, [scarabInInventory, skullInInventory, tonatiuhInInventory, rockInInventory, magnaBowlLentInInventory])
+    localStorage.setItem('inv_magna_bowl_original', String(magnaBowlOriginalInInventory))
+  }, [scarabInInventory, skullInInventory, tonatiuhInInventory, rockInInventory, magnaBowlLentInInventory, magnaBowlOriginalInInventory])
 
   // 🛸 Estado de habilidades de nave
   const [abilityActive, setAbilityActive] = useState(false)
   const [abilityCooldown, setAbilityCooldown] = useState(false)
-  
+
   // 💀 Detectar si estamos en Mictlán (atrapados hasta 10 apariciones)
-  const isMictlanLocation = !!(selectedLocation && 
-    Math.abs(selectedLocation.lat - 0.0001) < 0.01 && 
+  const isMictlanLocation = !!(selectedLocation &&
+    Math.abs(selectedLocation.lat - 0.0001) < 0.01 &&
     Math.abs(selectedLocation.lon - 0.0001) < 0.01)
   const [mictlanCompleted, setMictlanCompleted] = useState(false)
   const trappedInMictlan = isMictlanLocation && !mictlanCompleted
+
+  // 🌊 Inundación por robo del escarabajo — bloquea navegación
+  const [scarabStolenFlood, setScarabStolenFlood] = useState(false)
+
+  // 🔒 Bloquear navegación: Mictlán o inundación por robo
+  const navigationBlocked = trappedInMictlan || scarabStolenFlood
 
   const [isShaking, setIsShaking] = useState(false)
   const [scannedEntity, setScannedEntity] = useState<{ name: string, desc: string } | null>(null)
@@ -609,11 +623,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         } else if (siteId === 'pyramids-giza' || siteId === 'giza') {
           // Giza: elegir el NPC más cercano por distancia horizontal XZ
           const gizaNPCs = [
-            { name: 'Sphinx',     x: 100,  z: 50  },
-            { name: 'Ramesses',   x: -20,  z: -50 },
-            { name: 'Hatshepsut', x: 20,   z: -50 },
-            { name: 'Akhenaten',  x: 0,    z: 0   },
-            { name: 'Mummy',      x: -72,  z: -2  }
+            { name: 'Sphinx', x: 100, z: 50 },
+            { name: 'Ramesses', x: -20, z: -50 },
+            { name: 'Hatshepsut', x: 20, z: -50 },
+            { name: 'Akhenaten', x: 0, z: 0 },
+            { name: 'Mummy', x: -72, z: -2 }
           ]
           let minDistSq = Infinity
           const px = mainAvatarPositionRef.current.x
@@ -654,11 +668,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           else if (Math.abs(lat - 29.9792) < 0.1 && Math.abs(lon - 31.1342) < 0.1) {
             // En Giza por coordenadas: buscar más cercano igual que arriba
             const gizaNPCs = [
-              { name: 'Sphinx',     x: 100,  z: 50  },
-              { name: 'Ramesses',   x: -20,  z: -50 },
-              { name: 'Hatshepsut', x: 20,   z: -50 },
-              { name: 'Akhenaten',  x: 0,    z: 0   },
-              { name: 'Mummy',      x: -72,  z: -2  }
+              { name: 'Sphinx', x: 100, z: 50 },
+              { name: 'Ramesses', x: -20, z: -50 },
+              { name: 'Hatshepsut', x: 20, z: -50 },
+              { name: 'Akhenaten', x: 0, z: 0 },
+              { name: 'Mummy', x: -72, z: -2 }
             ]
             let minDistSq = Infinity
             const px = mainAvatarPositionRef.current.x
@@ -711,7 +725,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // Efecto de sacudida universal al activar cualquier habilidad
     setIsShaking(true)
     setTimeout(() => setIsShaking(false), 500)
-  // Solo depende de currentUfo y abilityCooldown — site/location se leen por ref
+    // Solo depende de currentUfo y abilityCooldown — site/location se leen por ref
   }, [currentUfo, abilityCooldown])
 
   // 🐍 Estado del diálogo de Quetzalcoatl
@@ -1197,7 +1211,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       <CoordinateInput
         onCoordinateSubmit={handleLocationClick}
         currentLocation={selectedLocation}
-        disabled={trappedInMictlan}
+        disabled={navigationBlocked}
       />
 
       {/* InformaciÃ³n de ubicaciÃ³n (desplegable) */}
@@ -1289,10 +1303,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         }}>
           <button
             onClick={handleBackToGlobe}
-            disabled={trappedInMictlan}
+            disabled={navigationBlocked}
             style={{
               padding: '12px 24px',
-              background: trappedInMictlan ? 'rgba(60, 60, 60, 0.5)' : 'rgba(102, 126, 234, 0.9)',
+              background: navigationBlocked ? 'rgba(60, 60, 60, 0.5)' : 'rgba(102, 126, 234, 0.9)',
               border: '1px solid rgba(255,255,255,0.3)',
               borderRadius: '8px',
               color: 'white',
@@ -1466,7 +1480,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           dropDisabled={mode === 'globe'}
         />
         <InventoryItem
-          modelPath="/escab.glb"
+          modelPath="/escarabajo.glb"
           itemName="Scarab"
           show={scarabInInventory}
           onDrop={handleDropScarab}
@@ -1487,11 +1501,17 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           dropDisabled={mode === 'globe'}
         />
         <InventoryItem
-          modelPath="/magna_bowl.glb"
+          modelPath="/fuente_magna.glb"
           itemName="Fuente Magna"
           show={magnaBowlLentInInventory}
           onDrop={handleDropMagnaBowl}
           dropDisabled={mode === 'globe'}
+        />
+        <InventoryItem
+          modelPath="/fuente_magna.glb"
+          itemName="Fuente"
+          show={magnaBowlOriginalInInventory}
+          dropDisabled={true}
         />
       </div>
 
@@ -1567,7 +1587,12 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onViracochaSpeak={() => {
             const pumaDone = isMissionCompleted('pumaPunku', 'reveal_structure')
             const allMissionsDone = loadMissionState().stats.totalMissionsCompleted >= 5
-            
+
+            // Viracocha toma la fuente, así que desaparece del inventario
+            if (magnaBowlOriginalInInventory) {
+              setMagnaBowlOriginalInInventory(false)
+            }
+
             // Solo permitir diálogo interactivo si las 5 misiones están completas
             if (pumaDone && magnaBowlCollected && allMissionsDone) {
               // Diálogo interactivo: usuario es digno de obtener la fuente prestada
@@ -1675,6 +1700,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onLendMagnaBowl={() => {
             setMagnaBowlLentInInventory(true)
             setMagnaBowlOnGround(false)
+            setMagnaBowlOriginalInInventory(false) // Viracocha acepta la original y presta la suya
           }}
         />
       ) : null}
@@ -2465,11 +2491,11 @@ function ModelScene({
                 onTonatiuhCollect={onTonatiuhCollect}
                 scarabDropPosition={scarabDropPosition}
                 scarabOnGround={scarabOnGround}
-                onScarabCollect={() => { /* no recoger en Göbekli — solo dejar en altar */ }}
+                onScarabCollect={onScarabCollect}
                 skullDropPosition={skullDropPosition}
                 skullOnGround={skullOnGround}
-                onSkullCollect={() => { /* no recoger en Göbekli — solo dejar en altar */ }}
-                magnaBowlCollected={magnaBowlLentInInventory || magnaBowlOnGround}
+                onSkullCollect={onSkullCollect}
+                magnaBowlCollected={magnaBowlCollected}
                 magnaBowlDropPosition={magnaBowlDropPosition}
                 magnaBowlOnGround={magnaBowlOnGround}
                 onMagnaBowlCollect={onMagnaBowlCollect}
@@ -2499,7 +2525,7 @@ function ModelScene({
             location.lat > -16.5 && location.lat < -15.5 &&
             location.lon > -70 && location.lon < -68.5 && onCollectItem && (
               <DiscoveredItemInWorld
-                modelPath={getAssetPath('/magna_bowl.glb')}
+                modelPath={getAssetPath('/fuente_magna.glb')}
                 position={[0, 0.5, 0]}
                 onCollect={onCollectItem}
               />
@@ -2535,7 +2561,7 @@ function ModelScene({
           missionCompleted={isMissionCompleted('pumaPunku', 'reveal_structure')}
           allMissionsCompleted={loadMissionState().stats.totalMissionsCompleted >= 5}
           magnaBowlReturned={magnaBowlCollected}
-          onClose={onCloseViracochaInteractive || (() => {})}
+          onClose={onCloseViracochaInteractive || (() => { })}
           onLendMagnaBowl={onLendMagnaBowl}
         />
       )}

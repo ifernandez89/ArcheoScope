@@ -23,7 +23,8 @@ export default function CompassTracker({ onRotationChange }: CompassTrackerProps
     camera.getWorldDirection(directionRef.current)
     
     // Calcular el ángulo en el plano horizontal (ignorar Y)
-    const angle = Math.atan2(directionRef.current.x, directionRef.current.z)
+    // En Three.js, -Z es 'hacia adelante', que se mapea como Norte (0°)
+    const angle = Math.atan2(directionRef.current.x, -directionRef.current.z)
     
     // Convertir a grados (0° = Norte, 90° = Este, 180° = Sur, 270° = Oeste)
     let degrees = THREE.MathUtils.radToDeg(angle)

@@ -57,10 +57,8 @@ export default function ViracochaInteractiveDialogue({
 
     // Opción 3: Prestar la Fuente Magna (siempre positivo porque el diálogo solo aparece con 5 misiones completas)
     if (id === 3 && onLendMagnaBowl) {
-      setTimeout(() => { 
-        onLendMagnaBowl()
-        onClose() 
-      }, 5000) // Dar tiempo para leer el mensaje
+      onLendMagnaBowl() // Quitar la fuente del inventario inmediatamente
+      setTimeout(() => onClose(), 5000) // Cerrar diálogo después de leer
       return
     }
     

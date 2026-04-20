@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useGLTF, Html } from '@react-three/drei'
 import * as THREE from 'three'
@@ -29,34 +29,40 @@ export default function DiscoveredItemInWorld({
   const cachedMeshes = useRef<THREE.Mesh[]>([])
   const meshesCached = useRef(false)
 
-  // Configurar modelo
-  useEffect(() => {
-    if (scene) {
-      // Calcular bounding box y centrar
-      const box = new THREE.Box3().setFromObject(scene)
-      const center = box.getCenter(new THREE.Vector3())
-      const size = box.getSize(new THREE.Vector3())
-
-      // Centrar modelo
-      scene.position.x = -center.x
-      scene.position.y = -center.y
-      scene.position.z = -center.z
-
-      // Escalar para que sea visible
-      const maxDim = Math.max(size.x, size.y, size.z)
-      const scale = 2.0 / maxDim
-      scene.scale.setScalar(scale)
-
-      // Habilitar sombras
-      scene.traverse((child) => {
-        if ((child as THREE.Mesh).isMesh) {
-          child.castShadow = true
-          child.receiveShadow = true
+  // Clonar la escena y sus materiales
+  const clonedScene = useMemo(() => {
+    const cloned = scene.clone(true)
+    cloned.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh
+        if (mesh.material) {
+          mesh.material = (mesh.material as THREE.Material).clone()
+          const mat = mesh.material as THREE.MeshStandardMaterial
+          mat.transparent = true
+          mat.opacity = 1
+          mat.needsUpdate = true
         }
-      })
-      
-      console.log('🏺 Magna Bowl visible en el lago:', { size, scale, position })
-    }
+        child.castShadow = true
+        child.receiveShadow = true
+      }
+    })
+
+    // Calcular bounding box y centrar antes de que se muestre
+    const box = new THREE.Box3().setFromObject(cloned)
+    const center = box.getCenter(new THREE.Vector3())
+    const size = box.getSize(new THREE.Vector3())
+
+    // Centrar modelo
+    cloned.position.x = -center.x
+    cloned.position.y = -center.y
+    cloned.position.z = -center.z
+
+    // Escalar para que sea visible
+    const maxDim = Math.max(size.x, size.y, size.z)
+    const scale = 2.0 / maxDim
+    cloned.scale.setScalar(scale)
+
+    return cloned
   }, [scene])
 
   // Animación: rotación suave y desaparición
@@ -78,7 +84,7 @@ export default function DiscoveredItemInWorld({
         // Cache meshes solo una vez
         if (!meshesCached.current) {
           cachedMeshes.current = []
-          scene.traverse((child) => {
+          clonedScene.traverse((child) => {
             if ((child as THREE.Mesh).isMesh) {
               cachedMeshes.current.push(child as THREE.Mesh)
             }
@@ -120,7 +126,7 @@ export default function DiscoveredItemInWorld({
         onPointerOver={() => !isSelected && setIsHovered(true)}
         onPointerOut={() => setIsHovered(false)}
       >
-        <primitive object={scene} />
+        <primitive object={clonedScene} />
         
         {/* Outline cuando está hover o seleccionado */}
         {(isHovered || isSelected) && !isDisappearing && (
