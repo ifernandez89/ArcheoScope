@@ -90,6 +90,7 @@ const OlmecInteractiveDialogue = dynamic(() => import('./OlmecInteractiveDialogu
 const DiscoveredItemInWorld = dynamic(() => import('./DiscoveredItemInWorld'), { ssr: false })
 const ItemCollectedMessage = dynamic(() => import('./ItemCollectedMessage'), { ssr: false })
 import InventoryItem from './InventoryItem'
+import DroppableItem from './DroppableItem'
 const Compass = dynamic(() => import('./Compass'), { ssr: false })
 const ShipAbilities = dynamic(() => import('./ShipAbilities'), { ssr: false })
 const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
@@ -173,6 +174,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const selectedLocationRef = useRef<{ lat: number, lon: number } | null>(null)
   const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('avatar') // Modo avatar por defecto
   const [showLocationInfo, setShowLocationInfo] = useState(false)
+  const [gameTimer, setGameTimer] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('game_timer_seconds')
+      return saved ? parseInt(saved) : 0
+    }
+    return 0
+  })
   const [showGeometryField, setShowGeometryField] = useState(true) // Activado por defecto
   const [showUfoSelector, setShowUfoSelector] = useState(false) // Dropdown de UFOs
   const [isDay, setIsDay] = useState(true) // Estado dÃ­a/noche
@@ -210,6 +218,18 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     scheduleWind()
     return () => clearTimeout(windTimer)
   }, [mode])
+
+  // ⏱️ Cronómetro de partida — incrementa cada segundo y persiste
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGameTimer(prev => {
+        const next = prev + 1
+        localStorage.setItem('game_timer_seconds', String(next))
+        return next
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   // Mostrar información del jugador al cargar
   useEffect(() => {
@@ -305,6 +325,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     setItemCollected(true)
     setMagnaBowlOriginalInInventory(true)
     setShowCollectedMessage(true)
+    setTimeout(() => setShowCollectedMessage(false), 3000)
 
     // Guardar en sessionStorage
     sessionStorage.setItem('item_magna_bowl_collected', 'true')
@@ -1214,12 +1235,32 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         disabled={navigationBlocked}
       />
 
-      {/* InformaciÃ³n de ubicaciÃ³n (desplegable) */}
+      {/* Información de ubicación (desplegable) */}
       {mode === 'model' && showLocationInfo && (
-        <LocationInfo
-          location={selectedLocation}
-          site={selectedSite}
-        />
+        <>
+          <LocationInfo
+            location={selectedLocation}
+            site={selectedSite}
+          />
+          <div style={{
+            position: 'fixed',
+            top: '160px',
+            left: '20px',
+            zIndex: 999,
+            background: 'rgba(0, 0, 0, 0.8)',
+            border: '1px solid rgba(255, 215, 0, 0.4)',
+            borderRadius: '8px',
+            padding: '8px 14px',
+            color: '#ffd700',
+            fontSize: '14px',
+            fontFamily: 'monospace',
+            letterSpacing: '1px',
+          }}>
+            ⏱️ {String(Math.floor(gameTimer / 3600)).padStart(2, '0')}:
+            {String(Math.floor((gameTimer % 3600) / 60)).padStart(2, '0')}:
+            {String(gameTimer % 60).padStart(2, '0')}
+          </div>
+        </>
       )}
 
       {/* Indicador de transiciÃ³n cinematogrÃ¡fica */}
@@ -1679,7 +1720,12 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           rockInInventory={rockInInventory}
           rockOnGround={rockOnGround}
           rockDropPosition={rockDropPosition}
-          onRockCollect={() => { setRockInInventory(true); setRockOnGround(false) }}
+          onRockCollect={() => { 
+            setRockInInventory(true)
+            setRockOnGround(false)
+            setShowCollectedMessage(true)
+            setTimeout(() => setShowCollectedMessage(false), 3000)
+          }}
           magnaBowlLentInInventory={magnaBowlLentInInventory}
           magnaBowlOnGround={magnaBowlOnGround}
           magnaBowlDropPosition={magnaBowlDropPosition}
@@ -2317,10 +2363,14 @@ function ModelScene({
 
           {/* 🪨 Roca soltada del inventario */}
           {rockOnGround && rockDropPosition && (
-            <DroppedRock
+            <DroppableItem
+              modelPath="/rock_blender.glb"
               position={[rockDropPosition.x, 0, rockDropPosition.z]}
               onCollect={onRockCollect}
-              canCollect={!rockInInventory}
+              scale={0.3}
+              floatHeight={0.5}
+              glowColor="#aaaaaa"
+              itemName="Roca"
             />
           )}
 
@@ -2488,17 +2538,13 @@ function ModelScene({
               <GobekliTepeScene
                 tonatiuhDropPosition={tonatiuhDropPosition}
                 tonatiuhOnGround={tonatiuhOnGround}
-                onTonatiuhCollect={onTonatiuhCollect}
                 scarabDropPosition={scarabDropPosition}
                 scarabOnGround={scarabOnGround}
-                onScarabCollect={onScarabCollect}
                 skullDropPosition={skullDropPosition}
                 skullOnGround={skullOnGround}
-                onSkullCollect={onSkullCollect}
                 magnaBowlCollected={magnaBowlCollected}
                 magnaBowlDropPosition={magnaBowlDropPosition}
                 magnaBowlOnGround={magnaBowlOnGround}
-                onMagnaBowlCollect={onMagnaBowlCollect}
                 avatarPositionRef={avatarPositionRef}
               />
             )}

@@ -127,12 +127,12 @@ function GobekliTepeContent({
       harmonia.playBeetleSound()
       console.log('🪲 Göbekli Tepe completado — Khepri despierta!')
     })
-    // Mostrar mensaje a los 3 segundos (cuando la esfera ya está visible)
-    const msgTimer = setTimeout(() => setShowMessage(true), 3000)
-    // Redirigir a créditos a los 13 segundos (animación ~11s + margen)
+    // Mostrar mensaje a los 8 segundos (esfera ya visible y subiendo)
+    const msgTimer = setTimeout(() => setShowMessage(true), 8000)
+    // Redirigir a créditos a los 25 segundos (animación 20s + margen)
     const redirectTimer = setTimeout(() => {
       router.push('/menu/info?credits=true')
-    }, 13000)
+    }, 25000)
     return () => {
       clearTimeout(msgTimer)
       clearTimeout(redirectTimer)
@@ -157,7 +157,7 @@ function GobekliTepeContent({
       {/* Esfera toroidal — emerge del piso al completar los 4 altares */}
       <ToroidalSphere
         position={[0, 0, 0]}
-        size={10}
+        size={20}
         visible={allActivated}
       />
 
@@ -326,7 +326,7 @@ function LoadingGobekli() {
         border: '2px solid rgba(255, 170, 51, 0.4)'
       }}>
         <div style={{ fontSize: '48px', marginBottom: '10px' }}>🏛️</div>
-        <div>Göbekli Tepe...</div>
+        <div></div>
       </div>
     </Html>
   )

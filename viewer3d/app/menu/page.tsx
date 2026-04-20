@@ -53,6 +53,7 @@ export default function MenuPage() {
       localStorage.removeItem('inv_rock')
       localStorage.removeItem('inv_magna_bowl')
       localStorage.removeItem('inv_magna_bowl_original')
+      localStorage.removeItem('game_timer_seconds')
     }
     
     console.log('✅ Todos los estados reseteados - Comenzando nueva partida')
