@@ -23,13 +23,15 @@ interface SelectableObjectProps {
   children: React.ReactNode
   position?: [number, number, number]
   onMove?: (newPosition: [number, number, number]) => void
+  onSelect?: () => void
 }
 
 export default function SelectableObject({
   id,
   children,
   position = [0, 0, 0],
-  onMove
+  onMove,
+  onSelect
 }: SelectableObjectProps) {
   const groupRef = useRef<THREE.Group>(null)
   const [hovered, setHovered] = useState(false)
@@ -111,14 +113,14 @@ export default function SelectableObject({
   const handleClick = useCallback((e: any) => {
     e.stopPropagation()
     if (isSelected) {
-      // Deseleccionar si ya estaba seleccionado
       setSelected(null)
       document.body.style.cursor = 'default'
     } else {
       setSelected(id)
       document.body.style.cursor = 'crosshair'
+      if (onSelect) onSelect()
     }
-  }, [isSelected, id, setSelected])
+  }, [isSelected, id, setSelected, onSelect])
 
   // Limpiar cursor al desmontar
   useEffect(() => {

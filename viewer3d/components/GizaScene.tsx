@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { useGLTF, Html } from '@react-three/drei'
 import { getAssetPath } from '@/lib/paths'
 import SelectableObject from './SelectableObject'
+import { useObjectSelection } from './ObjectSelectionContext'
 import CropCircle, { CropCirclePortal } from './CropCircle'
 import Geoglyph from './Geoglyph'
 import { isMissionCompleted } from '@/types/missionState'
@@ -16,6 +17,7 @@ import DroppableItem from './DroppableItem'
 interface GizaSceneProps {
   avatarPositionRef: React.MutableRefObject<THREE.Vector3>
   onSphinxClick?: () => void
+  onAkhenatonClick?: () => void
   onPyramidionCollect?: () => void
   pyramidionCollected?: boolean
   pyramidionOnTop?: boolean
@@ -52,7 +54,8 @@ interface GizaSceneProps {
  */
 export default function GizaScene({ 
   avatarPositionRef, 
-  onSphinxClick, 
+  onSphinxClick,
+  onAkhenatonClick,
   onPyramidionCollect, 
   pyramidionCollected, 
   pyramidionOnTop, 
@@ -164,13 +167,12 @@ export default function GizaScene({
           rotation={[0, Math.PI / 4, 0]} // Rotación 45° para alinear caras con cardinales
         />
         
-        {/* 👑 Akhenaton - Dentro de la pirámide (cámara del rey) - MOVIBLE */}
-        <MovablePharao 
-          id="giza-akhenaton"
-          model="akenaton.glb"
-          initialPosition={[0, 0, 0]} // Centro de la pirámide, a nivel del suelo
-          rotation={[0, 0, 0]} // De pie, mirando al norte
+        {/* 👑 Akhenaton - Dentro de la pirámide, mira al usuario, no movible */}
+        <AkhenatonNPC
+          position={[0, 0, 0]}
           scale={6}
+          onClick={onAkhenatonClick}
+          avatarPositionRef={avatarPositionRef}
         />
         
         {/* 🏺 Momia - Fuera de la pirámide hacia el oeste - MOVIBLE */}
@@ -404,16 +406,23 @@ function Sphinx({ position, rotation, onClick }: { position: [number, number, nu
  * 👑 Estatua de Faraón
  * Estatuas monumentales de faraones egipcios
  */
-function PharaoStatue({ model, position, rotation, scale }: { 
+function PharaoStatue({ model, position, rotation, scale, onClick }: { 
   model: string
   position: [number, number, number]
   rotation: [number, number, number]
   scale: number
+  onClick?: () => void
 }) {
   const { scene } = useGLTF(getAssetPath(`/${model}`))
   
   return (
-    <group position={position} rotation={rotation}>
+    <group
+      position={position}
+      rotation={rotation}
+      onClick={onClick}
+      onPointerOver={() => { if (onClick) document.body.style.cursor = 'pointer' }}
+      onPointerOut={() => { document.body.style.cursor = 'default' }}
+    >
       <primitive 
         object={scene}
         scale={[scale, scale, scale]}
@@ -461,15 +470,46 @@ function FloodWater({ levelRef }: { levelRef: React.MutableRefObject<number> }) 
 }
 
 /**
+ * 👑 Akhenaton NPC — Usa SelectableObject con onSelect para disparar el diálogo
+ */
+function AkhenatonNPC({ position, scale, onClick, avatarPositionRef }: {
+  position: [number, number, number]
+  scale: number
+  onClick?: () => void
+  avatarPositionRef?: React.MutableRefObject<THREE.Vector3>
+}) {
+  const { scene } = useGLTF(getAssetPath('/akenaton.glb'))
+  const groupRef = useRef<THREE.Group>(null)
+
+  // Girar para mirar al usuario
+  useFrame(({ camera }) => {
+    if (!groupRef.current) return
+    const target = avatarPositionRef?.current ?? camera.position
+    const dx = target.x - position[0]
+    const dz = target.z - position[2]
+    groupRef.current.rotation.y = Math.atan2(dx, dz)
+  })
+
+  return (
+    <group ref={groupRef}>
+      <SelectableObject id="giza-akhenaton" position={position} onSelect={onClick}>
+        <primitive object={scene} scale={[scale, scale, scale]} castShadow receiveShadow />
+      </SelectableObject>
+    </group>
+  )
+}
+
+/**
  * 👑 Faraón Movible - Wrapper para hacer estatuas seleccionables y movibles
  * Usa SelectableObject para permitir click y movimiento como los bloques H
  */
-function MovablePharao({ id, model, initialPosition, rotation, scale }: {
+function MovablePharao({ id, model, initialPosition, rotation, scale, onClick }: {
   id: string
   model: string
   initialPosition: [number, number, number]
   rotation: [number, number, number]
   scale: number
+  onClick?: () => void
 }) {
   const [pos, setPos] = useState<[number, number, number]>(initialPosition)
   
@@ -477,9 +517,10 @@ function MovablePharao({ id, model, initialPosition, rotation, scale }: {
     <SelectableObject id={id} position={pos} onMove={setPos}>
       <PharaoStatue 
         model={model}
-        position={[0, 0, 0]} // Posición relativa al SelectableObject
+        position={[0, 0, 0]}
         rotation={rotation}
         scale={scale}
+        onClick={onClick}
       />
     </SelectableObject>
   )

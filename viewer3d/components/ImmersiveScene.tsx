@@ -85,6 +85,7 @@ const Geoglyph = dynamic(() => import('./Geoglyph'), { ssr: false, loading: () =
 const ViracochaDialogue = dynamic(() => import('./ViracochaDialogue'), { ssr: false })
 const ViracochaInteractiveDialogue = dynamic(() => import('./ViracochaInteractiveDialogue'), { ssr: false })
 const SphinxInteractiveDialogue = dynamic(() => import('./SphinxInteractiveDialogue'), { ssr: false })
+const AkhenatonDialogue = dynamic(() => import('./AkhenatonDialogue'), { ssr: false })
 const QuetzalcoatlDialogue = dynamic(() => import('./QuetzalcoatlDialogue'), { ssr: false })
 const OlmecInteractiveDialogue = dynamic(() => import('./OlmecInteractiveDialogue'), { ssr: false })
 const DiscoveredItemInWorld = dynamic(() => import('./DiscoveredItemInWorld'), { ssr: false })
@@ -186,7 +187,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [isDay, setIsDay] = useState(true) // Estado dÃ­a/noche
   const [weather, setWeather] = useState<WeatherState>(DEFAULT_STORM_WEATHER) // Estado del clima
   const [cameraRotation, setCameraRotation] = useState(0) // Rotación de la cámara para la brújula
-  const [showSphinxDialogue, setShowSphinxDialogue] = useState(false) // Diálogo de la Esfinge en Giza
+  const [showSphinxDialogue, setShowSphinxDialogue] = useState(false)
+  const [showAkhenatonDialogue, setShowAkhenatonDialogue] = useState(false)
 
   // 🌬️ Viento aleatorio en escenas terrestres
   useEffect(() => {
@@ -1677,6 +1679,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             console.log('🌍 Clima global estabilizado. La esfera energética rosa ha aparecido.')
           }}
           onSphinxClick={() => setShowSphinxDialogue(true)}
+          onAkhenatonClick={() => setShowAkhenatonDialogue(true)}
           onPyramidionCollect={handleCollectPyramidion}
           pyramidionCollected={pyramidionCollected}
           pyramidionOnTop={pyramidionOnTop}
@@ -1791,6 +1794,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onOptionSelected={(optionId) => {
             console.log(` Opción seleccionada: ${optionId}`)
           }}
+        />
+      )}
+
+      {/* Diálogo de Akhenaton - FUERA del Canvas */}
+      {showAkhenatonDialogue && (
+        <AkhenatonDialogue
+          onClose={() => setShowAkhenatonDialogue(false)}
+          hasSeenGeoglyphs={isMissionCompleted('giza', 'return_pyramidion')}
         />
       )}
 
@@ -2036,6 +2047,7 @@ function ModelScene({
   magnaBowlCollected,
   onCameraRotationChange,
   onSphinxClick,
+  onAkhenatonClick,
   onPyramidionCollect,
   pyramidionCollected,
   pyramidionOnTop,
@@ -2139,6 +2151,7 @@ function ModelScene({
   magnaBowlCollected: boolean
   onCameraRotationChange?: (rotation: number) => void
   onSphinxClick?: () => void
+  onAkhenatonClick?: () => void
   onPyramidionCollect?: () => void
   pyramidionCollected?: boolean
   pyramidionOnTop?: boolean
@@ -2437,6 +2450,7 @@ function ModelScene({
                 key="giza-scene-permanent"
                 avatarPositionRef={avatarPositionRef}
                 onSphinxClick={onSphinxClick}
+                onAkhenatonClick={onAkhenatonClick}
                 onPyramidionCollect={onPyramidionCollect}
                 pyramidionCollected={pyramidionCollected || false}
                 pyramidionOnTop={pyramidionOnTop || false}
