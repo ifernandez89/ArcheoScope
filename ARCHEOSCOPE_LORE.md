@@ -252,6 +252,23 @@ Al completar el ritual final, el sonido del escarabajo sagrado — Khepri — se
 - Sistema solar completo con 8 planetas + Plutón + cinturón de asteroides
 - Fases lunares y eclipses
 - Iluminación solar real por coordenadas geográficas y fecha
+- **~250 estrellas reales** del Yale Bright Star Catalogue (Sirio, Vega, Orión, Cruz del Sur...)
+- Color espectral correcto por tipo estelar (O/B/A/F/G/K/M)
+- Tamaño proporcional a magnitud visual
+
+### Panel Científico (Modo Investigación)
+- Azimut solar, elevación, declinación en tiempo real
+- Tiempo simulado con fecha y hora calculada astronómicamente
+- Bioma, temperatura y humedad por coordenadas
+- **Alineaciones solares arqueoastronómicas** — líneas visuales hacia solsticios y equinoccios
+  - Fórmula real: `cos(Az) = sin(δ) / cos(φ)`
+  - Solsticio verano (naranja), Equinoccio (azul), Solsticio invierno (violeta)
+- Cronómetro de partida persistente
+
+### Calidad Gráfica
+- 3 presets: Baja / Media / Alta
+- Controlan: sombras, bloom, antialiasing, pixel ratio
+- Detección automática de GPU al iniciar
 
 ### Audio
 - Sistema Harmonia Mundi: audio procedural basado en frecuencias orbitales

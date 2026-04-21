@@ -93,6 +93,7 @@ const DiscoveredItemInWorld = dynamic(() => import('./DiscoveredItemInWorld'), {
 const ItemCollectedMessage = dynamic(() => import('./ItemCollectedMessage'), { ssr: false })
 import InventoryItem from './InventoryItem'
 import DroppableItem from './DroppableItem'
+import SolarAlignmentLines, { calcAlignments } from './SolarAlignmentLines'
 const Compass = dynamic(() => import('./Compass'), { ssr: false })
 const ShipAbilities = dynamic(() => import('./ShipAbilities'), { ssr: false })
 const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
@@ -176,6 +177,21 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const selectedLocationRef = useRef<{ lat: number, lon: number } | null>(null)
   const [movementMode, setMovementMode] = useState<'orbit' | 'avatar'>('avatar') // Modo avatar por defecto
   const [showLocationInfo, setShowLocationInfo] = useState(false)
+  const [showAlignmentLines, setShowAlignmentLines] = useState(false)
+
+  // Calcular estado solar para el panel científico (independiente del modo de movimiento)
+  const panelSolarState = useMemo(() => {
+    if (!selectedLocation || !showLocationInfo) return null
+    try {
+      const { SolarEngine } = require('../engines/SolarEngine')
+      const engine = new SolarEngine(selectedLocation.lat, selectedLocation.lon)
+      return engine.calculateSolarState()
+    } catch { return null }
+  }, [selectedLocation?.lat, selectedLocation?.lon, showLocationInfo])
+  const biome = useMemo(() => {
+    if (!selectedLocation) return { type: 'default' as const, name: 'Genérico', description: '', temperature: 20, humidity: 50 }
+    return detectBiome(selectedLocation.lat, selectedLocation.lon)
+  }, [selectedLocation?.lat, selectedLocation?.lon])
   const [gameTimer, setGameTimer] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('game_timer_seconds')
@@ -185,7 +201,23 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   })
   const [showGeometryField, setShowGeometryField] = useState(true) // Activado por defecto
   const [showUfoSelector, setShowUfoSelector] = useState(false) // Dropdown de UFOs
-  const [isDay, setIsDay] = useState(true) // Estado dÃ­a/noche
+  const [isDay, setIsDay] = useState(true)
+
+  // Sincronizar isDay con el estado solar real — al cambiar ubicación y cada minuto
+  useEffect(() => {
+    if (!selectedLocation) return
+    const update = () => {
+      try {
+        const { SolarEngine } = require('../engines/SolarEngine')
+        const engine = new SolarEngine(selectedLocation.lat, selectedLocation.lon)
+        const state = engine.calculateSolarState()
+        setIsDay(state.isDay)
+      } catch {}
+    }
+    update() // inmediato
+    const interval = setInterval(update, 60000) // cada minuto
+    return () => clearInterval(interval)
+  }, [selectedLocation?.lat, selectedLocation?.lon])
   const [weather, setWeather] = useState<WeatherState>(DEFAULT_STORM_WEATHER) // Estado del clima
   const [cameraRotation, setCameraRotation] = useState(0) // Rotación de la cámara para la brújula
   const [showSphinxDialogue, setShowSphinxDialogue] = useState(false)
@@ -1238,32 +1270,125 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         disabled={navigationBlocked}
       />
 
-      {/* Información de ubicación (desplegable) */}
+      {/* Panel Científico — reemplaza LocationInfo + timer */}
       {mode === 'model' && showLocationInfo && (
-        <>
-          <LocationInfo
-            location={selectedLocation}
-            site={selectedSite}
-          />
+        <div style={{
+          position: 'fixed',
+          top: '130px',
+          left: '20px',
+          zIndex: 999,
+          width: '280px',
+          background: 'rgba(5, 8, 18, 0.92)',
+          border: '1px solid rgba(102, 126, 234, 0.35)',
+          borderRadius: '12px',
+          padding: '16px',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          fontFamily: 'monospace',
+          fontSize: '12px',
+          color: 'rgba(255,255,255,0.85)',
+        }}>
+          {/* Header */}
           <div style={{
-            position: 'fixed',
-            top: '160px',
-            left: '20px',
-            zIndex: 999,
-            background: 'rgba(0, 0, 0, 0.8)',
-            border: '1px solid rgba(255, 215, 0, 0.4)',
-            borderRadius: '8px',
-            padding: '8px 14px',
-            color: '#ffd700',
-            fontSize: '14px',
-            fontFamily: 'monospace',
-            letterSpacing: '1px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            marginBottom: '12px', paddingBottom: '10px',
+            borderBottom: '1px solid rgba(102,126,234,0.2)',
           }}>
-            ⏱️ {String(Math.floor(gameTimer / 3600)).padStart(2, '0')}:
-            {String(Math.floor((gameTimer % 3600) / 60)).padStart(2, '0')}:
-            {String(gameTimer % 60).padStart(2, '0')}
+            <span style={{ color: '#667eea', fontWeight: 'bold', letterSpacing: '2px', fontSize: '11px' }}>
+              ◈ PANEL CIENTÍFICO
+            </span>
+            <span style={{ color: '#ffd700', letterSpacing: '1px' }}>
+              ⏱ {String(Math.floor(gameTimer / 3600)).padStart(2,'0')}:{String(Math.floor((gameTimer % 3600) / 60)).padStart(2,'0')}:{String(gameTimer % 60).padStart(2,'0')}
+            </span>
           </div>
-        </>
+
+          {/* Ubicación */}
+          <div style={{ marginBottom: '12px' }}>
+            <div style={{ color: '#667eea', fontSize: '10px', letterSpacing: '1px', marginBottom: '6px' }}>
+              📍 UBICACIÓN
+            </div>
+            {selectedSite && (
+              <div style={{ color: '#fff', fontWeight: 'bold', marginBottom: '3px', fontSize: '13px' }}>
+                {selectedSite.name}
+              </div>
+            )}
+            {selectedLocation && (
+              <div style={{ color: 'rgba(255,255,255,0.6)', lineHeight: '1.6' }}>
+                <div>Lat: <span style={{ color: '#a5f3fc' }}>{selectedLocation.lat.toFixed(5)}°</span></div>
+                <div>Lon: <span style={{ color: '#a5f3fc' }}>{selectedLocation.lon.toFixed(5)}°</span></div>
+              </div>
+            )}
+            {selectedSite && (
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '3px' }}>
+                {selectedSite.culture} · {selectedSite.period}
+              </div>
+            )}
+          </div>
+
+          {/* Datos Solares */}
+          <div style={{ marginBottom: '12px' }}>
+            <div style={{ color: '#f59e0b', fontSize: '10px', letterSpacing: '1px', marginBottom: '6px' }}>
+              ☀️ ASTRONOMÍA SOLAR
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 8px', lineHeight: '1.8' }}>
+              <span style={{ color: 'rgba(255,255,255,0.5)' }}>Azimut</span>
+              <span style={{ color: '#fcd34d' }}>{((panelSolarState?.solarAzimuth ?? 0) * 180 / Math.PI).toFixed(1)}°</span>
+              <span style={{ color: 'rgba(255,255,255,0.5)' }}>Elevación</span>
+              <span style={{ color: '#fcd34d' }}>{((panelSolarState?.solarAltitude ?? 0) * 180 / Math.PI).toFixed(1)}°</span>
+              <span style={{ color: 'rgba(255,255,255,0.5)' }}>Declinación</span>
+              <span style={{ color: '#fcd34d' }}>{((panelSolarState?.declination ?? 0) * 180 / Math.PI).toFixed(2)}°</span>
+              <span style={{ color: 'rgba(255,255,255,0.5)' }}>Fase</span>
+              <span style={{ color: (panelSolarState?.isDay ?? true) ? '#fbbf24' : '#818cf8' }}>{(panelSolarState?.isDay ?? true) ? '☀ Día' : '🌙 Noche'}</span>
+              {panelSolarState?.season && (
+                <>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>Estación</span>
+                  <span style={{ color: '#86efac' }}>
+                    {panelSolarState.season === 'spring' ? '🌱 Primavera'
+                      : panelSolarState.season === 'summer' ? '☀️ Verano'
+                      : panelSolarState.season === 'autumn' ? '🍂 Otoño'
+                      : '❄️ Invierno'}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Hora simulada */}
+          {panelSolarState?.simulatedTime && (
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ color: '#818cf8', fontSize: '10px', letterSpacing: '1px', marginBottom: '6px' }}>
+                🕐 TIEMPO SIMULADO
+              </div>
+              <div style={{ color: '#c4b5fd', lineHeight: '1.6' }}>
+                <div>{panelSolarState.simulatedTime.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                <div>{panelSolarState.simulatedTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} (hora local)</div>
+              </div>
+            </div>
+          )}
+
+          {/* Entorno */}
+          <div>
+            <div style={{ color: '#34d399', fontSize: '10px', letterSpacing: '1px', marginBottom: '6px' }}>
+              🌍 ENTORNO
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 8px', lineHeight: '1.8' }}>
+              <span style={{ color: 'rgba(255,255,255,0.5)' }}>Bioma</span>
+              <span style={{ color: '#6ee7b7', textTransform: 'capitalize' }}>{biome.type}</span>
+              {biome.temperature !== undefined && (
+                <>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>Temp.</span>
+                  <span style={{ color: '#6ee7b7' }}>{biome.temperature}°C</span>
+                </>
+              )}
+              {biome.humidity !== undefined && (
+                <>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>Humedad</span>
+                  <span style={{ color: '#6ee7b7' }}>{biome.humidity}%</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Indicador de transiciÃ³n cinematogrÃ¡fica */}
@@ -1580,6 +1705,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           location={selectedLocation}
           site={selectedSite}
           showGeometryField={showGeometryField}
+          showAlignmentLines={showAlignmentLines}
           isDay={isDay}
           onDayNightChange={setIsDay}
           solarDirection={solarDirection}
@@ -2025,6 +2151,7 @@ function ModelScene({
   location,
   site,
   showGeometryField,
+  showAlignmentLines,
   isDay,
   onDayNightChange,
   solarDirection,
@@ -2118,6 +2245,7 @@ function ModelScene({
   location?: { lat: number, lon: number } | null
   site?: ArchaeologicalSite | null
   showGeometryField: boolean
+  showAlignmentLines?: boolean
   isDay: boolean
   onDayNightChange: (isDay: boolean) => void
   solarDirection: { x: number, y: number, z: number }
@@ -2347,6 +2475,9 @@ function ModelScene({
             waterSize={biome.type === 'altiplano' ? 350 : 150}
             waterColor={biome.type === 'altiplano' ? '#2a5a8f' : '#1e3a5f'}
           />
+
+          {/* Estrellas — visibles de noche en escenas terrestres */}
+          {(!isDay || isMictlan) && <Stars />}
 
           {/* Terreno - adaptado al bioma (no en Mictlán) */}
           {!isMictlan && (isIceBiome ? (
@@ -2592,6 +2723,15 @@ function ModelScene({
           {/* Capturar referencias */}
           <CameraCapture onReady={onCameraReady} />
           <ModelCapture onLoaded={onModelLoaded} />
+
+          {/* Líneas de alineación solar arqueoastronómica */}
+          {location && (
+            <SolarAlignmentLines
+              latitude={location.lat}
+              visible={showAlignmentLines ?? false}
+              length={120}
+            />
+          )}
 
           {/* Zoom cinematogrÃ¡fico al entrar - SOLO en modo Ã³rbita */}
           {movementMode === 'orbit' && <CinematicZoom />}

@@ -316,6 +316,38 @@ function InfoContent() {
             border: 'rgba(244, 114, 182, 0.3)',
             bg: 'rgba(244, 114, 182, 0.08)',
             text: 'Generador procedural de patrones geométricos basados en matemáticas antiguas. Cada sitio arqueológico tiene asignado un patrón único: Lissajous (Giza), Cubo de Metatrón (Puma Punku), Espiral galáctica (Teotihuacán), Polígono estelar (Veracruz), Curva de Hilbert (Isla de Pascua). Al completar una misión, el patrón se graba en el terreno como crop circle. El sistema Sacred Geometry Engine genera además patrones únicos basados en la nave utilizada y las coordenadas del sitio — cada combinación produce una firma energética irrepetible.'
+          },
+          {
+            icon: '🔭',
+            title: 'Panel Científico — Modo Investigación',
+            color: '#38bdf8',
+            border: 'rgba(56, 189, 248, 0.3)',
+            bg: 'rgba(56, 189, 248, 0.08)',
+            text: 'Panel de datos astronómicos y geográficos en tiempo real accesible desde cualquier sitio arqueológico. Muestra azimut solar, elevación, declinación y estación calculados con el motor SolarEngine para las coordenadas exactas del sitio. Incluye tiempo simulado con fecha y hora local, bioma detectado con temperatura y humedad, y cronómetro de partida persistente. Diseñado como herramienta de referencia científica para investigadores y educadores.'
+          },
+          {
+            icon: '🌟',
+            title: 'Cielo Estelar Real — Catálogo Yale',
+            color: '#fde68a',
+            border: 'rgba(253, 230, 138, 0.3)',
+            bg: 'rgba(253, 230, 138, 0.06)',
+            text: 'El cielo nocturno incluye ~250 estrellas del Yale Bright Star Catalogue en sus posiciones astronómicas exactas, calculadas a partir de Ascensión Recta (RA) y Declinación (Dec). Sirio, Vega, Betelgeuse, Rigel, Polaris, la Cruz del Sur, Orión y las principales constelaciones son reconocibles. Cada estrella tiene su color espectral correcto (O=azul intenso, B=azul-blanco, A=blanco, F=amarillo-blanco, G=amarillo solar, K=naranja, M=rojo) y tamaño proporcional a su magnitud visual. El fondo galáctico añade 80,000 estrellas procedurales en un solo draw call sin impacto en el rendimiento.'
+          },
+          {
+            icon: '☀️',
+            title: 'Alineaciones Solares Arqueoastronómicas',
+            color: '#fb923c',
+            border: 'rgba(251, 146, 60, 0.3)',
+            bg: 'rgba(251, 146, 60, 0.06)',
+            text: 'Sistema de visualización de alineaciones solares basado en arqueoastronomía real. Para cada sitio, calcula y dibuja líneas hacia el horizonte indicando dónde sale y pone el sol en los tres eventos astronómicos clave: Solsticio de Verano (+23.44° de declinación, naranja), Equinoccios (0°, azul) y Solsticio de Invierno (-23.44°, violeta). La fórmula utilizada es cos(Az_salida) = sin(δ) / cos(φ), donde δ es la declinación solar y φ la latitud del sitio. Activable desde el Panel Científico. Ejemplo en Giza (lat 29.98°N): el sol del solsticio de verano sale a 62.5° NE — exactamente la orientación de la Gran Galería.'
+          },
+          {
+            icon: '🖥️',
+            title: 'Sistema de Calidad Gráfica',
+            color: '#a3e635',
+            border: 'rgba(163, 230, 53, 0.3)',
+            bg: 'rgba(163, 230, 53, 0.06)',
+            text: 'Tres presets de calidad gráfica configurables desde el menú Video: Baja (sin sombras, sin bloom, pixel ratio 0.75x — ideal para laptops), Media (sombras básicas, antialiasing, pixel ratio 1.0x — balance rendimiento/calidad) y Alta (sombras suaves, bloom, SSAO, pixel ratio nativo — requiere GPU dedicada). El sistema detecta automáticamente la GPU al iniciar y selecciona el preset óptimo. La configuración persiste entre sesiones en localStorage.'
           }
         ].map((s) => (
           <section key={s.title} style={{

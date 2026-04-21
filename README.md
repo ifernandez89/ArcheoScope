@@ -251,6 +251,79 @@ Los 4 items deben colocarse en sus altares cardinales. Si el jugador se equivoca
 - **Teoría Sintérgica** — Jacobo Grinberg-Zylberbaum: red energética planetaria
 - **Frecuencia 136.10 Hz** — "Om cósmico" (año terrestre transpuesto)
 - **432 Hz** — Frecuencia de afinación natural (Puma Punku)
+- **Yale Bright Star Catalogue** — ~250 estrellas con RA/Dec reales implementadas
+- **Arqueoastronomía** — Alineaciones solares calculadas con fórmula `cos(Az) = sin(δ) / cos(φ)`
+
+*Estas referencias han sido reinterpretadas libremente con fines artísticos y narrativos.*
+
+---
+
+## Módulo Científico — Panel de Información
+
+Al activar "Mostrar Info" en el juego, se despliega un panel científico con datos en tiempo real:
+
+### 📍 Ubicación
+- Nombre del sitio arqueológico, cultura y período histórico
+- Coordenadas geográficas con precisión de 5 decimales
+
+### ☀️ Astronomía Solar (tiempo real)
+- **Azimut solar** — dirección del sol en el horizonte (0°=Norte, 90°=Este)
+- **Elevación** — altura sobre el horizonte en grados
+- **Declinación** — inclinación axial de la Tierra en la fecha simulada
+- **Fase** — día o noche según posición solar
+- **Estación** — calculada por hemisferio y día del año
+
+### 🕐 Tiempo Simulado
+- Fecha y hora calculadas por el motor astronómico `SolarEngine`
+- Escala temporal: 1 segundo real = 2 minutos simulados
+
+### 🌍 Entorno
+- Bioma detectado por coordenadas geográficas
+- Temperatura y humedad del bioma
+
+### ✦ Alineaciones Solares Arqueoastronómicas
+Líneas visuales desde el sitio hacia el horizonte mostrando dónde sale/pone el sol en:
+
+| Evento | Declinación | Color |
+|--------|-------------|-------|
+| Solsticio de Verano | +23.44° | Naranja |
+| Equinoccios | 0° | Azul |
+| Solsticio de Invierno | -23.44° | Violeta |
+
+Fórmula utilizada: `cos(Az_salida) = sin(δ) / cos(φ)` donde δ = declinación solar, φ = latitud
+
+Ejemplo en Giza (lat 29.98°N):
+- Solsticio verano: sale a **62.5°** (NE), pone a **297.5°** (NO)
+- Equinoccio: sale a **90°** (E exacto), pone a **270°** (O exacto)
+- Solsticio invierno: sale a **117.5°** (SE), pone a **242.5°** (SO)
+
+### 🌟 Cielo Estelar Real
+~250 estrellas del Yale Bright Star Catalogue en posición astronómica exacta:
+- **Sirio** (mag -1.46), **Vega** (0.03), **Betelgeuse** (0.45), **Rigel** (0.12)
+- **Orión**, **Cruz del Sur**, **Osa Mayor**, **Casiopea** reconocibles
+- Color espectral correcto: O=azul, B=azul-blanco, A=blanco, G=amarillo, K=naranja, M=rojo
+- Tamaño proporcional a la magnitud visual
+
+---
+
+## Calidad Gráfica
+
+Menú Video → 3 presets:
+
+| Preset | Sombras | Bloom | Antialiasing | Pixel Ratio | Uso |
+|--------|---------|-------|--------------|-------------|-----|
+| **Baja** | ✗ | ✗ | ✗ | 0.75x | Laptops / navegadores lentos |
+| **Media** | ✓ básicas | ✗ | ✓ | 1.0x | Balance rendimiento/calidad |
+| **Alta** | ✓ suaves | ✓ | ✓ | nativo | GPU dedicada |
+
+---
+
+## Créditos y Referencias
+
+- **Harmonices Mundi** — Johannes Kepler (1619): frecuencias orbitales
+- **Teoría Sintérgica** — Jacobo Grinberg-Zylberbaum: red energética planetaria
+- **Frecuencia 136.10 Hz** — "Om cósmico" (año terrestre transpuesto)
+- **432 Hz** — Frecuencia de afinación natural (Puma Punku)
 
 *Estas referencias han sido reinterpretadas libremente con fines artísticos y narrativos.*
 
