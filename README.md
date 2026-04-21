@@ -1,362 +1,259 @@
-# 🏛️ Archeoscope: The Forgotten Relics
+# Archeoscope: The Forgotten Relics
+### Versión 1.0 — Abril 2026
 
-**Explora civilizaciones antiguas y descubre reliquias olvidadas**
+Experiencia interactiva 3D en navegador que combina arqueología, astronomía y narrativa mítica. El jugador explora sitios arqueológicos reales del mundo antiguo, resuelve misiones, recolecta artefactos sagrados y completa el ritual final en Göbekli Tepe.
 
-Un juego inmersivo de exploración arqueológica que te permite viajar por sitios históricos, descubrir artefactos antiguos y desentrañar los misterios de civilizaciones perdidas.
+**Demo:** https://ifernandez89.github.io/ArcheoScope
 
 ---
 
-## 🚀 Quick Start
+## Stack Tecnológico
 
-### 1. Iniciar API Creador3D
+| Capa | Tecnología |
+|------|-----------|
+| Framework | Next.js 14 (App Router, Static Export) |
+| 3D Engine | Three.js + React Three Fiber + Drei |
+| Lenguaje | TypeScript |
+| Estado | Zustand + useState + localStorage |
+| Audio | Web Audio API (procedural) |
+| Física | Custom (colisiones, órbitas keplerianas) |
+| Deploy | GitHub Pages |
+
+---
+
+## Estructura del Proyecto
+
+```
+viewer3d/
+├── app/                    # Next.js App Router
+│   ├── game/               # Escena principal del juego
+│   ├── menu/               # Menú principal, audio, controles, info/créditos
+│   ├── player-setup/       # Selección de nave y nombre
+│   └── reset/              # Resetear partida
+├── components/             # Componentes React/R3F
+│   ├── ImmersiveScene.tsx  # Componente raíz del juego (orquesta todo)
+│   ├── GizaScene.tsx       # Escena de Giza con pirámide y esfinge
+│   ├── EasterIslandScene.tsx
+│   ├── TeotihuacanScene.tsx
+│   ├── PumaPunkuScene.tsx
+│   ├── VeracruzScene.tsx
+│   ├── MictlanScene.tsx    # Inframundo azteca
+│   ├── GobekliTepeScene.tsx # Escena final con altares
+│   ├── DroppableItem.tsx   # Item flotante recogible en el mundo
+│   ├── InventoryItem.tsx   # Item en el inventario (Canvas 3D)
+│   ├── ToroidalSphere.tsx  # Esfera final que asciende al cielo
+│   └── ...
+├── systems/
+│   ├── HarmoniaMundiSystem.ts  # Audio procedural planetario
+│   ├── AudioSystem.ts
+│   └── CosmicResonanceSystem.ts
+├── engines/
+│   ├── SolarEngine.ts      # Cálculo astronómico real
+│   ├── AstroEngine.ts
+│   └── WorldCore/
+├── types/
+│   ├── missionState.ts     # Sistema de misiones y progreso
+│   ├── player.ts           # Estado del jugador
+│   └── gameSettings.ts     # Configuración de audio/video
+└── public/                 # Assets estáticos (GLB, texturas, audio)
+```
+
+---
+
+## Sitios Arqueológicos y Misiones
+
+### 1. Puma Punku — Bolivia (-16.56°, -68.68°)
+- **Misión:** Mover el bloque H para revelar la estructura oculta
+- **NPC:** Viracocha — entrega la Fuente Magna prestada al completar 5 misiones
+- **Item:** Fuente Magna (no se puede soltar hasta entregarla a Viracocha)
+
+### 2. Giza — Egipto (29.98°, 31.13°)
+- **Misión:** Devolver el Piramidión a la cima de la Gran Pirámide
+- **Item:** Escarabajo sagrado (bajo la momia)
+- **Castigo:** Robar el escarabajo antes de tiempo activa la inundación → Game Over
+- **NPC:** Esfinge, Akhenaton, Ramsés II, Hatshepsut
+
+### 3. Teotihuacán — México (19.69°, -98.84°)
+- **Misión:** Plantar la semilla de maíz sagrada
+- **Item:** Semilla de maíz
+- **NPC:** Quetzalcóatl
+
+### 4. Tres Zapotes — Veracruz, México (18.47°, -95.45°)
+- **Misión:** Entregar la Máscara de Jade al Olmeca
+- **Item:** Máscara de Jade
+- **NPC:** Cabeza Colosal Olmeca
+
+### 5. Isla de Pascua — Chile (-27.13°, -109.28°)
+- **Misión:** Activar el Merkaba con la nave Titan
+- **Items:** Tonatiuh (recogido en Mictlán), Calavera de Cristal
+- **Portal:** Obelisco que lleva a Göbekli Tepe
+
+### 6. Mictlán — Inframundo (0.0001°, 0.0001°)
+- **Mecánica:** El jugador queda atrapado hasta ver 10 apariciones de Mictlantecuhtli
+- **Item:** Tonatiuh (visible solo con nave Phantom + habilidad activa)
+- **Botones bloqueados:** Coordenadas y Globo deshabilitados durante el encierro
+
+### 7. Göbekli Tepe — Turquía (37.22°, 38.92°) — FINAL
+- **Misión:** Colocar los 4 artefactos en sus altares cardinales
+  - Norte: Tonatiuh 🌞
+  - Sur: Escarabajo 🪲
+  - Este: Calavera de Cristal 💀
+  - Oeste: Fuente Magna 🏺
+- **Secuencia final:** Esfera toroidal emerge del centro y asciende al cielo (30s)
+- **Mensaje:** "Archeoscope / Regresará..."
+- **Redirección:** Créditos con auto-scroll
+
+---
+
+## Sistema de Naves (UFOs)
+
+| # | Nombre | Habilidad |
+|---|--------|-----------|
+| 1 | Phantom | Invisibilidad — revela Tonatiuh en Mictlán |
+| 2 | Avenger | Escudo |
+| 3 | UAP | Velocidad |
+| 4 | Oracle | Escaneo de entidades |
+| 5 | Titan | Pulso — activa el Merkaba en Isla de Pascua |
+
+---
+
+## Sistema de Inventario
+
+Los items persisten en `localStorage` y sobreviven recargas de página (F5). Se resetean al iniciar nueva partida.
+
+| Item | Origen | Destino |
+|------|--------|---------|
+| Fuente Magna (Titicaca) | Lago Titicaca | Viracocha (Puma Punku) |
+| Fuente Magna (prestada) | Viracocha | Altar Oeste — Göbekli |
+| Escarabajo | Bajo la momia — Giza | Altar Sur — Göbekli |
+| Calavera de Cristal | Isla de Pascua | Altar Este — Göbekli |
+| Tonatiuh | Mictlán (Phantom) | Altar Norte — Göbekli |
+| Semilla de Maíz | Teotihuacán | Plantar en tierra |
+| Piramidión | Giza | Cima de la pirámide |
+| Máscara de Jade | Isla de Pascua | Olmeca — Veracruz |
+| Roca | Entorno | Decorativo |
+
+---
+
+## Sistema de Audio — Harmonia Mundi
+
+Motor de audio procedural basado en frecuencias orbitales reales. Cada misión completada desbloquea una capa sonora.
+
+**Frecuencias planetarias (transpuestas al rango audible):**
+- Tierra: 136.10 Hz (C# — "Om cósmico")
+- Marte: 144.72 Hz (D)
+- Júpiter: 183.58 Hz (F#)
+- Saturno: 147.85 Hz (D)
+- Urano: 207.36 Hz (G#)
+- Neptuno: 211.44 Hz (G#)
+
+**Amplificadores arquitectónicos:**
+- Giza → bandpass 150 Hz (frecuencias solares)
+- Teotihuacán → highpass 200 Hz (armónicos cristalinos)
+- Isla de Pascua → lowpass 80 Hz (subgraves oceánicos)
+- Puma Punku → peaking 432 Hz (frecuencia sagrada)
+- Göbekli Tepe → bandpass 45 Hz (portal primordial)
+
+**Sonido especial:** Al completar Göbekli Tepe se activa el sonido del escarabajo sagrado (Khepri) — 3 capas de síntesis: wingbeat oscillator, LFO de aleteo, armónicos aerodinámicos.
+
+---
+
+## Sistema Astronómico
+
+Cálculo en tiempo real de posiciones planetarias usando `astronomy-engine`. Escala temporal: 1 segundo real = 1 hora simulada.
+
+- Posición solar real por coordenadas geográficas y fecha
+- Fases lunares y eclipses
+- Órbitas keplerianas de 8 planetas + Plutón
+- Cinturón de asteroides con 1600 instancias (10 modelos × 160)
+- Arte generativo orbital basado en resonancias armónicas
+
+---
+
+## Persistencia de Datos (localStorage)
+
+| Clave | Contenido |
+|-------|-----------|
+| `player_state` | Nombre, nave, última ubicación |
+| `mission_state` | Misiones completadas por sitio |
+| `game_settings` | Volumen master, volumen Harmonia |
+| `inv_scarab` | Escarabajo en inventario |
+| `inv_skull` | Calavera en inventario |
+| `inv_tonatiuh` | Tonatiuh en inventario |
+| `inv_rock` | Roca en inventario |
+| `inv_magna_bowl` | Fuente Magna prestada |
+| `inv_magna_bowl_original` | Fuente Magna original |
+| `game_timer_seconds` | Tiempo total de partida |
+| `magna_bowl_thanked` | Si Viracocha ya agradeció |
+
+---
+
+## Modelos 3D (public/)
+
+Todos los modelos están optimizados con Draco compression + simplificación + texturas WebP.
+
+| Modelo | Tamaño | Uso |
+|--------|--------|-----|
+| mictlantecuhtli.glb | 814 KB | Guardián del Mictlán |
+| atlante.glb | 694 KB | Isla de Pascua |
+| quetzalcoatl.glb | 858 KB | Teotihuacán |
+| akenaton.glb | 534 KB | Giza |
+| ramses2.glb | 480 KB | Giza |
+| hatshepsut.glb | 331 KB | Giza |
+| lanzon_chavin.glb | 237 KB | Decorativo |
+| calendario_maya.glb | 1.2 MB | Teotihuacán |
+| gobekli_tepe.glb | 910 KB | Escena final |
+| tonatiuh_aztec_sun.glb | 704 KB | Altar Norte |
+| escarabajo.glb | 679 KB | Altar Sur |
+| crystal-skull.glb | 45 KB | Altar Este |
+| fuente_magna.glb | 11 MB | Altar Oeste |
+
+---
+
+## Comandos de Desarrollo
+
 ```bash
-python run_creador3d.py
-```
-API disponible en: `http://localhost:8004`
+# Instalar dependencias
+cd viewer3d && bun install
 
-### 2. Iniciar Visualizador 3D
-```bash
-start_viewer3d.bat
-```
-Visualizador disponible en: `http://localhost:3000`
+# Desarrollo local
+bun run dev
 
----
+# Build para producción (GitHub Pages)
+bun run build
 
-## 📦 Componentes del Ecosistema
-
-### 🎨 Creador3D API (Puerto 8004)
-API REST experimental para generación de modelos 3D.
-
-**Características**:
-- Generación desde parámetros geométricos
-- Generación desde clases morfológicas
-- Generación desde geometría custom
-- Export a PNG y OBJ
-- Reutiliza lógica de backend científico
-
-**Endpoints**:
-- `POST /generate/parameters` - Generar desde parámetros
-- `POST /generate/morphology` - Generar desde morfología
-- `POST /generate/custom` - Generar geometría custom
-- `GET /model/{filename}` - Descargar modelo
-- `GET /morphologies` - Listar clases disponibles
-
-**Documentación**: Ver `creador3d/README.md`
-
----
-
-### 🌐 Visualizador 3D (Puerto 3000)
-Visualizador web interactivo con Next.js + React Three Fiber + Core Engine.
-
-**Características**:
-- **Core Engine Profesional**: Runtime completo para experiencias 3D
-- Carga de modelos .glb/.gltf con progreso
-- Sistema de cámara avanzado (orbital + cinematográfico)
-- Iluminación dinámica con simulación de hora del día
-- Sistema de eventos (click, hover, proximity)
-- Timeline interno para eventos temporales
-- Postprocessing (Bloom, SSAO)
-- Estado global con Zustand
-- Auto-rotación con toggle
-- Sombras y reflejos realistas
-- UI moderna y responsive
-
-**Arquitectura**:
-- **CAPA 1**: Core Engine (loader, camera, lighting, events, timeline)
-- **CAPA 2**: Motor de Experiencias (scenes, transitions)
-- **CAPA 3**: Motor IA (próximamente)
-- **CAPA 4**: Motor Astronómico + Geoespacial (próximamente)
-
-**Controles**:
-- Click izquierdo + arrastrar: Rotar
-- Click derecho + arrastrar: Mover cámara
-- Scroll: Zoom
-- Click en modelo: Toggle auto-rotación
-
-**Documentación**: 
-- Ver `viewer3d/README.md`
-- Ver `viewer3d/CORE_ENGINE.md` (arquitectura completa)
-
----
-
-### 🏛️ Backend Core
-Core mínimo del backend para soporte de Creador3D.
-
-**Componentes**:
-- `culturally_constrained_mig.py` - Motor de inferencia geométrica
-- `morphological_repository.py` - Repositorio de clases morfológicas
-- `geometric_inference_engine.py` - Engine de inferencia
-
-**Clases Morfológicas**:
-1. MOAI (Rapa Nui)
-2. SPHINX (Egipto)
-3. EGYPTIAN_STATUE (Egipto)
-4. COLOSSUS (Egipto)
-5. PYRAMID_MESOAMERICAN (Mesoamérica)
-6. TEMPLE_PLATFORM (Mesoamérica)
-7. STELA_MAYA (Mesoamérica)
-
----
-
-## 🎯 Casos de Uso
-
-### 1. Generar Modelo desde Parámetros
-```bash
-curl -X POST http://localhost:8004/generate/parameters \
-  -H "Content-Type: application/json" \
-  -d '{
-    "height_m": 30,
-    "width_m": 50,
-    "shape_type": "pyramid",
-    "color": "#D4A574"
-  }'
-```
-
-### 2. Generar Modelo desde Morfología
-```bash
-curl -X POST http://localhost:8004/generate/morphology \
-  -H "Content-Type: application/json" \
-  -d '{
-    "morphological_class": "moai",
-    "scale_factor": 1.5
-  }'
-```
-
-### 3. Visualizar Modelo
-1. Genera un modelo con la API
-2. Obtén el nombre del archivo del response
-3. Abre el visualizador: `http://localhost:3000`
-4. El modelo se carga automáticamente
-
----
-
-## 📁 Estructura del Proyecto
-
-```
-creador3d-ecosystem/
-├── creador3d/              # API experimental
-│   ├── __init__.py
-│   ├── api_creador3d.py   # API FastAPI
-│   └── README.md          # Documentación
-│
-├── viewer3d/              # Visualizador 3D
-│   ├── app/               # Next.js App Router
-│   ├── components/        # Componentes React
-│   ├── core/              # Core Engine (runtime)
-│   ├── experience/        # Motor de Experiencias
-│   ├── store/             # Estado global (Zustand)
-│   ├── public/            # Archivos estáticos
-│   ├── README.md          # Documentación
-│   └── CORE_ENGINE.md     # Arquitectura del Core Engine
-│
-├── backend/               # Core mínimo
-│   ├── culturally_constrained_mig.py
-│   ├── morphological_repository.py
-│   └── geometric_inference_engine.py
-│
-├── models_3d/             # Modelos 3D de entrada
-│   └── warrior.glb        # Modelo de prueba
-│
-├── creador3d_models/      # Modelos generados
-│   ├── *.png              # Renders
-│   └── *.obj              # Geometría 3D
-│
-├── run_creador3d.py       # Iniciar API
-├── start_viewer3d.bat     # Iniciar visualizador
-├── test_creador3d.py      # Tests de la API
-└── README.md              # Este archivo
+# Verificar tipos TypeScript
+npx tsc --noEmit
 ```
 
 ---
 
-## 🔧 Instalación
+## Mecánicas Especiales
 
-### Requisitos
-- Python 3.8+
-- Node.js 18+
-- npm o yarn
+### Inundación de Giza
+Si el jugador roba el escarabajo antes de completar las 5 misiones previas:
+1. El escarabajo aparece en el inventario
+2. Los botones de navegación se bloquean
+3. El agua sube 1m/segundo hasta alcanzar al jugador
+4. Game Over → limpia localStorage → redirige al menú
 
-### Backend (Creador3D API)
-```bash
-pip install fastapi uvicorn trimesh matplotlib numpy pydantic
-```
+### Trampa del Mictlán
+Al entrar al Mictlán, los botones de coordenadas y globo se deshabilitan. La única salida es esperar 10 apariciones de Mictlantecuhtli (cada 4-10 segundos).
 
-### Frontend (Visualizador 3D)
-```bash
-cd viewer3d
-npm install
-```
+### Ritual de Göbekli Tepe
+Los 4 items deben colocarse en sus altares cardinales. Si el jugador se equivoca, puede recoger el item y reposicionarlo. Una vez los 4 están correctos, la secuencia es irreversible.
 
 ---
 
-## 🧪 Testing
+## Créditos y Referencias
 
-### Test de la API
-```bash
-python test_creador3d.py
-```
+- **Harmonices Mundi** — Johannes Kepler (1619): frecuencias orbitales
+- **Teoría Sintérgica** — Jacobo Grinberg-Zylberbaum: red energética planetaria
+- **Frecuencia 136.10 Hz** — "Om cósmico" (año terrestre transpuesto)
+- **432 Hz** — Frecuencia de afinación natural (Puma Punku)
 
-### Test Manual
-```bash
-# 1. Iniciar API
-python run_creador3d.py
-
-# 2. Verificar status
-curl http://localhost:8004/status
-
-# 3. Generar modelo de prueba
-curl -X POST http://localhost:8004/generate/morphology \
-  -H "Content-Type: application/json" \
-  -d '{"morphological_class": "moai", "scale_factor": 1.0}'
-```
+*Estas referencias han sido reinterpretadas libremente con fines artísticos y narrativos.*
 
 ---
 
-## 🎨 Tecnologías
-
-### Backend
-- **FastAPI**: Framework web moderno
-- **Trimesh**: Procesamiento de geometría 3D
-- **Matplotlib**: Rendering de imágenes
-- **NumPy**: Cálculos numéricos
-
-### Frontend
-- **Next.js 14**: Framework React
-- **React Three Fiber**: React renderer para Three.js
-- **@react-three/drei**: Helpers 3D
-- **@react-three/postprocessing**: Efectos visuales
-- **Three.js**: Motor 3D WebGL
-- **Zustand**: Estado global
-- **TypeScript**: Type safety
-- **Core Engine**: Runtime profesional para experiencias 3D
-
----
-
-## 📚 Documentación
-
-### APIs
-- **Creador3D API**: `creador3d/README.md`
-- **Visualizador 3D**: `viewer3d/README.md`
-- **Core Engine**: `viewer3d/CORE_ENGINE.md` (arquitectura completa)
-
-### Swagger UI
-- API Docs: `http://localhost:8004/docs`
-- ReDoc: `http://localhost:8004/redoc`
-
----
-
-## 🔗 Integración
-
-### Cargar Modelos en el Visualizador
-
-**Desde archivo local**:
-```tsx
-<ModelViewer modelPath="/warrior.glb" />
-```
-
-**Desde Creador3D API**:
-```tsx
-<ModelViewer modelPath="http://localhost:8004/model/moai.glb" />
-```
-
-**Workflow completo**:
-```javascript
-// 1. Generar modelo
-const response = await fetch('http://localhost:8004/generate/morphology', {
-  method: 'POST',
-  body: JSON.stringify({ morphological_class: 'moai' })
-})
-
-const result = await response.json()
-
-// 2. Cargar en visualizador
-const modelPath = `http://localhost:8004/model/${result.obj_filename}`
-```
-
----
-
-## 🚀 Roadmap
-
-### Corto Plazo
-- [x] Core Engine profesional (FASE 1 completa)
-- [x] Sistema de iluminación dinámica
-- [x] Sistema de eventos y timeline
-- [x] Postprocessing (Bloom, SSAO)
-- [ ] Selector de modelos en visualizador
-- [ ] Panel de control de iluminación avanzado
-- [ ] Captura de screenshots
-- [ ] Más tipos de formas (cilindros, esferas)
-
-### Mediano Plazo
-- [ ] FASE 2: Motor de Experiencias completo
-  - [ ] Sistema de escenas multi-escena
-  - [ ] Audio reactivo
-  - [ ] Texto contextual 3D
-  - [ ] Narrativa temporal
-- [ ] Galería de modelos con thumbnails
-- [ ] Comparación lado a lado
-- [ ] Mediciones y anotaciones
-- [ ] Texturas procedurales
-- [ ] Batch generation
-
-### Largo Plazo
-- [ ] FASE 3: Motor IA
-  - [ ] Animaciones procedurales
-  - [ ] Movimiento reactivo al usuario
-  - [ ] Micro-expresiones
-  - [ ] Control por LLM
-- [ ] FASE 4: Motor Astronómico + Geoespacial
-  - [ ] Mapa 3D global (Cesium)
-  - [ ] Simulación solar real
-  - [ ] Alineamientos astronómicos
-  - [ ] Coordenadas geoespaciales
-- [ ] Editor 3D interactivo
-- [ ] Generación desde descripción textual (IA)
-- [ ] Export a más formatos (STL, FBX, GLTF)
-- [ ] AR/VR support
-- [ ] Colaboración en tiempo real
-
----
-
-## 🤝 Contribuir
-
-Este es un proyecto experimental. Para contribuir:
-
-1. Fork el repositorio
-2. Crea una rama para tu feature
-3. Implementa y prueba
-4. Crea un pull request
-
----
-
-## 📄 Licencia
-
-MIT License - Ver LICENSE para más detalles
-
----
-
-## 🎯 Filosofía del Proyecto
-
-**Separación de Responsabilidades**:
-- Creador3D: Experimentación libre sin restricciones
-- Backend Core: Lógica científica reutilizable
-- Visualizador: Presentación profesional
-
-**Principios**:
-- Código modular y mantenible
-- APIs REST bien documentadas
-- Performance optimizado
-- Experiencia de usuario fluida
-
----
-
-## 📞 Soporte
-
-Para preguntas o issues:
-- Revisa la documentación en `creador3d/README.md` y `viewer3d/README.md`
-- Abre un issue en GitHub
-- Consulta los ejemplos en `test_creador3d.py`
-
----
-
-**¡Disfruta creando y visualizando modelos 3D!** 🎨✨
+**Archeoscope v1.0** — 2026 | [GitHub](https://github.com/ifernandez89/ArcheoScope)
