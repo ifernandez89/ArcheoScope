@@ -18,6 +18,7 @@ import { loggers } from '@/core/Logger'
 import { WorldCore } from '../engines/WorldCore'
 import { getProceduralAudio } from '../systems/ProceduralAudio'
 import { getClimateAudio } from '../systems/ClimateAudioSystem'
+import { GRAPHICS_PRESETS } from '../systems/GraphicsPresets'
 import { useNarrativeZoom } from './NarrativeZoom'
 import { detectBiome, getSkyColorForBiome, getFogColorForBiome } from '@/utils/biome-detector'
 import { loadPlayerState, savePlayerState, updatePlayerLocation } from '@/types/player'
@@ -2248,14 +2249,23 @@ function ModelScene({
     }
   }, [modelRef.current])
 
+  // 📊 Leer preset gráfico desde localStorage
+  const graphicsPreset = useMemo(() => {
+    if (typeof window === 'undefined') return 'MEDIUM'
+    return (localStorage.getItem('graphics_preset') || 'MEDIUM') as 'LOW' | 'MEDIUM' | 'HIGH' | 'ULTRA'
+  }, [])
+  const gfx = GRAPHICS_PRESETS[graphicsPreset]
+  const dpr = gfx.pixelRatio
+
   return (
     <>
       <ObjectSelectionProvider onBlockMoved={onBlockMoved}>
         <Canvas
-          shadows
+          shadows={gfx.shadows}
           camera={{ position: [8, 4, 8], fov: 60 }}
+          dpr={dpr}
           gl={{
-            antialias: true,
+            antialias: gfx.antialias,
             alpha: false,
             powerPreference: 'high-performance',
             toneMapping: THREE.ACESFilmicToneMapping,

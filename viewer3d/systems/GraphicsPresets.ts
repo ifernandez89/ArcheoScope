@@ -150,7 +150,7 @@ export const GRAPHICS_PRESETS: Record<QualityPreset, GraphicsConfig> = {
     
     // Rendering
     antialias: true,
-    pixelRatio: window.devicePixelRatio || 1.0,
+    pixelRatio: 1.0, // Se sobreescribe en cliente con window.devicePixelRatio
     maxLights: 16,
     
     // LOD

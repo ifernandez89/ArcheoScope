@@ -65,6 +65,7 @@ export default function MenuPage() {
   const menuOptions = [
     { label: 'Nueva', path: null, action: handleNewGame },
     { label: 'Audio', path: '/menu/audio', action: null },
+    { label: 'Video', path: '/menu/video', action: null },
     { label: 'Controles', path: '/menu/controls', action: null },
     { label: 'Información', path: '/menu/info', action: null }
   ]

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface AkhenatonDialogueProps {
   onClose: () => void
-  hasSeenGeoglyphs?: boolean // Desbloquea la 4ta pregunta
+  hasSeenGeoglyphs?: boolean
 }
 
 const ACCENT = '#e8c97a'
@@ -15,23 +15,36 @@ const OPTIONS = [
   { id: 3, label: '¿Qué ocurre si la red no se restaura?' },
 ]
 
-const RESPONSES: Record<number, string> = {
-  1: `Los hombres creen que cada civilización levantó sus monumentos por separado.\n\nPero las piedras recuerdan otra historia.\n\nCulturas separadas por océanos… separadas por milenios… levantaron estructuras con la misma geometría. Los mismos alineamientos. Las mismas proporciones. Las mismas orientaciones hacia las estrellas.\n\nNadie sabe quién transmitió ese conocimiento.\n\nAlgunos guardianes lo llaman…\n\nLa Primera Señal.`,
-  2: `Tu llegada no es un accidente.\n\nTu nave porta la marca de una antigua orden.\n\nArcheoscope.\n\nExploradores de mundos… buscadores de estructuras imposibles.\n\nHace poco tiempo, sus sensores detectaron algo que no debería existir. Una resonancia artificial proveniente de este planeta. Un pulso… demasiado preciso para ser natural.\n\nLa red despertó… y respondió a tu llegada.`,
-  3: `La red mantiene el equilibrio entre cielo y tierra.\n\nCuando sus nodos están alineados… el mundo respira en armonía.\n\nPero ahora… algo está fuera de fase.\n\nLos antiguos lo llamaban…\n\nLa Distorsión.\n\nCuando la red colapsa… las órbitas comienzan a desviarse. Las resonancias del planeta cambian. Y el tiempo mismo se vuelve inestable.\n\nSi la distorsión crece… la historia de este mundo podría reiniciarse.\n\nComo si nunca hubiera existido.`,
-  4: `Entonces comienzas a ver la red.\n\nLos antiguos no solo construyeron monumentos.\n\nDibujaron señales visibles desde el cielo.\n\nGeoglifos en los desiertos. Patrones en las montañas. Geometría grabada en piedra.\n\nCada símbolo es parte de un mapa mayor.\n\nUna geometría planetaria.\n\nUn lenguaje que solo puede leerse…\n\ndesde las estrellas.`,
+function getResponses(pilotName: string): Record<number, string> {
+  return {
+    1: `Los hombres creen que cada civilización levantó sus monumentos por separado.\n\nPero las piedras recuerdan otra historia.\n\nCulturas separadas por océanos… separadas por milenios… levantaron estructuras con la misma geometría. Los mismos alineamientos. Las mismas proporciones. Las mismas orientaciones hacia las estrellas.\n\nNadie sabe quién transmitió ese conocimiento.\n\nAlgunos guardianes lo llaman…\n\nLa Primera Señal.`,
+    2: `Tu llegada no es un accidente.\n\nTu nave porta la marca de una antigua orden.\n\n${pilotName}.\n\nExploradores de mundos… buscadores de estructuras imposibles.\n\nHace poco tiempo, sus sensores detectaron algo que no debería existir. Una resonancia artificial proveniente de este planeta. Un pulso… demasiado preciso para ser natural.\n\nLa red despertó… y respondió a tu llegada.`,
+    3: `La red mantiene el equilibrio entre cielo y tierra.\n\nCuando sus nodos están alineados… el mundo respira en armonía.\n\nPero ahora… algo está fuera de fase.\n\nLos antiguos lo llamaban…\n\nLa Distorsión.\n\nCuando la red colapsa… las órbitas comienzan a desviarse. Las resonancias del planeta cambian. Y el tiempo mismo se vuelve inestable.\n\nSi la distorsión crece… la historia de este mundo podría reiniciarse.\n\nComo si nunca hubiera existido.`,
+    4: `Entonces comienzas a ver la red.\n\nLos antiguos no solo construyeron monumentos.\n\nDibujaron señales visibles desde el cielo.\n\nGeoglifos en los desiertos. Patrones en las montañas. Geometría grabada en piedra.\n\nCada símbolo es parte de un mapa mayor.\n\nUna geometría planetaria.\n\nUn lenguaje que solo puede leerse…\n\ndesde las estrellas.`,
+  }
 }
 
 export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }: AkhenatonDialogueProps) {
   const [selectedResponse, setSelectedResponse] = useState<string | null>(null)
   const [showOptions, setShowOptions] = useState(true)
+  const [pilotName, setPilotName] = useState('Archeoscope')
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('player_state')
+      if (saved) {
+        const state = JSON.parse(saved)
+        if (state?.playerName) setPilotName(state.playerName)
+      }
+    } catch {}
+  }, [])
 
   const options = hasSeenGeoglyphs
     ? [...OPTIONS, { id: 4, label: 'He visto símbolos que conectan los nodos.' }]
     : OPTIONS
 
   const handleOption = (id: number) => {
-    setSelectedResponse(RESPONSES[id])
+    setSelectedResponse(getResponses(pilotName)[id])
     setShowOptions(false)
     setTimeout(() => onClose(), 8000)
   }
