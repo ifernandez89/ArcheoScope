@@ -175,7 +175,7 @@ export default function AstrologyPage() {
         style={{ padding: '12px 24px', fontSize: '18px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: '8px', color: '#a78bfa', marginBottom: '40px', cursor: 'pointer' }} />
 
       {/* ─── ESTADO LUNAR ────────────────────────────────────────────── */}
-      <div className="info-card" style={{ background: 'rgba(226,232,240,0.04)', border: '1px solid rgba(226,232,240,0.2)', padding: '32px' }}>
+      <div className="info-card" style={{ background: 'rgba(226,232,240,0.04)', border: '1px solid rgba(226,232,240,0.2)', padding: 'clamp(16px, 5vw, 32px)', maxWidth: '500px' }}>
         <div style={{ fontSize: 'clamp(50px, 12vw, 64px)', marginBottom: '8px' }}>{moonPhase.glyph}</div>
         <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '3px', marginBottom: '4px' }}>FASE LUNAR</div>
         <h2 style={{ color: '#e2e8f0' }}>{moonPhase.name}</h2>
@@ -183,9 +183,9 @@ export default function AstrologyPage() {
       </div>
 
       {/* ─── POSICIONES PLANETARIAS ──────────────────────────────────── */}
-      <div className="info-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '900px' }}>
+      <div className="info-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '900px', width: '100%', padding: 'clamp(16px, 4vw, 24px)' }}>
         <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '20px', textAlign: 'center' }}>POSICIONES DEL ZODIACO</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
           {PLANETS_META.map((p) => {
             const lon = data.positions[p.id]
             const sign = getSign(lon)
@@ -209,9 +209,9 @@ export default function AstrologyPage() {
       </div>
 
       {/* ─── ASPECTOS PLANETARIAS ───────────────────────────────────── */}
-      <div className="info-card" style={{ background: 'rgba(167,139,250,0.03)', border: '1px solid rgba(167,139,250,0.15)', maxWidth: '900px' }}>
+      <div className="info-card" style={{ background: 'rgba(167,139,250,0.03)', border: '1px solid rgba(167,139,250,0.15)', maxWidth: '900px', width: '100%', padding: 'clamp(16px, 4vw, 24px)' }}>
         <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '20px', textAlign: 'center' }}>ASPECTOS MAYORES (RELACIONES ANGULARES)</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
           {data.aspects.length > 0 ? data.aspects.map((a, i) => {
             const p1 = PLANETS_META.find(p => p.id === a.p1)!
             const p2 = PLANETS_META.find(p => p.id === a.p2)!
@@ -235,7 +235,7 @@ export default function AstrologyPage() {
       </div>
 
       {/* ─── GUÍA DE INTERPRETACIÓN ─────────────────────────────────── */}
-      <div className="info-card" style={{ background: 'rgba(251,191,36,0.02)', border: '1px solid rgba(251,191,36,0.1)', maxWidth: '900px' }}>
+      <div className="info-card" style={{ background: 'rgba(251,191,36,0.02)', border: '1px solid rgba(251,191,36,0.1)', maxWidth: '900px', width: '100%', padding: 'clamp(16px, 4vw, 24px)' }}>
         <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '16px', textAlign: 'center' }}>GUÍA DE ASPECTOS</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', textAlign: 'left' }}>
           <div>
