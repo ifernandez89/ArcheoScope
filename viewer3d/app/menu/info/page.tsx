@@ -367,11 +367,11 @@ function InfoContent() {
           },
           {
             icon: '🌀',
-            title: 'Calendario Tzolkin — Sincronario Maya',
+            title: 'Calendarios Mayas — Tzolk\'in y Dreamspell',
             color: '#fbbf24',
             border: 'rgba(251, 191, 36, 0.3)',
             bg: 'rgba(251, 191, 36, 0.06)',
-            text: 'Implementación del calendario sagrado maya de 260 kines (20 sellos solares × 13 tonos galácticos). Calcula el Kin del día usando la correlación estándar con fecha de referencia 26 de julio de 2023 = Kin 1 (Dragón Magnético). Muestra el sello solar con su glifo y significado, el tono galáctico con su poder y acción, y la onda encantada de 13 días a la que pertenece. Los 20 sellos representan arquetipos universales: Dragón (nacimiento), Viento (espíritu), Noche (abundancia), Semilla (florecimiento), hasta Sol (iluminación). Selector de fecha para consultar cualquier día de la historia.'
+            text: 'Archeoscope implementa dos sistemas calendáricos mayas. El Tzolk\'in Clásico usa la correlación GMT (584283) — el estándar arqueológico que relaciona la Cuenta Larga maya con el calendario gregoriano. El día 0.0.0.0.0 corresponde al 11 de agosto de 3114 a.C. y el 21 de diciembre de 2012 = 4 Ahau (verificado). Muestra Cuenta Larga, Tzolk\'in (20 sellos × 13 tonos = 260 kines) y Haab (18 meses de 20 días + 5 Wayeb). El Sincronario 13 Lunas (Dreamspell, José Argüelles) usa referencia fija 26 julio 1987 = Kin 24 (Harmonic Convergence), ciclo continuo sin reinicio anual, con Luna Galáctica (13 × 28 días) y Onda Encantada. El 21 abril 2026 = Kin 133 Caminante Eléctrico, Onda del Mono.'
           },
           {
             icon: '⚡',
