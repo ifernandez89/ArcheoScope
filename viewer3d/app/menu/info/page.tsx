@@ -372,6 +372,14 @@ function InfoContent() {
             border: 'rgba(251, 191, 36, 0.3)',
             bg: 'rgba(251, 191, 36, 0.06)',
             text: 'Implementación del calendario sagrado maya de 260 kines (20 sellos solares × 13 tonos galácticos). Calcula el Kin del día usando la correlación estándar con fecha de referencia 26 de julio de 2023 = Kin 1 (Dragón Magnético). Muestra el sello solar con su glifo y significado, el tono galáctico con su poder y acción, y la onda encantada de 13 días a la que pertenece. Los 20 sellos representan arquetipos universales: Dragón (nacimiento), Viento (espíritu), Noche (abundancia), Semilla (florecimiento), hasta Sol (iluminación). Selector de fecha para consultar cualquier día de la historia.'
+          },
+          {
+            icon: '⚡',
+            title: 'Calendario Babilónico — Sistema Sexagesimal',
+            color: '#38bdf8',
+            border: 'rgba(56, 189, 248, 0.3)',
+            bg: 'rgba(56, 189, 248, 0.06)',
+            text: 'El sistema de base 60 inventado en Mesopotamia (~3000 a.C.) que heredamos para medir el tiempo (60 min/hora, 60 seg/min), los ángulos (360°) y las coordenadas celestes (RA/Dec en horas·minutos·segundos). El calendario babilónico tenía 6 ciclos de 60 días = 360 días, cada uno presidido por una deidad planetaria: Shamash (Sol), Sin (Luna), Nergal (Marte), Nabu (Mercurio), Marduk (Júpiter), Ishtar (Venus). Incluye las 5 estrellas babilónicas principales con sus coordenadas RA/Dec reales en formato sexagesimal, la hora actual en unidades babilónicas (Beru, Uš, Ninda) y una tabla de la herencia del sistema en la ciencia moderna.'
           }
         ].map((s) => (
           <section key={s.title} style={{
