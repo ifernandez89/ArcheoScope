@@ -3,202 +3,233 @@
 import { useRouter } from 'next/navigation'
 import { useState, useMemo } from 'react'
 
-// ─── SIGNOS ZODIACALES ───────────────────────────────────────────────────────
+// ─── CONSTANTES ASTRONÓMICAS ────────────────────────────────────────────────
 const ZODIAC = [
-  { name: 'Aries',       glyph: '♈', dates: 'Mar 21 – Abr 19', element: 'Fuego',  color: '#ef4444', ruler: 'Marte',    quality: 'Cardinal',  trait: 'Iniciativa, Coraje, Impulso' },
-  { name: 'Tauro',       glyph: '♉', dates: 'Abr 20 – May 20', element: 'Tierra', color: '#22c55e', ruler: 'Venus',    quality: 'Fijo',      trait: 'Estabilidad, Sensualidad, Persistencia' },
-  { name: 'Géminis',     glyph: '♊', dates: 'May 21 – Jun 20', element: 'Aire',   color: '#fbbf24', ruler: 'Mercurio', quality: 'Mutable',   trait: 'Comunicación, Versatilidad, Curiosidad' },
-  { name: 'Cáncer',      glyph: '♋', dates: 'Jun 21 – Jul 22', element: 'Agua',   color: '#60a5fa', ruler: 'Luna',     quality: 'Cardinal',  trait: 'Protección, Emoción, Intuición' },
-  { name: 'Leo',         glyph: '♌', dates: 'Jul 23 – Ago 22', element: 'Fuego',  color: '#f97316', ruler: 'Sol',      quality: 'Fijo',      trait: 'Creatividad, Liderazgo, Generosidad' },
-  { name: 'Virgo',       glyph: '♍', dates: 'Ago 23 – Sep 22', element: 'Tierra', color: '#a3e635', ruler: 'Mercurio', quality: 'Mutable',   trait: 'Análisis, Servicio, Perfección' },
-  { name: 'Libra',       glyph: '♎', dates: 'Sep 23 – Oct 22', element: 'Aire',   color: '#f472b6', ruler: 'Venus',    quality: 'Cardinal',  trait: 'Equilibrio, Armonía, Justicia' },
-  { name: 'Escorpio',    glyph: '♏', dates: 'Oct 23 – Nov 21', element: 'Agua',   color: '#dc2626', ruler: 'Plutón',   quality: 'Fijo',      trait: 'Transformación, Intensidad, Poder' },
-  { name: 'Sagitario',   glyph: '♐', dates: 'Nov 22 – Dic 21', element: 'Fuego',  color: '#a78bfa', ruler: 'Júpiter',  quality: 'Mutable',   trait: 'Expansión, Filosofía, Aventura' },
-  { name: 'Capricornio', glyph: '♑', dates: 'Dic 22 – Ene 19', element: 'Tierra', color: '#6b7280', ruler: 'Saturno',  quality: 'Cardinal',  trait: 'Ambición, Disciplina, Estructura' },
-  { name: 'Acuario',     glyph: '♒', dates: 'Ene 20 – Feb 18', element: 'Aire',   color: '#38bdf8', ruler: 'Urano',    quality: 'Fijo',      trait: 'Innovación, Libertad, Humanidad' },
-  { name: 'Piscis',      glyph: '♓', dates: 'Feb 19 – Mar 20', element: 'Agua',   color: '#818cf8', ruler: 'Neptuno',  quality: 'Mutable',   trait: 'Compasión, Imaginación, Trascendencia' },
+  { name: 'Aries',       glyph: '♈', color: '#ef4444', element: 'Fuego',  ruler: 'Marte' },
+  { name: 'Tauro',       glyph: '♉', color: '#22c55e', element: 'Tierra', ruler: 'Venus' },
+  { name: 'Géminis',     glyph: '♊', color: '#fbbf24', element: 'Aire',   ruler: 'Mercurio' },
+  { name: 'Cáncer',      glyph: '♋', color: '#60a5fa', element: 'Agua',   ruler: 'Luna' },
+  { name: 'Leo',         glyph: '♌', color: '#f97316', element: 'Fuego',  ruler: 'Sol' },
+  { name: 'Virgo',       glyph: '♍', color: '#a3e635', element: 'Tierra', ruler: 'Mercurio' },
+  { name: 'Libra',       glyph: '♎', color: '#f472b6', element: 'Aire',   ruler: 'Venus' },
+  { name: 'Escorpio',    glyph: '♏', color: '#dc2626', element: 'Agua',   ruler: 'Plutón' },
+  { name: 'Sagitario',   glyph: '♐', color: '#a78bfa', element: 'Fuego',  ruler: 'Júpiter' },
+  { name: 'Capricornio', glyph: '♑', color: '#6b7280', element: 'Tierra', ruler: 'Saturno' },
+  { name: 'Acuario',     glyph: '♒', color: '#38bdf8', element: 'Aire',   ruler: 'Urano' },
+  { name: 'Piscis',      glyph: '♓', color: '#818cf8', element: 'Agua',   ruler: 'Neptuno' },
 ]
 
-// ─── PLANETAS ────────────────────────────────────────────────────────────────
-const PLANETS = [
-  { name: 'Sol',      glyph: '☉', color: '#fbbf24', meaning: 'Identidad, Voluntad, Vitalidad' },
-  { name: 'Luna',     glyph: '☽', color: '#e2e8f0', meaning: 'Emociones, Instinto, Subconsciente' },
-  { name: 'Mercurio', glyph: '☿', color: '#a3e635', meaning: 'Comunicación, Intelecto, Movimiento' },
-  { name: 'Venus',    glyph: '♀', color: '#f472b6', meaning: 'Amor, Belleza, Valores' },
-  { name: 'Marte',    glyph: '♂', color: '#ef4444', meaning: 'Acción, Deseo, Energía' },
-  { name: 'Júpiter',  glyph: '♃', color: '#a78bfa', meaning: 'Expansión, Sabiduría, Abundancia' },
-  { name: 'Saturno',  glyph: '♄', color: '#6b7280', meaning: 'Estructura, Disciplina, Tiempo' },
+const PLANETS_META = [
+  { id: 'sun',     name: 'Sol',      glyph: '☉', color: '#fbbf24', speed: 0.9856 },
+  { id: 'moon',    name: 'Luna',     glyph: '☽', color: '#e2e8f0', speed: 13.176 },
+  { id: 'mercury', name: 'Mercurio', glyph: '☿', color: '#a3e635', speed: 4.0923 },
+  { id: 'venus',   name: 'Venus',    glyph: '♀', color: '#f472b6', speed: 1.6021 },
+  { id: 'mars',    name: 'Marte',    glyph: '♂', color: '#ef4444', speed: 0.5241 },
+  { id: 'jupiter', name: 'Júpiter',  glyph: '♃', color: '#a78bfa', speed: 0.0831 },
+  { id: 'saturn',  name: 'Saturno',  glyph: '♄', color: '#6b7280', speed: 0.0335 },
 ]
 
-/**
- * Calcular signo solar basado en fecha
- */
-function getSolarSign(date: Date) {
-  const m = date.getMonth() + 1
-  const d = date.getDate()
-  if ((m === 3 && d >= 21) || (m === 4 && d <= 19)) return 0
-  if ((m === 4 && d >= 20) || (m === 5 && d <= 20)) return 1
-  if ((m === 5 && d >= 21) || (m === 6 && d <= 20)) return 2
-  if ((m === 6 && d >= 21) || (m === 7 && d <= 22)) return 3
-  if ((m === 7 && d >= 23) || (m === 8 && d <= 22)) return 4
-  if ((m === 8 && d >= 23) || (m === 9 && d <= 22)) return 5
-  if ((m === 9 && d >= 23) || (m === 10 && d <= 22)) return 6
-  if ((m === 10 && d >= 23) || (m === 11 && d <= 21)) return 7
-  if ((m === 11 && d >= 22) || (m === 12 && d <= 21)) return 8
-  if ((m === 12 && d >= 22) || (m === 1 && d <= 19)) return 9
-  if ((m === 1 && d >= 20) || (m === 2 && d <= 18)) return 10
-  return 11
+// ─── MOTOR ASTRONÓMICO SIMPLIFICADO ──────────────────────────────────────────
+function getPlanetPositions(date: Date) {
+  const jd = (date.getTime() / 86400000) + 2440587.5
+  const d = jd - 2451545.0 // Días desde J2000
+
+  // Sol
+  const sunL = (280.460 + 0.9856474 * d) % 360
+  const sunM = (357.528 + 0.9856003 * d) % 360
+  const sunLon = (sunL + 1.915 * Math.sin(sunM * Math.PI / 180) + 0.020 * Math.sin(2 * sunM * Math.PI / 180)) % 360
+
+  // Luna
+  const moonL = (218.316 + 13.176396 * d) % 360
+  const moonM = (134.963 + 13.064993 * d) % 360
+  const moonLon = (moonL + 6.289 * Math.sin(moonM * Math.PI / 180)) % 360
+
+  // Aproximaciones para planetas
+  const calcPlanet = (baseL: number, daily: number, ecc: number) => {
+    const l = (baseL + daily * d) % 360
+    return (l + ecc * Math.sin(l * Math.PI / 180)) % 360
+  }
+
+  const mercuryLon = calcPlanet(252.25, 4.0923, 0.205)
+  const venusLon   = calcPlanet(181.98, 1.6021, 0.006)
+  const marsLon    = calcPlanet(355.45, 0.5241, 0.093)
+  const jupiterLon = calcPlanet(34.40,  0.0831, 0.048)
+  const saturnLon  = calcPlanet(50.08,  0.0335, 0.056)
+
+  const positions: Record<string, number> = {
+    sun: sunLon < 0 ? sunLon + 360 : sunLon,
+    moon: moonLon < 0 ? moonLon + 360 : moonLon,
+    mercury: mercuryLon < 0 ? mercuryLon + 360 : mercuryLon,
+    venus: venusLon < 0 ? venusLon + 360 : venusLon,
+    mars: marsLon < 0 ? marsLon + 360 : marsLon,
+    jupiter: jupiterLon < 0 ? jupiterLon + 360 : jupiterLon,
+    saturn: saturnLon < 0 ? saturnLon + 360 : saturnLon,
+  }
+
+  // Retrogradación (Aproximación basada en senoides de ciclos planetarios)
+  const isRetrograde = (id: string) => {
+    if (id === 'sun' || id === 'moon') return false
+    const cycleMap: Record<string, number> = { mercury: 0.05, venus: 0.01, mars: 0.008, jupiter: 0.005, saturn: 0.003 }
+    const seed = Math.sin(d * (cycleMap[id] || 0.01)) 
+    return seed > 0.8
+  }
+
+  return { positions, isRetrograde }
 }
 
-/**
- * Calcular signo lunar aproximado (ciclo de 29.5 días)
- */
-function getLunarSign(date: Date) {
-  const ref = new Date(2000, 0, 6) // Luna nueva conocida
-  const diffDays = (date.getTime() - ref.getTime()) / 86400000
-  const lunarCycle = 29.53059
-  const dayInCycle = ((diffDays % lunarCycle) + lunarCycle) % lunarCycle
-  const signIdx = Math.floor((dayInCycle / lunarCycle) * 12) % 12
-  const phase = dayInCycle / lunarCycle
-  let phaseName = 'Nueva'
-  if (phase > 0.03 && phase <= 0.25) phaseName = 'Creciente'
-  else if (phase > 0.25 && phase <= 0.53) phaseName = 'Llena'
-  else if (phase > 0.53 && phase <= 0.75) phaseName = 'Menguante'
-  else if (phase > 0.75) phaseName = 'Balsámica'
-  return { signIdx, phaseName }
+function getAspects(positions: Record<string, number>) {
+  const aspects: { p1: string, p2: string, type: string, orb: number, glyph: string }[] = []
+  const keys = Object.keys(positions)
+  const types = [
+    { name: 'Conjunción', angle: 0,   orb: 8, glyph: '☌' },
+    { name: 'Oposición',  angle: 180, orb: 8, glyph: '☍' },
+    { name: 'Trígono',    angle: 120, orb: 7, glyph: '△' },
+    { name: 'Cuadratura', angle: 90,  orb: 7, glyph: '□' },
+    { name: 'Sextil',     angle: 60,  orb: 5, glyph: '⚹' },
+  ]
+
+  for (let i = 0; i < keys.length; i++) {
+    for (let j = i + 1; j < keys.length; j++) {
+      const diff = Math.abs(positions[keys[i]] - positions[keys[j]])
+      const angle = diff > 180 ? 360 - diff : diff
+      
+      for (const t of types) {
+        const orb = Math.abs(angle - t.angle)
+        if (orb <= t.orb) {
+          aspects.push({ p1: keys[i], p2: keys[j], type: t.name, orb, glyph: t.glyph })
+          break
+        }
+      }
+    }
+  }
+  return aspects
+}
+
+function getSign(lon: number) {
+  const idx = Math.floor(lon / 30) % 12
+  return ZODIAC[idx]
 }
 
 export default function AstrologyPage() {
   const router = useRouter()
   const [selectedDate, setSelectedDate] = useState(new Date())
 
-  const solarIdx = useMemo(() => getSolarSign(selectedDate), [selectedDate])
-  const lunar = useMemo(() => getLunarSign(selectedDate), [selectedDate])
-  const solarSign = ZODIAC[solarIdx]
-  const lunarSign = ZODIAC[lunar.signIdx]
+  const data = useMemo(() => {
+    const { positions, isRetrograde } = getPlanetPositions(selectedDate)
+    const aspects = getAspects(positions)
+    return { positions, isRetrograde, aspects }
+  }, [selectedDate])
+
+  const moonPhase = useMemo(() => {
+    const jd = (selectedDate.getTime() / 86400000) + 2440587.5
+    const lunarCycle = 29.530588853
+    const phase = ((jd - 2451550.1) / lunarCycle) % 1
+    const phaseNorm = phase < 0 ? phase + 1 : phase
+    
+    let name = 'Luna Nueva', glyph = '🌑'
+    if (phaseNorm > 0.03 && phaseNorm <= 0.23) { name = 'Cuarto Creciente'; glyph = '🌒' }
+    else if (phaseNorm > 0.23 && phaseNorm <= 0.27) { name = 'Primer Cuarto'; glyph = '🌓' }
+    else if (phaseNorm > 0.27 && phaseNorm <= 0.47) { name = 'Gibosa Creciente'; glyph = '🌔' }
+    else if (phaseNorm > 0.47 && phaseNorm <= 0.53) { name = 'Luna Llena'; glyph = '🌕' }
+    else if (phaseNorm > 0.53 && phaseNorm <= 0.73) { name = 'Gibosa Menguante'; glyph = '🌖' }
+    else if (phaseNorm > 0.73 && phaseNorm <= 0.77) { name = 'Último Cuarto'; glyph = '🌗' }
+    else if (phaseNorm > 0.77 && phaseNorm <= 0.97) { name = 'Cuarto Menguante'; glyph = '🌘' }
+    
+    return { name, glyph, val: phaseNorm * 100 }
+  }, [selectedDate])
 
   return (
-    <main style={{
-      width: '100vw', height: '100vh',
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'flex-start',
-      background: 'linear-gradient(180deg, #0a0a1a 0%, #1a0a2e 50%, #0a0a1a 100%)',
-      margin: 0, padding: '40px 20px', overflow: 'auto', color: '#fff',
-    }}>
-      <h1 style={{ fontSize: '48px', marginBottom: '8px', letterSpacing: '6px', fontFamily: 'Archeoscope, serif', color: '#a78bfa' }}>
-        ASTROLOGÍA
-      </h1>
-      <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', marginBottom: '30px', letterSpacing: '2px' }}>
-        Tránsito Planetario y Carta del Momento
-      </p>
+    <main style={{ width: '100vw', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(180deg, #0a0a1a, #1a0a2e, #0a0a1a)', padding: '40px 20px', color: '#fff', overflowY: 'auto' }}>
+      <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '12px', cursor: 'pointer', textAlign: 'center' }} onClick={() => router.push('/menu')}>← MENÚ PRINCIPAL</div>
+      <h1 className="title-responsive" style={{ color: '#a78bfa' }}>ASTROLOGÍA ARQUEOSCÓPICA</h1>
+      <p className="subtitle-responsive" style={{ marginBottom: '8px' }}>Sincronía Planetaria · Tránsitos y Aspectos</p>
+      <p className="text-responsive" style={{ marginBottom: '24px', color: 'rgba(255,255,255,0.3)' }}>Cálculo de posiciones geocéntricas y relaciones angulares sagradas.</p>
 
-      {/* Selector de fecha */}
-      <input
-        type="date"
-        value={selectedDate.toISOString().split('T')[0]}
-        onChange={(e) => setSelectedDate(new Date(e.target.value + 'T12:00:00'))}
-        style={{
-          padding: '10px 20px', fontSize: '16px', background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(167,139,250,0.3)', borderRadius: '8px', color: '#a78bfa',
-          marginBottom: '30px', cursor: 'pointer',
-        }}
-      />
+      <input type="date" value={selectedDate.toISOString().split('T')[0]} onChange={(e) => setSelectedDate(new Date(e.target.value + 'T12:00:00'))}
+        style={{ padding: '12px 24px', fontSize: '18px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: '8px', color: '#a78bfa', marginBottom: '40px', cursor: 'pointer' }} />
 
-      {/* Signo Solar */}
-      <div style={{
-        maxWidth: '500px', width: '100%', padding: '28px',
-        background: `rgba(${solarSign.color === '#ef4444' ? '239,68,68' : solarSign.color === '#22c55e' ? '34,197,94' : '251,191,36'},0.06)`,
-        border: `1px solid ${solarSign.color}40`,
-        borderRadius: '16px', textAlign: 'center', marginBottom: '20px',
-      }}>
-        <div style={{ fontSize: '56px', marginBottom: '4px' }}>{solarSign.glyph}</div>
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '4px' }}>SOL EN</div>
-        <div style={{ fontSize: '36px', fontWeight: 'bold', color: solarSign.color, fontFamily: 'Archeoscope, serif' }}>
-          {solarSign.name}
-        </div>
-        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>{solarSign.dates}</div>
-        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)', marginTop: '10px' }}>{solarSign.trait}</div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '12px', fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
-          <span>Elemento: <strong style={{ color: solarSign.color }}>{solarSign.element}</strong></span>
-          <span>Regente: <strong style={{ color: solarSign.color }}>{solarSign.ruler}</strong></span>
-          <span>Cualidad: <strong style={{ color: solarSign.color }}>{solarSign.quality}</strong></span>
+      {/* ─── ESTADO LUNAR ────────────────────────────────────────────── */}
+      <div className="info-card" style={{ background: 'rgba(226,232,240,0.04)', border: '1px solid rgba(226,232,240,0.2)', padding: '32px' }}>
+        <div style={{ fontSize: 'clamp(50px, 12vw, 64px)', marginBottom: '8px' }}>{moonPhase.glyph}</div>
+        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '3px', marginBottom: '4px' }}>FASE LUNAR</div>
+        <h2 style={{ color: '#e2e8f0' }}>{moonPhase.name}</h2>
+        <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.6)', marginTop: '8px' }}>Iluminación: {moonPhase.val.toFixed(1)}%</div>
+      </div>
+
+      {/* ─── POSICIONES PLANETARIAS ──────────────────────────────────── */}
+      <div className="info-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '900px' }}>
+        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '20px', textAlign: 'center' }}>POSICIONES DEL ZODIACO</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+          {PLANETS_META.map((p) => {
+            const lon = data.positions[p.id]
+            const sign = getSign(lon)
+            const deg = Math.floor(lon % 30)
+            const isRetro = data.isRetrograde(p.id)
+            return (
+              <div key={p.id} style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', textAlign: 'left', position: 'relative' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '32px', color: p.color }}>{p.glyph}</span>
+                  <div>
+                    <div style={{ fontWeight: 'bold', fontSize: '18px' }}>{p.name} {isRetro && <span style={{ color: '#ef4444', fontSize: '12px' }}>[Rx]</span>}</div>
+                    <div style={{ color: sign.color, fontSize: '14px' }}>{deg}° {sign.name} {sign.glyph}</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>Elemento: {sign.element} · Regente: {sign.ruler}</div>
+                {isRetro && <div style={{ fontSize: '10px', color: '#ef4444', marginTop: '4px' }}>⚠️ Retrogradación activa</div>}
+              </div>
+            )
+          })}
         </div>
       </div>
 
-      {/* Luna */}
-      <div style={{
-        maxWidth: '500px', width: '100%', padding: '24px',
-        background: 'rgba(226,232,240,0.04)', border: '1px solid rgba(226,232,240,0.2)',
-        borderRadius: '12px', textAlign: 'center', marginBottom: '20px',
-      }}>
-        <div style={{ fontSize: '40px', marginBottom: '4px' }}>☽</div>
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '4px' }}>LUNA EN</div>
-        <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#e2e8f0', fontFamily: 'Archeoscope, serif' }}>
-          {lunarSign.name}
-        </div>
-        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', marginTop: '6px' }}>
-          Fase: <strong style={{ color: '#e2e8f0' }}>{lunar.phaseName}</strong>
-        </div>
-        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>{lunarSign.trait}</div>
-      </div>
-
-      {/* Rueda zodiacal */}
-      <div style={{
-        maxWidth: '500px', width: '100%', padding: '20px',
-        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: '12px', marginBottom: '20px',
-      }}>
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '14px', textAlign: 'center' }}>
-          ZODIACO
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
-          {ZODIAC.map((z, i) => (
-            <div key={z.name} style={{
-              padding: '6px 12px', borderRadius: '6px', fontSize: '14px',
-              background: i === solarIdx ? `${z.color}25` : 'rgba(255,255,255,0.03)',
-              border: `1px solid ${i === solarIdx ? z.color : 'rgba(255,255,255,0.08)'}`,
-              color: i === solarIdx ? z.color : 'rgba(255,255,255,0.4)',
-              fontWeight: i === solarIdx ? 'bold' : 'normal',
-              transition: 'all 0.2s',
-            }}>
-              {z.glyph} {z.name}
-            </div>
-          ))}
+      {/* ─── ASPECTOS PLANETARIAS ───────────────────────────────────── */}
+      <div className="info-card" style={{ background: 'rgba(167,139,250,0.03)', border: '1px solid rgba(167,139,250,0.15)', maxWidth: '900px' }}>
+        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '20px', textAlign: 'center' }}>ASPECTOS MAYORES (RELACIONES ANGULARES)</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+          {data.aspects.length > 0 ? data.aspects.map((a, i) => {
+            const p1 = PLANETS_META.find(p => p.id === a.p1)!
+            const p2 = PLANETS_META.find(p => p.id === a.p2)!
+            return (
+              <div key={i} style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: p1.color }}>{p1.glyph}</span>
+                  <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#a78bfa' }}>{a.glyph}</span>
+                  <span style={{ color: p2.color }}>{p2.glyph}</span>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold' }}>{a.type}</div>
+                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Orb: {a.orb.toFixed(1)}°</div>
+                </div>
+              </div>
+            )
+          }) : (
+            <div style={{ gridColumn: '1/-1', color: 'rgba(255,255,255,0.3)', padding: '20px' }}>No hay aspectos mayores significativos en este momento.</div>
+          )}
         </div>
       </div>
 
-      {/* Planetas */}
-      <div style={{
-        maxWidth: '500px', width: '100%', padding: '20px',
-        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: '12px', marginBottom: '30px',
-      }}>
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '14px', textAlign: 'center' }}>
-          CUERPOS CELESTES
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          {PLANETS.map((p) => (
-            <div key={p.name} style={{
-              padding: '10px 14px', borderRadius: '8px',
-              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-            }}>
-              <div style={{ fontSize: '20px', marginBottom: '2px' }}>{p.glyph} <span style={{ color: p.color, fontSize: '14px', fontWeight: 'bold' }}>{p.name}</span></div>
-              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{p.meaning}</div>
-            </div>
-          ))}
+      {/* ─── GUÍA DE INTERPRETACIÓN ─────────────────────────────────── */}
+      <div className="info-card" style={{ background: 'rgba(251,191,36,0.02)', border: '1px solid rgba(251,191,36,0.1)', maxWidth: '900px' }}>
+        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '16px', textAlign: 'center' }}>GUÍA DE ASPECTOS</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', textAlign: 'left' }}>
+          <div>
+            <strong style={{ color: '#fbbf24' }}>☌ Conjunción:</strong> Fusión de energías. Potencia el impacto de ambos planetas.
+          </div>
+          <div>
+            <strong style={{ color: '#fbbf24' }}>☍ Oposición:</strong> Tensión y equilibrio. Necesidad de integrar polaridades.
+          </div>
+          <div>
+            <strong style={{ color: '#fbbf24' }}>□ Cuadratura:</strong> Desafío y acción. Tensión que impulsa el cambio.
+          </div>
+          <div>
+            <strong style={{ color: '#fbbf24' }}>△ Trígono:</strong> Armonía y fluidez. Talentos naturales que fluyen sin esfuerzo.
+          </div>
         </div>
       </div>
 
-      <button
-        onClick={() => router.push('/menu')}
-        style={{
-          padding: '16px 60px', fontSize: '20px', fontWeight: 'bold', color: '#fff',
-          background: 'transparent', border: '2px solid #fff', borderRadius: '8px',
-          cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase', transition: 'all 0.3s',
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#000' }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff' }}
-      >
+      <button onClick={() => router.push('/menu')} className="btn-responsive"
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#fff' }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)' }}>
         Volver
       </button>
     </main>

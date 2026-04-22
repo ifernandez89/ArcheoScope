@@ -41,7 +41,6 @@ const TONOS = [
 ]
 
 // Dreamspell: referencia fija 26 julio 1987 = Kin 24
-// (Harmonic Convergence — base del Sincronario 13 Lunas)
 const DS_REF = new Date(1987, 6, 26)
 const DS_REF_KIN = 24
 
@@ -51,7 +50,6 @@ function calcDreamspell(date: Date) {
   const selIdx = (kin - 1) % 20
   const tonoIdx = (kin - 1) % 13
   const ondaIdx = ((selIdx - tonoIdx) % 20 + 20) % 20
-  // Luna galáctica (13 lunas de 28 días desde 26 julio)
   const refYear = (date.getMonth() < 7 || (date.getMonth() === 6 && date.getDate() < 26))
     ? date.getFullYear() - 1 : date.getFullYear()
   const yearStart = new Date(refYear, 6, 26)
@@ -63,6 +61,45 @@ function calcDreamspell(date: Date) {
 
 const LUNAS = ['Magnética','Lunar','Eléctrica','Autoexistente','Entonada','Rítmica','Resonante','Galáctica','Solar','Planetaria','Espectral','Cristal','Cósmica']
 
+const SELLO_MENSAJE = [
+  'Honra tus raíces. Nutre lo que te da vida. Hoy es un día para recibir.',
+  'Habla desde el corazón. Tu voz es un instrumento del espíritu.',
+  'Confía en tu intuición. Los sueños de anoche traen mensajes.',
+  'Planta una intención. Lo que siembras hoy florece en el tiempo correcto.',
+  'Escucha a tu cuerpo. Tu instinto es sabiduría ancestral.',
+  'Suelta lo que ya no sirve. La muerte de lo viejo abre paso a lo nuevo.',
+  'Sana con tus manos y tu presencia. Eres un canal de luz.',
+  'Expresa tu belleza interior. El arte es tu lenguaje natural hoy.',
+  'Fluye con las emociones. El agua siempre encuentra su camino.',
+  'Ama sin condiciones. Tu corazón es tu brújula más confiable.',
+  'Juega, crea, imagina. La magia vive en la ligereza del ser.',
+  'Usa tu libre albedrío con sabiduría. Cada elección es sagrada.',
+  'Explora nuevos horizontes. El universo te invita a expandirte.',
+  'Observa en silencio. La verdad se revela a quien sabe esperar.',
+  'Eleva tu visión. Desde las alturas todo cobra perspectiva.',
+  'Cuestiona con valentía. Las preguntas correctas abren puertas.',
+  'Sincronízate con la Tierra. Camina consciente sobre ella.',
+  'Mira con honestidad. El espejo no miente, solo refleja.',
+  'Libera la energía estancada. La tormenta limpia y renueva.',
+  'Irradia tu luz. Hoy el sol brilla a través de ti.',
+]
+
+const TONO_CLIMA = [
+  { clima: '🌱 Día de Inicio',      consejo: 'Ideal para comenzar proyectos. La energía atrae nuevas oportunidades.' },
+  { clima: '⚖️ Día de Polaridad',   consejo: 'Observa los opuestos en tu vida. El equilibrio surge del contraste.' },
+  { clima: '⚡ Día de Activación',  consejo: 'Energía alta para conectar con otros. Comparte, colabora, vincula.' },
+  { clima: '📐 Día de Definición',  consejo: 'Clarifica tus formas y límites. Define qué es tuyo y qué no.' },
+  { clima: '✨ Día de Poder',        consejo: 'Tu brillo interior está amplificado. Empodera a quienes te rodean.' },
+  { clima: '🎵 Día de Ritmo',       consejo: 'Organiza tu espacio y tiempo. El orden trae paz y fluidez.' },
+  { clima: '🎶 Día de Resonancia',  consejo: 'Medita, canaliza, inspírate. Estás sintonizado con el cosmos.' },
+  { clima: '🌀 Día Galáctico',      consejo: 'Actúa con integridad total. Lo que haces hoy modela el futuro.' },
+  { clima: '☀️ Día Solar',          consejo: 'Pulsa tu intención con fuerza. Lo que deseas está cerca de manifestarse.' },
+  { clima: '🌍 Día de Manifestación', consejo: 'Perfecciona lo que construyes. La realidad responde a tu enfoque.' },
+  { clima: '🌊 Día de Liberación',  consejo: 'Suelta, disuelve, deja ir. La libertad llega cuando sueltas el control.' },
+  { clima: '💎 Día de Cooperación', consejo: 'Reúnete con tu tribu. La fuerza colectiva supera a la individual.' },
+  { clima: '🌌 Día Cósmico',        consejo: 'Trasciende lo cotidiano. Hoy el velo entre mundos es más delgado.' },
+]
+
 export default function DreamspellPage() {
   const router = useRouter()
   const [date, setDate] = useState(new Date())
@@ -72,57 +109,74 @@ export default function DreamspellPage() {
   const onda = SELLOS[r.ondaIdx]
 
   return (
-    <main style={{ width:'100vw', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', background:'linear-gradient(180deg,#0a0a1a,#1a0a2e,#0a0a1a)', padding:'40px 20px', color:'#fff' }}>
-      <div style={{ fontSize:'12px', color:'rgba(255,255,255,0.3)', letterSpacing:'2px', marginBottom:'4px', cursor:'pointer' }} onClick={() => router.push('/menu/calendarios')}>← CALENDARIOS ANTIGUOS</div>
-      <h1 style={{ fontSize:'38px', marginBottom:'4px', letterSpacing:'5px', fontFamily:'Archeoscope, serif', color:'#a78bfa' }}>SINCRONARIO 13 LUNAS</h1>
-      <p style={{ fontSize:'12px', color:'rgba(255,255,255,0.3)', marginBottom:'6px', letterSpacing:'2px' }}>Dreamspell · José Argüelles · Año Nuevo 26 Julio</p>
-      <p style={{ fontSize:'11px', color:'rgba(255,255,255,0.2)', marginBottom:'24px' }}>Año Galáctico {r.refYear}/{r.refYear+1}</p>
+    <main style={{ width:'100vw', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', background:'linear-gradient(180deg,#0a0a1a,#1a0a2e,#0a0a1a)', padding:'40px 20px', color:'#fff', overflowY: 'auto' }}>
+      <div style={{ fontSize:'18px', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'12px', cursor:'pointer', textAlign: 'center' }} onClick={() => router.push('/menu/calendarios')}>← CALENDARIOS ANTIGUOS</div>
+      <h1 className="title-responsive" style={{ color:'#a78bfa' }}>SINCRONARIO 13 LUNAS</h1>
+      <p className="subtitle-responsive" style={{ marginBottom:'8px' }}>Dreamspell · José Argüelles · Año Nuevo 26 Julio</p>
+      <p className="text-responsive" style={{ marginBottom:'8px', color:'rgba(255,255,255,0.5)' }}>Interpretación moderna inspirada en calendarios mayas.</p>
+      <p className="text-responsive" style={{ marginBottom:'24px', color:'rgba(255,255,255,0.3)' }}>Año Galáctico {r.refYear}/{r.refYear+1}</p>
 
       <input type="date" value={date.toISOString().split('T')[0]} onChange={e => setDate(new Date(e.target.value+'T12:00:00'))}
-        style={{ padding:'10px 20px', fontSize:'16px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(167,139,250,0.3)', borderRadius:'8px', color:'#a78bfa', marginBottom:'24px', cursor:'pointer' }} />
+        style={{ padding:'12px 24px', fontSize:'18px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(167,139,250,0.3)', borderRadius:'8px', color:'#a78bfa', marginBottom:'40px', cursor:'pointer' }} />
 
       {/* Kin del día */}
-      <div style={{ maxWidth:'500px', width:'100%', padding:'28px', background:'rgba(167,139,250,0.06)', border:'1px solid rgba(167,139,250,0.25)', borderRadius:'16px', textAlign:'center', marginBottom:'14px' }}>
-        <div style={{ fontSize:'52px', marginBottom:'4px' }}>{sello.glyph}</div>
-        <div style={{ fontSize:'10px', color:'rgba(255,255,255,0.3)', letterSpacing:'2px', marginBottom:'4px' }}>ENERGÍA DEL DÍA · KIN {r.kin}</div>
-        <div style={{ fontSize:'32px', fontWeight:'bold', color:'#a78bfa', fontFamily:'Archeoscope, serif', marginBottom:'4px' }}>{tono.num} {sello.name}</div>
-        <div style={{ fontSize:'16px', color:'rgba(255,255,255,0.7)', marginBottom:'8px' }}>Tono {tono.name}</div>
-        <div style={{ fontSize:'13px', color:'rgba(255,255,255,0.5)' }}>{sello.meaning}</div>
+      <div className="info-card" style={{ background:'rgba(167,139,250,0.06)', border:'1px solid rgba(167,139,250,0.25)', padding:'28px' }}>
+        <div style={{ fontSize:'clamp(40px, 10vw, 52px)', marginBottom:'4px' }}>{sello.glyph}</div>
+        <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'4px' }}>ENERGÍA DEL DÍA · KIN {r.kin}</div>
+        <h2 style={{ color:'#a78bfa' }}>{tono.num} {sello.name}</h2>
+        <div style={{ fontSize:'clamp(18px, 4vw, 21px)', color:'rgba(255,255,255,0.8)', marginBottom:'8px' }}>Tono {tono.name}</div>
+        <div style={{ fontSize:'clamp(15px, 3.5vw, 18px)', color:'rgba(255,255,255,0.6)' }}>{sello.meaning}</div>
+      </div>
+
+      {/* CLIMA ENERGÉTICO DEL DÍA */}
+      <div className="info-card" style={{ background:'rgba(167,139,250,0.08)', border:'1px solid rgba(167,139,250,0.3)', padding:'22px' }}>
+        <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'12px', textAlign:'center' }}>
+          🌤️ CLIMA ENERGÉTICO DEL DÍA
+        </div>
+        <div style={{ fontSize:'clamp(18px, 5vw, 24px)', fontWeight:'bold', color:'#a78bfa', textAlign:'center', marginBottom:'10px' }}>
+          {TONO_CLIMA[r.tonoIdx].clima}
+        </div>
+        <div style={{ fontSize:'clamp(16px, 4vw, 20px)', color:'rgba(255,255,255,0.7)', textAlign:'center', lineHeight:'1.7', marginBottom:'14px' }}>
+          {TONO_CLIMA[r.tonoIdx].consejo}
+        </div>
+        <div style={{ borderTop:'1px solid rgba(167,139,250,0.2)', paddingTop:'12px', fontSize:'clamp(16px, 4vw, 20px)', color:'rgba(255,255,255,0.6)', textAlign:'center', lineHeight:'1.7', fontStyle:'italic' }}>
+          ✦ {SELLO_MENSAJE[r.selIdx]}
+        </div>
       </div>
 
       {/* Tono + Onda + Luna */}
-      <div style={{ maxWidth:'500px', width:'100%', display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'10px', marginBottom:'14px' }}>
+      <div style={{ maxWidth:'min(600px, 95vw)', width:'100%', display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(130px, 1fr))', gap:'10px', marginBottom:'14px' }}>
         <div style={{ padding:'16px', background:'rgba(167,139,250,0.08)', border:'1px solid rgba(167,139,250,0.2)', borderRadius:'12px', textAlign:'center' }}>
-          <div style={{ fontSize:'10px', color:'rgba(255,255,255,0.3)', letterSpacing:'1px', marginBottom:'6px' }}>TONO</div>
-          <div style={{ fontSize:'26px', fontWeight:'bold', color:'#a78bfa' }}>{tono.num}</div>
-          <div style={{ fontSize:'13px', color:'#fff', marginBottom:'6px' }}>{tono.name}</div>
-          <div style={{ fontSize:'10px', color:'rgba(255,255,255,0.4)', lineHeight:'1.6' }}>
+          <div style={{ fontSize:'13px', color:'rgba(255,255,255,0.4)', letterSpacing:'1px', marginBottom:'6px' }}>TONO</div>
+          <div style={{ fontSize:'28px', fontWeight:'bold', color:'#a78bfa' }}>{tono.num}</div>
+          <div style={{ fontSize:'16px', color:'#fff', marginBottom:'6px' }}>{tono.name}</div>
+          <div style={{ fontSize:'13px', color:'rgba(255,255,255,0.5)', lineHeight:'1.6' }}>
             {tono.power}<br/>{tono.action}<br/>{tono.essence}
           </div>
         </div>
         <div style={{ padding:'16px', background:'rgba(244,114,182,0.08)', border:'1px solid rgba(244,114,182,0.2)', borderRadius:'12px', textAlign:'center' }}>
-          <div style={{ fontSize:'10px', color:'rgba(255,255,255,0.3)', letterSpacing:'1px', marginBottom:'6px' }}>ONDA ENCANTADA</div>
+          <div style={{ fontSize:'13px', color:'rgba(255,255,255,0.4)', letterSpacing:'1px', marginBottom:'6px' }}>ONDA ENCANTADA</div>
           <div style={{ fontSize:'28px' }}>{onda.glyph}</div>
-          <div style={{ fontSize:'13px', color:'#f472b6', fontWeight:'bold' }}>{onda.name}</div>
-          <div style={{ fontSize:'10px', color:'rgba(255,255,255,0.4)', marginTop:'4px' }}>{onda.meaning.split('·')[0]}</div>
+          <div style={{ fontSize:'16px', color:'#f472b6', fontWeight:'bold' }}>{onda.name}</div>
+          <div style={{ fontSize:'13px', color:'rgba(255,255,255,0.5)', marginTop:'4px' }}>{onda.meaning.split('·')[0]}</div>
         </div>
         <div style={{ padding:'16px', background:'rgba(56,189,248,0.08)', border:'1px solid rgba(56,189,248,0.2)', borderRadius:'12px', textAlign:'center' }}>
-          <div style={{ fontSize:'10px', color:'rgba(255,255,255,0.3)', letterSpacing:'1px', marginBottom:'6px' }}>LUNA GALÁCTICA</div>
-          <div style={{ fontSize:'26px', fontWeight:'bold', color:'#38bdf8' }}>{r.luna}</div>
-          <div style={{ fontSize:'13px', color:'#fff', marginBottom:'4px' }}>{LUNAS[r.luna-1]}</div>
-          <div style={{ fontSize:'10px', color:'rgba(255,255,255,0.4)' }}>Día {r.diaLuna} de 28</div>
+          <div style={{ fontSize:'13px', color:'rgba(255,255,255,0.4)', letterSpacing:'1px', marginBottom:'6px' }}>LUNA GALÁCTICA</div>
+          <div style={{ fontSize:'28px', fontWeight:'bold', color:'#38bdf8' }}>{r.luna}</div>
+          <div style={{ fontSize:'16px', color:'#fff', marginBottom:'4px' }}>{LUNAS[r.luna-1]}</div>
+          <div style={{ fontSize:'13px', color:'rgba(255,255,255,0.5)' }}>Día {r.diaLuna} de 28</div>
         </div>
       </div>
 
       {/* Nota */}
-      <div style={{ maxWidth:'500px', width:'100%', padding:'14px', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:'8px', marginBottom:'28px', textAlign:'center' }}>
-        <div style={{ fontSize:'11px', color:'rgba(255,255,255,0.3)', lineHeight:'1.8' }}>
-          Referencia: <strong style={{ color:'rgba(255,255,255,0.5)' }}>26 julio 1987 = Kin 24</strong> · Harmonic Convergence<br/>
-          Ciclo continuo de 260 días · Año nuevo galáctico: <strong style={{ color:'rgba(255,255,255,0.5)' }}>26 julio</strong>
+      <div className="info-card" style={{ padding:'14px', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)' }}>
+        <div className="text-responsive" style={{ lineHeight:'1.8' }}>
+          Referencia: <strong style={{ color:'rgba(255,255,255,0.6)' }}>26 julio 1987 = Kin 24</strong> · Harmonic Convergence<br/>
+          Ciclo continuo de 260 días · Año nuevo galáctico: <strong style={{ color:'rgba(255,255,255,0.6)' }}>26 julio</strong>
         </div>
       </div>
 
-      <button onClick={() => router.push('/menu/calendarios')} style={{ padding:'14px 50px', fontSize:'18px', color:'#fff', background:'transparent', border:'2px solid rgba(255,255,255,0.3)', borderRadius:'8px', cursor:'pointer', letterSpacing:'2px', textTransform:'uppercase', transition:'all 0.3s' }}
+      <button onClick={() => router.push('/menu/calendarios')} className="btn-responsive"
         onMouseEnter={e => e.currentTarget.style.borderColor='#fff'} onMouseLeave={e => e.currentTarget.style.borderColor='rgba(255,255,255,0.3)'}>
         Volver
       </button>
