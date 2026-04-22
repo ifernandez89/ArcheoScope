@@ -27,51 +27,77 @@ const PLANETS_META = [
   { id: 'mars',    name: 'Marte',    glyph: '♂', color: '#ef4444', speed: 0.5241 },
   { id: 'jupiter', name: 'Júpiter',  glyph: '♃', color: '#a78bfa', speed: 0.0831 },
   { id: 'saturn',  name: 'Saturno',  glyph: '♄', color: '#6b7280', speed: 0.0335 },
+  { id: 'uranus',  name: 'Urano',    glyph: '♅', color: '#38bdf8', speed: 0.0117 },
+  { id: 'neptune', name: 'Neptuno',  glyph: '♆', color: '#818cf8', speed: 0.0060 },
+  { id: 'pluto',   name: 'Plutón',   glyph: '♇', color: '#dc2626', speed: 0.0040 },
 ]
 
 // ─── MOTOR ASTRONÓMICO SIMPLIFICADO ──────────────────────────────────────────
 function getPlanetPositions(date: Date) {
   const jd = (date.getTime() / 86400000) + 2440587.5
-  const d = jd - 2451545.0 // Días desde J2000
+  const d = jd - 2451545.0
+  const toRad = Math.PI / 180
+  const toDeg = 180 / Math.PI
 
-  // Sol
+  // Sol (Geocéntrico)
   const sunL = (280.460 + 0.9856474 * d) % 360
   const sunM = (357.528 + 0.9856003 * d) % 360
-  const sunLon = (sunL + 1.915 * Math.sin(sunM * Math.PI / 180) + 0.020 * Math.sin(2 * sunM * Math.PI / 180)) % 360
+  const sunLon = (sunL + 1.915 * Math.sin(sunM * toRad) + 0.020 * Math.sin(2 * sunM * toRad)) % 360
 
-  // Luna
+  // Luna (Geocéntrico)
   const moonL = (218.316 + 13.176396 * d) % 360
   const moonM = (134.963 + 13.064993 * d) % 360
-  const moonLon = (moonL + 6.289 * Math.sin(moonM * Math.PI / 180)) % 360
+  const moonLon = (moonL + 6.289 * Math.sin(moonM * toRad)) % 360
 
-  // Aproximaciones para planetas
-  const calcPlanet = (baseL: number, daily: number, ecc: number) => {
-    const l = (baseL + daily * d) % 360
-    return (l + ecc * Math.sin(l * Math.PI / 180)) % 360
+  // Motor Geocéntrico Mejorado
+  const calcPlanetGeo = (days: number, baseL: number, daily: number, ecc: number, peri: number, dist: number, isInferior: boolean) => {
+    const L = (baseL + daily * days) % 360
+    const M = (L - peri) % 360
+    const helioLon = (L + (2 * ecc * Math.sin(M * toRad) + 1.25 * ecc * ecc * Math.sin(2 * M * toRad)) * toDeg) % 360
+    const relLon = (helioLon - sunLon) * toRad
+    let geoLon
+    if (!isInferior) {
+      geoLon = sunLon + Math.atan2(Math.sin(relLon), (1/dist) + Math.cos(relLon)) * toDeg
+    } else {
+      geoLon = sunLon + Math.atan2(dist * Math.sin(relLon), 1 + dist * Math.cos(relLon)) * toDeg
+    }
+    return (geoLon + 360) % 360
   }
 
-  const mercuryLon = calcPlanet(252.25, 4.0923, 0.205)
-  const venusLon   = calcPlanet(181.98, 1.6021, 0.006)
-  const marsLon    = calcPlanet(355.45, 0.5241, 0.093)
-  const jupiterLon = calcPlanet(34.40,  0.0831, 0.048)
-  const saturnLon  = calcPlanet(50.08,  0.0335, 0.056)
+  // Elementos Orbitales (Aproximación J2000 calibrada para 2026)
+  const mercury = (dd: number) => calcPlanetGeo(dd, 252.25, 4.0923, 0.2056, 77.45, 0.387, true)
+  const venus   = (dd: number) => calcPlanetGeo(dd, 181.98, 1.6021, 0.0068, 131.57, 0.723, true)
+  const mars    = (dd: number) => calcPlanetGeo(dd, 355.45, 0.5241, 0.0934, 336.06, 1.524, false)
+  const jupiter = (dd: number) => calcPlanetGeo(dd, 34.40,  0.0831, 0.0484, 14.75, 5.203, false)
+  const saturn  = (dd: number) => calcPlanetGeo(dd, 50.08,  0.0335, 0.0565, 92.43, 9.537, false)
+  const uranus  = (dd: number) => calcPlanetGeo(dd, 314.05, 0.0117, 0.0463, 170.95, 19.191, false)
+  const neptune = (dd: number) => calcPlanetGeo(dd, 304.34, 0.0060, 0.0090, 44.97, 30.069, false)
+  const pluto   = (dd: number) => calcPlanetGeo(dd, 238.93, 0.0040, 0.2488, 224.06, 39.482, false)
 
   const positions: Record<string, number> = {
-    sun: sunLon < 0 ? sunLon + 360 : sunLon,
-    moon: moonLon < 0 ? moonLon + 360 : moonLon,
-    mercury: mercuryLon < 0 ? mercuryLon + 360 : mercuryLon,
-    venus: venusLon < 0 ? venusLon + 360 : venusLon,
-    mars: marsLon < 0 ? marsLon + 360 : marsLon,
-    jupiter: jupiterLon < 0 ? jupiterLon + 360 : jupiterLon,
-    saturn: saturnLon < 0 ? saturnLon + 360 : saturnLon,
+    sun: (sunLon + 360) % 360,
+    moon: (moonLon + 360) % 360,
+    mercury: mercury(d),
+    venus: venus(d),
+    mars: mars(d),
+    jupiter: jupiter(d),
+    saturn: saturn(d),
+    uranus: uranus(d),
+    neptune: neptune(d),
+    pluto: pluto(d),
   }
 
-  // Retrogradación (Aproximación basada en senoides de ciclos planetarios)
   const isRetrograde = (id: string) => {
     if (id === 'sun' || id === 'moon') return false
-    const cycleMap: Record<string, number> = { mercury: 0.05, venus: 0.01, mars: 0.008, jupiter: 0.005, saturn: 0.003 }
-    const seed = Math.sin(d * (cycleMap[id] || 0.01)) 
-    return seed > 0.8
+    const posFuncs: Record<string, (dd: number) => number> = { mercury, venus, mars, jupiter, saturn, uranus, neptune, pluto }
+    const f = posFuncs[id]
+    if (!f) return false
+    const p1 = f(d)
+    const p0 = f(d - 0.1)
+    let diff = p1 - p0
+    if (diff > 180) diff -= 360
+    if (diff < -180) diff += 360
+    return diff < 0
   }
 
   return { positions, isRetrograde }
@@ -223,6 +249,9 @@ export default function AstrologyPage() {
           </div>
           <div>
             <strong style={{ color: '#fbbf24' }}>△ Trígono:</strong> Armonía y fluidez. Talentos naturales que fluyen sin esfuerzo.
+          </div>
+          <div>
+            <strong style={{ color: '#fbbf24' }}>⚹ Sextil:</strong> Oportunidad y colaboración. Estímulo creativo y facilidad de comunicación.
           </div>
         </div>
       </div>
