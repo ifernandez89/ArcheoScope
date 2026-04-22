@@ -19,6 +19,7 @@ interface EnvironmentSystemProps {
   waterPosition?: [number, number, number]
   waterSize?: number
   waterColor?: string
+  solarDirection?: { x: number, y: number, z: number }
 }
 
 export default function EnvironmentSystem({
@@ -30,7 +31,8 @@ export default function EnvironmentSystem({
   showWater,
   waterPosition = [0, -0.5, 0],
   waterSize = 150,
-  waterColor = '#1e3a5f'
+  waterColor = '#1e3a5f',
+  solarDirection
 }: EnvironmentSystemProps) {
   console.log('EnvironmentSystem - showWater:', showWater)
   
@@ -40,7 +42,8 @@ export default function EnvironmentSystem({
       <DynamicSky 
         isDay={isDay} 
         skyColor={skyColor} 
-        stormDarkness={stormDarkness} 
+        stormDarkness={stormDarkness}
+        solarDirection={solarDirection}
       />
 
       {/* Niebla volumétrica */}

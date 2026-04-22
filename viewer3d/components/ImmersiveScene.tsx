@@ -2471,6 +2471,7 @@ function ModelScene({
             }
             fogDensity={isMictlan ? 0.02 : biome.type === 'altiplano' ? 0.004 : isIceBiome ? 0.012 : 0.008}
             showWater={!isIceBiome && !isMictlan}
+            solarDirection={solarDirection}
             waterPosition={[0, -0.5, 0]}
             waterSize={biome.type === 'altiplano' ? 350 : 150}
             waterColor={biome.type === 'altiplano' ? '#2a5a8f' : '#1e3a5f'}

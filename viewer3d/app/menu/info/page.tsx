@@ -348,6 +348,30 @@ function InfoContent() {
             border: 'rgba(163, 230, 53, 0.3)',
             bg: 'rgba(163, 230, 53, 0.06)',
             text: 'Tres presets de calidad gráfica configurables desde el menú Video: Baja (sin sombras, sin bloom, pixel ratio 0.75x — ideal para laptops), Media (sombras básicas, antialiasing, pixel ratio 1.0x — balance rendimiento/calidad) y Alta (sombras suaves, bloom, SSAO, pixel ratio nativo — requiere GPU dedicada). El sistema detecta automáticamente la GPU al iniciar y selecciona el preset óptimo. La configuración persiste entre sesiones en localStorage.'
+          },
+          {
+            icon: '🌅',
+            title: 'Cielo Atmosférico — Rayleigh Scattering',
+            color: '#fb923c',
+            border: 'rgba(251, 146, 60, 0.3)',
+            bg: 'rgba(251, 146, 60, 0.06)',
+            text: 'El cielo de Archeoscope simula el fenómeno físico real de dispersión de Rayleigh — el mismo proceso que hace el cielo azul durante el día, naranja y rojo al amanecer y atardecer, y negro de noche. El shader Sky de Three.js calcula en tiempo real cómo la atmósfera dispersa la luz solar según la posición del sol (calculada astronómicamente por SolarEngine). Durante tormentas, la turbidez aumenta progresivamente oscureciendo el cielo. De noche, el cielo se vuelve negro y las estrellas del catálogo Yale son visibles. La transición día/noche es suave y continua.'
+          },
+          {
+            icon: '♈',
+            title: 'Módulo de Astrología',
+            color: '#c084fc',
+            border: 'rgba(192, 132, 252, 0.3)',
+            bg: 'rgba(192, 132, 252, 0.06)',
+            text: 'Calculadora astrológica integrada accesible desde el menú principal. Determina el signo solar por fecha de nacimiento, el signo lunar aproximado basado en el ciclo sinódico de 29.53 días, y la fase lunar actual (Nueva, Creciente, Llena, Menguante, Balsámica). Muestra la rueda zodiacal completa con los 12 signos, sus elementos (Fuego, Tierra, Aire, Agua), planetas regentes, cualidades (Cardinal, Fijo, Mutable) y los 7 cuerpos celestes principales con su significado arquetípico. Selector de fecha para consultar cualquier momento.'
+          },
+          {
+            icon: '🌀',
+            title: 'Calendario Tzolkin — Sincronario Maya',
+            color: '#fbbf24',
+            border: 'rgba(251, 191, 36, 0.3)',
+            bg: 'rgba(251, 191, 36, 0.06)',
+            text: 'Implementación del calendario sagrado maya de 260 kines (20 sellos solares × 13 tonos galácticos). Calcula el Kin del día usando la correlación estándar con fecha de referencia 26 de julio de 2023 = Kin 1 (Dragón Magnético). Muestra el sello solar con su glifo y significado, el tono galáctico con su poder y acción, y la onda encantada de 13 días a la que pertenece. Los 20 sellos representan arquetipos universales: Dragón (nacimiento), Viento (espíritu), Noche (abundancia), Semilla (florecimiento), hasta Sol (iluminación). Selector de fecha para consultar cualquier día de la historia.'
           }
         ].map((s) => (
           <section key={s.title} style={{
