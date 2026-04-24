@@ -14,6 +14,7 @@ export interface SoundState {
 export class AtmosphericSound {
   private audioContext: AudioContext | null = null
   private masterGain: GainNode | null = null
+  private baseVolume: number = 0.5 // Default
   
   // Dron armónico base
   private droneOscillator: OscillatorNode | null = null
@@ -31,7 +32,30 @@ export class AtmosphericSound {
   private enabled: boolean = false
   
   constructor() {
-    // No inicializar automáticamente - esperar interacción del usuario
+    this.loadSavedVolume()
+  }
+  
+  private loadSavedVolume(): void {
+    if (typeof window === 'undefined') return
+    try {
+      const gameSettingsStr = localStorage.getItem('game_settings')
+      if (gameSettingsStr) {
+        const gameSettings = JSON.parse(gameSettingsStr)
+        if (gameSettings?.audio?.masterVolume !== undefined) {
+          this.baseVolume = gameSettings.audio.masterVolume
+          return
+        }
+      }
+      const playerStateStr = localStorage.getItem('player_state')
+      if (playerStateStr) {
+        const playerState = JSON.parse(playerStateStr)
+        if (playerState?.settings?.masterVolume !== undefined) {
+          this.baseVolume = playerState.settings.masterVolume
+        }
+      }
+    } catch (e) {
+      console.warn('Error loading volume for AtmosphericSound:', e)
+    }
   }
   
   /**
@@ -43,9 +67,9 @@ export class AtmosphericSound {
     try {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
       
-      // Master gain (volumen general muy bajo)
+      // Master gain (volumen general dinámico)
       this.masterGain = this.audioContext.createGain()
-      this.masterGain.gain.value = 0.15 // Muy sutil
+      this.masterGain.gain.value = this.baseVolume
       this.masterGain.connect(this.audioContext.destination)
       
       // Crear dron armónico
@@ -120,7 +144,7 @@ export class AtmosphericSound {
     
     // Gain del viento
     this.windGain = this.audioContext.createGain()
-    this.windGain.gain.value = 0.02 // Muy bajo
+    this.windGain.gain.value = 0.02 // Viento ligero y sutil
     
     // Conectar: buffer -> filtro -> gain -> master
     this.windBuffer.connect(this.windFilter)
@@ -136,10 +160,23 @@ export class AtmosphericSound {
   setEnabled(enabled: boolean) {
     this.enabled = enabled
     if (this.masterGain) {
-      const targetVolume = enabled ? 0.15 : 0
+      const targetVolume = enabled ? this.baseVolume : 0
       this.masterGain.gain.linearRampToValueAtTime(
         targetVolume,
         this.audioContext!.currentTime + 2 // Fade de 2 segundos
+      )
+    }
+  }
+  
+  /**
+   * Ajustar volumen master
+   */
+  setMasterVolume(volume: number) {
+    this.baseVolume = Math.max(0, Math.min(1, volume))
+    if (this.masterGain && this.audioContext && this.enabled) {
+      this.masterGain.gain.linearRampToValueAtTime(
+        this.baseVolume,
+        this.audioContext.currentTime + 0.1
       )
     }
   }
@@ -185,7 +222,7 @@ export class AtmosphericSound {
     if (this.windGain && this.windFilter) {
       // Volumen del viento con variación lenta
       const windVariation = Math.sin(this.time * 0.03) * 0.01
-      const windVolume = 0.015 + windIntensity * 0.02 + windVariation
+      const windVolume = 0.01 + windIntensity * 0.02 + windVariation
       this.windGain.gain.linearRampToValueAtTime(
         windVolume,
         this.audioContext.currentTime + 3
@@ -200,9 +237,9 @@ export class AtmosphericSound {
     }
     
     // Respiración del volumen master (período de 90 segundos)
-    if (this.masterGain) {
-      const breathe = Math.sin(this.time * 0.07) * 0.02
-      const targetVolume = this.enabled ? 0.15 + breathe : 0
+    if (this.masterGain && this.enabled) {
+      const breathe = Math.sin(this.time * 0.07) * (this.baseVolume * 0.08)
+      const targetVolume = this.baseVolume + breathe
       this.masterGain.gain.linearRampToValueAtTime(
         targetVolume,
         this.audioContext.currentTime + 0.1

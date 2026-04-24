@@ -8,6 +8,7 @@
 import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { AtmosphericSound } from '@/engines/AtmosphericSound'
+import { loadGameSettings } from '@/types/gameSettings'
 
 export default function AmbientAudio() {
   const soundRef = useRef<AtmosphericSound | null>(null)
@@ -47,12 +48,25 @@ export default function AmbientAudio() {
     }
   }, [])
 
+  // Sincronizar volumen con gameSettings
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!soundRef.current) return
+      const settings = loadGameSettings()
+      if (settings?.audio?.masterVolume !== undefined) {
+        soundRef.current.setMasterVolume(settings.audio.masterVolume)
+      }
+    }, 1000) // Polling cada segundo para eficiencia
+
+    return () => clearInterval(interval)
+  }, [])
+  
   // Actualizar cada frame con valores por defecto (mediodía, viento suave)
   useFrame((_, delta) => {
     if (!soundRef.current) return
     timeRef.current += delta
     // solarAltitude: 0 = horizonte, PI/2 = cenit — usamos valor fijo de mediodía
-    soundRef.current.update(delta, Math.PI / 4, 0.4)
+    soundRef.current.update(delta, Math.PI / 4, 0.2)
   })
 
   return null

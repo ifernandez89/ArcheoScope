@@ -641,7 +641,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     'Perro': "Guardián del umbral entre el mundo visible y el invisible. Su figura marca el paso hacia territorios que los vivos no deberían cruzar sin guía.",
     'Ballena': "Una de las figuras más antiguas grabadas en la tierra. Representa el origen de la vida y los ciclos oceánicos que gobiernan el planeta. Su boca abierta devora el tiempo.",
     'Astronauta': "Figura humanoide que mira hacia el cielo con el brazo levantado. Su forma sugiere algo que los trazadores de líneas conocían y que nosotros apenas comenzamos a intuir.",
-    'MonolitoGobekli': "Monolito de origen lejano, traído aquí intencionalmente. Representa una deidad de forma híbrida — entre lo animal y lo divino. Su presencia en este lugar es un anacronismo sagrado: un nexo entre dos puntos del tiempo que nunca deberían haberse tocado."
+    'MonolitoGobekli': "Monolito de origen lejano, traído aquí intencionalmente. Representa una deidad de forma híbrida — entre lo animal y lo divino. Su presencia en este lugar es un anacronismo sagrado: un nexo entre dos puntos del tiempo que nunca deberían haberse tocado.",
+    'Árbol': "Organismo vivo que conecta tres mundos: sus raíces penetran el inframundo, su tronco habita la tierra, y sus ramas tocan el cielo. Los antiguos lo consideraban el eje del cosmos — el axis mundi.",
+    'Roca': "Fragmento de la corteza terrestre con millones de años de memoria geológica. Cada mineral en su interior registra las condiciones del planeta en el momento de su formación. La piedra no olvida."
   }
 
   const toggleAbility = useCallback(() => {

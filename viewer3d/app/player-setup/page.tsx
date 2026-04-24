@@ -109,8 +109,8 @@ export default function PlayerSetupPage() {
 
       console.log('🎮 Jugador configurado:', playerState)
 
-      // Ir al juego
-      router.push('/game')
+      // Ir al entrenamiento
+      router.push('/training')
     }
   }
 

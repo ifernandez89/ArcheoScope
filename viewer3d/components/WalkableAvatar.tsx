@@ -419,11 +419,11 @@ export default function WalkableAvatar({
       isMoving = true
     }
     
-    // Rotación del avatar con Q/E (todos los UFOs pueden rotar manualmente)
+    // Rotación del avatar con Q/E/R (todos los UFOs pueden rotar manualmente)
     if (keys.current['q']) {
       group.current.rotation.y += 2.0 * delta  // Rotar izquierda
     }
-    if (keys.current['e']) {
+    if (keys.current['e'] || keys.current['r']) {
       group.current.rotation.y -= 2.0 * delta  // Rotar derecha
     }
     
