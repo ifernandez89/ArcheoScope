@@ -16,6 +16,7 @@ import SnowParticles from './SnowParticles'
 import DroppableItem from './DroppableItem'
 import { ObjectSelectionProvider } from './ObjectSelectionContext'
 import { loadPlayerState } from '@/types/player'
+import { getAssetPath } from '@/lib/paths'
 import AmbientAudio from './AmbientAudio'
 import { getClimateAudio } from '../systems/ClimateAudioSystem'
 import { getProceduralAudio } from '../systems/ProceduralAudio'
@@ -73,7 +74,7 @@ function emitScan(entity: { name: string, desc: string } | null) {
   scanListeners.forEach(fn => fn(entity))
 }
 function TrainingScene() {
-  const [playerShip, setPlayerShip] = useState<string>('/ufo_1.glb')
+  const [playerShip, setPlayerShip] = useState<string>(getAssetPath('/ufo_1.glb'))
   const [abilityActive, setAbilityActive] = useState(false)
   const [abilityCooldown, setAbilityCooldown] = useState(false)
   const [scannedEntity, setScannedEntity] = useState<{ name: string, desc: string } | null>(null)
@@ -161,7 +162,7 @@ function TrainingScene() {
   useEffect(() => {
     const state = loadPlayerState()
     if (state?.ship?.model) {
-      setPlayerShip(state.ship.model)
+      setPlayerShip(getAssetPath(state.ship.model))
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
