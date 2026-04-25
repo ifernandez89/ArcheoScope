@@ -1549,6 +1549,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         <button
           onClick={() => {
             if (typeof window !== 'undefined') {
+              // Guardar flag de partida activa para poder volver
+              sessionStorage.setItem('mobile_game_active', 'true')
+              // Guardar ubicación actual
+              if (selectedLocation) {
+                updatePlayerLocation(selectedLocation.lat, selectedLocation.lon, 'model')
+              }
+              // Navegar al menú (el estado ya está en localStorage)
               window.location.href = '/menu'
             }
           }}

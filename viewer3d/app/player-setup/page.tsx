@@ -68,6 +68,8 @@ export default function PlayerSetupPage() {
     // Mobile: directo a mobile-game (sin training)
     // PC: va a training
     if (isMobile) {
+      // Marcar partida mobile activa para poder continuar desde menú
+      sessionStorage.setItem('mobile_game_active', 'true')
       router.push('/mobile-game')
     } else {
       router.push('/training')

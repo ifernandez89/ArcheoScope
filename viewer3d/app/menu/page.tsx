@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { resetPlayerState } from '@/types/player'
+import { resetPlayerState, loadPlayerState } from '@/types/player'
 import { resetMissionState } from '@/types/missionState'
 import { resetGameSettings } from '@/types/gameSettings'
 import { getAssetPath } from '@/lib/paths'
@@ -14,6 +14,7 @@ const LOGO_MAIN = process.env.NODE_ENV === 'production'
 export default function MenuPage() {
   const router = useRouter()
   const [isMobile, setIsMobile] = useState(false)
+  const [hasActiveGame, setHasActiveGame] = useState(false)
 
   useEffect(() => {
     const check = () => setIsMobile(
@@ -22,6 +23,14 @@ export default function MenuPage() {
     check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
+  }, [])
+
+  // Detectar si hay una partida activa (para mostrar "Continuar")
+  useEffect(() => {
+    const mobileGameActive = sessionStorage.getItem('mobile_game_active') === 'true'
+    const playerState = loadPlayerState()
+    // Hay partida activa si: flag de sesión activo Y hay estado de jugador guardado
+    setHasActiveGame(mobileGameActive && !!playerState?.playerName)
   }, [])
 
   // Detectar F5 para resetear el juego
@@ -94,8 +103,16 @@ export default function MenuPage() {
   // Handler para nueva partida MOBILE — va a player-setup con flag mobile
   const handleNewGameMobile = () => {
     console.log('📱 Iniciando nueva partida MOBILE...')
+    // Limpiar flag de partida activa
+    sessionStorage.removeItem('mobile_game_active')
     handleNewGame() // Resetea todo igual
     // El flag isMobile se detecta en player-setup para saltar training
+  }
+
+  // Handler para continuar partida MOBILE — vuelve al juego
+  const handleContinueGame = () => {
+    console.log('📱 Continuando partida MOBILE...')
+    router.push('/mobile-game')
   }
 
   const menuOptions = [
@@ -108,17 +125,19 @@ export default function MenuPage() {
     { label: 'Información', path: '/menu/info', action: null }
   ]
 
-  // Mobile: Nueva, Audio, Astrología, Calendarios, Información (sin Video, sin Controles)
-  // "3D Solar System" se mantiene internamente como demo gratuita
-  const visibleOptions = isMobile
-    ? [
-        { label: 'Nueva', path: null, action: handleNewGameMobile },
-        { label: 'Audio', path: '/menu/audio', action: null },
-        { label: 'Astrología', path: '/menu/astrology', action: null },
-        { label: 'Calendarios', path: '/menu/calendarios', action: null },
-        { label: 'Información', path: '/menu/info', action: null },
-      ]
-    : menuOptions
+  // Mobile: Continuar (si hay partida), Nueva, Audio, Controles, etc.
+  const mobileOptions = [
+    // Mostrar "Continuar" solo si hay partida activa
+    ...(hasActiveGame ? [{ label: 'Continuar', path: null, action: handleContinueGame }] : []),
+    { label: 'Nueva', path: null, action: handleNewGameMobile },
+    { label: 'Audio', path: '/menu/audio', action: null },
+    { label: 'Controles', path: '/menu/controls', action: null },
+    { label: 'Astrología', path: '/menu/astrology', action: null },
+    { label: 'Calendarios', path: '/menu/calendarios', action: null },
+    { label: 'Información', path: '/menu/info', action: null },
+  ]
+
+  const visibleOptions = isMobile ? mobileOptions : menuOptions
 
   return (
     <main style={{
