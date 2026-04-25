@@ -48,22 +48,28 @@ export default function PlayerSetupPage() {
   useEffect(() => {
     if (!isMobile) return
 
+    let resizeHandler: (() => void) | null = null
+    let orientationHandler: (() => void) | null = null
+
     const initLandscape = async () => {
       await enterFullscreen()
       const locked = await lockLandscape()
       if (!locked) {
         const checkOrientation = () => setShowPortraitOverlay(isPortrait())
         checkOrientation()
+        resizeHandler = checkOrientation
+        orientationHandler = checkOrientation
         window.addEventListener('resize', checkOrientation)
         window.addEventListener('orientationchange', checkOrientation)
-        return () => {
-          window.removeEventListener('resize', checkOrientation)
-          window.removeEventListener('orientationchange', checkOrientation)
-        }
       }
     }
     initLandscape()
-    return () => { unlockOrientation() }
+
+    return () => {
+      if (resizeHandler) window.removeEventListener('resize', resizeHandler)
+      if (orientationHandler) window.removeEventListener('orientationchange', orientationHandler)
+      unlockOrientation()
+    }
   }, [isMobile])
 
   const handlePrevShip = () => setSelectedShip(p => (p === 0 ? ships.length - 1 : p - 1))

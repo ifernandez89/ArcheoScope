@@ -20,8 +20,8 @@ const ImmersiveScene = dynamic(() => import('./ImmersiveScene'), { ssr: false })
 export default function MobileGameScene() {
   const [showPortraitOverlay, setShowPortraitOverlay] = useState(false)
 
-  // Leer nave seleccionada del playerState
-  const spaceUfoNumber = (() => {
+  // Leer nave seleccionada del playerState — memoizado para evitar recálculo
+  const [spaceUfoNumber] = useState(() => {
     if (typeof window === 'undefined') return 1
     const playerState = loadPlayerState()
     if (playerState?.ship?.id) {
@@ -29,26 +29,34 @@ export default function MobileGameScene() {
       return ufoNum || 1
     }
     return 1
-  })()
+  })
 
   // Intentar bloquear en landscape al montar
   useEffect(() => {
+    let resizeHandler: (() => void) | null = null
+    let orientationHandler: (() => void) | null = null
+
     const initLandscape = async () => {
       await enterFullscreen()
       const locked = await lockLandscape()
       if (!locked) {
+        // Fallback: detectar orientación manualmente
         const checkOrientation = () => setShowPortraitOverlay(isPortrait())
         checkOrientation()
+        resizeHandler = checkOrientation
+        orientationHandler = checkOrientation
         window.addEventListener('resize', checkOrientation)
         window.addEventListener('orientationchange', checkOrientation)
-        return () => {
-          window.removeEventListener('resize', checkOrientation)
-          window.removeEventListener('orientationchange', checkOrientation)
-        }
       }
     }
     initLandscape()
-    return () => { unlockOrientation() }
+
+    // Cleanup: remover listeners Y desbloquear orientación
+    return () => {
+      if (resizeHandler) window.removeEventListener('resize', resizeHandler)
+      if (orientationHandler) window.removeEventListener('orientationchange', orientationHandler)
+      unlockOrientation()
+    }
   }, [])
 
   if (showPortraitOverlay) {

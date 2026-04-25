@@ -21,19 +21,11 @@ export default function AudioPage() {
   const handleSave = () => {
     const vol = masterVolume / 100
     const harmVol = harmoniaVolume / 100
-
     updateAudioSettings({ masterVolume: vol, musicVolume: harmVol, sfxVolume: vol })
-
-    // Clima, lluvia, viento
     getProceduralAudio().setMasterVolume(vol)
-
-    // Música de esferas — solo en PC (mobile no carga HarmoniaMundi)
-    if (!isMobile) {
-      import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
-        getHarmoniaMundi().setMasterVolume(harmVol)
-      })
-    }
-
+    import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+      getHarmoniaMundi().setMasterVolume(harmVol)
+    })
     router.push('/menu')
   }
 
@@ -46,14 +38,12 @@ export default function AudioPage() {
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       background: '#000', color: '#fff',
-      padding: isMobile ? '16px' : '40px',
-      boxSizing: 'border-box'
+      padding: isMobile ? '16px' : '40px', boxSizing: 'border-box'
     }}>
       <h1 style={{
         fontSize: isMobile ? '24px' : '48px',
         marginBottom: isMobile ? '30px' : '60px',
-        letterSpacing: '4px',
-        fontFamily: 'Archeoscope, serif'
+        letterSpacing: '4px', fontFamily: 'Archeoscope, serif'
       }}>
         AUDIO
       </h1>
@@ -61,8 +51,7 @@ export default function AudioPage() {
       <div style={{
         display: 'flex', flexDirection: 'column',
         gap: isMobile ? '24px' : '40px',
-        width: isMobile ? '100%' : '600px',
-        maxWidth: '100%'
+        width: isMobile ? '100%' : '600px', maxWidth: '100%'
       }}>
         {/* Volumen General */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '15px' }}>
@@ -72,11 +61,7 @@ export default function AudioPage() {
           <input
             type="range" min="0" max="100" value={masterVolume}
             onChange={(e) => setMasterVolume(parseInt(e.target.value))}
-            style={{
-              width: '100%', height: '8px', borderRadius: '4px',
-              outline: 'none', cursor: 'pointer',
-              background: sliderBg(masterVolume, '#4a9eff')
-            }}
+            style={{ width: '100%', height: '8px', borderRadius: '4px', outline: 'none', cursor: 'pointer', background: sliderBg(masterVolume, '#4a9eff') }}
           />
           <span style={{ fontSize: isMobile ? '12px' : '16px', color: '#888' }}>
             Clima, lluvia, viento y efectos
@@ -85,32 +70,25 @@ export default function AudioPage() {
 
         <div style={{ height: '1px', background: '#333' }} />
 
-        {/* Música de Esferas — ocultar slider en mobile ya que no se usa */}
-        {!isMobile && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            <label style={{ fontSize: '22px', letterSpacing: '2px', textTransform: 'uppercase', color: '#FFD700' }}>
-              🎼 Música de las Esferas: {harmoniaVolume}%
-            </label>
-            <input
-              type="range" min="0" max="100" value={harmoniaVolume}
-              onChange={(e) => setHarmoniaVolume(parseInt(e.target.value))}
-              style={{
-                width: '100%', height: '8px', borderRadius: '4px',
-                outline: 'none', cursor: 'pointer',
-                background: sliderBg(harmoniaVolume, '#FFD700')
-              }}
-            />
-            <span style={{ fontSize: '16px', color: '#888' }}>
-              Música cósmica procedural — se despierta con cada misión completada
-            </span>
-          </div>
-        )}
+        {/* Música de Esferas */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '15px' }}>
+          <label style={{ fontSize: isMobile ? '15px' : '22px', letterSpacing: '2px', textTransform: 'uppercase', color: '#FFD700' }}>
+            🎼 Música de las Esferas: {harmoniaVolume}%
+          </label>
+          <input
+            type="range" min="0" max="100" value={harmoniaVolume}
+            onChange={(e) => setHarmoniaVolume(parseInt(e.target.value))}
+            style={{ width: '100%', height: '8px', borderRadius: '4px', outline: 'none', cursor: 'pointer', background: sliderBg(harmoniaVolume, '#FFD700') }}
+          />
+          <span style={{ fontSize: isMobile ? '12px' : '16px', color: '#888' }}>
+            Música cósmica procedural — se despierta con cada misión
+          </span>
+        </div>
       </div>
 
       {/* Botones */}
       <div style={{
-        display: 'flex',
-        gap: isMobile ? '12px' : '20px',
+        display: 'flex', gap: isMobile ? '12px' : '20px',
         marginTop: isMobile ? '30px' : '70px',
         flexDirection: isMobile ? 'column' : 'row',
         width: isMobile ? '100%' : 'auto'
@@ -119,11 +97,10 @@ export default function AudioPage() {
           onClick={() => router.push('/menu')}
           style={{
             padding: isMobile ? '14px 24px' : '18px 70px',
-            fontSize: isMobile ? '16px' : '20px',
-            fontWeight: 'bold', color: '#fff', background: 'transparent',
-            border: '2px solid #fff', borderRadius: '8px', cursor: 'pointer',
-            letterSpacing: '2px', textTransform: 'uppercase',
-            width: isMobile ? '100%' : 'auto'
+            fontSize: isMobile ? '16px' : '20px', fontWeight: 'bold',
+            color: '#fff', background: 'transparent', border: '2px solid #fff',
+            borderRadius: '8px', cursor: 'pointer', letterSpacing: '2px',
+            textTransform: 'uppercase', width: isMobile ? '100%' : 'auto'
           }}
           onMouseEnter={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#000' }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff' }}
@@ -134,11 +111,10 @@ export default function AudioPage() {
           onClick={handleSave}
           style={{
             padding: isMobile ? '14px 24px' : '18px 70px',
-            fontSize: isMobile ? '16px' : '20px',
-            fontWeight: 'bold', color: '#000', background: '#4a9eff',
-            border: '2px solid #4a9eff', borderRadius: '8px', cursor: 'pointer',
-            letterSpacing: '2px', textTransform: 'uppercase',
-            width: isMobile ? '100%' : 'auto'
+            fontSize: isMobile ? '16px' : '20px', fontWeight: 'bold',
+            color: '#000', background: '#4a9eff', border: '2px solid #4a9eff',
+            borderRadius: '8px', cursor: 'pointer', letterSpacing: '2px',
+            textTransform: 'uppercase', width: isMobile ? '100%' : 'auto'
           }}
           onMouseEnter={(e) => { e.currentTarget.style.background = '#6ab7ff' }}
           onMouseLeave={(e) => { e.currentTarget.style.background = '#4a9eff' }}
