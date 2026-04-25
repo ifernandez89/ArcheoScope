@@ -97,6 +97,7 @@ import SolarAlignmentLines, { calcAlignments } from './SolarAlignmentLines'
 const Compass = dynamic(() => import('./Compass'), { ssr: false })
 const ShipAbilities = dynamic(() => import('./ShipAbilities'), { ssr: false })
 const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
+const MobileTouchControls = dynamic(() => import('./MobileTouchControls'), { ssr: false })
 const CelestialOverlayHUD = dynamic(() => import('./CelestialOverlay').then(m => ({ default: m.CelestialOverlayHUD })), { ssr: false })
 const BackgroundMountains = dynamic(() => import('./BackgroundMountains'), { ssr: false, loading: () => null })
 const EnhancedMoon = dynamic(() => import('./EnhancedMoon'), { ssr: false })
@@ -1586,6 +1587,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         <>
           <Compass rotation={cameraRotation} solarAzimuth={solarState.azimuth} />
         </>
+      )}
+
+      {/* 📱 Controles touch para mobile — D-pad + rotación */}
+      {mode === 'model' && isMobile && (
+        <MobileTouchControls visible={true} />
       )}
 
       {/* 🛸 Botón de Habilidad Especial */}

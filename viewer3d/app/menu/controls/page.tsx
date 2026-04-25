@@ -86,19 +86,32 @@ export default function ControlsPage() {
         ═══════════════════════════════════════════════════════════════════ */}
         {isMobile ? (
           <>
-            {/* Navegación Touch */}
+            {/* Movimiento de Nave — Escena Terrestre */}
+            <div style={sectionStyle(true)}>
+              <h2 style={h2Style('#3b82f6', true)}>
+                <span>🛸</span> Movimiento de Nave (Terrestre)
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '15px' }}>
+                <div style={rowStyle}><span style={labelStyle}>▲ / ▼</span><span>Adelante / Atrás</span></div>
+                <div style={rowStyle}><span style={labelStyle}>◀ / ▶</span><span>Izquierda / Derecha</span></div>
+                <div style={rowStyle}><span style={labelStyle}>↺ / ↻</span><span>Rotar nave</span></div>
+                <div style={rowStyle}><span style={labelStyle}>Botón habilidad</span><span>Activar poder especial</span></div>
+              </div>
+            </div>
+
+            {/* Navegación Espacial */}
             <div style={sectionStyle(true)}>
               <h2 style={h2Style('#8b5cf6', true)}>
-                <span>👆</span> Navegación Touch
+                <span>🌌</span> Navegación Espacial
               </h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '15px' }}>
                 <div style={rowStyle}><span style={labelStyle}>1 dedo + arrastrar</span><span>Rotar cámara</span></div>
                 <div style={rowStyle}><span style={labelStyle}>2 dedos + pinza</span><span>Zoom</span></div>
-                <div style={rowStyle}><span style={labelStyle}>2 dedos + arrastrar</span><span>Mover (Pan)</span></div>
+                <div style={rowStyle}><span style={labelStyle}>Tap en planeta</span><span>Ver info / Viajar</span></div>
               </div>
             </div>
 
-            {/* Interacción Touch */}
+            {/* Interacción */}
             <div style={sectionStyle(true)}>
               <h2 style={h2Style('#ec4899', true)}>
                 <span>🖱️</span> Interacción
@@ -107,17 +120,6 @@ export default function ControlsPage() {
                 <div style={rowStyle}><span style={labelStyle}>Tap en objeto</span><span>Interactuar / Recoger</span></div>
                 <div style={rowStyle}><span style={labelStyle}>Tap en NPC</span><span>Hablar</span></div>
                 <div style={rowStyle}><span style={labelStyle}>Botón ☰</span><span>Menú</span></div>
-              </div>
-            </div>
-
-            {/* Movimiento de Nave */}
-            <div style={sectionStyle(true)}>
-              <h2 style={h2Style('#3b82f6', true)}>
-                <span>🛸</span> Movimiento de Nave
-              </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '15px' }}>
-                <div style={rowStyle}><span style={labelStyle}>Arrastrar en pantalla</span><span>Mover nave</span></div>
-                <div style={rowStyle}><span style={labelStyle}>Botón de habilidad</span><span>Activar poder</span></div>
               </div>
             </div>
 
