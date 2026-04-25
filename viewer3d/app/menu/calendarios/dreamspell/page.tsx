@@ -4,26 +4,26 @@ import { useState, useMemo } from 'react'
 
 // ─── 20 Nawales del Cholq'ij ────────────────────────────────────────────────
 const NAWALES = [
-  { name: "Imox",    glyph: '🌀', color: '#3b82f6', meaning: 'Agua · Locura sagrada · Lo desconocido' },
-  { name: "Iq'",    glyph: '🌬️', color: '#a78bfa', meaning: 'Viento · Espíritu · Vida' },
-  { name: "Aq'ab'al", glyph: '🌅', color: '#fbbf24', meaning: 'Amanecer · Claridad · Nuevo comienzo' },
-  { name: "K'at",   glyph: '🕸️', color: '#f59e0b', meaning: 'Red · Abundancia · Atrapamiento' },
-  { name: "Kan",    glyph: '🐍', color: '#ef4444', meaning: 'Serpiente · Fuerza vital · Kundalini' },
-  { name: "Keme",   glyph: '💀', color: '#94a3b8', meaning: 'Muerte · Transformación · Ancestros' },
-  { name: "Kej",    glyph: '🦌', color: '#22c55e', meaning: 'Venado · Autoridad · Los cuatro pilares' },
-  { name: "Q'anil", glyph: '🌽', color: '#84cc16', meaning: 'Semilla · Madurez · Abundancia' },
-  { name: "Toj",    glyph: '🔥', color: '#f97316', meaning: 'Fuego · Pago · Equilibrio cósmico' },
-  { name: "Tz'i'",  glyph: '🐕', color: '#d97706', meaning: 'Perro · Justicia · Fidelidad' },
-  { name: "B'atz'", glyph: '🧵', color: '#8b5cf6', meaning: 'Hilo · Tiempo · Arte sagrado' },
-  { name: "E",      glyph: '🛤️', color: '#10b981', meaning: 'Camino · Destino · Viaje' },
-  { name: "Aj",     glyph: '🌿', color: '#059669', meaning: 'Caña · Hogar · Autoridad espiritual' },
-  { name: "I'x",    glyph: '🐆', color: '#7c3aed', meaning: 'Jaguar · Magia · Fuerza femenina' },
-  { name: "Tz'ikin", glyph: '🦅', color: '#0ea5e9', meaning: 'Pájaro · Visión · Mensajero' },
-  { name: "Ajmaq",  glyph: '🦉', color: '#6366f1', meaning: 'Búho · Pecado · Perdón · Ancestros' },
-  { name: "No'j",   glyph: '🧠', color: '#06b6d4', meaning: 'Mente · Sabiduría · Conocimiento' },
-  { name: "Tijax",  glyph: '🔪', color: '#dc2626', meaning: 'Pedernal · Curación · Corte' },
-  { name: "Kawoq",  glyph: '⛈️', color: '#2563eb', meaning: 'Tormenta · Comunidad · Familia' },
-  { name: "Ajpu",   glyph: '☀️', color: '#fbbf24', meaning: 'Sol · Héroe · Luz · Cazador' },
+  { name: "Imox",    glyph: '🌀', color: '#3b82f6', meaning: 'Agua · Locura sagrada · Lo desconocido', desc: 'Nawal del agua y del mundo invisible. Representa el inconsciente colectivo, la intuición profunda y lo que está más allá de la razón. Los ajq\'ijab\' lo invocan para conectar con los ancestros y el mundo espiritual.' },
+  { name: "Iq'",    glyph: '🌬️', color: '#a78bfa', meaning: 'Viento · Espíritu · Vida', desc: 'Nawal del viento y del aliento vital. Es el espíritu que anima todo ser vivo. Representa la comunicación sagrada, la voz de los ancestros y la presencia del creador en cada respiración.' },
+  { name: "Aq'ab'al", glyph: '🌅', color: '#fbbf24', meaning: 'Amanecer · Claridad · Nuevo comienzo', desc: 'Nawal del amanecer y la transición entre la oscuridad y la luz. Simboliza los nuevos comienzos, la claridad mental y el momento en que lo oculto se vuelve visible. Día propicio para iniciar proyectos.' },
+  { name: "K'at",   glyph: '🕸️', color: '#f59e0b', meaning: 'Red · Abundancia · Atrapamiento', desc: 'Nawal de la red y la abundancia. Representa las conexiones entre todos los seres y la riqueza que surge de ellas. También advierte sobre las trampas del ego y los enredos que nos impiden avanzar.' },
+  { name: "Kan",    glyph: '🐍', color: '#ef4444', meaning: 'Serpiente · Fuerza vital · Kundalini', desc: 'Nawal de la serpiente y la energía vital. Representa la fuerza primordial que sube por la columna vertebral, la sexualidad sagrada y el poder de transformación. Es la energía que sostiene la vida.' },
+  { name: "Keme",   glyph: '💀', color: '#94a3b8', meaning: 'Muerte · Transformación · Ancestros', desc: 'Nawal de la muerte y la transformación. No representa el fin, sino el paso entre mundos. Es el guardián de los ancestros y el portal hacia la vida eterna. Día para honrar a los que partieron.' },
+  { name: "Kej",    glyph: '🦌', color: '#22c55e', meaning: 'Venado · Autoridad · Los cuatro pilares', desc: 'Nawal del venado y la autoridad espiritual. Representa los cuatro puntos cardinales y los pilares que sostienen el cosmos. Es el guardián de la naturaleza y el líder que sirve a su comunidad.' },
+  { name: "Q'anil", glyph: '🌽', color: '#84cc16', meaning: 'Semilla · Madurez · Abundancia', desc: 'Nawal de la semilla y la fertilidad. Representa el potencial que duerme en cada ser y el momento de la cosecha. Es el nawal de la abundancia material y espiritual, del maíz sagrado que sustenta la vida maya.' },
+  { name: "Toj",    glyph: '🔥', color: '#f97316', meaning: 'Fuego · Pago · Equilibrio cósmico', desc: 'Nawal del fuego y el pago ceremonial. Representa el equilibrio entre lo que recibimos y lo que devolvemos al cosmos. Los ajq\'ijab\' realizan ofrendas en este día para saldar deudas espirituales y restaurar la armonía.' },
+  { name: "Tz'i'",  glyph: '🐕', color: '#d97706', meaning: 'Perro · Justicia · Fidelidad', desc: 'Nawal del perro y la justicia divina. Representa la lealtad, la autoridad de la ley y el guardián del camino al inframundo. Es el nawal de los líderes comunitarios y quienes administran justicia.' },
+  { name: "B'atz'", glyph: '🧵', color: '#8b5cf6', meaning: 'Hilo · Tiempo · Arte sagrado', desc: 'Nawal del hilo y el tiempo. Es uno de los más sagrados: representa el tejido del destino, el arte, la música y la continuidad de la vida. El día 8 B\'atz\' es el año nuevo de los ajq\'ijab\' y el día de iniciación de nuevos sacerdotes.' },
+  { name: "E",      glyph: '🛤️', color: '#10b981', meaning: 'Camino · Destino · Viaje', desc: 'Nawal del camino y el destino. Representa el viaje de la vida, los pasos que damos y la dirección que elegimos. Es el nawal de los viajeros, los comerciantes y quienes buscan su propósito.' },
+  { name: "Aj",     glyph: '🌿', color: '#059669', meaning: 'Caña · Hogar · Autoridad espiritual', desc: 'Nawal de la caña y el hogar sagrado. Representa la columna vertebral del cosmos, la autoridad espiritual y la protección del hogar y la familia. Es el nawal de los guías espirituales y los que cuidan a su comunidad.' },
+  { name: "I'x",    glyph: '🐆', color: '#7c3aed', meaning: 'Jaguar · Magia · Fuerza femenina', desc: 'Nawal del jaguar y la magia. Representa la fuerza femenina, el poder de la oscuridad sagrada y la capacidad de moverse entre mundos. Es el nawal de los chamanes y quienes trabajan con energías invisibles.' },
+  { name: "Tz'ikin", glyph: '🦅', color: '#0ea5e9', meaning: 'Pájaro · Visión · Mensajero', desc: 'Nawal del pájaro y la visión elevada. Representa la capacidad de ver desde lo alto, la libertad del espíritu y el papel de mensajero entre el mundo humano y el divino. Es el nawal de la prosperidad y los sueños.' },
+  { name: "Ajmaq",  glyph: '🦉', color: '#6366f1', meaning: 'Búho · Pecado · Perdón · Ancestros', desc: 'Nawal del búho y el perdón. Representa los errores cometidos y la posibilidad de sanarlos. Es el nawal de los ancestros que guían desde el más allá y el día para pedir perdón y liberarse de cargas del pasado.' },
+  { name: "No'j",   glyph: '🧠', color: '#06b6d4', meaning: 'Mente · Sabiduría · Conocimiento', desc: 'Nawal de la mente y la sabiduría cósmica. Representa el pensamiento elevado, la inteligencia al servicio del bien y el conocimiento ancestral. Es el nawal de los maestros, los estudiantes y quienes buscan la verdad.' },
+  { name: "Tijax",  glyph: '🔪', color: '#dc2626', meaning: 'Pedernal · Curación · Corte', desc: 'Nawal del pedernal y la curación. Representa el corte que libera, la cirugía espiritual que elimina lo que enferma. Es el nawal de los sanadores, los médicos y quienes tienen el poder de cortar lazos negativos.' },
+  { name: "Kawoq",  glyph: '⛈️', color: '#2563eb', meaning: 'Tormenta · Comunidad · Familia', desc: 'Nawal de la tormenta y la comunidad. Representa la fuerza colectiva, la lluvia que nutre la tierra y los lazos familiares que nos sostienen. Es el nawal de las mujeres, el hogar y la vida en comunidad.' },
+  { name: "Ajpu",   glyph: '☀️', color: '#fbbf24', meaning: 'Sol · Héroe · Luz · Cazador', desc: 'Nawal del sol y el héroe espiritual. Representa la luz que vence a la oscuridad, la valentía del guerrero espiritual y la iluminación. Es el nawal de los líderes, los artistas y quienes irradian luz a su alrededor.' },
 ]
 
 // ─── 13 Números (tonos) ─────────────────────────────────────────────────────
@@ -162,11 +162,11 @@ export default function CholqijPage() {
         </div>
       </div>
 
-      {/* Número + Nawal */}
+      {/* Número + Ciclo en grid, Nawal como card separada */}
       <div style={{
         maxWidth: 'min(600px, 95vw)', width: '100%',
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-        gap: '10px', marginBottom: '14px'
+        display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: '10px', marginBottom: '10px'
       }}>
         {/* Número */}
         <div style={{
@@ -181,19 +181,6 @@ export default function CholqijPage() {
           </div>
         </div>
 
-        {/* Nawal */}
-        <div style={{
-          padding: '16px', background: 'rgba(244,114,182,0.08)',
-          border: '1px solid rgba(244,114,182,0.2)', borderRadius: '12px', textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '6px' }}>NAWAL</div>
-          <div style={{ fontSize: '28px' }}>{nawal.glyph}</div>
-          <div style={{ fontSize: '16px', color: '#f472b6', fontWeight: 'bold' }}>{nawal.name}</div>
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>
-            {nawal.meaning.split('·')[0]}
-          </div>
-        </div>
-
         {/* Ciclo */}
         <div style={{
           padding: '16px', background: 'rgba(56,189,248,0.08)',
@@ -203,6 +190,25 @@ export default function CholqijPage() {
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#38bdf8' }}>260</div>
           <div style={{ fontSize: '16px', color: '#fff', marginBottom: '4px' }}>días sagrados</div>
           <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>13 × 20</div>
+        </div>
+      </div>
+
+      {/* Nawal — card ancha con descripción completa */}
+      <div style={{
+        maxWidth: 'min(600px, 95vw)', width: '100%', marginBottom: '14px',
+        padding: '20px', background: 'rgba(244,114,182,0.08)',
+        border: '1px solid rgba(244,114,182,0.25)', borderRadius: '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+          <div style={{ fontSize: '32px' }}>{nawal.glyph}</div>
+          <div>
+            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>NAWAL DEL DÍA</div>
+            <div style={{ fontSize: '20px', color: '#f472b6', fontWeight: 'bold' }}>{nawal.name}</div>
+            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>{nawal.meaning}</div>
+          </div>
+        </div>
+        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.65)', lineHeight: '1.8', borderTop: '1px solid rgba(244,114,182,0.15)', paddingTop: '12px' }}>
+          {nawal.desc}
         </div>
       </div>
 
