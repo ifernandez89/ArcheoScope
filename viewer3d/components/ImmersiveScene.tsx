@@ -335,11 +335,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       // ClimateAudio (usa ProceduralAudio internamente, pero forzamos)
       getClimateAudio().setMasterVolume(volume)
 
-      // HarmoniaMundi (música cósmica) - siempre guardar aunque no esté habilitado
-      import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
-        const harmonia = getHarmoniaMundi()
-        harmonia.setMasterVolume(volume)
-      })
+      // HarmoniaMundi — solo en PC (mobile no lo usa)
+      if (!_isMobileDevice) {
+        import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+          const harmonia = getHarmoniaMundi()
+          harmonia.setMasterVolume(volume)
+        })
+      }
 
       console.log('🔊 Volumen aplicado a todos los sistemas:', volume)
     }
@@ -1054,25 +1056,27 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         setAudioEnabled(true)
         loggers.world.info('🔊 Audio habilitado')
 
-        // 🎼 Habilitar Harmonia Mundi PERMANENTEMENTE
-        const { getHarmoniaMundi } = await import('@/systems/HarmoniaMundiSystem')
-        const harmonia = getHarmoniaMundi()
-        await harmonia.enable()
-        loggers.world.info('🎼 Harmonia Mundi habilitado permanentemente')
+        // 🎼 Habilitar Harmonia Mundi — DESACTIVADO en mobile (demasiados AudioNodes)
+        if (!_isMobileDevice) {
+          const { getHarmoniaMundi } = await import('@/systems/HarmoniaMundiSystem')
+          const harmonia = getHarmoniaMundi()
+          await harmonia.enable()
+          loggers.world.info('🎼 Harmonia Mundi habilitado permanentemente')
 
-        // Aplicar volumen guardado
-        const settings = loadGameSettings()
-        const vol = settings?.audio?.masterVolume ?? 0.7
-        harmonia.setMasterVolume(vol)
+          // Aplicar volumen guardado
+          const settings = loadGameSettings()
+          const vol = settings?.audio?.masterVolume ?? 0.7
+          harmonia.setMasterVolume(vol)
 
-        // Activar capas ya desbloqueadas por misiones previas
-        const { loadMissionState: loadMS } = await import('@/types/missionState')
-        const ms = loadMS()
-        const totalCompleted = ms.stats.totalMissionsCompleted
-        for (let i = 1; i <= totalCompleted; i++) {
-          harmonia.unlockMissionLayer(`earth_mission_${i}`)
+          // Activar capas ya desbloqueadas por misiones previas
+          const { loadMissionState: loadMS } = await import('@/types/missionState')
+          const ms = loadMS()
+          const totalCompleted = ms.stats.totalMissionsCompleted
+          for (let i = 1; i <= totalCompleted; i++) {
+            harmonia.unlockMissionLayer(`earth_mission_${i}`)
+          }
+          loggers.world.info(`🎵 ${totalCompleted} capas de misión restauradas`)
         }
-        loggers.world.info(`🎵 ${totalCompleted} capas de misión restauradas`)
 
         window.removeEventListener('click', enableAudioOnInteraction)
         window.removeEventListener('keydown', enableAudioOnInteraction)
