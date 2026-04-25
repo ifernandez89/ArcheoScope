@@ -9,7 +9,7 @@
  * - Fuerza orientación horizontal (landscape)
  */
 
-import { useRef, useState, useEffect, useMemo, Suspense } from 'react'
+import { useRef, useEffect, useMemo, Suspense } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { PerspectiveCamera, OrbitControls, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
@@ -131,21 +131,24 @@ function SolarContent() {
 }
 
 export default function MobileSolarScene() {
-  const [isPortrait, setIsPortrait] = useState(false)
-
   useEffect(() => {
-    // Forzar landscape via Screen Orientation API (experimental)
-    try {
-      const so = screen.orientation as any
-      so?.lock?.('landscape').catch(() => {})
-    } catch {}
+    // Forzar landscape: fullscreen + orientation lock
+    const goLandscape = async () => {
+      try {
+        const el = document.documentElement as any
+        // Primero fullscreen (requerido para orientation lock en la mayoría de browsers)
+        if (el.requestFullscreen) await el.requestFullscreen()
+        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen()
+        // Luego lock orientation
+        const so = screen.orientation as any
+        await so?.lock?.('landscape')
+      } catch {}
+    }
+    goLandscape()
 
-    const check = () => setIsPortrait(window.innerHeight > window.innerWidth)
-    check()
-    window.addEventListener('resize', check)
     return () => {
-      window.removeEventListener('resize', check)
       try { (screen.orientation as any)?.unlock?.() } catch {}
+      try { if (document.fullscreenElement) document.exitFullscreen() } catch {}
     }
   }, [])
 
@@ -158,25 +161,6 @@ export default function MobileSolarScene() {
       overflow: 'hidden',
       touchAction: 'none',
     }}>
-      {/* Mensaje si está en portrait */}
-      {isPortrait && (
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 50,
-          background: 'rgba(0,0,0,0.92)',
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          color: '#fff', textAlign: 'center', padding: '20px',
-        }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📱↔️</div>
-          <div style={{ fontSize: '16px', letterSpacing: '2px', fontWeight: 'bold' }}>
-            GIRA TU DISPOSITIVO
-          </div>
-          <div style={{ fontSize: '12px', opacity: 0.5, marginTop: '8px' }}>
-            Modo horizontal para mejor experiencia
-          </div>
-        </div>
-      )}
-
       <Canvas
         camera={{ position: [0, 0, 15], fov: 50 }}
         style={{ background: '#000' }}

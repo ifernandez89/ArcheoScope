@@ -29,6 +29,16 @@ export default function CelestialTooltip({
   color
 }: CelestialTooltipProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // No renderizar labels en mobile — ocupan demasiado espacio
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      setIsMobile(/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+    }
+  })
+
+  if (isMobile) return null
   
   return (
     <Html position={position} center>
