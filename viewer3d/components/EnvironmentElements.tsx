@@ -148,7 +148,7 @@ export default function EnvironmentElements({
     
     // Reducir árboles en sitios específicos
     if ((isTeotihuacan || isVeracruz || isEasterIsland) && count.trees) {
-      count.trees = isEasterIsland ? 5 : isTeotihuacan ? 10 : isVeracruz ? 10 : 15
+      count.trees = isEasterIsland ? 5 : isTeotihuacan ? 5 : isVeracruz ? 10 : 15
     }
     if (isGobekli && count.trees) {
       count.trees = 5

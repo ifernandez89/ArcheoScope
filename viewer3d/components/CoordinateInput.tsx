@@ -13,6 +13,10 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation, d
   const [lat, setLat] = useState(currentLocation?.lat.toFixed(4) || '')
   const [lon, setLon] = useState(currentLocation?.lon.toFixed(4) || '')
 
+  // Detectar mobile — en mobile solo se muestran sitios, sin inputs manuales
+  const isMobile = typeof window !== 'undefined' &&
+    (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const latitude = parseFloat(lat)
@@ -39,12 +43,12 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation, d
 
   // Coordenadas de sitios seleccionados
   const famousSites = [
-    { lat: -16.56164569638123, lon: -68.67952141492464, category: 'famous' },
-    { lat: 29.9792, lon: 31.1342, category: 'famous' },
-    { lat: 19.6925, lon: -98.8438, category: 'famous' },
-    { lat: 18.4667, lon: -95.4500, category: 'famous' },
-    { lat: -27.1254, lon: -109.2778, category: 'famous' },
-    { lat: -75.2509, lon: 0.0714, category: 'famous' },
+    { name: '🏔️ Puma Punku', lat: -16.56164569638123, lon: -68.67952141492464, category: 'famous' },
+    { name: '🏛️ Giza', lat: 29.9792, lon: 31.1342, category: 'famous' },
+    { name: '🌞 Teotihuacán', lat: 19.6925, lon: -98.8438, category: 'famous' },
+    { name: '🗿 Veracruz', lat: 18.4667, lon: -95.4500, category: 'famous' },
+    { name: '🗿 Isla de Pascua', lat: -27.1254, lon: -109.2778, category: 'famous' },
+    { name: '🌊 Lago Titicaca', lat: -75.2509, lon: 0.0714, category: 'famous' },
   ]
 
   return (
@@ -129,80 +133,82 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation, d
             </div>
           )}
 
-          {/* Formulario */}
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{
-                display: 'block',
-                color: 'rgba(255,255,255,0.8)',
-                fontSize: '12px',
-                marginBottom: '5px'
-              }}>
-                Latitud (-90 a 90)
-              </label>
-              <input
-                type="text"
-                value={lat}
-                onChange={(e) => setLat(e.target.value)}
-                placeholder="-13.1631"
+          {/* Formulario — solo en PC */}
+          {!isMobile && (
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{
+                  display: 'block',
+                  color: 'rgba(255,255,255,0.8)',
+                  fontSize: '12px',
+                  marginBottom: '5px'
+                }}>
+                  Latitud (-90 a 90)
+                </label>
+                <input
+                  type="text"
+                  value={lat}
+                  onChange={(e) => setLat(e.target.value)}
+                  placeholder="-13.1631"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: 'rgba(255,255,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '6px',
+                    color: 'white',
+                    fontSize: '14px',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{
+                  display: 'block',
+                  color: 'rgba(255,255,255,0.8)',
+                  fontSize: '12px',
+                  marginBottom: '5px'
+                }}>
+                  Longitud (-180 a 180)
+                </label>
+                <input
+                  type="text"
+                  value={lon}
+                  onChange={(e) => setLon(e.target.value)}
+                  placeholder="-72.5450"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: 'rgba(255,255,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '6px',
+                    color: 'white',
+                    fontSize: '14px',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
                 style={{
                   width: '100%',
-                  padding: '10px',
-                  background: 'rgba(255,255,255,0.1)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: '6px',
+                  padding: '12px',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  border: 'none',
+                  borderRadius: '8px',
                   color: 'white',
                   fontSize: '14px',
-                  outline: 'none'
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
                 }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{
-                display: 'block',
-                color: 'rgba(255,255,255,0.8)',
-                fontSize: '12px',
-                marginBottom: '5px'
-              }}>
-                Longitud (-180 a 180)
-              </label>
-              <input
-                type="text"
-                value={lon}
-                onChange={(e) => setLon(e.target.value)}
-                placeholder="-72.5450"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  background: 'rgba(255,255,255,0.1)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: '6px',
-                  color: 'white',
-                  fontSize: '14px',
-                  outline: 'none'
-                }}
-              />
-            </div>
-
-            <button
-              type="submit"
-              style={{
-                width: '100%',
-                padding: '12px',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                border: 'none',
-                borderRadius: '8px',
-                color: 'white',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              🌍 Viajar
-            </button>
-          </form>
+              >
+                🌍 Viajar
+              </button>
+            </form>
+          )}
 
           {/* Sitios famosos */}
           <div style={{ marginTop: '20px' }}>
@@ -224,17 +230,23 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation, d
                 <button
                   key={i}
                   onClick={() => {
-                    setLat(site.lat.toFixed(4))
-                    setLon(site.lon.toFixed(4))
+                    if (isMobile) {
+                      // Mobile: navegar directamente al sitio
+                      onCoordinateSubmit(site.lat, site.lon)
+                      setIsOpen(false)
+                    } else {
+                      setLat(site.lat.toFixed(4))
+                      setLon(site.lon.toFixed(4))
+                    }
                   }}
                   style={{
-                    padding: '8px 12px',
+                    padding: isMobile ? '12px 14px' : '8px 12px',
                     background: 'rgba(255,255,255,0.05)',
                     border: '1px solid rgba(255,255,255,0.1)',
                     borderRadius: '6px',
                     color: 'white',
                     cursor: 'pointer',
-                    fontSize: '13px',
+                    fontSize: isMobile ? '14px' : '13px',
                     textAlign: 'left',
                     transition: 'all 0.2s'
                   }}
@@ -247,7 +259,10 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation, d
                     e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
                   }}
                 >
-                  {site.lat.toFixed(4)}°, {site.lon.toFixed(4)}°
+                  {site.name}
+                  {!isMobile && <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginLeft: '8px' }}>
+                    {site.lat.toFixed(2)}°, {site.lon.toFixed(2)}°
+                  </span>}
                 </button>
               ))}
             </div>

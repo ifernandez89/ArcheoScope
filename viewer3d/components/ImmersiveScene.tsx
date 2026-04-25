@@ -129,6 +129,14 @@ const CALM_WEATHER: WeatherState = {
   volcanicEruption: false
 }
 
+// Teotihuacán: lluvia ligera (menos carga GPU, más apropiado para el bioma)
+const TEOTIHUACAN_WEATHER: WeatherState = {
+  snow: false, rainLight: true, rainModerate: false, rainHeavy: false,
+  wind: true, fog: false, storm: false, lightning: false,
+  tornado: false, clouds: true, earthquake: false, visibleSun: false,
+  volcanicEruption: false
+}
+
 export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false, spaceUfoNumber = 1 }: ImmersiveSceneProps) {
   // Detectar mobile
   const [isMobile, setIsMobile] = useState(false)
@@ -1152,7 +1160,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     const allMissionsComplete = missionState.stats.totalMissionsCompleted >= 5
     const siteName = getSiteNameFromCoordinates(site.lat, site.lon)
     const weatherCleared = allMissionsComplete || (siteName ? isWeatherCleared(siteName) : discoveredSites.current.has(site.id))
-    setWeather(weatherCleared ? CALM_WEATHER : DEFAULT_STORM_WEATHER)
+    // Teotihuacán: lluvia ligera en lugar de tormenta completa
+    const isTeotihuacan = siteName === 'teotihuacan'
+    setWeather(weatherCleared ? CALM_WEATHER : isTeotihuacan ? TEOTIHUACAN_WEATHER : DEFAULT_STORM_WEATHER)
     setMode('model')
 
     loggers.world.info('Teletransporte a sitio arqueolÃ³gico completado')
@@ -1197,7 +1207,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     const allComplete = ms.stats.totalMissionsCompleted >= 5
     const siteName = getSiteNameFromCoordinates(lat, lon)
     const weatherCleared = allComplete || (siteName ? isWeatherCleared(siteName) : false)
-    setWeather(weatherCleared ? CALM_WEATHER : DEFAULT_STORM_WEATHER)
+    // Teotihuacán: lluvia ligera en lugar de tormenta completa
+    const isTeotihuacan = siteName === 'teotihuacan'
+    setWeather(weatherCleared ? CALM_WEATHER : isTeotihuacan ? TEOTIHUACAN_WEATHER : DEFAULT_STORM_WEATHER)
     setMode('model')
 
     loggers.world.info('Teletransporte completado', { lat, lon })

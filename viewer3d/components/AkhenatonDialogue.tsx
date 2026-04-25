@@ -29,6 +29,9 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
   const [showOptions, setShowOptions] = useState(true)
   const [pilotName, setPilotName] = useState('Archeoscope')
 
+  const isMobile = typeof window !== 'undefined' &&
+    (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+
   useEffect(() => {
     try {
       const saved = localStorage.getItem('player_state')
@@ -70,25 +73,27 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
           background: 'rgba(18, 12, 6, 0.97)',
           border: `2px solid ${ACCENT}`,
           borderRadius: '12px',
-          padding: '32px 44px',
-          maxWidth: '640px',
+          padding: isMobile ? '16px 18px' : '32px 44px',
+          maxWidth: isMobile ? '95vw' : '640px',
           width: '92%',
+          maxHeight: isMobile ? '85vh' : 'auto',
+          overflowY: isMobile ? 'auto' : 'visible',
           boxShadow: `0 0 40px rgba(232, 201, 122, 0.4)`,
           animation: 'scaleIn 0.3s ease-out'
         }}
       >
         {/* Icono */}
-        <div style={{ textAlign: 'center', marginBottom: '10px', fontSize: '44px' }}>𓂀</div>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? '4px' : '10px', fontSize: isMobile ? '28px' : '44px' }}>𓂀</div>
 
         {/* Nombre */}
         <div style={{
           color: ACCENT,
-          fontSize: '22px',
+          fontSize: isMobile ? '15px' : '22px',
           fontWeight: 'bold',
           textAlign: 'center',
-          marginBottom: '22px',
+          marginBottom: isMobile ? '10px' : '22px',
           fontFamily: '"Cinzel", serif',
-          letterSpacing: '4px',
+          letterSpacing: isMobile ? '2px' : '4px',
           textShadow: `0 0 12px rgba(232, 201, 122, 0.7)`,
         }}>
           Akhenaton
@@ -98,14 +103,14 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
         {selectedResponse && (
           <div style={{
             color: '#f0e8d0',
-            fontSize: '16px',
+            fontSize: isMobile ? '12px' : '16px',
             textAlign: 'center',
             fontFamily: '"Cinzel", serif',
             letterSpacing: '0.5px',
-            lineHeight: '1.9',
+            lineHeight: isMobile ? '1.5' : '1.9',
             whiteSpace: 'pre-line',
             textShadow: `0 0 6px rgba(232, 201, 122, 0.2)`,
-            marginBottom: '24px',
+            marginBottom: isMobile ? '12px' : '24px',
           }}>
             {selectedResponse}
           </div>
@@ -116,22 +121,22 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
           <>
             <div style={{
               color: 'rgba(240, 232, 208, 0.7)',
-              fontSize: '15px',
+              fontSize: isMobile ? '12px' : '15px',
               textAlign: 'center',
               fontFamily: '"Cinzel", serif',
-              marginBottom: '20px',
+              marginBottom: isMobile ? '10px' : '20px',
               letterSpacing: '1px',
             }}>
               ¿Qué deseas saber, viajero?
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
               {options.map((opt) => (
                 <button
                   key={opt.id}
                   onClick={() => handleOption(opt.id)}
                   style={{
-                    padding: '14px 22px',
-                    fontSize: '15px',
+                    padding: isMobile ? '10px 14px' : '14px 22px',
+                    fontSize: isMobile ? '12px' : '15px',
                     color: opt.id === 4 ? '#88ddff' : ACCENT,
                     background: opt.id === 4 ? 'rgba(136, 221, 255, 0.08)' : `rgba(232, 201, 122, 0.08)`,
                     border: `1px solid ${opt.id === 4 ? 'rgba(136,221,255,0.4)' : 'rgba(232,201,122,0.4)'}`,
@@ -161,7 +166,7 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
         )}
 
         {/* Botones inferiores */}
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '24px' }}>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: isMobile ? '12px' : '24px' }}>
           {selectedResponse && (
             <button
               onClick={handleBack}
