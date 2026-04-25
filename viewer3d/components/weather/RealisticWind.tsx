@@ -183,7 +183,7 @@ export function WindStreaks({ strength = 0.5 }: { strength: number }) {
     if (!groupRef.current) return
     
     const group = groupRef.current
-    const count = 100
+    const count = 50  // Reducido de 100 a 50 para mejor rendimiento
     
     // Geometría y material compartidos
     const sharedGeometry = new THREE.PlaneGeometry(0.5, 0.05)
@@ -285,7 +285,7 @@ export function WindDust({ strength = 0.5, biome = 'default' }: {
   
   const geometry = useRef(
     (() => {
-      const count = 500
+      const count = 250  // Reducido de 500 a 250 para mejor rendimiento
       const positions = new Float32Array(count * 3)
       
       for (let i = 0; i < count; i++) {

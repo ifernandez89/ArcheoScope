@@ -50,14 +50,14 @@ export default function MobileTouchControls({ visible = true }: MobileTouchContr
 
   if (!visible) return null
 
-  // Estilos de botones
+  // Estilos de botones — fondo gris visible siempre
   const btnBase: React.CSSProperties = {
     width: 44,
     height: 44,
     borderRadius: '50%',
-    background: 'rgba(255,255,255,0.15)',
-    border: '2px solid rgba(255,255,255,0.4)',
-    color: '#fff',
+    background: 'rgba(60, 60, 60, 0.85)',
+    border: '2px solid rgba(180, 180, 180, 0.7)',
+    color: '#ffffff',
     fontSize: '18px',
     display: 'flex',
     alignItems: 'center',
@@ -66,6 +66,7 @@ export default function MobileTouchControls({ visible = true }: MobileTouchContr
     userSelect: 'none',
     WebkitUserSelect: 'none',
     touchAction: 'manipulation',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.6)',
   }
 
   const btnActive: React.CSSProperties = {
@@ -121,7 +122,7 @@ export default function MobileTouchControls({ visible = true }: MobileTouchContr
   return (
     <div style={{
       position: 'fixed',
-      top: 100, // Debajo de la brújula (que está en top: 20)
+      top: 100,
       right: 16,
       zIndex: 1000,
       display: 'flex',
@@ -129,6 +130,10 @@ export default function MobileTouchControls({ visible = true }: MobileTouchContr
       alignItems: 'center',
       gap: 8,
       pointerEvents: 'auto',
+      background: 'rgba(0,0,0,0.35)',
+      borderRadius: '16px',
+      padding: '10px 8px',
+      backdropFilter: 'blur(4px)',
     }}>
       {/* D-PAD: Arriba/Abajo/Izq/Der */}
       <div style={{

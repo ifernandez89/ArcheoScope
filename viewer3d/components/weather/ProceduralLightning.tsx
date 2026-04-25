@@ -27,12 +27,12 @@ interface ProceduralLightningProps {
 
 export default function ProceduralLightning({
   enabled,
-  intensity = 1.0,
+  intensity = 0.5,       // Reducido de 1.0 a 0.5
   showBolt = false,
   minDistance = 200,
   maxDistance = 3000,
-  minInterval = 3000,
-  maxInterval = 10000
+  minInterval = 6000,    // Reducido: rayos menos frecuentes (era 3000)
+  maxInterval = 18000    // Reducido: más espacio entre rayos (era 10000)
 }: ProceduralLightningProps) {
   const { scene, gl } = useThree()
   const flashLightRef = useRef<THREE.DirectionalLight>(null)

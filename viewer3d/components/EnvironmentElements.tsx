@@ -107,11 +107,11 @@ export default function EnvironmentElements({
     }
 
     const counts: Record<string, Record<string, number>> = {
-      tropical:  { trees: 25, bushes: 20, rocks: 10, palms: 8 },
-      temperate: { trees: 25, bushes: 15, rocks: 15, logs: 5 },
-      altiplano: { trees: 5, bushes: 25, rocks: 20, logs: 3 }, // Reducido para Titicaca
-      desert:    { trees: 15, bushes: 5,  rocks: 25, cacti: 12, crystals: 8 },  // Menos árboles en desierto
-      arctic:    { trees: 20, bushes: 8,  rocks: 30, crystals: 5 }
+      tropical:  { trees: 12, bushes: 12, rocks: 8,  palms: 5 },
+      temperate: { trees: 12, bushes: 10, rocks: 10, logs: 3 },
+      altiplano: { trees: 3,  bushes: 15, rocks: 15, logs: 2 },
+      desert:    { trees: 6,  bushes: 4,  rocks: 18, cacti: 8, crystals: 5 },
+      arctic:    { trees: 10, bushes: 5,  rocks: 20, crystals: 4 }
     }
     const count = counts[biome] || counts.temperate
     const items: any[] = []

@@ -36,8 +36,21 @@ export default function SpaceUfo({ ufoNumber = 1 }: { ufoNumber?: number }) {
         y: -(e.clientY / size.height) * 2 + 1
       })
     }
+    // Touch support — seguir el primer dedo
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 0) return
+      const touch = e.touches[0]
+      setMousePosition({
+        x: (touch.clientX / size.width) * 2 - 1,
+        y: -(touch.clientY / size.height) * 2 + 1
+      })
+    }
     window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
+    window.addEventListener('touchmove', handleTouchMove, { passive: true })
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('touchmove', handleTouchMove)
+    }
   }, [size])
 
   useFrame(() => {

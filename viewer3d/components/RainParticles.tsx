@@ -11,33 +11,15 @@ interface RainParticlesProps {
 export default function RainParticles({ intensity = 'light' }: RainParticlesProps) {
   const pointsRef = useRef<THREE.Points>(null)
   
-  // Configuración según intensidad
+  // Configuración según intensidad — reducida 50% para mejor rendimiento mobile
   const config = useMemo(() => {
     switch (intensity) {
       case 'light':
-        return {
-          count: 4000, // Duplicado de 2000
-          speed: 1.2,
-          size: 0.06,
-          opacity: 0.5,
-          spread: 100
-        }
+        return { count: 2000, speed: 1.2, size: 0.06, opacity: 0.5, spread: 100 }
       case 'moderate':
-        return {
-          count: 8000, // Duplicado de 4000
-          speed: 1.8,
-          size: 0.08,
-          opacity: 0.65,
-          spread: 100
-        }
+        return { count: 4000, speed: 1.8, size: 0.08, opacity: 0.65, spread: 100 }
       case 'heavy':
-        return {
-          count: 18000, // Triplicado de 6000
-          speed: 2.5,
-          size: 0.1,
-          opacity: 0.8,
-          spread: 100
-        }
+        return { count: 8000, speed: 2.5, size: 0.1, opacity: 0.8, spread: 100 }
     }
   }, [intensity])
   
