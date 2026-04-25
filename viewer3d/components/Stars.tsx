@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
 import { BRIGHT_STARS, raDecToXYZ, spectralColor } from '@/data/bright-stars'
+import { CONSTELLATION_LINES } from '@/data/constellations'
 
 /**
  * Estrellas en dos capas:
@@ -100,6 +101,9 @@ export default function Stars() {
     const realPos   = new Float32Array(realCount * 3)
     const realCol   = new Float32Array(realCount * 3)
 
+    // Mapa nombre → posición 3D para las constelaciones
+    const starPositions = new Map<string, THREE.Vector3>()
+
     BRIGHT_STARS.forEach((star, i) => {
       const i3 = i * 3
       const [x, y, z] = raDecToXYZ(star.ra, star.dec, R)
@@ -110,6 +114,7 @@ export default function Stars() {
       realCol[i3]     = r
       realCol[i3 + 1] = g
       realCol[i3 + 2] = b
+      if (star.name) starPositions.set(star.name, new THREE.Vector3(x, y, z))
     })
 
     const realGeo = new THREE.BufferGeometry()
@@ -125,14 +130,42 @@ export default function Stars() {
       blending: THREE.AdditiveBlending,
     })
 
-    return { baseGeo, baseMat, brightGeo, brightMat, realGeo, realMat }
+    return { baseGeo, baseMat, brightGeo, brightMat, realGeo, realMat, starPositions }
   }, [])
+
+  // Constelaciones en componente separado para no interferir con las estrellas
+  const constellationLines = useMemo(() => {
+    const lines: { points: Float32Array, color: string }[] = []
+    CONSTELLATION_LINES.forEach(constellation => {
+      const pts: number[] = []
+      constellation.stars.forEach(([nameA, nameB]) => {
+        const posA = layers.starPositions.get(nameA)
+        const posB = layers.starPositions.get(nameB)
+        if (posA && posB) {
+          pts.push(posA.x, posA.y, posA.z, posB.x, posB.y, posB.z)
+        }
+      })
+      if (pts.length > 0) {
+        lines.push({ points: new Float32Array(pts), color: constellation.color })
+      }
+    })
+    return lines
+  }, [layers.starPositions])
 
   return (
     <group renderOrder={-1}>
       <points geometry={layers.baseGeo}   material={layers.baseMat} />
       <points geometry={layers.brightGeo} material={layers.brightMat} />
       <points geometry={layers.realGeo}   material={layers.realMat} />
+      {/* Líneas de constelaciones — declarativas para no romper el render */}
+      {constellationLines.map((line, i) => (
+        <lineSegments key={`const-${i}`}>
+          <bufferGeometry>
+            <bufferAttribute attach="attributes-position" count={line.points.length / 3} array={line.points} itemSize={3} />
+          </bufferGeometry>
+          <lineBasicMaterial color={line.color} transparent opacity={0.35} blending={THREE.AdditiveBlending} depthWrite={false} />
+        </lineSegments>
+      ))}
     </group>
   )
 }
