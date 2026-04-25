@@ -1,0 +1,30 @@
+{
+  "name": "Archeoscope: The Forgotten Relics",
+  "short_name": "Archeoscope",
+  "description": "Explora civilizaciones antiguas y descubre reliquias olvidadas en un viaje inmersivo por la historia",
+  "start_url": "/ArcheoScope/",
+  "scope": "/ArcheoScope/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#667eea",
+  "orientation": "any",
+  "categories": ["games", "education", "entertainment"],
+  "icons": [
+    {
+      "src": "/ArcheoScope/branding/icons/logo-simple.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/ArcheoScope/branding/icons/logo-simple-2.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/ArcheoScope/branding/icons/logo-simple-3.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

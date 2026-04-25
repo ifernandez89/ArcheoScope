@@ -19,6 +19,7 @@ const BASE_URL = process.env.NODE_ENV === 'production'
 export const metadata: Metadata = {
   title: 'Archeoscope: The Forgotten Relics',
   description: 'Explora civilizaciones antiguas y descubre reliquias olvidadas en un viaje inmersivo por la historia',
+  manifest: `${BASE_PATH}/manifest.json`,
   icons: {
     icon: [
       { url: `${BASE_PATH}/branding/icons/logo-simple.png`, sizes: '32x32', type: 'image/png' },
@@ -64,6 +65,13 @@ export default function RootLayout({
         {children}
         <AlienCursorTrail />
         <WebVitalsInit />
+        <script dangerouslySetInnerHTML={{ __html: `
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+              navigator.serviceWorker.register('/ArcheoScope/sw.js').catch(() => {})
+            })
+          }
+        `}} />
       </body>
     </html>
   )

@@ -40,13 +40,34 @@ export default function MenuPage() {
     // Resetear estado de misiones
     resetMissionState()
     
-    // Resetear configuración del juego (opcional - mantiene preferencias de audio/video)
-    // resetGameSettings()
+    // 🔇 Apagar todos los sonidos residuales (clima, audio procedural, Harmonia Mundi)
+    if (typeof window !== 'undefined') {
+      try {
+        // Importar y apagar sistemas de audio dinámicamente
+        import('@/systems/ProceduralAudio').then(({ getProceduralAudio }) => {
+          const audio = getProceduralAudio()
+          audio.stopRain?.()
+          audio.stopWind?.()
+          audio.stopTornado?.()
+          audio.setMasterVolume?.(0)
+          setTimeout(() => audio.setMasterVolume?.(0.7), 100)
+        }).catch(() => {})
+
+        import('@/systems/ClimateAudioSystem').then(({ getClimateAudio }) => {
+          const climate = getClimateAudio()
+          climate.updateWeather?.({ rain: 0, wind: 0, thunder: false, snow: 0, tornado: 0 })
+        }).catch(() => {})
+
+        import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
+          const harmonia = getHarmoniaMundi()
+          if (harmonia.isEnabled()) harmonia.dispose()
+        }).catch(() => {})
+      } catch {}
+    }
     
     // Limpiar sessionStorage
     if (typeof window !== 'undefined') {
       sessionStorage.clear()
-      // Limpiar inventario
       localStorage.removeItem('inv_scarab')
       localStorage.removeItem('inv_skull')
       localStorage.removeItem('inv_tonatiuh')
@@ -57,8 +78,6 @@ export default function MenuPage() {
     }
     
     console.log('✅ Todos los estados reseteados - Comenzando nueva partida')
-    
-    // Ir a player-setup para configurar nueva partida
     router.push('/player-setup')
   }
 
