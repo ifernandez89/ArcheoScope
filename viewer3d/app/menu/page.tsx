@@ -101,10 +101,13 @@ export default function MenuPage() {
     { label: 'Información', path: '/menu/info', action: null }
   ]
 
-  // Mobile: solo Astrología, Calendarios e Información
-  const MOBILE_ONLY = ['Astrología', 'Calendarios', 'Información']
+  // Mobile: solo Astrología, Calendarios, Información + 3D Solar System
+  const MOBILE_ONLY = ['3D Solar System', 'Astrología', 'Calendarios', 'Información']
   const visibleOptions = isMobile
-    ? menuOptions.filter(o => MOBILE_ONLY.includes(o.label))
+    ? [
+        { label: '3D Solar System', path: '/mobile-solar', action: null },
+        ...menuOptions.filter(o => ['Astrología', 'Calendarios', 'Información'].includes(o.label))
+      ]
     : menuOptions
 
   return (
