@@ -39,11 +39,22 @@ function InfoContent() {
       justifyContent: 'flex-start',
       background: '#000000',
       margin: 0,
-      padding: '40px 20px',
+      padding: '24px 16px',
       overflow: 'auto',
       color: '#ffffff'
     }}>
-      <h1 style={{
+      <style>{`
+        @media (max-width: 600px) {
+          .info-h1 { font-size: clamp(26px, 8vw, 48px) !important; letter-spacing: 2px !important; margin-bottom: 12px !important; }
+          .info-h2 { font-size: clamp(16px, 5vw, 24px) !important; }
+          .info-p  { font-size: clamp(14px, 4vw, 18px) !important; }
+          .info-section { padding: 16px !important; margin-bottom: 14px !important; }
+          .info-scroll  { padding: 8px !important; }
+          .info-req-item { font-size: clamp(13px, 3.5vw, 19px) !important; }
+          .info-btn { padding: 14px 40px !important; font-size: 18px !important; width: auto !important; }
+        }
+      `}</style>
+      <h1 className="info-h1" style={{
         fontSize: '48px',
         marginBottom: '20px',
         letterSpacing: '4px',
@@ -55,6 +66,7 @@ function InfoContent() {
       {/* Contenedor de contenido con scroll */}
       <div
         ref={scrollRef}
+        className="info-scroll"
         style={{
           maxWidth: '800px',
           width: '100%',
@@ -65,7 +77,7 @@ function InfoContent() {
         }}>
         
         {/* Sección de Inspiración */}
-        <section style={{
+        <section className="info-section" style={{
           marginBottom: '40px',
           padding: '30px',
           background: 'rgba(102, 126, 234, 0.1)',
@@ -119,7 +131,7 @@ function InfoContent() {
         </section>
         
         {/* Sección de Requerimientos Mínimos */}
-        <section style={{
+        <section className="info-section" style={{
           marginBottom: '40px',
           padding: '30px',
           background: 'rgba(239, 68, 68, 0.1)',
@@ -389,7 +401,7 @@ function InfoContent() {
             border: `1px solid ${s.border}`,
             borderRadius: '12px'
           }}>
-            <h2 style={{
+            <h2 className="info-h2" style={{
               fontSize: '24px',
               marginBottom: '14px',
               color: s.color,
@@ -398,7 +410,7 @@ function InfoContent() {
             }}>
               {s.icon} {s.title}
             </h2>
-            <p style={{
+            <p className="info-p" style={{
               fontSize: '18px',
               lineHeight: '1.8',
               opacity: 0.88
@@ -410,6 +422,7 @@ function InfoContent() {
       </div>
       
       <button
+        className="info-btn"
         onClick={() => router.push('/menu')}
         style={{
           padding: '20px 80px',
