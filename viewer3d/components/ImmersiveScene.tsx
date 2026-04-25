@@ -129,6 +129,17 @@ const CALM_WEATHER: WeatherState = {
 }
 
 export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false, spaceUfoNumber = 1 }: ImmersiveSceneProps) {
+  // Detectar mobile
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(
+      /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768
+    )
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   // Cargar estado del jugador
   const playerState = loadPlayerState()
 
@@ -1461,8 +1472,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         </div>
       )}
 
-      {/* Botones de control */}
-      {mode === 'model' && (
+      {/* Botones de control — ocultar "Volver al Globo" y "Mostrar Info" en mobile */}
+      {mode === 'model' && !isMobile && (
         <div style={{
           position: 'absolute',
           top: '20px',
@@ -1531,6 +1542,36 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
 
           {/* Selector de UFO eliminado - ahora se configura en /player-setup */}
         </div>
+      )}
+
+      {/* 📱 Botón de Menú para mobile — esquina inferior izquierda */}
+      {mode === 'model' && isMobile && (
+        <button
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.location.href = '/menu'
+            }
+          }}
+          style={{
+            position: 'fixed',
+            bottom: 16,
+            left: 16,
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            background: 'rgba(0,0,0,0.6)',
+            border: '1px solid rgba(255,255,255,0.3)',
+            color: '#fff',
+            fontSize: '18px',
+            cursor: 'pointer',
+            zIndex: 1001,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          ☰
+        </button>
       )}
 
       {/* Brújula astronómica - muestra el norte real basado en la rotación de la cámara */}
@@ -2385,7 +2426,18 @@ function ModelScene({
     return (localStorage.getItem('graphics_preset') || 'MEDIUM') as 'LOW' | 'MEDIUM' | 'HIGH' | 'ULTRA'
   }, [])
   const gfx = GRAPHICS_PRESETS[graphicsPreset]
-  const dpr = gfx.pixelRatio
+  // 📱 Mobile optimization: limitar pixelRatio para mejor FPS
+  const dpr = useMemo(() => {
+    if (typeof window === 'undefined') return gfx.pixelRatio
+    // Detectar mobile síncronamente para el cálculo inicial
+    const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768
+    // En mobile, limitar a 1.3 máximo (ahorra GPU sin pérdida visual notable)
+    if (mobile) {
+      return Math.min(window.devicePixelRatio, 1.3)
+    }
+    // En PC, usar el preset o devicePixelRatio según calidad
+    return graphicsPreset === 'ULTRA' ? window.devicePixelRatio : gfx.pixelRatio
+  }, [gfx.pixelRatio, graphicsPreset])
 
   return (
     <>

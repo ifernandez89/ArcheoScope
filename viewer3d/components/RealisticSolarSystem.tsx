@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
@@ -8,6 +8,7 @@ import { SolarEngine } from '@/engines/SolarEngine'
 import { calculateAllPlanets } from '@/utils/planetary-orbits'
 import { calculateLunarPhase } from '@/utils/lunar-system'
 import { getAssetPath } from '@/lib/paths'
+import { getSphereSegments } from '@/lib/mobileOptimizations'
 import Sun from './Sun'
 import Globe3D from './Globe3D'
 import RealisticOrbits from './RealisticOrbits'
@@ -57,6 +58,9 @@ export default function RealisticSolarSystem({
 }: RealisticSolarSystemProps) {
   // Three.js scene para el sistema de resonancia
   const { scene } = useThree()
+  
+  // 📱 Segmentos optimizados para mobile (24) vs PC (64)
+  const segments = useMemo(() => getSphereSegments('high'), [])
   
   // Cargar texturas de planetas
   const mercuryTexture = useTexture(getAssetPath('/textures/2k_mercury.jpg'))
@@ -499,7 +503,7 @@ export default function RealisticSolarSystem({
       {/* Mercurio - Posición real con rotación axial */}
       <group ref={mercuryRef}>
         <mesh ref={mercuryMeshRef}>
-          <sphereGeometry args={[1.9, 64, 64]} />
+          <sphereGeometry args={[1.9, segments, segments]} />
           <meshStandardMaterial 
             map={mercuryTexture}
             color="#9c9c9c" 
@@ -528,7 +532,7 @@ export default function RealisticSolarSystem({
       <group ref={venusRef}>
         {/* Núcleo de Venus con rotación */}
         <mesh ref={venusMeshRef}>
-          <sphereGeometry args={[0.95, 64, 64]} />
+          <sphereGeometry args={[0.95, segments, segments]} />
           <meshStandardMaterial 
             map={venusAtmosphereTexture}
             color="#f5e6d3" 
@@ -623,7 +627,7 @@ export default function RealisticSolarSystem({
       {/* Luna con posición ABSOLUTA - FUERA del grupo de la Tierra */}
       <group ref={moonRef}>
         <mesh ref={moonMeshRef}>
-          <sphereGeometry args={[0.27, 64, 64]} />
+          <sphereGeometry args={[0.27, segments, segments]} />
           <meshStandardMaterial 
             map={moonTexture}
             color="#FFFFFF" 
@@ -649,7 +653,7 @@ export default function RealisticSolarSystem({
       {/* Marte - Posición real con rotación axial */}
       <group ref={marsRef}>
         <mesh ref={marsMeshRef}>
-          <sphereGeometry args={[0.5, 64, 64]} />
+          <sphereGeometry args={[0.5, segments, segments]} />
           <meshStandardMaterial 
             map={marsTexture}
             color="#8b6f5f" 
@@ -695,7 +699,7 @@ export default function RealisticSolarSystem({
       {/* ── Júpiter ─────────────────────────────────────────────────────── */}
       <group ref={jupiterRef}>
         <mesh ref={jupiterMeshRef}>
-          <sphereGeometry args={[55, 64, 64]} />
+          <sphereGeometry args={[55, segments, segments]} />
           <meshStandardMaterial map={jupiterTexture} roughness={0.9} metalness={0.0} />
         </mesh>
         <CelestialTooltip name="Júpiter" symbol="♃" type="Gigante gaseoso"
@@ -709,7 +713,7 @@ export default function RealisticSolarSystem({
       <group ref={saturnRef}>
         {/* Planeta */}
         <mesh ref={saturnMeshRef} castShadow>
-          <sphereGeometry args={[38, 64, 64]} />
+          <sphereGeometry args={[38, segments, segments]} />
           <meshStandardMaterial map={saturnTexture} roughness={0.9} metalness={0.0} />
         </mesh>
         
@@ -730,7 +734,7 @@ export default function RealisticSolarSystem({
       {/* ── Urano ────────────────────────────────────────────────────────── */}
       <group ref={uranusRef}>
         <mesh ref={uranusMeshRef}>
-          <sphereGeometry args={[20, 64, 64]} />
+          <sphereGeometry args={[20, segments, segments]} />
           <meshStandardMaterial map={uranusTexture} roughness={0.85} metalness={0.0}
             emissive="#7de8e8" emissiveIntensity={0.04} />
         </mesh>
@@ -750,7 +754,7 @@ export default function RealisticSolarSystem({
       {/* ── Neptuno ──────────────────────────────────────────────────────── */}
       <group ref={neptuneRef}>
         <mesh ref={neptuneMeshRef}>
-          <sphereGeometry args={[19, 64, 64]} />
+          <sphereGeometry args={[19, segments, segments]} />
           <meshStandardMaterial map={neptuneTexture} roughness={0.85} metalness={0.0}
             emissive="#4b70dd" emissiveIntensity={0.06} />
         </mesh>

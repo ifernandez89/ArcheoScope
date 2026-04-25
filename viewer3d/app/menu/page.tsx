@@ -91,6 +91,13 @@ export default function MenuPage() {
     router.push('/player-setup')
   }
 
+  // Handler para nueva partida MOBILE — va a player-setup con flag mobile
+  const handleNewGameMobile = () => {
+    console.log('📱 Iniciando nueva partida MOBILE...')
+    handleNewGame() // Resetea todo igual
+    // El flag isMobile se detecta en player-setup para saltar training
+  }
+
   const menuOptions = [
     { label: 'Nueva', path: null, action: handleNewGame },
     { label: 'Audio', path: '/menu/audio', action: null },
@@ -101,12 +108,15 @@ export default function MenuPage() {
     { label: 'Información', path: '/menu/info', action: null }
   ]
 
-  // Mobile: solo Astrología, Calendarios, Información + 3D Solar System
-  const MOBILE_ONLY = ['3D Solar System', 'Astrología', 'Calendarios', 'Información']
+  // Mobile: Nueva, Audio, Astrología, Calendarios, Información (sin Video, sin Controles)
+  // "3D Solar System" se mantiene internamente como demo gratuita
   const visibleOptions = isMobile
     ? [
-        { label: '3D Solar System', path: '/mobile-solar', action: null },
-        ...menuOptions.filter(o => ['Astrología', 'Calendarios', 'Información'].includes(o.label))
+        { label: 'Nueva', path: null, action: handleNewGameMobile },
+        { label: 'Audio', path: '/menu/audio', action: null },
+        { label: 'Astrología', path: '/menu/astrology', action: null },
+        { label: 'Calendarios', path: '/menu/calendarios', action: null },
+        { label: 'Información', path: '/menu/info', action: null },
       ]
     : menuOptions
 
