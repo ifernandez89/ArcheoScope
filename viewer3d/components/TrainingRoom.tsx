@@ -60,9 +60,26 @@ export function requestDrop(itemId: string) {
   dropListeners.forEach(fn => fn(itemId))
 }
 
+// Store compartido para Oracle scan (3D → UI)
+type ScanListener = (entity: { name: string, desc: string } | null) => void
+const scanListeners: Set<ScanListener> = new Set()
+
+export function subscribeScan(listener: ScanListener) {
+  scanListeners.add(listener)
+  return () => { scanListeners.delete(listener) }
+}
+
+function emitScan(entity: { name: string, desc: string } | null) {
+  scanListeners.forEach(fn => fn(entity))
+}
 function TrainingScene() {
   const [playerShip, setPlayerShip] = useState<string>('/ufo_1.glb')
   const [abilityActive, setAbilityActive] = useState(false)
+  const [abilityCooldown, setAbilityCooldown] = useState(false)
+  const [scannedEntity, setScannedEntity] = useState<{ name: string, desc: string } | null>(null)
+
+  // Emitir scan al UI
+  useEffect(() => { emitScan(scannedEntity) }, [scannedEntity])
   const [audioEnabled, setAudioEnabled] = useState(false)
   const [playerPosition, setPlayerPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 0))
   const terrainRef = useRef<THREE.Mesh>(null)
@@ -148,10 +165,55 @@ function TrainingScene() {
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space') setAbilityActive(true)
+      if (e.code === 'Space' && !abilityCooldown) {
+        setAbilityActive(true)
+
+        // Oracle (nave 4): escanear objeto más cercano
+        const ufoNum = playerShip.includes('ufo_5') ? 5 : playerShip.includes('ufo_4') ? 4 : playerShip.includes('ufo_3') ? 3 : playerShip.includes('ufo_2') ? 2 : 1
+        if (ufoNum === 4) {
+          // Buscar el objeto más cercano al jugador
+          const px = playerPosition.x, pz = playerPosition.z
+          let closest = '', closestDist = Infinity
+          worldTrees.forEach(t => {
+            const dx = t.position[0] - px, dz = t.position[2] - pz
+            const d = dx*dx + dz*dz
+            if (d < closestDist) { closestDist = d; closest = 'Árbol' }
+          })
+          worldRocks.forEach(r => {
+            const dx = r.position[0] - px, dz = r.position[2] - pz
+            const d = dx*dx + dz*dz
+            if (d < closestDist) { closestDist = d; closest = 'Roca' }
+          })
+          droppedRocks.forEach(r => {
+            const dx = r.position[0] - px, dz = r.position[2] - pz
+            const d = dx*dx + dz*dz
+            if (d < closestDist) { closestDist = d; closest = 'Roca' }
+          })
+
+          const SCAN_DATA: Record<string, string> = {
+            'Árbol': "Organismo vivo que conecta tres mundos: sus raíces penetran el inframundo, su tronco habita la tierra, y sus ramas tocan el cielo. Los antiguos lo consideraban el eje del cosmos — el axis mundi.",
+            'Roca': "Fragmento de la corteza terrestre con millones de años de memoria geológica. Cada mineral en su interior registra las condiciones del planeta en el momento de su formación. La piedra no olvida."
+          }
+
+          if (closest && closestDist < 900) { // ~30m de radio
+            setScannedEntity({ name: closest, desc: SCAN_DATA[closest] || '' })
+          }
+
+          setTimeout(() => {
+            setAbilityActive(false)
+            setScannedEntity(null)
+            setAbilityCooldown(true)
+            setTimeout(() => setAbilityCooldown(false), 3000)
+          }, 2000)
+        }
+      }
     }
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'Space') setAbilityActive(false)
+      if (e.code === 'Space') {
+        // Oracle maneja su propio timeout, las demás naves desactivan al soltar
+        const ufoNum = playerShip.includes('ufo_4') ? 4 : 0
+        if (ufoNum !== 4) setAbilityActive(false)
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
@@ -159,7 +221,7 @@ function TrainingScene() {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, []) 
+  }, [playerShip, playerPosition, worldTrees, worldRocks, droppedRocks, abilityCooldown])
 
   // Sincronizar audio climático y volumen
   useEffect(() => {
@@ -255,7 +317,12 @@ function TrainingScene() {
         initialPosition={[0, 10, 0]}
         abilityActive={abilityActive}
         onPositionChange={setPlayerPosition}
-        currentUfo={playerShip.includes('ufo_2') ? 2 : playerShip.includes('ufo_3') ? 3 : 1}
+        currentUfo={
+          playerShip.includes('ufo_5') ? 5 :
+          playerShip.includes('ufo_4') ? 4 :
+          playerShip.includes('ufo_3') ? 3 :
+          playerShip.includes('ufo_2') ? 2 : 1
+        }
       />
 
       {/* Árboles (movibles con SelectableObject) */}

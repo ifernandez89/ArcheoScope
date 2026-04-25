@@ -3,15 +3,20 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import InventoryItem from './InventoryItem'
-import { subscribeInventory, requestDrop, type InventoryEntry } from './TrainingRoom'
+import { subscribeInventory, requestDrop, subscribeScan, type InventoryEntry } from './TrainingRoom'
 
 export default function TrainingUI() {
   const router = useRouter()
   const [keys, setKeys] = useState<{ [key: string]: boolean }>({})
   const [showGlobeInfo, setShowGlobeInfo] = useState(false)
   const [inventory, setInventory] = useState<InventoryEntry[]>([])
+  const [scanData, setScanData] = useState<{ name: string, desc: string } | null>(null)
 
-  // Suscribirse al inventario compartido del TrainingRoom
+  // Suscribirse al scan de Oracle
+  useEffect(() => {
+    const unsub = subscribeScan(setScanData)
+    return unsub
+  }, [])
   useEffect(() => {
     const unsub = subscribeInventory((items) => {
       setInventory([...items])
@@ -204,6 +209,35 @@ export default function TrainingUI() {
         </button>
       </div>
 
+      {/* 🔬 Oracle: Scan HUD Overlay */}
+      {scanData && (
+        <div style={{
+          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          background: 'rgba(0, 20, 30, 0.92)', border: '2px solid #00ffff',
+          borderRadius: '12px', padding: '30px 40px', maxWidth: '500px', width: '90%',
+          textAlign: 'center', zIndex: 200, pointerEvents: 'none',
+          boxShadow: '0 0 40px rgba(0, 255, 255, 0.3)',
+          animation: 'scanIn 0.3s ease-out',
+        }}>
+          <div style={{ fontSize: '10px', marginBottom: '8px', opacity: 0.8, letterSpacing: '2px', color: '#00ffff' }}>
+            📡 ORACLE_SCAN // SIGNATURE_IDENTIFIED
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '900', marginBottom: '12px', letterSpacing: '4px', textShadow: '0 0 10px #00ffff', color: '#fff' }}>
+            {scanData.name}
+          </div>
+          <div style={{ fontSize: '15px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.7', fontStyle: 'italic' }}>
+            {scanData.desc}
+          </div>
+          <div style={{ marginTop: '16px', height: '3px', background: 'rgba(0, 255, 255, 0.2)', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', background: '#00ffff', animation: 'scanBar 2s linear' }} />
+          </div>
+          <style>{`
+            @keyframes scanIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+            @keyframes scanBar { from { width: 0%; } to { width: 100%; } }
+          `}</style>
+        </div>
+      )}
+
       {/* Globe Info Modal */}
       {showGlobeInfo && (
         <div style={{
@@ -227,7 +261,7 @@ export default function TrainingUI() {
           }}>
             <h2 style={{ color: '#4a9eff', marginBottom: '30px', fontSize: '28px' }}>SISTEMA DE NAVEGACIÓN GLOBAL</h2>
             <div style={{ textAlign: 'left', lineHeight: '1.8', fontSize: '18px', marginBottom: '40px' }}>
-              <p>📍 En la vista del <b>Globo Terráqueo</b>:</p>
+              <p>📍 En la vista del <b>Globo</b>:</p>
               <ul style={{ listStyle: 'none', padding: 0 }}>
                 <li>🚀 Tu <b>nave</b> actúa como el puntero del mouse.</li>
                 <li>⚡ Se utiliza como <b>&quot;Velocidad Espacial&quot;</b>.</li>
