@@ -18,11 +18,11 @@ export default function RainParticles({ intensity = 'light' }: RainParticlesProp
 
     switch (intensity) {
       case 'light':
-        return { count: mobile ? 800  : 2000, speed: 1.2, size: 0.06, opacity: 0.5, spread: 100 }
+        return { count: mobile ? 600  : 2000, speed: 1.2, size: 0.06, opacity: 0.5, spread: 100 }
       case 'moderate':
-        return { count: mobile ? 1500 : 4000, speed: 1.8, size: 0.08, opacity: 0.65, spread: 100 }
+        return { count: mobile ? 1200 : 4000, speed: 1.8, size: 0.08, opacity: 0.65, spread: 100 }
       case 'heavy':
-        return { count: mobile ? 2500 : 8000, speed: 2.5, size: 0.1,  opacity: 0.8,  spread: 100 }
+        return { count: mobile ? 2200 : 8000, speed: 2.5, size: 0.1,  opacity: 0.8,  spread: 100 }
     }
   }, [intensity])
   
@@ -65,10 +65,19 @@ export default function RainParticles({ intensity = 'light' }: RainParticlesProp
     })
   }, [config])
   
+  // Frame skip en mobile — actualizar cada 2 frames (~30fps efectivo)
+  const frameCount = useRef(0)
+  const isMobileRain = useRef(
+    typeof window !== 'undefined' &&
+    (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+  )
+
   // Animar caída de lluvia
   useFrame(() => {
     if (!pointsRef.current) return
-    
+    frameCount.current++
+    if (isMobileRain.current && frameCount.current % 2 !== 0) return
+
     const pos = pointsRef.current.geometry.attributes.position.array as Float32Array
     
     for (let i = 0; i < pos.length; i += 3) {

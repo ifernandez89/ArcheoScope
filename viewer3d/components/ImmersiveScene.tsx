@@ -1680,14 +1680,15 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         zIndex: 998
       }} />
 
-      {/* Inventario - Items recolectados apilados */}
+      {/* Inventario - horizontal abajo en mobile, vertical derecha en PC */}
       <div style={{
         position: 'fixed',
-        top: '280px',
-        right: '20px',
+        ...(isMobile
+          ? { bottom: '12px', left: '50%', transform: 'translateX(-50%)', flexDirection: 'row' as const }
+          : { top: '280px', right: '20px', flexDirection: 'column' as const }
+        ),
         display: 'flex',
-        flexDirection: 'column',
-        gap: '10px',
+        gap: isMobile ? '8px' : '10px',
         zIndex: 1000
       }}>
         <InventoryItem
@@ -2444,9 +2445,9 @@ function ModelScene({
     if (typeof window === 'undefined') return gfx.pixelRatio
     // Detectar mobile síncronamente para el cálculo inicial
     const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768
-    // En mobile, limitar a 1.3 máximo (ahorra GPU sin pérdida visual notable)
+    // En mobile, limitar a 1.2 máximo (ahorra GPU sin pérdida visual notable en pantallas pequeñas)
     if (mobile) {
-      return Math.min(window.devicePixelRatio, 1.3)
+      return Math.min(window.devicePixelRatio, 1.2)
     }
     // En PC, usar el preset o devicePixelRatio según calidad
     return graphicsPreset === 'ULTRA' ? window.devicePixelRatio : gfx.pixelRatio
@@ -2473,7 +2474,11 @@ function ModelScene({
           {/* 🧭 Rastreador de rotación de cámara para la brújula */}
           {onCameraRotationChange && <CompassTracker onRotationChange={onCameraRotationChange} />}
 
-          <PerspectiveCamera makeDefault position={[8, 4, 8]} fov={60} />
+          {/* Far plane reducido en mobile: 900 vs 1500 — menos geometría procesada */}
+          <PerspectiveCamera makeDefault position={[8, 4, 8]} fov={60}
+            near={0.1}
+            far={typeof window !== 'undefined' && (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768) ? 900 : 1500}
+          />
 
           {/* Controles segÃºn modo */}
           {movementMode === 'orbit' ? (

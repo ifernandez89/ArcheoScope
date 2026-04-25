@@ -69,7 +69,7 @@ function fbm(x: number, y: number, octaves: number = 4, seed: number = 0): numbe
 
 export default function ProceduralTerrain({
   size = 200,
-  segments = typeof window !== 'undefined' && (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768) ? 64 : 128,
+  segments = typeof window !== 'undefined' && (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768) ? 48 : 128,
   heightScale = 15,
   seed = 42
 }: ProceduralTerrainProps) {

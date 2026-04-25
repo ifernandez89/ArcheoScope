@@ -35,6 +35,11 @@ export default function InventoryItem({ modelPath, itemName, onDrop, show, dropD
   const [mountKey, setMountKey] = useState(0)
   const prevShowRef = useRef(show)
 
+  // Detectar mobile para tamaño reducido
+  const isMobile = typeof window !== 'undefined' &&
+    (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+  const size = isMobile ? 52 : 80
+
   // Forzar remontaje del Canvas cuando show cambia de false→true
   useEffect(() => {
     if (show && !prevShowRef.current) {
@@ -49,12 +54,12 @@ export default function InventoryItem({ modelPath, itemName, onDrop, show, dropD
     <div
       style={{
         position: 'relative',
-        width: '80px',
-        height: '80px',
+        width: `${size}px`,
+        height: `${size}px`,
         background: isHovered
           ? (dropDisabled ? 'rgba(150, 0, 0, 0.3)' : 'rgba(255, 215, 0, 0.3)')
           : 'rgba(0, 0, 0, 0.7)',
-        borderRadius: '12px',
+        borderRadius: isMobile ? '8px' : '12px',
         border: dropDisabled && isHovered
           ? '3px solid #ff4444'
           : (isHovered ? '3px solid #ffd700' : '2px solid #ffd700'),
@@ -120,7 +125,7 @@ export default function InventoryItem({ modelPath, itemName, onDrop, show, dropD
           right: '0',
           textAlign: 'center',
           color: '#ffd700',
-          fontSize: '10px',
+          fontSize: isMobile ? '8px' : '10px',
           fontFamily: '"Cinzel", serif',
           textShadow: '0 0 3px black',
         }}
