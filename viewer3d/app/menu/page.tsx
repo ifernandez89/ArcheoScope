@@ -13,6 +13,16 @@ const LOGO_MAIN = process.env.NODE_ENV === 'production'
 
 export default function MenuPage() {
   const router = useRouter()
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(
+      /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768
+    )
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   // Detectar F5 para resetear el juego
   useEffect(() => {
@@ -91,6 +101,12 @@ export default function MenuPage() {
     { label: 'Información', path: '/menu/info', action: null }
   ]
 
+  // Mobile: solo Astrología, Calendarios e Información
+  const MOBILE_ONLY = ['Astrología', 'Calendarios', 'Información']
+  const visibleOptions = isMobile
+    ? menuOptions.filter(o => MOBILE_ONLY.includes(o.label))
+    : menuOptions
+
   return (
     <main style={{
       width: '100vw',
@@ -128,7 +144,7 @@ export default function MenuPage() {
             50% { filter: drop-shadow(0 0 30px rgba(102, 126, 234, 0.85)); }
           }
         `}</style>
-        {menuOptions.map((option) => (
+        {visibleOptions.map((option) => (
           <button
             key={option.label}
             onClick={() => {
