@@ -486,15 +486,31 @@ export default function WalkableAvatar({
       if (trailPoints.current.length > 0) trailPoints.current.shift()
     }
     
-    // ✨ Actualizar GLOW (Emissive) dinámicamente
+    // ✨ Actualizar GLOW y CLOAKING dinámicamente
     if (modelRef.current) {
       modelRef.current.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
           const mat = (child as THREE.Mesh).material as THREE.MeshStandardMaterial
-          if (mat && mat.emissive) {
+          if (!mat) return
+
+          // 🌫️ Phantom (nave 1): cloaking — hacer transparente
+          if (currentUfo === 1) {
+            mat.transparent = true
+            const targetOpacity = abilityActive ? 0.15 : 1.0
+            mat.opacity = THREE.MathUtils.lerp(mat.opacity ?? 1, targetOpacity, 0.08)
+            if (mat.emissive) {
+              mat.emissive.set(abilityActive ? '#8888ff' : '#000000')
+              mat.emissiveIntensity = abilityActive ? 0.5 : 0
+            }
+          }
+          // 🛡️ Aegis (nave 2) + ⚡ Vector (nave 3): emissive glow
+          else if (mat.emissive) {
             if (abilityActive && (currentUfo === 3 || currentUfo === 2)) {
               mat.emissive.set(currentUfo === 3 ? "#0066ff" : "#00ffff")
               mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, 2, 0.1)
+            } else if (abilityActive && currentUfo === 5) {
+              mat.emissive.set("#ff4400")
+              mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, 3, 0.15)
             } else {
               mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, 0, 0.1)
             }
@@ -864,10 +880,65 @@ export default function WalkableAvatar({
             </points>
           </>
         )}
+
+        {/* 💥 Titan: Shockwave Pulse (UFO 5) */}
+        {currentUfo === 5 && abilityActive && (
+          <TitanPulse />
+        )}
       </group>
     </>
   )
 }
 
-// Los modelos se cargan bajo demanda cuando se necesitan
-// No precargar para mejorar tiempo de carga inicial en GitHub Pages
+// ─── Titan Shockwave Pulse ────────────────────────────────────────────────────
+function TitanPulse() {
+  const ring1Ref = useRef<THREE.Mesh>(null)
+  const ring2Ref = useRef<THREE.Mesh>(null)
+  const ring3Ref = useRef<THREE.Mesh>(null)
+  const startTime = useRef(0)
+
+  useFrame(({ clock }) => {
+    if (startTime.current === 0) startTime.current = clock.elapsedTime
+    const t = (clock.elapsedTime - startTime.current) % 1.2 // ciclo de 1.2s
+    const scale = 1 + t * 6
+    const opacity = Math.max(0, 0.8 - t * 0.7)
+
+    const t2 = ((clock.elapsedTime - startTime.current + 0.4) % 1.2)
+    const scale2 = 1 + t2 * 6
+    const opacity2 = Math.max(0, 0.8 - t2 * 0.7)
+
+    const t3 = ((clock.elapsedTime - startTime.current + 0.8) % 1.2)
+    const scale3 = 1 + t3 * 6
+    const opacity3 = Math.max(0, 0.8 - t3 * 0.7)
+
+    if (ring1Ref.current) {
+      ring1Ref.current.scale.setScalar(scale)
+      ;(ring1Ref.current.material as THREE.MeshBasicMaterial).opacity = opacity
+    }
+    if (ring2Ref.current) {
+      ring2Ref.current.scale.setScalar(scale2)
+      ;(ring2Ref.current.material as THREE.MeshBasicMaterial).opacity = opacity2
+    }
+    if (ring3Ref.current) {
+      ring3Ref.current.scale.setScalar(scale3)
+      ;(ring3Ref.current.material as THREE.MeshBasicMaterial).opacity = opacity3
+    }
+  })
+
+  return (
+    <>
+      {[ring1Ref, ring2Ref, ring3Ref].map((ref, i) => (
+        <mesh key={i} ref={ref} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.8, 1.0, 32]} />
+          <meshBasicMaterial color="#ff6600" transparent opacity={0.8} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
+        </mesh>
+      ))}
+      {/* Núcleo de impacto */}
+      <mesh>
+        <sphereGeometry args={[0.5, 16, 16]} />
+        <meshBasicMaterial color="#ffaa00" transparent opacity={0.6} blending={THREE.AdditiveBlending} />
+      </mesh>
+      <pointLight color="#ff6600" intensity={8} distance={15} />
+    </>
+  )
+}

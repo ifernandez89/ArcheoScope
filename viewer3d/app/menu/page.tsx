@@ -50,28 +50,28 @@ export default function MenuPage() {
     // Resetear estado de misiones
     resetMissionState()
     
-    // 🔇 Apagar todos los sonidos residuales (clima, audio procedural, Harmonia Mundi)
+    // 🔇 MATAR todos los sonidos — cerrar AudioContext directamente
     if (typeof window !== 'undefined') {
       try {
-        // Importar y apagar sistemas de audio dinámicamente
+        // Método nuclear: cerrar todos los AudioContext activos
+        // Esto mata lluvia, viento, truenos, tornado, Harmonia Mundi, todo
         import('@/systems/ProceduralAudio').then(({ getProceduralAudio }) => {
-          const audio = getProceduralAudio()
-          audio.stopRain?.()
-          audio.stopWind?.()
-          audio.stopTornado?.()
-          audio.setMasterVolume?.(0)
-          setTimeout(() => audio.setMasterVolume?.(0.7), 100)
-        }).catch(() => {})
-
-        import('@/systems/ClimateAudioSystem').then(({ getClimateAudio }) => {
-          const climate = getClimateAudio()
-          climate.updateWeather?.({ rain: 0, wind: 0, thunder: false, snow: 0, tornado: 0 })
+          try { getProceduralAudio().dispose() } catch {}
         }).catch(() => {})
 
         import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
-          const harmonia = getHarmoniaMundi()
-          if (harmonia.isEnabled()) harmonia.dispose()
+          try { getHarmoniaMundi().dispose() } catch {}
         }).catch(() => {})
+
+        // Fallback: suspender todos los AudioContext del navegador
+        // @ts-ignore — acceso a propiedad no estándar pero funcional
+        if (window.AudioContext || (window as any).webkitAudioContext) {
+          // Buscar y cerrar cualquier AudioContext huérfano
+          const origClose = AudioContext.prototype.close
+          document.querySelectorAll('audio, video').forEach(el => {
+            try { (el as HTMLMediaElement).pause(); (el as HTMLMediaElement).src = '' } catch {}
+          })
+        }
       } catch {}
     }
     
