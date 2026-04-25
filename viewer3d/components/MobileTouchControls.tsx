@@ -3,165 +3,132 @@
 /**
  * MobileTouchControls — D-pad + botones de rotación para mobile
  * 
- * Simula teclas WASD + Q/E para controlar el avatar en escenas terrestres.
- * Se coloca debajo de la brújula, mismo tamaño aproximado.
+ * Simula teclas WASD + Q/R para controlar el avatar en escenas terrestres.
+ * Q = rotar izquierda, R = rotar derecha (igual que en PC)
  */
 
-import { useCallback, useRef, useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 interface MobileTouchControlsProps {
   visible?: boolean
 }
 
-export default function MobileTouchControls({ visible = true }: MobileTouchControlsProps) {
-  // Refs para tracking de teclas activas (evitar eventos duplicados)
-  const activeKeys = useRef<Set<string>>(new Set())
+// Simular keydown/keyup directamente — sin estado React para máxima velocidad
+function pressKey(key: string) {
+  window.dispatchEvent(new KeyboardEvent('keydown', {
+    key, code: `Key${key.toUpperCase()}`, bubbles: true, cancelable: true
+  }))
+}
 
-  // Simular keydown/keyup
-  const fireKey = useCallback((key: string, down: boolean) => {
-    const code = key === ' ' ? 'Space' : `Key${key.toUpperCase()}`
-    const eventType = down ? 'keydown' : 'keyup'
-    
-    // Evitar eventos duplicados
-    if (down && activeKeys.current.has(key)) return
-    if (!down && !activeKeys.current.has(key)) return
-    
-    if (down) {
-      activeKeys.current.add(key)
-    } else {
-      activeKeys.current.delete(key)
-    }
-    
-    const ev = new KeyboardEvent(eventType, {
-      key,
-      code,
-      bubbles: true,
-      cancelable: true
-    })
-    window.dispatchEvent(ev)
-  }, [])
+function releaseKey(key: string) {
+  window.dispatchEvent(new KeyboardEvent('keyup', {
+    key, code: `Key${key.toUpperCase()}`, bubbles: true, cancelable: true
+  }))
+}
 
-  // Limpiar todas las teclas al desmontar
-  useEffect(() => {
-    return () => {
-      activeKeys.current.forEach(key => fireKey(key, false))
-    }
-  }, [fireKey])
-
-  if (!visible) return null
-
-  // Estilos de botones — fondo gris visible siempre
-  const btnBase: React.CSSProperties = {
-    width: 44,
-    height: 44,
+// Botón individual — componente puro sin hooks internos
+function Btn({
+  keyCode,
+  label,
+  size = 44,
+  fontSize = 18,
+}: {
+  keyCode: string
+  label: string
+  size?: number
+  fontSize?: number
+}) {
+  const style: React.CSSProperties = {
+    width: size,
+    height: size,
     borderRadius: '50%',
-    background: 'rgba(60, 60, 60, 0.85)',
-    border: '2px solid rgba(180, 180, 180, 0.7)',
-    color: '#ffffff',
-    fontSize: '18px',
+    background: 'rgba(55, 55, 55, 0.9)',
+    border: '2px solid rgba(200, 200, 200, 0.6)',
+    color: '#fff',
+    fontSize,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
     userSelect: 'none',
     WebkitUserSelect: 'none',
-    touchAction: 'manipulation',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.6)',
+    touchAction: 'none',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.7)',
+    flexShrink: 0,
   }
 
-  const btnActive: React.CSSProperties = {
-    ...btnBase,
-    background: 'rgba(74, 158, 255, 0.5)',
-    border: '2px solid rgba(74, 158, 255, 0.8)',
-  }
+  return (
+    <button
+      style={style}
+      onPointerDown={(e) => { e.preventDefault(); pressKey(keyCode) }}
+      onPointerUp={(e) => { e.preventDefault(); releaseKey(keyCode) }}
+      onPointerLeave={(e) => { e.preventDefault(); releaseKey(keyCode) }}
+      onPointerCancel={(e) => { e.preventDefault(); releaseKey(keyCode) }}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      {label}
+    </button>
+  )
+}
 
-  // Componente de botón con touch events
-  const ControlButton = ({ 
-    keyCode, 
-    label, 
-    style 
-  }: { 
-    keyCode: string
-    label: string
-    style?: React.CSSProperties 
-  }) => {
-    const pressed = useRef(false)
+export default function MobileTouchControls({ visible = true }: MobileTouchControlsProps) {
+  // Limpiar teclas al desmontar
+  useEffect(() => {
+    return () => {
+      ['w', 'a', 's', 'd', 'q', 'r'].forEach(releaseKey)
+    }
+  }, [])
 
-    const handleStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
-      e.preventDefault()
-      if (!pressed.current) {
-        pressed.current = true
-        fireKey(keyCode, true)
-      }
-    }, [keyCode])
-
-    const handleEnd = useCallback((e: React.TouchEvent | React.MouseEvent) => {
-      e.preventDefault()
-      if (pressed.current) {
-        pressed.current = false
-        fireKey(keyCode, false)
-      }
-    }, [keyCode])
-
-    return (
-      <button
-        style={{ ...btnBase, ...style }}
-        onTouchStart={handleStart}
-        onTouchEnd={handleEnd}
-        onTouchCancel={handleEnd}
-        onMouseDown={handleStart}
-        onMouseUp={handleEnd}
-        onMouseLeave={handleEnd}
-        onContextMenu={(e) => e.preventDefault()}
-      >
-        {label}
-      </button>
-    )
-  }
+  if (!visible) return null
 
   return (
     <div style={{
       position: 'fixed',
-      top: 100,
-      right: 16,
+      top: 96,
+      right: 12,
       zIndex: 1000,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: 8,
-      pointerEvents: 'auto',
-      background: 'rgba(0,0,0,0.35)',
-      borderRadius: '16px',
+      gap: 6,
+      background: 'rgba(0,0,0,0.45)',
+      borderRadius: '18px',
       padding: '10px 8px',
-      backdropFilter: 'blur(4px)',
+      backdropFilter: 'blur(6px)',
+      border: '1px solid rgba(255,255,255,0.1)',
     }}>
-      {/* ROTACIÓN: Q / E — arriba del D-pad */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <ControlButton keyCode="q" label="↺" style={{ fontSize: '20px' }} />
-        <span style={{ color: '#aaa', fontSize: '9px', letterSpacing: '1px' }}>ROT</span>
-        <ControlButton keyCode="e" label="↻" style={{ fontSize: '20px' }} />
+
+      {/* ROTACIÓN — Q (izq) / R (der) — arriba del D-pad */}
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <Btn keyCode="q" label="↺" fontSize={20} />
+        <span style={{ color: '#999', fontSize: '9px', letterSpacing: '1px', minWidth: 20, textAlign: 'center' }}>ROT</span>
+        <Btn keyCode="r" label="↻" fontSize={20} />
       </div>
 
       {/* Separador */}
-      <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.15)' }} />
+      <div style={{ width: '90%', height: 1, background: 'rgba(255,255,255,0.12)' }} />
 
-      {/* D-PAD: Arriba/Abajo/Izq/Der */}
+      {/* D-PAD */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 44px)',
         gridTemplateRows: 'repeat(3, 44px)',
         gap: 4,
       }}>
+        {/* Fila 1 */}
         <div />
-        <ControlButton keyCode="w" label="▲" />
+        <Btn keyCode="w" label="▲" />
         <div />
-        <ControlButton keyCode="a" label="◀" />
+        {/* Fila 2 */}
+        <Btn keyCode="a" label="◀" />
         <div />
-        <ControlButton keyCode="d" label="▶" />
+        <Btn keyCode="d" label="▶" />
+        {/* Fila 3 */}
         <div />
-        <ControlButton keyCode="s" label="▼" />
+        <Btn keyCode="s" label="▼" />
         <div />
       </div>
+
     </div>
   )
 }
