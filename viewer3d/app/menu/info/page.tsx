@@ -379,11 +379,11 @@ function InfoContent() {
           },
           {
             icon: '🌀',
-            title: 'Calendarios Mayas — Tzolk\'in y Dreamspell',
+            title: 'Cholq\'ij — Calendario Sagrado Maya',
             color: '#fbbf24',
             border: 'rgba(251, 191, 36, 0.3)',
             bg: 'rgba(251, 191, 36, 0.06)',
-            text: 'Archeoscope implementa dos sistemas calendáricos mayas. El Tzolk\'in Clásico usa la correlación GMT (584283) — el estándar arqueológico que relaciona la Cuenta Larga maya con el calendario gregoriano. El día 0.0.0.0.0 corresponde al 11 de agosto de 3114 a.C. y el 21 de diciembre de 2012 = 4 Ahau (verificado). Muestra Cuenta Larga, Tzolk\'in (20 sellos × 13 tonos = 260 kines) y Haab (18 meses de 20 días + 5 Wayeb). El Sincronario 13 Lunas (Dreamspell, José Argüelles) usa referencia fija 26 julio 1987 = Kin 24 (Harmonic Convergence), ciclo continuo sin reinicio anual, con Luna Galáctica (13 × 28 días) y Onda Encantada. El 21 abril 2026 = Kin 133 Caminante Eléctrico, Onda del Mono.'
+            text: 'El Cholq\'ij es el calendario sagrado de 260 días usado por los mayas hasta hoy. Se compone de 13 números (intensidad espiritual) × 20 nawales (fuerzas vivas del universo). Cada nawal es un principio espiritual activo: Ajpu → Sol y sabiduría, B\'atz\' → creatividad y destino, Kawoq → comunidad y lluvia, Imox → agua e inconsciente. Los números indican el grado de desarrollo: 1 inicio, 5 poder, 7 equilibrio, 9 intención espiritual, 13 culminación. El Tzolk\'in Clásico usa correlación GMT (584283) — estándar arqueológico verificado: 21 dic 2012 = 4 Ahau. El tiempo no es abstracto en la visión maya: cada día tiene espíritu. Los ajq\'ijab\' (guardianes del calendario) dicen que "los días hablan". El Cholq\'ij se usa para elegir días de rituales, ceremonias de protección y agradecimiento, y para interpretar el destino personal de cada persona según su día de nacimiento.'
           },
           {
             icon: '⚡',

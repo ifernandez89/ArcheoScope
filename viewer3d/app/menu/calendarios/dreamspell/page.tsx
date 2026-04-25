@@ -214,6 +214,45 @@ export default function CholqijPage() {
         </div>
       </div>
 
+      {/* Información espiritual expandida */}
+      <div style={{ maxWidth: 'min(700px, 95vw)', width: '100%', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '14px' }}>
+
+        <div className="info-card" style={{ padding: '20px', background: 'rgba(167,139,250,0.04)', border: '1px solid rgba(167,139,250,0.15)' }}>
+          <div style={{ fontSize: '13px', color: '#a78bfa', letterSpacing: '2px', marginBottom: '10px' }}>🌿 LOS NAWALES SON FUERZAS VIVAS</div>
+          <div className="text-responsive" style={{ color: 'rgba(255,255,255,0.65)', lineHeight: '1.8' }}>
+            En el Cholq'ij, cada nawal no es solo un símbolo — es un principio espiritual activo del universo. Representa una fuerza natural, un tipo de conciencia, una energía espiritual.<br /><br />
+            <strong style={{ color: 'rgba(255,255,255,0.8)' }}>Ajpu</strong> → Sol, luz, sabiduría, el cazador espiritual<br />
+            <strong style={{ color: 'rgba(255,255,255,0.8)' }}>B'atz'</strong> → creatividad, destino, el hilo de la vida<br />
+            <strong style={{ color: 'rgba(255,255,255,0.8)' }}>Kawoq</strong> → comunidad, familia, lluvia<br />
+            <strong style={{ color: 'rgba(255,255,255,0.8)' }}>Imox</strong> → agua, inconsciente, mundo interior
+          </div>
+        </div>
+
+        <div className="info-card" style={{ padding: '20px', background: 'rgba(167,139,250,0.04)', border: '1px solid rgba(167,139,250,0.15)' }}>
+          <div style={{ fontSize: '13px', color: '#a78bfa', letterSpacing: '2px', marginBottom: '10px' }}>🔢 LOS NÚMEROS: INTENSIDAD ESPIRITUAL</div>
+          <div className="text-responsive" style={{ color: 'rgba(255,255,255,0.65)', lineHeight: '1.8' }}>
+            Los 13 números indican el grado de fuerza o desarrollo de la energía del nawal.<br /><br />
+            <strong style={{ color: 'rgba(255,255,255,0.8)' }}>1</strong> inicio · <strong style={{ color: 'rgba(255,255,255,0.8)' }}>5</strong> poder · <strong style={{ color: 'rgba(255,255,255,0.8)' }}>7</strong> equilibrio · <strong style={{ color: 'rgba(255,255,255,0.8)' }}>9</strong> intención espiritual · <strong style={{ color: 'rgba(255,255,255,0.8)' }}>13</strong> culminación<br /><br />
+            Un día no es solo "Ajpu" — es por ejemplo <strong style={{ color: '#a78bfa' }}>8 Ajpu</strong>: la energía solar equilibrada y madura.
+          </div>
+        </div>
+
+        <div className="info-card" style={{ padding: '20px', background: 'rgba(167,139,250,0.04)', border: '1px solid rgba(167,139,250,0.15)' }}>
+          <div style={{ fontSize: '13px', color: '#a78bfa', letterSpacing: '2px', marginBottom: '10px' }}>🧭 DESTINO PERSONAL</div>
+          <div className="text-responsive" style={{ color: 'rgba(255,255,255,0.65)', lineHeight: '1.8' }}>
+            Cuando nace una persona, su día Cholq'ij se considera su guía espiritual, energía de vida y misión. No como algo fijo, sino como un camino que hay que aprender a equilibrar. Los ajq'ijab' realizan ceremonias para ayudar a armonizar ese camino.
+          </div>
+        </div>
+
+        <div className="info-card" style={{ padding: '20px', background: 'rgba(167,139,250,0.04)', border: '1px solid rgba(167,139,250,0.15)' }}>
+          <div style={{ fontSize: '13px', color: '#a78bfa', letterSpacing: '2px', marginBottom: '10px' }}>🌌 EL TIEMPO COMO SER VIVO</div>
+          <div className="text-responsive" style={{ color: 'rgba(255,255,255,0.65)', lineHeight: '1.8' }}>
+            En la visión maya, el tiempo no es abstracto. Cada día tiene espíritu. Por eso los ajq'ij dicen que <em>"los días hablan"</em>. Interpretar el calendario es escuchar la conversación entre los ciclos del cosmos y la vida humana — ciclos solares, lunares, agrícolas y espirituales, todos interconectados.
+          </div>
+        </div>
+
+      </div>
+
       <button
         onClick={() => router.push('/menu/calendarios')}
         className="btn-responsive"
