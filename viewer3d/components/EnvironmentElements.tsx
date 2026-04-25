@@ -106,7 +106,18 @@ export default function EnvironmentElements({
       return x - Math.floor(x)
     }
 
-    const counts: Record<string, Record<string, number>> = {
+    const isMobile = typeof window !== 'undefined' &&
+      (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+
+    const counts: Record<string, Record<string, number>> = isMobile ? {
+      // Mobile: densidades reducidas
+      tropical:  { trees: 6, bushes: 6, rocks: 5, palms: 3 },
+      temperate: { trees: 6, bushes: 5, rocks: 5, logs: 2 },
+      altiplano: { trees: 2, bushes: 8, rocks: 8, logs: 1 },
+      desert:    { trees: 3, bushes: 2, rocks: 8, cacti: 4, crystals: 3 },
+      arctic:    { trees: 5, bushes: 3, rocks: 10, crystals: 2 }
+    } : {
+      // PC: densidades normales
       tropical:  { trees: 12, bushes: 12, rocks: 8,  palms: 5 },
       temperate: { trees: 12, bushes: 10, rocks: 10, logs: 3 },
       altiplano: { trees: 3,  bushes: 15, rocks: 15, logs: 2 },

@@ -116,8 +116,18 @@ export default function RealisticWind({
     objectsCached.current = false // Invalidar cache si cambia
   }, [baseDirection])
   
-  // Actualizar sistema de viento
+  // Actualizar sistema de viento — mobile: cada 2 frames (30fps efectivo)
+  const frameCount = useRef(0)
+  const isMobileWind = useRef(
+    typeof window !== 'undefined' &&
+    (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+  )
+
   useFrame((state, delta) => {
+    frameCount.current++
+    // Mobile: skip cada 2 frames → 50% CPU de este sistema
+    if (isMobileWind.current && frameCount.current % 2 !== 0) return
+
     globalWind.update(delta, strength, gustFrequency, turbulenceScale)
     
     // Afectar objetos del mundo (árboles, arbustos)
@@ -183,7 +193,9 @@ export function WindStreaks({ strength = 0.5 }: { strength: number }) {
     if (!groupRef.current) return
     
     const group = groupRef.current
-    const count = 50  // Reducido de 100 a 50 para mejor rendimiento
+    const isMobile = typeof window !== 'undefined' &&
+      (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+    const count = isMobile ? 0 : 50  // Desactivado en mobile — lookAt muy caro
     
     // Geometría y material compartidos
     const sharedGeometry = new THREE.PlaneGeometry(0.5, 0.05)
@@ -285,7 +297,9 @@ export function WindDust({ strength = 0.5, biome = 'default' }: {
   
   const geometry = useRef(
     (() => {
-      const count = 250  // Reducido de 500 a 250 para mejor rendimiento
+      const isMobile = typeof window !== 'undefined' &&
+        (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+      const count = isMobile ? 100 : 250  // Mobile: 100 partículas de polvo
       const positions = new Float32Array(count * 3)
       
       for (let i = 0; i < count; i++) {

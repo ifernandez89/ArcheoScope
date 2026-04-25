@@ -11,15 +11,18 @@ interface RainParticlesProps {
 export default function RainParticles({ intensity = 'light' }: RainParticlesProps) {
   const pointsRef = useRef<THREE.Points>(null)
   
-  // Configuración según intensidad — reducida 50% para mejor rendimiento mobile
+  // Configuración según intensidad — mobile: densidades reducidas para 35-40% GPU load
   const config = useMemo(() => {
+    const mobile = typeof window !== 'undefined' &&
+      (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+
     switch (intensity) {
       case 'light':
-        return { count: 2000, speed: 1.2, size: 0.06, opacity: 0.5, spread: 100 }
+        return { count: mobile ? 800  : 2000, speed: 1.2, size: 0.06, opacity: 0.5, spread: 100 }
       case 'moderate':
-        return { count: 4000, speed: 1.8, size: 0.08, opacity: 0.65, spread: 100 }
+        return { count: mobile ? 1500 : 4000, speed: 1.8, size: 0.08, opacity: 0.65, spread: 100 }
       case 'heavy':
-        return { count: 8000, speed: 2.5, size: 0.1, opacity: 0.8, spread: 100 }
+        return { count: mobile ? 2500 : 8000, speed: 2.5, size: 0.1,  opacity: 0.8,  spread: 100 }
     }
   }, [intensity])
   

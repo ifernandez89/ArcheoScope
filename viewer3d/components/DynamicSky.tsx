@@ -48,9 +48,11 @@ export default function DynamicSky({
     return 2 + stormDarkness * 18
   }, [stormDarkness])
 
-  // ── Capa interna de estrellas procedurales (restaurada del DynamicSky original) ──
+  // ── Capa interna de estrellas procedurales ──
   const { starsGeo, starsMat } = useMemo(() => {
-    const count = 10000
+    const isMobile = typeof window !== 'undefined' &&
+      (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+    const count = isMobile ? 2500 : 10000
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
 

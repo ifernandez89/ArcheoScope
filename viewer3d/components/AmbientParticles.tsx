@@ -10,7 +10,10 @@ export default function AmbientParticles() {
 
   const particlesGeometry = useMemo(() => {
     const geometry = new THREE.BufferGeometry()
-    const count = 500
+    const isMobile = typeof window !== 'undefined' &&
+      (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+    const count = isMobile ? 0 : 500  // Desactivado en mobile — puro decorativo
+    if (count === 0) return geometry
     const positions = new Float32Array(count * 3)
     for (let i = 0; i < count; i++) {
       const i3 = i * 3
