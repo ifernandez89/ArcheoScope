@@ -41,7 +41,7 @@ export default function CalendariosPage() {
           <div style={{ marginTop: '12px', fontSize: '15px', color: 'rgba(251,191,36,0.6)' }}>21 dic 2012 = 4 Ahau ✓</div>
         </div>
 
-        {/* Dreamspell */}
+        {/* Cholq'ij */}
         <div
           onClick={() => router.push('/menu/calendarios/dreamspell')}
           className="cal-card info-card"
@@ -54,10 +54,10 @@ export default function CalendariosPage() {
           onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(167,139,250,0.05)'; (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(167,139,250,0.3)' }}
         >
           <div style={{ fontSize: '44px', marginBottom: '10px' }}>🌀</div>
-          <h2 style={{ color: '#a78bfa' }}>Sincronario 13 Lunas</h2>
-          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '12px' }}>DREAMSPELL · ARGÜELLES</div>
-          <p className="text-responsive" style={{ color: 'rgba(255,255,255,0.6)' }}>Kin del día, Onda Encantada, Luna Galáctica. Reinicia 26 julio.</p>
-          <div style={{ marginTop: '12px', fontSize: '15px', color: 'rgba(167,139,250,0.6)' }}>26 jul 1987 = Kin 24 ✓</div>
+          <h2 style={{ color: '#a78bfa' }}>Cholq'ij</h2>
+          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '12px' }}>SAGRADO MAYA · 260 DÍAS</div>
+          <p className="text-responsive" style={{ color: 'rgba(255,255,255,0.6)' }}>13 números × 20 nawales. Usado en ceremonias hasta hoy por los ajq'ijab'.</p>
+          <div style={{ marginTop: '12px', fontSize: '15px', color: 'rgba(167,139,250,0.6)' }}>8 Ajpu · 3 Kawoq · 1 Imox ✓</div>
         </div>
 
         {/* Sexagesimal */}
