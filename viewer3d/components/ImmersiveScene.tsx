@@ -122,6 +122,14 @@ const DEFAULT_STORM_WEATHER: WeatherState = {
   volcanicEruption: false
 }
 
+// Mobile: tormenta reducida — lluvia moderada sin rayos (ahorra mucha memoria)
+const MOBILE_STORM_WEATHER: WeatherState = {
+  snow: false, rainLight: false, rainModerate: true, rainHeavy: false,
+  wind: true, fog: false, storm: false, lightning: false,
+  tornado: false, clouds: true, earthquake: false, visibleSun: false,
+  volcanicEruption: false
+}
+
 const CALM_WEATHER: WeatherState = {
   snow: false, rainLight: false, rainModerate: false, rainHeavy: false,
   wind: false, fog: false, storm: false, lightning: false,
@@ -132,9 +140,19 @@ const CALM_WEATHER: WeatherState = {
 // Teotihuacán: lluvia ligera (menos carga GPU, más apropiado para el bioma)
 const TEOTIHUACAN_WEATHER: WeatherState = {
   snow: false, rainLight: true, rainModerate: false, rainHeavy: false,
-  wind: true, fog: false, storm: false, lightning: false,
+  wind: false, fog: false, storm: false, lightning: false,
   tornado: false, clouds: true, earthquake: false, visibleSun: false,
   volcanicEruption: false
+}
+
+// Detectar mobile una vez al cargar el módulo (para elegir clima)
+const _isMobileDevice = typeof window !== 'undefined' &&
+  (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+
+// Función helper: elegir clima de tormenta según plataforma
+function getStormWeather(siteName?: string | null): WeatherState {
+  if (siteName === 'teotihuacan') return TEOTIHUACAN_WEATHER
+  return _isMobileDevice ? MOBILE_STORM_WEATHER : DEFAULT_STORM_WEATHER
 }
 
 export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false, spaceUfoNumber = 1 }: ImmersiveSceneProps) {
@@ -238,7 +256,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     const interval = setInterval(update, 60000) // cada minuto
     return () => clearInterval(interval)
   }, [selectedLocation?.lat, selectedLocation?.lon])
-  const [weather, setWeather] = useState<WeatherState>(DEFAULT_STORM_WEATHER) // Estado del clima
+  const [weather, setWeather] = useState<WeatherState>(_isMobileDevice ? MOBILE_STORM_WEATHER : DEFAULT_STORM_WEATHER)
   const [cameraRotation, setCameraRotation] = useState(0) // Rotación de la cámara para la brújula
   const [showSphinxDialogue, setShowSphinxDialogue] = useState(false)
   const [showAkhenatonDialogue, setShowAkhenatonDialogue] = useState(false)
@@ -1160,9 +1178,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     const allMissionsComplete = missionState.stats.totalMissionsCompleted >= 5
     const siteName = getSiteNameFromCoordinates(site.lat, site.lon)
     const weatherCleared = allMissionsComplete || (siteName ? isWeatherCleared(siteName) : discoveredSites.current.has(site.id))
-    // Teotihuacán: lluvia ligera en lugar de tormenta completa
-    const isTeotihuacan = siteName === 'teotihuacan'
-    setWeather(weatherCleared ? CALM_WEATHER : isTeotihuacan ? TEOTIHUACAN_WEATHER : DEFAULT_STORM_WEATHER)
+    setWeather(weatherCleared ? CALM_WEATHER : getStormWeather(siteName))
     setMode('model')
 
     loggers.world.info('Teletransporte a sitio arqueolÃ³gico completado')
@@ -1207,9 +1223,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     const allComplete = ms.stats.totalMissionsCompleted >= 5
     const siteName = getSiteNameFromCoordinates(lat, lon)
     const weatherCleared = allComplete || (siteName ? isWeatherCleared(siteName) : false)
-    // Teotihuacán: lluvia ligera en lugar de tormenta completa
-    const isTeotihuacan = siteName === 'teotihuacan'
-    setWeather(weatherCleared ? CALM_WEATHER : isTeotihuacan ? TEOTIHUACAN_WEATHER : DEFAULT_STORM_WEATHER)
+    setWeather(weatherCleared ? CALM_WEATHER : getStormWeather(siteName))
     setMode('model')
 
     loggers.world.info('Teletransporte completado', { lat, lon })
