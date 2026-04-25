@@ -3,17 +3,17 @@
 /**
  * MobileTouchControls — D-pad + botones de rotación para mobile
  * 
- * Simula teclas WASD + Q/R para controlar el avatar en escenas terrestres.
+ * Usa touchstart/touchend (más robusto en Edge mobile que pointerdown).
  * Q = rotar izquierda, R = rotar derecha (igual que en PC)
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 
 interface MobileTouchControlsProps {
   visible?: boolean
 }
 
-// Simular keydown/keyup directamente — sin estado React para máxima velocidad
+// Simular keydown/keyup — funciones puras de módulo
 function pressKey(key: string) {
   window.dispatchEvent(new KeyboardEvent('keydown', {
     key, code: `Key${key.toUpperCase()}`, bubbles: true, cancelable: true
@@ -26,7 +26,7 @@ function releaseKey(key: string) {
   }))
 }
 
-// Botón individual — componente puro sin hooks internos
+// Botón individual — usa touchstart/touchend para máxima compatibilidad en Edge mobile
 function Btn({
   keyCode,
   label,
@@ -52,18 +52,25 @@ function Btn({
     cursor: 'pointer',
     userSelect: 'none',
     WebkitUserSelect: 'none',
-    touchAction: 'none',
+    // touchAction: 'none' — NO usar, interfiere con Edge
+    touchAction: 'manipulation',
     boxShadow: '0 2px 8px rgba(0,0,0,0.7)',
     flexShrink: 0,
+    // Evitar highlight azul en mobile
+    WebkitTapHighlightColor: 'transparent',
   }
 
   return (
     <button
       style={style}
-      onPointerDown={(e) => { e.preventDefault(); pressKey(keyCode) }}
-      onPointerUp={(e) => { e.preventDefault(); releaseKey(keyCode) }}
-      onPointerLeave={(e) => { e.preventDefault(); releaseKey(keyCode) }}
-      onPointerCancel={(e) => { e.preventDefault(); releaseKey(keyCode) }}
+      // touchstart/touchend — más fiables que pointer en Edge mobile
+      onTouchStart={(e) => { e.preventDefault(); pressKey(keyCode) }}
+      onTouchEnd={(e) => { e.preventDefault(); releaseKey(keyCode) }}
+      onTouchCancel={(e) => { e.preventDefault(); releaseKey(keyCode) }}
+      // Mouse fallback para PC/debug
+      onMouseDown={(e) => { e.preventDefault(); pressKey(keyCode) }}
+      onMouseUp={(e) => { e.preventDefault(); releaseKey(keyCode) }}
+      onMouseLeave={(e) => { releaseKey(keyCode) }}
       onContextMenu={(e) => e.preventDefault()}
     >
       {label}
@@ -72,10 +79,16 @@ function Btn({
 }
 
 export default function MobileTouchControls({ visible = true }: MobileTouchControlsProps) {
-  // Limpiar teclas al desmontar
+  // Limpiar todas las teclas al desmontar (evita teclas "pegadas")
   useEffect(() => {
+    const cleanup = () => ['w', 'a', 's', 'd', 'q', 'r'].forEach(releaseKey)
+    // También limpiar si la página pierde foco (Edge descarga contenido)
+    window.addEventListener('blur', cleanup)
+    window.addEventListener('visibilitychange', cleanup)
     return () => {
-      ['w', 'a', 's', 'd', 'q', 'r'].forEach(releaseKey)
+      cleanup()
+      window.removeEventListener('blur', cleanup)
+      window.removeEventListener('visibilitychange', cleanup)
     }
   }, [])
 
@@ -115,15 +128,12 @@ export default function MobileTouchControls({ visible = true }: MobileTouchContr
         gridTemplateRows: 'repeat(3, 44px)',
         gap: 4,
       }}>
-        {/* Fila 1 */}
         <div />
         <Btn keyCode="w" label="▲" />
         <div />
-        {/* Fila 2 */}
         <Btn keyCode="a" label="◀" />
         <div />
         <Btn keyCode="d" label="▶" />
-        {/* Fila 3 */}
         <div />
         <Btn keyCode="s" label="▼" />
         <div />

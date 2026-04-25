@@ -43,12 +43,12 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation, d
 
   // Coordenadas de sitios seleccionados
   const famousSites = [
-    { name: '🏔️ Puma Punku', lat: -16.56164569638123, lon: -68.67952141492464, category: 'famous' },
-    { name: '🏛️ Giza', lat: 29.9792, lon: 31.1342, category: 'famous' },
-    { name: '🌞 Teotihuacán', lat: 19.6925, lon: -98.8438, category: 'famous' },
-    { name: '🗿 Veracruz', lat: 18.4667, lon: -95.4500, category: 'famous' },
-    { name: '🗿 Isla de Pascua', lat: -27.1254, lon: -109.2778, category: 'famous' },
-    { name: '🌊 Lago Titicaca', lat: -75.2509, lon: 0.0714, category: 'famous' },
+    { lat: -16.56164569638123, lon: -68.67952141492464, category: 'famous' },
+    { lat: 29.9792, lon: 31.1342, category: 'famous' },
+    { lat: 19.6925, lon: -98.8438, category: 'famous' },
+    { lat: 18.4667, lon: -95.4500, category: 'famous' },
+    { lat: -27.1254, lon: -109.2778, category: 'famous' },
+    { lat: -75.2509, lon: 0.0714, category: 'famous' },
   ]
 
   return (
@@ -240,13 +240,13 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation, d
                     }
                   }}
                   style={{
-                    padding: isMobile ? '12px 14px' : '8px 12px',
+                    padding: '8px 12px',
                     background: 'rgba(255,255,255,0.05)',
                     border: '1px solid rgba(255,255,255,0.1)',
                     borderRadius: '6px',
                     color: 'white',
                     cursor: 'pointer',
-                    fontSize: isMobile ? '14px' : '13px',
+                    fontSize: '13px',
                     textAlign: 'left',
                     transition: 'all 0.2s'
                   }}
@@ -259,10 +259,7 @@ export default function CoordinateInput({ onCoordinateSubmit, currentLocation, d
                     e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
                   }}
                 >
-                  {site.name}
-                  {!isMobile && <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginLeft: '8px' }}>
-                    {site.lat.toFixed(2)}°, {site.lon.toFixed(2)}°
-                  </span>}
+                  {site.lat.toFixed(4)}°, {site.lon.toFixed(4)}°
                 </button>
               ))}
             </div>
