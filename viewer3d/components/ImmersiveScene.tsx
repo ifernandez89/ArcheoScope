@@ -2804,10 +2804,10 @@ function ModelScene({
           {/* Zoom cinematogrÃ¡fico al entrar - SOLO en modo Ã³rbita */}
           {movementMode === 'orbit' && <CinematicZoom />}
 
-          {/* Post-processing modular */}
+          {/* Post-processing modular — desactivado en mobile para mejor rendimiento */}
           <PostProcessingSystem
-            enableBloom={true}
-            enableVignette={true}
+            enableBloom={typeof window !== 'undefined' ? !(/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768) : true}
+            enableVignette={typeof window !== 'undefined' ? !(/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768) : true}
             bloomIntensity={0.3}
             vignetteIntensity={0.4}
           />

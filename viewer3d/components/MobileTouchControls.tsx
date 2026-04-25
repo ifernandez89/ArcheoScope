@@ -135,6 +135,16 @@ export default function MobileTouchControls({ visible = true }: MobileTouchContr
       padding: '10px 8px',
       backdropFilter: 'blur(4px)',
     }}>
+      {/* ROTACIÓN: Q / E — arriba del D-pad */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <ControlButton keyCode="q" label="↺" style={{ fontSize: '20px' }} />
+        <span style={{ color: '#aaa', fontSize: '9px', letterSpacing: '1px' }}>ROT</span>
+        <ControlButton keyCode="e" label="↻" style={{ fontSize: '20px' }} />
+      </div>
+
+      {/* Separador */}
+      <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.15)' }} />
+
       {/* D-PAD: Arriba/Abajo/Izq/Der */}
       <div style={{
         display: 'grid',
@@ -142,34 +152,15 @@ export default function MobileTouchControls({ visible = true }: MobileTouchContr
         gridTemplateRows: 'repeat(3, 44px)',
         gap: 4,
       }}>
-        {/* Fila 1: vacío - W - vacío */}
         <div />
         <ControlButton keyCode="w" label="▲" />
         <div />
-        
-        {/* Fila 2: A - vacío - D */}
         <ControlButton keyCode="a" label="◀" />
         <div />
         <ControlButton keyCode="d" label="▶" />
-        
-        {/* Fila 3: vacío - S - vacío */}
         <div />
         <ControlButton keyCode="s" label="▼" />
         <div />
-      </div>
-
-      {/* Separador */}
-      <div style={{ height: 8 }} />
-
-      {/* ROTACIÓN: Q / E */}
-      <div style={{
-        display: 'flex',
-        gap: 8,
-        alignItems: 'center',
-      }}>
-        <ControlButton keyCode="q" label="↺" style={{ fontSize: '20px' }} />
-        <span style={{ color: '#fff', fontSize: '10px', opacity: 0.6 }}>ROT</span>
-        <ControlButton keyCode="e" label="↻" style={{ fontSize: '20px' }} />
       </div>
     </div>
   )

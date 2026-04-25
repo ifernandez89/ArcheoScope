@@ -9,7 +9,7 @@ export default function SnowParticles() {
   
   // Generar partículas de nieve
   const [positions, velocities] = useMemo(() => {
-    const count = 2000
+    const count = 1000  // Reducido de 2000 a 1000 para mejor rendimiento
     const pos = new Float32Array(count * 3)
     const vel = new Float32Array(count * 3)
     
