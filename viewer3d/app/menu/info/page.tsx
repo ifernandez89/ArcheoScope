@@ -346,6 +346,14 @@ function InfoContent() {
             text: 'El cielo nocturno incluye ~250 estrellas del Yale Bright Star Catalogue en sus posiciones astronómicas exactas, calculadas a partir de Ascensión Recta (RA) y Declinación (Dec). Sirio, Vega, Betelgeuse, Rigel, Polaris, la Cruz del Sur, Orión y las principales constelaciones son reconocibles. Cada estrella tiene su color espectral correcto (O=azul intenso, B=azul-blanco, A=blanco, F=amarillo-blanco, G=amarillo solar, K=naranja, M=rojo) y tamaño proporcional a su magnitud visual. El fondo galáctico añade 80,000 estrellas procedurales en un solo draw call sin impacto en el rendimiento.'
           },
           {
+            icon: '✦',
+            title: 'Escena de Constelaciones — Observatorio Nocturno',
+            color: '#a78bfa',
+            border: 'rgba(167, 139, 250, 0.3)',
+            bg: 'rgba(167, 139, 250, 0.06)',
+            text: 'Escena nocturna interactiva ambientada en el desierto de Rub\' al Khali (20.0°N, 50.0°E) — uno de los cielos más despejados del planeta. Muestra 83,130 estrellas en tres capas: 80,000 estrellas procedurales de fondo galáctico, 3,000 estrellas brillantes con shader de centelleo dinámico, y ~130 estrellas del catálogo Yale Bright Star con posiciones RA/Dec reales y colores espectrales. Las 27 constelaciones visibles incluyen Orión, Osa Mayor, Casiopea, Escorpión, Cruz del Sur (destacada para el hemisferio sur), Centauro, Sagitario, Pegaso, Andrómeda, Cygnus y más. La Vía Láctea se renderiza como banda galáctica procedimental con shader GLSL. La luna usa textura fotorrealista en modo billboard (siempre mira al observador). Halo atmosférico en el horizonte simula el scattering real. Controlable con WASD + Shift en PC, o D-pad táctil en mobile. Brújula astronómica integrada.'
+          },
+          {
             icon: '☀️',
             title: 'Alineaciones Solares Arqueoastronómicas',
             color: '#fb923c',

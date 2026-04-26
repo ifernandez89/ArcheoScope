@@ -54,7 +54,7 @@ export default function CalendariosPage() {
           onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(167,139,250,0.05)'; (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(167,139,250,0.3)' }}
         >
           <div style={{ fontSize: '44px', marginBottom: '10px' }}>🌀</div>
-          <h2 style={{ color: '#a78bfa' }}>Cholq'ij</h2>
+          <h2 style={{ color: '#a78bfa' }}>Cholq'ij/Tzolk'in</h2>
           <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '12px' }}>SAGRADO MAYA · 260 DÍAS</div>
           <p className="text-responsive" style={{ color: 'rgba(255,255,255,0.6)' }}>13 números × 20 nawales. Usado en ceremonias hasta hoy por los ajq'ijab'.</p>
           <div style={{ marginTop: '12px', fontSize: '15px', color: 'rgba(167,139,250,0.6)' }}>8 Ajpu · 3 Kawoq · 1 Imox ✓</div>
