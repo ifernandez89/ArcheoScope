@@ -259,6 +259,38 @@ export default function CholqijPage() {
 
       </div>
 
+      {/* Aclaración: Cholq'ij vs Tzolk'in clásico */}
+      <div className="info-card" style={{
+        padding: '20px', background: 'rgba(251,191,36,0.04)',
+        border: '1px solid rgba(251,191,36,0.2)', marginBottom: '8px'
+      }}>
+        <div style={{ fontSize: '13px', color: '#fbbf24', letterSpacing: '2px', marginBottom: '12px' }}>
+          📜 CHOLQ'IJ Y TZOLK'IN — LA MISMA RAÍZ
+        </div>
+        <div className="text-responsive" style={{ color: 'rgba(255,255,255,0.65)', lineHeight: '1.8', marginBottom: '16px' }}>
+          El Cholq'ij usado hoy por sacerdotes mayas es prácticamente el mismo sistema que el Tzolk'in clásico. También usa 13 números y 20 nawales. La diferencia principal es el nombre de los días en idiomas mayas modernos (k'iche', kaqchikel, etc.).
+        </div>
+        {/* Tabla comparativa */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '13px' }}>
+          <div style={{ color: '#fbbf24', fontWeight: 'bold', padding: '6px 10px', background: 'rgba(251,191,36,0.1)', borderRadius: '6px 6px 0 0', textAlign: 'center' }}>Maya clásico</div>
+          <div style={{ color: '#a78bfa', fontWeight: 'bold', padding: '6px 10px', background: 'rgba(167,139,250,0.1)', borderRadius: '6px 6px 0 0', textAlign: 'center' }}>Cholq'ij moderno</div>
+          {[
+            ['Ajaw', 'Ajpu'],
+            ['Imix', 'Imox'],
+            ["Ik'", "Iq'"],
+            ["Ak'bal", "Aq'ab'al"],
+          ].map(([clasico, moderno], i) => (
+            <>
+              <div key={`c${i}`} style={{ padding: '5px 10px', background: 'rgba(251,191,36,0.05)', color: 'rgba(255,255,255,0.7)', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{clasico}</div>
+              <div key={`m${i}`} style={{ padding: '5px 10px', background: 'rgba(167,139,250,0.05)', color: 'rgba(255,255,255,0.7)', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{moderno}</div>
+            </>
+          ))}
+        </div>
+        <div className="text-responsive" style={{ color: 'rgba(255,255,255,0.45)', lineHeight: '1.7', marginTop: '12px', fontStyle: 'italic' }}>
+          La estructura del calendario es idéntica. Solo cambian los nombres según el idioma maya.
+        </div>
+      </div>
+
       <button
         onClick={() => router.push('/menu/calendarios')}
         className="btn-responsive"
