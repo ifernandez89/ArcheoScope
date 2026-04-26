@@ -178,4 +178,111 @@ export const CONSTELLATION_LINES: Array<{
       ['Fomalhaut', 'Sadalsuud'],
     ]
   },
+
+  // ─── PEGASO ───────────────────────────────────────────────────────────────
+  {
+    name: 'Pegaso',
+    color: '#aaccff',
+    stars: [
+      ['Scheat', 'Markab'],
+      ['Markab', 'Algenib'],
+      ['Algenib', 'Alpheratz'],
+      ['Alpheratz', 'Scheat'],
+    ]
+  },
+
+  // ─── ANDRÓMEDA ────────────────────────────────────────────────────────────
+  {
+    name: 'Andrómeda',
+    color: '#ffddaa',
+    stars: [
+      ['Alpheratz', 'Mirach'],
+      ['Mirach', 'Almach'],
+    ]
+  },
+
+  // ─── PERSEO ───────────────────────────────────────────────────────────────
+  {
+    name: 'Perseo',
+    color: '#ffbbcc',
+    stars: [
+      ['Mirfak', 'Algol'],
+    ]
+  },
+
+  // ─── TAURO ────────────────────────────────────────────────────────────────
+  {
+    name: 'Tauro',
+    color: '#ffeeaa',
+    stars: [
+      ['Aldebarán', 'Ain'],
+      ['Aldebarán', 'Alcyone (Pléyades)'],
+    ]
+  },
+
+  // ─── AURIGA ───────────────────────────────────────────────────────────────
+  {
+    name: 'Auriga',
+    color: '#ffffaa',
+    stars: [
+      ['Capella', 'Menkalinan'],
+    ]
+  },
+
+  // ─── LYRA ─────────────────────────────────────────────────────────────────
+  {
+    name: 'Lyra',
+    color: '#aaffee',
+    stars: [
+      ['Vega', 'Sheliak'],
+    ]
+  },
+
+  // ─── HÉRCULES ─────────────────────────────────────────────────────────────
+  {
+    name: 'Hércules',
+    color: '#ffaa66',
+    stars: [
+      ['Kornephoros', 'Rasalgethi'],
+    ]
+  },
+
+  // ─── OPHIUCHUS ────────────────────────────────────────────────────────────
+  {
+    name: 'Ophiuchus',
+    color: '#aaffaa',
+    stars: [
+      ['Rasalhague', 'Sabik'],
+      ['Sabik', 'Unukalhai'],
+    ]
+  },
+
+  // ─── ERIDANUS ─────────────────────────────────────────────────────────────
+  {
+    name: 'Eridanus',
+    color: '#88ccff',
+    stars: [
+      ['Achernar', 'Zaurak'],
+      ['Zaurak', 'Acamar'],
+    ]
+  },
+
+  // ─── GRUS ─────────────────────────────────────────────────────────────────
+  {
+    name: 'Grus',
+    color: '#ffccaa',
+    stars: [
+      ['Alnair', 'Tiaki'],
+    ]
+  },
+
+  // ─── CARINA ───────────────────────────────────────────────────────────────
+  {
+    name: 'Carina',
+    color: '#aaeeff',
+    stars: [
+      ['Canopus', 'Avior'],
+      ['Avior', 'Aspidiske'],
+    ]
+  },
 ]

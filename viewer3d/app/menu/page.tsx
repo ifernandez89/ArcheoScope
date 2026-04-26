@@ -111,6 +111,7 @@ export default function MenuPage() {
     { label: 'Audio', path: '/menu/audio', action: null },
     { label: 'Video', path: '/menu/video', action: null },
     { label: 'Controles', path: '/menu/controls', action: null },
+    { label: 'Constelaciones', path: '/constellations', action: null },
     { label: 'Astrología', path: '/menu/astrology', action: null },
     { label: 'Calendarios', path: '/menu/calendarios', action: null },
     { label: 'Información', path: '/menu/info', action: null }
@@ -120,6 +121,7 @@ export default function MenuPage() {
   const mobileOptions = [
     { label: 'Audio', path: '/menu/audio', action: null },
     { label: 'Controles', path: '/menu/controls', action: null },
+    { label: 'Constelaciones', path: '/constellations', action: null },
     { label: 'Astrología', path: '/menu/astrology', action: null },
     { label: 'Calendarios', path: '/menu/calendarios', action: null },
     { label: 'Información', path: '/menu/info', action: null },
@@ -131,14 +133,14 @@ export default function MenuPage() {
   return (
     <main style={{
       width: '100vw',
-      height: '100vh',
+      minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       background: '#000000',
       margin: 0,
-      padding: 0,
-      overflow: 'hidden'
+      padding: '20px 0',
+      overflowY: 'auto'
     }}>
       <div style={{
         display: 'flex',

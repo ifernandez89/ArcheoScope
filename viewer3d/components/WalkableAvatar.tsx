@@ -15,9 +15,10 @@ interface WalkableAvatarProps {
   solarDirection?: { x: number, y: number, z: number }
   isDay?: boolean
   showCosmicEffects?: boolean
-  disableCameraControl?: boolean // Nuevo prop para deshabilitar control de cámara
-  initialPosition?: [number, number, number] // Posición inicial
-  abilityActive?: boolean // Estado de la habilidad especial
+  disableCameraControl?: boolean
+  disableShiftFlight?: boolean  // Deshabilitar vuelo libre con Shift (para escena constelaciones)
+  initialPosition?: [number, number, number]
+  abilityActive?: boolean
   currentUfo?: number // Número de UFO actual
 }
 
@@ -37,9 +38,10 @@ export default function WalkableAvatar({
   onModelChange,
   solarDirection = { x: 0, y: 1, z: 0 },
   isDay = true,
-  showCosmicEffects = true,  // Reactivado
-  disableCameraControl = false, // Por defecto controla la cámara
-  initialPosition = [0, 0, 0], // Posición inicial por defecto
+  showCosmicEffects = true,
+  disableCameraControl = false,
+  disableShiftFlight = false,  // Por defecto Shift activa vuelo libre
+  initialPosition = [0, 0, 0],
   abilityActive = false,
   currentUfo = 1
 }: WalkableAvatarProps) {

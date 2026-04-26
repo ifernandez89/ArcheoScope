@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import * as THREE from 'three'
+import { Html } from '@react-three/drei'
 import { BRIGHT_STARS, raDecToXYZ, spectralColor } from '@/data/bright-stars'
 import { CONSTELLATION_LINES } from '@/data/constellations'
 
@@ -152,19 +153,60 @@ export default function Stars() {
     return lines
   }, [layers.starPositions])
 
+  // Centros de constelaciones para labels
+  const constellationCenters = useMemo(() => {
+    const centers: { name: string, position: THREE.Vector3, color: string }[] = []
+    CONSTELLATION_LINES.forEach(constellation => {
+      const positions: THREE.Vector3[] = []
+      constellation.stars.forEach(([nameA, nameB]) => {
+        const posA = layers.starPositions.get(nameA)
+        const posB = layers.starPositions.get(nameB)
+        if (posA) positions.push(posA)
+        if (posB) positions.push(posB)
+      })
+      if (positions.length > 0) {
+        const center = new THREE.Vector3()
+        positions.forEach(p => center.add(p))
+        center.divideScalar(positions.length)
+        centers.push({ name: constellation.name, position: center, color: constellation.color })
+      }
+    })
+    return centers
+  }, [layers.starPositions])
+
   return (
     <group renderOrder={-1}>
       <points geometry={layers.baseGeo}   material={layers.baseMat} />
       <points geometry={layers.brightGeo} material={layers.brightMat} />
       <points geometry={layers.realGeo}   material={layers.realMat} />
-      {/* Líneas de constelaciones — declarativas para no romper el render */}
+      {/* Líneas de constelaciones */}
       {constellationLines.map((line, i) => (
         <lineSegments key={`const-${i}`}>
           <bufferGeometry>
             <bufferAttribute attach="attributes-position" count={line.points.length / 3} array={line.points} itemSize={3} />
           </bufferGeometry>
-          <lineBasicMaterial color={line.color} transparent opacity={0.35} blending={THREE.AdditiveBlending} depthWrite={false} />
+          <lineBasicMaterial color={line.color} transparent opacity={0.6} blending={THREE.AdditiveBlending} depthWrite={false} />
         </lineSegments>
+      ))}
+      {/* Nombres de constelaciones — sprite fijo, siempre visible */}
+      {constellationCenters.map((c, i) => (
+        <Html key={`label-${i}`} position={c.position} center sprite occlude={false}>
+          <div style={{
+            color: c.color,
+            fontSize: '35px',
+            fontFamily: 'monospace',
+            letterSpacing: '4px',
+            textTransform: 'uppercase',
+            opacity: 0.9,
+            textShadow: `0 0 20px ${c.color}, 0 0 40px ${c.color}`,
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+            userSelect: 'none',
+            fontWeight: 'bold',
+          }}>
+            {c.name}
+          </div>
+        </Html>
       ))}
     </group>
   )
