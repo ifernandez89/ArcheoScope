@@ -30,34 +30,119 @@ const AmbientAudio = dynamic(() => import('./AmbientAudio'), { ssr: false })
 const Tree3DModel = dynamic(() => import('./Tree3DModel'), { ssr: false, loading: () => null })
 const Rock3DModel = dynamic(() => import('./Rock3DModel'), { ssr: false, loading: () => null })
 
+// ─── Banda de Vía Láctea procedimental ───────────────────────────────────────
+function MilkyWayBand() {
+  const bandMat = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
+      uniforms: {},
+      vertexShader: `
+        varying vec3 vPosition;
+        void main() {
+          vPosition = position;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vPosition;
+        // Simple hash for noise
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+        }
+        float noise(vec2 p) {
+          vec2 i = floor(p);
+          vec2 f = fract(p);
+          f = f * f * (3.0 - 2.0 * f);
+          float a = hash(i);
+          float b = hash(i + vec2(1.0, 0.0));
+          float c = hash(i + vec2(0.0, 1.0));
+          float d = hash(i + vec2(1.0, 1.0));
+          return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+        }
+        void main() {
+          vec3 dir = normalize(vPosition);
+          // Galactic plane: band around the equator tilted ~60 degrees
+          float galacticLat = dir.y * 0.5 + dir.x * 0.866; // tilt
+          float band = exp(-galacticLat * galacticLat * 8.0); // gaussian band
+          // Add noise for texture
+          float n = noise(dir.xz * 15.0) * 0.5 + noise(dir.xz * 30.0) * 0.25;
+          float brightness = band * (0.6 + n * 0.4);
+          // Color: warm white-blue
+          vec3 color = mix(vec3(0.6, 0.65, 0.8), vec3(0.9, 0.85, 0.7), n);
+          gl_FragColor = vec4(color, brightness * 0.12);
+        }
+      `,
+    })
+  }, [])
+
+  return (
+    <mesh material={bandMat} renderOrder={-2}>
+      <sphereGeometry args={[18000, 32, 32]} />
+    </mesh>
+  )
+}
+
+// ─── Halo atmosférico del horizonte ──────────────────────────────────────────
+function HorizonHalo() {
+  const haloMat = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
+      uniforms: {},
+      vertexShader: `
+        varying vec3 vPosition;
+        void main() {
+          vPosition = position;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vPosition;
+        void main() {
+          vec3 dir = normalize(vPosition);
+          // Fade near horizon (y close to 0)
+          float horizonFade = 1.0 - smoothstep(-0.05, 0.25, dir.y);
+          // Color: dark blue atmospheric scattering
+          vec3 color = vec3(0.04, 0.06, 0.18);
+          gl_FragColor = vec4(color, horizonFade * 0.2);
+        }
+      `,
+    })
+  }, [])
+
+  return (
+    <mesh material={haloMat} renderOrder={-3}>
+      <sphereGeometry args={[500, 16, 16]} />
+    </mesh>
+  )
+}
+
 // ─── Luna visible con textura real e iluminación farol ───────────────────────
 function DesertMoon({ moonTexture }: { moonTexture: THREE.Texture }) {
   const moonRef = useRef<THREE.Mesh>(null)
 
   // Billboard: la luna siempre mira hacia la cámara
   useFrame(({ camera }) => {
-    if (moonRef.current) {
-      moonRef.current.lookAt(camera.position)
-    }
+    if (moonRef.current) moonRef.current.lookAt(camera.position)
   })
 
   return (
     <group position={[200, 120, -300]}>
-      {/* Plano con textura de luna — siempre mira a la cámara */}
+      {/* Textura de luna — billboard */}
       <mesh ref={moonRef}>
         <planeGeometry args={[30, 30]} />
-        <meshBasicMaterial
-          map={moonTexture}
-          transparent
-          side={THREE.DoubleSide}
-        />
+        <meshBasicMaterial map={moonTexture} transparent side={THREE.DoubleSide} />
       </mesh>
       {/* Glow suave */}
-      <mesh ref={(m) => { if (m) m.lookAt(0, 20, 0) }}>
+      <mesh>
         <planeGeometry args={[45, 45]} />
         <meshBasicMaterial color="#c8d4e8" transparent opacity={0.04} side={THREE.DoubleSide} />
       </mesh>
-      {/* Luz de luna */}
       <directionalLight position={[200, 120, -300]} intensity={0.8} color="#c8d4e8" />
       <pointLight position={[200, 120, -300]} intensity={0.5} color="#d0dce8" distance={800} decay={1.5} />
     </group>
@@ -158,6 +243,12 @@ function SkyContent({
     <>
       {/* Estrellas fijas — sin rotación automática */}
       <Stars />
+
+      {/* Banda de Vía Láctea — procedimental, costo mínimo */}
+      <MilkyWayBand />
+
+      {/* Halo atmosférico del horizonte — scattering sutil */}
+      <HorizonHalo />
 
       {/* Luna con textura real */}
       <DesertMoon moonTexture={moonTexture} />

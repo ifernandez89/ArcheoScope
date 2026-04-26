@@ -69,8 +69,8 @@ export const CONSTELLATION_LINES: Array<{
 
   // ─── CRUZ DEL SUR ─────────────────────────────────────────────────────────
   {
-    name: 'Cruz del Sur',
-    color: '#44ffcc',
+    name: '✦ Cruz del Sur',
+    color: '#00ffcc',
     stars: [
       ['Acrux', 'Gacrux'],    // eje vertical
       ['Mimosa', 'Imai'],     // eje horizontal
@@ -144,8 +144,8 @@ export const CONSTELLATION_LINES: Array<{
 
   // ─── CENTAURO ─────────────────────────────────────────────────────────────
   {
-    name: 'Centauro',
-    color: '#44ffff',
+    name: '✦ Centauro',
+    color: '#00ffff',
     stars: [
       ['Rigil Kentaurus', 'Hadar'],
       ['Hadar', 'Menkent'],
