@@ -15,7 +15,7 @@
  */
 
 import { Suspense, useEffect, useMemo, useState, useRef } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { PerspectiveCamera, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
@@ -27,24 +27,37 @@ const MobileTouchControls = dynamic(() => import('./MobileTouchControls'), { ssr
 const Compass = dynamic(() => import('./Compass'), { ssr: false })
 const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
 const AmbientAudio = dynamic(() => import('./AmbientAudio'), { ssr: false })
+const Tree3DModel = dynamic(() => import('./Tree3DModel'), { ssr: false, loading: () => null })
+const Rock3DModel = dynamic(() => import('./Rock3DModel'), { ssr: false, loading: () => null })
 
 // ─── Luna visible con textura real e iluminación farol ───────────────────────
 function DesertMoon({ moonTexture }: { moonTexture: THREE.Texture }) {
+  const moonRef = useRef<THREE.Mesh>(null)
+
+  // Billboard: la luna siempre mira hacia la cámara
+  useFrame(({ camera }) => {
+    if (moonRef.current) {
+      moonRef.current.lookAt(camera.position)
+    }
+  })
+
   return (
     <group position={[200, 120, -300]}>
-      <mesh>
-        <sphereGeometry args={[15, 32, 32]} />
-        <meshStandardMaterial
+      {/* Plano con textura de luna — siempre mira a la cámara */}
+      <mesh ref={moonRef}>
+        <planeGeometry args={[30, 30]} />
+        <meshBasicMaterial
           map={moonTexture}
-          emissive="#fffde8"
-          emissiveIntensity={0.15}
-          roughness={0.9}
+          transparent
+          side={THREE.DoubleSide}
         />
       </mesh>
-      <mesh>
-        <sphereGeometry args={[20, 16, 16]} />
-        <meshBasicMaterial color="#c8d4e8" transparent opacity={0.06} side={THREE.BackSide} />
+      {/* Glow suave */}
+      <mesh ref={(m) => { if (m) m.lookAt(0, 20, 0) }}>
+        <planeGeometry args={[45, 45]} />
+        <meshBasicMaterial color="#c8d4e8" transparent opacity={0.04} side={THREE.DoubleSide} />
       </mesh>
+      {/* Luz de luna */}
       <directionalLight position={[200, 120, -300]} intensity={0.8} color="#c8d4e8" />
       <pointLight position={[200, 120, -300]} intensity={0.5} color="#d0dce8" distance={800} decay={1.5} />
     </group>
@@ -72,14 +85,58 @@ function DesertFloor() {
   )
 }
 
-// ─── Contenido 3D ────────────────────────────────────────────────────────────
+// ─── Vegetación y rocas del desierto ─────────────────────────────────────────
+function DesertVegetation() {
+  // Posiciones fijas dispersas — árboles y rocas en el desierto nocturno
+  const trees: [number, number, number, number, string][] = [
+    // [x, z, scale, rotation, type]
+    [-35, -20, 1.2, 0.3,  'tree1'],
+    [ 28, -45, 0.9, 1.1,  'tree2'],
+    [-60,  15, 1.4, 2.4,  'tree3'],
+    [ 50,  30, 1.0, 0.8,  'tree1'],
+    [-15,  55, 1.3, 3.1,  'tree2'],
+    [ 70, -10, 0.8, 1.7,  'tree3'],
+  ]
+
+  const rocks: [number, number, number, number][] = [
+    // [x, z, scale, rotation]
+    [ 20, -25, 0.8, 0.5],
+    [-40,  35, 1.1, 1.2],
+    [ 55, -50, 0.6, 2.0],
+    [-25, -60, 0.9, 0.9],
+    [ 40,  50, 1.2, 3.5],
+    [-70, -30, 0.7, 1.8],
+  ]
+
+  return (
+    <>
+      {trees.map(([x, z, scale, rot, type], i) => (
+        <Tree3DModel
+          key={`tree-${i}`}
+          position={[x, 0, z]}
+          scale={scale}
+          rotation={rot}
+          treeType={type as any}
+        />
+      ))}
+      {rocks.map(([x, z, scale, rot], i) => (
+        <Rock3DModel
+          key={`rock-${i}`}
+          position={[x, 0, z]}
+          scale={scale}
+          rotation={rot}
+        />
+      ))}
+    </>
+  )
+}
 function SkyContent({
   onCameraRotation
 }: {
   onCameraRotation?: (rotation: number) => void
 }) {
   // Cargar textura de luna al nivel del componente R3F (dentro del Canvas)
-  const moonTexture = useTexture(getAssetPath('/textures/2k_moon.jpg'))
+  const moonTexture = useTexture(getAssetPath('/textures/beautiful-glowing-gray-full-moon.jpg'))
 
   // Habilitar HarmoniaMundi al primer click/touch
   useEffect(() => {
@@ -108,7 +165,10 @@ function SkyContent({
       {/* Terreno desierto */}
       <DesertFloor />
 
-      {/* Nave — vuelo alto, posición inicial elevada, Shift libre para cámara */}
+      {/* Árboles y rocas dispersos */}
+      <DesertVegetation />
+
+      {/* Nave — vuelo alto, posición inicial elevada, +2 velocidad */}
       <WalkableAvatar
         modelPath={getAssetPath('/ufo_3.glb')}
         solarDirection={{ x: 0.3, y: -0.5, z: -0.8 }}
@@ -116,8 +176,10 @@ function SkyContent({
         showCosmicEffects={false}
         abilityActive={false}
         currentUfo={3}
-        initialPosition={[0, 30, 0]}
+        initialPosition={[0, 20, 0]}
         disableShiftFlight={true}
+        speedMultiplier={1.1}
+        flyingHeightOverride={20}
       />
 
       {/* Rastreador de brújula */}
@@ -176,7 +238,7 @@ export default function ConstellationsScene() {
           toneMappingExposure: 0.8,
         }}
       >
-        <PerspectiveCamera makeDefault position={[0, 30, 10]} fov={60} far={20000} />
+        <PerspectiveCamera makeDefault position={[0, 20, 10]} fov={60} far={20000} />
         <Suspense fallback={null}>
           <SkyContent onCameraRotation={setCameraRotation} />
         </Suspense>
@@ -185,8 +247,12 @@ export default function ConstellationsScene() {
       {/* Brújula */}
       <Compass rotation={cameraRotation} />
 
-      {/* Mobile: D-pad touch controls */}
-      {isMobile && <MobileTouchControls visible={true} />}
+      {/* Mobile: D-pad touch controls — touchAction auto para no bloquear toques */}
+      {isMobile && (
+        <div style={{ touchAction: 'auto' }}>
+          <MobileTouchControls visible={true} />
+        </div>
+      )}
 
       {/* Label sutil */}
       <div style={{

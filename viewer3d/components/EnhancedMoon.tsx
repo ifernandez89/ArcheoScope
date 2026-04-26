@@ -2,7 +2,7 @@
 
 /**
  * EnhancedMoon - Luna mejorada con fases y eclipses
- * Integrada con nuestro sistema lunar avanzado
+ * Integrada con nuestro sistema lunar avanzado y optimizaciones para mobile
  */
 
 import { useRef, useMemo } from 'react'
@@ -13,8 +13,7 @@ import { getAssetPath } from '@/lib/paths'
 
 interface EnhancedMoonProps {
   lunarState?: {
-    phase: 'new' | 'waxing_crescent' | 'first_quarter' | 'waxing_gibbous' | 
-           'full' | 'waning_gibbous' | 'last_quarter' | 'waning_crescent'
+    phase: string
     illumination: number // 0-1
     position: { x: number, y: number, z: number }
     angularSize: number // grados
@@ -35,131 +34,159 @@ export default function EnhancedMoon({
   visible = true 
 }: EnhancedMoonProps) {
   const moonRef = useRef<THREE.Mesh>(null)
+  const halo1Ref = useRef<THREE.Mesh>(null)
+  const halo2Ref = useRef<THREE.Mesh>(null)
+  
   const moonTexture = useTexture(getAssetPath('/textures/2k_moon.jpg'))
   
-  // Calcular posición y tamaño de la luna
-  const { position, scale, color } = useMemo(() => {
+  const { position, scale, sunDir } = useMemo(() => {
+    const sDir = new THREE.Vector3(solarDirection.x, solarDirection.y, solarDirection.z).normalize()
+    
     if (!lunarState) {
       return { 
-        position: [30, 10, 30] as [number, number, number], 
+        position: new THREE.Vector3(30, 10, 30), 
         scale: 1, 
-        color: '#ffffff' 
+        sunDir: sDir
       }
     }
     
-    // Posición escalada para visualización
-    const pos: [number, number, number] = [
+    const pos = new THREE.Vector3(
       lunarState.position.x * 50,
-      lunarState.position.y * 50 + 15, // Elevar un poco
+      lunarState.position.y * 50 + 15,
       lunarState.position.z * 50
-    ]
+    )
     
-    // Tamaño basado en distancia (tamaño angular)
     const baseScale = 2
-    const sizeScale = baseScale * (lunarState.angularSize / 0.5) // 0.5° es el tamaño promedio
+    const sizeScale = baseScale * (lunarState.angularSize / 0.5)
     
-    // Color según eclipse
-    let moonColor = '#ffffff'
-    if (eclipse && eclipse.type === 'lunar' && eclipse.magnitude > 0) {
-      // Eclipse lunar - luna rojiza
-      const redness = Math.min(eclipse.magnitude, 1)
-      moonColor = `rgb(${255}, ${Math.floor(255 * (1 - redness * 0.7))}, ${Math.floor(255 * (1 - redness * 0.8))})`
-    }
-    
-    return { position: pos, scale: sizeScale, color: moonColor }
-  }, [lunarState, eclipse])
+    return { position: pos, scale: sizeScale, sunDir: sDir }
+  }, [lunarState, solarDirection])
   
-  // Shader para fases lunares
+  // Shader de Luna con Terminador Realista
   const moonMaterial = useMemo(() => {
-    const illumination = lunarState?.illumination || 0.5
-    
     return new THREE.ShaderMaterial({
       uniforms: {
         moonTexture: { value: moonTexture },
-        illumination: { value: illumination },
-        sunDirection: { value: new THREE.Vector3(solarDirection.x, solarDirection.y, solarDirection.z) },
+        sunDirection: { value: sunDir },
         eclipseMagnitude: { value: eclipse?.magnitude || 0 },
         time: { value: 0 }
       },
       vertexShader: `
         varying vec2 vUv;
         varying vec3 vNormal;
-        varying vec3 vPosition;
+        varying vec3 vViewPosition;
+        varying vec3 vWorldNormal;
         
         void main() {
           vUv = uv;
           vNormal = normalize(normalMatrix * normal);
-          vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          vViewPosition = -mvPosition.xyz;
+          gl_Position = projectionMatrix * mvPosition;
         }
       `,
       fragmentShader: `
         uniform sampler2D moonTexture;
-        uniform float illumination;
         uniform vec3 sunDirection;
         uniform float eclipseMagnitude;
         uniform float time;
         
         varying vec2 vUv;
         varying vec3 vNormal;
-        varying vec3 vPosition;
+        varying vec3 vWorldNormal;
         
         void main() {
-          vec4 moonColor = texture2D(moonTexture, vUv);
+          vec4 texColor = texture2D(moonTexture, vUv);
           
-          // Calcular iluminación de fase lunar
-          float phase = illumination;
-          float terminator = (vUv.x - 0.5) * 2.0; // -1 a 1
-          float phaseEdge = (phase - 0.5) * 2.0; // -1 a 1
+          // Terminador realista: dot product entre normal de la superficie y dirección del sol
+          // Invertimos sunDirection porque es la dirección HACIA el sol
+          float NdotL = dot(vWorldNormal, sunDirection);
           
-          float brightness = 1.0;
-          if (phase < 0.5) {
-            // Fases menguantes
-            brightness = step(terminator, phaseEdge);
-          } else {
-            // Fases crecientes
-            brightness = step(phaseEdge, terminator);
-          }
+          // Suavizado del terminador para realismo
+          float terminator = smoothstep(-0.05, 0.05, NdotL);
           
-          // Eclipse lunar
+          // Luz cenicienta (Earthshine) - luz sutil en la parte oscura
+          float earthshine = 0.05;
+          float finalLighting = max(terminator, earthshine);
+          
+          vec3 finalColor = texColor.rgb * finalLighting;
+          
+          // Efecto de Eclipse Lunar
           if (eclipseMagnitude > 0.0) {
-            float eclipseEffect = 1.0 - eclipseMagnitude * 0.8;
-            brightness *= eclipseEffect;
-            // Tinte rojizo durante eclipse
-            moonColor.r *= 1.0 + eclipseMagnitude * 0.3;
-            moonColor.g *= 1.0 - eclipseMagnitude * 0.4;
-            moonColor.b *= 1.0 - eclipseMagnitude * 0.5;
+            vec3 bloodMoon = vec3(0.6, 0.2, 0.1);
+            finalColor = mix(finalColor, finalColor * bloodMoon * 2.0, eclipseMagnitude);
           }
           
-          // Brillo sutil
-          float glow = 1.0 + sin(time * 2.0) * 0.1;
-          
-          gl_FragColor = vec4(moonColor.rgb * brightness * glow, moonColor.a);
+          gl_FragColor = vec4(finalColor, 1.0);
+        }
+      `
+    })
+  }, [moonTexture, sunDir, eclipse?.magnitude])
+
+  // Shader para Halo Lunar (Dispersión Atmosférica)
+  const createHaloMaterial = (opacity: number) => {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        color: { value: new THREE.Color('#ffffff') },
+        opacity: { value: opacity }
+      },
+      vertexShader: `
+        varying vec3 vNormal;
+        void main() {
+          vNormal = normalize(normalMatrix * normal);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
-      transparent: true
+      fragmentShader: `
+        varying vec3 vNormal;
+        uniform vec3 color;
+        uniform float opacity;
+        void main() {
+          float intensity = pow(0.6 - dot(vNormal, vec3(0, 0, 1.0)), 2.0);
+          gl_FragColor = vec4(color, intensity * opacity);
+        }
+      `,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
+      depthWrite: false
     })
-  }, [moonTexture, lunarState?.illumination, solarDirection, eclipse?.magnitude])
-  
-  // Actualizar uniforms
+  }
+
+  const halo1Mat = useMemo(() => createHaloMaterial(0.06), [])
+  const halo2Mat = useMemo(() => createHaloMaterial(0.03), [])
+
   useFrame((state) => {
     if (moonMaterial.uniforms) {
       moonMaterial.uniforms.time.value = state.clock.elapsedTime
-      moonMaterial.uniforms.illumination.value = lunarState?.illumination || 0.5
-      moonMaterial.uniforms.eclipseMagnitude.value = eclipse?.magnitude || 0
+      moonMaterial.uniforms.sunDirection.value.copy(sunDir)
     }
+    // Orientar halos hacia la cámara
+    if (halo1Ref.current) halo1Ref.current.lookAt(state.camera.position)
+    if (halo2Ref.current) halo2Ref.current.lookAt(state.camera.position)
   })
   
   if (!visible || !lunarState) return null
   
   return (
-    <mesh
-      ref={moonRef}
-      position={position}
-      scale={scale}
-      material={moonMaterial}
-    >
-      <sphereGeometry args={[1, 32, 32]} />
-    </mesh>
+    <group position={position} scale={scale}>
+      {/* Cuerpo Lunar */}
+      <mesh ref={moonRef} material={moonMaterial}>
+        <sphereGeometry args={[1, 64, 64]} />
+      </mesh>
+      
+      {/* Halo Lunar Capa 1 (Cercana) */}
+      <mesh ref={halo1Ref} scale={1.2}>
+        <planeGeometry args={[2.5, 2.5]} />
+        <primitive object={halo1Mat} attach="material" />
+      </mesh>
+      
+      {/* Halo Lunar Capa 2 (Extendida) */}
+      <mesh ref={halo2Ref} scale={1.5}>
+        <planeGeometry args={[3, 3]} />
+        <primitive object={halo2Mat} attach="material" />
+      </mesh>
+    </group>
   )
 }

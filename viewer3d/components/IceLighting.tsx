@@ -50,7 +50,7 @@ export default function IceLighting({
       />
       
       {/* Luz ambiental azulada */}
-      <ambientLight color="#c8e0f0" intensity={0.8} />
+      <ambientLight color="#c8e0f0" intensity={0.65} />
       
       {/* Luz de relleno para reducir sombras duras */}
       <directionalLight

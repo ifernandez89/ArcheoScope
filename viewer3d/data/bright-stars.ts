@@ -35,7 +35,7 @@ export const BRIGHT_STARS: StarData[] = [
   { ra: 12.448, dec: -63.099, mag:  0.77, type: 'B', name: 'Mimosa' },
   { ra: 12.519, dec: -57.113, mag:  1.58, type: 'B', name: 'Acrux' },
   { ra: 16.490, dec: -26.432, mag:  1.06, type: 'M', name: 'Antares' },
-  { ra: 15.737, dec: 26.715,  mag:  2.23, type: 'A', name: 'Alphecca' },
+  { ra: 15.578, dec: 26.715,  mag:  2.23, type: 'A', name: 'Alphecca' },  // Corona Borealis
   { ra: 2.530,  dec: 89.264,  mag:  1.97, type: 'F', name: 'Polaris' },
 
   // Orión

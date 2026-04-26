@@ -19,7 +19,9 @@ interface WalkableAvatarProps {
   disableShiftFlight?: boolean  // Deshabilitar vuelo libre con Shift (para escena constelaciones)
   initialPosition?: [number, number, number]
   abilityActive?: boolean
-  currentUfo?: number // Número de UFO actual
+  currentUfo?: number
+  speedMultiplier?: number  // Multiplicador de velocidad (1.0 = normal, 1.1 = +10%)
+  flyingHeightOverride?: number  // Altura de vuelo personalizada (default: 10) // Número de UFO actual
 }
 
 // Detectar tipo de avatar según el path
@@ -40,10 +42,12 @@ export default function WalkableAvatar({
   isDay = true,
   showCosmicEffects = true,
   disableCameraControl = false,
-  disableShiftFlight = false,  // Por defecto Shift activa vuelo libre
+  disableShiftFlight = false,
   initialPosition = [0, 0, 0],
   abilityActive = false,
-  currentUfo = 1
+  currentUfo = 1,
+  speedMultiplier = 1.0,
+  flyingHeightOverride,
 }: WalkableAvatarProps) {
   const group = useRef<THREE.Group>(null)
   const modelRef = useRef<THREE.Group>(null) // Ref para el modelo interno (solo para rotación)
@@ -108,7 +112,7 @@ export default function WalkableAvatar({
   const jumpForce = 10.0  // Aumentado para salto más visible
   const gravity = -25.0  // Aumentado para caída más natural
   const groundLevel = useRef(0)  // Nivel del suelo
-  const flyingHeight = 10.0  // Altura de vuelo para el OVNI (2x la original)
+  const flyingHeight = flyingHeightOverride ?? 10.0  // Altura de vuelo para el OVNI
   
   // Resetear avatar al cambiar modelo
   useEffect(() => {
@@ -444,7 +448,7 @@ export default function WalkableAvatar({
       reusableVectors.moveDirection.normalize()
       
       // 🚀 UFO 3: Velocidad x2 cuando la habilidad está activa
-      const currentMoveSpeed = (currentUfo === 3 && abilityActive) ? moveSpeed * 2.5 : moveSpeed
+      const currentMoveSpeed = (currentUfo === 3 && abilityActive) ? moveSpeed * 2.5 : moveSpeed * speedMultiplier
       
       velocity.current.copy(reusableVectors.moveDirection.multiplyScalar(currentMoveSpeed * delta))
       group.current.position.add(velocity.current)

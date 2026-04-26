@@ -821,7 +821,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // Efecto de sacudida universal al activar cualquier habilidad
     setIsShaking(true)
     setTimeout(() => setIsShaking(false), 500)
-    // Solo depende de currentUfo y abilityCooldown — site/location se leen por ref
+    // Solo depende de currentUfo and abilityCooldown — site/location se leen por ref
   }, [currentUfo, abilityCooldown])
 
   // 🐍 Estado del diálogo de Quetzalcoatl
@@ -1484,7 +1484,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
               fontSize: '14px',
               marginTop: '10px'
             }}>
-              ðŸ“ Lat: {selectedLocation.lat.toFixed(4)}Â° | Lon: {selectedLocation.lon.toFixed(4)}Â°
+              ðŸ“  Lat: {selectedLocation.lat.toFixed(4)}Â° | Lon: {selectedLocation.lon.toFixed(4)}Â°
             </div>
           )}
           {selectedSite && (
@@ -1531,7 +1531,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(102, 126, 234, 1)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(102, 126, 234, 0.9)'}
           >
-            ðŸŒ Volver al Globo
+            ðŸŒ  Volver al Globo
           </button>
 
           {/* BotÃ³n para mostrar/ocultar informaciÃ³n de ubicaciÃ³n */}
@@ -1563,7 +1563,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
                 : 'rgba(75, 85, 99, 0.7)'
             }}
           >
-            ðŸ“ {showLocationInfo ? 'Ocultar Info' : 'Mostrar Info'}
+            ðŸ“  {showLocationInfo ? 'Ocultar Info' : 'Mostrar Info'}
           </button>
 
 
@@ -2471,9 +2471,9 @@ function ModelScene({
     if (typeof window === 'undefined') return gfx.pixelRatio
     // Detectar mobile síncronamente para el cálculo inicial
     const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768
-    // En mobile, limitar a 1.2 máximo (ahorra GPU sin pérdida visual notable en pantallas pequeñas)
+    // En mobile, limitar a 1.5 máximo (ahorra GPU sin pérdida visual notable en pantallas pequeñas)
     if (mobile) {
-      return Math.min(window.devicePixelRatio, 1.2)
+      return Math.min(window.devicePixelRatio, 1.5)
     }
     // En PC, usar el preset o devicePixelRatio según calidad
     return graphicsPreset === 'ULTRA' ? window.devicePixelRatio : gfx.pixelRatio

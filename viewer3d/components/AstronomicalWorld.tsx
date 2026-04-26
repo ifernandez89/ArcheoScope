@@ -214,7 +214,7 @@ export default function AstronomicalWorld({
     cachedLights.current.directional.forEach(light => {
       light.position.lerp(sunPos, 0.01)
       light.color.lerp(seasonalState.lightColor, 0.005)
-      const baseIntensity = solarState.isDay ? 2.5 : 0.3
+      const baseIntensity = solarState.isDay ? 2.5 : 0.65
       const targetIntensity = baseIntensity + motionState.atmosphericPulse
       light.intensity += (targetIntensity - light.intensity) * 0.01
     })
