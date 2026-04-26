@@ -15,7 +15,7 @@
  */
 
 import { Suspense, useEffect, useMemo, useState, useRef } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { PerspectiveCamera, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
@@ -90,31 +90,6 @@ function DesertFloor() {
   )
 }
 
-// ─── Pitch de cámara por mouse (sin Shift) — exclusivo constelaciones ────────
-// El mouse Y controla hacia dónde mira la cámara: arriba/abajo
-function MousePitchCamera() {
-  const { camera } = useThree()
-  const mouseY = useRef(0)
-
-  useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      // Normalizar: 0 = centro, -1 = arriba, +1 = abajo
-      mouseY.current = (e.clientY / window.innerHeight) * 2 - 1
-    }
-    window.addEventListener('mousemove', onMouseMove)
-    return () => window.removeEventListener('mousemove', onMouseMove)
-  }, [])
-
-  useFrame(() => {
-    // Mapear mouseY a pitch: arriba del centro → mirar arriba, abajo → mirar abajo
-    // Rango: -60° (arriba) a +30° (abajo)
-    const targetPitch = mouseY.current * (Math.PI / 3)
-    camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, -targetPitch, 0.05)
-  })
-
-  return null
-}
-
 // ─── Contenido 3D ────────────────────────────────────────────────────────────
 function SkyContent({
   heading,
@@ -164,9 +139,6 @@ function SkyContent({
         initialPosition={[0, 30, 0]}
         disableShiftFlight={true}
       />
-
-      {/* Mirar arriba/abajo con mouse (sin Shift) — exclusivo constelaciones */}
-      <MousePitchCamera />
 
       {/* Rastreador de brújula */}
       {onCameraRotation && <CompassTracker onRotationChange={onCameraRotation} />}
