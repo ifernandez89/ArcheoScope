@@ -15,7 +15,7 @@
  */
 
 import { Suspense, useEffect, useMemo, useState, useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas } from '@react-three/fiber'
 import { PerspectiveCamera, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
@@ -27,24 +27,6 @@ const MobileTouchControls = dynamic(() => import('./MobileTouchControls'), { ssr
 const Compass = dynamic(() => import('./Compass'), { ssr: false })
 const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
 const AmbientAudio = dynamic(() => import('./AmbientAudio'), { ssr: false })
-
-// ─── Sky rotator: rota las estrellas según compass heading del dispositivo ───
-function SkyRotator({ heading }: { heading: number }) {
-  const groupRef = useRef<THREE.Group>(null)
-
-  useFrame(() => {
-    if (!groupRef.current) return
-    // Rotar suavemente hacia el heading del dispositivo
-    const targetY = THREE.MathUtils.degToRad(-heading)
-    groupRef.current.rotation.y += (targetY - groupRef.current.rotation.y) * 0.05
-  })
-
-  return (
-    <group ref={groupRef}>
-      <Stars />
-    </group>
-  )
-}
 
 // ─── Luna visible con textura real e iluminación farol ───────────────────────
 function DesertMoon({ moonTexture }: { moonTexture: THREE.Texture }) {
@@ -92,10 +74,8 @@ function DesertFloor() {
 
 // ─── Contenido 3D ────────────────────────────────────────────────────────────
 function SkyContent({
-  heading,
   onCameraRotation
 }: {
-  heading: number
   onCameraRotation?: (rotation: number) => void
 }) {
   // Cargar textura de luna al nivel del componente R3F (dentro del Canvas)
@@ -119,8 +99,8 @@ function SkyContent({
 
   return (
     <>
-      {/* Estrellas rotadas según compass heading del dispositivo */}
-      <SkyRotator heading={heading} />
+      {/* Estrellas fijas — sin rotación automática */}
+      <Stars />
 
       {/* Luna con textura real */}
       <DesertMoon moonTexture={moonTexture} />
@@ -159,71 +139,7 @@ export default function ConstellationsScene() {
     typeof window !== 'undefined' &&
     (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
   )
-  const [compassHeading, setCompassHeading] = useState(0)
-  const [deviceHeading, setDeviceHeading] = useState(0)
   const [cameraRotation, setCameraRotation] = useState(0)
-  const [orientationGranted, setOrientationGranted] = useState(false)
-
-  // ─── Device Orientation (mobile compass) ─────────────────────────────────
-  useEffect(() => {
-    if (!isMobile) return
-
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      if (e.alpha !== null) {
-        setDeviceHeading(e.alpha)
-      }
-    }
-
-    // Intentar pedir permiso (iOS)
-    const requestPermission = async () => {
-      try {
-        const DOE = DeviceOrientationEvent as any
-        if (typeof DOE.requestPermission === 'function') {
-          const permission = await DOE.requestPermission()
-          if (permission === 'granted') {
-            setOrientationGranted(true)
-            window.addEventListener('deviceorientationabsolute', handleOrientation as any)
-            window.addEventListener('deviceorientation', handleOrientation)
-          }
-        } else {
-          // Android: no necesita permiso
-          setOrientationGranted(true)
-          window.addEventListener('deviceorientationabsolute', handleOrientation as any)
-          window.addEventListener('deviceorientation', handleOrientation)
-        }
-      } catch {
-        // Fallback: intentar sin permiso
-        window.addEventListener('deviceorientation', handleOrientation)
-      }
-    }
-
-    // Activar con primer toque (requerido por iOS)
-    const activateOnTouch = () => {
-      requestPermission()
-      window.removeEventListener('touchstart', activateOnTouch)
-    }
-    window.addEventListener('touchstart', activateOnTouch, { once: true })
-    // También intentar directamente (Android)
-    requestPermission()
-
-    return () => {
-      window.removeEventListener('deviceorientationabsolute', handleOrientation as any)
-      window.removeEventListener('deviceorientation', handleOrientation)
-      window.removeEventListener('touchstart', activateOnTouch)
-    }
-  }, [isMobile])
-
-  // ─── PC: tecla N centra norte ────────────────────────────────────────────
-  useEffect(() => {
-    if (isMobile) return
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'n' || e.key === 'N') {
-        setDeviceHeading(0)
-      }
-    }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
-  }, [isMobile])
 
   // Landscape lock en mobile
   useEffect(() => {
@@ -262,10 +178,7 @@ export default function ConstellationsScene() {
       >
         <PerspectiveCamera makeDefault position={[0, 30, 10]} fov={60} far={20000} />
         <Suspense fallback={null}>
-          <SkyContent
-            heading={deviceHeading}
-            onCameraRotation={setCameraRotation}
-          />
+          <SkyContent onCameraRotation={setCameraRotation} />
         </Suspense>
       </Canvas>
 
