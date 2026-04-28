@@ -512,20 +512,12 @@ function InfoContent() {
             text: "Calculadora astrológica integrada accesible desde el menú principal. Determina el signo solar por fecha de nacimiento, el signo lunar aproximado basado en el ciclo sinódico de 29.53 días, y la fase lunar actual (Nueva, Creciente, Llena, Menguante, Balsámica). Muestra la rueda zodiacal completa con los 12 signos, sus elementos (Fuego, Tierra, Aire, Agua), planetas regentes, cualidades (Cardinal, Fijo, Mutable) y los 7 cuerpos celestes principales con su significado arquetípico. Selector de fecha para consultar cualquier momento.",
           },
           {
-            icon: "🌀",
-            title: "Cholq'ij — Calendario Sagrado Maya",
+            icon: "🗓️",
+            title: "Sección de Calendarios",
             color: "#fbbf24",
             border: "rgba(251, 191, 36, 0.3)",
             bg: "rgba(251, 191, 36, 0.06)",
-            text: "El Cholq'ij es el calendario sagrado de 260 días usado por los mayas hasta hoy. Se compone de 13 números (intensidad espiritual) × 20 nawales (fuerzas vivas del universo). Cada nawal es un principio espiritual activo: Ajpu → Sol y sabiduría, B'atz' → creatividad y destino, Kawoq → comunidad y lluvia, Imox → agua e inconsciente. Los números indican el grado de desarrollo: 1 inicio, 5 poder, 7 equilibrio, 9 intención espiritual, 13 culminación. El Tzolk'in Clásico usa correlación GMT (584283) — estándar arqueológico verificado: 21 dic 2012 = 4 Ahau. El tiempo no es abstracto en la visión maya: cada día tiene espíritu. Los ajq'ijab' (guardianes del calendario) dicen que \"los días hablan\". El Cholq'ij se usa para elegir días de rituales, ceremonias de protección y agradecimiento, y para interpretar el destino personal de cada persona según su día de nacimiento.",
-          },
-          {
-            icon: "⚡",
-            title: "Calendario Babilónico — Sistema Sexagesimal",
-            color: "#38bdf8",
-            border: "rgba(56, 189, 248, 0.3)",
-            bg: "rgba(56, 189, 248, 0.06)",
-            text: "El sistema de base 60 inventado en Mesopotamia (~3000 a.C.) que heredamos para medir el tiempo (60 min/hora, 60 seg/min), los ángulos (360°) y las coordenadas celestes (RA/Dec en horas·minutos·segundos). El calendario babilónico tenía 6 ciclos de 60 días = 360 días, cada uno presidido por una deidad planetaria: Shamash (Sol), Sin (Luna), Nergal (Marte), Nabu (Mercurio), Marduk (Júpiter), Ishtar (Venus). Incluye las 5 estrellas babilónicas principales con sus coordenadas RA/Dec reales en formato sexagesimal, la hora actual en unidades babilónicas (Beru, Uš, Ninda) y una tabla de la herencia del sistema en la ciencia moderna.",
+            text: "Archeoscope incluye una sección dedicada a tres sistemas calendáricos de distintas civilizaciones. Cada uno tiene su propia calculadora interactiva con selector de fecha. Accesible desde el menú principal → Calendarios.",
           },
           {
             icon: "📱",

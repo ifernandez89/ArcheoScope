@@ -117,13 +117,13 @@ export default function MenuPage() {
     { label: 'Información', path: '/menu/info', action: null }
   ]
 
-  // Mobile DEMO: solo info + 3D Solar System (sin juego completo)
+  // Mobile DEMO: Controles, Constelaciones, Astrología, Calendarios, Clima, Información, 3D Solar System
   const mobileOptions = [
-    { label: 'Audio', path: '/menu/audio', action: null },
     { label: 'Controles', path: '/menu/controls', action: null },
     { label: 'Constelaciones', path: '/constellations', action: null },
     { label: 'Astrología', path: '/menu/astrology', action: null },
     { label: 'Calendarios', path: '/menu/calendarios', action: null },
+    { label: 'Clima Local', path: '/menu/weather', action: null },
     { label: 'Información', path: '/menu/info', action: null },
     { label: '3D Solar System', path: '/mobile-solar', action: null },
   ]

@@ -110,35 +110,6 @@ export default function ControlsPage() {
                 <div style={rowStyle}><span style={labelStyle}>Tap en planeta</span><span>Ver info / Viajar</span></div>
               </div>
             </div>
-
-            {/* Interacción */}
-            <div style={sectionStyle(true)}>
-              <h2 style={h2Style('#ec4899', true)}>
-                <span>🖱️</span> Interacción
-              </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '15px' }}>
-                <div style={rowStyle}><span style={labelStyle}>Tap en objeto</span><span>Interactuar / Recoger</span></div>
-                <div style={rowStyle}><span style={labelStyle}>Tap en NPC</span><span>Hablar</span></div>
-                <div style={rowStyle}><span style={labelStyle}>Botón ☰</span><span>Menú</span></div>
-              </div>
-            </div>
-
-            {/* Cómo Jugar */}
-            <div style={{
-              background: 'rgba(102, 126, 234, 0.08)',
-              padding: '16px', borderRadius: '8px',
-              border: '1px solid rgba(102, 126, 234, 0.3)'
-            }}>
-              <h2 style={h2Style('#a78bfa', true)}>
-                <span>🎮</span> Cómo Jugar
-              </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', lineHeight: '1.5' }}>
-                <p style={{ color: '#ccc', margin: 0 }}>🌍 Explora el sistema solar y viaja a la Tierra.</p>
-                <p style={{ color: '#ccc', margin: 0 }}>🗿 Toca los NPCs para interactuar con ellos.</p>
-                <p style={{ color: '#ccc', margin: 0 }}>📦 Recoge objetos sagrados y completa misiones.</p>
-                <p style={{ color: '#ccc', margin: 0 }}>⚠️ Cuidado: algunas acciones son irreversibles.</p>
-              </div>
-            </div>
           </>
         ) : (
           <>
