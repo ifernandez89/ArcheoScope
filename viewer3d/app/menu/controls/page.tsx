@@ -102,12 +102,24 @@ export default function ControlsPage() {
             {/* Navegación Espacial */}
             <div style={sectionStyle(true)}>
               <h2 style={h2Style('#8b5cf6', true)}>
-                <span>🌌</span> Navegación Espacial
+                <span>🌌</span> 3D Solar System
               </h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '15px' }}>
                 <div style={rowStyle}><span style={labelStyle}>1 dedo + arrastrar</span><span>Rotar cámara</span></div>
-                <div style={rowStyle}><span style={labelStyle}>2 dedos + pinza</span><span>Zoom</span></div>
-                <div style={rowStyle}><span style={labelStyle}>Tap en planeta</span><span>Ver info / Viajar</span></div>
+                <div style={rowStyle}><span style={labelStyle}>2 dedos + pinza</span><span>Zoom in/out</span></div>
+                <div style={rowStyle}><span style={labelStyle}>Nave</span><span>Sigue el dedo en pantalla</span></div>
+              </div>
+            </div>
+
+            {/* Constelaciones mobile */}
+            <div style={sectionStyle(true)}>
+              <h2 style={h2Style('#a78bfa', true)}>
+                <span>✦</span> Constelaciones
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '15px' }}>
+                <div style={rowStyle}><span style={labelStyle}>▲ / ▼ / ◀ / ▶</span><span>Mover nave</span></div>
+                <div style={rowStyle}><span style={labelStyle}>↺ / ↻</span><span>Rotar nave</span></div>
+                <div style={rowStyle}><span style={labelStyle}>Zona izquierda ↑↓</span><span>Inclinar cielo (ver arriba/abajo)</span></div>
               </div>
             </div>
           </>
@@ -163,6 +175,27 @@ export default function ControlsPage() {
                 <div style={rowStyle}><span style={labelStyle}>SHIFT + MOUSE UP</span><span>Vuelo hacia arriba</span></div>
                 <div style={rowStyle}><span style={labelStyle}>SHIFT + MOUSE DOWN</span><span>Vuelo hacia abajo</span></div>
                 <div style={rowStyle}><span style={labelStyle}>BARRA ESPACIADORA</span><span>Habilidad Espacial</span></div>
+              </div>
+            </div>
+
+            {/* 3D Solar System PC */}
+            <div style={sectionStyle(false)}>
+              <h2 style={h2Style('#8b5cf6', false)}><span>🌌</span> 3D Solar System</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '19px' }}>
+                <div style={rowStyle}><span style={labelStyle}>Click Izq + Arrastrar</span><span>Rotar cámara</span></div>
+                <div style={rowStyle}><span style={labelStyle}>Scroll</span><span>Zoom in/out</span></div>
+                <div style={rowStyle}><span style={labelStyle}>Mouse</span><span>Nave sigue el cursor</span></div>
+              </div>
+            </div>
+
+            {/* Constelaciones PC */}
+            <div style={sectionStyle(false)}>
+              <h2 style={h2Style('#a78bfa', false)}><span>✦</span> Constelaciones</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '19px' }}>
+                <div style={rowStyle}><span style={labelStyle}>W / A / S / D</span><span>Mover nave</span></div>
+                <div style={rowStyle}><span style={labelStyle}>Q / E</span><span>Rotar nave</span></div>
+                <div style={rowStyle}><span style={labelStyle}>SHIFT + Mouse</span><span>Vuelo libre (arriba/abajo)</span></div>
+                <div style={rowStyle}><span style={labelStyle}>Rueda del mouse</span><span>Inclinar cielo (ver constelaciones arriba)</span></div>
               </div>
             </div>
 
