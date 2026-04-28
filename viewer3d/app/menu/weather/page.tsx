@@ -16,6 +16,9 @@ interface WeatherData {
   moonEmoji: string
   lat: number
   lon: number
+  sunrise: string   // HH:MM local
+  sunset: string    // HH:MM local
+  dayLength: string // horas y minutos
 }
 
 // ─── Fase lunar (algoritmo preciso) ──────────────────────────────────────────
@@ -113,7 +116,7 @@ export default function WeatherPage() {
             `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
             `&current=temperature_2m,relative_humidity_2m,apparent_temperature,` +
             `wind_speed_10m,weather_code,precipitation_probability` +
-            `&wind_speed_unit=kmh&timezone=auto`
+            `&daily=sunrise,sunset&wind_speed_unit=kmh&timezone=auto`
           )
           const d = await res.json()
           const c = d.current
@@ -130,6 +133,25 @@ export default function WeatherPage() {
             country = gd.address?.country || ''
           } catch {}
 
+          // Procesar amanecer/atardecer
+          const sunriseRaw: string = d.daily?.sunrise?.[0] || ''
+          const sunsetRaw: string = d.daily?.sunset?.[0] || ''
+          const fmtTime = (iso: string) => {
+            if (!iso) return '--:--'
+            const t = new Date(iso)
+            return t.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+          }
+          const sunrise = fmtTime(sunriseRaw)
+          const sunset = fmtTime(sunsetRaw)
+          // Duración del día
+          let dayLength = '--'
+          if (sunriseRaw && sunsetRaw) {
+            const mins = Math.round((new Date(sunsetRaw).getTime() - new Date(sunriseRaw).getTime()) / 60000)
+            const h = Math.floor(mins / 60)
+            const m = mins % 60
+            dayLength = `${h}h ${m}m`
+          }
+
           const data: WeatherData = {
             temp: Math.round(c.temperature_2m),
             feelsLike: Math.round(c.apparent_temperature),
@@ -141,6 +163,7 @@ export default function WeatherPage() {
             moonPhase: moon.phase,
             moonEmoji: moon.emoji,
             lat, lon,
+            sunrise, sunset, dayLength,
           }
           localStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() }))
           setWeather(data)
@@ -263,6 +286,33 @@ export default function WeatherPage() {
                 background: `linear-gradient(90deg, #34d399, ${getRainColor(weather.rainProbability)})`,
                 borderRadius: '3px', transition: 'width 1s ease'
               }} />
+            </div>
+          </div>
+
+          {/* Sunrise / Sunset card */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(251,146,60,0.08), rgba(251,191,36,0.04))',
+            border: '1px solid rgba(251,146,60,0.2)',
+            borderRadius: '14px', padding: '16px',
+          }}>
+            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '12px', textAlign: 'center' }}>
+              AMANECER · ATARDECER
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>🌅</div>
+                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '2px' }}>AMANECER</div>
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fb923c' }}>{weather.sunrise}</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>DÍA</div>
+                <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'rgba(255,255,255,0.6)', marginTop: '2px' }}>{weather.dayLength}</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>🌇</div>
+                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '2px' }}>ATARDECER</div>
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#a78bfa' }}>{weather.sunset}</div>
+              </div>
             </div>
           </div>
 
