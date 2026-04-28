@@ -15,7 +15,7 @@
  */
 
 import { Suspense, useEffect, useMemo, useState, useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { PerspectiveCamera, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
@@ -215,10 +215,26 @@ function DesertVegetation() {
     </>
   )
 }
+// ─── Pitch de cámara controlado por touch (zona izquierda de pantalla) ────────
+function TouchPitchCamera({ pitchRef }: { pitchRef: React.RefObject<number> }) {
+  const { camera } = useThree()
+
+  useFrame(() => {
+    const pitch = pitchRef.current ?? 0
+    if (Math.abs(pitch) > 0.001) {
+      camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, -pitch, 0.08)
+    }
+  })
+
+  return null
+}
+
 function SkyContent({
-  onCameraRotation
+  onCameraRotation,
+  pitchRef
 }: {
   onCameraRotation?: (rotation: number) => void
+  pitchRef: React.RefObject<number>
 }) {
   // Cargar textura de luna al nivel del componente R3F (dentro del Canvas)
   const moonTexture = useTexture(getAssetPath('/textures/beautiful-glowing-gray-full-moon.jpg'))
@@ -276,6 +292,9 @@ function SkyContent({
       {/* Rastreador de brújula */}
       {onCameraRotation && <CompassTracker onRotationChange={onCameraRotation} />}
 
+      {/* Pitch de cámara por touch (zona izquierda) */}
+      <TouchPitchCamera pitchRef={pitchRef} />
+
       {/* Audio: viento ligero + drone atmosférico */}
       <AmbientAudio />
 
@@ -293,6 +312,38 @@ export default function ConstellationsScene() {
     (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
   )
   const [cameraRotation, setCameraRotation] = useState(0)
+
+  // Pitch controlado por zona táctil izquierda (mobile)
+  const pitchRef = useRef(0)
+  const touchStartY = useRef(0)
+  const touchActive = useRef(false)
+
+  // Handlers para zona táctil izquierda
+  const handlePitchTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    // Solo activar si el toque está en la mitad izquierda de la pantalla
+    if (touch.clientX < window.innerWidth * 0.4) {
+      touchStartY.current = touch.clientY
+      touchActive.current = true
+      e.preventDefault()
+    }
+  }
+  const handlePitchTouchMove = (e: React.TouchEvent) => {
+    if (!touchActive.current) return
+    const touch = e.touches[0]
+    const deltaY = touchStartY.current - touch.clientY
+    // Mapear delta a pitch: arriba = positivo (mirar arriba), abajo = negativo
+    pitchRef.current = THREE.MathUtils.clamp(
+      deltaY * 0.005,
+      -Math.PI / 2.2,  // máximo abajo
+      Math.PI / 2.2    // máximo arriba (~80°)
+    )
+    e.preventDefault()
+  }
+  const handlePitchTouchEnd = () => {
+    touchActive.current = false
+    // No resetear pitch — mantener donde quedó
+  }
 
   // Landscape lock en mobile
   useEffect(() => {
@@ -331,12 +382,43 @@ export default function ConstellationsScene() {
       >
         <PerspectiveCamera makeDefault position={[0, 20, 10]} fov={60} far={20000} />
         <Suspense fallback={null}>
-          <SkyContent onCameraRotation={setCameraRotation} />
+          <SkyContent onCameraRotation={setCameraRotation} pitchRef={pitchRef} />
         </Suspense>
       </Canvas>
 
       {/* Brújula */}
       <Compass rotation={cameraRotation} />
+
+      {/* Mobile: zona táctil izquierda para pitch (mirar arriba/abajo) */}
+      {isMobile && (
+        <div
+          onTouchStart={handlePitchTouchStart}
+          onTouchMove={handlePitchTouchMove}
+          onTouchEnd={handlePitchTouchEnd}
+          onTouchCancel={handlePitchTouchEnd}
+          style={{
+            position: 'fixed',
+            top: 0, left: 0,
+            width: '40%', height: '100%',
+            zIndex: 500,
+            touchAction: 'none',
+            // Indicador visual sutil
+            background: 'linear-gradient(90deg, rgba(167,139,250,0.04) 0%, transparent 100%)',
+          }}
+        >
+          {/* Hint visual */}
+          <div style={{
+            position: 'absolute', top: '50%', left: '12px',
+            transform: 'translateY(-50%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+            opacity: 0.25, pointerEvents: 'none',
+          }}>
+            <span style={{ fontSize: '14px', color: '#a78bfa' }}>▲</span>
+            <span style={{ fontSize: '9px', color: '#a78bfa', letterSpacing: '1px' }}>VISTA</span>
+            <span style={{ fontSize: '14px', color: '#a78bfa' }}>▼</span>
+          </div>
+        </div>
+      )}
 
       {/* Mobile: D-pad touch controls — touchAction auto para no bloquear toques */}
       {isMobile && (

@@ -32,69 +32,48 @@ const PLANETS_META = [
   { id: 'pluto',   name: 'Plutón',   glyph: '♇', color: '#dc2626', speed: 0.0040 },
 ]
 
-// ─── MOTOR ASTRONÓMICO SIMPLIFICADO ──────────────────────────────────────────
+// ─── MOTOR ASTRONÓMICO — astronomy-engine (VSOP87/ELP, precisión ~1 arcmin) ──
+import * as Astronomy from 'astronomy-engine'
+
 function getPlanetPositions(date: Date) {
-  const jd = (date.getTime() / 86400000) + 2440587.5
-  const d = jd - 2451545.0
-  const toRad = Math.PI / 180
-  const toDeg = 180 / Math.PI
+  const t = Astronomy.MakeTime(date)
 
-  // Sol (Geocéntrico)
-  const sunL = (280.460 + 0.9856474 * d) % 360
-  const sunM = (357.528 + 0.9856003 * d) % 360
-  const sunLon = (sunL + 1.915 * Math.sin(sunM * toRad) + 0.020 * Math.sin(2 * sunM * toRad)) % 360
+  // Sol: usa SunPosition (elon = longitud eclíptica)
+  const sunPos = Astronomy.SunPosition(t)
+  const sunLon = sunPos.elon
 
-  // Luna (Geocéntrico)
-  const moonL = (218.316 + 13.176396 * d) % 360
-  const moonM = (134.963 + 13.064993 * d) % 360
-  const moonLon = (moonL + 6.289 * Math.sin(moonM * toRad)) % 360
-
-  // Motor Geocéntrico Mejorado
-  const calcPlanetGeo = (days: number, baseL: number, daily: number, ecc: number, peri: number, dist: number, isInferior: boolean) => {
-    const L = (baseL + daily * days) % 360
-    const M = (L - peri) % 360
-    const helioLon = (L + (2 * ecc * Math.sin(M * toRad) + 1.25 * ecc * ecc * Math.sin(2 * M * toRad)) * toDeg) % 360
-    const relLon = (helioLon - sunLon) * toRad
-    let geoLon
-    if (!isInferior) {
-      geoLon = sunLon + Math.atan2(Math.sin(relLon), (1/dist) + Math.cos(relLon)) * toDeg
-    } else {
-      geoLon = sunLon + Math.atan2(dist * Math.sin(relLon), 1 + dist * Math.cos(relLon)) * toDeg
-    }
-    return (geoLon + 360) % 360
-  }
-
-  // Elementos Orbitales (Aproximación J2000 calibrada para 2026)
-  const mercury = (dd: number) => calcPlanetGeo(dd, 252.25, 4.0923, 0.2056, 77.45, 0.387, true)
-  const venus   = (dd: number) => calcPlanetGeo(dd, 181.98, 1.6021, 0.0068, 131.57, 0.723, true)
-  const mars    = (dd: number) => calcPlanetGeo(dd, 355.45, 0.5241, 0.0934, 336.06, 1.524, false)
-  const jupiter = (dd: number) => calcPlanetGeo(dd, 34.40,  0.0831, 0.0484, 14.75, 5.203, false)
-  const saturn  = (dd: number) => calcPlanetGeo(dd, 50.08,  0.0335, 0.0565, 92.43, 9.537, false)
-  const uranus  = (dd: number) => calcPlanetGeo(dd, 314.05, 0.0117, 0.0463, 170.95, 19.191, false)
-  const neptune = (dd: number) => calcPlanetGeo(dd, 304.34, 0.0060, 0.0090, 44.97, 30.069, false)
-  const pluto   = (dd: number) => calcPlanetGeo(dd, 238.93, 0.0040, 0.2488, 224.06, 39.482, false)
+  // Luna y planetas: EclipticLongitude con Body enum
+  const moonLon = Astronomy.EclipticLongitude(Astronomy.Body.Moon, t)
 
   const positions: Record<string, number> = {
-    sun: (sunLon + 360) % 360,
-    moon: (moonLon + 360) % 360,
-    mercury: mercury(d),
-    venus: venus(d),
-    mars: mars(d),
-    jupiter: jupiter(d),
-    saturn: saturn(d),
-    uranus: uranus(d),
-    neptune: neptune(d),
-    pluto: pluto(d),
+    sun: sunLon,
+    moon: moonLon,
+    mercury: Astronomy.EclipticLongitude(Astronomy.Body.Mercury, t),
+    venus: Astronomy.EclipticLongitude(Astronomy.Body.Venus, t),
+    mars: Astronomy.EclipticLongitude(Astronomy.Body.Mars, t),
+    jupiter: Astronomy.EclipticLongitude(Astronomy.Body.Jupiter, t),
+    saturn: Astronomy.EclipticLongitude(Astronomy.Body.Saturn, t),
+    uranus: Astronomy.EclipticLongitude(Astronomy.Body.Uranus, t),
+    neptune: Astronomy.EclipticLongitude(Astronomy.Body.Neptune, t),
+    pluto: Astronomy.EclipticLongitude(Astronomy.Body.Pluto, t),
+  }
+
+  // Retrogradación: comparar posición actual vs 1 día antes
+  const bodyMap: Record<string, Astronomy.Body> = {
+    mercury: Astronomy.Body.Mercury, venus: Astronomy.Body.Venus,
+    mars: Astronomy.Body.Mars, jupiter: Astronomy.Body.Jupiter,
+    saturn: Astronomy.Body.Saturn, uranus: Astronomy.Body.Uranus,
+    neptune: Astronomy.Body.Neptune, pluto: Astronomy.Body.Pluto
   }
 
   const isRetrograde = (id: string) => {
     if (id === 'sun' || id === 'moon') return false
-    const posFuncs: Record<string, (dd: number) => number> = { mercury, venus, mars, jupiter, saturn, uranus, neptune, pluto }
-    const f = posFuncs[id]
-    if (!f) return false
-    const p1 = f(d)
-    const p0 = f(d - 0.1)
-    let diff = p1 - p0
+    const body = bodyMap[id]
+    if (!body) return false
+    const tPrev = Astronomy.MakeTime(new Date(date.getTime() - 86400000))
+    const lonNow = positions[id]
+    const lonPrev = Astronomy.EclipticLongitude(body, tPrev)
+    let diff = lonNow - lonPrev
     if (diff > 180) diff -= 360
     if (diff < -180) diff += 360
     return diff < 0
@@ -136,6 +115,111 @@ function getSign(lon: number) {
   return ZODIAC[idx]
 }
 
+// ─── INTERPRETACIÓN ASTROLÓGICA PROFESIONAL ──────────────────────────────────
+const PLANET_INTERPRETATIONS: Record<string, Record<string, string>> = {
+  sun: {
+    Aries: 'Voluntad directa y pionera. Impulso de liderazgo y acción inmediata.',
+    Tauro: 'Voluntad estable y constructiva. Búsqueda de seguridad material y sensorial.',
+    Géminis: 'Identidad versátil y comunicativa. Necesidad de variedad intelectual.',
+    Cáncer: 'Identidad emocional y protectora. Raíces familiares como centro vital.',
+    Leo: 'Expresión creativa plena. Necesidad de reconocimiento y brillo personal.',
+    Virgo: 'Identidad analítica y servicial. Perfeccionismo como motor de crecimiento.',
+    Libra: 'Búsqueda de equilibrio y armonía. Identidad definida a través de las relaciones.',
+    Escorpio: 'Voluntad transformadora e intensa. Profundidad emocional como fuerza.',
+    Sagitario: 'Expansión filosófica y aventurera. Búsqueda de significado y libertad.',
+    Capricornio: 'Disciplina y estructura como identidad. Ambición orientada a logros duraderos.',
+    Acuario: 'Identidad innovadora y humanitaria. Visión de futuro y originalidad.',
+    Piscis: 'Sensibilidad trascendente. Conexión con lo invisible y lo espiritual.',
+  },
+  moon: {
+    Aries: 'Emociones impulsivas y directas. Necesidad de independencia emocional.',
+    Tauro: 'Emociones estables y sensoriales. Seguridad afectiva a través de lo tangible.',
+    Géminis: 'Emociones cambiantes y curiosas. Procesamiento intelectual de los sentimientos.',
+    Cáncer: 'Emociones profundas y nutritivas. Gran capacidad empática y protectora.',
+    Leo: 'Emociones expresivas y generosas. Necesidad de ser visto y apreciado.',
+    Virgo: 'Emociones contenidas y analíticas. Cuidado expresado a través del servicio.',
+    Libra: 'Emociones equilibradas y diplomáticas. Necesidad de armonía en las relaciones.',
+    Escorpio: 'Emociones intensas y transformadoras. Profundidad que busca la verdad.',
+    Sagitario: 'Emociones expansivas y optimistas. Libertad emocional como prioridad.',
+    Capricornio: 'Emociones controladas y responsables. Madurez emocional temprana.',
+    Acuario: 'Emociones desapegadas e innovadoras. Necesidad de espacio y originalidad.',
+    Piscis: 'Emociones oceánicas y compasivas. Sensibilidad extrema al entorno.',
+  },
+}
+
+const ASPECT_INTERPRETATIONS: Record<string, string> = {
+  'sun-moon-Conjunción': 'Luna nueva interior: las emociones y la voluntad están alineadas. Momento de siembra.',
+  'sun-moon-Oposición': 'Luna llena interior: tensión entre lo que quieres y lo que sientes. Momento de revelación.',
+  'sun-mars-Conjunción': 'Energía vital amplificada. Gran capacidad de acción pero riesgo de impulsividad.',
+  'sun-jupiter-Trígono': 'Expansión armoniosa. Optimismo natural y oportunidades que fluyen.',
+  'sun-saturn-Cuadratura': 'Tensión entre deseo y responsabilidad. Crecimiento a través de la disciplina.',
+  'venus-mars-Conjunción': 'Fusión de lo femenino y lo masculino. Magnetismo personal intenso.',
+  'venus-jupiter-Trígono': 'Armonía social y abundancia. Período favorable para relaciones y finanzas.',
+  'mars-saturn-Cuadratura': 'Frustración que impulsa la acción estratégica. Paciencia como virtud.',
+  'jupiter-saturn-Conjunción': 'Ciclo de 20 años: expansión estructurada. Nuevos cimientos sociales.',
+  'saturn-uranus-Cuadratura': 'Tensión entre tradición e innovación. Reestructuración necesaria.',
+  'saturn-neptune-Oposición': 'Confrontación entre realidad e idealismo. Necesidad de anclar los sueños.',
+}
+
+function generateInterpretation(
+  positions: Record<string, number>,
+  aspects: { p1: string, p2: string, type: string, orb: number }[],
+  isRetrograde: (id: string) => boolean
+): string[] {
+  const lines: string[] = []
+
+  // Interpretación del Sol y Luna
+  const sunSign = getSign(positions.sun)
+  const moonSign = getSign(positions.moon)
+  if (PLANET_INTERPRETATIONS.sun[sunSign.name]) {
+    lines.push(`☉ Sol en ${sunSign.name}: ${PLANET_INTERPRETATIONS.sun[sunSign.name]}`)
+  }
+  if (PLANET_INTERPRETATIONS.moon[moonSign.name]) {
+    lines.push(`☽ Luna en ${moonSign.name}: ${PLANET_INTERPRETATIONS.moon[moonSign.name]}`)
+  }
+
+  // Retrogradaciones
+  const retros = PLANETS_META.filter(p => isRetrograde(p.id))
+  if (retros.length > 0) {
+    const names = retros.map(p => p.name).join(', ')
+    lines.push(`⚠️ Retrogradaciones activas (${names}): período de revisión interna en las áreas gobernadas por estos planetas. No es momento de iniciar, sino de reconsiderar y ajustar.`)
+  }
+
+  // Aspectos específicos
+  aspects.forEach(a => {
+    const key = `${a.p1}-${a.p2}-${a.type}`
+    const keyReverse = `${a.p2}-${a.p1}-${a.type}`
+    const interp = ASPECT_INTERPRETATIONS[key] || ASPECT_INTERPRETATIONS[keyReverse]
+    if (interp) {
+      const p1 = PLANETS_META.find(p => p.id === a.p1)
+      const p2 = PLANETS_META.find(p => p.id === a.p2)
+      if (p1 && p2) {
+        lines.push(`${p1.glyph}${a.type === 'Conjunción' ? '☌' : a.type === 'Oposición' ? '☍' : a.type === 'Trígono' ? '△' : a.type === 'Cuadratura' ? '□' : '⚹'}${p2.glyph} ${p1.name}–${p2.name} (${a.type}): ${interp}`)
+      }
+    }
+  })
+
+  // Resumen general
+  const trines = aspects.filter(a => a.type === 'Trígono').length
+  const squares = aspects.filter(a => a.type === 'Cuadratura').length
+  const opps = aspects.filter(a => a.type === 'Oposición').length
+  const conjs = aspects.filter(a => a.type === 'Conjunción').length
+
+  if (trines > squares + opps) {
+    lines.push('✦ Clima general: predominan los aspectos armónicos. Período de fluidez y oportunidades naturales.')
+  } else if (squares + opps > trines) {
+    lines.push('✦ Clima general: predominan los aspectos tensos. Período de desafíos que impulsan el crecimiento y la acción.')
+  } else {
+    lines.push('✦ Clima general: equilibrio entre armonía y tensión. Momento de integración y decisiones conscientes.')
+  }
+
+  if (conjs >= 2) {
+    lines.push('✦ Múltiples conjunciones activas: concentración de energía en áreas específicas. Momento de intensidad y enfoque.')
+  }
+
+  return lines
+}
+
 export default function AstrologyPage() {
   const router = useRouter()
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -151,7 +235,6 @@ export default function AstrologyPage() {
     const lunarCycle = 29.530588853
     const phase = ((jd - 2451550.1) / lunarCycle) % 1
     const phaseNorm = phase < 0 ? phase + 1 : phase
-    
     let name = 'Luna Nueva', glyph = '🌑'
     if (phaseNorm > 0.03 && phaseNorm <= 0.23) { name = 'Cuarto Creciente'; glyph = '🌒' }
     else if (phaseNorm > 0.23 && phaseNorm <= 0.27) { name = 'Primer Cuarto'; glyph = '🌓' }
@@ -160,100 +243,305 @@ export default function AstrologyPage() {
     else if (phaseNorm > 0.53 && phaseNorm <= 0.73) { name = 'Gibosa Menguante'; glyph = '🌖' }
     else if (phaseNorm > 0.73 && phaseNorm <= 0.77) { name = 'Último Cuarto'; glyph = '🌗' }
     else if (phaseNorm > 0.77 && phaseNorm <= 0.97) { name = 'Cuarto Menguante'; glyph = '🌘' }
-    
     return { name, glyph, val: phaseNorm * 100 }
   }, [selectedDate])
 
+  const wheelSize = typeof window !== 'undefined' && window.innerWidth < 500 ? 360 : 520
+  const cx = wheelSize / 2
+  const cy = wheelSize / 2
+  const R = wheelSize / 2 - 8
+  const lonToAngle = (lon: number) => ((lon - 90) * Math.PI) / 180
+  const rOuter = R
+  const rZodiac2 = R * 0.88
+  const rZodiac1 = R * 0.72
+  const rHouse2 = R * 0.70
+  const rHouse1 = R * 0.55
+  const rPlanet = R * 0.63
+  const rAspect = R * 0.50
+  const rCenter = R * 0.14
+  const aspectColors: Record<string, string> = {
+    'Conjunción': '#fbbf24', 'Oposición': '#ef4444',
+    'Trígono': '#22c55e', 'Cuadratura': '#f97316', 'Sextil': '#38bdf8'
+  }
+
   return (
-    <main style={{ width: '100vw', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(180deg, #0a0a1a, #1a0a2e, #0a0a1a)', padding: '40px 20px', color: '#fff', overflowY: 'auto' }}>
-      <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '12px', cursor: 'pointer', textAlign: 'center' }} onClick={() => router.push('/menu')}>← MENÚ PRINCIPAL</div>
-      <h1 className="title-responsive" style={{ color: '#a78bfa' }}>ASTROLOGÍA ARQUEOSCÓPICA</h1>
-      <p className="subtitle-responsive" style={{ marginBottom: '8px' }}>Sincronía Planetaria · Tránsitos y Aspectos</p>
-      <p className="text-responsive" style={{ marginBottom: '24px', color: 'rgba(255,255,255,0.3)' }}>Cálculo de posiciones geocéntricas y relaciones angulares sagradas.</p>
+    <main style={{ width: '100vw', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(180deg, #06060f, #0d0820, #06060f)', padding: '32px 16px', color: '#fff', overflowY: 'auto' }}>
+      <div style={{ fontSize: '19px', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginBottom: '10px', cursor: 'pointer', textAlign: 'center' }} onClick={() => router.push('/menu')}>← MENÚ PRINCIPAL</div>
+      <h1 className="title-responsive" style={{ color: '#a78bfa', marginBottom: '4px' }}>ASTROLOGÍA ARQUEOSCÓPICA</h1>
+      <p style={{ fontSize: '19px', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginBottom: '20px', textAlign: 'center' }}>CARTA CELESTE · POSICIONES GEOCÉNTRICAS · ASPECTOS</p>
 
-      <input type="date" value={selectedDate.toISOString().split('T')[0]} onChange={(e) => setSelectedDate(new Date(e.target.value + 'T12:00:00'))}
-        style={{ padding: '12px 24px', fontSize: '18px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: '8px', color: '#a78bfa', marginBottom: '40px', cursor: 'pointer' }} />
+      <input type="date" value={selectedDate.toISOString().split('T')[0]}
+        onChange={(e) => setSelectedDate(new Date(e.target.value + 'T12:00:00'))}
+        style={{ padding: '10px 20px', fontSize: '22px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(167,139,250,0.4)', borderRadius: '8px', color: '#a78bfa', marginBottom: '28px', cursor: 'pointer' }} />
 
-      {/* ─── ESTADO LUNAR ────────────────────────────────────────────── */}
-      <div className="info-card" style={{ background: 'rgba(226,232,240,0.04)', border: '1px solid rgba(226,232,240,0.2)', padding: 'clamp(16px, 5vw, 32px)', maxWidth: '500px' }}>
-        <div style={{ fontSize: 'clamp(50px, 12vw, 64px)', marginBottom: '8px' }}>{moonPhase.glyph}</div>
-        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '3px', marginBottom: '4px' }}>FASE LUNAR</div>
-        <h2 style={{ color: '#e2e8f0' }}>{moonPhase.name}</h2>
-        <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.6)', marginTop: '8px' }}>Iluminación: {moonPhase.val.toFixed(1)}%</div>
+      {/* RUEDA ASTROLÓGICA */}
+      <div style={{ background: 'rgba(10,8,20,0.95)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: '16px', padding: '20px', marginBottom: '20px', boxShadow: '0 0 60px rgba(167,139,250,0.08)' }}>
+        <div style={{ fontSize: '17px', color: 'rgba(255,255,255,0.3)', letterSpacing: '3px', marginBottom: '14px', textAlign: 'center', textTransform: 'uppercase' }}>
+          Carta Celeste · {selectedDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })} · Tropical/Geocéntrico
+        </div>
+        <svg width={wheelSize} height={wheelSize} viewBox={`0 0 ${wheelSize} ${wheelSize}`} style={{ display: 'block', margin: '0 auto' }}>
+          <defs>
+            <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#0d0820" />
+              <stop offset="100%" stopColor="#06060f" />
+            </radialGradient>
+          </defs>
+          <circle cx={cx} cy={cy} r={rOuter} fill="url(#bgGrad)" stroke="rgba(167,139,250,0.3)" strokeWidth="1" />
+          {/* Marcas de grados */}
+          {Array.from({ length: 72 }).map((_, i) => {
+            const deg = i * 5
+            const isMajor = deg % 30 === 0
+            const isMed = deg % 10 === 0
+            const angle = lonToAngle(deg)
+            const r1 = isMajor ? rOuter * 0.94 : isMed ? rOuter * 0.96 : rOuter * 0.97
+            return (
+              <line key={i}
+                x1={cx + rOuter * Math.cos(angle)} y1={cy + rOuter * Math.sin(angle)}
+                x2={cx + r1 * Math.cos(angle)} y2={cy + r1 * Math.sin(angle)}
+                stroke={isMajor ? 'rgba(167,139,250,0.6)' : 'rgba(167,139,250,0.25)'}
+                strokeWidth={isMajor ? '1.2' : '0.6'}
+              />
+            )
+          })}
+          {/* Sectores zodiacales */}
+          {ZODIAC.map((sign, i) => {
+            const startA = lonToAngle(i * 30)
+            const endA = lonToAngle((i + 1) * 30)
+            const midA = lonToAngle(i * 30 + 15)
+            const x1s = cx + rZodiac1 * Math.cos(startA), y1s = cy + rZodiac1 * Math.sin(startA)
+            const x2s = cx + rZodiac2 * Math.cos(startA), y2s = cy + rZodiac2 * Math.sin(startA)
+            const x3s = cx + rZodiac2 * Math.cos(endA), y3s = cy + rZodiac2 * Math.sin(endA)
+            const x4s = cx + rZodiac1 * Math.cos(endA), y4s = cy + rZodiac1 * Math.sin(endA)
+            const tx = cx + ((rZodiac1 + rZodiac2) / 2) * Math.cos(midA)
+            const ty = cy + ((rZodiac1 + rZodiac2) / 2) * Math.sin(midA)
+            return (
+              <g key={sign.name}>
+                <path d={`M ${x1s} ${y1s} L ${x2s} ${y2s} A ${rZodiac2} ${rZodiac2} 0 0 1 ${x3s} ${y3s} L ${x4s} ${y4s} A ${rZodiac1} ${rZodiac1} 0 0 0 ${x1s} ${y1s}`}
+                  fill={`${sign.color}14`} stroke={`${sign.color}35`} strokeWidth="0.5" />
+                <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle"
+                  fontSize={wheelSize < 400 ? "19" : "22"} fill={sign.color} opacity="0.95" fontWeight="bold">{sign.glyph}</text>
+              </g>
+            )
+          })}
+          {/* Líneas divisorias signos */}
+          {ZODIAC.map((_, i) => {
+            const angle = lonToAngle(i * 30)
+            return (
+              <line key={i}
+                x1={cx + rZodiac1 * Math.cos(angle)} y1={cy + rZodiac1 * Math.sin(angle)}
+                x2={cx + rOuter * 0.93 * Math.cos(angle)} y2={cy + rOuter * 0.93 * Math.sin(angle)}
+                stroke="rgba(167,139,250,0.4)" strokeWidth="0.8" />
+            )
+          })}
+          {/* Anillos concéntricos */}
+          {[rZodiac2, rZodiac1, rHouse2, rHouse1, rAspect * 1.05].map((r, i) => (
+            <circle key={i} cx={cx} cy={cy} r={r} fill="none"
+              stroke={i < 2 ? 'rgba(167,139,250,0.35)' : 'rgba(167,139,250,0.18)'}
+              strokeWidth={i < 2 ? '0.8' : '0.5'} />
+          ))}
+          {/* Casas */}
+          {Array.from({ length: 12 }).map((_, i) => {
+            const angle = lonToAngle(i * 30)
+            const midA = lonToAngle(i * 30 + 15)
+            const tx = cx + ((rHouse1 + rHouse2) / 2) * Math.cos(midA)
+            const ty = cy + ((rHouse1 + rHouse2) / 2) * Math.sin(midA)
+            return (
+              <g key={i}>
+                <line x1={cx + rHouse1 * Math.cos(angle)} y1={cy + rHouse1 * Math.sin(angle)}
+                  x2={cx + rHouse2 * Math.cos(angle)} y2={cy + rHouse2 * Math.sin(angle)}
+                  stroke="rgba(167,139,250,0.25)" strokeWidth="0.5" />
+                <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle"
+                  fontSize={wheelSize < 400 ? "15" : "17"} fill="rgba(167,139,250,0.55)">{i + 1}</text>
+              </g>
+            )
+          })}
+          {/* Ejes AC/DC y MC/IC */}
+          {[0, 90].map((deg, i) => {
+            const a1 = lonToAngle(deg), a2 = lonToAngle(deg + 180)
+            return (
+              <line key={i}
+                x1={cx + rHouse1 * Math.cos(a1)} y1={cy + rHouse1 * Math.sin(a1)}
+                x2={cx + rHouse1 * Math.cos(a2)} y2={cy + rHouse1 * Math.sin(a2)}
+                stroke={i === 0 ? 'rgba(239,68,68,0.5)' : 'rgba(167,139,250,0.4)'}
+                strokeWidth="0.8" strokeDasharray={i === 1 ? '4,3' : 'none'} />
+            )
+          })}
+          {/* Líneas de aspectos */}
+          {data.aspects.map((a, i) => {
+            const a1 = lonToAngle(data.positions[a.p1]), a2 = lonToAngle(data.positions[a.p2])
+            const x1 = cx + rAspect * Math.cos(a1), y1 = cy + rAspect * Math.sin(a1)
+            const x2 = cx + rAspect * Math.cos(a2), y2 = cy + rAspect * Math.sin(a2)
+            return (
+              <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+                stroke={aspectColors[a.type] || '#888'} strokeWidth="0.9" opacity="0.55"
+                strokeDasharray={a.type === 'Cuadratura' || a.type === 'Oposición' ? '4,3' : 'none'} />
+            )
+          })}
+          {/* Planetas */}
+          {PLANETS_META.map((p) => {
+            const lon = data.positions[p.id]
+            const angle = lonToAngle(lon)
+            const px = cx + rPlanet * Math.cos(angle), py = cy + rPlanet * Math.sin(angle)
+            const isRetro = data.isRetrograde(p.id)
+            const degInSign = Math.floor(lon % 30)
+            const lx = cx + rZodiac1 * Math.cos(angle), ly = cy + rZodiac1 * Math.sin(angle)
+            const fs = wheelSize < 400 ? 16 : 19
+            return (
+              <g key={p.id}>
+                <line x1={px} y1={py} x2={lx} y2={ly} stroke={p.color} strokeWidth="0.5" opacity="0.3" />
+                <circle cx={px} cy={py} r={wheelSize < 400 ? 11 : 13} fill="rgba(6,6,15,0.92)" stroke={p.color} strokeWidth="1.5" />
+                <text x={px} y={py} textAnchor="middle" dominantBaseline="middle" fontSize={fs} fill={p.color} fontWeight="bold">{p.glyph}</text>
+                <text x={px + (wheelSize < 400 ? 12 : 15)} y={py - (wheelSize < 400 ? 4 : 5)} fontSize={wheelSize < 400 ? "13" : "15"} fill={p.color} opacity="0.8">{degInSign}°</text>
+                {isRetro && <text x={px + (wheelSize < 400 ? 12 : 15)} y={py + (wheelSize < 400 ? 6 : 8)} fontSize="13" fill="#ef4444" fontStyle="italic">Rx</text>}
+              </g>
+            )
+          })}
+          <circle cx={cx} cy={cy} r={rCenter} fill="rgba(10,8,20,0.95)" stroke="rgba(167,139,250,0.4)" strokeWidth="1" />
+          <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fontSize={wheelSize < 400 ? "23" : "27"} fill="rgba(167,139,250,0.5)">⊕</text>
+        </svg>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center', marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(167,139,250,0.1)' }}>
+          {Object.entries(aspectColors).map(([name, color]) => (
+            <span key={name} style={{ fontSize: '24px', color, opacity: 0.85, letterSpacing: '0.5px' }}>
+              {name === 'Conjunción' ? '☌' : name === 'Oposición' ? '☍' : name === 'Trígono' ? '△' : name === 'Cuadratura' ? '□' : '⚹'} {name}
+            </span>
+          ))}
+        </div>
       </div>
 
-      {/* ─── POSICIONES PLANETARIAS ──────────────────────────────────── */}
-      <div className="info-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '900px', width: '100%', padding: 'clamp(16px, 4vw, 24px)' }}>
-        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '20px', textAlign: 'center' }}>POSICIONES DEL ZODIACO</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+      {/* FASE LUNAR */}
+      <div className="info-card" style={{ background: 'rgba(226,232,240,0.04)', border: '1px solid rgba(226,232,240,0.2)', padding: 'clamp(16px, 5vw, 28px)', maxWidth: '500px' }}>
+        <div style={{ fontSize: '19px', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginBottom: '8px', textAlign: 'center' }}>FASE LUNAR</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', justifyContent: 'center' }}>
+          <span style={{ fontSize: 'clamp(44px, 10vw, 56px)' }}>{moonPhase.glyph}</span>
+          <div>
+            <div style={{ fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: 'bold', color: '#e2e8f0' }}>{moonPhase.name}</div>
+            <div style={{ fontSize: '21px', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>Iluminación: {moonPhase.val.toFixed(1)}%</div>
+          </div>
+        </div>
+      </div>
+
+      {/* POSICIONES */}
+      <div className="info-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', maxWidth: '900px', width: '100%', padding: 'clamp(16px, 4vw, 24px)' }}>
+        <div style={{ fontSize: '17px', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginBottom: '18px', textAlign: 'center' }}>POSICIONES DEL ZODIACO</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>
           {PLANETS_META.map((p) => {
             const lon = data.positions[p.id]
             const sign = getSign(lon)
             const deg = Math.floor(lon % 30)
+            const min = Math.floor((lon % 1) * 60)
             const isRetro = data.isRetrograde(p.id)
             return (
-              <div key={p.id} style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', textAlign: 'left', position: 'relative' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '32px', color: p.color }}>{p.glyph}</span>
+              <div key={p.id} style={{ padding: '14px', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '36px', color: p.color }}>{p.glyph}</span>
                   <div>
-                    <div style={{ fontWeight: 'bold', fontSize: '18px' }}>{p.name} {isRetro && <span style={{ color: '#ef4444', fontSize: '12px' }}>[Rx]</span>}</div>
-                    <div style={{ color: sign.color, fontSize: '14px' }}>{deg}° {sign.name} {sign.glyph}</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '22px' }}>{p.name} {isRetro && <span style={{ color: '#ef4444', fontSize: '17px', fontStyle: 'italic' }}>Rx</span>}</div>
+                    <div style={{ color: sign.color, fontSize: '20px' }}>{deg}°{min.toString().padStart(2,'0')}′ {sign.name} {sign.glyph}</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>Elemento: {sign.element} · Regente: {sign.ruler}</div>
-                {isRetro && <div style={{ fontSize: '10px', color: '#ef4444', marginTop: '4px' }}>⚠️ Retrogradación activa</div>}
+                <div style={{ fontSize: '17px', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.5px' }}>{sign.element} · {sign.ruler}</div>
               </div>
             )
           })}
         </div>
       </div>
 
-      {/* ─── ASPECTOS PLANETARIAS ───────────────────────────────────── */}
-      <div className="info-card" style={{ background: 'rgba(167,139,250,0.03)', border: '1px solid rgba(167,139,250,0.15)', maxWidth: '900px', width: '100%', padding: 'clamp(16px, 4vw, 24px)' }}>
-        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '20px', textAlign: 'center' }}>ASPECTOS MAYORES (RELACIONES ANGULARES)</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+      {/* ASPECTOS */}
+      <div className="info-card" style={{ background: 'rgba(167,139,250,0.02)', border: '1px solid rgba(167,139,250,0.12)', maxWidth: '900px', width: '100%', padding: 'clamp(16px, 4vw, 24px)' }}>
+        <div style={{ fontSize: '17px', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginBottom: '16px', textAlign: 'center' }}>ASPECTOS MAYORES</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
           {data.aspects.length > 0 ? data.aspects.map((a, i) => {
             const p1 = PLANETS_META.find(p => p.id === a.p1)!
             const p2 = PLANETS_META.find(p => p.id === a.p2)!
             return (
-              <div key={i} style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ color: p1.color }}>{p1.glyph}</span>
-                  <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#a78bfa' }}>{a.glyph}</span>
-                  <span style={{ color: p2.color }}>{p2.glyph}</span>
+              <div key={i} style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ color: p1.color, fontSize: '24px' }}>{p1.glyph}</span>
+                  <span style={{ fontSize: '24px', fontWeight: 'bold', color: aspectColors[a.type] }}>{a.glyph}</span>
+                  <span style={{ color: p2.color, fontSize: '24px' }}>{p2.glyph}</span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold' }}>{a.type}</div>
-                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Orb: {a.orb.toFixed(1)}°</div>
+                  <div style={{ fontSize: '19px', fontWeight: 'bold', color: aspectColors[a.type] }}>{a.type}</div>
+                  <div style={{ fontSize: '17px', color: 'rgba(255,255,255,0.35)' }}>orb {a.orb.toFixed(1)}°</div>
                 </div>
               </div>
             )
           }) : (
-            <div style={{ gridColumn: '1/-1', color: 'rgba(255,255,255,0.3)', padding: '20px' }}>No hay aspectos mayores significativos en este momento.</div>
+            <div style={{ gridColumn: '1/-1', color: 'rgba(255,255,255,0.25)', padding: '16px', textAlign: 'center', fontSize: '20px' }}>Sin aspectos mayores significativos en esta fecha.</div>
           )}
         </div>
       </div>
 
-      {/* ─── GUÍA DE INTERPRETACIÓN ─────────────────────────────────── */}
-      <div className="info-card" style={{ background: 'rgba(251,191,36,0.02)', border: '1px solid rgba(251,191,36,0.1)', maxWidth: '900px', width: '100%', padding: 'clamp(16px, 4vw, 24px)' }}>
-        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '16px', textAlign: 'center' }}>GUÍA DE ASPECTOS</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', textAlign: 'left' }}>
-          <div>
-            <strong style={{ color: '#fbbf24' }}>☌ Conjunción:</strong> Fusión de energías. Potencia el impacto de ambos planetas.
-          </div>
-          <div>
-            <strong style={{ color: '#fbbf24' }}>☍ Oposición:</strong> Tensión y equilibrio. Necesidad de integrar polaridades.
-          </div>
-          <div>
-            <strong style={{ color: '#fbbf24' }}>□ Cuadratura:</strong> Desafío y acción. Tensión que impulsa el cambio.
-          </div>
-          <div>
-            <strong style={{ color: '#fbbf24' }}>△ Trígono:</strong> Armonía y fluidez. Talentos naturales que fluyen sin esfuerzo.
-          </div>
-          <div>
-            <strong style={{ color: '#fbbf24' }}>⚹ Sextil:</strong> Oportunidad y colaboración. Estímulo creativo y facilidad de comunicación.
-          </div>
+      {/* INTERPRETACIÓN PROFESIONAL */}
+      <div className="info-card" style={{ background: 'rgba(251,191,36,0.03)', border: '1px solid rgba(251,191,36,0.15)', maxWidth: '900px', width: '100%', padding: 'clamp(18px, 4vw, 28px)' }}>
+        <div style={{ fontSize: 'clamp(11px, 2.5vw, 22px)', color: '#fbbf24', letterSpacing: '3px', marginBottom: '18px', textAlign: 'center' }}>
+          LECTURA ASTROLÓGICA · {selectedDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}
         </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {generateInterpretation(data.positions, data.aspects, data.isRetrograde).map((line, i) => (
+            <div key={i} style={{
+              fontSize: 'clamp(13px, 2.5vw, 20px)',
+              color: line.startsWith('✦') ? 'rgba(251,191,36,0.85)' : line.startsWith('⚠') ? 'rgba(239,68,68,0.8)' : 'rgba(255,255,255,0.65)',
+              lineHeight: '1.7',
+              paddingLeft: line.startsWith('✦') || line.startsWith('⚠') ? '0' : '8px',
+              borderLeft: line.startsWith('✦') || line.startsWith('⚠') ? 'none' : '2px solid rgba(251,191,36,0.2)',
+              fontStyle: line.startsWith('✦') ? 'italic' : 'normal',
+              fontWeight: line.startsWith('✦') ? 'bold' : 'normal',
+              marginTop: line.startsWith('✦') ? '8px' : '0',
+              paddingTop: line.startsWith('✦') ? '12px' : '0',
+              borderTop: line.startsWith('✦') ? '1px solid rgba(251,191,36,0.1)' : 'none',
+            }}>
+              {line}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* GUÍA */}
+      <div className="info-card" style={{ background: 'rgba(251,191,36,0.02)', border: '1px solid rgba(251,191,36,0.08)', maxWidth: '900px', width: '100%', padding: 'clamp(14px, 4vw, 22px)' }}>
+        <div style={{ fontSize: '17px', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginBottom: '14px', textAlign: 'center' }}>GUÍA DE ASPECTOS</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', fontSize: '19px' }}>
+          {[
+            { g: '☌', n: 'Conjunción', d: 'Fusión de energías. Potencia el impacto de ambos planetas.' },
+            { g: '☍', n: 'Oposición', d: 'Tensión y equilibrio. Necesidad de integrar polaridades.' },
+            { g: '□', n: 'Cuadratura', d: 'Desafío y acción. Tensión que impulsa el cambio.' },
+            { g: '△', n: 'Trígono', d: 'Armonía y fluidez. Talentos naturales sin esfuerzo.' },
+            { g: '⚹', n: 'Sextil', d: 'Oportunidad y colaboración. Estímulo creativo.' },
+          ].map(({ g, n, d }) => (
+            <div key={n}>
+              <div style={{ color: '#fbbf24', fontWeight: 'bold', marginBottom: '3px' }}>{g} {n}</div>
+              <div style={{ color: 'rgba(255,255,255,0.45)', lineHeight: '1.5' }}>{d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* NOTAS Y FUENTES */}
+      <div style={{
+        maxWidth: '900px', width: '100%', marginTop: '8px', marginBottom: '20px',
+        padding: 'clamp(14px, 3vw, 24px)',
+        background: 'rgba(255,255,255,0.015)',
+        border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: '12px',
+        fontSize: 'clamp(11px, 2vw, 15px)',
+        color: 'rgba(255,255,255,0.35)',
+        lineHeight: '1.8'
+      }}>
+        <div style={{ color: 'rgba(255,255,255,0.5)', letterSpacing: '2px', marginBottom: '12px', fontSize: 'clamp(10px, 2vw, 13px)' }}>
+          NOTAS METODOLÓGICAS Y FUENTES
+        </div>
+        <p style={{ margin: '0 0 10px' }}>
+          <strong style={{ color: 'rgba(255,255,255,0.5)' }}>Cálculos astronómicos:</strong> Las posiciones planetarias se calculan con la librería <em>astronomy-engine</em> que implementa las efemérides VSOP87 (planetas) y ELP/MPP02 (Luna), las mismas utilizadas por el JPL de NASA. Precisión de ~1 arcminuto para planetas y ~10 arcsegundos para la Luna. Las posiciones son geocéntricas tropicales.
+        </p>
+        <p style={{ margin: '0 0 10px' }}>
+          <strong style={{ color: 'rgba(255,255,255,0.5)' }}>Interpretaciones astrológicas:</strong> Basadas en la tradición astrológica occidental clásica (Ptolomeo, <em>Tetrabiblos</em>, siglo II d.C.) y la escuela psicológica moderna (Liz Greene, Stephen Arroyo, Howard Sasportas). Los significados de los aspectos ptolemaicos (conjunción, oposición, trígono, cuadratura, sextil) y las dignidades planetarias siguen el consenso de la tradición.
+        </p>
+        <p style={{ margin: '0 0 10px' }}>
+          <strong style={{ color: 'rgba(255,255,255,0.5)' }}>Limitaciones:</strong> Esta herramienta calcula tránsitos generales, no cartas natales personales. Para una carta natal completa se requiere fecha, hora exacta y lugar de nacimiento, además del cálculo de casas astrológicas (Placidus, Koch, etc.) que no está implementado aquí. Las interpretaciones son orientativas y educativas.
+        </p>
+        <p style={{ margin: '0', fontStyle: 'italic', color: 'rgba(255,255,255,0.25)' }}>
+          Datos orbitales: JPL/NASA · Efemérides: VSOP87 (planetas), ELP/MPP02 (Luna) · Catálogo estelar: Yale Bright Star Catalogue
+        </p>
       </div>
 
       <button onClick={() => router.push('/menu')} className="btn-responsive"
@@ -264,3 +552,5 @@ export default function AstrologyPage() {
     </main>
   )
 }
+
+
