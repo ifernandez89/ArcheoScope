@@ -15,7 +15,7 @@
  */
 
 import { Suspense, useEffect, useMemo, useState, useRef } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { PerspectiveCamera, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { getAssetPath } from '@/lib/paths'
@@ -215,18 +215,18 @@ function DesertVegetation() {
     </>
   )
 }
-// ─── Pitch de cámara controlado por touch (zona izquierda de pantalla) ────────
-function TouchPitchCamera({ pitchRef }: { pitchRef: React.RefObject<number> }) {
-  const { camera } = useThree()
+// ─── Rotación del cielo controlada por touch (zona izquierda de pantalla) ─────
+function SkyPitchGroup({ pitchRef, children }: { pitchRef: React.RefObject<number>, children: React.ReactNode }) {
+  const groupRef = useRef<THREE.Group>(null)
 
   useFrame(() => {
+    if (!groupRef.current) return
     const pitch = pitchRef.current ?? 0
-    if (Math.abs(pitch) > 0.001) {
-      camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, -pitch, 0.08)
-    }
+    // Rotar el grupo de estrellas/cielo según el pitch del touch
+    groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, pitch, 0.06)
   })
 
-  return null
+  return <group ref={groupRef}>{children}</group>
 }
 
 function SkyContent({
@@ -239,8 +239,15 @@ function SkyContent({
   // Cargar textura de luna al nivel del componente R3F (dentro del Canvas)
   const moonTexture = useTexture(getAssetPath('/textures/beautiful-glowing-gray-full-moon.jpg'))
 
-  // Habilitar HarmoniaMundi al primer click/touch
+  // Detectar mobile para condicionar audio
+  const [isMobileAudio] = useState(() =>
+    typeof window !== 'undefined' &&
+    (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
+  )
+
+  // Habilitar HarmoniaMundi solo en PC (mobile solo viento ligero)
   useEffect(() => {
+    if (isMobileAudio) return // No cargar HarmoniaMundi en mobile
     const enableAudio = async () => {
       try {
         const { getHarmoniaMundi } = await import('@/systems/HarmoniaMundiSystem')
@@ -249,25 +256,20 @@ function SkyContent({
         harmonia.setMasterVolume(0.5)
       } catch {}
     }
-    const handler = () => { enableAudio(); window.removeEventListener('click', handler); window.removeEventListener('touchstart', handler) }
+    const handler = () => { enableAudio(); window.removeEventListener('click', handler) }
     window.addEventListener('click', handler, { once: true })
-    window.addEventListener('touchstart', handler, { once: true })
-    return () => { window.removeEventListener('click', handler); window.removeEventListener('touchstart', handler) }
-  }, [])
+    return () => { window.removeEventListener('click', handler) }
+  }, [isMobileAudio])
 
   return (
     <>
-      {/* Estrellas fijas — sin rotación automática */}
-      <Stars />
-
-      {/* Banda de Vía Láctea — procedimental, costo mínimo */}
-      <MilkyWayBand />
-
-      {/* Halo atmosférico del horizonte — scattering sutil */}
-      <HorizonHalo />
-
-      {/* Luna con textura real */}
-      <DesertMoon moonTexture={moonTexture} />
+      {/* Cielo rotable por touch — estrellas + vía láctea + luna */}
+      <SkyPitchGroup pitchRef={pitchRef}>
+        <Stars />
+        <MilkyWayBand />
+        <HorizonHalo />
+        <DesertMoon moonTexture={moonTexture} />
+      </SkyPitchGroup>
 
       {/* Terreno desierto */}
       <DesertFloor />
@@ -292,10 +294,7 @@ function SkyContent({
       {/* Rastreador de brújula */}
       {onCameraRotation && <CompassTracker onRotationChange={onCameraRotation} />}
 
-      {/* Pitch de cámara por touch (zona izquierda) */}
-      <TouchPitchCamera pitchRef={pitchRef} />
-
-      {/* Audio: viento ligero + drone atmosférico */}
+      {/* Audio: viento ligero */}
       <AmbientAudio />
 
       {/* Iluminación nocturna */}
