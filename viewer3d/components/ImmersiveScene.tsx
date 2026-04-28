@@ -98,6 +98,7 @@ const Compass = dynamic(() => import('./Compass'), { ssr: false })
 const ShipAbilities = dynamic(() => import('./ShipAbilities'), { ssr: false })
 const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
 const MobileTouchControls = dynamic(() => import('./MobileTouchControls'), { ssr: false })
+const LocalWeather = dynamic(() => import('./LocalWeather'), { ssr: false })
 const CelestialOverlayHUD = dynamic(() => import('./CelestialOverlay').then(m => ({ default: m.CelestialOverlayHUD })), { ssr: false })
 const BackgroundMountains = dynamic(() => import('./BackgroundMountains'), { ssr: false, loading: () => null })
 const EnhancedMoon = dynamic(() => import('./EnhancedMoon'), { ssr: false })
@@ -2140,6 +2141,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           to { transform: translateX(0); }
         }
       `}</style>
+
+      {/* Clima Local - Solo Mobile */}
+      <LocalWeather />
     </div>
   )
 }

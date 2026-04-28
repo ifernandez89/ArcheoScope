@@ -536,6 +536,14 @@ function InfoContent() {
             text: "Archeoscope es una Progressive Web App (PWA) instalable directamente desde el navegador. En Android: abre el menú del navegador y selecciona 'Añadir a pantalla de inicio'. En iOS Safari: botón compartir → 'Añadir a pantalla de inicio'. La app se ejecuta en modo standalone (sin barra del navegador), con soporte offline para los recursos principales. Compatible con Trusted Web Activity (TWA) para distribución en Google Play Store.",
           },
           {
+            icon: "🌤️",
+            title: "Clima Local — Solo Mobile",
+            color: "#60a5fa",
+            border: "rgba(96, 165, 250, 0.3)",
+            bg: "rgba(96, 165, 250, 0.06)",
+            text: "Panel de condiciones del cielo en tiempo real exclusivo para dispositivos móviles. Muestra temperatura actual, probabilidad de lluvia y fase lunar calculada localmente. Usa la API Open-Meteo (gratuita, sin API key, cobertura global) para obtener datos meteorológicos basados en la geolocalización del usuario. La fase lunar se calcula mediante algoritmo astronómico preciso sin necesidad de API externa — ciclo sinódico de 29.53 días con 8 fases (Nueva, Creciente, Cuarto Creciente, Gibosa Creciente, Llena, Gibosa Menguante, Cuarto Menguante, Menguante). Cache inteligente de 30 minutos en localStorage para optimizar rendimiento. Diseñado para exploradores que juegan al aire libre — sincroniza el mundo virtual con las condiciones reales del cielo.",
+          },
+          {
             icon: "⚖️",
             title: "Licencia y Código Abierto",
             color: "#a78bfa",
