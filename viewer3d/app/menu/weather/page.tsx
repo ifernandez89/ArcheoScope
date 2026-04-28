@@ -81,6 +81,183 @@ function getRainColor(pct: number): string {
 const CACHE_KEY = 'archeoscope_weather_full'
 const CACHE_DURATION = 30 * 60 * 1000 // 30 min
 
+// ─── Gradiente de fondo según clima ──────────────────────────────────────────
+function getCardGradient(code: number): string {
+  if (code === 0) return 'linear-gradient(135deg, rgba(251,191,36,0.12), rgba(245,158,11,0.06))' // despejado
+  if (code <= 2) return 'linear-gradient(135deg, rgba(14,165,233,0.12), rgba(6,182,212,0.06))' // parcial
+  if (code === 3) return 'linear-gradient(135deg, rgba(107,114,128,0.15), rgba(75,85,99,0.08))' // nublado
+  if (code <= 49) return 'linear-gradient(135deg, rgba(148,163,184,0.12), rgba(100,116,139,0.08))' // niebla
+  if (code <= 69) return 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(37,99,235,0.08))' // lluvia
+  if (code <= 79) return 'linear-gradient(135deg, rgba(226,232,240,0.15), rgba(203,213,225,0.08))' // nieve
+  if (code <= 86) return 'linear-gradient(135deg, rgba(226,232,240,0.18), rgba(148,163,184,0.10))' // nieve fuerte
+  if (code <= 99) return 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(88,28,135,0.08))' // tormenta
+  return 'linear-gradient(135deg, rgba(14,165,233,0.12), rgba(6,182,212,0.06))'
+}
+
+// ─── Animación de clima CSS pura ─────────────────────────────────────────────
+function WeatherAnimation({ code }: { code: number }) {
+  // Despejado: rayos de sol girando
+  if (code === 0) {
+    return (
+      <>
+        <style>{`
+          @keyframes sunRays { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+          @keyframes sunPulse { 0%,100% { opacity: 0.15 } 50% { opacity: 0.25 } }
+        `}</style>
+        <div style={{
+          position: 'absolute', top: '-30px', right: '-30px', width: '120px', height: '120px',
+          borderRadius: '50%', background: 'radial-gradient(circle, rgba(251,191,36,0.3) 0%, transparent 70%)',
+          animation: 'sunPulse 4s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px',
+          border: '2px dashed rgba(251,191,36,0.15)', borderRadius: '50%',
+          animation: 'sunRays 20s linear infinite',
+        }} />
+      </>
+    )
+  }
+
+  // Lluvia
+  if (code > 49 && code <= 69) {
+    const drops = Array.from({ length: 12 }, (_, i) => i)
+    return (
+      <>
+        <style>{`
+          @keyframes rainDrop {
+            0% { transform: translateY(-20px); opacity: 0 }
+            20% { opacity: 0.6 }
+            100% { transform: translateY(200px); opacity: 0 }
+          }
+        `}</style>
+        {drops.map(i => (
+          <div key={i} style={{
+            position: 'absolute',
+            top: 0, left: `${8 + i * 8}%`,
+            width: '1.5px', height: '12px',
+            background: 'linear-gradient(180deg, transparent, rgba(96,165,250,0.5))',
+            borderRadius: '1px',
+            animation: `rainDrop ${1.2 + Math.random() * 0.8}s linear infinite`,
+            animationDelay: `${Math.random() * 2}s`,
+          }} />
+        ))}
+      </>
+    )
+  }
+
+  // Nieve
+  if (code > 69 && code <= 86) {
+    const flakes = Array.from({ length: 10 }, (_, i) => i)
+    return (
+      <>
+        <style>{`
+          @keyframes snowFall {
+            0% { transform: translateY(-10px) translateX(0); opacity: 0 }
+            20% { opacity: 0.7 }
+            100% { transform: translateY(200px) translateX(20px); opacity: 0 }
+          }
+        `}</style>
+        {flakes.map(i => (
+          <div key={i} style={{
+            position: 'absolute',
+            top: 0, left: `${5 + i * 9}%`,
+            width: '4px', height: '4px',
+            background: 'rgba(255,255,255,0.6)',
+            borderRadius: '50%',
+            animation: `snowFall ${2.5 + Math.random() * 2}s linear infinite`,
+            animationDelay: `${Math.random() * 3}s`,
+          }} />
+        ))}
+      </>
+    )
+  }
+
+  // Tormenta
+  if (code > 86 && code <= 99) {
+    return (
+      <>
+        <style>{`
+          @keyframes lightning {
+            0%,90%,100% { opacity: 0 }
+            92% { opacity: 0.8 }
+            94% { opacity: 0 }
+            96% { opacity: 0.5 }
+          }
+          @keyframes stormRain {
+            0% { transform: translateY(-20px) skewX(-10deg); opacity: 0 }
+            15% { opacity: 0.5 }
+            100% { transform: translateY(200px) skewX(-10deg); opacity: 0 }
+          }
+        `}</style>
+        {/* Flash de rayo */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(167,139,250,0.15)',
+          animation: 'lightning 4s ease-in-out infinite',
+          animationDelay: `${Math.random() * 2}s`,
+        }} />
+        {/* Lluvia diagonal */}
+        {Array.from({ length: 8 }, (_, i) => (
+          <div key={i} style={{
+            position: 'absolute', top: 0, left: `${5 + i * 12}%`,
+            width: '1.5px', height: '16px',
+            background: 'linear-gradient(180deg, transparent, rgba(124,58,237,0.4))',
+            animation: `stormRain ${0.8 + Math.random() * 0.5}s linear infinite`,
+            animationDelay: `${Math.random() * 1.5}s`,
+          }} />
+        ))}
+      </>
+    )
+  }
+
+  // Niebla
+  if (code > 2 && code <= 49) {
+    return (
+      <>
+        <style>{`
+          @keyframes fogDrift {
+            0% { transform: translateX(-20px); opacity: 0.08 }
+            50% { opacity: 0.15 }
+            100% { transform: translateX(20px); opacity: 0.08 }
+          }
+        `}</style>
+        {[0, 1, 2].map(i => (
+          <div key={i} style={{
+            position: 'absolute',
+            top: `${30 + i * 25}%`, left: '-10%',
+            width: '120%', height: '20px',
+            background: 'rgba(148,163,184,0.12)',
+            borderRadius: '10px', filter: 'blur(8px)',
+            animation: `fogDrift ${5 + i * 2}s ease-in-out infinite alternate`,
+            animationDelay: `${i * 1.5}s`,
+          }} />
+        ))}
+      </>
+    )
+  }
+
+  // Parcialmente nublado: nube flotante
+  if (code <= 2) {
+    return (
+      <>
+        <style>{`
+          @keyframes cloudFloat {
+            0%,100% { transform: translateX(0) }
+            50% { transform: translateX(10px) }
+          }
+        `}</style>
+        <div style={{
+          position: 'absolute', top: '15px', right: '20px',
+          fontSize: '28px', opacity: 0.2,
+          animation: 'cloudFloat 6s ease-in-out infinite',
+        }}>☁️</div>
+      </>
+    )
+  }
+
+  return null
+}
+
 export default function WeatherPage() {
   const router = useRouter()
   const [weather, setWeather] = useState<WeatherData | null>(null)
@@ -233,22 +410,28 @@ export default function WeatherPage() {
 
           {/* Main card */}
           <div style={{
-            background: 'linear-gradient(135deg, rgba(14,165,233,0.12), rgba(6,182,212,0.06))',
+            background: getCardGradient(weather.weatherCode),
             border: '1px solid rgba(14,165,233,0.25)',
             borderRadius: '20px', padding: '28px 20px', textAlign: 'center',
-            boxShadow: '0 0 40px rgba(14,165,233,0.08)'
+            boxShadow: '0 0 40px rgba(14,165,233,0.08)',
+            position: 'relative', overflow: 'hidden',
           }}>
-            <div style={{ fontSize: '64px', lineHeight: 1, marginBottom: '8px' }}>
-              {getWeatherIcon(weather.weatherCode)}
-            </div>
-            <div style={{ fontSize: '64px', fontWeight: '200', letterSpacing: '-2px', lineHeight: 1 }}>
-              {weather.temp}°
-            </div>
-            <div style={{ fontSize: '16px', color: 'rgba(255,255,255,0.6)', marginTop: '6px', letterSpacing: '1px' }}>
-              {getWeatherDesc(weather.weatherCode)}
-            </div>
-            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)', marginTop: '4px' }}>
-              Sensación {weather.feelsLike}°C
+            {/* Animación de clima */}
+            <WeatherAnimation code={weather.weatherCode} />
+
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ fontSize: '64px', lineHeight: 1, marginBottom: '8px' }}>
+                {getWeatherIcon(weather.weatherCode)}
+              </div>
+              <div style={{ fontSize: '64px', fontWeight: '200', letterSpacing: '-2px', lineHeight: 1 }}>
+                {weather.temp}°
+              </div>
+              <div style={{ fontSize: '16px', color: 'rgba(255,255,255,0.6)', marginTop: '6px', letterSpacing: '1px' }}>
+                {getWeatherDesc(weather.weatherCode)}
+              </div>
+              <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)', marginTop: '4px' }}>
+                Sensación {weather.feelsLike}°C
+              </div>
             </div>
           </div>
 
