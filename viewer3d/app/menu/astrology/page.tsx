@@ -35,6 +35,27 @@ const PLANETS_META = [
 // ─── MOTOR ASTRONÓMICO — astronomy-engine (VSOP87/ELP, precisión ~1 arcmin) ──
 import * as Astronomy from 'astronomy-engine'
 
+// Velocidad instantánea dλ/dt en grados/día (Δt = 1 hora para máxima precisión)
+function getPlanetSpeed(body: Astronomy.Body, t: Astronomy.AstroTime): number {
+  const dt = 1 / 24 // 1 hora en días
+  const tNext = Astronomy.MakeTime(new Date(t.date.getTime() + dt * 86400000))
+  const lonNow = Astronomy.EclipticLongitude(body, t)
+  const lonNext = Astronomy.EclipticLongitude(body, tNext)
+  let diff = lonNext - lonNow
+  if (diff > 180) diff -= 360
+  if (diff < -180) diff += 360
+  return diff / dt // grados/día
+}
+
+// Clasificar estado del planeta según velocidad
+function getPlanetStatus(speed: number, avgSpeed: number): 'direct' | 'retrograde' | 'stationary-direct' | 'stationary-retrograde' {
+  const stationaryThreshold = Math.abs(avgSpeed) * 0.05 // <5% de velocidad media = estacionario
+  if (Math.abs(speed) < stationaryThreshold) {
+    return speed >= 0 ? 'stationary-direct' : 'stationary-retrograde'
+  }
+  return speed > 0 ? 'direct' : 'retrograde'
+}
+
 function getPlanetPositions(date: Date) {
   const t = Astronomy.MakeTime(date)
 
@@ -58,7 +79,6 @@ function getPlanetPositions(date: Date) {
     pluto: Astronomy.EclipticLongitude(Astronomy.Body.Pluto, t),
   }
 
-  // Retrogradación: comparar posición actual vs 1 día antes
   const bodyMap: Record<string, Astronomy.Body> = {
     mercury: Astronomy.Body.Mercury, venus: Astronomy.Body.Venus,
     mars: Astronomy.Body.Mars, jupiter: Astronomy.Body.Jupiter,
@@ -66,20 +86,31 @@ function getPlanetPositions(date: Date) {
     neptune: Astronomy.Body.Neptune, pluto: Astronomy.Body.Pluto
   }
 
+  // Velocidades instantáneas (Δt = 1 hora — más preciso en puntos estacionarios)
+  const speeds: Record<string, number> = {}
+  Object.entries(bodyMap).forEach(([id, body]) => {
+    speeds[id] = getPlanetSpeed(body, t)
+  })
+  // Sol y Luna: velocidad aproximada
+  speeds.sun = 0.9856
+  speeds.moon = 13.176
+
+  // Estado del planeta: direct / retrograde / stationary-direct / stationary-retrograde
+  const planetStatus: Record<string, ReturnType<typeof getPlanetStatus>> = {}
+  Object.entries(bodyMap).forEach(([id, _]) => {
+    const avgSpeed = PLANETS_META.find(p => p.id === id)?.speed || 1
+    planetStatus[id] = getPlanetStatus(speeds[id], avgSpeed)
+  })
+  planetStatus.sun = 'direct'
+  planetStatus.moon = 'direct'
+
+  // isRetrograde: Δt = 1 hora (más preciso que 1 día en puntos estacionarios)
   const isRetrograde = (id: string) => {
     if (id === 'sun' || id === 'moon') return false
-    const body = bodyMap[id]
-    if (!body) return false
-    const tPrev = Astronomy.MakeTime(new Date(date.getTime() - 86400000))
-    const lonNow = positions[id]
-    const lonPrev = Astronomy.EclipticLongitude(body, tPrev)
-    let diff = lonNow - lonPrev
-    if (diff > 180) diff -= 360
-    if (diff < -180) diff += 360
-    return diff < 0
+    return speeds[id] < 0
   }
 
-  return { positions, isRetrograde }
+  return { positions, isRetrograde, speeds, planetStatus }
 }
 
 function getAspects(positions: Record<string, number>) {
@@ -185,6 +216,16 @@ function generateInterpretation(
     lines.push(`⚠️ Retrogradaciones activas (${names}): período de revisión interna en las áreas gobernadas por estos planetas. No es momento de iniciar, sino de reconsiderar y ajustar.`)
   }
 
+  // Planetas estacionarios (velocidad ~0) — muy raros y significativos
+  const stationaries = PLANETS_META.filter(p => {
+    const status = (positions as any)._status?.[p.id]
+    return status === 'stationary-direct' || status === 'stationary-retrograde'
+  })
+  if (stationaries.length > 0) {
+    const names = stationaries.map(p => p.name).join(', ')
+    lines.push(`⊙ Planeta(s) estacionario(s) (${names}): momento de máxima intensidad. El planeta está cambiando de dirección — su energía se concentra y amplifica. Evento astronómico raro y astrológicamente significativo.`)
+  }
+
   // Aspectos específicos
   aspects.forEach(a => {
     const key = `${a.p1}-${a.p2}-${a.type}`
@@ -225,9 +266,9 @@ export default function AstrologyPage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
 
   const data = useMemo(() => {
-    const { positions, isRetrograde } = getPlanetPositions(selectedDate)
+    const { positions, isRetrograde, speeds, planetStatus } = getPlanetPositions(selectedDate)
     const aspects = getAspects(positions)
-    return { positions, isRetrograde, aspects }
+    return { positions, isRetrograde, speeds, planetStatus, aspects }
   }, [selectedDate])
 
   const moonPhase = useMemo(() => {
@@ -430,16 +471,38 @@ export default function AstrologyPage() {
             const deg = Math.floor(lon % 30)
             const min = Math.floor((lon % 1) * 60)
             const isRetro = data.isRetrograde(p.id)
+            const status = data.planetStatus[p.id]
+            const speed = data.speeds[p.id]
+            const isStationary = status === 'stationary-direct' || status === 'stationary-retrograde'
+            const statusLabel = isStationary
+              ? (status === 'stationary-direct' ? '⊙ Estacionario D' : '⊙ Estacionario Rx')
+              : isRetro ? 'Rx' : null
+            const statusColor = isStationary ? '#fbbf24' : '#ef4444'
             return (
-              <div key={p.id} style={{ padding: '14px', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px' }}>
+              <div key={p.id} style={{
+                padding: '14px',
+                background: isStationary ? 'rgba(251,191,36,0.06)' : 'rgba(255,255,255,0.025)',
+                border: `1px solid ${isStationary ? 'rgba(251,191,36,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                borderRadius: '10px'
+              }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
                   <span style={{ fontSize: '36px', color: p.color }}>{p.glyph}</span>
                   <div>
-                    <div style={{ fontWeight: 'bold', fontSize: '22px' }}>{p.name} {isRetro && <span style={{ color: '#ef4444', fontSize: '17px', fontStyle: 'italic' }}>Rx</span>}</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '22px' }}>
+                      {p.name}{' '}
+                      {statusLabel && <span style={{ color: statusColor, fontSize: '14px', fontStyle: 'italic' }}>{statusLabel}</span>}
+                    </div>
                     <div style={{ color: sign.color, fontSize: '20px' }}>{deg}°{min.toString().padStart(2,'0')}′ {sign.name} {sign.glyph}</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '17px', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.5px' }}>{sign.element} · {sign.ruler}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: '17px', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.5px' }}>{sign.element} · {sign.ruler}</div>
+                  {p.id !== 'sun' && p.id !== 'moon' && (
+                    <div style={{ fontSize: '13px', color: isRetro ? '#ef4444' : 'rgba(255,255,255,0.2)', letterSpacing: '0.5px' }}>
+                      {speed > 0 ? '+' : ''}{speed.toFixed(3)}°/d
+                    </div>
+                  )}
+                </div>
               </div>
             )
           })}
