@@ -312,10 +312,26 @@ export default function ConstellationsScene() {
   )
   const [cameraRotation, setCameraRotation] = useState(0)
 
-  // Pitch controlado por zona táctil izquierda (mobile)
+  // Pitch controlado por zona táctil izquierda (mobile) y rueda del mouse (PC)
   const pitchRef = useRef(0)
   const touchStartY = useRef(0)
   const touchActive = useRef(false)
+
+  // PC: rueda del mouse rota el cielo arriba/abajo
+  useEffect(() => {
+    if (isMobile) return
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      // deltaY positivo = scroll abajo = cielo sube (miras arriba)
+      pitchRef.current = THREE.MathUtils.clamp(
+        pitchRef.current + e.deltaY * 0.0008,
+        -Math.PI / 2.2,
+        Math.PI / 2.2
+      )
+    }
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    return () => window.removeEventListener('wheel', handleWheel)
+  }, [isMobile])
 
   // Handlers para zona táctil izquierda
   const handlePitchTouchStart = (e: React.TouchEvent) => {
@@ -459,7 +475,7 @@ export default function ConstellationsScene() {
           fontSize: '10px', letterSpacing: '2px', fontFamily: 'monospace',
           pointerEvents: 'none',
         }}>
-          WASD mover · SHIFT+mouse subir/bajar · Q/E rotar · N centrar norte
+          WASD mover · SHIFT+mouse subir/bajar · Q/E rotar · 🖱️ rueda = inclinar cielo
         </div>
       )}
     </div>
