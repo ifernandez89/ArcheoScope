@@ -17,7 +17,6 @@ import { getAssetPath } from '@/lib/paths'
 import MilkyWayBackground from './MilkyWayBackground'
 import Stars from './Stars'
 import RealisticSolarSystem from './RealisticSolarSystem'
-import EngineIntegration from './EngineIntegration'
 
 /** UFO controlado por touch — sigue el dedo en pantalla */
 function TouchSpaceUfo() {
@@ -121,7 +120,6 @@ function TouchSpaceUfo() {
 function SolarContent() {
   return (
     <>
-      <EngineIntegration />
       <MilkyWayBackground />
       <Stars />
       <RealisticSolarSystem />
@@ -164,9 +162,9 @@ export default function MobileSolarScene() {
       <Canvas
         camera={{ position: [0, 0, 15], fov: 50 }}
         style={{ background: '#000' }}
-        dpr={[1, 1.5]}
+        dpr={[1, 1.2]}
         gl={{
-          antialias: true,
+          antialias: false,
           alpha: false,
           powerPreference: 'high-performance',
           toneMapping: THREE.ACESFilmicToneMapping,
