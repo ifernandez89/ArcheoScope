@@ -216,7 +216,7 @@ export default function WeatherControl({ onWeatherChange, initialWeather }: Weat
           <WeatherCheckbox 
             checked={weather.visibleSun} 
             onChange={() => handleToggle('visibleSun')}
-            icon="☀️"
+            icon=""
             label="Sol/Luna"
           />
 
