@@ -473,9 +473,6 @@ export default function WeatherPage() {
             <WeatherAnimation code={weather.weatherCode} night={isNightTime(weather.sunrise, weather.sunset)} />
 
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ fontSize: '64px', lineHeight: 1, marginBottom: '8px' }}>
-                {getWeatherIcon(weather.weatherCode)}
-              </div>
               <div style={{ fontSize: '64px', fontWeight: '200', letterSpacing: '-2px', lineHeight: 1 }}>
                 {weather.temp}°
               </div>
