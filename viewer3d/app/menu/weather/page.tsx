@@ -88,18 +88,17 @@ function isNightTime(sunrise?: string, sunset?: string): boolean {
   const m = now.getMinutes()
   const nowMins = h * 60 + m
 
-  if (sunrise && sunset) {
-    // Parsear HH:MM
+  if (sunrise && sunset && sunrise !== '--:--' && sunset !== '--:--') {
     const [sh, sm] = sunrise.split(':').map(Number)
     const [eh, em] = sunset.split(':').map(Number)
-    if (!isNaN(sh) && !isNaN(eh)) {
+    if (!isNaN(sh) && !isNaN(eh) && sh > 0) {
       const sunriseMins = sh * 60 + (sm || 0)
       const sunsetMins = eh * 60 + (em || 0)
       return nowMins < sunriseMins || nowMins > sunsetMins
     }
   }
-  // Fallback: noche entre 19:00 y 06:00
-  return h >= 19 || h < 6
+  // Fallback conservador: noche entre 20:00 y 06:00
+  return h >= 20 || h < 6
 }
 
 // ─── Gradiente de fondo según clima + día/noche ──────────────────────────────
@@ -112,14 +111,16 @@ function getCardGradient(code: number, night: boolean): string {
     if (code <= 99) return 'linear-gradient(135deg, rgba(30,10,60,0.9), rgba(15,23,42,0.8))' // noche tormenta
     return 'linear-gradient(135deg, rgba(15,23,42,0.9), rgba(30,41,59,0.7))'
   }
-  if (code === 0) return 'linear-gradient(135deg, rgba(251,191,36,0.12), rgba(245,158,11,0.06))'
-  if (code <= 2) return 'linear-gradient(135deg, rgba(14,165,233,0.12), rgba(6,182,212,0.06))'
-  if (code === 3) return 'linear-gradient(135deg, rgba(107,114,128,0.15), rgba(75,85,99,0.08))'
-  if (code <= 49) return 'linear-gradient(135deg, rgba(148,163,184,0.12), rgba(100,116,139,0.08))'
-  if (code <= 69) return 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(37,99,235,0.08))'
-  if (code <= 79) return 'linear-gradient(135deg, rgba(226,232,240,0.15), rgba(203,213,225,0.08))'
-  if (code <= 86) return 'linear-gradient(135deg, rgba(226,232,240,0.18), rgba(148,163,184,0.10))'
-  if (code <= 99) return 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(88,28,135,0.08))'
+  if (!night) {
+    if (code === 0) return 'linear-gradient(135deg, rgba(251,191,36,0.18), rgba(245,158,11,0.10), rgba(14,165,233,0.06))'
+    if (code <= 2) return 'linear-gradient(135deg, rgba(14,165,233,0.14), rgba(6,182,212,0.08))'
+    if (code === 3) return 'linear-gradient(135deg, rgba(107,114,128,0.15), rgba(75,85,99,0.08))'
+    if (code <= 49) return 'linear-gradient(135deg, rgba(148,163,184,0.12), rgba(100,116,139,0.08))'
+    if (code <= 69) return 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(37,99,235,0.08))'
+    if (code <= 79) return 'linear-gradient(135deg, rgba(226,232,240,0.15), rgba(203,213,225,0.08))'
+    if (code <= 86) return 'linear-gradient(135deg, rgba(226,232,240,0.18), rgba(148,163,184,0.10))'
+    if (code <= 99) return 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(88,28,135,0.08))'
+  }
   return 'linear-gradient(135deg, rgba(14,165,233,0.12), rgba(6,182,212,0.06))'
 }
 
@@ -194,24 +195,54 @@ function WeatherAnimation({ code, night }: { code: number; night: boolean }) {
     )
   }
 
-  // ── DÍA DESPEJADO: sol suave (más pequeño) ──
+  // ── DÍA DESPEJADO: sol con rayos cálidos ──
   if (code === 0) {
     return (
       <>
         <style>{`
-          @keyframes sunPulse { 0%,100% { opacity: 0.1 } 50% { opacity: 0.18 } }
+          @keyframes sunPulse { 0%,100% { opacity: 0.18; transform: scale(1) } 50% { opacity: 0.28; transform: scale(1.05) } }
           @keyframes sunSpin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+          @keyframes sunRay { 0%,100% { opacity: 0.12 } 50% { opacity: 0.22 } }
         `}</style>
+        {/* Glow central cálido */}
         <div style={{
-          position: 'absolute', top: '-15px', right: '-15px', width: '60px', height: '60px',
-          borderRadius: '50%', background: 'radial-gradient(circle, rgba(251,191,36,0.2) 0%, transparent 70%)',
-          animation: 'sunPulse 4s ease-in-out infinite',
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '80px', height: '80px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(251,191,36,0.35) 0%, rgba(245,158,11,0.15) 50%, transparent 70%)',
+          animation: 'sunPulse 3s ease-in-out infinite',
+        }} />
+        {/* Rayos girando */}
+        <div style={{
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '110px', height: '110px',
+          border: '1.5px dashed rgba(251,191,36,0.18)',
+          borderRadius: '50%',
+          animation: 'sunSpin 20s linear infinite',
         }} />
         <div style={{
-          position: 'absolute', top: '-8px', right: '-8px', width: '46px', height: '46px',
-          border: '1.5px dashed rgba(251,191,36,0.1)', borderRadius: '50%',
-          animation: 'sunSpin 25s linear infinite',
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '140px', height: '140px',
+          border: '1px dashed rgba(251,191,36,0.08)',
+          borderRadius: '50%',
+          animation: 'sunSpin 35s linear infinite reverse',
         }} />
+        {/* Destellos de calor en las esquinas */}
+        {[
+          { top: '10%', right: '12%' },
+          { top: '60%', right: '8%' },
+          { top: '20%', left: '10%' },
+        ].map((pos, i) => (
+          <div key={i} style={{
+            position: 'absolute', ...pos,
+            width: '6px', height: '6px', borderRadius: '50%',
+            background: 'rgba(251,191,36,0.4)',
+            animation: `sunRay ${2 + i * 0.8}s ease-in-out infinite`,
+            animationDelay: `${i * 0.6}s`,
+          }} />
+        ))}
       </>
     )
   }

@@ -146,7 +146,102 @@ function getSign(lon: number) {
   return ZODIAC[idx]
 }
 
-// ─── INTERPRETACIÓN ASTROLÓGICA PROFESIONAL ──────────────────────────────────
+// ─── ELEMENTOS PREDOMINANTES ─────────────────────────────────────────────────
+const ELEMENT_DESCRIPTIONS: Record<string, { title: string, desc: string, advice: string, color: string, emoji: string }> = {
+  'Fuego': {
+    title: 'Predominio de Fuego',
+    desc: 'La energía del día es expansiva, apasionada y orientada a la acción. Los impulsos creativos y el liderazgo están amplificados.',
+    advice: 'Día ideal para iniciar proyectos, tomar decisiones audaces y expresar tu visión con confianza.',
+    color: '#ef4444', emoji: '🔥'
+  },
+  'Tierra': {
+    title: 'Predominio de Tierra',
+    desc: 'La energía del día es práctica, estable y orientada a resultados concretos. El enfoque en lo material y lo tangible está favorecido.',
+    advice: 'Día ideal para planificar, construir, organizar y consolidar lo que ya existe.',
+    color: '#84cc16', emoji: '🌿'
+  },
+  'Aire': {
+    title: 'Predominio de Aire',
+    desc: 'La energía del día es mental, comunicativa y social. Las ideas fluyen con facilidad y las conexiones intelectuales se multiplican.',
+    advice: 'Día ideal para comunicar, aprender, negociar y establecer nuevas conexiones.',
+    color: '#38bdf8', emoji: '💨'
+  },
+  'Agua': {
+    title: 'Predominio de Agua',
+    desc: 'La energía del día es emocional, intuitiva y receptiva. La sensibilidad está elevada y la conexión con el mundo interior es profunda.',
+    advice: 'Día ideal para introspección, sanar relaciones, trabajar con la intuición y el mundo emocional.',
+    color: '#818cf8', emoji: '🌊'
+  },
+}
+
+function getElementBalance(positions: Record<string, number>): {
+  counts: Record<string, number>
+  dominant: string[]
+  balance: string
+} {
+  const counts: Record<string, number> = { Fuego: 0, Tierra: 0, Aire: 0, Agua: 0 }
+  Object.values(positions).forEach(lon => {
+    const sign = getSign(lon)
+    counts[sign.element] = (counts[sign.element] || 0) + 1
+  })
+  const max = Math.max(...Object.values(counts))
+  const dominant = Object.entries(counts).filter(([, v]) => v === max).map(([k]) => k)
+  const total = Object.values(counts).reduce((a, b) => a + b, 0)
+  const balance = Object.entries(counts)
+    .sort(([, a], [, b]) => b - a)
+    .map(([el, n]) => `${ELEMENT_DESCRIPTIONS[el].emoji} ${el} ${n}/${total}`)
+    .join('  ·  ')
+  return { counts, dominant, balance }
+}
+
+// ─── NODOS LUNARES ────────────────────────────────────────────────────────────
+// El Nodo Norte (Rahu) se calcula como la longitud del nodo ascendente de la Luna
+// astronomy-engine no tiene MoonNode directo, usamos aproximación clásica
+function getLunarNodes(date: Date): { northNode: number, southNode: number, northSign: ReturnType<typeof getSign>, southSign: ReturnType<typeof getSign> } {
+  // Nodo Norte: ciclo de 18.6 años, retrograda continuamente
+  // Referencia: Nodo Norte en 0° Aries el 1 enero 2005 (JD 2453371.5)
+  const jd = (date.getTime() / 86400000) + 2440587.5
+  const daysSinceRef = jd - 2453371.5
+  // Velocidad media: -0.05295°/día (retrograda)
+  const northNodeLon = ((0 - 0.05295 * daysSinceRef) % 360 + 360) % 360
+  const southNodeLon = (northNodeLon + 180) % 360
+  return {
+    northNode: northNodeLon,
+    southNode: southNodeLon,
+    northSign: getSign(northNodeLon),
+    southSign: getSign(southNodeLon),
+  }
+}
+
+const NODE_NORTH_INTERPRETATIONS: Record<string, string> = {
+  Aries: 'Desarrollar independencia, valentía y liderazgo personal. Confiar en el propio impulso.',
+  Tauro: 'Construir seguridad material y emocional. Valorar la estabilidad y los placeres simples.',
+  Géminis: 'Cultivar la curiosidad, la comunicación y la adaptabilidad. Aprender a escuchar.',
+  Cáncer: 'Nutrir las raíces emocionales y familiares. Desarrollar la empatía y el cuidado.',
+  Leo: 'Expresar la creatividad y el corazón con generosidad. Brillar sin miedo al juicio.',
+  Virgo: 'Desarrollar el discernimiento, el servicio y la atención al detalle.',
+  Libra: 'Cultivar el equilibrio, la diplomacia y las relaciones armoniosas.',
+  Escorpio: 'Transformar profundamente. Soltar el control y abrazar la vulnerabilidad.',
+  Sagitario: 'Expandir la visión filosófica y espiritual. Buscar el significado más allá de lo cotidiano.',
+  Capricornio: 'Construir con disciplina y responsabilidad. Asumir el propio poder con madurez.',
+  Acuario: 'Contribuir a la comunidad y la humanidad. Innovar con visión de futuro.',
+  Piscis: 'Desarrollar la compasión, la espiritualidad y la conexión con lo trascendente.',
+}
+
+const NODE_SOUTH_INTERPRETATIONS: Record<string, string> = {
+  Aries: 'Soltar la impulsividad y el egocentrismo. Aprender a cooperar.',
+  Tauro: 'Soltar el apego material y la resistencia al cambio.',
+  Géminis: 'Soltar la dispersión mental y la superficialidad.',
+  Cáncer: 'Soltar el apego emocional y la dependencia familiar.',
+  Leo: 'Soltar la necesidad de reconocimiento y el drama personal.',
+  Virgo: 'Soltar el perfeccionismo excesivo y la autocrítica.',
+  Libra: 'Soltar la codependencia y la indecisión crónica.',
+  Escorpio: 'Soltar el control, los celos y las dinámicas de poder.',
+  Sagitario: 'Soltar el dogmatismo y la huida de la responsabilidad cotidiana.',
+  Capricornio: 'Soltar la rigidez, el autoritarismo y el miedo al fracaso.',
+  Acuario: 'Soltar el desapego emocional y la rebeldía sin causa.',
+  Piscis: 'Soltar la evasión, la victimización y la confusión.',
+}
 const PLANET_INTERPRETATIONS: Record<string, Record<string, string>> = {
   sun: {
     Aries: 'Voluntad directa y pionera. Impulso de liderazgo y acción inmediata.',
@@ -268,7 +363,9 @@ export default function AstrologyPage() {
   const data = useMemo(() => {
     const { positions, isRetrograde, speeds, planetStatus } = getPlanetPositions(selectedDate)
     const aspects = getAspects(positions)
-    return { positions, isRetrograde, speeds, planetStatus, aspects }
+    const elementBalance = getElementBalance(positions)
+    const lunarNodes = getLunarNodes(selectedDate)
+    return { positions, isRetrograde, speeds, planetStatus, aspects, elementBalance, lunarNodes }
   }, [selectedDate])
 
   const moonPhase = useMemo(() => {
@@ -557,6 +654,90 @@ export default function AstrologyPage() {
               {line}
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* ELEMENTOS PREDOMINANTES */}
+      <div className="info-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', maxWidth: '900px', width: '100%', padding: 'clamp(16px, 4vw, 26px)' }}>
+        <div style={{ fontSize: 'clamp(11px, 2.5vw, 20px)', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginBottom: '16px', textAlign: 'center' }}>
+          ELEMENTOS PREDOMINANTES DEL DÍA
+        </div>
+        {/* Barra de elementos */}
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '18px', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+          {Object.entries(data.elementBalance.counts).map(([el, n]) => (
+            <div key={el} style={{
+              flex: n, background: ELEMENT_DESCRIPTIONS[el].color,
+              opacity: 0.7, transition: 'flex 0.5s ease',
+              minWidth: n > 0 ? '4px' : '0',
+            }} />
+          ))}
+        </div>
+        {/* Leyenda */}
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '18px', flexWrap: 'wrap' }}>
+          {Object.entries(data.elementBalance.counts).map(([el, n]) => (
+            <span key={el} style={{ fontSize: 'clamp(12px, 2.5vw, 18px)', color: ELEMENT_DESCRIPTIONS[el].color, opacity: n > 0 ? 1 : 0.3 }}>
+              {ELEMENT_DESCRIPTIONS[el].emoji} {el} ({n})
+            </span>
+          ))}
+        </div>
+        {/* Descripción del/los elemento(s) dominante(s) */}
+        {data.elementBalance.dominant.map(el => (
+          <div key={el} style={{
+            padding: 'clamp(12px, 3vw, 18px)',
+            background: `rgba(${el === 'Fuego' ? '239,68,68' : el === 'Tierra' ? '132,204,22' : el === 'Aire' ? '56,189,248' : '129,140,248'},0.06)`,
+            border: `1px solid ${ELEMENT_DESCRIPTIONS[el].color}30`,
+            borderRadius: '10px', marginBottom: '10px',
+          }}>
+            <div style={{ fontSize: 'clamp(14px, 3vw, 22px)', fontWeight: 'bold', color: ELEMENT_DESCRIPTIONS[el].color, marginBottom: '8px' }}>
+              {ELEMENT_DESCRIPTIONS[el].emoji} {ELEMENT_DESCRIPTIONS[el].title}
+            </div>
+            <div style={{ fontSize: 'clamp(13px, 2.5vw, 19px)', color: 'rgba(255,255,255,0.65)', lineHeight: '1.7', marginBottom: '8px' }}>
+              {ELEMENT_DESCRIPTIONS[el].desc}
+            </div>
+            <div style={{ fontSize: 'clamp(12px, 2.5vw, 18px)', color: ELEMENT_DESCRIPTIONS[el].color, opacity: 0.8, fontStyle: 'italic' }}>
+              ✦ {ELEMENT_DESCRIPTIONS[el].advice}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* NODOS LUNARES */}
+      <div className="info-card" style={{ background: 'rgba(167,139,250,0.03)', border: '1px solid rgba(167,139,250,0.15)', maxWidth: '900px', width: '100%', padding: 'clamp(16px, 4vw, 26px)' }}>
+        <div style={{ fontSize: 'clamp(11px, 2.5vw, 20px)', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginBottom: '18px', textAlign: 'center' }}>
+          NODOS LUNARES · {selectedDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          {/* Nodo Norte */}
+          <div style={{ padding: 'clamp(12px, 3vw, 18px)', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '12px' }}>
+            <div style={{ fontSize: 'clamp(18px, 4vw, 28px)', marginBottom: '6px' }}>☊</div>
+            <div style={{ fontSize: 'clamp(11px, 2vw, 16px)', color: '#fbbf24', letterSpacing: '1px', marginBottom: '4px' }}>NODO NORTE</div>
+            <div style={{ fontSize: 'clamp(14px, 3vw, 20px)', fontWeight: 'bold', color: '#fde68a', marginBottom: '8px' }}>
+              {Math.floor(data.lunarNodes.northNode % 30)}° {data.lunarNodes.northSign.name} {data.lunarNodes.northSign.glyph}
+            </div>
+            <div style={{ fontSize: 'clamp(11px, 2vw, 15px)', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6', marginBottom: '8px' }}>
+              Dirección de crecimiento y evolución del alma.
+            </div>
+            <div style={{ fontSize: 'clamp(11px, 2vw, 15px)', color: '#fde68a', lineHeight: '1.6', fontStyle: 'italic' }}>
+              {NODE_NORTH_INTERPRETATIONS[data.lunarNodes.northSign.name]}
+            </div>
+          </div>
+          {/* Nodo Sur */}
+          <div style={{ padding: 'clamp(12px, 3vw, 18px)', background: 'rgba(148,163,184,0.06)', border: '1px solid rgba(148,163,184,0.2)', borderRadius: '12px' }}>
+            <div style={{ fontSize: 'clamp(18px, 4vw, 28px)', marginBottom: '6px' }}>☋</div>
+            <div style={{ fontSize: 'clamp(11px, 2vw, 16px)', color: '#94a3b8', letterSpacing: '1px', marginBottom: '4px' }}>NODO SUR</div>
+            <div style={{ fontSize: 'clamp(14px, 3vw, 20px)', fontWeight: 'bold', color: '#cbd5e1', marginBottom: '8px' }}>
+              {Math.floor(data.lunarNodes.southNode % 30)}° {data.lunarNodes.southSign.name} {data.lunarNodes.southSign.glyph}
+            </div>
+            <div style={{ fontSize: 'clamp(11px, 2vw, 15px)', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6', marginBottom: '8px' }}>
+              Patrones del pasado a integrar y soltar.
+            </div>
+            <div style={{ fontSize: 'clamp(11px, 2vw, 15px)', color: '#94a3b8', lineHeight: '1.6', fontStyle: 'italic' }}>
+              {NODE_SOUTH_INTERPRETATIONS[data.lunarNodes.southSign.name]}
+            </div>
+          </div>
+        </div>
+        <div style={{ fontSize: 'clamp(10px, 2vw, 14px)', color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: '14px', fontStyle: 'italic' }}>
+          Los nodos lunares se mueven ~0.053°/día en sentido retrógrado · Ciclo completo: 18.6 años
         </div>
       </div>
 
