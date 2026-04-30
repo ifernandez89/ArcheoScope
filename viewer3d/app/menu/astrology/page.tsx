@@ -373,6 +373,12 @@ export default function AstrologyPage() {
     const lunarCycle = 29.530588853
     const phase = ((jd - 2451550.1) / lunarCycle) % 1
     const phaseNorm = phase < 0 ? phase + 1 : phase
+    
+    // Cálculo correcto de iluminación (0% en nueva, 100% en llena)
+    const illumination = phaseNorm <= 0.5 
+      ? phaseNorm * 200  // Creciente: 0% → 100%
+      : (1 - phaseNorm) * 200  // Menguante: 100% → 0%
+    
     let name = 'Luna Nueva', glyph = '🌑'
     if (phaseNorm > 0.03 && phaseNorm <= 0.23) { name = 'Cuarto Creciente'; glyph = '🌒' }
     else if (phaseNorm > 0.23 && phaseNorm <= 0.27) { name = 'Primer Cuarto'; glyph = '🌓' }
@@ -381,7 +387,27 @@ export default function AstrologyPage() {
     else if (phaseNorm > 0.53 && phaseNorm <= 0.73) { name = 'Gibosa Menguante'; glyph = '🌖' }
     else if (phaseNorm > 0.73 && phaseNorm <= 0.77) { name = 'Último Cuarto'; glyph = '🌗' }
     else if (phaseNorm > 0.77 && phaseNorm <= 0.97) { name = 'Cuarto Menguante'; glyph = '🌘' }
-    return { name, glyph, val: phaseNorm * 100 }
+    
+    // Calcular próxima luna nueva y llena
+    const daysInCycle = phaseNorm * lunarCycle
+    const daysToNewMoon = phaseNorm <= 0.03 ? 0 : (1 - phaseNorm) * lunarCycle
+    const daysToFullMoon = phaseNorm <= 0.5 
+      ? (0.5 - phaseNorm) * lunarCycle 
+      : (1.5 - phaseNorm) * lunarCycle
+    
+    const nextNewMoon = new Date(selectedDate.getTime() + daysToNewMoon * 86400000)
+    const nextFullMoon = new Date(selectedDate.getTime() + daysToFullMoon * 86400000)
+    
+    return { 
+      name, 
+      glyph, 
+      illumination: Math.round(illumination * 10) / 10,
+      phaseNorm,
+      nextNewMoon,
+      nextFullMoon,
+      daysToNewMoon: Math.round(daysToNewMoon),
+      daysToFullMoon: Math.round(daysToFullMoon)
+    }
   }, [selectedDate])
 
   const wheelSize = typeof window !== 'undefined' && window.innerWidth < 500 ? 360 : 520
@@ -547,13 +573,51 @@ export default function AstrologyPage() {
       </div>
 
       {/* FASE LUNAR */}
-      <div className="info-card" style={{ background: 'rgba(226,232,240,0.04)', border: '1px solid rgba(226,232,240,0.2)', padding: 'clamp(16px, 5vw, 28px)', maxWidth: '500px' }}>
-        <div style={{ fontSize: '19px', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginBottom: '8px', textAlign: 'center' }}>FASE LUNAR</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', justifyContent: 'center' }}>
+      <div className="info-card" style={{ background: 'rgba(226,232,240,0.04)', border: '1px solid rgba(226,232,240,0.2)', padding: 'clamp(16px, 5vw, 28px)', maxWidth: '700px' }}>
+        <div style={{ fontSize: '19px', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginBottom: '12px', textAlign: 'center' }}>FASE LUNAR</div>
+        
+        {/* Fase actual */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', justifyContent: 'center', marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid rgba(226,232,240,0.1)' }}>
           <span style={{ fontSize: 'clamp(44px, 10vw, 56px)' }}>{moonPhase.glyph}</span>
           <div>
             <div style={{ fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: 'bold', color: '#e2e8f0' }}>{moonPhase.name}</div>
-            <div style={{ fontSize: '21px', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>Iluminación: {moonPhase.val.toFixed(1)}%</div>
+            <div style={{ fontSize: 'clamp(17px, 3.5vw, 21px)', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>Iluminación: {moonPhase.illumination}%</div>
+            <div style={{ fontSize: 'clamp(16px, 3.5vw, 19px)', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
+              Luna en {getSign(data.positions.moon).name} {getSign(data.positions.moon).glyph}
+            </div>
+          </div>
+        </div>
+
+        {/* Próximas fases */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 'clamp(15px, 3.5vw, 18px)', color: 'rgba(255,255,255,0.4)', marginBottom: '4px' }}>🌑 Próxima Luna Nueva</div>
+            <div style={{ fontSize: 'clamp(16px, 3.5vw, 19px)', fontWeight: 'bold', color: '#e2e8f0' }}>
+              {moonPhase.nextNewMoon.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+            </div>
+            <div style={{ fontSize: 'clamp(15px, 3.5vw, 17px)', color: 'rgba(255,255,255,0.35)' }}>
+              En {moonPhase.daysToNewMoon} día{moonPhase.daysToNewMoon !== 1 ? 's' : ''}
+            </div>
+          </div>
+          
+          <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 'clamp(15px, 3.5vw, 18px)', color: 'rgba(255,255,255,0.4)', marginBottom: '4px' }}>🌕 Próxima Luna Llena</div>
+            <div style={{ fontSize: 'clamp(16px, 3.5vw, 19px)', fontWeight: 'bold', color: '#fde68a' }}>
+              {moonPhase.nextFullMoon.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+            </div>
+            <div style={{ fontSize: 'clamp(15px, 3.5vw, 17px)', color: 'rgba(255,255,255,0.35)' }}>
+              En {moonPhase.daysToFullMoon} día{moonPhase.daysToFullMoon !== 1 ? 's' : ''}
+            </div>
+          </div>
+        </div>
+
+        {/* Significado de la Luna en el signo actual */}
+        <div style={{ padding: '14px', background: `${getSign(data.positions.moon).color}12`, border: `1px solid ${getSign(data.positions.moon).color}30`, borderRadius: '10px' }}>
+          <div style={{ fontSize: 'clamp(16px, 3.5vw, 19px)', fontWeight: 'bold', color: getSign(data.positions.moon).color, marginBottom: '6px' }}>
+            ☽ Luna en {getSign(data.positions.moon).name} {getSign(data.positions.moon).glyph}
+          </div>
+          <div style={{ fontSize: 'clamp(15px, 3.5vw, 18px)', color: 'rgba(255,255,255,0.65)', lineHeight: '1.7' }}>
+            {PLANET_INTERPRETATIONS.moon[getSign(data.positions.moon).name]}
           </div>
         </div>
       </div>
