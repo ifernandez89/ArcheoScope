@@ -50,7 +50,7 @@ a {
 }
 
 .text-responsive {
-  font-size: clamp(14px, 3.5vw, 18px);
+  font-size: clamp(16px, 3.5vw, 20px);
   color: rgba(255,255,255,0.5);
   text-align: center;
   font-family: var(--font-archeoscope), sans-serif;

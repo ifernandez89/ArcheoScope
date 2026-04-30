@@ -112,10 +112,10 @@ export default function TzolkinPage() {
         <h3 style={{ fontSize: 'clamp(20px, 5vw, 28px)', color: '#fff', marginBottom: '8px' }}>
           {maya.tzolkin.numero} {maya.sello.name}
         </h3>
-        <div style={{ fontSize: 'clamp(17px, 4vw, 21px)', color: 'rgba(255,255,255,0.7)', marginBottom: '12px' }}>
+        <div style={{ fontSize: 'clamp(19px, 4vw, 23px)', color: 'rgba(255,255,255,0.7)', marginBottom: '12px' }}>
           Tono {maya.tono.name}
         </div>
-        <div className="text-responsive" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>
+        <div className="text-responsive" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: '1.6', fontSize: 'clamp(16px, 3.5vw, 20px)' }}>
           {maya.sello.meaning}
         </div>
       </div>
@@ -125,7 +125,7 @@ export default function TzolkinPage() {
           <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '6px' }}>TONO GALÁCTICO</div>
           <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#a78bfa' }}>{maya.tono.num}</div>
           <div style={{ fontSize: '18px', color: '#fff', marginBottom: '6px' }}>{maya.tono.name}</div>
-          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>
+          <div style={{ fontSize: 'clamp(15px, 3.5vw, 17px)', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>
             {maya.tono.power} · {maya.tono.action} · {maya.tono.essence}
           </div>
         </div>
@@ -135,7 +135,7 @@ export default function TzolkinPage() {
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#22c55e' }}>
             {maya.haab.day} {maya.haab.monthName}
           </div>
-          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', marginTop: '8px' }}>
+          <div style={{ fontSize: 'clamp(15px, 3.5vw, 17px)', color: 'rgba(255,255,255,0.5)', marginTop: '8px' }}>
             Mes {maya.haab.monthIdx + 1} de 19
           </div>
         </div>

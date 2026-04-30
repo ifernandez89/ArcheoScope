@@ -137,10 +137,10 @@ export default function CholqijPage() {
           DÍA DEL CHOLQ'IJ
         </div>
         <h2 style={{ color: '#a78bfa' }}>{numero.num} {nawal.name}</h2>
-        <div style={{ fontSize: 'clamp(18px, 4vw, 21px)', color: 'rgba(255,255,255,0.8)', marginBottom: '8px' }}>
+        <div style={{ fontSize: 'clamp(20px, 4vw, 23px)', color: 'rgba(255,255,255,0.8)', marginBottom: '8px' }}>
           {numero.name}
         </div>
-        <div style={{ fontSize: 'clamp(15px, 3.5vw, 18px)', color: 'rgba(255,255,255,0.6)' }}>
+        <div style={{ fontSize: 'clamp(17px, 3.5vw, 20px)', color: 'rgba(255,255,255,0.6)' }}>
           {nawal.meaning}
         </div>
       </div>
@@ -154,10 +154,10 @@ export default function CholqijPage() {
         <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '12px' }}>
           🌀 MENSAJE DEL NAWAL
         </div>
-        <div style={{ fontSize: 'clamp(16px, 4vw, 20px)', color: 'rgba(255,255,255,0.7)', lineHeight: '1.7', marginBottom: '14px' }}>
+        <div style={{ fontSize: 'clamp(18px, 4vw, 22px)', color: 'rgba(255,255,255,0.7)', lineHeight: '1.7', marginBottom: '14px' }}>
           {NAWAL_MENSAJE[r.nawalIdx]}
         </div>
-        <div style={{ borderTop: '1px solid rgba(167,139,250,0.2)', paddingTop: '12px', fontSize: 'clamp(15px, 3.5vw, 18px)', color: 'rgba(255,255,255,0.5)', lineHeight: '1.7', fontStyle: 'italic' }}>
+        <div style={{ borderTop: '1px solid rgba(167,139,250,0.2)', paddingTop: '12px', fontSize: 'clamp(17px, 3.5vw, 20px)', color: 'rgba(255,255,255,0.5)', lineHeight: '1.7', fontStyle: 'italic' }}>
           ✦ {numero.meaning}
         </div>
       </div>
@@ -176,7 +176,7 @@ export default function CholqijPage() {
           <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '6px' }}>NÚMERO</div>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#a78bfa' }}>{numero.num}</div>
           <div style={{ fontSize: '16px', color: '#fff', marginBottom: '6px' }}>{numero.name}</div>
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>
+          <div style={{ fontSize: 'clamp(15px, 3.5vw, 17px)', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>
             Intensidad del día<br />Tono energético
           </div>
         </div>
@@ -189,7 +189,7 @@ export default function CholqijPage() {
           <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '6px' }}>CICLO</div>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#38bdf8' }}>260</div>
           <div style={{ fontSize: '16px', color: '#fff', marginBottom: '4px' }}>días sagrados</div>
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>13 × 20</div>
+          <div style={{ fontSize: 'clamp(15px, 3.5vw, 17px)', color: 'rgba(255,255,255,0.5)' }}>13 × 20</div>
         </div>
       </div>
 
@@ -204,10 +204,10 @@ export default function CholqijPage() {
           <div>
             <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>NAWAL DEL DÍA</div>
             <div style={{ fontSize: '20px', color: '#f472b6', fontWeight: 'bold' }}>{nawal.name}</div>
-            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>{nawal.meaning}</div>
+            <div style={{ fontSize: 'clamp(15px, 3.5vw, 17px)', color: 'rgba(255,255,255,0.5)' }}>{nawal.meaning}</div>
           </div>
         </div>
-        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.65)', lineHeight: '1.8', borderTop: '1px solid rgba(244,114,182,0.15)', paddingTop: '12px' }}>
+        <div style={{ fontSize: 'clamp(16px, 3.5vw, 18px)', color: 'rgba(255,255,255,0.65)', lineHeight: '1.8', borderTop: '1px solid rgba(244,114,182,0.15)', paddingTop: '12px' }}>
           {nawal.desc}
         </div>
       </div>

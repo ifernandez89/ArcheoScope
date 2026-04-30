@@ -130,8 +130,8 @@ export default function TzolkinPage() {
         <div style={{ fontSize:'clamp(40px, 10vw, 52px)', marginBottom:'4px' }}>{sello.glyph}</div>
         <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'4px' }}>ENERGÍA DEL DÍA · KIN {r.kin}</div>
         <h2 style={{ color:'#fbbf24' }}>{r.num} {sello.name}</h2>
-        <div style={{ fontSize:'clamp(18px, 4vw, 21px)', color:'rgba(255,255,255,0.8)', marginBottom:'8px' }}>Tono {tono}</div>
-        <div style={{ fontSize:'clamp(15px, 3.5vw, 18px)', color:'rgba(255,255,255,0.6)' }}>{sello.meaning}</div>
+        <div style={{ fontSize:'clamp(20px, 4vw, 23px)', color:'rgba(255,255,255,0.8)', marginBottom:'8px' }}>Tono {tono}</div>
+        <div style={{ fontSize:'clamp(17px, 3.5vw, 20px)', color:'rgba(255,255,255,0.6)' }}>{sello.meaning}</div>
       </div>
 
       {/* Tzolkin + Haab */}
@@ -140,12 +140,12 @@ export default function TzolkinPage() {
           <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)', letterSpacing:'1px', marginBottom:'6px' }}>TZOLK'IN</div>
           <div style={{ fontSize:'32px', fontWeight:'bold', color:'#a78bfa' }}>{r.num}</div>
           <div style={{ fontSize:'18px', color:'#fff' }}>{tono}</div>
-          <div style={{ fontSize:'15px', color:'rgba(255,255,255,0.5)', marginTop:'4px' }}>{sello.name}</div>
+          <div style={{ fontSize:'clamp(16px, 3.5vw, 18px)', color:'rgba(255,255,255,0.5)', marginTop:'4px' }}>{sello.name}</div>
         </div>
         <div style={{ padding:'18px', background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.25)', borderRadius:'12px', textAlign:'center' }}>
           <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)', letterSpacing:'1px', marginBottom:'6px' }}>HAAB (365 DÍAS)</div>
           <div style={{ fontSize:'28px', fontWeight:'bold', color:'#22c55e' }}>{r.haab.day} {HAAB[r.haab.month]}</div>
-          <div style={{ fontSize:'15px', color:'rgba(255,255,255,0.5)', marginTop:'4px' }}>Mes {r.haab.month+1} de 19</div>
+          <div style={{ fontSize:'clamp(16px, 3.5vw, 18px)', color:'rgba(255,255,255,0.5)', marginTop:'4px' }}>Mes {r.haab.month+1} de 19</div>
         </div>
       </div>
 
@@ -170,8 +170,8 @@ export default function TzolkinPage() {
             ['🌀 Precesión', '25,772 años · Ciclo axial terrestre'],
           ].map(([k, v]) => (
             <div key={String(k)} style={{ padding:'8px', background:'rgba(255,255,255,0.03)', borderRadius:'6px' }}>
-              <div style={{ color:'#fbbf24', fontSize:'16px', marginBottom:'2px' }}>{k}</div>
-              <div style={{ color:'rgba(255,255,255,0.5)', fontSize:'14px' }}>{v}</div>
+              <div style={{ color:'#fbbf24', fontSize:'clamp(17px, 4vw, 19px)', marginBottom:'2px' }}>{k}</div>
+              <div style={{ color:'rgba(255,255,255,0.5)', fontSize:'clamp(15px, 3.5vw, 17px)' }}>{v}</div>
             </div>
           ))}
         </div>
@@ -189,12 +189,12 @@ export default function TzolkinPage() {
             <span style={{ fontSize:'16px', color:'#f472b6', fontWeight:'bold' }}>
               {r.venus.icon} Venus · Ciclo 584 días
             </span>
-            <span style={{ fontSize:'14px', color:'rgba(255,255,255,0.5)' }}>Día {Math.round(r.venus.day)} · {r.venus.progress}%</span>
+            <span style={{ fontSize:'clamp(15px, 3.5vw, 17px)', color:'rgba(255,255,255,0.5)' }}>Día {Math.round(r.venus.day)} · {r.venus.progress}%</span>
           </div>
           <div style={{ height:'4px', background:'rgba(255,255,255,0.1)', borderRadius:'2px', marginBottom:'8px' }}>
             <div style={{ height:'100%', width:`${r.venus.progress}%`, background:'#f472b6', borderRadius:'2px', transition:'width 0.3s' }} />
           </div>
-          <div style={{ fontSize:'16px', color:'rgba(255,255,255,0.7)', textAlign:'left' }}>{r.venus.phase}</div>
+          <div style={{ fontSize:'clamp(17px, 4vw, 19px)', color:'rgba(255,255,255,0.7)', textAlign:'left' }}>{r.venus.phase}</div>
         </div>
 
         {/* Luna */}
@@ -203,9 +203,9 @@ export default function TzolkinPage() {
             <span style={{ fontSize:'16px', color:'#e2e8f0', fontWeight:'bold' }}>
               {r.luna.icon} Luna · Ciclo 29.53 días
             </span>
-            <span style={{ fontSize:'14px', color:'rgba(255,255,255,0.5)' }}>Día {r.luna.day.toFixed(1)}</span>
+            <span style={{ fontSize:'clamp(15px, 3.5vw, 17px)', color:'rgba(255,255,255,0.5)' }}>Día {r.luna.day.toFixed(1)}</span>
           </div>
-          <div style={{ fontSize:'16px', color:'rgba(255,255,255,0.7)', textAlign:'left' }}>{r.luna.phase}</div>
+          <div style={{ fontSize:'clamp(17px, 4vw, 19px)', color:'rgba(255,255,255,0.7)', textAlign:'left' }}>{r.luna.phase}</div>
         </div>
 
         {/* Temporada de Eclipses */}
