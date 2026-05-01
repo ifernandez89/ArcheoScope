@@ -21,25 +21,36 @@ interface WeatherData {
   dayLength: string // horas y minutos
 }
 
-// ─── Fase lunar (algoritmo preciso) ──────────────────────────────────────────
+// ─── Fase lunar PRECISA con astronomy-engine ─────────────────────────────────
+import * as Astronomy from 'astronomy-engine'
+
 function getMoonPhase(): { phase: string; emoji: string; illumination: number } {
-  const now = new Date()
-  const lp = 2551443 // segundos del ciclo lunar
-  const newMoon = new Date('1970-01-07T20:35:00Z')
-  const phase = ((now.getTime() - newMoon.getTime()) / 1000) % lp
-  const idx = Math.floor((phase / lp) * 8)
-  const pct = Math.round((phase / lp) * 100)
-  const phases = [
-    { name: 'Luna Nueva',         emoji: '🌑', illum: 0 },
-    { name: 'Creciente',          emoji: '🌒', illum: 25 },
-    { name: 'Cuarto Creciente',   emoji: '🌓', illum: 50 },
-    { name: 'Gibosa Creciente',   emoji: '🌔', illum: 75 },
-    { name: 'Luna Llena',         emoji: '🌕', illum: 100 },
-    { name: 'Gibosa Menguante',   emoji: '🌖', illum: 75 },
-    { name: 'Cuarto Menguante',   emoji: '🌗', illum: 50 },
-    { name: 'Menguante',          emoji: '🌘', illum: 25 },
-  ]
-  return { phase: phases[idx].name, emoji: phases[idx].emoji, illumination: phases[idx].illum }
+  const t = Astronomy.MakeTime(new Date())
+  const phaseAngle = Astronomy.MoonPhase(t) // 0-360°
+  const moonLon = Astronomy.EclipticLongitude(Astronomy.Body.Moon, t)
+  const signIdx = Math.floor(moonLon / 30) % 12
+  const signs = ['Aries','Tauro','Géminis','Cáncer','Leo','Virgo','Libra','Escorpio','Sagitario','Capricornio','Acuario','Piscis']
+  const signName = signs[signIdx]
+
+  // Iluminación basada en ángulo de fase
+  const illumination = Math.round((1 - Math.cos(phaseAngle * Math.PI / 180)) / 2 * 100)
+
+  // Determinar fase
+  let name: string, emoji: string
+  if (phaseAngle < 11.25)       { name = 'Luna Nueva';          emoji = '🌑' }
+  else if (phaseAngle < 78.75)  { name = 'Creciente';           emoji = '🌒' }
+  else if (phaseAngle < 101.25) { name = 'Cuarto Creciente';    emoji = '🌓' }
+  else if (phaseAngle < 168.75) { name = 'Gibosa Creciente';    emoji = '🌔' }
+  else if (phaseAngle < 191.25) { name = 'Luna Llena';          emoji = '🌕' }
+  else if (phaseAngle < 258.75) { name = 'Gibosa Menguante';    emoji = '🌖' }
+  else if (phaseAngle < 281.25) { name = 'Cuarto Menguante';    emoji = '🌗' }
+  else if (phaseAngle < 348.75) { name = 'Menguante';           emoji = '🌘' }
+  else                          { name = 'Luna Nueva';          emoji = '🌑' }
+
+  // Agregar signo al nombre
+  name = `${name} en ${signName}`
+
+  return { phase: name, emoji, illumination }
 }
 
 // ─── WMO Weather Code helpers ─────────────────────────────────────────────────
