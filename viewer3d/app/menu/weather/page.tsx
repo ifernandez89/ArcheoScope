@@ -3,6 +3,14 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
+interface ForecastDay {
+  date: string       // "Lun", "Mar", etc.
+  tempMax: number
+  tempMin: number
+  rainProb: number
+  weatherCode: number
+}
+
 interface WeatherData {
   temp: number
   feelsLike: number
@@ -16,9 +24,10 @@ interface WeatherData {
   moonEmoji: string
   lat: number
   lon: number
-  sunrise: string   // HH:MM local
-  sunset: string    // HH:MM local
-  dayLength: string // horas y minutos
+  sunrise: string
+  sunset: string
+  dayLength: string
+  forecast: ForecastDay[]  // próximos 6 días
 }
 
 // ─── Fase lunar PRECISA con astronomy-engine ─────────────────────────────────
@@ -365,7 +374,8 @@ export default function WeatherPage() {
       const cached = localStorage.getItem(CACHE_KEY)
       if (cached) {
         const { data, ts } = JSON.parse(cached)
-        if (Date.now() - ts < CACHE_DURATION) {
+        // Invalidar cache si faltan campos nuevos (forecast, sunrise, etc.)
+        if (Date.now() - ts < CACHE_DURATION && data.forecast && data.sunrise) {
           setWeather(data)
           setLoading(false)
           return
@@ -388,7 +398,8 @@ export default function WeatherPage() {
             `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
             `&current=temperature_2m,relative_humidity_2m,apparent_temperature,` +
             `wind_speed_10m,weather_code,precipitation_probability` +
-            `&daily=sunrise,sunset&wind_speed_unit=kmh&timezone=auto`
+            `&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code` +
+            `&wind_speed_unit=kmh&timezone=auto`
           )
           const d = await res.json()
           const c = d.current
@@ -436,6 +447,16 @@ export default function WeatherPage() {
             moonEmoji: moon.emoji,
             lat, lon,
             sunrise, sunset, dayLength,
+            forecast: (d.daily?.time || []).slice(1, 7).map((dateStr: string, i: number) => {
+              const dt = new Date(dateStr + 'T12:00:00')
+              return {
+                date: dt.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', ''),
+                tempMax: Math.round(d.daily.temperature_2m_max[i + 1]),
+                tempMin: Math.round(d.daily.temperature_2m_min[i + 1]),
+                rainProb: d.daily.precipitation_probability_max[i + 1] || 0,
+                weatherCode: d.daily.weather_code[i + 1] || 0,
+              }
+            }),
           }
           localStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() }))
           setWeather(data)
@@ -607,6 +628,52 @@ export default function WeatherPage() {
               </div>
             </div>
           </div>
+
+          {/* Pronóstico 6 días */}
+          {weather.forecast && weather.forecast.length > 0 && (
+            <div style={{
+              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: '14px', padding: '16px',
+            }}>
+              <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '14px', textAlign: 'center' }}>
+                PRÓXIMOS 6 DÍAS
+              </div>
+              <div style={{ display: 'flex', gap: '6px', justifyContent: 'space-between' }}>
+                {weather.forecast.map((day, i) => (
+                  <div key={i} style={{
+                    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                    padding: '8px 4px',
+                    background: day.rainProb > 50 ? 'rgba(59,130,246,0.08)' : 'rgba(255,255,255,0.02)',
+                    borderRadius: '10px',
+                    border: `1px solid ${day.rainProb > 50 ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)'}`,
+                  }}>
+                    {/* Día */}
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)', letterSpacing: '0.5px', textTransform: 'capitalize' }}>
+                      {day.date}
+                    </div>
+                    {/* Icono */}
+                    <div style={{ fontSize: '18px', lineHeight: 1 }}>
+                      {getWeatherIcon(day.weatherCode)}
+                    </div>
+                    {/* Temp max */}
+                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff' }}>
+                      {day.tempMax}°
+                    </div>
+                    {/* Temp min */}
+                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
+                      {day.tempMin}°
+                    </div>
+                    {/* Lluvia */}
+                    {day.rainProb > 0 && (
+                      <div style={{ fontSize: '10px', color: day.rainProb > 50 ? '#60a5fa' : 'rgba(255,255,255,0.3)' }}>
+                        💧{day.rainProb}%
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', textAlign: 'center', letterSpacing: '1px' }}>
             Open-Meteo · OpenStreetMap · Cache 30 min
