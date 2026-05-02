@@ -5,6 +5,17 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-05-02
+
+### Added
+- **Eclipses dinámicos**: módulo `eclipse-calculator.ts` con `astronomy-engine` — busca eclipses solares y lunares dinámicamente para cualquier año (reemplaza lista estática 2026)
+- **Códice de Dresde**: datos de la tabla de eclipses maya (páginas 51-58), ciclos de 177/148 días, eclipses históricos verificados, detección de "ventana de peligro" maya
+- **Página Hoy**: sección de próximos eclipses con countdown + ventana de eclipse del Códice de Dresde
+- **Página Hoy**: eventos astronómicos por día del año (funciona cualquier año, no solo 2026)
+
+### Changed
+- **Página Hoy**: reemplazada lista estática `ASTRO_EVENTS_2026` por cálculos dinámicos
+
 ## [1.0.2] - 2026-05-02
 
 ### Added

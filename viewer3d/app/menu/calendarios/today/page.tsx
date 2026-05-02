@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useMemo } from 'react'
 import * as Astronomy from 'astronomy-engine'
+import { getUpcomingEclipses, isDresdenEclipseWindow, DRESDEN_CODEX_INFO } from '@/utils/eclipse-calculator'
 
 // ─── Datos del Tzolk'in (Cholq'ij) ──────────────────────────────────────────
 const NAWALES = ['Imox','Iq\'','Aq\'ab\'al','K\'at','Kan','Keme','Kej','Q\'anil','Toj','Tz\'i\'','B\'atz\'','E','Aj','I\'x','Tz\'ikin','Ajmaq','No\'j','Tijax','Kawoq','Ajpu']
@@ -18,25 +19,37 @@ function calcCholqij(date: Date) {
   return { nawal: NAWALES[nawalIdx], num: numIdx + 1, numName: NUMEROS_KICHE[numIdx] }
 }
 
-// ─── Eventos astronómicos 2026 (principales) ─────────────────────────────────
-const ASTRO_EVENTS_2026 = [
-  { date: '2026-01-03', name: 'Cuadrántidas', type: 'meteoros', emoji: '🌠' },
-  { date: '2026-02-17', name: 'Eclipse anular de Sol', type: 'eclipse', emoji: '🌑' },
-  { date: '2026-03-03', name: 'Eclipse total de Luna', type: 'eclipse', emoji: '🌕' },
-  { date: '2026-03-20', name: 'Equinoccio de Marzo', type: 'solar', emoji: '☀️' },
-  { date: '2026-04-22', name: 'Líridas', type: 'meteoros', emoji: '🌠' },
-  { date: '2026-05-06', name: 'Eta Acuáridas', type: 'meteoros', emoji: '🌠' },
-  { date: '2026-06-21', name: 'Solsticio de Junio', type: 'solar', emoji: '☀️' },
-  { date: '2026-07-28', name: 'Delta Acuáridas', type: 'meteoros', emoji: '🌠' },
-  { date: '2026-08-12', name: 'Perseidas', type: 'meteoros', emoji: '🌠' },
-  { date: '2026-08-12', name: 'Eclipse total de Sol', type: 'eclipse', emoji: '🌑' },
-  { date: '2026-08-28', name: 'Eclipse parcial de Luna', type: 'eclipse', emoji: '🌕' },
-  { date: '2026-09-22', name: 'Equinoccio de Septiembre', type: 'solar', emoji: '☀️' },
-  { date: '2026-10-21', name: 'Oriónidas', type: 'meteoros', emoji: '🌠' },
-  { date: '2026-11-17', name: 'Leónidas', type: 'meteoros', emoji: '🌠' },
-  { date: '2026-12-14', name: 'Gemínidas', type: 'meteoros', emoji: '🌠' },
-  { date: '2026-12-21', name: 'Solsticio de Diciembre', type: 'solar', emoji: '☀️' },
+// ─── Eventos astronómicos (lluvias de meteoros + solsticios/equinoccios) ──────
+const METEOR_SHOWERS = [
+  { doy: 3, name: 'Cuadrántidas', emoji: '🌠' },
+  { doy: 112, name: 'Líridas', emoji: '🌠' },
+  { doy: 126, name: 'Eta Acuáridas', emoji: '🌠' },
+  { doy: 209, name: 'Delta Acuáridas', emoji: '🌠' },
+  { doy: 224, name: 'Perseidas', emoji: '🌠' },
+  { doy: 294, name: 'Oriónidas', emoji: '🌠' },
+  { doy: 321, name: 'Leónidas', emoji: '🌠' },
+  { doy: 348, name: 'Gemínidas', emoji: '🌠' },
 ]
+
+const SOLAR_EVENTS = [
+  { doy: 79, name: 'Equinoccio de Marzo', emoji: '☀️' },
+  { doy: 172, name: 'Solsticio de Junio', emoji: '☀️' },
+  { doy: 265, name: 'Equinoccio de Septiembre', emoji: '☀️' },
+  { doy: 355, name: 'Solsticio de Diciembre', emoji: '☀️' },
+]
+
+function getUpcomingEvents(date: Date, count: number = 4) {
+  const doy = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000)
+  const allEvents = [...METEOR_SHOWERS, ...SOLAR_EVENTS]
+    .map(e => {
+      let days = e.doy - doy
+      if (days < 0) days += 365
+      return { ...e, days }
+    })
+    .sort((a, b) => a.days - b.days)
+    .slice(0, count)
+  return allEvents
+}
 
 // ─── Estación solar ──────────────────────────────────────────────────────────
 function getSeason(date: Date): { name: string; emoji: string; progress: number; nextEvent: string; daysToNext: number } {
@@ -75,17 +88,6 @@ function getSeason(date: Date): { name: string; emoji: string; progress: number;
   return { name, emoji, progress, nextEvent, daysToNext }
 }
 
-// ─── Próximos eventos astronómicos ───────────────────────────────────────────
-function getUpcomingEvents(date: Date, count: number = 3) {
-  const today = date.toISOString().split('T')[0]
-  const upcoming = ASTRO_EVENTS_2026.filter(e => e.date >= today).slice(0, count)
-  return upcoming.map(e => {
-    const evDate = new Date(e.date + 'T12:00:00')
-    const days = Math.ceil((evDate.getTime() - date.getTime()) / 86400000)
-    return { ...e, days }
-  })
-}
-
 export default function TodayPage() {
   const router = useRouter()
   const today = new Date()
@@ -114,13 +116,15 @@ export default function TodayPage() {
     const cholqij = calcCholqij(today)
     const season = getSeason(today)
     const events = getUpcomingEvents(today)
+    const eclipses = getUpcomingEclipses(today, 3)
+    const dresdenWindow = isDresdenEclipseWindow(today)
 
     return {
       date: today.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
       moonPhase: phaseName, moonEmoji: phaseEmoji, moonSign: signs[moonSignIdx], moonGlyph: glyphs[moonSignIdx],
       moonDeg: (moonLon % 30).toFixed(1), illumination,
       sunSign: signs[sunSignIdx], sunGlyph: glyphs[sunSignIdx], sunDeg: (sunLon % 30).toFixed(1),
-      cholqij, season, events,
+      cholqij, season, events, eclipses, dresdenWindow,
     }
   }, [])
 
@@ -229,6 +233,59 @@ export default function TodayPage() {
             </div>
           </div>
         )}
+
+        {/* Eclipses — dinámicos con astronomy-engine */}
+        {data.eclipses.length > 0 && (
+          <div style={cardStyle('rgba(239,68,68)')}>
+            <div style={{ fontSize: 'clamp(10px, 2vw, 13px)', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '10px' }}>
+              🌑 PRÓXIMOS ECLIPSES (astronomy-engine)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {data.eclipses.map((e, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '18px' }}>{e.emoji}</span>
+                    <div>
+                      <span style={{ fontSize: 'clamp(13px, 2.5vw, 16px)', color: 'rgba(255,255,255,0.7)' }}>
+                        Eclipse {e.type === 'solar' ? 'Solar' : 'Lunar'} {e.kind}
+                      </span>
+                      <div style={{ fontSize: 'clamp(11px, 2vw, 13px)', color: 'rgba(255,255,255,0.35)' }}>{e.dateStr}</div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 'clamp(12px, 2vw, 15px)', color: e.daysFromNow <= 7 ? '#ef4444' : 'rgba(255,255,255,0.35)' }}>
+                    {e.daysFromNow === 0 ? '¡HOY!' : `en ${e.daysFromNow}d`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Códice de Dresde — ventana de eclipse maya */}
+        <div style={cardStyle('rgba(251,191,36)')}>
+          <div style={{ fontSize: 'clamp(10px, 2vw, 13px)', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '10px' }}>
+            📜 CÓDICE DE DRESDE — CICLOS DE ECLIPSE MAYA
+          </div>
+          <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: 'rgba(255,255,255,0.55)', lineHeight: '1.6', marginBottom: '10px' }}>
+            {DRESDEN_CODEX_INFO.description}
+          </div>
+          <div style={{
+            padding: '10px',
+            background: data.dresdenWindow.inWindow ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.05)',
+            border: `1px solid ${data.dresdenWindow.inWindow ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.15)'}`,
+            borderRadius: '8px',
+          }}>
+            <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', fontWeight: 'bold', color: data.dresdenWindow.inWindow ? '#ef4444' : '#22c55e' }}>
+              {data.dresdenWindow.inWindow
+                ? '⚠️ Ventana de eclipse activa (tradición maya)'
+                : `✓ Fuera de ventana — próxima en ${data.dresdenWindow.daysToWindow}d`
+              }
+            </div>
+            <div style={{ fontSize: 'clamp(11px, 2vw, 13px)', color: 'rgba(255,255,255,0.35)', marginTop: '4px' }}>
+              Ciclo: {data.dresdenWindow.cycleType}
+            </div>
+          </div>
+        </div>
 
         {/* Gregoriano */}
         <div style={{ fontSize: 'clamp(11px, 2vw, 14px)', color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: '8px', letterSpacing: '1px' }}>
