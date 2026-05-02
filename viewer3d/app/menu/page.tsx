@@ -116,14 +116,14 @@ export default function MenuPage() {
     { label: 'Información', path: '/menu/info', action: null }
   ]
 
-  // Mobile DEMO: Controles, Constelaciones, Astrología, Calendarios, Clima, Información
-  const mobileOptions = [
-    { label: 'Controles', path: '/menu/controls', action: null },
-    { label: 'Constelaciones', path: '/constellations', action: null },
-    { label: 'Astrología', path: '/menu/astrology', action: null },
-    { label: 'Calendarios', path: '/menu/calendarios', action: null },
-    { label: 'Clima Local', path: '/menu/weather', action: null },
-    { label: 'Información', path: '/menu/info', action: null },
+  // Mobile DEMO: Hoy (principal) + secciones con propósito
+  const mobileOptions: { label: string; sub: string; path: string | null; action: (() => void) | null; primary: boolean }[] = [
+    { label: '🌍 Hoy', sub: 'Qué pasa en el cielo ahora', path: '/menu/calendarios/today', action: null, primary: true },
+    { label: '✦ Constelaciones', sub: 'Explorar el cielo nocturno', path: '/constellations', action: null, primary: false },
+    { label: '🪐 Astrología', sub: 'Planetas · aspectos · lectura', path: '/menu/astrology', action: null, primary: false },
+    { label: '📅 Calendarios', sub: 'Maya · Babilónico · Tzolk\'in', path: '/menu/calendarios', action: null, primary: false },
+    { label: '🌦 Clima', sub: 'Temperatura · luna · pronóstico', path: '/menu/weather', action: null, primary: false },
+    { label: 'ℹ Información', sub: 'Sobre la app', path: '/menu/info', action: null, primary: false },
   ]
 
   const visibleOptions = isMobile ? mobileOptions : menuOptions
@@ -143,19 +143,21 @@ export default function MenuPage() {
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px',
-        alignItems: 'center'
+        gap: isMobile ? '10px' : '12px',
+        alignItems: 'center',
+        width: isMobile ? '90%' : 'auto',
+        maxWidth: isMobile ? '380px' : 'none',
       }}>
         {/* Logo principal con glow sutil */}
         <div style={{
-          marginBottom: '10px',
+          marginBottom: isMobile ? '6px' : '10px',
           animation: 'logoPulse 3s ease-in-out infinite'
         }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={LOGO_MAIN}
             alt="Archeoscope: The Forgotten Relics"
-            style={{ width: '200px', height: '200px', objectFit: 'contain' }}
+            style={{ width: isMobile ? '120px' : '200px', height: isMobile ? '120px' : '200px', objectFit: 'contain' }}
           />
         </div>
 
@@ -165,43 +167,93 @@ export default function MenuPage() {
             50% { filter: drop-shadow(0 0 30px rgba(102, 126, 234, 0.85)); }
           }
         `}</style>
-        {visibleOptions.map((option) => (
-          <button
-            key={option.label}
-            onClick={() => {
-              if (option.action) {
-                option.action()
-              } else if (option.path) {
-                router.push(option.path)
-              }
-            }}
-            style={{
-              padding: '16px 64px',
-              fontSize: '20px',
-              fontWeight: 'bold',
-              color: '#ffffff',
-              background: 'transparent',
-              border: '2px solid #ffffff',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              fontFamily: 'inherit',
-              letterSpacing: '2px',
-              textTransform: 'uppercase',
-              width: '350px'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#ffffff'
-              e.currentTarget.style.color = '#000000'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent'
-              e.currentTarget.style.color = '#ffffff'
-            }}
-          >
-            {option.label}
-          </button>
-        ))}
+
+        {/* Mobile: layout con propósito */}
+        {isMobile ? (
+          <>
+            {mobileOptions.map((option) => (
+              <button
+                key={option.label}
+                onClick={() => {
+                  if (option.action) option.action()
+                  else if (option.path) router.push(option.path)
+                }}
+                style={{
+                  width: '100%',
+                  padding: option.primary ? '18px 20px' : '13px 20px',
+                  background: option.primary ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.03)',
+                  border: `1.5px solid ${option.primary ? 'rgba(34,197,94,0.5)' : 'rgba(255,255,255,0.12)'}`,
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s ease',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+                onTouchStart={(e) => {
+                  e.currentTarget.style.background = option.primary ? 'rgba(34,197,94,0.22)' : 'rgba(255,255,255,0.08)'
+                }}
+                onTouchEnd={(e) => {
+                  e.currentTarget.style.background = option.primary ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.03)'
+                }}
+              >
+                <div style={{
+                  fontSize: option.primary ? '20px' : '17px',
+                  fontWeight: 'bold',
+                  color: option.primary ? '#22c55e' : '#ffffff',
+                  letterSpacing: '0.5px',
+                }}>
+                  {option.label}
+                </div>
+                <div style={{
+                  fontSize: '12px',
+                  color: option.primary ? 'rgba(34,197,94,0.7)' : 'rgba(255,255,255,0.35)',
+                  marginTop: '3px',
+                  letterSpacing: '0.3px',
+                }}>
+                  {option.sub}
+                </div>
+              </button>
+            ))}
+          </>
+        ) : (
+          /* PC: layout original */
+          <>
+            {menuOptions.map((option) => (
+              <button
+                key={option.label}
+                onClick={() => {
+                  if (option.action) option.action()
+                  else if (option.path) router.push(option.path)
+                }}
+                style={{
+                  padding: '16px 64px',
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                  color: '#ffffff',
+                  background: 'transparent',
+                  border: '2px solid #ffffff',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  fontFamily: 'inherit',
+                  letterSpacing: '2px',
+                  textTransform: 'uppercase',
+                  width: '350px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#ffffff'
+                  e.currentTarget.style.color = '#000000'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.color = '#ffffff'
+                }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </>
+        )}
       </div>
     </main>
   )

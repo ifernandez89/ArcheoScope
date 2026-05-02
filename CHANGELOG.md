@@ -5,6 +5,15 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-05-02
+
+### Added
+- **Menú mobile**: rediseño con propósito — "Hoy" como botón principal verde destacado, cada opción con subtítulo descriptivo, logo más pequeño, touch feedback
+
+### Changed
+- **Menú mobile**: "Hoy" accesible directamente desde el menú (antes requería Calendarios → Hoy)
+- **Menú mobile**: botones con emoji + título + subtítulo en lugar de solo texto uppercase
+
 ## [1.0.4] - 2026-05-02
 
 ### Added
