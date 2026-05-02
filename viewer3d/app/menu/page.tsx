@@ -112,7 +112,6 @@ export default function MenuPage() {
     { label: 'Video', path: '/menu/video', action: null },
     { label: 'Controles', path: '/menu/controls', action: null },
     { label: 'Constelaciones', path: '/constellations', action: null },
-    { label: 'Astrología', path: '/menu/astrology', action: null },
     { label: 'Calendarios', path: '/menu/calendarios', action: null },
     { label: 'Información', path: '/menu/info', action: null }
   ]

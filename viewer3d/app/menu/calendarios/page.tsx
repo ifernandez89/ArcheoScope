@@ -14,13 +14,32 @@ export default function CalendariosPage() {
       margin: 0, padding: '40px 20px', color: '#fff', overflowY: 'auto',
     }}>
       <h1 className="title-responsive" style={{ color: '#fbbf24' }}>
-        CALENDARIOS ANTIGUOS
+        CALENDARIOS
       </h1>
       <p className="subtitle-responsive" style={{ marginBottom: '50px' }}>
-        Sistemas de medición del tiempo de la civilización Maya y Mesopotamia
+        Sistemas de medición del tiempo — antiguos y modernos
       </p>
 
       <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '1000px' }}>
+
+        {/* HOY — Vista integrada diaria */}
+        <div
+          onClick={() => router.push('/menu/calendarios/today')}
+          className="cal-card info-card"
+          style={{
+            maxWidth: '300px', padding: '32px 24px', cursor: 'pointer',
+            background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.3)',
+            transition: 'all 0.3s',
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(34,197,94,0.12)'; (e.currentTarget as HTMLDivElement).style.borderColor = '#22c55e' }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(34,197,94,0.05)'; (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(34,197,94,0.3)' }}
+        >
+          <div style={{ fontSize: '44px', marginBottom: '10px' }}>🌌</div>
+          <h2 style={{ color: '#22c55e' }}>Hoy</h2>
+          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '12px' }}>VISTA INTEGRADA · DIARIA</div>
+          <p className="text-responsive" style={{ color: 'rgba(255,255,255,0.6)' }}>Fase lunar, Tzolk'in, estación solar, eventos astronómicos — todo en una vista.</p>
+          <div style={{ marginTop: '12px', fontSize: '15px', color: 'rgba(34,197,94,0.6)' }}>Sincronía de ciclos ✓</div>
+        </div>
 
         {/* Tzolk'in Arqueológico */}
         <div

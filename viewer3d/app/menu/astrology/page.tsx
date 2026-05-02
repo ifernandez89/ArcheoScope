@@ -697,6 +697,102 @@ export default function AstrologyPage() {
         )
       })()}
 
+      {/* LUNA Y AGRICULTURA */}
+      {(() => {
+        const lunar = getLunarPreciseDataAstro(selectedDate)
+        const phaseAngle = Astronomy.MoonPhase(Astronomy.MakeTime(selectedDate))
+
+        // Determinar fase agrícola (4 fases principales)
+        type AgriPhase = { name: string; emoji: string; color: string; plant: string; activities: string[]; avoid: string }
+        let agri: AgriPhase
+        if (phaseAngle < 45 || phaseAngle >= 315) {
+          agri = {
+            name: 'Luna Nueva', emoji: '🌑', color: '#94a3b8',
+            plant: 'Planta en reposo — se adapta al medio',
+            activities: ['Deshierbe y limpieza del terreno', 'Abono orgánico y compost', 'Poda de formación', 'Tutorado y mantenimiento', 'Preparación de suelo'],
+            avoid: 'No sembrar ni trasplantar — la savia está en las raíces'
+          }
+        } else if (phaseAngle >= 45 && phaseAngle < 135) {
+          agri = {
+            name: 'Cuarto Creciente', emoji: '🌓', color: '#22c55e',
+            plant: 'Desarrollo de hojas y raíces — germinación activa',
+            activities: ['Sembrar semillas de hoja (lechuga, espinaca, albahaca)', 'Germinar semillas en almácigo', 'Fertilizar con nitrógeno', 'Regar abundantemente', 'Injertar árboles frutales'],
+            avoid: 'No podar — la planta está en crecimiento activo'
+          }
+        } else if (phaseAngle >= 135 && phaseAngle < 225) {
+          agri = {
+            name: 'Luna Llena', emoji: '🌕', color: '#fde68a',
+            plant: 'Plantas más frondosas — máximo movimiento de savia',
+            activities: ['Cosechar frutos y hortalizas', 'Cortar madera para construcción', 'Trasplantar (la savia sube a las hojas)', 'Deshierbar (las malezas se debilitan)', 'Recolectar semillas para guardar'],
+            avoid: 'No podar ni cortar césped — crecimiento excesivo'
+          }
+        } else {
+          agri = {
+            name: 'Cuarto Menguante', emoji: '🌗', color: '#a78bfa',
+            plant: 'Crecimiento lento de hojas — energía hacia raíces',
+            activities: ['Sembrar tubérculos (papa, zanahoria, remolacha)', 'Trasplantar plantas de raíz', 'Podar árboles y arbustos', 'Aplicar fungicidas naturales', 'Hacer conservas y fermentos'],
+            avoid: 'No sembrar plantas de hoja — crecimiento será lento'
+          }
+        }
+
+        return (
+          <div className="info-card" style={{
+            background: 'rgba(34,197,94,0.03)',
+            border: '1px solid rgba(34,197,94,0.15)',
+            maxWidth: '700px', width: '100%',
+            padding: 'clamp(16px, 4vw, 24px)',
+          }}>
+            <div style={{ fontSize: 'clamp(11px, 2.5vw, 18px)', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginBottom: '14px', textAlign: 'center' }}>
+              🌿 LUNA Y AGRICULTURA
+            </div>
+
+            {/* Fase actual + estado de la planta */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '14px',
+              padding: 'clamp(10px, 2.5vw, 16px)',
+              background: `${agri.color}10`,
+              border: `1px solid ${agri.color}30`,
+              borderRadius: '12px', marginBottom: '14px',
+            }}>
+              <span style={{ fontSize: 'clamp(32px, 8vw, 44px)' }}>{agri.emoji}</span>
+              <div>
+                <div style={{ fontSize: 'clamp(15px, 3vw, 20px)', fontWeight: 'bold', color: agri.color }}>{agri.name}</div>
+                <div style={{ fontSize: 'clamp(12px, 2.5vw, 16px)', color: 'rgba(255,255,255,0.6)', marginTop: '3px' }}>{agri.plant}</div>
+              </div>
+            </div>
+
+            {/* Actividades recomendadas */}
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: 'clamp(11px, 2vw, 14px)', color: '#22c55e', letterSpacing: '1px', marginBottom: '8px' }}>✓ ACTIVIDADES RECOMENDADAS</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                {agri.activities.map((act, i) => (
+                  <div key={i} style={{ fontSize: 'clamp(12px, 2.5vw, 16px)', color: 'rgba(255,255,255,0.6)', paddingLeft: '12px', borderLeft: '2px solid rgba(34,197,94,0.3)' }}>
+                    {act}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Evitar */}
+            <div style={{
+              padding: 'clamp(8px, 2vw, 12px)',
+              background: 'rgba(239,68,68,0.05)',
+              border: '1px solid rgba(239,68,68,0.15)',
+              borderRadius: '8px',
+              fontSize: 'clamp(11px, 2.5vw, 15px)',
+              color: 'rgba(239,68,68,0.7)',
+            }}>
+              ⚠️ {agri.avoid}
+            </div>
+
+            {/* Nota */}
+            <div style={{ fontSize: 'clamp(10px, 2vw, 13px)', color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: '12px', fontStyle: 'italic' }}>
+              Basado en la tradición agrícola lunar — el movimiento de savia se correlaciona con las fases de la Luna
+            </div>
+          </div>
+        )
+      })()}
+
       {/* POSICIONES */}
       <div className="info-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', maxWidth: '900px', width: '100%', padding: 'clamp(16px, 4vw, 24px)' }}>
         <div style={{ fontSize: '17px', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginBottom: '18px', textAlign: 'center' }}>POSICIONES DEL ZODIACO</div>
