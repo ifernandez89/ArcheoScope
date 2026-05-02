@@ -33,33 +33,107 @@ interface WeatherData {
 // ─── Fase lunar PRECISA con astronomy-engine ─────────────────────────────────
 import * as Astronomy from 'astronomy-engine'
 
-function getMoonPhase(): { phase: string; emoji: string; illumination: number } {
-  const t = Astronomy.MakeTime(new Date())
-  const phaseAngle = Astronomy.MoonPhase(t) // 0-360°
-  const moonLon = Astronomy.EclipticLongitude(Astronomy.Body.Moon, t)
-  const signIdx = Math.floor(moonLon / 30) % 12
-  const signs = ['Aries','Tauro','Géminis','Cáncer','Leo','Virgo','Libra','Escorpio','Sagitario','Capricornio','Acuario','Piscis']
-  const signName = signs[signIdx]
+// Nombres de signos
+const ZODIAC_SIGNS = ['Aries','Tauro','Géminis','Cáncer','Leo','Virgo','Libra','Escorpio','Sagitario','Capricornio','Acuario','Piscis']
+const ZODIAC_GLYPHS = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓']
 
-  // Iluminación basada en ángulo de fase
+interface LunarPreciseData {
+  phase: string           // "Luna Llena"
+  emoji: string           // 🌕
+  signName: string        // "Escorpio"
+  signGlyph: string       // ♏
+  degInSign: number       // 11.25
+  illumination: number    // 0-100
+  intensity: number       // 0-100 (cercanía a fase exacta)
+  distToExact: number     // grados a la fase exacta más cercana
+  nextPhaseLabel: string  // "Luna Llena exacta"
+  nextPhaseTime: string   // "Hoy 17:23" o "Mañana 08:15"
+  daysInSign: number      // días restantes en el signo actual
+  isExactToday: boolean   // si la fase exacta ocurre hoy
+  peakLabel: string       // "Peak energético HOY" o "en 2d 3h"
+}
+
+function getLunarPreciseData(): LunarPreciseData {
+  const now = new Date()
+  const t = Astronomy.MakeTime(now)
+  const phaseAngle = Astronomy.MoonPhase(t)
+  const moonLon = Astronomy.EclipticLongitude(Astronomy.Body.Moon, t)
+  const sunLon = Astronomy.SunPosition(t).elon
+
+  const signIdx = Math.floor(moonLon / 30) % 12
+  const degInSign = moonLon % 30
+  const signName = ZODIAC_SIGNS[signIdx]
+  const signGlyph = ZODIAC_GLYPHS[signIdx]
+
+  // Iluminación
   const illumination = Math.round((1 - Math.cos(phaseAngle * Math.PI / 180)) / 2 * 100)
 
-  // Determinar fase
-  let name: string, emoji: string
-  if (phaseAngle < 11.25)       { name = 'Luna Nueva';          emoji = '🌑' }
-  else if (phaseAngle < 78.75)  { name = 'Creciente';           emoji = '🌒' }
-  else if (phaseAngle < 101.25) { name = 'Cuarto Creciente';    emoji = '🌓' }
-  else if (phaseAngle < 168.75) { name = 'Gibosa Creciente';    emoji = '🌔' }
-  else if (phaseAngle < 191.25) { name = 'Luna Llena';          emoji = '🌕' }
-  else if (phaseAngle < 258.75) { name = 'Gibosa Menguante';    emoji = '🌖' }
-  else if (phaseAngle < 281.25) { name = 'Cuarto Menguante';    emoji = '🌗' }
-  else if (phaseAngle < 348.75) { name = 'Menguante';           emoji = '🌘' }
-  else                          { name = 'Luna Nueva';          emoji = '🌑' }
+  // Distancia a la oposición (luna llena = 180°)
+  const diff = ((moonLon - sunLon) + 360) % 360
+  const distToFull = Math.min(Math.abs(diff - 180), 360 - Math.abs(diff - 180))
+  // Distancia a la fase más cercana (0°, 90°, 180°, 270°)
+  const phases = [0, 90, 180, 270]
+  const distToExact = Math.min(...phases.map(p => Math.min(Math.abs(phaseAngle - p), 360 - Math.abs(phaseAngle - p))))
+  // Intensidad: 100 = en fase exacta, 0 = a 45° de cualquier fase
+  const intensity = Math.round(Math.max(0, 100 - (distToExact / 45) * 100))
 
-  // Agregar signo al nombre
-  name = `${name} en ${signName}`
+  // Fase actual
+  let phase: string, emoji: string
+  if (phaseAngle < 11.25)       { phase = 'Luna Nueva';        emoji = '🌑' }
+  else if (phaseAngle < 78.75)  { phase = 'Creciente';         emoji = '🌒' }
+  else if (phaseAngle < 101.25) { phase = 'Cuarto Creciente';  emoji = '🌓' }
+  else if (phaseAngle < 168.75) { phase = 'Gibosa Creciente';  emoji = '🌔' }
+  else if (phaseAngle < 191.25) { phase = 'Luna Llena';        emoji = '🌕' }
+  else if (phaseAngle < 258.75) { phase = 'Gibosa Menguante';  emoji = '🌖' }
+  else if (phaseAngle < 281.25) { phase = 'Cuarto Menguante';  emoji = '🌗' }
+  else if (phaseAngle < 348.75) { phase = 'Menguante';         emoji = '🌘' }
+  else                          { phase = 'Luna Nueva';        emoji = '🌑' }
 
-  return { phase: name, emoji, illumination }
+  // Próxima fase exacta
+  const nextQ = Astronomy.SearchMoonQuarter(t)
+  const quarterNames = ['Luna Nueva', 'Cuarto Creciente', 'Luna Llena', 'Cuarto Menguante']
+  const nextPhaseLabel = quarterNames[nextQ.quarter] || 'Próxima fase'
+  const nextPhaseDate = nextQ.time.date
+  const msToNext = nextPhaseDate.getTime() - now.getTime()
+  const hoursToNext = msToNext / 3600000
+  const isExactToday = hoursToNext >= 0 && hoursToNext < 24
+  let nextPhaseTime: string
+  if (hoursToNext < 0) {
+    nextPhaseTime = 'Hace ' + Math.abs(Math.round(hoursToNext)) + 'h'
+  } else if (isExactToday) {
+    nextPhaseTime = 'Hoy ' + nextPhaseDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+  } else {
+    const days = Math.floor(hoursToNext / 24)
+    const hrs = Math.round(hoursToNext % 24)
+    nextPhaseTime = `en ${days}d ${hrs}h`
+  }
+
+  // Peak label
+  const peakLabel = isExactToday
+    ? `⚡ Peak HOY ${nextPhaseDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+    : `Peak ${nextPhaseTime}`
+
+  // Días restantes en el signo (Luna ~13.2°/día)
+  const moonSpeed = 13.176
+  const daysInSign = parseFloat(((30 - degInSign) / moonSpeed).toFixed(1))
+
+  return {
+    phase, emoji, signName, signGlyph,
+    degInSign: parseFloat(degInSign.toFixed(2)),
+    illumination, intensity,
+    distToExact: parseFloat(distToExact.toFixed(2)),
+    nextPhaseLabel, nextPhaseTime,
+    daysInSign, isExactToday, peakLabel,
+  }
+}
+
+function getMoonPhase(): { phase: string; emoji: string; illumination: number } {
+  const d = getLunarPreciseData()
+  return {
+    phase: `${d.phase} en ${d.signName}`,
+    emoji: d.emoji,
+    illumination: d.illumination,
+  }
 }
 
 // ─── WMO Weather Code helpers ─────────────────────────────────────────────────
@@ -612,22 +686,75 @@ export default function WeatherPage() {
             </div>
           </div>
 
-          {/* Moon card */}
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(253,230,138,0.08), rgba(251,191,36,0.04))',
-            border: '1px solid rgba(253,230,138,0.15)',
-            borderRadius: '14px', padding: '16px',
-            display: 'flex', alignItems: 'center', gap: '16px'
-          }}>
-            <div style={{ fontSize: '40px' }}>{weather.moonEmoji}</div>
-            <div>
-              <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '4px' }}>FASE LUNAR HOY</div>
-              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fde68a' }}>{weather.moonPhase}</div>
-              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>
-                Ciclo lunar: ~29.5 días
+          {/* Moon card — precisa con astronomy-engine */}
+          {(() => {
+            const lunar = getLunarPreciseData()
+            return (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(253,230,138,0.08), rgba(251,191,36,0.04))',
+                border: `1px solid ${lunar.isExactToday ? 'rgba(253,230,138,0.5)' : 'rgba(253,230,138,0.15)'}`,
+                borderRadius: '14px', padding: '16px',
+                boxShadow: lunar.isExactToday ? '0 0 20px rgba(253,230,138,0.15)' : 'none',
+              }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '12px' }}>
+                  <div style={{ fontSize: '40px' }}>{lunar.emoji}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '3px' }}>FASE LUNAR</div>
+                    <div style={{ fontSize: '17px', fontWeight: 'bold', color: '#fde68a' }}>
+                      {lunar.phase} {lunar.signGlyph}
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>
+                      {lunar.degInSign.toFixed(1)}° {lunar.signName} · {lunar.illumination}% iluminada
+                    </div>
+                  </div>
+                </div>
+
+                {/* Barra de intensidad lunar */}
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(255,255,255,0.35)', marginBottom: '5px' }}>
+                    <span>INTENSIDAD LUNAR</span>
+                    <span style={{ color: lunar.intensity > 80 ? '#fde68a' : 'rgba(255,255,255,0.4)' }}>{lunar.intensity}%</span>
+                  </div>
+                  <div style={{ height: '5px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', width: `${lunar.intensity}%`,
+                      background: `linear-gradient(90deg, rgba(253,230,138,0.4), rgba(251,191,36,${0.4 + lunar.intensity * 0.006}))`,
+                      borderRadius: '3px', transition: 'width 1s ease',
+                    }} />
+                  </div>
+                </div>
+
+                {/* Peak energético */}
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '8px 10px',
+                  background: lunar.isExactToday ? 'rgba(253,230,138,0.12)' : 'rgba(255,255,255,0.03)',
+                  borderRadius: '8px', marginBottom: '8px',
+                  border: lunar.isExactToday ? '1px solid rgba(253,230,138,0.3)' : '1px solid rgba(255,255,255,0.05)',
+                }}>
+                  <div>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px' }}>PEAK ENERGÉTICO</div>
+                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: lunar.isExactToday ? '#fde68a' : 'rgba(255,255,255,0.6)', marginTop: '2px' }}>
+                      {lunar.nextPhaseLabel}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '13px', color: lunar.isExactToday ? '#fde68a' : 'rgba(255,255,255,0.5)', fontWeight: lunar.isExactToday ? 'bold' : 'normal' }}>
+                      {lunar.nextPhaseTime}
+                    </div>
+                    {lunar.isExactToday && <div style={{ fontSize: '10px', color: '#fde68a', marginTop: '2px' }}>⚡ HOY</div>}
+                  </div>
+                </div>
+
+                {/* Ventana activa en signo */}
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>♏ Ventana activa en {lunar.signName}</span>
+                  <span style={{ color: 'rgba(253,230,138,0.6)' }}>~{lunar.daysInSign}d restantes</span>
+                </div>
               </div>
-            </div>
-          </div>
+            )
+          })()}
 
           {/* Pronóstico 6 días */}
           {weather.forecast && weather.forecast.length > 0 && (

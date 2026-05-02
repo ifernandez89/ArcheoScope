@@ -8,6 +8,8 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "REGLA ABSOLUTA: NUNCA hagas git commit ni git push a menos que el usuario lo pida EXPLÍCITAMENTE. El usuario debe testear primero. Si estás a punto de ejecutar git commit o git push sin que el usuario lo haya pedido en este mensaje, DETENTE."
-  }
+    "prompt": "REGLA ABSOLUTA: NUNCA hagas git commit ni git push a menos que el usuario lo pida EXPLÍCITAMENTE. El usuario debe testear primero. Si estás a punto de ejecutar git commit o git push sin que el usuario lo haya pedido en este mensaje, DETENTE. Tambien recuerda siempre actualizar el Changelog con los fixes o modificaciones/commits antes de pushear!"
+  },
+  "workspaceFolderName": "ArcheoScope",
+  "shortName": "no-commit-without-permission"
 }

@@ -5,6 +5,23 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-05-01
+
+### Added
+- **Astrología**: Fase lunar precisa con grado exacto en signo, barra de intensidad lunar, peak energético con timestamp exacto, ventana activa en signo, días restantes
+- **Clima Local**: Moon card reemplazada con datos precisos de astronomy-engine — fase + signo + grado + intensidad + peak energético + ventana activa
+- **Clima Local**: Pronóstico 6 días (temperatura máx/mín + probabilidad de lluvia)
+- **Clima Local**: Animaciones CSS adaptativas día/noche (estrellas + luna de noche, sol cálido de día)
+- **Clima Local**: Amanecer/atardecer con duración del día
+- **Astrología**: Elementos predominantes del día con barra visual y consejo
+- **Astrología**: Nodos lunares (Norte/Sur) con signo, grado e interpretación
+- **Astrología**: Velocidad instantánea dλ/dt y detección de planetas estacionarios
+
+### Fixed
+- **Clima Local**: Fase lunar mostraba "Gibosa Creciente" en lugar de "Luna Llena en Escorpio" — reemplazado algoritmo simplificado por astronomy-engine
+- **Clima Local**: Cache invalidado automáticamente cuando faltan campos nuevos
+- **Clima Local**: Detección día/noche mejorada (fallback 20:00-06:00, validación de sunrise/sunset)
+
 ## [1.0.0] - 2026-05-01
 
 ### 🌌 Escenas 3D
