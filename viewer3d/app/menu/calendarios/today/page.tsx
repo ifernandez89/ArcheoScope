@@ -287,6 +287,96 @@ export default function TodayPage() {
           </div>
         </div>
 
+        {/* TONIGHT SKY */}
+        {(() => {
+          // Planetas visibles esta noche (elongación > 15° del Sol = no en conjunción)
+          const t = Astronomy.MakeTime(today)
+          const sunLon = Astronomy.SunPosition(t).elon
+          const visiblePlanets = [
+            { id: Astronomy.Body.Mercury, name: 'Mercurio', emoji: '☿', color: '#a3e635' },
+            { id: Astronomy.Body.Venus,   name: 'Venus',    emoji: '♀', color: '#f472b6' },
+            { id: Astronomy.Body.Mars,    name: 'Marte',    emoji: '♂', color: '#ef4444' },
+            { id: Astronomy.Body.Jupiter, name: 'Júpiter',  emoji: '♃', color: '#a78bfa' },
+            { id: Astronomy.Body.Saturn,  name: 'Saturno',  emoji: '♄', color: '#6b7280' },
+          ].map(p => {
+            const lon = Astronomy.EclipticLongitude(p.id, t)
+            let diff = Math.abs(lon - sunLon)
+            if (diff > 180) diff = 360 - diff
+            const visible = diff > 20 // >20° del Sol = potencialmente visible
+            const signs = ['Aries','Tauro','Géminis','Cáncer','Leo','Virgo','Libra','Escorpio','Sagitario','Capricornio','Acuario','Piscis']
+            const glyphs = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓']
+            const signIdx = Math.floor(lon / 30) % 12
+            return { ...p, visible, sign: signs[signIdx], glyph: glyphs[signIdx], deg: (lon % 30).toFixed(0) }
+          }).filter(p => p.visible)
+
+          // Condición de observación basada en fase lunar
+          const phaseAngle = Astronomy.MoonPhase(t)
+          let obsQuality: string, obsColor: string, obsEmoji: string
+          if (phaseAngle > 168 && phaseAngle < 192) {
+            obsQuality = 'Difícil — Luna Llena ilumina el cielo'
+            obsColor = '#ef4444'; obsEmoji = '🔴'
+          } else if ((phaseAngle > 78 && phaseAngle < 102) || (phaseAngle > 258 && phaseAngle < 282)) {
+            obsQuality = 'Moderada — Cuarto lunar activo'
+            obsColor = '#fbbf24'; obsEmoji = '🟡'
+          } else if (phaseAngle < 30 || phaseAngle > 330) {
+            obsQuality = 'Excelente — Luna Nueva, cielo oscuro'
+            obsColor = '#22c55e'; obsEmoji = '🟢'
+          } else {
+            obsQuality = 'Buena — Luna parcial'
+            obsColor = '#22c55e'; obsEmoji = '🟢'
+          }
+
+          return (
+            <div style={{
+              padding: 'clamp(14px, 3vw, 20px)',
+              background: 'rgba(15,23,42,0.8)',
+              border: '1px solid rgba(56,189,248,0.2)',
+              borderRadius: '14px',
+            }}>
+              <div style={{ fontSize: 'clamp(10px, 2vw, 13px)', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '12px' }}>
+                🌃 TONIGHT SKY
+              </div>
+
+              {/* Condición de observación */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '16px' }}>{obsEmoji}</span>
+                <div>
+                  <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px' }}>CONDICIONES DE OBSERVACIÓN</div>
+                  <div style={{ fontSize: 'clamp(13px, 2.5vw, 16px)', fontWeight: 'bold', color: obsColor }}>{obsQuality}</div>
+                </div>
+              </div>
+
+              {/* Planetas visibles */}
+              <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', marginBottom: '8px' }}>
+                PLANETAS VISIBLES ESTA NOCHE
+              </div>
+              {visiblePlanets.length > 0 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {visiblePlanets.map(p => (
+                    <div key={p.name} style={{
+                      padding: '6px 10px',
+                      background: `${p.color}12`,
+                      border: `1px solid ${p.color}30`,
+                      borderRadius: '8px',
+                      display: 'flex', alignItems: 'center', gap: '6px',
+                    }}>
+                      <span style={{ fontSize: '14px', color: p.color }}>{p.emoji}</span>
+                      <div>
+                        <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: p.color, fontWeight: 'bold' }}>{p.name}</div>
+                        <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'rgba(255,255,255,0.35)' }}>{p.deg}° {p.sign} {p.glyph}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: 'rgba(255,255,255,0.35)' }}>
+                  Planetas cerca del Sol — difícil observación
+                </div>
+              )}
+            </div>
+          )
+        })()}
+
         {/* Gregoriano */}
         <div style={{ fontSize: 'clamp(11px, 2vw, 14px)', color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: '8px', letterSpacing: '1px' }}>
           Día {Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000)} del año · Semana {Math.ceil(((today.getTime() - new Date(today.getFullYear(), 0, 1).getTime()) / 86400000) / 7)}

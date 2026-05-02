@@ -116,7 +116,7 @@ export default function MenuPage() {
     { label: 'Información', path: '/menu/info', action: null }
   ]
 
-  // Mobile DEMO: Controles, Constelaciones, Astrología, Calendarios, Clima, Información, 3D Solar System
+  // Mobile DEMO: Controles, Constelaciones, Astrología, Calendarios, Clima, Información
   const mobileOptions = [
     { label: 'Controles', path: '/menu/controls', action: null },
     { label: 'Constelaciones', path: '/constellations', action: null },
@@ -124,7 +124,6 @@ export default function MenuPage() {
     { label: 'Calendarios', path: '/menu/calendarios', action: null },
     { label: 'Clima Local', path: '/menu/weather', action: null },
     { label: 'Información', path: '/menu/info', action: null },
-    { label: '3D Solar System', path: '/mobile-solar', action: null },
   ]
 
   const visibleOptions = isMobile ? mobileOptions : menuOptions

@@ -659,6 +659,44 @@ export default function WeatherPage() {
             </div>
           </div>
 
+          {/* Condiciones de observación astronómica */}
+          {(() => {
+            const lunar = getLunarPreciseData()
+            const night = isNightTime(weather.sunrise, weather.sunset)
+            let obsQuality: string, obsColor: string, obsEmoji: string
+            if (lunar.intensity > 80) {
+              obsQuality = 'Difícil — Luna brillante'
+              obsColor = '#ef4444'; obsEmoji = '🔴'
+            } else if (weather.weatherCode >= 3) {
+              obsQuality = 'Limitada — cielo cubierto'
+              obsColor = '#f97316'; obsEmoji = '🟠'
+            } else if (lunar.intensity > 40) {
+              obsQuality = 'Moderada — luna parcial'
+              obsColor = '#fbbf24'; obsEmoji = '🟡'
+            } else {
+              obsQuality = 'Excelente — cielo despejado'
+              obsColor = '#22c55e'; obsEmoji = '🟢'
+            }
+            return (
+              <div style={{
+                background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(56,189,248,0.15)',
+                borderRadius: '14px', padding: '14px',
+                display: 'flex', alignItems: 'center', gap: '12px',
+              }}>
+                <span style={{ fontSize: '22px' }}>{obsEmoji}</span>
+                <div>
+                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', marginBottom: '3px' }}>
+                    🔭 CONDICIONES DE OBSERVACIÓN {night ? 'NOCTURNA' : 'DIURNA'}
+                  </div>
+                  <div style={{ fontSize: '15px', fontWeight: 'bold', color: obsColor }}>{obsQuality}</div>
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>
+                    Luna: {lunar.intensity}% intensidad · {weather.weatherCode === 0 ? 'Despejado' : getWeatherDesc(weather.weatherCode)}
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
           {/* Sunrise / Sunset card */}
           <div style={{
             background: 'linear-gradient(135deg, rgba(251,146,60,0.08), rgba(251,191,36,0.04))',

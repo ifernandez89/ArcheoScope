@@ -481,6 +481,54 @@ export default function AstrologyPage() {
         onChange={(e) => setSelectedDate(new Date(e.target.value + 'T12:00:00'))}
         style={{ padding: '10px 20px', fontSize: '22px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(167,139,250,0.4)', borderRadius: '8px', color: '#a78bfa', marginBottom: '28px', cursor: 'pointer' }} />
 
+      {/* ENERGÍA DEL DÍA — resumen rápido arriba */}
+      {(() => {
+        const el = data.elementBalance.dominant[0]
+        const elInfo = ELEMENT_DESCRIPTIONS[el]
+        const retros = PLANETS_META.filter(p => data.isRetrograde(p.id))
+        const tensions = data.aspects.filter(a => a.type === 'Cuadratura' || a.type === 'Oposición').length
+        const harmonics = data.aspects.filter(a => a.type === 'Trígono' || a.type === 'Sextil').length
+        const clima = tensions > harmonics ? { label: 'Tenso · desafiante', color: '#f97316' }
+          : harmonics > tensions ? { label: 'Fluido · armonioso', color: '#22c55e' }
+          : { label: 'Equilibrado · integrador', color: '#38bdf8' }
+        const lunar = getLunarPreciseDataAstro(selectedDate)
+        return (
+          <div style={{
+            background: `linear-gradient(135deg, ${elInfo.color}12, rgba(10,8,20,0.9))`,
+            border: `1px solid ${elInfo.color}30`,
+            borderRadius: '16px', padding: 'clamp(16px, 4vw, 24px)',
+            maxWidth: '700px', width: '100%', marginBottom: '8px',
+          }}>
+            <div style={{ fontSize: 'clamp(11px, 2vw, 15px)', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginBottom: '14px', textAlign: 'center' }}>
+              ⚡ ENERGÍA DEL DÍA
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
+                <div style={{ fontSize: 'clamp(10px, 2vw, 13px)', color: 'rgba(255,255,255,0.35)', marginBottom: '4px' }}>DOMINANTE</div>
+                <div style={{ fontSize: 'clamp(15px, 3vw, 20px)', fontWeight: 'bold', color: elInfo.color }}>{elInfo.emoji} {el}</div>
+              </div>
+              <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
+                <div style={{ fontSize: 'clamp(10px, 2vw, 13px)', color: 'rgba(255,255,255,0.35)', marginBottom: '4px' }}>CLIMA</div>
+                <div style={{ fontSize: 'clamp(14px, 2.5vw, 18px)', fontWeight: 'bold', color: clima.color }}>{clima.label}</div>
+              </div>
+              <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
+                <div style={{ fontSize: 'clamp(10px, 2vw, 13px)', color: 'rgba(255,255,255,0.35)', marginBottom: '4px' }}>LUNA</div>
+                <div style={{ fontSize: 'clamp(14px, 2.5vw, 18px)', fontWeight: 'bold', color: '#fde68a' }}>{lunar.emoji} {lunar.phase} {lunar.signGlyph}</div>
+              </div>
+              <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
+                <div style={{ fontSize: 'clamp(10px, 2vw, 13px)', color: 'rgba(255,255,255,0.35)', marginBottom: '4px' }}>CLAVE</div>
+                <div style={{ fontSize: 'clamp(13px, 2.5vw, 17px)', color: elInfo.color, fontStyle: 'italic' }}>{elInfo.advice.split('.')[0]}</div>
+              </div>
+            </div>
+            {retros.length > 0 && (
+              <div style={{ marginTop: '10px', fontSize: 'clamp(11px, 2vw, 14px)', color: '#ef4444', textAlign: 'center' }}>
+                ⚠️ {retros.map(p => p.name).join(', ')} retrógrado{retros.length > 1 ? 's' : ''} — revisar, no iniciar
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
       {/* RUEDA ASTROLÓGICA */}
       <div style={{ background: 'rgba(10,8,20,0.95)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: '16px', padding: '20px', marginBottom: '20px', boxShadow: '0 0 60px rgba(167,139,250,0.08)' }}>
         <div style={{ fontSize: '17px', color: 'rgba(255,255,255,0.3)', letterSpacing: '3px', marginBottom: '14px', textAlign: 'center', textTransform: 'uppercase' }}>
