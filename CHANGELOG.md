@@ -5,6 +5,14 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2026-05-03
+
+### Added
+- **Astrología**: card "🌕✨🌕 Doble Luna Llena" — detecta dinámicamente cuando hay dos lunas llenas en el mismo mes (Luna Rosa + Luna Azul). Muestra fechas exactas, signos, mensaje interpretativo especial y datos curiosos del fenómeno. Para mayo 2026: Luna Rosa en Escorpio (1 mayo) + Luna Azul en Sagitario (31 mayo)
+
+### Fixed
+- **Botones "Volver" mobile**: mejor UX — padding aumentado (16px), ancho máximo 340px, min-height 54px (mejor touch target), border-radius 12px, feedback táctil `:active` con scale(0.97), `-webkit-tap-highlight-color: transparent`
+
 ## [1.0.5] - 2026-05-02
 
 ### Added

@@ -243,6 +243,100 @@ const NODE_SOUTH_INTERPRETATIONS: Record<string, string> = {
   Piscis: 'Soltar la evasión, la victimización y la confusión.',
 }
 
+// ─── LUNA AZUL: detección de doble luna llena en el mismo mes ────────────────
+interface BlueMoonData {
+  isDoubleMoon: boolean
+  firstFull: Date | null
+  secondFull: Date | null
+  firstSign: string
+  secondSign: string
+  firstEmoji: string
+  secondEmoji: string
+  firstName: string   // "Luna Rosa" (primera luna llena de mayo = luna rosa tradicional)
+  secondName: string  // "Luna Azul"
+  message: string
+}
+
+function detectBlueMoon(date: Date): BlueMoonData {
+  const year = date.getFullYear()
+  const month = date.getMonth() // 0-indexed
+
+  // Buscar todas las lunas llenas del mes
+  const startOfMonth = new Date(year, month, 1, 0, 0, 0)
+  const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59)
+
+  const fullMoons: Date[] = []
+  let searchTime = Astronomy.MakeTime(startOfMonth)
+
+  // Buscar hasta 3 lunas llenas (máximo posible en un mes)
+  for (let i = 0; i < 3; i++) {
+    try {
+      const nextFull = Astronomy.SearchMoonPhase(180, searchTime, 35)
+      if (!nextFull) break
+      if (nextFull.date > endOfMonth) break
+      fullMoons.push(nextFull.date)
+      // Avanzar 29 días para buscar la siguiente
+      searchTime = Astronomy.MakeTime(new Date(nextFull.date.getTime() + 29 * 86400000))
+    } catch {
+      break
+    }
+  }
+
+  if (fullMoons.length < 2) {
+    return {
+      isDoubleMoon: false,
+      firstFull: fullMoons[0] || null,
+      secondFull: null,
+      firstSign: '', secondSign: '',
+      firstEmoji: '🌕', secondEmoji: '🌕',
+      firstName: '', secondName: '',
+      message: ''
+    }
+  }
+
+  // Hay dos lunas llenas — calcular signos
+  const t1 = Astronomy.MakeTime(fullMoons[0])
+  const t2 = Astronomy.MakeTime(fullMoons[1])
+  const lon1 = Astronomy.EclipticLongitude(Astronomy.Body.Moon, t1)
+  const lon2 = Astronomy.EclipticLongitude(Astronomy.Body.Moon, t2)
+  const sign1 = getSign(lon1)
+  const sign2 = getSign(lon2)
+
+  // Nombres tradicionales de luna llena por mes
+  const FULL_MOON_NAMES: Record<number, string> = {
+    0: 'Luna del Lobo', 1: 'Luna de Nieve', 2: 'Luna de Gusano',
+    3: 'Luna Rosa', 4: 'Luna de Flores', 5: 'Luna de Fresa',
+    6: 'Luna del Ciervo', 7: 'Luna del Esturión', 8: 'Luna de la Cosecha',
+    9: 'Luna del Cazador', 10: 'Luna del Castor', 11: 'Luna Fría'
+  }
+
+  const firstName = FULL_MOON_NAMES[month] || 'Luna Llena'
+
+  // Mensajes interpretativos por combinación de signos
+  const BLUE_MOON_MESSAGES: Record<string, string> = {
+    'Escorpio-Sagitario': 'Mayo 2026 trae una rareza cósmica: dos lunas llenas en el mismo mes. La primera, en Escorpio, abre el mes con una energía de transformación profunda, revelación de verdades ocultas y muerte simbólica de lo que ya no sirve. La segunda, la Luna Azul en Sagitario, cierra el mes con una llamada a la expansión, la libertad y la búsqueda de significado. Juntas forman un arco completo: de las profundidades de Escorpio a las alturas de Sagitario. Es un mes para soltar lo viejo y lanzarse hacia el horizonte.',
+    'Sagitario-Capricornio': 'Doble luna llena: expansión filosófica seguida de consolidación práctica. Un mes para soñar en grande y luego construir con disciplina.',
+    'Aries-Tauro': 'Doble luna llena: impulso pionero seguido de consolidación sensorial. Iniciar y luego enraizar.',
+    'Tauro-Géminis': 'Doble luna llena: estabilidad material seguida de movimiento intelectual. Construir y luego comunicar.',
+  }
+
+  const comboKey = `${sign1.name}-${sign2.name}`
+  const defaultMsg = `Mayo trae una rareza cósmica: dos lunas llenas en el mismo mes. La primera en ${sign1.name} abre un ciclo de ${sign1.element.toLowerCase()}, mientras la Luna Azul en ${sign2.name} lo cierra con energía de ${sign2.element.toLowerCase()}. Un mes de doble intensidad emocional y revelación.`
+
+  return {
+    isDoubleMoon: true,
+    firstFull: fullMoons[0],
+    secondFull: fullMoons[1],
+    firstSign: sign1.name,
+    secondSign: sign2.name,
+    firstEmoji: '🌕',
+    secondEmoji: '🌕',
+    firstName,
+    secondName: 'Luna Azul',
+    message: BLUE_MOON_MESSAGES[comboKey] || defaultMsg,
+  }
+}
+
 // ─── Datos lunares precisos para astrología (acepta fecha seleccionada) ───────
 const ZODIAC_SIGNS = ['Aries','Tauro','Géminis','Cáncer','Leo','Virgo','Libra','Escorpio','Sagitario','Capricornio','Acuario','Piscis']
 const ZODIAC_GLYPHS = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓']
@@ -408,7 +502,8 @@ export default function AstrologyPage() {
     const aspects = getAspects(positions)
     const elementBalance = getElementBalance(positions)
     const lunarNodes = getLunarNodes(selectedDate)
-    return { positions, isRetrograde, speeds, planetStatus, aspects, elementBalance, lunarNodes }
+    const blueMoon = detectBlueMoon(selectedDate)
+    return { positions, isRetrograde, speeds, planetStatus, aspects, elementBalance, lunarNodes, blueMoon }
   }, [selectedDate])
 
   const moonPhase = useMemo(() => {
@@ -525,6 +620,130 @@ export default function AstrologyPage() {
                 ⚠️ {retros.map(p => p.name).join(', ')} retrógrado{retros.length > 1 ? 's' : ''} — revisar, no iniciar
               </div>
             )}
+          </div>
+        )
+      })()}
+
+      {/* LUNA AZUL — doble luna llena del mes (evento raro) */}
+      {data.blueMoon.isDoubleMoon && (() => {
+        const bm = data.blueMoon
+        const fmt = (d: Date | null) => d ? d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' }) + ' · ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '—'
+        const isNearFirst = bm.firstFull && Math.abs(selectedDate.getTime() - bm.firstFull.getTime()) < 3 * 86400000
+        const isNearSecond = bm.secondFull && Math.abs(selectedDate.getTime() - bm.secondFull.getTime()) < 3 * 86400000
+        return (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(30,10,60,0.95), rgba(10,5,30,0.98))',
+            border: '1.5px solid rgba(167,139,250,0.45)',
+            borderRadius: '18px',
+            padding: 'clamp(18px, 4vw, 28px)',
+            maxWidth: '700px', width: '100%',
+            marginBottom: '8px',
+            boxShadow: '0 0 40px rgba(167,139,250,0.12), 0 0 80px rgba(167,139,250,0.05)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            {/* Glow decorativo */}
+            <div style={{
+              position: 'absolute', top: '-40px', right: '-40px',
+              width: '160px', height: '160px',
+              background: 'radial-gradient(circle, rgba(167,139,250,0.15) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }} />
+
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '18px' }}>
+              <div style={{ fontSize: 'clamp(22px, 6vw, 32px)', marginBottom: '6px' }}>🌕✨🌕</div>
+              <div style={{ fontSize: 'clamp(13px, 2.5vw, 16px)', color: '#a78bfa', letterSpacing: '3px', fontWeight: 'bold', marginBottom: '4px' }}>
+                EVENTO RARO · DOBLE LUNA LLENA
+              </div>
+              <div style={{ fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: 'bold', color: '#e2d9ff' }}>
+                {bm.firstName} & {bm.secondName}
+              </div>
+            </div>
+
+            {/* Las dos lunas */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+              {/* Primera luna */}
+              <div style={{
+                padding: 'clamp(10px, 2.5vw, 16px)',
+                background: isNearFirst ? 'rgba(253,230,138,0.1)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${isNearFirst ? 'rgba(253,230,138,0.4)' : 'rgba(167,139,250,0.2)'}`,
+                borderRadius: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: 'clamp(28px, 7vw, 40px)', marginBottom: '4px' }}>🌕</div>
+                <div style={{ fontSize: 'clamp(11px, 2vw, 14px)', color: '#fde68a', letterSpacing: '1px', marginBottom: '4px' }}>
+                  {bm.firstName.toUpperCase()}
+                </div>
+                <div style={{ fontSize: 'clamp(13px, 2.5vw, 17px)', fontWeight: 'bold', color: '#e2d9ff' }}>
+                  en {bm.firstSign}
+                </div>
+                <div style={{ fontSize: 'clamp(10px, 2vw, 13px)', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
+                  {fmt(bm.firstFull)}
+                </div>
+              </div>
+
+              {/* Segunda luna — Luna Azul */}
+              <div style={{
+                padding: 'clamp(10px, 2.5vw, 16px)',
+                background: isNearSecond ? 'rgba(56,189,248,0.1)' : 'rgba(56,189,248,0.05)',
+                border: `1px solid ${isNearSecond ? 'rgba(56,189,248,0.5)' : 'rgba(56,189,248,0.2)'}`,
+                borderRadius: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: 'clamp(28px, 7vw, 40px)', marginBottom: '4px' }}>🔵</div>
+                <div style={{ fontSize: 'clamp(11px, 2vw, 14px)', color: '#38bdf8', letterSpacing: '1px', marginBottom: '4px' }}>
+                  {bm.secondName.toUpperCase()}
+                </div>
+                <div style={{ fontSize: 'clamp(13px, 2.5vw, 17px)', fontWeight: 'bold', color: '#e2d9ff' }}>
+                  en {bm.secondSign}
+                </div>
+                <div style={{ fontSize: 'clamp(10px, 2vw, 13px)', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
+                  {fmt(bm.secondFull)}
+                </div>
+              </div>
+            </div>
+
+            {/* Mensaje interpretativo */}
+            <div style={{
+              padding: 'clamp(12px, 3vw, 18px)',
+              background: 'rgba(167,139,250,0.06)',
+              border: '1px solid rgba(167,139,250,0.2)',
+              borderRadius: '12px',
+              marginBottom: '14px',
+            }}>
+              <div style={{ fontSize: 'clamp(11px, 2vw, 14px)', color: '#a78bfa', letterSpacing: '2px', marginBottom: '10px' }}>
+                ✦ MENSAJE DEL MES
+              </div>
+              <div style={{ fontSize: 'clamp(13px, 2.5vw, 17px)', color: 'rgba(255,255,255,0.75)', lineHeight: '1.8' }}>
+                {bm.message}
+              </div>
+            </div>
+
+            {/* Datos curiosos */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
+                <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'rgba(255,255,255,0.3)', marginBottom: '4px' }}>FRECUENCIA</div>
+                <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: '#a78bfa' }}>~cada 2.5 años</div>
+              </div>
+              <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
+                <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'rgba(255,255,255,0.3)', marginBottom: '4px' }}>CICLO LUNAR</div>
+                <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: '#a78bfa' }}>29.53 días</div>
+              </div>
+              <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
+                <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'rgba(255,255,255,0.3)', marginBottom: '4px' }}>PRIMERA LUNA</div>
+                <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: '#fde68a' }}>🌕 {bm.firstSign}</div>
+              </div>
+              <div style={{ padding: '10px 12px', background: 'rgba(56,189,248,0.06)', borderRadius: '10px', border: '1px solid rgba(56,189,248,0.15)' }}>
+                <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'rgba(56,189,248,0.6)', marginBottom: '4px' }}>LUNA AZUL</div>
+                <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: '#38bdf8' }}>🔵 {bm.secondSign}</div>
+              </div>
+            </div>
+
+            {/* Nota */}
+            <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: '14px', fontStyle: 'italic' }}>
+              "Once in a blue moon" — expresión que nació de este fenómeno astronómico
+            </div>
           </div>
         )
       })()}

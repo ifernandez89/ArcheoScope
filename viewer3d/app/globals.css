@@ -71,6 +71,13 @@ a {
   display: inline-block;
   text-align: center;
   font-family: var(--font-archeoscope), serif;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.btn-responsive:active {
+  background: rgba(255,255,255,0.12);
+  transform: scale(0.97);
 }
 
 @media (max-width: 600px) {
@@ -78,10 +85,16 @@ a {
     letter-spacing: 3px;
   }
   .btn-responsive {
-    padding: 12px 30px;
-    font-size: 18px;
+    padding: 16px 24px;
+    font-size: 17px;
     width: 100%;
-    max-width: 280px;
+    max-width: 340px;
+    min-height: 54px;
+    border-radius: 12px;
+    letter-spacing: 1.5px;
+    /* Better touch target */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   .subtitle-responsive {
     letter-spacing: 1px;
