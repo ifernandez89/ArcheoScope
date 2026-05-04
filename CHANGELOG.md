@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Fuente global**: reemplazada Archeoscope-Regular.ttf por Spaceport_2006.otf como fuente principal del proyecto (prueba visual)
 
+### Fixed
+- **Build**: `next build` fallaba en GitHub Actions con Next.js 16 (Turbopack activado por defecto). Solución: `next build --webpack` fuerza webpack explícitamente. Eliminado `swcMinify` obsoleto de `next.config.js`
+
 ## [1.0.7] - 2026-05-04
 
 ### Added
