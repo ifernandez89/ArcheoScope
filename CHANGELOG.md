@@ -5,6 +5,22 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-05-04
+
+### Fixed — Mobile responsive audit (frontend-design skill)
+- **Menú mobile**: font-sizes hardcodeados → `clamp()` en label (17/20px → clamp(15/18px, 4vw)) y subtitle (12px → clamp(12px, 2.8vw, 14px))
+- **Tzolk'in Clásico**: grid `minmax(180px)` causaba overflow horizontal en 320px → `minmax(min(180px, 100%), 1fr)`. Mismo fix en grid de ciclos astronómicos mayas
+- **Tzolk'in Clásico**: múltiples font-sizes hardcodeados (14px labels, 32px/28px números, 16px/18px textos) → todos con `clamp()`
+- **Tzolk'in Clásico**: ciclos cósmicos (Venus/Luna/Eclipses) tenían 13px/12px hardcodeados → `clamp(13-14px, 3vw, 16-17px)`
+- **Calendario Babilónico**: grid `minmax(180px)` y `minmax(150px)` → `minmax(min(180/150px, 100%), 1fr)`. Grid de tiempo fijo `minmax(130px)` → `repeat(3, 1fr)` (siempre 3 columnas)
+- **Calendario Babilónico**: font-sizes hardcodeados (14px labels, 28px números, 15px/16px textos) → todos con `clamp()`
+- **Cholq'ij**: grid `repeat(2, 1fr)` → `repeat(auto-fit, minmax(min(140px, 100%), 1fr))` para colapsar en pantallas muy pequeñas
+- **Cholq'ij**: font-sizes hardcodeados (13px labels, 28px números, 16px/20px textos) → todos con `clamp()`
+
+### Added
+- **Calendario Babilónico**: barra de progreso del ciclo actual (día X de 60, días para el siguiente ciclo)
+- **Calendario Babilónico**: mapa visual de los 6 ciclos del año con el ciclo actual resaltado
+
 ## [1.0.9] - 2026-05-04
 
 ### Fixed

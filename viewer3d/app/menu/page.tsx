@@ -197,7 +197,7 @@ export default function MenuPage() {
                 }}
               >
                 <div style={{
-                  fontSize: option.primary ? '20px' : '17px',
+                  fontSize: option.primary ? 'clamp(18px, 4.5vw, 22px)' : 'clamp(15px, 4vw, 18px)',
                   fontWeight: 'bold',
                   color: option.primary ? '#22c55e' : '#ffffff',
                   letterSpacing: '0.5px',
@@ -205,7 +205,7 @@ export default function MenuPage() {
                   {option.label}
                 </div>
                 <div style={{
-                  fontSize: '12px',
+                  fontSize: 'clamp(12px, 2.8vw, 14px)',
                   color: option.primary ? 'rgba(34,197,94,0.7)' : 'rgba(255,255,255,0.35)',
                   marginTop: '3px',
                   letterSpacing: '0.3px',
