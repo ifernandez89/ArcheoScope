@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fuente global**: reemplazada Archeoscope-Regular.ttf por Spaceport_2006.otf como fuente principal del proyecto (prueba visual)
 
 ### Fixed
-- **Build**: `next build` fallaba en GitHub Actions con Next.js 16 (Turbopack activado por defecto). Solución: `next build --webpack` fuerza webpack explícitamente. Eliminado `swcMinify` obsoleto de `next.config.js`
+- **Build CI**: raíz del problema — `package-lock.json` estaba en `.gitignore`, por lo que `npm install` en CI resolvía versiones libremente e instalaba Next.js 16 (Turbopack). Fix: removido `package-lock.json` del `.gitignore`, generado lockfile con Next.js `14.2.35` exacto, CI usa `npm ci`. También corregido `.gitignore` que tenía `*.js` ignorando todos los JS incluyendo `next.config.js`
 
 ## [1.0.7] - 2026-05-04
 

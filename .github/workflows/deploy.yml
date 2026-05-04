@@ -29,7 +29,7 @@ jobs:
     
     - name: Install dependencies
       working-directory: ./viewer3d
-      run: npm install
+      run: npm ci
     
     - name: Build Next.js
       working-directory: ./viewer3d
