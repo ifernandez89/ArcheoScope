@@ -1,6 +1,6 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CALENDARIO SEXAGESIMAL MESOPOTÁMICO (Babilonia / Sumer)
@@ -58,21 +58,7 @@ function calcSexagesimal(date: Date) {
   // Epagómenos (5 días fuera del tiempo)
   const isEpagomenos = yearPos >= 360
 
-  // Hora en base 60
-  const now = new Date()
-  const totalSecs = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()
-  const beru = Math.floor(totalSecs / 7200) // 1 beru = 2 horas
-  const ush = Math.floor((totalSecs % 7200) / 60) // 1 ush = 1 minuto
-  const ninda = totalSecs % 60 // 1 ninda = 1 segundo
-
-  // Ángulo solar en base 60 (azimut)
-  const azimutSexag = {
-    grados: Math.floor(0), // placeholder — se podría conectar con solarState
-    minutos: 0,
-    segundos: 0
-  }
-
-  return { cicloIdx, dayInCiclo, dayInDecada, decadaIdx, isEpagomenos, babilYear, dayOf360, beru, ush, ninda, yearPos }
+  return { cicloIdx, dayInCiclo, dayInDecada, decadaIdx, isEpagomenos, babilYear, dayOf360, yearPos }
 }
 
 /**
@@ -93,6 +79,17 @@ export default function SexagesimalPage() {
   const [date, setDate] = useState(new Date())
   const r = useMemo(() => calcSexagesimal(date), [date])
   const ciclo = CICLOS[r.cicloIdx]
+
+  // Hora babilónica — se actualiza cada segundo
+  const [now, setNow] = useState(new Date())
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(interval)
+  }, [])
+  const totalSecs = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()
+  const beru  = Math.floor(totalSecs / 7200)       // 1 beru = 2 horas
+  const ush   = Math.floor((totalSecs % 7200) / 60) // 1 ush = 1 minuto
+  const ninda = totalSecs % 60                       // 1 ninda = 1 segundo
 
   return (
     <main style={{ width:'100vw', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', background:'linear-gradient(180deg,#0a0a1a,#1a0a2e,#0a0a1a)', padding:'40px 20px', color:'#fff', overflowY: 'auto' }}>
@@ -141,15 +138,15 @@ export default function SexagesimalPage() {
         <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.3)', letterSpacing:'2px', marginBottom:'10px', textAlign:'center' }}>TIEMPO BABILÓNICO (BASE 60)</div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(130px, 1fr))', gap:'10px', textAlign:'center' }}>
           <div>
-            <div style={{ fontSize:'28px', fontWeight:'bold', color:'#fbbf24' }}>{r.beru}</div>
+            <div style={{ fontSize:'28px', fontWeight:'bold', color:'#fbbf24' }}>{beru}</div>
             <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)' }}>Beru</div>
           </div>
           <div>
-            <div style={{ fontSize:'28px', fontWeight:'bold', color:'#fbbf24' }}>{r.ush}</div>
+            <div style={{ fontSize:'28px', fontWeight:'bold', color:'#fbbf24' }}>{ush}</div>
             <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)' }}>Uš</div>
           </div>
           <div>
-            <div style={{ fontSize:'28px', fontWeight:'bold', color:'#fbbf24' }}>{r.ninda}</div>
+            <div style={{ fontSize:'28px', fontWeight:'bold', color:'#fbbf24' }}>{ninda}</div>
             <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)' }}>Ninda</div>
           </div>
         </div>

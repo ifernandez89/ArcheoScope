@@ -5,6 +5,17 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.9] - 2026-05-04
+
+### Fixed
+- **Astrología — actualización diaria**: eliminado `moonPhase` useMemo que era código muerto (se calculaba pero nunca se renderizaba). La sección FASE LUNAR ya usaba `getLunarPreciseDataAstro()` con astronomy-engine
+- **Astrología — rendimiento**: `getLunarPreciseDataAstro()` se llamaba 3 veces en el JSX en cada render; ahora memoizado como `lunarData` con `useMemo([selectedDate])`
+- **Astrología — rendimiento**: `generateInterpretation()` se llamaba sin memoizar; ahora memoizado como `interpretation`
+- **Astrología — Fase Lunar**: próxima Luna Nueva y Luna Llena ahora calculadas con `Astronomy.SearchMoonPhase()` (astronomy-engine, precisión ~1 min) en lugar de cálculo manual aproximado. Incluye signo zodiacal donde cae cada luna
+- **Calendarios/Hoy**: `const today = new Date()` estaba fuera de `useState` con `useMemo([])` — los datos nunca se recalculaban si el componente se remontaba. Corregido con `useState(() => new Date())` y `useMemo([today])`
+- **Calendario Babilónico**: hora babilónica (Beru/Uš/Ninda) usaba `new Date()` dentro de `calcSexagesimal()` — se congelaba en el primer render. Separada en `useState` + `useEffect` con `setInterval(1000)` para actualización en tiempo real
+- **Clima Local (Weather)**: `getLunarPreciseData()` se llamaba 3 veces en el JSX en cada render (condiciones de observación + moon card + getMoonPhase). Ahora memoizado como `lunarData` y `moon` con `useMemo([])`
+
 ## [1.0.8] - 2026-05-04
 
 ### Changed

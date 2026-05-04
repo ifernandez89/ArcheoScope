@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 interface ForecastDay {
   date: string       // "Lun", "Mar", etc.
@@ -544,7 +544,9 @@ export default function WeatherPage() {
     )
   }, [])
 
-  const moon = getMoonPhase()
+  // Datos lunares memoizados — se calculan una sola vez, no en cada render
+  const lunarData = useMemo(() => getLunarPreciseData(), [])
+  const moon = useMemo(() => getMoonPhase(), [])
 
   return (
     <main style={{
@@ -661,7 +663,7 @@ export default function WeatherPage() {
 
           {/* Condiciones de observación astronómica */}
           {(() => {
-            const lunar = getLunarPreciseData()
+            const lunar = lunarData
             const night = isNightTime(weather.sunrise, weather.sunset)
             let obsQuality: string, obsColor: string, obsEmoji: string
             if (lunar.intensity > 80) {
@@ -726,7 +728,7 @@ export default function WeatherPage() {
 
           {/* Moon card — precisa con astronomy-engine */}
           {(() => {
-            const lunar = getLunarPreciseData()
+            const lunar = lunarData
             return (
               <div style={{
                 background: 'linear-gradient(135deg, rgba(253,230,138,0.08), rgba(251,191,36,0.04))',
