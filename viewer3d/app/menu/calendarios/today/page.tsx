@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import * as Astronomy from 'astronomy-engine'
 import { getUpcomingEclipses, isDresdenEclipseWindow, DRESDEN_CODEX_INFO } from '@/utils/eclipse-calculator'
 
