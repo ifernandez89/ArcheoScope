@@ -5,6 +5,22 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2026-05-04
+
+### Changed
+- **Fuente global**: reemplazada Archeoscope-Regular.ttf por Spaceport_2006.otf como fuente principal del proyecto (prueba visual)
+
+## [1.0.7] - 2026-05-04
+
+### Added
+- **Astrología — Fase Lunar**: cálculo correcto de iluminación (0% nueva → 100% llena → 0% menguante), antes mostraba porcentaje de fase en vez de iluminación
+- **Astrología — Fase Lunar**: próxima Luna Nueva y Luna Llena con fecha y días restantes
+- **Astrología — Fase Lunar**: signo zodiacal donde cae la Luna con interpretación astrológica completa
+
+### Fixed
+- **Calendarios mobile**: tipografía de textos descriptivos aumentada 2-3 puntos en Cholq'ij, Tzolk'in Clásico y Tzolk'in simple — mejora legibilidad en dispositivos móviles
+- **globals.css**: `.text-responsive` base aumentada de 14px a 16px
+
 ## [1.0.6] - 2026-05-03
 
 ### Added
