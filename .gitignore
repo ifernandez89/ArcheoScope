@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 yarn.lock
 
 # Environment variables
@@ -22,10 +21,8 @@ prisma/migrations/
 # Build outputs
 dist/
 build/
-*.js
-*.js.map
-*.d.ts
-!prisma/seed.ts
+viewer3d/.next/
+viewer3d/out/
 
 # IDE
 .vscode/

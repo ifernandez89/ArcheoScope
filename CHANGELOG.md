@@ -5,11 +5,60 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.7] - 2026-05-07
+## [1.1.1] - 2026-05-07
 
 ### Added
 - **Brújula** (`/menu/brujula`): nueva sección mobile con orientación magnética en tiempo real. Disco giratorio estilo vintage con marcas de grados, letras cardinales, aguja roja/blanca fija, heading numérico grande, indicador de dirección con color dinámico por punto cardinal. Usa `DeviceOrientationEvent` + `webkitCompassHeading` (iOS) / `alpha` (Android). Suavizado exponencial α=0.15 para evitar jitter. Muestra precisión del sensor (±°) cuando está disponible. Tip de calibración en "8". Permiso explícito en iOS via `requestPermission()`
 - **Menú mobile**: agregada opción 🧭 Brújula entre Clima e Información
+- **Información**: sección 🧭 Brújula agregada al listado de features técnicas
+
+## [1.1.0] - 2026-05-04
+
+### Fixed — Mobile responsive audit (frontend-design skill)
+- **Menú mobile**: font-sizes hardcodeados → `clamp()` en label (17/20px → clamp(15/18px, 4vw)) y subtitle (12px → clamp(12px, 2.8vw, 14px))
+- **Tzolk'in Clásico**: grid `minmax(180px)` causaba overflow horizontal en 320px → `minmax(min(180px, 100%), 1fr)`. Mismo fix en grid de ciclos astronómicos mayas
+- **Tzolk'in Clásico**: múltiples font-sizes hardcodeados (14px labels, 32px/28px números, 16px/18px textos) → todos con `clamp()`
+- **Tzolk'in Clásico**: ciclos cósmicos (Venus/Luna/Eclipses) tenían 13px/12px hardcodeados → `clamp(13-14px, 3vw, 16-17px)`
+- **Calendario Babilónico**: grid `minmax(180px)` y `minmax(150px)` → `minmax(min(180/150px, 100%), 1fr)`. Grid de tiempo fijo `minmax(130px)` → `repeat(3, 1fr)` (siempre 3 columnas)
+- **Calendario Babilónico**: font-sizes hardcodeados (14px labels, 28px números, 15px/16px textos) → todos con `clamp()`
+- **Cholq'ij**: grid `repeat(2, 1fr)` → `repeat(auto-fit, minmax(min(140px, 100%), 1fr))` para colapsar en pantallas muy pequeñas
+- **Cholq'ij**: font-sizes hardcodeados (13px labels, 28px números, 16px/20px textos) → todos con `clamp()`
+
+### Added
+- **Calendario Babilónico**: barra de progreso del ciclo actual (día X de 60, días para el siguiente ciclo)
+- **Calendario Babilónico**: mapa visual de los 6 ciclos del año con el ciclo actual resaltado
+
+## [1.0.9] - 2026-05-04
+
+### Fixed
+- **Astrología — actualización diaria**: eliminado `moonPhase` useMemo que era código muerto (se calculaba pero nunca se renderizaba). La sección FASE LUNAR ya usaba `getLunarPreciseDataAstro()` con astronomy-engine
+- **Astrología — rendimiento**: `getLunarPreciseDataAstro()` se llamaba 3 veces en el JSX en cada render; ahora memoizado como `lunarData` con `useMemo([selectedDate])`
+- **Astrología — rendimiento**: `generateInterpretation()` se llamaba sin memoizar; ahora memoizado como `interpretation`
+- **Astrología — Fase Lunar**: próxima Luna Nueva y Luna Llena ahora calculadas con `Astronomy.SearchMoonPhase()` (astronomy-engine, precisión ~1 min) en lugar de cálculo manual aproximado. Incluye signo zodiacal donde cae cada luna
+- **Calendarios/Hoy**: `const today = new Date()` estaba fuera de `useState` con `useMemo([])` — los datos nunca se recalculaban si el componente se remontaba. Corregido con `useState(() => new Date())` y `useMemo([today])`
+- **Calendario Babilónico**: hora babilónica (Beru/Uš/Ninda) usaba `new Date()` dentro de `calcSexagesimal()` — se congelaba en el primer render. Separada en `useState` + `useEffect` con `setInterval(1000)` para actualización en tiempo real
+- **Clima Local (Weather)**: `getLunarPreciseData()` se llamaba 3 veces en el JSX en cada render (condiciones de observación + moon card + getMoonPhase). Ahora memoizado como `lunarData` y `moon` con `useMemo([])`
+- **Build**: import `useState` faltante en `calendarios/today/page.tsx` — causaba error de compilación en CI
+
+## [1.0.8] - 2026-05-04
+
+### Changed
+- **Fuente global**: reemplazada Archeoscope-Regular.ttf por Spaceport_2006.otf como fuente principal del proyecto (prueba visual)
+
+### Fixed
+- **Build CI**: raíz del problema — `package-lock.json` estaba en `.gitignore`, por lo que `npm install` en CI resolvía versiones libremente e instalaba Next.js 16 (Turbopack). Fix: removido `package-lock.json` del `.gitignore`, generado lockfile con Next.js `14.2.35` exacto, CI usa `npm ci`. También corregido `.gitignore` que tenía `*.js` ignorando todos los JS incluyendo `next.config.js`
+
+## [1.0.7] - 2026-05-04
+
+### Added
+- **Astrología — Fase Lunar**: cálculo correcto de iluminación (0% nueva → 100% llena → 0% menguante), antes mostraba porcentaje de fase en vez de iluminación
+- **Astrología — Fase Lunar**: próxima Luna Nueva y Luna Llena con fecha y días restantes
+- **Astrología — Fase Lunar**: signo zodiacal donde cae la Luna con interpretación astrológica completa
+
+### Fixed
+- **Calendarios mobile**: tipografía de textos descriptivos aumentada 2-3 puntos en Cholq'ij, Tzolk'in Clásico y Tzolk'in simple — mejora legibilidad en dispositivos móviles
+- **globals.css**: `.text-responsive` base aumentada de 14px a 16px
+>>>>>>> 4898e143e25be8ea08a7aa5e44dc8aed290cae51
 
 ## [1.0.6] - 2026-05-03
 

@@ -506,47 +506,34 @@ export default function AstrologyPage() {
     return { positions, isRetrograde, speeds, planetStatus, aspects, elementBalance, lunarNodes, blueMoon }
   }, [selectedDate])
 
-  const moonPhase = useMemo(() => {
-    const jd = (selectedDate.getTime() / 86400000) + 2440587.5
-    const lunarCycle = 29.530588853
-    const phase = ((jd - 2451550.1) / lunarCycle) % 1
-    const phaseNorm = phase < 0 ? phase + 1 : phase
-    
-    // Cálculo correcto de iluminación (0% en nueva, 100% en llena)
-    const illumination = phaseNorm <= 0.5 
-      ? phaseNorm * 200  // Creciente: 0% → 100%
-      : (1 - phaseNorm) * 200  // Menguante: 100% → 0%
-    
-    let name = 'Luna Nueva', glyph = '🌑'
-    if (phaseNorm > 0.03 && phaseNorm <= 0.23) { name = 'Cuarto Creciente'; glyph = '🌒' }
-    else if (phaseNorm > 0.23 && phaseNorm <= 0.27) { name = 'Primer Cuarto'; glyph = '🌓' }
-    else if (phaseNorm > 0.27 && phaseNorm <= 0.47) { name = 'Gibosa Creciente'; glyph = '🌔' }
-    else if (phaseNorm > 0.47 && phaseNorm <= 0.53) { name = 'Luna Llena'; glyph = '🌕' }
-    else if (phaseNorm > 0.53 && phaseNorm <= 0.73) { name = 'Gibosa Menguante'; glyph = '🌖' }
-    else if (phaseNorm > 0.73 && phaseNorm <= 0.77) { name = 'Último Cuarto'; glyph = '🌗' }
-    else if (phaseNorm > 0.77 && phaseNorm <= 0.97) { name = 'Cuarto Menguante'; glyph = '🌘' }
-    
-    // Calcular próxima luna nueva y llena
-    const daysInCycle = phaseNorm * lunarCycle
-    const daysToNewMoon = phaseNorm <= 0.03 ? 0 : (1 - phaseNorm) * lunarCycle
-    const daysToFullMoon = phaseNorm <= 0.5 
-      ? (0.5 - phaseNorm) * lunarCycle 
-      : (1.5 - phaseNorm) * lunarCycle
-    
-    const nextNewMoon = new Date(selectedDate.getTime() + daysToNewMoon * 86400000)
-    const nextFullMoon = new Date(selectedDate.getTime() + daysToFullMoon * 86400000)
-    
-    return { 
-      name, 
-      glyph, 
-      illumination: Math.round(illumination * 10) / 10,
-      phaseNorm,
-      nextNewMoon,
-      nextFullMoon,
-      daysToNewMoon: Math.round(daysToNewMoon),
-      daysToFullMoon: Math.round(daysToFullMoon)
+  // Datos lunares precisos — memoizados para evitar recálculo en cada render
+  const lunarData = useMemo(() => getLunarPreciseDataAstro(selectedDate), [selectedDate])
+
+  // Próxima luna nueva y llena — usando astronomy-engine para máxima precisión
+  const nextMoons = useMemo(() => {
+    const t = Astronomy.MakeTime(selectedDate)
+    // Buscar próxima luna nueva (quarter 0) y llena (quarter 2)
+    try {
+      const nextNew  = Astronomy.SearchMoonPhase(0,   t, 35)
+      const nextFull = Astronomy.SearchMoonPhase(180, t, 35)
+      const newDate  = nextNew  ? nextNew.date  : null
+      const fullDate = nextFull ? nextFull.date : null
+      const daysToNew  = newDate  ? Math.round((newDate.getTime()  - selectedDate.getTime()) / 86400000) : null
+      const daysToFull = fullDate ? Math.round((fullDate.getTime() - selectedDate.getTime()) / 86400000) : null
+      // Signo donde cae cada luna
+      const newSign  = newDate  ? getSign(Astronomy.EclipticLongitude(Astronomy.Body.Moon, Astronomy.MakeTime(newDate)))  : null
+      const fullSign = fullDate ? getSign(Astronomy.EclipticLongitude(Astronomy.Body.Moon, Astronomy.MakeTime(fullDate))) : null
+      return { newDate, fullDate, daysToNew, daysToFull, newSign, fullSign }
+    } catch {
+      return { newDate: null, fullDate: null, daysToNew: null, daysToFull: null, newSign: null, fullSign: null }
     }
   }, [selectedDate])
+
+  // Interpretación astrológica — memoizada
+  const interpretation = useMemo(
+    () => generateInterpretation(data.positions, data.aspects, data.isRetrograde),
+    [data]
+  )
 
   const wheelSize = typeof window !== 'undefined' && window.innerWidth < 500 ? 360 : 520
   const cx = wheelSize / 2
@@ -586,7 +573,7 @@ export default function AstrologyPage() {
         const clima = tensions > harmonics ? { label: 'Tenso · desafiante', color: '#f97316' }
           : harmonics > tensions ? { label: 'Fluido · armonioso', color: '#22c55e' }
           : { label: 'Equilibrado · integrador', color: '#38bdf8' }
-        const lunar = getLunarPreciseDataAstro(selectedDate)
+        const lunar = lunarData
         return (
           <div style={{
             background: `linear-gradient(135deg, ${elInfo.color}12, rgba(10,8,20,0.9))`,
@@ -884,7 +871,7 @@ export default function AstrologyPage() {
 
       {/* FASE LUNAR — precisa con astronomy-engine */}
       {(() => {
-        const lunar = getLunarPreciseDataAstro(selectedDate)
+        const lunar = lunarData
         const moonSign = getSign(data.positions.moon)
         return (
           <div className="info-card" style={{
@@ -945,10 +932,34 @@ export default function AstrologyPage() {
               </div>
             </div>
 
-            {/* Ventana activa + interpretación */}
+            {/* Ventana activa + días en signo */}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'clamp(12px, 2.5vw, 16px)', color: 'rgba(255,255,255,0.35)', marginBottom: '12px' }}>
               <span>Ventana activa en {lunar.signName}</span>
               <span style={{ color: 'rgba(253,230,138,0.6)' }}>~{lunar.daysInSign}d restantes</span>
+            </div>
+
+            {/* Próximas lunas nueva y llena */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+              <div style={{ padding: 'clamp(8px, 2vw, 12px)', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: 'rgba(255,255,255,0.35)', marginBottom: '4px' }}>🌑 Próxima Luna Nueva</div>
+                <div style={{ fontSize: 'clamp(14px, 3vw, 18px)', fontWeight: 'bold', color: '#e2e8f0' }}>
+                  {nextMoons.newDate ? nextMoons.newDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '—'}
+                </div>
+                <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: 'rgba(255,255,255,0.35)' }}>
+                  {nextMoons.daysToNew !== null ? `en ${nextMoons.daysToNew}d` : ''}
+                  {nextMoons.newSign ? ` · ${nextMoons.newSign.name} ${nextMoons.newSign.glyph}` : ''}
+                </div>
+              </div>
+              <div style={{ padding: 'clamp(8px, 2vw, 12px)', background: 'rgba(253,230,138,0.04)', borderRadius: '10px', border: '1px solid rgba(253,230,138,0.12)' }}>
+                <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: 'rgba(255,255,255,0.35)', marginBottom: '4px' }}>🌕 Próxima Luna Llena</div>
+                <div style={{ fontSize: 'clamp(14px, 3vw, 18px)', fontWeight: 'bold', color: '#fde68a' }}>
+                  {nextMoons.fullDate ? nextMoons.fullDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '—'}
+                </div>
+                <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: 'rgba(255,255,255,0.35)' }}>
+                  {nextMoons.daysToFull !== null ? `en ${nextMoons.daysToFull}d` : ''}
+                  {nextMoons.fullSign ? ` · ${nextMoons.fullSign.name} ${nextMoons.fullSign.glyph}` : ''}
+                </div>
+              </div>
             </div>
 
             {/* Significado Luna en signo */}
@@ -966,7 +977,7 @@ export default function AstrologyPage() {
 
       {/* LUNA Y AGRICULTURA */}
       {(() => {
-        const lunar = getLunarPreciseDataAstro(selectedDate)
+        const lunar = lunarData
         const phaseAngle = Astronomy.MoonPhase(Astronomy.MakeTime(selectedDate))
 
         // Determinar fase agrícola (4 fases principales)
@@ -1140,7 +1151,7 @@ export default function AstrologyPage() {
           LECTURA ASTROLÓGICA · {selectedDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {generateInterpretation(data.positions, data.aspects, data.isRetrograde).map((line, i) => (
+          {interpretation.map((line, i) => (
             <div key={i} style={{
               fontSize: 'clamp(13px, 2.5vw, 20px)',
               color: line.startsWith('✦') ? 'rgba(251,191,36,0.85)' : line.startsWith('⚠') ? 'rgba(239,68,68,0.8)' : 'rgba(255,255,255,0.65)',

@@ -128,23 +128,23 @@ export default function TzolkinPage() {
       {/* Kin del día */}
       <div className="info-card" style={{ background:'rgba(251,191,36,0.06)', border:'1px solid rgba(251,191,36,0.25)', padding:'28px' }}>
         <div style={{ fontSize:'clamp(40px, 10vw, 52px)', marginBottom:'4px' }}>{sello.glyph}</div>
-        <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'4px' }}>ENERGÍA DEL DÍA · KIN {r.kin}</div>
+        <div style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'4px' }}>ENERGÍA DEL DÍA · KIN {r.kin}</div>
         <h2 style={{ color:'#fbbf24' }}>{r.num} {sello.name}</h2>
         <div style={{ fontSize:'clamp(20px, 4vw, 23px)', color:'rgba(255,255,255,0.8)', marginBottom:'8px' }}>Tono {tono}</div>
         <div style={{ fontSize:'clamp(17px, 3.5vw, 20px)', color:'rgba(255,255,255,0.6)' }}>{sello.meaning}</div>
       </div>
 
       {/* Tzolkin + Haab */}
-      <div style={{ maxWidth:'min(500px, 95vw)', width:'100%', display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:'12px', marginBottom:'14px' }}>
+      <div style={{ maxWidth:'min(500px, 95vw)', width:'100%', display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap:'12px', marginBottom:'14px' }}>
         <div style={{ padding:'18px', background:'rgba(167,139,250,0.08)', border:'1px solid rgba(167,139,250,0.25)', borderRadius:'12px', textAlign:'center' }}>
-          <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)', letterSpacing:'1px', marginBottom:'6px' }}>TZOLK'IN</div>
-          <div style={{ fontSize:'32px', fontWeight:'bold', color:'#a78bfa' }}>{r.num}</div>
-          <div style={{ fontSize:'18px', color:'#fff' }}>{tono}</div>
+          <div style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.4)', letterSpacing:'1px', marginBottom:'6px' }}>TZOLK'IN</div>
+          <div style={{ fontSize:'clamp(24px, 6vw, 34px)', fontWeight:'bold', color:'#a78bfa' }}>{r.num}</div>
+          <div style={{ fontSize:'clamp(16px, 3.5vw, 20px)', color:'#fff' }}>{tono}</div>
           <div style={{ fontSize:'clamp(16px, 3.5vw, 18px)', color:'rgba(255,255,255,0.5)', marginTop:'4px' }}>{sello.name}</div>
         </div>
         <div style={{ padding:'18px', background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.25)', borderRadius:'12px', textAlign:'center' }}>
-          <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)', letterSpacing:'1px', marginBottom:'6px' }}>HAAB (365 DÍAS)</div>
-          <div style={{ fontSize:'28px', fontWeight:'bold', color:'#22c55e' }}>{r.haab.day} {HAAB[r.haab.month]}</div>
+          <div style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.4)', letterSpacing:'1px', marginBottom:'6px' }}>HAAB (365 DÍAS)</div>
+          <div style={{ fontSize:'clamp(22px, 5.5vw, 30px)', fontWeight:'bold', color:'#22c55e' }}>{r.haab.day} {HAAB[r.haab.month]}</div>
           <div style={{ fontSize:'clamp(16px, 3.5vw, 18px)', color:'rgba(255,255,255,0.5)', marginTop:'4px' }}>Mes {r.haab.month+1} de 19</div>
         </div>
       </div>
@@ -159,8 +159,8 @@ export default function TzolkinPage() {
 
       {/* Ciclos astronómicos mayas */}
       <div className="info-card" style={{ background:'rgba(251,191,36,0.04)', border:'1px solid rgba(251,191,36,0.15)' }}>
-        <div style={{ fontSize:'15px', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'12px', textAlign:'center' }}>CICLOS ASTRONÓMICOS MAYAS</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:'8px' }}>
+        <div style={{ fontSize:'clamp(13px, 2.5vw, 16px)', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'12px', textAlign:'center' }}>CICLOS ASTRONÓMICOS MAYAS</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap:'8px' }}>
           {[
             ['📅 Tzolk\'in', '260 días · 20 sellos × 13 tonos'],
             ['🌞 Haab', '365 días · 18 meses × 20 + 5 Wayeb'],
@@ -179,14 +179,14 @@ export default function TzolkinPage() {
 
       {/* RED DE CICLOS CÓSMICOS — Sistema de Navegación Astronómica */}
       <div className="info-card" style={{ background:'rgba(56,189,248,0.05)', border:'1px solid rgba(56,189,248,0.2)' }}>
-        <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'16px', textAlign:'center' }}>
+        <div style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'16px', textAlign:'center' }}>
           RED DE CICLOS CÓSMICOS · SISTEMA DE NAVEGACIÓN ASTRONÓMICA MAYA
         </div>
 
         {/* Venus */}
         <div style={{ marginBottom:'12px', padding:'12px', background:'rgba(244,114,182,0.08)', borderRadius:'8px' }}>
           <div className="cycle-header" style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px', flexWrap: 'wrap', gap: '4px' }}>
-            <span style={{ fontSize:'16px', color:'#f472b6', fontWeight:'bold' }}>
+            <span style={{ fontSize:'clamp(14px, 3.5vw, 17px)', color:'#f472b6', fontWeight:'bold' }}>
               {r.venus.icon} Venus · Ciclo 584 días
             </span>
             <span style={{ fontSize:'clamp(15px, 3.5vw, 17px)', color:'rgba(255,255,255,0.5)' }}>Día {Math.round(r.venus.day)} · {r.venus.progress}%</span>
@@ -200,7 +200,7 @@ export default function TzolkinPage() {
         {/* Luna */}
         <div style={{ marginBottom:'12px', padding:'12px', background:'rgba(226,232,240,0.06)', borderRadius:'8px' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'6px' }}>
-            <span style={{ fontSize:'16px', color:'#e2e8f0', fontWeight:'bold' }}>
+            <span style={{ fontSize:'clamp(14px, 3.5vw, 17px)', color:'#e2e8f0', fontWeight:'bold' }}>
               {r.luna.icon} Luna · Ciclo 29.53 días
             </span>
             <span style={{ fontSize:'clamp(15px, 3.5vw, 17px)', color:'rgba(255,255,255,0.5)' }}>Día {r.luna.day.toFixed(1)}</span>
@@ -211,10 +211,10 @@ export default function TzolkinPage() {
         {/* Temporada de Eclipses */}
         <div style={{ marginBottom:'12px', padding:'12px', background: r.eclipse.inSeason ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.04)', border: r.eclipse.inSeason ? '1px solid rgba(239,68,68,0.4)' : '1px solid transparent', borderRadius:'8px' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'6px' }}>
-            <span style={{ fontSize:'13px', color: r.eclipse.inSeason ? '#ef4444' : 'rgba(255,255,255,0.5)', fontWeight:'bold' }}>
+            <span style={{ fontSize:'clamp(13px, 3vw, 16px)', color: r.eclipse.inSeason ? '#ef4444' : 'rgba(255,255,255,0.5)', fontWeight:'bold' }}>
               🌑 Temporada de Eclipses · 173.31 días
             </span>
-            <span style={{ fontSize:'12px', color: r.eclipse.inSeason ? '#ef4444' : 'rgba(255,255,255,0.4)' }}>
+            <span style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color: r.eclipse.inSeason ? '#ef4444' : 'rgba(255,255,255,0.4)' }}>
               {r.eclipse.inSeason ? '⚠️ ACTIVA' : `Día ${Math.round(r.eclipse.day)}`}
             </span>
           </div>
@@ -226,8 +226,8 @@ export default function TzolkinPage() {
         {/* Rueda Calendárica */}
         <div style={{ marginBottom:'12px', padding:'12px', background:'rgba(251,191,36,0.06)', borderRadius:'8px' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'6px' }}>
-            <span style={{ fontSize:'13px', color:'#fbbf24', fontWeight:'bold' }}>🔄 Rueda Calendárica</span>
-            <span style={{ fontSize:'12px', color:'rgba(255,255,255,0.5)' }}>Año {r.calRound.year + 1} de 52</span>
+            <span style={{ fontSize:'clamp(13px, 3vw, 16px)', color:'#fbbf24', fontWeight:'bold' }}>🔄 Rueda Calendárica</span>
+            <span style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.5)' }}>Año {r.calRound.year + 1} de 52</span>
           </div>
           <div style={{ height:'4px', background:'rgba(255,255,255,0.1)', borderRadius:'2px' }}>
             <div style={{ height:'100%', width:`${r.calRound.progress}%`, background:'#fbbf24', borderRadius:'2px' }} />
@@ -237,8 +237,8 @@ export default function TzolkinPage() {
         {/* Sincronía Venus-Tzolk'in */}
         <div style={{ padding:'12px', background:'rgba(167,139,250,0.06)', borderRadius:'8px' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'6px' }}>
-            <span style={{ fontSize:'13px', color:'#a78bfa', fontWeight:'bold' }}>⭐ Sincronía Venus-Solar</span>
-            <span style={{ fontSize:'12px', color:'rgba(255,255,255,0.5)' }}>{r.venusTzolkin.progress}%</span>
+            <span style={{ fontSize:'clamp(13px, 3vw, 16px)', color:'#a78bfa', fontWeight:'bold' }}>⭐ Sincronía Venus-Solar</span>
+            <span style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.5)' }}>{r.venusTzolkin.progress}%</span>
           </div>
           <div style={{ height:'4px', background:'rgba(255,255,255,0.1)', borderRadius:'2px' }}>
             <div style={{ height:'100%', width:`${r.venusTzolkin.progress}%`, background:'#a78bfa', borderRadius:'2px' }} />
@@ -248,7 +248,7 @@ export default function TzolkinPage() {
 
       {/* Venus y el Dresden Codex */}
       <div className="info-card" style={{ background:'rgba(244,114,182,0.05)', border:'1px solid rgba(244,114,182,0.2)' }}>
-        <div style={{ fontSize:'10px', color:'rgba(255,255,255,0.3)', letterSpacing:'2px', marginBottom:'10px', textAlign:'center' }}>VENUS Y EL DRESDEN CODEX</div>
+        <div style={{ fontSize:'clamp(11px, 2.5vw, 14px)', color:'rgba(255,255,255,0.3)', letterSpacing:'2px', marginBottom:'10px', textAlign:'center' }}>VENUS Y EL DRESDEN CODEX</div>
         <div className="text-responsive" style={{ color:'rgba(255,255,255,0.6)', lineHeight:'1.8', textAlign:'left' }}>
           Venus aparece como <strong style={{ color:'#f472b6' }}>estrella de la mañana</strong> (Chak Ek') y <strong style={{ color:'#f472b6' }}>estrella de la tarde</strong>. Los mayas registraron su ciclo sinódico de <strong style={{ color:'#f472b6' }}>584 días</strong> con precisión extraordinaria.<br/><br/>
           El <strong style={{ color:'#f472b6' }}>Códice de Dresde</strong> contiene tablas completas del planeta Venus, asociando sus fases con <strong style={{ color:'rgba(255,255,255,0.7)' }}>guerra, rituales y augurios</strong>.

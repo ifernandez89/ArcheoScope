@@ -4,9 +4,9 @@ import './globals.css'
 import AlienCursorTrail from '@/components/AlienCursorTrail'
 import WebVitalsInit from '@/components/WebVitalsInit'
 
-// Cargar fuente Archeoscope usando Next.js Font API
+// Cargar fuente Spaceport 2006 (reemplaza Archeoscope — prueba visual)
 const archeoscope = localFont({
-  src: '../public/fonts/Archeoscope-Regular.ttf',
+  src: '../public/fonts/Spaceport_2006.otf',
   variable: '--font-archeoscope',
   display: 'swap',
 })

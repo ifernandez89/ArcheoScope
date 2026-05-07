@@ -28,11 +28,6 @@ const nextConfig = {
   },
   
   // Optimizaciones de performance
-  swcMinify: true,
-  
-  // Turbopack config removido (Next.js 14 no lo soporta)
-  
-  // Configuración de chunks
   experimental: {
     optimizePackageImports: ['three', '@react-three/fiber', '@react-three/drei'],
   },

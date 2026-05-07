@@ -1,6 +1,6 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CALENDARIO SEXAGESIMAL MESOPOTÁMICO (Babilonia / Sumer)
@@ -58,21 +58,7 @@ function calcSexagesimal(date: Date) {
   // Epagómenos (5 días fuera del tiempo)
   const isEpagomenos = yearPos >= 360
 
-  // Hora en base 60
-  const now = new Date()
-  const totalSecs = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()
-  const beru = Math.floor(totalSecs / 7200) // 1 beru = 2 horas
-  const ush = Math.floor((totalSecs % 7200) / 60) // 1 ush = 1 minuto
-  const ninda = totalSecs % 60 // 1 ninda = 1 segundo
-
-  // Ángulo solar en base 60 (azimut)
-  const azimutSexag = {
-    grados: Math.floor(0), // placeholder — se podría conectar con solarState
-    minutos: 0,
-    segundos: 0
-  }
-
-  return { cicloIdx, dayInCiclo, dayInDecada, decadaIdx, isEpagomenos, babilYear, dayOf360, beru, ush, ninda, yearPos }
+  return { cicloIdx, dayInCiclo, dayInDecada, decadaIdx, isEpagomenos, babilYear, dayOf360, yearPos }
 }
 
 /**
@@ -94,6 +80,17 @@ export default function SexagesimalPage() {
   const r = useMemo(() => calcSexagesimal(date), [date])
   const ciclo = CICLOS[r.cicloIdx]
 
+  // Hora babilónica — se actualiza cada segundo
+  const [now, setNow] = useState(new Date())
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(interval)
+  }, [])
+  const totalSecs = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()
+  const beru  = Math.floor(totalSecs / 7200)       // 1 beru = 2 horas
+  const ush   = Math.floor((totalSecs % 7200) / 60) // 1 ush = 1 minuto
+  const ninda = totalSecs % 60                       // 1 ninda = 1 segundo
+
   return (
     <main style={{ width:'100vw', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', background:'linear-gradient(180deg,#0a0a1a,#1a0a2e,#0a0a1a)', padding:'40px 20px', color:'#fff', overflowY: 'auto' }}>
       <div style={{ fontSize:'18px', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'12px', cursor:'pointer', textAlign: 'center' }} onClick={() => router.push('/menu/calendarios')}>← CALENDARIOS ANTIGUOS</div>
@@ -107,7 +104,7 @@ export default function SexagesimalPage() {
       {/* Ciclo planetario */}
       <div className="info-card" style={{ background:`rgba(56,189,248,0.05)`, border:'1px solid rgba(56,189,248,0.2)', padding:'28px' }}>
         <div style={{ fontSize:'clamp(40px, 10vw, 57px)', marginBottom:'4px' }}>{ciclo.glyph}</div>
-        <div style={{ fontSize:'15px', color:'rgba(255,255,255,0.4)', lineHeight:'1.8', textAlign:'center', marginTop:'12px' }}>
+        <div style={{ fontSize:'clamp(13px, 3vw, 16px)', color:'rgba(255,255,255,0.4)', lineHeight:'1.8', textAlign:'center', marginTop:'12px' }}>
           Basado en el sistema sexagesimal de Mesopotamia.<br/>
           Origen de los 360° del círculo, 60 min y 60 seg.
         </div>
@@ -117,57 +114,101 @@ export default function SexagesimalPage() {
         <div style={{ fontSize:'clamp(18px, 4vw, 21px)', color:'rgba(255,255,255,0.6)', marginBottom:'8px' }}>
           {r.isEpagomenos ? '5 días sagrados fuera del calendario' : `Planeta: ${ciclo.planet}`}
         </div>
-        {!r.isEpagomenos && <div style={{ fontSize:'clamp(15px, 3.5vw, 18px)', color:'rgba(255,255,255,0.5)' }}>{ciclo.meaning}</div>}
+        {!r.isEpagomenos && <div style={{ fontSize:'clamp(15px, 3.5vw, 18px)', color:'rgba(255,255,255,0.5)', marginBottom:'12px' }}>{ciclo.meaning}</div>}
+        {!r.isEpagomenos && (
+          <div>
+            <div style={{ display:'flex', justifyContent:'space-between', fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.35)', marginBottom:'6px' }}>
+              <span>Día {r.dayInCiclo + 1} de 60</span>
+              <span>{60 - r.dayInCiclo - 1}d para {CICLOS[(r.cicloIdx + 1) % 6].name}</span>
+            </div>
+            <div style={{ height:'6px', background:'rgba(255,255,255,0.08)', borderRadius:'3px', overflow:'hidden' }}>
+              <div style={{ height:'100%', width:`${((r.dayInCiclo + 1) / 60) * 100}%`, background: ciclo.color, borderRadius:'3px', transition:'width 0.3s' }} />
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Mapa de ciclos del año */}
+      {!r.isEpagomenos && (
+        <div className="info-card" style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.08)', padding:'16px' }}>
+          <div style={{ fontSize:'clamp(11px, 2vw, 14px)', color:'rgba(255,255,255,0.3)', letterSpacing:'2px', marginBottom:'10px', textAlign:'center' }}>CICLOS DEL AÑO BABILÓNICO · 6 × 60 DÍAS</div>
+          <div style={{ display:'flex', gap:'4px', height:'32px', borderRadius:'6px', overflow:'hidden' }}>
+            {CICLOS.map((c, i) => (
+              <div key={i} style={{
+                flex: 1, display:'flex', alignItems:'center', justifyContent:'center',
+                background: i === r.cicloIdx ? `${c.color}35` : 'rgba(255,255,255,0.04)',
+                border: i === r.cicloIdx ? `1px solid ${c.color}60` : '1px solid transparent',
+                fontSize:'clamp(14px, 3vw, 18px)',
+                opacity: i === r.cicloIdx ? 1 : 0.4,
+                transition:'all 0.3s',
+              }}>
+                {c.glyph}
+              </div>
+            ))}
+          </div>
+          <div style={{ display:'flex', gap:'4px', marginTop:'4px' }}>
+            {CICLOS.map((c, i) => (
+              <div key={i} style={{
+                flex: 1, textAlign:'center',
+                fontSize:'clamp(9px, 1.8vw, 12px)',
+                color: i === r.cicloIdx ? c.color : 'rgba(255,255,255,0.25)',
+                fontWeight: i === r.cicloIdx ? 'bold' : 'normal',
+              }}>
+                {c.name}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Posición en el año + Décadas */}
       {!r.isEpagomenos && (
-        <div style={{ maxWidth:'min(520px, 95vw)', width:'100%', display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:'12px', marginBottom:'14px' }}>
+        <div style={{ maxWidth:'min(520px, 95vw)', width:'100%', display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap:'12px', marginBottom:'14px' }}>
           <div style={{ padding:'18px', background:'rgba(56,189,248,0.06)', border:'1px solid rgba(56,189,248,0.2)', borderRadius:'12px', textAlign:'center' }}>
-            <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.3)', letterSpacing:'1px', marginBottom:'6px' }}>DÍA DEL AÑO (360)</div>
-            <div style={{ fontSize:'32px', fontWeight:'bold', color:'#38bdf8' }}>{r.dayOf360 + 1}</div>
-            <div style={{ fontSize:'15px', color:'rgba(255,255,255,0.4)', marginTop:'4px' }}>de 360 días</div>
+            <div style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.3)', letterSpacing:'1px', marginBottom:'6px' }}>DÍA DEL AÑO (360)</div>
+            <div style={{ fontSize:'clamp(24px, 6vw, 34px)', fontWeight:'bold', color:'#38bdf8' }}>{r.dayOf360 + 1}</div>
+            <div style={{ fontSize:'clamp(13px, 3vw, 16px)', color:'rgba(255,255,255,0.4)', marginTop:'4px' }}>de 360 días</div>
           </div>
           <div style={{ padding:'18px', background:'rgba(56,189,248,0.06)', border:'1px solid rgba(56,189,248,0.2)', borderRadius:'12px', textAlign:'center' }}>
-            <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.3)', letterSpacing:'1px', marginBottom:'6px' }}>DÉCADA</div>
-            <div style={{ fontSize:'24px', fontWeight:'bold', color:'#38bdf8' }}>{DECADAS[r.decadaIdx]}</div>
-            <div style={{ fontSize:'15px', color:'rgba(255,255,255,0.4)', marginTop:'4px' }}>Día {r.dayInDecada} de 10</div>
+            <div style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.3)', letterSpacing:'1px', marginBottom:'6px' }}>DÉCADA</div>
+            <div style={{ fontSize:'clamp(18px, 4.5vw, 26px)', fontWeight:'bold', color:'#38bdf8' }}>{DECADAS[r.decadaIdx]}</div>
+            <div style={{ fontSize:'clamp(13px, 3vw, 16px)', color:'rgba(255,255,255,0.4)', marginTop:'4px' }}>Día {r.dayInDecada} de 10</div>
           </div>
         </div>
       )}
 
       {/* Hora en base 60 */}
       <div className="info-card" style={{ background:'rgba(251,191,36,0.05)', border:'1px solid rgba(251,191,36,0.2)', padding:'20px' }}>
-        <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.3)', letterSpacing:'2px', marginBottom:'10px', textAlign:'center' }}>TIEMPO BABILÓNICO (BASE 60)</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(130px, 1fr))', gap:'10px', textAlign:'center' }}>
+        <div style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.3)', letterSpacing:'2px', marginBottom:'10px', textAlign:'center' }}>TIEMPO BABILÓNICO (BASE 60)</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'10px', textAlign:'center' }}>
           <div>
-            <div style={{ fontSize:'28px', fontWeight:'bold', color:'#fbbf24' }}>{r.beru}</div>
-            <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)' }}>Beru</div>
+            <div style={{ fontSize:'clamp(22px, 5.5vw, 30px)', fontWeight:'bold', color:'#fbbf24' }}>{beru}</div>
+            <div style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.4)' }}>Beru</div>
           </div>
           <div>
-            <div style={{ fontSize:'28px', fontWeight:'bold', color:'#fbbf24' }}>{r.ush}</div>
-            <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)' }}>Uš</div>
+            <div style={{ fontSize:'clamp(22px, 5.5vw, 30px)', fontWeight:'bold', color:'#fbbf24' }}>{ush}</div>
+            <div style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.4)' }}>Uš</div>
           </div>
           <div>
-            <div style={{ fontSize:'28px', fontWeight:'bold', color:'#fbbf24' }}>{r.ninda}</div>
-            <div style={{ fontSize:'14px', color:'rgba(255,255,255,0.4)' }}>Ninda</div>
+            <div style={{ fontSize:'clamp(22px, 5.5vw, 30px)', fontWeight:'bold', color:'#fbbf24' }}>{ninda}</div>
+            <div style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.4)' }}>Ninda</div>
           </div>
         </div>
       </div>
 
       {/* Coordenadas celestes en base 60 */}
       <div className="info-card" style={{ background:'rgba(167,139,250,0.05)', border:'1px solid rgba(167,139,250,0.2)', padding:'20px' }}>
-        <div style={{ fontSize:'15px', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'12px', textAlign:'center' }}>
+        <div style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'12px', textAlign:'center' }}>
           ESTRELLAS BABILÓNICAS — RA/Dec
         </div>
         {ESTRELLAS_BABILONICAS.map((s, i) => (
           <div key={i} style={{ padding:'10px 0', borderBottom: i < ESTRELLAS_BABILONICAS.length-1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:'8px' }}>
               <div style={{ textAlign:'left' }}>
-                <div style={{ color:'#a78bfa', fontWeight:'bold', fontSize:'16px' }}>{s.name}</div>
-                <div style={{ color:'rgba(255,255,255,0.4)', fontSize:'14px' }}>mag {s.mag}</div>
+                <div style={{ color:'#a78bfa', fontWeight:'bold', fontSize:'clamp(14px, 3.5vw, 17px)' }}>{s.name}</div>
+                <div style={{ color:'rgba(255,255,255,0.4)', fontSize:'clamp(12px, 2.5vw, 15px)' }}>mag {s.mag}</div>
               </div>
-              <div style={{ textAlign:'right', fontSize:'14px', fontFamily:'monospace', color:'#38bdf8' }}>
+              <div style={{ textAlign:'right', fontSize:'clamp(12px, 2.5vw, 15px)', fontFamily:'monospace', color:'#38bdf8' }}>
                 <div>RA: {s.ra}</div>
                 <div>Dec: {s.dec}</div>
               </div>
@@ -178,8 +219,8 @@ export default function SexagesimalPage() {
 
       {/* Herencia del sistema */}
       <div className="info-card" style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', padding:'16px' }}>
-        <div style={{ fontSize:'15px', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'12px', textAlign:'center' }}>HERENCIA DEL SISTEMA SEXAGESIMAL</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px, 1fr))', gap:'10px' }}>
+        <div style={{ fontSize:'clamp(12px, 2.5vw, 15px)', color:'rgba(255,255,255,0.4)', letterSpacing:'2px', marginBottom:'12px', textAlign:'center' }}>HERENCIA DEL SISTEMA SEXAGESIMAL</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(150px, 100%), 1fr))', gap:'10px' }}>
           {[
             ['⏰ Tiempo', '60 min/h · 60 seg/min'],
             ['🔵 Ángulos', '360° = 6 × 60 · 1° = 60\''],
@@ -189,8 +230,8 @@ export default function SexagesimalPage() {
             ['🏛️ Origen', 'Sumer / Babilonia'],
           ].map(([k, v]) => (
             <div key={k} style={{ padding:'8px', background:'rgba(255,255,255,0.03)', borderRadius:'6px' }}>
-              <div style={{ color:'#38bdf8', fontSize:'15px', marginBottom:'4px' }}>{k}</div>
-              <div style={{ color:'rgba(255,255,255,0.5)', fontSize:'13px' }}>{v}</div>
+              <div style={{ color:'#38bdf8', fontSize:'clamp(13px, 3vw, 16px)', marginBottom:'4px' }}>{k}</div>
+              <div style={{ color:'rgba(255,255,255,0.5)', fontSize:'clamp(12px, 2.5vw, 15px)' }}>{v}</div>
             </div>
           ))}
         </div>

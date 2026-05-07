@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import * as Astronomy from 'astronomy-engine'
 import { getUpcomingEclipses, isDresdenEclipseWindow, DRESDEN_CODEX_INFO } from '@/utils/eclipse-calculator'
 
@@ -90,7 +90,8 @@ function getSeason(date: Date): { name: string; emoji: string; progress: number;
 
 export default function TodayPage() {
   const router = useRouter()
-  const today = new Date()
+  // today como estado para que React lo capture correctamente en el useMemo
+  const [today] = useState(() => new Date())
 
   const data = useMemo(() => {
     const t = Astronomy.MakeTime(today)
@@ -126,7 +127,7 @@ export default function TodayPage() {
       sunSign: signs[sunSignIdx], sunGlyph: glyphs[sunSignIdx], sunDeg: (sunLon % 30).toFixed(1),
       cholqij, season, events, eclipses, dresdenWindow,
     }
-  }, [])
+  }, [today])
 
   const cardStyle = (color: string) => ({
     padding: 'clamp(14px, 3vw, 20px)',

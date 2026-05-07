@@ -133,7 +133,7 @@ export default function CholqijPage() {
         padding: '28px', textAlign: 'center'
       }}>
         <div style={{ fontSize: 'clamp(40px, 10vw, 52px)', marginBottom: '4px' }}>{nawal.glyph}</div>
-        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '4px' }}>
+        <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '4px' }}>
           DÍA DEL CHOLQ'IJ
         </div>
         <h2 style={{ color: '#a78bfa' }}>{numero.num} {nawal.name}</h2>
@@ -151,7 +151,7 @@ export default function CholqijPage() {
         border: '1px solid rgba(167,139,250,0.3)',
         padding: '22px', textAlign: 'center'
       }}>
-        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '12px' }}>
+        <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: '12px' }}>
           🌀 MENSAJE DEL NAWAL
         </div>
         <div style={{ fontSize: 'clamp(18px, 4vw, 22px)', color: 'rgba(255,255,255,0.7)', lineHeight: '1.7', marginBottom: '14px' }}>
@@ -165,7 +165,7 @@ export default function CholqijPage() {
       {/* Número + Ciclo en grid, Nawal como card separada */}
       <div style={{
         maxWidth: 'min(600px, 95vw)', width: '100%',
-        display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))',
         gap: '10px', marginBottom: '10px'
       }}>
         {/* Número */}
@@ -173,10 +173,10 @@ export default function CholqijPage() {
           padding: '16px', background: 'rgba(167,139,250,0.08)',
           border: '1px solid rgba(167,139,250,0.2)', borderRadius: '12px', textAlign: 'center'
         }}>
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '6px' }}>NÚMERO</div>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#a78bfa' }}>{numero.num}</div>
-          <div style={{ fontSize: '16px', color: '#fff', marginBottom: '6px' }}>{numero.name}</div>
-          <div style={{ fontSize: 'clamp(15px, 3.5vw, 17px)', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>
+          <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '6px' }}>NÚMERO</div>
+          <div style={{ fontSize: 'clamp(22px, 5.5vw, 30px)', fontWeight: 'bold', color: '#a78bfa' }}>{numero.num}</div>
+          <div style={{ fontSize: 'clamp(15px, 3.5vw, 18px)', color: '#fff', marginBottom: '6px' }}>{numero.name}</div>
+          <div style={{ fontSize: 'clamp(13px, 3vw, 16px)', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>
             Intensidad del día<br />Tono energético
           </div>
         </div>
@@ -186,10 +186,10 @@ export default function CholqijPage() {
           padding: '16px', background: 'rgba(56,189,248,0.08)',
           border: '1px solid rgba(56,189,248,0.2)', borderRadius: '12px', textAlign: 'center'
         }}>
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '6px' }}>CICLO</div>
-          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#38bdf8' }}>260</div>
-          <div style={{ fontSize: '16px', color: '#fff', marginBottom: '4px' }}>días sagrados</div>
-          <div style={{ fontSize: 'clamp(15px, 3.5vw, 17px)', color: 'rgba(255,255,255,0.5)' }}>13 × 20</div>
+          <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '6px' }}>CICLO</div>
+          <div style={{ fontSize: 'clamp(22px, 5.5vw, 30px)', fontWeight: 'bold', color: '#38bdf8' }}>260</div>
+          <div style={{ fontSize: 'clamp(15px, 3.5vw, 18px)', color: '#fff', marginBottom: '4px' }}>días sagrados</div>
+          <div style={{ fontSize: 'clamp(13px, 3vw, 16px)', color: 'rgba(255,255,255,0.5)' }}>13 × 20</div>
         </div>
       </div>
 
@@ -202,8 +202,8 @@ export default function CholqijPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
           <div style={{ fontSize: '32px' }}>{nawal.glyph}</div>
           <div>
-            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>NAWAL DEL DÍA</div>
-            <div style={{ fontSize: '20px', color: '#f472b6', fontWeight: 'bold' }}>{nawal.name}</div>
+            <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>NAWAL DEL DÍA</div>
+            <div style={{ fontSize: 'clamp(17px, 4vw, 22px)', color: '#f472b6', fontWeight: 'bold' }}>{nawal.name}</div>
             <div style={{ fontSize: 'clamp(15px, 3.5vw, 17px)', color: 'rgba(255,255,255,0.5)' }}>{nawal.meaning}</div>
           </div>
         </div>
@@ -224,7 +224,7 @@ export default function CholqijPage() {
       <div style={{ maxWidth: 'min(700px, 95vw)', width: '100%', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '14px' }}>
 
         <div className="info-card" style={{ padding: '20px', background: 'rgba(167,139,250,0.04)', border: '1px solid rgba(167,139,250,0.15)' }}>
-          <div style={{ fontSize: '13px', color: '#a78bfa', letterSpacing: '2px', marginBottom: '10px' }}>🌿 LOS NAWALES SON FUERZAS VIVAS</div>
+          <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: '#a78bfa', letterSpacing: '2px', marginBottom: '10px' }}>🌿 LOS NAWALES SON FUERZAS VIVAS</div>
           <div className="text-responsive" style={{ color: 'rgba(255,255,255,0.65)', lineHeight: '1.8' }}>
             En el Cholq'ij, cada nawal no es solo un símbolo — es un principio espiritual activo del universo. Representa una fuerza natural, un tipo de conciencia, una energía espiritual.<br /><br />
             <strong style={{ color: 'rgba(255,255,255,0.8)' }}>Ajpu</strong> → Sol, luz, sabiduría, el cazador espiritual<br />
@@ -235,7 +235,7 @@ export default function CholqijPage() {
         </div>
 
         <div className="info-card" style={{ padding: '20px', background: 'rgba(167,139,250,0.04)', border: '1px solid rgba(167,139,250,0.15)' }}>
-          <div style={{ fontSize: '13px', color: '#a78bfa', letterSpacing: '2px', marginBottom: '10px' }}>🔢 LOS NÚMEROS: INTENSIDAD ESPIRITUAL</div>
+          <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: '#a78bfa', letterSpacing: '2px', marginBottom: '10px' }}>🔢 LOS NÚMEROS: INTENSIDAD ESPIRITUAL</div>
           <div className="text-responsive" style={{ color: 'rgba(255,255,255,0.65)', lineHeight: '1.8' }}>
             Los 13 números indican el grado de fuerza o desarrollo de la energía del nawal.<br /><br />
             <strong style={{ color: 'rgba(255,255,255,0.8)' }}>1</strong> inicio · <strong style={{ color: 'rgba(255,255,255,0.8)' }}>5</strong> poder · <strong style={{ color: 'rgba(255,255,255,0.8)' }}>7</strong> equilibrio · <strong style={{ color: 'rgba(255,255,255,0.8)' }}>9</strong> intención espiritual · <strong style={{ color: 'rgba(255,255,255,0.8)' }}>13</strong> culminación<br /><br />
@@ -244,14 +244,14 @@ export default function CholqijPage() {
         </div>
 
         <div className="info-card" style={{ padding: '20px', background: 'rgba(167,139,250,0.04)', border: '1px solid rgba(167,139,250,0.15)' }}>
-          <div style={{ fontSize: '13px', color: '#a78bfa', letterSpacing: '2px', marginBottom: '10px' }}>🧭 DESTINO PERSONAL</div>
+          <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: '#a78bfa', letterSpacing: '2px', marginBottom: '10px' }}>🧭 DESTINO PERSONAL</div>
           <div className="text-responsive" style={{ color: 'rgba(255,255,255,0.65)', lineHeight: '1.8' }}>
             Cuando nace una persona, su día Cholq'ij se considera su guía espiritual, energía de vida y misión. No como algo fijo, sino como un camino que hay que aprender a equilibrar. Los ajq'ijab' realizan ceremonias para ayudar a armonizar ese camino.
           </div>
         </div>
 
         <div className="info-card" style={{ padding: '20px', background: 'rgba(167,139,250,0.04)', border: '1px solid rgba(167,139,250,0.15)' }}>
-          <div style={{ fontSize: '13px', color: '#a78bfa', letterSpacing: '2px', marginBottom: '10px' }}>🌌 EL TIEMPO COMO SER VIVO</div>
+          <div style={{ fontSize: 'clamp(12px, 2.5vw, 15px)', color: '#a78bfa', letterSpacing: '2px', marginBottom: '10px' }}>🌌 EL TIEMPO COMO SER VIVO</div>
           <div className="text-responsive" style={{ color: 'rgba(255,255,255,0.65)', lineHeight: '1.8' }}>
             En la visión maya, el tiempo no es abstracto. Cada día tiene espíritu. Por eso los ajq'ij dicen que <em>"los días hablan"</em>. Interpretar el calendario es escuchar la conversación entre los ciclos del cosmos y la vida humana — ciclos solares, lunares, agrícolas y espirituales, todos interconectados.
           </div>
