@@ -123,6 +123,7 @@ export default function MenuPage() {
     { label: '🪐 Astrología', sub: 'Planetas · aspectos · lectura', path: '/menu/astrology', action: null, primary: false },
     { label: '📅 Calendarios', sub: 'Maya · Babilónico · Tzolk\'in', path: '/menu/calendarios', action: null, primary: false },
     { label: '🌦 Clima', sub: 'Temperatura · luna · pronóstico', path: '/menu/weather', action: null, primary: false },
+    { label: '🧭 Brújula', sub: 'Orientación magnética en tiempo real', path: '/menu/brujula', action: null, primary: false },
     { label: 'ℹ Información', sub: 'Sobre la app', path: '/menu/info', action: null, primary: false },
   ]
 

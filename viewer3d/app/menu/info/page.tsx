@@ -1,13 +1,23 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 
 function InfoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isCredits = searchParams.get("credits") === "true";
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(
+      /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768
+    );
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // Auto-scroll cuando viene desde Göbekli Tepe
   useEffect(() => {
@@ -15,7 +25,6 @@ function InfoContent() {
     const el = scrollRef.current;
     const totalHeight = el.scrollHeight - el.clientHeight;
     if (totalHeight <= 0) return;
-    // Scroll suave: ~25px por segundo
     const duration = (totalHeight / 25) * 1000;
     const start = performance.now();
     let raf: number;
@@ -180,7 +189,8 @@ function InfoContent() {
           </p>
         </section>
 
-        {/* Sección de Requerimientos Mínimos */}
+        {/* Sección de Requerimientos Mínimos — solo PC */}
+        {!isMobile && (
         <section
           className="info-section"
           style={{
@@ -357,6 +367,7 @@ function InfoContent() {
             hardware habilitada en tu navegador.
           </div>
         </section>
+        )} {/* end !isMobile — Requerimientos */}
 
         {/* Sección de Créditos */}
         <section
@@ -410,6 +421,7 @@ function InfoContent() {
           {
             icon: "🎨",
             title: "Sistema de Arte Generativo Orbital",
+            pcOnly: true,
             color: "#a78bfa",
             border: "rgba(167, 139, 250, 0.3)",
             bg: "rgba(167, 139, 250, 0.08)",
@@ -418,6 +430,7 @@ function InfoContent() {
           {
             icon: "🎵",
             title: "Sistema de Sonido — Harmonia Mundi",
+            pcOnly: true,
             color: "#10b981",
             border: "rgba(16, 185, 129, 0.3)",
             bg: "rgba(16, 185, 129, 0.08)",
@@ -426,6 +439,7 @@ function InfoContent() {
           {
             icon: "⭐",
             title: "Sistema de Cálculo Estelar",
+            pcOnly: false,
             color: "#fbbf24",
             border: "rgba(251, 191, 36, 0.3)",
             bg: "rgba(251, 191, 36, 0.08)",
@@ -434,6 +448,7 @@ function InfoContent() {
           {
             icon: "🪐",
             title: "Sistema Orbital y de Planetas",
+            pcOnly: false,
             color: "#34d399",
             border: "rgba(52, 211, 153, 0.3)",
             bg: "rgba(52, 211, 153, 0.08)",
@@ -442,6 +457,7 @@ function InfoContent() {
           {
             icon: "🎮",
             title: "Sistema 3D y Gráficos",
+            pcOnly: true,
             color: "#60a5fa",
             border: "rgba(96, 165, 250, 0.3)",
             bg: "rgba(96, 165, 250, 0.08)",
@@ -453,7 +469,8 @@ function InfoContent() {
             color: "#f472b6",
             border: "rgba(244, 114, 182, 0.3)",
             bg: "rgba(244, 114, 182, 0.08)",
-            text: "Generador procedural de patrones geométricos basados en matemáticas antiguas. Cada sitio arqueológico tiene asignado un patrón único: Lissajous (Giza), Cubo de Metatrón (Puma Punku), Espiral galáctica (Teotihuacán), Polígono estelar (Veracruz), Curva de Hilbert (Isla de Pascua). Al completar una misión, el patrón se graba en el terreno como crop circle. El sistema Sacred Geometry Engine genera además patrones únicos basados en la nave utilizada y las coordenadas del sitio — cada combinación produce una firma energética irrepetible.",
+            pcOnly: false,
+            text: "Generador procedural de patrones geométricos basados en matemáticas antiguas. Cada sitio arqueológico tiene asignado un patrón único derivado de su geometría y coordenadas: Lissajous (Giza), Cubo de Metatrón (Puma Punku), Espiral galáctica (Teotihuacán), Polígono estelar (Veracruz), Curva de Hilbert (Isla de Pascua). El motor Sacred Geometry Engine genera firmas energéticas únicas para cada combinación de sitio y configuración astronómica — patrones irrepetibles que evolucionan con el tiempo.",
           },
           {
             icon: "🔭",
@@ -461,11 +478,13 @@ function InfoContent() {
             color: "#38bdf8",
             border: "rgba(56, 189, 248, 0.3)",
             bg: "rgba(56, 189, 248, 0.08)",
-            text: "Panel de datos astronómicos y geográficos en tiempo real accesible desde cualquier sitio arqueológico. Muestra azimut solar, elevación, declinación y estación calculados con el motor SolarEngine para las coordenadas exactas del sitio. Incluye tiempo simulado con fecha y hora local, bioma detectado con temperatura y humedad, y cronómetro de partida persistente. Diseñado como herramienta de referencia científica para investigadores y educadores.",
+            pcOnly: false,
+            text: "Panel de datos astronómicos y geográficos en tiempo real integrado en las escenas 3D. Muestra azimut solar, elevación, declinación y estación calculados con el motor SolarEngine para las coordenadas exactas de cada sitio arqueológico. Incluye fecha y hora local, bioma con temperatura y humedad estimada. Diseñado como herramienta de referencia científica para investigadores y educadores.",
           },
           {
             icon: "🌟",
             title: "Cielo Estelar Real — Catálogo Yale",
+            pcOnly: false,
             color: "#fde68a",
             border: "rgba(253, 230, 138, 0.3)",
             bg: "rgba(253, 230, 138, 0.06)",
@@ -474,6 +493,7 @@ function InfoContent() {
           {
             icon: "✦",
             title: "Escena de Constelaciones — Observatorio Nocturno",
+            pcOnly: false,
             color: "#a78bfa",
             border: "rgba(167, 139, 250, 0.3)",
             bg: "rgba(167, 139, 250, 0.06)",
@@ -485,11 +505,13 @@ function InfoContent() {
             color: "#fb923c",
             border: "rgba(251, 146, 60, 0.3)",
             bg: "rgba(251, 146, 60, 0.06)",
-            text: "Sistema de visualización de alineaciones solares basado en arqueoastronomía real. Para cada sitio, calcula y dibuja líneas hacia el horizonte indicando dónde sale y pone el sol en los tres eventos astronómicos clave: Solsticio de Verano (+23.44° de declinación, naranja), Equinoccios (0°, azul) y Solsticio de Invierno (-23.44°, violeta). La fórmula utilizada es cos(Az_salida) = sin(δ) / cos(φ), donde δ es la declinación solar y φ la latitud del sitio. Activable desde el Panel Científico. Ejemplo en Giza (lat 29.98°N): el sol del solsticio de verano sale a 62.5° NE — exactamente la orientación de la Gran Galería.",
+            pcOnly: false,
+            text: "Sistema de visualización de alineaciones solares basado en arqueoastronomía real. Para cada sitio, calcula y dibuja líneas hacia el horizonte indicando dónde sale y pone el sol en los tres eventos astronómicos clave: Solsticio de Verano (+23.44° de declinación), Equinoccios (0°) y Solsticio de Invierno (-23.44°). La fórmula utilizada es cos(Az_salida) = sin(δ) / cos(φ), donde δ es la declinación solar y φ la latitud del sitio. Ejemplo en Giza (lat 29.98°N): el sol del solsticio de verano sale a 62.5° NE — exactamente la orientación de la Gran Galería.",
           },
           {
             icon: "🖥️",
             title: "Sistema de Calidad Gráfica",
+            pcOnly: true,
             color: "#a3e635",
             border: "rgba(163, 230, 53, 0.3)",
             bg: "rgba(163, 230, 53, 0.06)",
@@ -498,6 +520,7 @@ function InfoContent() {
           {
             icon: "🌅",
             title: "Cielo Atmosférico — Rayleigh Scattering",
+            pcOnly: true,
             color: "#fb923c",
             border: "rgba(251, 146, 60, 0.3)",
             bg: "rgba(251, 146, 60, 0.06)",
@@ -509,7 +532,8 @@ function InfoContent() {
             color: "#c084fc",
             border: "rgba(192, 132, 252, 0.3)",
             bg: "rgba(192, 132, 252, 0.06)",
-            text: "Calculadora astrológica integrada accesible desde el menú principal. Determina el signo solar por fecha de nacimiento, el signo lunar aproximado basado en el ciclo sinódico de 29.53 días, y la fase lunar actual (Nueva, Creciente, Llena, Menguante, Balsámica). Muestra la rueda zodiacal completa con los 12 signos, sus elementos (Fuego, Tierra, Aire, Agua), planetas regentes, cualidades (Cardinal, Fijo, Mutable) y los 7 cuerpos celestes principales con su significado arquetípico. Selector de fecha para consultar cualquier momento.",
+            pcOnly: false,
+            text: "Calculadora astrológica integrada accesible desde el menú principal. Determina posiciones planetarias precisas con astronomy-engine (VSOP87/ELP), la fase lunar actual con 8 fases, aspectos ptolemaicos entre planetas, elementos predominantes del día y nodos lunares. Muestra la rueda zodiacal completa con los 12 signos, planetas regentes y lectura astrológica dinámica. Selector de fecha para consultar cualquier momento.",
           },
           {
             icon: "🗓️",
@@ -517,11 +541,22 @@ function InfoContent() {
             color: "#fbbf24",
             border: "rgba(251, 191, 36, 0.3)",
             bg: "rgba(251, 191, 36, 0.06)",
-            text: "Archeoscope incluye una sección dedicada a tres sistemas calendáricos de distintas civilizaciones. Cada uno tiene su propia calculadora interactiva con selector de fecha. Accesible desde el menú principal → Calendarios.",
+            pcOnly: false,
+            text: "Archeoscope incluye una sección dedicada a sistemas calendáricos de distintas civilizaciones: Cholq'ij maya, Tzolk'in clásico con Cuenta Larga, Calendario Babilónico sexagesimal y vista integrada diaria con fase lunar, Sol en signo, estación solar y próximos eventos astronómicos. Cada uno tiene su propia calculadora interactiva con selector de fecha.",
+          },
+          {
+            icon: "🧭",
+            title: "Brújula",
+            color: "#a5f3fc",
+            border: "rgba(165, 243, 252, 0.3)",
+            bg: "rgba(165, 243, 252, 0.06)",
+            pcOnly: false,
+            text: "Orientación magnética en tiempo real usando el sensor del dispositivo. Disco giratorio estilo vintage con marcas de grados, letras cardinales y aguja roja/blanca fija. Muestra el rumbo en grados y la dirección cardinal con color dinámico. Usa DeviceOrientationEvent con webkitCompassHeading en iOS y alpha en Android. Suavizado exponencial para evitar jitter del sensor. Precisión típica ±5–10° según dispositivo y calibración.",
           },
           {
             icon: "📱",
             title: "PWA — Instalable como App",
+            pcOnly: false,
             color: "#34d399",
             border: "rgba(52, 211, 153, 0.3)",
             bg: "rgba(52, 211, 153, 0.06)",
@@ -529,11 +564,12 @@ function InfoContent() {
           },
           {
             icon: "🌤️",
-            title: "Clima Local — Solo Mobile",
+            title: "Clima Local",
             color: "#60a5fa",
             border: "rgba(96, 165, 250, 0.3)",
             bg: "rgba(96, 165, 250, 0.06)",
-            text: "Panel de condiciones del cielo en tiempo real exclusivo para dispositivos móviles. Muestra temperatura actual, probabilidad de lluvia y fase lunar calculada localmente. Usa la API Open-Meteo (gratuita, sin API key, cobertura global) para obtener datos meteorológicos basados en la geolocalización del usuario. La fase lunar se calcula mediante algoritmo astronómico preciso sin necesidad de API externa — ciclo sinódico de 29.53 días con 8 fases (Nueva, Creciente, Cuarto Creciente, Gibosa Creciente, Llena, Gibosa Menguante, Cuarto Menguante, Menguante). Cache inteligente de 30 minutos en localStorage para optimizar rendimiento. Diseñado para exploradores que juegan al aire libre — sincroniza el mundo virtual con las condiciones reales del cielo.",
+            pcOnly: false,
+            text: "Panel de condiciones del cielo en tiempo real. Muestra temperatura actual, probabilidad de lluvia, fase lunar y condiciones de observación astronómica. Usa la API Open-Meteo (gratuita, sin API key, cobertura global) basada en la geolocalización del usuario. La fase lunar se calcula con astronomy-engine — ciclo sinódico de 29.53 días con 8 fases precisas. Cache inteligente de 30 minutos en localStorage. Sincroniza las condiciones reales del cielo con la información astronómica de la app.",
           },
           {
             icon: "⚖️",
@@ -541,9 +577,10 @@ function InfoContent() {
             color: "#a78bfa",
             border: "rgba(167, 139, 250, 0.3)",
             bg: "rgba(167, 139, 250, 0.06)",
+            pcOnly: false,
             text: "El código fuente de Archeoscope está licenciado bajo Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0). Puedes estudiar, modificar y hacer fork del proyecto para uso educativo o de investigación con atribución. Los assets (modelos 3D, texturas, audio, música, arte) son All Rights Reserved — Copyright (c) 2026 Ignacio Fernandez. No se permite el uso comercial sin permiso explícito. Licencias comerciales disponibles bajo solicitud.",
           },
-        ].map((s) => (
+        ].filter(s => !isMobile || !s.pcOnly).map((s) => (
           <section
             key={s.title}
             style={{

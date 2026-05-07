@@ -5,12 +5,19 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] - 2026-05-07
+
+### Added
+- **Brújula** (`/menu/brujula`): nueva sección mobile con orientación magnética en tiempo real. Disco giratorio estilo vintage con marcas de grados, letras cardinales, aguja roja/blanca fija, heading numérico grande, indicador de dirección con color dinámico por punto cardinal. Usa `DeviceOrientationEvent` + `webkitCompassHeading` (iOS) / `alpha` (Android). Suavizado exponencial α=0.15 para evitar jitter. Muestra precisión del sensor (±°) cuando está disponible. Tip de calibración en "8". Permiso explícito en iOS via `requestPermission()`
+- **Menú mobile**: agregada opción 🧭 Brújula entre Clima e Información
+
 ## [1.0.6] - 2026-05-03
 
 ### Added
 - **Astrología**: card "🌕✨🌕 Doble Luna Llena" — detecta dinámicamente cuando hay dos lunas llenas en el mismo mes (Luna Rosa + Luna Azul). Muestra fechas exactas, signos, mensaje interpretativo especial y datos curiosos del fenómeno. Para mayo 2026: Luna Rosa en Escorpio (1 mayo) + Luna Azul en Sagitario (31 mayo)
 
 ### Fixed
+- **Información mobile**: secciones exclusivas del juego PC ocultas en mobile (Requerimientos Mínimos, Arte Generativo, Harmonia Mundi, Sistema 3D, Calidad Gráfica, Cielo Atmosférico). Secciones 🔷 Geometría Sagrada, 🔭 Panel Científico y ☀️ Alineaciones Solares reescritas sin referencias al juego — describen los sistemas técnicos de forma neutral
 - **Botón "Entrar" mobile** (pantalla de inicio): centrado en la parte inferior, ancho `min(320px, 80vw)`, padding 18px, border-radius 14px, touch feedback `onTouchStart/End`, `backdropFilter blur(8px)`. PC sin cambios
 - **Botones "Volver" mobile**: mejor UX — padding aumentado (16px), ancho máximo 340px, min-height 54px (mejor touch target), border-radius 12px, feedback táctil `:active` con scale(0.97), `-webkit-tap-highlight-color: transparent`
 
