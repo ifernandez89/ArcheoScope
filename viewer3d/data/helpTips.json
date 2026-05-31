@@ -1,0 +1,157 @@
+{
+  "rock": {
+    "icon": "🪨",
+    "title": "Roca",
+    "tip": "Podés juntar rocas y volver a soltarlas. Acercate y hacé click para recogerla."
+  },
+  "droppedRock": {
+    "icon": "🪨",
+    "title": "Roca en el suelo",
+    "tip": "Esta roca fue soltada del inventario. Podés recogerla de nuevo acercándote."
+  },
+  "tree": {
+    "icon": "🌲",
+    "title": "Árbol",
+    "tip": "Podés mover un árbol: hacé click para seleccionarlo y luego click en otro lugar del terreno para moverlo."
+  },
+  "portal": {
+    "icon": "🌀",
+    "title": "Portal",
+    "tip": "Ten cuidado — si lo atravesás, viajarás a otro lugar. Acercate despacio."
+  },
+  "puertaDelSol": {
+    "icon": "🚪",
+    "title": "Puerta del Sol",
+    "tip": "Ten cuidado — si la atravesás, viajarás. Es un portal sagrado tiwanaku."
+  },
+  "sphinx": {
+    "icon": "🦁",
+    "title": "La Esfinge",
+    "tip": "Guardiana de secretos. Interactuá con ella — tiene algo para decirte."
+  },
+  "viracocha": {
+    "icon": "✨",
+    "title": "Viracocha",
+    "tip": "Deidad creadora andina. Podés interactuar con él para recibir su mensaje."
+  },
+  "quetzalcoatl": {
+    "icon": "🐍",
+    "title": "Quetzalcóatl",
+    "tip": "La serpiente emplumada. Tiene sabiduría para compartir — acercate e interactuá."
+  },
+  "atlante": {
+    "icon": "🗿",
+    "title": "Atlante",
+    "tip": "Figura colosal olmeca. Guardián del sitio — podés interactuar con él."
+  },
+  "mictlantecuhtli": {
+    "icon": "💀",
+    "title": "Mictlantecuhtli",
+    "tip": "Señor del inframundo. Interactuá con cuidado — su mensaje es profundo."
+  },
+  "hotuMatua": {
+    "icon": "🗿",
+    "title": "Hotu Matua",
+    "tip": "El primer rey de Rapa Nui. Tiene una historia que contarte."
+  },
+  "akhenaten": {
+    "icon": "☀️",
+    "title": "Akhenaten",
+    "tip": "Faraón herético del sol. Interactuá para escuchar su visión."
+  },
+  "ramesses": {
+    "icon": "👑",
+    "title": "Ramsés II",
+    "tip": "El gran faraón constructor. Podés interactuar con él."
+  },
+  "hatshepsut": {
+    "icon": "🌺",
+    "title": "Hatshepsut",
+    "tip": "La faraona. Una de las gobernantes más poderosas del antiguo Egipto."
+  },
+  "mummy": {
+    "icon": "⚰️",
+    "title": "Momia",
+    "tip": "Guarda un secreto del pasado. Interactuá para descubrirlo."
+  },
+  "fuenteMagna": {
+    "icon": "🏺",
+    "title": "Fuente Magna",
+    "tip": "Artefacto misterioso con inscripciones. Podés tomarlo — es parte de tu misión."
+  },
+  "calendarioMaya": {
+    "icon": "🗓️",
+    "title": "Calendario Maya",
+    "tip": "El Tonalpohualli — rueda del tiempo sagrado. Interactuá para conocer su mensaje."
+  },
+  "merkaba": {
+    "icon": "✡️",
+    "title": "Merkaba",
+    "tip": "Geometría sagrada de luz. Interactuá para activarla."
+  },
+  "monolitoGobekli": {
+    "icon": "🗿",
+    "title": "Monolito de Göbekli Tepe",
+    "tip": "El monolito más antiguo conocido. Guarda un mensaje primordial."
+  },
+  "astronauta": {
+    "icon": "👨‍🚀",
+    "title": "Figura Astronauta",
+    "tip": "Una figura enigmática. ¿Quién la dejó aquí? Interactuá para descubrirlo."
+  },
+  "geoglifo": {
+    "icon": "🦅",
+    "title": "Geoglifo",
+    "tip": "Figura trazada en la tierra, visible desde el cielo. Acercate para activar el escáner."
+  },
+  "scarab": {
+    "icon": "🪲",
+    "title": "Escarabajo Sagrado",
+    "tip": "Símbolo de renacimiento solar. Es un ítem coleccionable — podés tomarlo."
+  },
+  "crystalSkull": {
+    "icon": "💎",
+    "title": "Cráneo de Cristal",
+    "tip": "Artefacto de poder. Es un ítem coleccionable — podés tomarlo."
+  },
+  "tonatiuh": {
+    "icon": "☀️",
+    "title": "Tonatiuh",
+    "tip": "El dios sol azteca. Es un ítem coleccionable — podés tomarlo."
+  },
+  "jadeMask": {
+    "icon": "🎭",
+    "title": "Máscara de Jade",
+    "tip": "Máscara funeraria maya. Es un ítem coleccionable — podés tomarlo."
+  },
+  "maiz": {
+    "icon": "🌽",
+    "title": "Semilla de Maíz",
+    "tip": "Sagrada para los pueblos mesoamericanos. Es un ítem coleccionable."
+  },
+  "npc": {
+    "icon": "👤",
+    "title": "Personaje",
+    "tip": "Podés interactuar con este personaje. Acercate y hacé click."
+  },
+  "monument": {
+    "icon": "🏛️",
+    "title": "Monumento",
+    "tip": "Estructura arqueológica. Explorá sus alrededores para descubrir secretos."
+  },
+  "glyph": {
+    "icon": "🔣",
+    "title": "Glifo",
+    "tip": "Símbolo antiguo. Activá el escáner (UFO 4) para decodificarlo."
+  },
+  "water": {
+    "icon": "💧",
+    "title": "Agua",
+    "tip": "Cuidado con el agua — puede activar eventos especiales si la tocás."
+  },
+  "cave": {
+    "icon": "🕳️",
+    "title": "Cueva",
+    "tip": "Una entrada oculta. Explorá su interior con cuidado."
+  }
+}

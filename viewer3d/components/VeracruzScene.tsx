@@ -169,10 +169,7 @@ function VeracruzSceneContent({ avatarPositionRef, onOlmecClick, caveQuestActive
 
 // Diálogo con el mismo estilo que Quetzalcoatl/Viracocha - exportado para uso fuera del Canvas
 export function OlmecDialogue({ onClose }: { onClose: () => void }) {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 6000)
-    return () => clearTimeout(timer)
-  }, [onClose])
+  // ✅ Sin auto-close — el usuario cierra cuando quiera
 
   return (
     <div

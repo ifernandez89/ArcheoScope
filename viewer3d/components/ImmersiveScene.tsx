@@ -102,6 +102,10 @@ const LocalWeather = dynamic(() => import('./LocalWeather'), { ssr: false })
 const CelestialOverlayHUD = dynamic(() => import('./CelestialOverlay').then(m => ({ default: m.CelestialOverlayHUD })), { ssr: false })
 const BackgroundMountains = dynamic(() => import('./BackgroundMountains'), { ssr: false, loading: () => null })
 const EnhancedMoon = dynamic(() => import('./EnhancedMoon'), { ssr: false })
+const HelpBubble = dynamic(() => import('./HelpBubble'), { ssr: false })
+import helpTipsData from '@/data/helpTips.json'
+import type { HelpZone } from './ProximityHelpDetector'
+import ProximityHelpDetector from './ProximityHelpDetector'
 
 // EnvironmentElementsWithTrees necesita el contexto, importar directamente
 import { EnvironmentElementsWithTrees } from './EnvironmentElements'
@@ -259,6 +263,63 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   }, [selectedLocation?.lat, selectedLocation?.lon])
   const [weather, setWeather] = useState<WeatherState>(_isMobileDevice ? MOBILE_STORM_WEATHER : DEFAULT_STORM_WEATHER)
   const [cameraRotation, setCameraRotation] = useState(0) // Rotación de la cámara para la brújula
+  const [nearestHelpZone, setNearestHelpZone] = useState<HelpZone | null>(null)
+
+  // ── Help zones por sitio ─────────────────────────────────────────────────
+  const helpZones = useMemo<HelpZone[]>(() => {
+    if (mode !== 'model') return []
+    const tips = helpTipsData as Record<string, { icon: string; title: string; tip: string }>
+    const siteId = selectedSite?.id || ''
+    const zones: HelpZone[] = []
+
+    if (siteId === 'pyramids-giza' || siteId === 'giza') {
+      zones.push(
+        { id: 'sphinx',          position: [100, 0, 50],   radius: 25, tip: tips.sphinx },
+        { id: 'ramesses',        position: [-20, 0, -50],  radius: 20, tip: tips.ramesses },
+        { id: 'hatshepsut',      position: [20, 0, -50],   radius: 20, tip: tips.hatshepsut },
+        { id: 'akhenaten',       position: [0, 0, 0],      radius: 20, tip: tips.akhenaten },
+        { id: 'mummy',           position: [-72, 0, -2],   radius: 20, tip: tips.mummy },
+        { id: 'geoglifo-arana',  position: [-83, 0, -67],  radius: 18, tip: tips.geoglifo },
+      )
+    } else if (siteId === 'puma-punku' || siteId === 'pumaPunku') {
+      zones.push(
+        { id: 'viracocha',    position: [14.5, 0, 0.83], radius: 22, tip: tips.viracocha },
+        { id: 'fuenteMagna',  position: [0, 0, 0],       radius: 20, tip: tips.fuenteMagna },
+        { id: 'condor',       position: [-83, 0, -67],   radius: 18, tip: tips.geoglifo },
+        { id: 'portal-pp',    position: [0, 0, 30],      radius: 12, tip: tips.puertaDelSol },
+      )
+    } else if (siteId === 'moai-easter-island' || siteId === 'easter-island') {
+      zones.push(
+        { id: 'hotuMatua', position: [0, 0, 0],    radius: 25, tip: tips.hotuMatua },
+        { id: 'merkaba',   position: [0, 0, 0],    radius: 18, tip: tips.merkaba },
+        { id: 'ballena',   position: [-55, 0, 55], radius: 18, tip: tips.geoglifo },
+      )
+    } else if (siteId === 'teotihuacan') {
+      zones.push(
+        { id: 'quetzalcoatl',    position: [0, 0, 0],     radius: 25, tip: tips.quetzalcoatl },
+        { id: 'calendarioMaya',  position: [0, 0, -20],   radius: 20, tip: tips.calendarioMaya },
+        { id: 'colibri',         position: [-83, 0, -67], radius: 18, tip: tips.geoglifo },
+      )
+    } else if (siteId === 'tres-zapotes') {
+      zones.push(
+        { id: 'atlante',         position: [0, 0, 0],     radius: 25, tip: tips.atlante },
+        { id: 'mictlantecuhtli', position: [0, 0, 0],     radius: 20, tip: tips.mictlantecuhtli },
+        { id: 'perro',           position: [-83, 0, -67], radius: 18, tip: tips.geoglifo },
+      )
+    } else if (siteId === 'gobekli-tepe') {
+      zones.push(
+        { id: 'monolito',   position: [0, 0, 0],     radius: 22, tip: tips.monolitoGobekli },
+        { id: 'astronauta', position: [-55, 0, -55], radius: 20, tip: tips.astronauta },
+      )
+    }
+
+    // Portal genérico (todos los sitios excepto Puma Punku que ya lo tiene)
+    if (siteId !== 'puma-punku' && siteId !== 'pumaPunku') {
+      zones.push({ id: 'portal-generic', position: [0, 0, 30], radius: 10, tip: tips.portal })
+    }
+
+    return zones
+  }, [mode, selectedSite?.id])
   const [showSphinxDialogue, setShowSphinxDialogue] = useState(false)
   const [showAkhenatonDialogue, setShowAkhenatonDialogue] = useState(false)
 
@@ -1309,6 +1370,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         onCoordinateSubmit={handleLocationClick}
         currentLocation={selectedLocation}
         disabled={navigationBlocked}
+        mode={mode}
+        weatherCode={weather.storm || weather.tornado ? 99 : weather.rainHeavy ? 65 : weather.rainLight ? 51 : 0}
       />
 
       {/* Panel Científico — reemplaza LocationInfo + timer */}
@@ -1614,6 +1677,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         <>
           <Compass rotation={cameraRotation} solarAzimuth={solarState.azimuth} />
         </>
+      )}
+
+      {/* ❓ HelpBubble — ayuda contextual por proximidad (solo escenas terrestres) */}
+      {mode === 'model' && nearestHelpZone && (
+        <HelpBubble tip={nearestHelpZone.tip} />
       )}
 
       {/* 📱 Controles touch para mobile — D-pad + rotación */}
@@ -1966,6 +2034,8 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             setMagnaBowlOnGround(false)
             setMagnaBowlOriginalInInventory(false) // Viracocha acepta la original y presta la suya
           }}
+          helpZones={helpZones}
+          onNearestHelpZone={setNearestHelpZone}
         />
       ) : null}
 
@@ -2185,6 +2255,9 @@ function GlobeScene({
           autoRotate={false}
         />
 
+        {/* 🎯 Controlador de foco en cuerpos celestes */}
+        <CelestialFocusController />
+
         {/* Sistema de Zoom Narrativo */}
         <NarrativeZoomContent
           onLocationClick={onLocationClick}
@@ -2201,6 +2274,52 @@ function GlobeScene({
       </Canvas>
     </div>
   )
+}
+
+/**
+ * CelestialFocusController — componente dentro del Canvas que escucha
+ * el evento 'celestial-focus-internal' y anima la cámara suavemente
+ * hacia el cuerpo celeste seleccionado.
+ */
+function CelestialFocusController() {
+  const { camera } = useThree()
+  const targetPos = useRef<THREE.Vector3 | null>(null)
+  const targetLook = useRef<THREE.Vector3 | null>(null)
+  const animating = useRef(false)
+  const tmpVec = useRef(new THREE.Vector3())
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as {
+        cameraPos: { x: number; y: number; z: number }
+        target: { x: number; y: number; z: number }
+      }
+      targetPos.current = new THREE.Vector3(detail.cameraPos.x, detail.cameraPos.y, detail.cameraPos.z)
+      targetLook.current = new THREE.Vector3(detail.target.x, detail.target.y, detail.target.z)
+      animating.current = true
+    }
+    window.addEventListener('celestial-focus-internal', handler)
+    return () => window.removeEventListener('celestial-focus-internal', handler)
+  }, [])
+
+  useFrame((_, delta) => {
+    if (!animating.current || !targetPos.current || !targetLook.current) return
+
+    // Interpolación suave hacia la posición objetivo
+    const speed = Math.min(delta * 3, 0.12)
+    camera.position.lerp(targetPos.current, speed)
+
+    // Orientar la cámara hacia el objetivo
+    tmpVec.current.copy(targetLook.current)
+    camera.lookAt(tmpVec.current)
+
+    // Detener cuando está suficientemente cerca
+    if (camera.position.distanceTo(targetPos.current) < 0.5) {
+      animating.current = false
+    }
+  })
+
+  return null
 }
 
 // Contenido que responde al zoom narrativo - AHORA CON SISTEMA REALISTA
@@ -2320,7 +2439,9 @@ function ModelScene({
   onObeliskActivate,
   showViracochaInteractive,
   onCloseViracochaInteractive,
-  onLendMagnaBowl
+  onLendMagnaBowl,
+  helpZones = [],
+  onNearestHelpZone,
 }: {
   abilityActive: boolean
   currentUfo: number
@@ -2424,6 +2545,8 @@ function ModelScene({
   showViracochaInteractive?: boolean
   onCloseViracochaInteractive?: () => void
   onLendMagnaBowl?: () => void
+  helpZones?: HelpZone[]
+  onNearestHelpZone?: (zone: HelpZone | null) => void
 }) {
   const terrainRef = useRef<THREE.Mesh>(null)
   const modelRef = useRef<THREE.Group>(null)
@@ -2503,6 +2626,15 @@ function ModelScene({
 
           {/* 🧭 Rastreador de rotación de cámara para la brújula */}
           {onCameraRotationChange && <CompassTracker onRotationChange={onCameraRotationChange} />}
+
+          {/* ❓ Sistema de ayuda por proximidad */}
+          {helpZones.length > 0 && onNearestHelpZone && (
+            <ProximityHelpDetector
+              avatarPositionRef={avatarPositionRef}
+              onNearestChange={onNearestHelpZone}
+              zones={helpZones}
+            />
+          )}
 
           {/* Far plane reducido en mobile: 900 vs 1500 — menos geometría procesada */}
           <PerspectiveCamera makeDefault position={[8, 4, 8]} fov={60}

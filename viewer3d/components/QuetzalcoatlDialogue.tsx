@@ -20,29 +20,18 @@ export default function QuetzalcoatlDialogue({
 
   useEffect(() => {
     if (!hasCornSeed && !hasPlantedCorn) {
-      // Primera vez - pedir que plante la semilla
       setCurrentMessage('🌽 Viajero de las estrellas... El maíz es el regalo de los dioses a la humanidad. Busca la semilla sagrada y plántala en la tierra fértil.')
       setShowOptions(false)
       onRequestSeed()
-      
-      setTimeout(() => {
-        onClose()
-      }, 5000)
+      // ✅ Sin auto-close — el usuario cierra cuando quiera
     } else if (hasCornSeed && !hasPlantedCorn) {
-      // Tiene la semilla pero no la ha plantado
       setCurrentMessage('🌱 Veo que has encontrado la semilla sagrada. Ahora debes plantarla en la tierra para completar el ciclo de la vida.')
       setShowOptions(false)
-      
-      setTimeout(() => {
-        onClose()
-      }, 4000)
+      // ✅ Sin auto-close — el usuario cierra cuando quiera
     } else {
-      // Ya plantó el maíz - agradecimiento
       setCurrentMessage('🌾 ¡Viajero de las estrellas! Has completado el ciclo sagrado del maíz. Los dioses están complacidos. La tormenta cesa y la abundancia fluirá sobre estas tierras.')
       setShowOptions(false)
-      setTimeout(() => {
-        onClose()
-      }, 6000)
+      // ✅ Sin auto-close — el usuario cierra cuando quiera
     }
   }, [hasCornSeed, hasPlantedCorn, onClose, onRequestSeed])
 

@@ -11,9 +11,11 @@ import Geoglyph from './Geoglyph'
 import { isMissionCompleted } from '@/types/missionState'
 
 /**
- * Escena de Teotihuacán - OPTIMIZADA
+ * Escena de Teotihuacán - OPTIMIZADA v2
  * 
  * Optimizaciones aplicadas:
+ * - calendario_maya.glb: 49.9MB → 1.79MB (Draco + WebP, -96%)
+ * - quetzalcoatl.glb: 30.6MB → 1.13MB (Draco + WebP, -96%)
  * - Eliminado .clone() de modelos (muy costoso)
  * - useFrame solo ejecuta cuando es necesario
  * - Fade-in aplicado correctamente a materiales
@@ -88,7 +90,9 @@ function TeotihuacanSceneContent({
   currentUfo,
   abilityActive
 }: TeotihuacanSceneProps) {
-  // Cargar modelos base (livianos: kukulkan 0.6MB, aztec 1.9MB, calendario 49.9MB)
+  // Cargar modelos base — todos livianos tras compresión Draco+WebP
+  // calendario_maya.glb: 1.79MB (era 49.9MB, -96%)
+  // quetzalcoatl.glb: 1.13MB (era 30.6MB, -96%) — sigue lazy por lógica de juego
   const kukulkanModel = useGLTF(getAssetPath('/kukulkan.glb'))
   const aztecTempleModel = useGLTF(getAssetPath('/aztec_temple.glb'))
   const calendarioModel = useGLTF(getAssetPath('/calendario_maya.glb'))
@@ -319,7 +323,7 @@ function TeotihuacanSceneContent({
         currentUfo={currentUfo}
       />
       
-      {/* Calendario Maya - SIN CLONE */}
+      {/* Calendario Maya — 1.79MB tras compresión Draco (era 49.9MB) */}
       <group 
         ref={calendarioRef}
         position={[0, 10, -20]}
@@ -450,7 +454,7 @@ function TeotihuacanSceneContent({
   )
 }
 
-// Subcomponente lazy: Quetzalcoatl (42.7MB) - se carga solo al detener el calendario
+// Subcomponente lazy: Quetzalcoatl (1.13MB tras compresión) - se carga solo al detener el calendario
 function QuetzalcoatlModel({ 
   quetzalcoatlRef,
   quetzalcoatlOpacityRef,

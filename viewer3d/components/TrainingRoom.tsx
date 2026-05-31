@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Sky, Stars, Environment, PerspectiveCamera, OrbitControls } from '@react-three/drei'
+import { Sky, Stars, PerspectiveCamera, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import IceTerrain from './IceTerrain'
 import IceLighting from './IceLighting'
@@ -21,6 +21,14 @@ import AmbientAudio from './AmbientAudio'
 import { getClimateAudio } from '../systems/ClimateAudioSystem'
 import { getProceduralAudio } from '../systems/ProceduralAudio'
 import { loadGameSettings } from '@/types/gameSettings'
+import ProximityHelpDetector, { type HelpZone } from './ProximityHelpDetector'
+import HelpBubble, { type HelpTip } from './HelpBubble'
+import helpTipsData from '@/data/helpTips.json'
+
+/** Wrapper que lazy-imports HelpBubble para evitar SSR issues */
+function HelpBubbleWrapper({ tip }: { tip: HelpTip }) {
+  return <HelpBubble tip={tip} />
+}
 
 // Store compartido para comunicar 3D → UI (inventario)
 // Exportamos las funciones para que TrainingUI pueda suscribirse
@@ -73,6 +81,19 @@ export function subscribeScan(listener: ScanListener) {
 function emitScan(entity: { name: string, desc: string } | null) {
   scanListeners.forEach(fn => fn(entity))
 }
+
+// Store compartido para zona de ayuda más cercana (3D → UI)
+type HelpZoneListener = (zone: HelpZone | null) => void
+const helpZoneListeners: Set<HelpZoneListener> = new Set()
+
+export function subscribeHelpZone(listener: HelpZoneListener) {
+  helpZoneListeners.add(listener)
+  return () => { helpZoneListeners.delete(listener) }
+}
+
+function emitHelpZone(zone: HelpZone | null) {
+  helpZoneListeners.forEach(fn => fn(zone))
+}
 function TrainingScene() {
   const [playerShip, setPlayerShip] = useState<string>(getAssetPath('/ufo_1.glb'))
   const [abilityActive, setAbilityActive] = useState(false)
@@ -83,6 +104,7 @@ function TrainingScene() {
   useEffect(() => { emitScan(scannedEntity) }, [scannedEntity])
   const [audioEnabled, setAudioEnabled] = useState(false)
   const [playerPosition, setPlayerPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 0))
+  const avatarPositionRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0))
   const terrainRef = useRef<THREE.Mesh>(null)
 
   // Estado inicial de las rocas y árboles
@@ -304,7 +326,8 @@ function TrainingScene() {
     <>
       <Sky sunPosition={[30, 40, 30]} />
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-      <Environment preset="night" />
+      {/* Environment preset removido — cargaba dikhololo_night_1k.hdr externamente (falla en producción) */}
+      {/* La iluminación la maneja IceLighting + ambientLight en la escena */}
       
       <IceLighting />
       <IceTerrain ref={terrainRef} location={{ lat: -75.2509, lon: 0.0714 }} />
@@ -317,13 +340,45 @@ function TrainingScene() {
         terrainRef={terrainRef} 
         initialPosition={[0, 10, 0]}
         abilityActive={abilityActive}
-        onPositionChange={setPlayerPosition}
+        onPositionChange={(pos) => {
+          setPlayerPosition(pos)
+          avatarPositionRef.current.copy(pos)
+        }}
         currentUfo={
           playerShip.includes('ufo_5') ? 5 :
           playerShip.includes('ufo_4') ? 4 :
           playerShip.includes('ufo_3') ? 3 :
           playerShip.includes('ufo_2') ? 2 : 1
         }
+      />
+
+      {/* Sistema de ayuda por proximidad */}
+      <ProximityHelpDetector
+        zones={[
+          // Rocas del mundo (clickeables para recoger)
+          ...worldRocks.map(r => ({
+            id: `help-rock-${r.id}`,
+            position: r.position as [number, number, number],
+            radius: 10,
+            tip: (helpTipsData as any).rock,
+          })),
+          // Rocas dropeadas en el piso
+          ...droppedRocks.map(r => ({
+            id: `help-dropped-${r.id}`,
+            position: r.position as [number, number, number],
+            radius: 8,
+            tip: (helpTipsData as any).droppedRock,
+          })),
+          // Árboles (movibles)
+          ...worldTrees.map(t => ({
+            id: `help-tree-${t.id}`,
+            position: t.position as [number, number, number],
+            radius: 12,
+            tip: (helpTipsData as any).tree,
+          })),
+        ]}
+        avatarPositionRef={avatarPositionRef}
+        onNearestChange={emitHelpZone}
       />
 
       {/* Árboles (movibles con SelectableObject) */}
@@ -441,6 +496,13 @@ function TrainingTree({ obj }: { obj: any }) {
 }
 
 export default function TrainingRoom() {
+  const [nearestHelpZone, setNearestHelpZone] = useState<HelpZone | null>(null)
+
+  useEffect(() => {
+    const unsub = subscribeHelpZone(setNearestHelpZone)
+    return unsub
+  }, [])
+
   return (
     <div style={{ width: '100vw', height: '100vh', background: '#000000' }}>
       <ObjectSelectionProvider>
@@ -460,6 +522,11 @@ export default function TrainingRoom() {
           <TrainingScene />
         </Canvas>
       </ObjectSelectionProvider>
+
+      {/* HelpBubble — fuera del Canvas, sobre el HUD */}
+      {nearestHelpZone && (
+        <HelpBubbleWrapper tip={nearestHelpZone.tip} />
+      )}
     </div>
   )
 }

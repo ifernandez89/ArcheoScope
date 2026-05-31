@@ -63,7 +63,7 @@ export default function OlmecInteractiveDialogue({
     if (!hasStoodUp) {
       setCurrentMessage('Gracias, viajero de las estrellas... Dormia desde hace milenios. Te saludo desde el principio de los tiempos.')
       setShowOptions(false)
-      setTimeout(() => onClose(), 5000)
+      // ✅ Sin auto-close — el usuario cierra cuando quiera
     } else if (hasJadeMask) {
       setCurrentMessage('Siento la energia del Jade del Aliento... ¿Me lo entregas, viajero?')
       setShowOptions(true)
@@ -82,12 +82,12 @@ export default function OlmecInteractiveDialogue({
     if (optionId === 1 && onEnterCave && !missionCompleted) {
       setTimeout(() => {
         if (onEnterCave) onEnterCave()
-      }, 3000) // Dar tiempo a leer la respuesta
-      setTimeout(() => onClose(), 5000)
+      }, 3000) // Dar tiempo a leer la respuesta antes de entrar a la cueva
+      // ✅ Sin auto-close — el usuario cierra cuando quiera
       return
     }
 
-    setTimeout(() => onClose(), 5000)
+    // ✅ Sin auto-close — el usuario cierra cuando quiera
   }
 
   const accentColor = '#c8860a'
@@ -147,7 +147,7 @@ export default function OlmecInteractiveDialogue({
                   setSelectedResponse('Gracias, viajero... El Jade del Aliento regresa a su lugar sagrado. Los antiguos te bendicen.')
                   setShowOptions(false)
                   if (onDeliverJade) onDeliverJade()
-                  setTimeout(() => onClose(), 6000)
+                  // ✅ Sin auto-close — el usuario cierra cuando quiera
                 }}
                 style={{
                   padding: '14px 22px', fontSize: '16px',

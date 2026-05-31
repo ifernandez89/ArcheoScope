@@ -41,12 +41,10 @@ export default function ViracochaInteractiveDialogue({
   )
   const [showOptions, setShowOptions] = useState(magnaBowlReturned)
 
-  // Si es el agradecimiento, cerrar automáticamente después de 6s
+  // ✅ Sin auto-close — el usuario cierra cuando quiera
+  // (el agradecimiento se muestra como mensaje, el usuario lo cierra)
   useEffect(() => {
-    if (!magnaBowlReturned) {
-      const timer = setTimeout(() => onClose(), 6000)
-      return () => clearTimeout(timer)
-    }
+    // No auto-close
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -55,15 +53,14 @@ export default function ViracochaInteractiveDialogue({
     setSelectedResponse(response)
     setShowOptions(false)
 
-    // Opción 3: Prestar la Fuente Magna (siempre positivo porque el diálogo solo aparece con 5 misiones completas)
+    // Opción 3: Prestar la Fuente Magna
     if (id === 3 && onLendMagnaBowl) {
-      onLendMagnaBowl() // Quitar la fuente del inventario inmediatamente
-      setTimeout(() => onClose(), 5000) // Cerrar diálogo después de leer
+      onLendMagnaBowl()
+      // ✅ Sin auto-close — el usuario cierra cuando quiera
       return
     }
     
-    // Para otras opciones, cerrar después de 5s
-    setTimeout(() => onClose(), 5000)
+    // ✅ Sin auto-close — el usuario cierra cuando quiera
   }
 
   return (

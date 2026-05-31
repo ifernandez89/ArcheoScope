@@ -224,10 +224,10 @@ export default function TrainingUI() {
           <h3 style={{ margin: '0 0 10px', color: '#4a9eff', fontSize: mobile ? '13px' : '16px' }}>INTERACCIONES</h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <li style={{ fontSize: mobile ? '12px' : '15px' }}>
-              {mobile ? '👆' : '🖱️'} Toca Roca → <span style={{ color: '#ffd700', fontWeight: 'bold' }}>JUNTAR</span>
+              {mobile ? '👆' : '🖱️'} Roca → <span style={{ color: '#ffd700', fontWeight: 'bold' }}>JUNTAR</span>
             </li>
             <li style={{ fontSize: mobile ? '12px' : '15px' }}>
-              🎒 Toca Inventario → <span style={{ color: '#ffd700', fontWeight: 'bold' }}>SOLTAR</span>
+              🎒 Inventario → <span style={{ color: '#ffd700', fontWeight: 'bold' }}>SOLTAR</span>
             </li>
             <li style={{ fontSize: mobile ? '12px' : '15px' }}>
               ♻️ Repetir <span style={{ color: '#4a9eff', fontWeight: 'bold' }}>infinitamente</span>
@@ -255,7 +255,8 @@ export default function TrainingUI() {
               padding: '16px 36px', fontSize: '18px',
               background: '#ffffff', color: '#000000',
               border: 'none', borderRadius: '8px',
-              cursor: 'pointer', fontWeight: 'bold', letterSpacing: '2px', transition: 'all 0.3s',
+              cursor: 'pointer', fontWeight: 'normal', letterSpacing: '3px', transition: 'all 0.3s',
+              fontFamily: 'Archeoscope, serif',
             }}
             onMouseEnter={e => { e.currentTarget.style.background = '#4a9eff'; e.currentTarget.style.color = '#fff' }}
             onMouseLeave={e => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.color = '#000' }}

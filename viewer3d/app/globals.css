@@ -1,6 +1,18 @@
-/* La fuente Archeoscope se carga en layout.tsx usando Next.js Font API */
+/**
+ * Archeoscope — Design System
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Typography:
+ *   --font-inter        → UI body text, labels, descriptions (WCAG AA)
+ *   --font-archeoscope  → Brand headings, titles, identity buttons
+ *
+ * Spacing: 8px base grid (8, 16, 24, 32, 40, 48, 56, 64px)
+ * Contrast: WCAG AA minimum (4.5:1 normal text, 3:1 large text)
+ * Mobile First: base styles for mobile, enhanced for larger screens
+ * Touch targets: minimum 44px height (WCAG 2.5.5)
+ */
 
-* {
+/* ─── Reset ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
@@ -12,20 +24,27 @@ body {
   overflow-x: hidden;
 }
 
+/* ─── Base Typography — Inter (UI) ───────────────────────────────────────── */
 body {
-  font-family: var(--font-archeoscope), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Roboto', 'Helvetica Neue', sans-serif;
+  font-size: 16px;           /* WCAG base */
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: #ffffff;
 }
 
+/* Inputs/buttons inherit Inter */
 input, button, select, textarea {
-  font-family: inherit;
+  font-family: var(--font-inter), sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6 {
+/* ─── Brand Typography — Spaceport (headings/identity) ───────────────────── */
+h1, h2, h3, h4, h5, h6,
+.brand-font {
   font-family: var(--font-archeoscope), serif;
+  font-weight: 400; /* Spaceport has no bold variant — avoid faux bold */
 }
 
 a {
@@ -33,93 +52,155 @@ a {
   text-decoration: none;
 }
 
-/* Responsive Typography & UI Utilities */
+/* ─── Responsive Typography Utilities ───────────────────────────────────── */
 .title-responsive {
-  font-size: clamp(30px, 8vw, 48px);
+  font-size: clamp(28px, 8vw, 48px);
   letter-spacing: 6px;
   font-family: var(--font-archeoscope), serif;
+  font-weight: 400;
   text-align: center;
+  line-height: 1.2;
 }
 
 .subtitle-responsive {
-  font-size: clamp(16px, 4vw, 20px);
-  color: rgba(255,255,255,0.6);
+  font-size: clamp(14px, 4vw, 18px);
+  color: rgba(255, 255, 255, 0.6);
   letter-spacing: 2px;
   text-align: center;
-  font-family: var(--font-archeoscope), sans-serif;
+  font-family: var(--font-inter), sans-serif;
+  line-height: 1.5;
 }
 
 .text-responsive {
-  font-size: clamp(16px, 3.5vw, 20px);
-  color: rgba(255,255,255,0.5);
+  font-size: clamp(14px, 3.5vw, 18px);
+  color: rgba(255, 255, 255, 0.5);
   text-align: center;
-  font-family: var(--font-archeoscope), sans-serif;
+  font-family: var(--font-inter), sans-serif;
+  line-height: 1.6;
 }
 
+/* ─── Button System ──────────────────────────────────────────────────────── */
+/* Base: Mobile First — full width, 56px min-height (exceeds 44px WCAG) */
 .btn-responsive {
-  padding: 16px 60px;
-  font-size: 24px;
-  font-weight: bold;
-  color: #fff;
-  background: transparent;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-radius: 8px;
-  cursor: pointer;
+  /* Layout */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 340px;
+  min-height: 56px;
+  padding: 16px 24px;
+
+  /* Typography — brand font for identity buttons */
+  font-family: var(--font-archeoscope), serif;
+  font-size: clamp(15px, 4vw, 17px);
+  font-weight: 400;
   letter-spacing: 2px;
   text-transform: uppercase;
-  transition: all 0.3s;
-  display: inline-block;
   text-align: center;
-  font-family: var(--font-archeoscope), serif;
+
+  /* Visual */
+  color: #fff;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+
+  /* Interaction */
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  user-select: none;
 }
 
 .btn-responsive:active {
-  background: rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.12);
   transform: scale(0.97);
 }
 
-@media (max-width: 600px) {
-  .title-responsive {
-    letter-spacing: 3px;
-  }
+.btn-responsive:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 3px;
+}
+
+/* Desktop: wider padding, larger font */
+@media (min-width: 768px) {
   .btn-responsive {
-    padding: 16px 24px;
-    font-size: 17px;
-    width: 100%;
-    max-width: 340px;
-    min-height: 54px;
-    border-radius: 12px;
-    letter-spacing: 1.5px;
-    /* Better touch target */
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-  .subtitle-responsive {
-    letter-spacing: 1px;
+    width: auto;
+    max-width: none;
+    padding: 16px 60px;
+    font-size: 22px;
+    border-radius: 8px;
+    letter-spacing: 3px;
   }
 }
 
-/* Common container for info cards */
+/* ─── Info Cards ─────────────────────────────────────────────────────────── */
 .info-card {
   max-width: min(500px, 95vw);
   width: 100%;
-  padding: 24px;
+  padding: 24px;           /* 3 × 8px */
   border-radius: 16px;
   text-align: center;
-  margin-bottom: 20px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.1);
-  font-family: var(--font-archeoscope), sans-serif;
+  margin-bottom: 16px;     /* 2 × 8px */
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--font-inter), sans-serif;
 }
 
 .info-card h2 {
-  font-size: clamp(24px, 6vw, 32px);
+  font-family: var(--font-archeoscope), serif;
+  font-size: clamp(20px, 6vw, 28px);
+  font-weight: 400;
   margin-bottom: 8px;
 }
 
 .info-card p {
-  font-size: clamp(14px, 4vw, 18px);
+  font-family: var(--font-inter), sans-serif;
+  font-size: clamp(14px, 4vw, 16px);
   line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75); /* WCAG AA on dark bg */
+}
+
+/* ─── Spacing Utilities (8px grid) ──────────────────────────────────────── */
+.mt-8  { margin-top: 8px }
+.mt-16 { margin-top: 16px }
+.mt-24 { margin-top: 24px }
+.mt-32 { margin-top: 32px }
+.mb-8  { margin-bottom: 8px }
+.mb-16 { margin-bottom: 16px }
+.mb-24 { margin-bottom: 24px }
+.p-16  { padding: 16px }
+.p-24  { padding: 24px }
+.gap-8  { gap: 8px }
+.gap-16 { gap: 16px }
+.gap-24 { gap: 24px }
+
+/* ─── Accessibility ──────────────────────────────────────────────────────── */
+/* Skip link for keyboard navigation */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 8px;
+  background: #000;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 9999;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 8px;
+}
+
+/* Focus visible for all interactive elements */
+:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 2px;
+}
+
+/* Remove focus ring for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
 }

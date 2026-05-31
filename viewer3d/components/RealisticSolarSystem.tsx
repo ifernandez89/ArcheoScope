@@ -244,6 +244,25 @@ export default function RealisticSolarSystem({
     }
   }, [scene])
   
+  // 🎯 Escuchar evento celestial-focus para mover la cámara al planeta seleccionado
+  useEffect(() => {
+    const { camera } = (window as any).__r3f_camera_ref || {}
+    
+    const handleCelestialFocus = (e: Event) => {
+      const detail = (e as CustomEvent).detail as {
+        id: string
+        cameraPos: { x: number; y: number; z: number }
+        target: { x: number; y: number; z: number }
+      }
+      
+      // Emitir evento interno para que el OrbitControls lo procese
+      window.dispatchEvent(new CustomEvent('celestial-focus-internal', { detail }))
+    }
+    
+    window.addEventListener('celestial-focus', handleCelestialFocus)
+    return () => window.removeEventListener('celestial-focus', handleCelestialFocus)
+  }, [])
+
   // Actualización del sistema
   useFrame((state, delta) => {
     const solarEngine = solarEngineRef.current

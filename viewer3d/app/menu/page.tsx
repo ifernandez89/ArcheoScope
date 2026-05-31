@@ -6,22 +6,43 @@ import { resetPlayerState } from '@/types/player'
 import { resetMissionState } from '@/types/missionState'
 import { resetGameSettings } from '@/types/gameSettings'
 import { getAssetPath } from '@/lib/paths'
+import { isHelpEnabled, toggleHelp } from '@/systems/helpSystem'
 
 const LOGO_MAIN = process.env.NODE_ENV === 'production'
   ? '/ArcheoScope/branding/logo/logo-main.png'
   : '/branding/logo/logo-main.png'
 
+/**
+ * Detecta mobile de forma síncrona en el cliente.
+ * Devuelve null en SSR (antes de hydration) para evitar el flash PC→mobile.
+ */
+function detectMobile(): boolean | null {
+  if (typeof window === 'undefined') return null
+  return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768
+}
+
 export default function MenuPage() {
   const router = useRouter()
-  const [isMobile, setIsMobile] = useState(false)
+  // null = aún no detectado (ocultar hasta saber)
+  const [isMobile, setIsMobile] = useState<boolean | null>(null)
+  const [helpOn, setHelpOn] = useState(true)
 
   useEffect(() => {
+    // Detectar inmediatamente en el primer render del cliente
     const check = () => setIsMobile(
       /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768
     )
     check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
+  }, [])
+
+  // Leer estado de ayuda al montar
+  useEffect(() => {
+    setHelpOn(isHelpEnabled())
+    const handler = (e: Event) => setHelpOn((e as CustomEvent).detail.enabled)
+    window.addEventListener('help-toggle', handler)
+    return () => window.removeEventListener('help-toggle', handler)
   }, [])
 
   // Detectar F5 para resetear el juego
@@ -113,6 +134,7 @@ export default function MenuPage() {
     { label: 'Controles', path: '/menu/controls', action: null },
     { label: 'Constelaciones', path: '/constellations', action: null },
     { label: 'Calendarios', path: '/menu/calendarios', action: null },
+    { label: helpOn ? 'Ayuda ON' : 'Ayuda OFF', path: null, action: () => { const next = toggleHelp(); setHelpOn(next) } },
     { label: 'Información', path: '/menu/info', action: null }
   ]
 
@@ -128,6 +150,16 @@ export default function MenuPage() {
   ]
 
   const visibleOptions = isMobile ? mobileOptions : menuOptions
+
+  // Mientras no se detectó el dispositivo, mostrar pantalla negra sin flash
+  if (isMobile === null) {
+    return (
+      <main style={{
+        width: '100vw', minHeight: '100vh',
+        background: '#000000', margin: 0, padding: 0,
+      }} aria-hidden="true" />
+    )
+  }
 
   return (
     <main style={{
@@ -219,7 +251,10 @@ export default function MenuPage() {
         ) : (
           /* PC: layout original */
           <>
-            {menuOptions.map((option) => (
+            {menuOptions.map((option) => {
+              const isAyuda = option.label.startsWith('Ayuda')
+              const ayudaOn = option.label === 'Ayuda ON'
+              return (
               <button
                 key={option.label}
                 onClick={() => {
@@ -230,9 +265,9 @@ export default function MenuPage() {
                   padding: '16px 64px',
                   fontSize: '20px',
                   fontWeight: 'bold',
-                  color: '#ffffff',
+                  color: isAyuda ? (ayudaOn ? '#22c55e' : 'rgba(255,255,255,0.4)') : '#ffffff',
                   background: 'transparent',
-                  border: '2px solid #ffffff',
+                  border: `2px solid ${isAyuda ? (ayudaOn ? '#22c55e' : 'rgba(255,255,255,0.25)') : '#ffffff'}`,
                   borderRadius: '8px',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
@@ -242,17 +277,24 @@ export default function MenuPage() {
                   width: '350px'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#ffffff'
-                  e.currentTarget.style.color = '#000000'
+                  e.currentTarget.style.background = isAyuda
+                    ? (ayudaOn ? '#22c55e' : 'rgba(255,255,255,0.15)')
+                    : '#ffffff'
+                  e.currentTarget.style.color = isAyuda
+                    ? (ayudaOn ? '#000000' : '#ffffff')
+                    : '#000000'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'transparent'
-                  e.currentTarget.style.color = '#ffffff'
+                  e.currentTarget.style.color = isAyuda
+                    ? (ayudaOn ? '#22c55e' : 'rgba(255,255,255,0.4)')
+                    : '#ffffff'
                 }}
               >
                 {option.label}
               </button>
-            ))}
+              )
+            })}
           </>
         )}
       </div>

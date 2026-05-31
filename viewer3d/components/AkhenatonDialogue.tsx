@@ -49,7 +49,7 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
   const handleOption = (id: number) => {
     setSelectedResponse(getResponses(pilotName)[id])
     setShowOptions(false)
-    setTimeout(() => onClose(), 8000)
+    // ✅ Sin auto-close — el usuario cierra cuando quiera
   }
 
   const handleBack = () => {

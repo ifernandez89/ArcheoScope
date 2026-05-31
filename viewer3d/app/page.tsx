@@ -11,7 +11,7 @@ const LOGO_PATH = process.env.NODE_ENV === 'production'
 
 export default function Home() {
   const router = useRouter()
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState<boolean | null>(null)
 
   useEffect(() => {
     const check = () => setIsMobile(
@@ -55,8 +55,8 @@ export default function Home() {
           src={LOGO_PATH}
           alt="Archeoscope"
           style={{
-            maxWidth: isMobile ? '95vw' : '90vw',
-            maxHeight: isMobile ? '75vh' : '90vh',
+            maxWidth: isMobile === false ? '90vw' : '95vw',
+            maxHeight: isMobile === false ? '90vh' : '75vh',
             objectFit: 'contain',
             filter: 'drop-shadow(0 0 25px rgba(0,255,255,0.4))',
             userSelect: 'none'
@@ -64,8 +64,8 @@ export default function Home() {
         />
       </div>
 
-      {/* Botón Entrar */}
-      {isMobile ? (
+      {/* Botón Entrar — oculto hasta detectar dispositivo para evitar flash */}
+      {isMobile !== null && (isMobile ? (
         /* MOBILE: centrado abajo, ancho generoso, fácil de tocar */
         <button
           onClick={() => router.push('/menu')}
@@ -78,7 +78,7 @@ export default function Home() {
             width: 'min(320px, 80vw)',
             padding: '18px 0',
             fontSize: '18px',
-            fontWeight: 'bold',
+            fontWeight: 'normal',
             color: '#ffffff',
             background: 'rgba(1,22,19,0.85)',
             border: '2px solid rgba(255,255,255,0.7)',
@@ -91,6 +91,7 @@ export default function Home() {
             WebkitTapHighlightColor: 'transparent',
             touchAction: 'manipulation',
             transition: 'all 0.2s ease',
+            minHeight: '56px',
           }}
           onTouchStart={(e) => {
             e.currentTarget.style.background = 'rgba(255,255,255,0.15)'
@@ -127,7 +128,7 @@ export default function Home() {
         >
           Entrar
         </button>
-      )}
+      ))}
     </main>
   )
 }

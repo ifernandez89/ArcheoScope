@@ -1,14 +1,24 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import AlienCursorTrail from '@/components/AlienCursorTrail'
 import WebVitalsInit from '@/components/WebVitalsInit'
 
-// Cargar fuente Spaceport 2006 (reemplaza Archeoscope — prueba visual)
+// Fuente de marca: Spaceport 2006 — títulos, headings, botones de identidad
 const archeoscope = localFont({
   src: '../public/fonts/Spaceport_2006.otf',
   variable: '--font-archeoscope',
   display: 'swap',
+  weight: '400',
+})
+
+// Fuente UI: Inter — body text, labels, descripciones, UI general (WCAG AA)
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
 })
 
 const BASE_PATH = process.env.NODE_ENV === 'production' ? '/ArcheoScope' : ''
@@ -60,8 +70,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className={archeoscope.variable}>
-      <body className={archeoscope.className}>
+    <html lang="es" className={`${archeoscope.variable} ${inter.variable}`}>
+      <body className={inter.className}>
         {children}
         <AlienCursorTrail />
         <WebVitalsInit />
