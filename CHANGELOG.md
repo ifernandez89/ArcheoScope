@@ -5,6 +5,123 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-05-31
+
+### Fixed
+- **Coordenadas — Cuerpos Celestes**: la sección 🪐 (Sol, Mercurio, Venus, etc.) ahora solo aparece en modo globo/espacio. En escenas terrestres (misiones, sitios arqueológicos) el panel muestra únicamente los sitios arqueológicos. Al volver al globo, los cuerpos celestes vuelven a aparecer automáticamente
+
+## [1.1.9] - 2026-05-31
+
+### Added — World Resonance (capa de resonancia subconsciente)
+- **`WorldResonanceSystem.ts`**: nueva capa de audio única y sutil (5-7% de volumen) que aporta una "firma sonora" simbólica por escena/sitio. Diseñada para sentirse, no escucharse — "no sé por qué, pero este lugar se siente diferente"
+- **Frecuencias simbólicas por escena**:
+  - Exploración (globo): 72 Hz (9×8, atención tranquila)
+  - Descubrimiento (sitio sin identificar): 108 Hz (tradición hindú/budista/astronómica)
+  - Giza: 111 Hz (monumentalidad) · Teotihuacán: 104 Hz (aérea) · Isla de Pascua: 63 Hz (oceánica) · Puma Punku: 432 Hz (identidad existente, ganancia muy baja) · Veracruz: 55 Hz (subterránea) · Göbekli Tepe: 45 Hz (integrada con Khepri)
+- **Oscilador sine + sub-octava** con lowpass suave — el sub-grave da "cuerpo" que se siente físicamente
+- **Resonancia temporal**: la frecuencia varía imperceptiblemente con la hora del día (noche -5%, mediodía base) — transición de 20s, el mundo "respira"
+- **Transición suave de 4s** al cambiar de sitio — la frecuencia hace glissando entre escenas
+- **Información**: sección 🌍 World Resonance agregada al menú de Información (visible en mobile y PC)
+- Sincronizado con el volumen master del juego, se libera (`dispose`) al iniciar nueva partida
+
+### Fixed — Ayuda contextual (ProximityHelpDetector)
+- **Bug crítico de distancia**: el detector usaba `distanceTo` 3D — cuando el avatar vuela a Y=10 y las zonas están en Y=0, la distancia era siempre ≥10 y nunca activaba zonas con radio <10. **Fix**: ahora usa distancia XZ únicamente (ignora altura), igual que el Oracle scan del juego
+- **Puma Punku**: radios de bloques aumentados de 7→10 y estructura de 18→22 para compensar
+- **Árboles del entorno**: reemplazadas 8 posiciones hardcodeadas por 16 zonas en anillo interior+exterior (radio 18 c/u) que cubren el área real donde `EnvironmentElements` genera los árboles proceduralmente
+
+### Nota de diseño
+Se eligió una ÚNICA capa derivada de la frecuencia del sitio actual en lugar de múltiples frecuencias permanentes — más limpio, más ligero (1 oscilador) y no satura el mix de HarmoniaMundi. Ganancias ajustadas por frecuencia: las graves (45-72 Hz) se sienten, las agudas (108-432 Hz) se atenúan más para que no se escuchen conscientemente.
+
+## [1.1.8] - 2026-05-31
+
+### Fixed — Ayuda contextual ahora reconoce estructuras, bloques y árboles en sitios
+- **Detección de sitio por coordenadas**: antes `helpZones` dependía solo de `selectedSite?.id`, que es `null` al navegar por coordenadas → en ese caso no se creaba ninguna zona. Ahora hay fallback que detecta el sitio por `selectedLocation` (lat/lon) igual que el resto del juego
+- **Puma Punku**: agregadas zonas para la estructura megalítica (`[8,0,-8]`), los 9 bloques tallados dispersos (rocas, posiciones reales de `extraBlocks`), la Puerta del Sol (`[70,8,60]`) y el geoglifo del Cóndor
+- **Estructuras megalíticas / monumentos**: agregadas zonas amplias para la Gran Pirámide (Giza r60), Moai (Isla de Pascua r40), Pirámide de Teotihuacán (r40)
+- **Árboles del entorno**: 8 zonas en anillo exterior (radio 9) presentes en todos los sitios — reconoce los árboles de `EnvironmentElements`
+- **Nuevos tips**: `megalith` (estructura), `ppBlock` (bloque Puma Punku), `sunGate` (Puerta del Sol)
+- **Calendario Maya (Teo)**: corregida posición de zona de `[0,0,-20]` a `[0,10,-20]` (estaba elevado)
+
+## [1.1.7] - 2026-05-31
+
+### Added
+- **Toast orientativo de zoom**: al viajar a un cuerpo celeste, aparece un mensaje flotante 5s — "🪐 Viajando a [Planeta] · usá la rueda del mouse para acercar/alejar 🔍". Animación de entrada suave, fondo blur, se auto-oculta
+
+### Fixed — Tipografía responsive en todos los diálogos de NPCs
+- **Patrón unificado**: todos los diálogos interactivos ahora usan `clamp()` para tipografía responsive (antes tenían font-sizes hardcodeados que se veían gigantes y desbordaban en mobile)
+- **ViracochaInteractiveDialogue**: nombre 22px → `clamp(18px, 5vw, 22px)`, mensaje 18px → `clamp(14px, 3.5vw, 18px)`, opciones y botón con clamp + `maxHeight: 85vh` + scroll
+- **OlmecInteractiveDialogue**: mismo tratamiento + agregado título "Olmeca" que faltaba
+- **QuetzalcoatlDialogue**: nombre 28px → `clamp(20px, 6vw, 28px)`, mensaje 20px → `clamp(14px, 3.8vw, 20px)` + agregado nombre "Quetzalcóatl" que faltaba
+- **SphinxInteractiveDialogue**: mensaje 24px → `clamp(15px, 4vw, 24px)`, opciones 18px → `clamp(13px, 3.5vw, 18px)`
+- **VeracruzScene/OlmecDialogue**: nombre 26px → `clamp(18px, 5.5vw, 26px)`, mensaje 20px → `clamp(14px, 3.8vw, 20px)` + agregado título "Olmeca"
+- **Touch targets**: todos los botones "Cerrar" ahora tienen `min-height: 44px` (WCAG)
+- **Padding del contenedor**: `30px 40px` fijo → `clamp(18px, 5vw, 36px)` para mejor uso del espacio en mobile
+
+## [1.1.6] - 2026-05-31
+
+### Changed — Menú in-game unificado
+- **InGameMenu (tecla M)**: ahora tiene las mismas opciones generales que el menú principal PC — Nueva, Audio, Video, Controles, Constelaciones, Calendarios, **Ayuda ON/OFF**, Información. Antes solo tenía 4 opciones y faltaba el toggle de Ayuda
+- **Ayuda ON/OFF en escenas terrestres**: ahora accesible desde el menú M dentro de Giza, Teo, Puma Punku, etc. — mismo patrón verde/gris que el menú principal, sincronizado vía evento `help-toggle`
+
+### Fixed — Enfoque de cuerpos celestes (posición real)
+- **Navegación a planetas**: antes usaba posiciones de cámara hardcodeadas que no coincidían con la posición orbital real del planeta (los planetas orbitan en tiempo real) → la nave/cámara quedaba en el vacío
+- **Ahora**: lee la posición REAL del planeta desde su ref (actualizada cada frame), calcula una posición de cámara frente al cuerpo (distancia = radio × 4, lado opuesto al sol, ligeramente elevada) y anima la cámara + el target del OrbitControls con `lerp`
+- **CelestialFocusController**: ahora actualiza el `target` del OrbitControls (antes solo movía la cámara, que OrbitControls revertía al instante)
+- **OrbitControls del globo**: agregado `ref` + `enableDamping` para transiciones suaves
+
+## [1.1.5] - 2026-05-31
+
+### Fixed — Diálogos de NPCs: eliminado auto-close, patrón UX unificado
+- **AkhenatonDialogue**: eliminado `setTimeout(() => onClose(), 8000)` al elegir opción — el usuario cierra cuando quiera
+- **OlmecInteractiveDialogue**: eliminados 3 `setTimeout(() => onClose(), 5000/6000)` — saludo inicial, respuestas y entrega de jade. El timer de 3s para entrar a la cueva se mantiene (es funcional, no cierra el diálogo)
+- **ViracochaInteractiveDialogue**: eliminados `setTimeout(() => onClose(), 5000/6000)` en opciones y el auto-close de 6s del mensaje de agradecimiento
+- **QuetzalcoatlDialogue**: eliminados 3 `setTimeout(() => onClose(), 4000/5000/6000)` en los tres estados del diálogo (pedir semilla, tiene semilla, maíz plantado)
+- **VeracruzScene — OlmecDialogue**: eliminado `setTimeout(onClose, 6000)`
+- **Patrón unificado**: todos los diálogos interactivos ahora tienen solo un botón "Cerrar" visible. El usuario lee a su tiempo y cierra cuando quiere
+- **Nota**: `SphinxDialogue` y `ViracochaDialogue` son notificaciones flotantes de sistema (no interactivas) — mantienen su comportamiento auto-dismiss por diseño
+
+## [1.1.4] - 2026-05-31
+
+### Added
+- **Botón Coordenadas — rediseño reactivo**: color cambia según estado del juego (verde=todas misiones, dorado=progreso, rojo=tormenta, azul=default). Pulso animado cada 4s en modo globo. Ícono 🧭 + contador de misiones completadas. Glow dinámico
+- **Cuerpos Celestes en panel de navegación**: nueva sección "🪐 CUERPOS CELESTES" con Sol, Mercurio, Venus, Tierra, Luna, Marte, Júpiter, Saturno, Urano, Neptuno y Plutón. Al hacer click, la cámara del Sistema Solar se anima suavemente hacia una posición cercana al cuerpo celeste seleccionado
+- **CelestialFocusController**: componente Three.js dentro del Canvas que interpola la cámara con `lerp` hacia el planeta objetivo usando `useFrame`
+- **Sitios arqueológicos con nombre**: los sitios ahora muestran nombre + emoji (Puma Punku, Giza, Teotihuacán, etc.) en lugar de solo coordenadas. Agregado Göbekli Tepe
+
+## [1.1.3] - 2026-05-31
+
+### Performance — Compresión masiva de modelos GLB (Draco + WebP)
+- **calendario_maya.glb**: 49.9 MB → 1.79 MB (-96.4%)
+- **quetzalcoatl.glb**: 30.6 MB → 1.13 MB (-96.3%)
+- **mictlantecuhtli.glb**: 42.1 MB → 1.41 MB (-96.7%)
+- **atlante.glb**: 33.4 MB → 1.00 MB (-97.0%)
+- **akenaton.glb**: 13.6 MB → 0.80 MB (-94.1%)
+- **ramses2.glb**: 12.1 MB → 0.67 MB (-94.5%)
+- **hatshepsut.glb**: 11.8 MB → 0.50 MB (-95.8%)
+- **lanzon_chavin.glb**: 11.2 MB → 0.33 MB (-97.1%)
+- **fuente_magna.glb**: 11.1 MB → 0.53 MB (-95.2%)
+- **Total ahorrado**: ~215 MB → ~8 MB en los 9 modelos más pesados
+- Herramienta: `@gltf-transform/cli optimize --compress draco --texture-compress webp`
+
+### Fixed
+- **Flash PC→Mobile en menú**: `isMobile` ahora inicializa como `null` (no `false`). El menú se oculta hasta que la detección del dispositivo se completa en el cliente, eliminando el flash del layout PC que aparecía por un instante en mobile
+- **Flash en landing (Entrar)**: mismo fix aplicado a `app/page.tsx` — el botón Entrar se oculta hasta detectar el dispositivo
+- **Tipografía — Design System**: Inter como fuente UI (body, labels, descripciones) + Spaceport para brand headings. `globals.css` reescrito con sistema de spacing 8px, WCAG AA, touch targets 56px, `clamp()` responsive, `:focus-visible`, utilidades de spacing
+- **Botón "FINALIZAR TUTORIAL"**: `font-weight: normal` (Spaceport no tiene variante bold — faux bold distorsionaba los glifos). Ahora coincide visualmente con el h1 "TRAINING ROOM"
+
+## [1.1.2] - 2026-05-31
+
+### Added
+- **AGENTS.md**: guía completa para agentes de IA — convenciones, reglas absolutas, skills obligatorias, estructura del proyecto, flujo de trabajo, errores conocidos, posiciones NPC, sistema de audio, estado persistente, checklist pre-commit
+- **Sistema de Ayuda Contextual** — botón `?` flotante que aparece al acercarse a objetos en Training Room y escenas terrestres
+  - `helpTips.json` — 30+ tips para rocas, árboles, portales, NPCs (Esfinge, Viracocha, Quetzalcóatl, Atlante, etc.), geoglifos, ítems coleccionables, monumentos, agua, cuevas
+  - `helpSystem.ts` — toggle global en `localStorage` con evento `help-toggle` para sincronización reactiva
+  - `ProximityHelpDetector.tsx` — componente Three.js (dentro del Canvas) que detecta la zona más cercana cada 10 frames usando `distanceTo()`
+  - `HelpBubble.tsx` — botón `?` animado (pulse dorado) + diálogo desplegable con ícono, título y tip. Se cierra solo al alejarse del objeto
+  - **Training Room**: zonas de ayuda para cada roca y árbol con radio 10-12 unidades
+  - **ImmersiveScene**: zonas por sitio (Giza, Puma Punku, Isla de Pascua, Teotihuacán, Tres Zapotes, Göbekli Tepe) con posiciones exactas de NPCs
+  - **Menú PC**: opción "Ayuda ON/OFF" — verde cuando activa, gris cuando desactivada. Persiste en `localStorage`
+
 ## [1.1.1] - 2026-05-07
 
 ### Added
@@ -58,7 +175,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Calendarios mobile**: tipografía de textos descriptivos aumentada 2-3 puntos en Cholq'ij, Tzolk'in Clásico y Tzolk'in simple — mejora legibilidad en dispositivos móviles
 - **globals.css**: `.text-responsive` base aumentada de 14px a 16px
->>>>>>> 4898e143e25be8ea08a7aa5e44dc8aed290cae51
 
 ## [1.0.6] - 2026-05-03
 

@@ -79,23 +79,25 @@ export default function ViracochaInteractiveDialogue({
           background: 'rgba(20, 15, 10, 0.95)',
           border: `2px solid ${ACCENT}`,
           borderRadius: '12px',
-          padding: '30px 40px',
+          padding: 'clamp(18px, 5vw, 36px)',
           maxWidth: '620px',
           width: '90%',
+          maxHeight: '85vh',
+          overflowY: 'auto',
           boxShadow: `0 0 30px rgba(255, 215, 0, 0.6)`,
           animation: 'scaleIn 0.3s ease-out'
         }}
       >
         {/* Icono */}
-        <div style={{ textAlign: 'center', marginBottom: '15px', fontSize: '42px' }}>🗿</div>
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(8px, 2vw, 15px)', fontSize: 'clamp(32px, 8vw, 42px)' }}>🗿</div>
 
         {/* Nombre */}
         <div style={{
           color: ACCENT,
-          fontSize: '22px',
+          fontSize: 'clamp(18px, 5vw, 22px)',
           fontWeight: 'bold',
           textAlign: 'center',
-          marginBottom: '20px',
+          marginBottom: 'clamp(12px, 3vw, 20px)',
           fontFamily: '"Cinzel", "Trajan Pro", serif',
           letterSpacing: '3px',
           textShadow: `0 0 10px rgba(255, 215, 0, 0.8)`,
@@ -106,9 +108,9 @@ export default function ViracochaInteractiveDialogue({
         {/* Mensaje */}
         <div style={{
           color: '#ffffff',
-          fontSize: '18px',
+          fontSize: 'clamp(14px, 3.5vw, 18px)',
           textAlign: 'center',
-          marginBottom: showOptions && !selectedResponse ? '25px' : '0',
+          marginBottom: showOptions && !selectedResponse ? 'clamp(16px, 4vw, 25px)' : '0',
           fontFamily: '"Cinzel", serif',
           letterSpacing: '1px',
           lineHeight: '1.6',
@@ -128,7 +130,7 @@ export default function ViracochaInteractiveDialogue({
                   key={opt.id}
                   onClick={() => handleOption(opt.id)}
                   style={{
-                    padding: '14px 22px', fontSize: '16px',
+                    padding: 'clamp(11px, 3vw, 14px) clamp(14px, 4vw, 22px)', fontSize: 'clamp(13px, 3.5vw, 16px)',
                     color: isLend ? '#00ff88' : ACCENT,
                     background: isLend ? 'rgba(0,255,136,0.1)' : `rgba(255,215,0,0.1)`,
                     border: `2px solid ${isLend ? '#00ff88' : ACCENT}`,
@@ -160,11 +162,12 @@ export default function ViracochaInteractiveDialogue({
           <button
             onClick={onClose}
             style={{
-              marginTop: '20px', padding: '10px 30px', fontSize: '16px',
+              marginTop: '20px', padding: '10px 30px', fontSize: 'clamp(14px, 3.5vw, 16px)',
               color: ACCENT, background: 'transparent',
               border: `2px solid ${ACCENT}`, borderRadius: '8px',
               cursor: 'pointer', fontFamily: '"Cinzel", serif',
               letterSpacing: '2px', display: 'block', margin: '20px auto 0',
+              minHeight: '44px',
               transition: 'all 0.3s ease'
             }}
             onMouseEnter={(e) => { e.currentTarget.style.background = ACCENT; e.currentTarget.style.color = '#000' }}

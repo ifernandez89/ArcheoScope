@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { loadGameSettings, updateAudioSettings } from '@/types/gameSettings'
 import { resetPlayerState } from '@/types/player'
 import { resetMissionState } from '@/types/missionState'
+import { isHelpEnabled, toggleHelp } from '@/systems/helpSystem'
 
 interface InGameMenuProps {
   isOpen: boolean
@@ -16,6 +17,7 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
   const [showAudioSettings, setShowAudioSettings] = useState(false)
   const [masterVolume, setMasterVolume] = useState(70)   // Clima + efectos
   const [harmoniaVolume, setHarmoniaVolume] = useState(70) // Música de esferas
+  const [helpOn, setHelpOn] = useState(true)
 
   // Cargar volumen guardado cuando se abre el menú
   useEffect(() => {
@@ -23,12 +25,20 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
       const settings = loadGameSettings()
       setMasterVolume(Math.round(settings.audio.masterVolume * 100))
       setHarmoniaVolume(Math.round((settings.audio.musicVolume ?? 0.7) * 100))
+      setHelpOn(isHelpEnabled())
       console.log('🔊 Volúmenes cargados en InGameMenu:', {
         master: settings.audio.masterVolume,
         harmonia: settings.audio.musicVolume
       })
     }
   }, [isOpen])
+
+  // Sincronizar estado de ayuda con eventos externos
+  useEffect(() => {
+    const handler = (e: Event) => setHelpOn((e as CustomEvent).detail.enabled)
+    window.addEventListener('help-toggle', handler)
+    return () => window.removeEventListener('help-toggle', handler)
+  }, [])
 
   // Cerrar con ESC
   useEffect(() => {
@@ -283,12 +293,16 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
     )
   }
 
-  // Menú principal
+  // Menú principal — mismas opciones generales que el menú principal del juego
   const menuOptions = [
-    { label: 'Nueva', action: handleNewGame },
-    { label: 'Audio', action: () => setShowAudioSettings(true) },
-    { label: 'Controles', action: () => router.push('/menu/controls') },
-    { label: 'Información', action: () => router.push('/menu/info') }
+    { label: 'Nueva', action: handleNewGame, isHelp: false },
+    { label: 'Audio', action: () => setShowAudioSettings(true), isHelp: false },
+    { label: 'Video', action: () => router.push('/menu/video'), isHelp: false },
+    { label: 'Controles', action: () => router.push('/menu/controls'), isHelp: false },
+    { label: 'Constelaciones', action: () => router.push('/constellations'), isHelp: false },
+    { label: 'Calendarios', action: () => router.push('/menu/calendarios'), isHelp: false },
+    { label: helpOn ? 'Ayuda ON' : 'Ayuda OFF', action: () => { const next = toggleHelp(); setHelpOn(next) }, isHelp: true },
+    { label: 'Información', action: () => router.push('/menu/info'), isHelp: false }
   ]
 
   return (
@@ -313,15 +327,18 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '20px',
-          alignItems: 'center'
+          gap: '12px',
+          alignItems: 'center',
+          maxHeight: '100vh',
+          overflowY: 'auto',
+          padding: '20px 0',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <h1 style={{
           color: '#ffffff',
-          fontSize: '48px',
-          margin: '0 0 20px 0',
+          fontSize: '40px',
+          margin: '0 0 12px 0',
           letterSpacing: '4px',
           textTransform: 'uppercase',
           fontFamily: 'Archeoscope, serif'
@@ -329,37 +346,46 @@ export default function InGameMenu({ isOpen, onClose }: InGameMenuProps) {
           Menú
         </h1>
 
-        {menuOptions.map((option) => (
-          <button
-            key={option.label}
-            onClick={option.action}
-            style={{
-              padding: '20px 80px',
-              fontSize: '24px',
-              fontWeight: 'bold',
-              color: '#ffffff',
-              background: 'transparent',
-              border: '2px solid #ffffff',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              fontFamily: 'inherit',
-              letterSpacing: '2px',
-              textTransform: 'uppercase',
-              minWidth: '350px'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#ffffff'
-              e.currentTarget.style.color = '#000000'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent'
-              e.currentTarget.style.color = '#ffffff'
-            }}
-          >
-            {option.label}
-          </button>
-        ))}
+        {menuOptions.map((option) => {
+          const ayudaOn = option.label === 'Ayuda ON'
+          return (
+            <button
+              key={option.label}
+              onClick={option.action}
+              style={{
+                padding: '14px 60px',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                color: option.isHelp ? (ayudaOn ? '#22c55e' : 'rgba(255,255,255,0.4)') : '#ffffff',
+                background: 'transparent',
+                border: `2px solid ${option.isHelp ? (ayudaOn ? '#22c55e' : 'rgba(255,255,255,0.25)') : '#ffffff'}`,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                fontFamily: 'inherit',
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+                minWidth: '350px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = option.isHelp
+                  ? (ayudaOn ? '#22c55e' : 'rgba(255,255,255,0.15)')
+                  : '#ffffff'
+                e.currentTarget.style.color = option.isHelp
+                  ? (ayudaOn ? '#000000' : '#ffffff')
+                  : '#000000'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+                e.currentTarget.style.color = option.isHelp
+                  ? (ayudaOn ? '#22c55e' : 'rgba(255,255,255,0.4)')
+                  : '#ffffff'
+              }}
+            >
+              {option.label}
+            </button>
+          )
+        })}
 
         <div style={{
           color: '#888888',

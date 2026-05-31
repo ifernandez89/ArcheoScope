@@ -244,21 +244,72 @@ export default function RealisticSolarSystem({
     }
   }, [scene])
   
-  // 🎯 Escuchar evento celestial-focus para mover la cámara al planeta seleccionado
+  // 🎯 Escuchar evento celestial-focus — mueve la cámara FRENTE al planeta real
+  // Lee la posición actual del planeta desde su ref (actualizada cada frame por la órbita)
   useEffect(() => {
-    const { camera } = (window as any).__r3f_camera_ref || {}
-    
-    const handleCelestialFocus = (e: Event) => {
-      const detail = (e as CustomEvent).detail as {
-        id: string
-        cameraPos: { x: number; y: number; z: number }
-        target: { x: number; y: number; z: number }
-      }
-      
-      // Emitir evento interno para que el OrbitControls lo procese
-      window.dispatchEvent(new CustomEvent('celestial-focus-internal', { detail }))
+    // Mapa id → ref del planeta (posiciones vivas)
+    const planetRefs: Record<string, React.RefObject<THREE.Group>> = {
+      mercury: mercuryRef,
+      venus: venusRef,
+      earth: earthGroupRef,
+      moon: moonRef,
+      mars: marsRef,
+      jupiter: jupiterRef,
+      saturn: saturnRef,
+      uranus: uranusRef,
+      neptune: neptuneRef,
+      pluto: plutoRef,
     }
-    
+
+    // Radio aproximado de cada cuerpo (para calcular distancia de cámara frente a él)
+    const bodyRadius: Record<string, number> = {
+      sun: 12, mercury: 1.2, venus: 2.2, earth: 2.4, moon: 0.8,
+      mars: 1.6, jupiter: 6, saturn: 5.5, uranus: 3.5, neptune: 3.4, pluto: 0.8,
+    }
+
+    const handleCelestialFocus = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { id: string }
+      const id = detail.id
+
+      // Posición real del cuerpo
+      const bodyPos = new THREE.Vector3()
+      if (id === 'sun') {
+        bodyPos.set(0, 0, 0) // El sol está en el centro
+      } else {
+        const ref = planetRefs[id]
+        if (ref?.current) {
+          ref.current.getWorldPosition(bodyPos)
+        } else {
+          return // planeta no encontrado
+        }
+      }
+
+      // Calcular posición de cámara FRENTE al planeta
+      // Vector desde el centro del sistema (origen) hacia el planeta, normalizado
+      const radius = bodyRadius[id] ?? 2
+      const dirFromCenter = bodyPos.clone()
+      if (dirFromCenter.lengthSq() < 0.001) {
+        dirFromCenter.set(0, 0, 1) // fallback para el sol
+      } else {
+        dirFromCenter.normalize()
+      }
+
+      // La cámara se coloca "afuera" del planeta (lado opuesto al sol) + un poco elevada
+      // Distancia = radio del cuerpo × 4 (para verlo completo con margen)
+      const camDistance = Math.max(radius * 4, 8)
+      const cameraPos = bodyPos.clone()
+        .add(dirFromCenter.clone().multiplyScalar(camDistance))   // afuera
+        .add(new THREE.Vector3(0, radius * 1.2, 0))               // un poco arriba
+
+      // Emitir posiciones REALES calculadas al controlador de cámara
+      window.dispatchEvent(new CustomEvent('celestial-focus-internal', {
+        detail: {
+          cameraPos: { x: cameraPos.x, y: cameraPos.y, z: cameraPos.z },
+          target: { x: bodyPos.x, y: bodyPos.y, z: bodyPos.z },
+        }
+      }))
+    }
+
     window.addEventListener('celestial-focus', handleCelestialFocus)
     return () => window.removeEventListener('celestial-focus', handleCelestialFocus)
   }, [])
