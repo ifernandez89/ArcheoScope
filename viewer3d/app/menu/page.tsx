@@ -84,6 +84,10 @@ export default function MenuPage() {
           try { getHarmoniaMundi().dispose() } catch {}
         }).catch(() => {})
 
+        import('@/systems/WorldResonanceSystem').then(({ getWorldResonance }) => {
+          try { getWorldResonance().dispose() } catch {}
+        }).catch(() => {})
+
         // Fallback: suspender todos los AudioContext del navegador
         // @ts-ignore — acceso a propiedad no estándar pero funcional
         if (window.AudioContext || (window as any).webkitAudioContext) {

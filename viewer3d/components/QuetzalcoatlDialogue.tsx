@@ -58,15 +58,17 @@ export default function QuetzalcoatlDialogue({
           background: 'rgba(20, 40, 20, 0.95)',
           border: '2px solid #7cfc00',
           borderRadius: '12px',
-          padding: '30px 40px',
+          padding: 'clamp(18px, 5vw, 36px)',
           maxWidth: '600px',
           width: '90%',
+          maxHeight: '85vh',
+          overflowY: 'auto',
           boxShadow: '0 0 30px rgba(124, 252, 0, 0.6)',
           animation: 'scaleIn 0.3s ease-out'
         }}
       >
         {/* Icono de Quetzalcoatl */}
-        <div style={{ textAlign: 'center', marginBottom: '20px', fontSize: '48px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(12px, 3vw, 20px)', fontSize: 'clamp(36px, 9vw, 48px)' }}>
           🐍
         </div>
         
@@ -74,25 +76,26 @@ export default function QuetzalcoatlDialogue({
         <div
           style={{
             color: '#7cfc00',
-            fontSize: '28px',
+            fontSize: 'clamp(20px, 6vw, 28px)',
             fontWeight: 'bold',
             textAlign: 'center',
-            marginBottom: '20px',
+            marginBottom: 'clamp(12px, 3vw, 20px)',
             fontFamily: '"Cinzel", "Trajan Pro", "Times New Roman", serif',
             letterSpacing: '3px',
             textShadow: '0 0 10px rgba(124, 252, 0, 0.8)',
           }}
         >
+          Quetzalcóatl
         </div>
 
         {/* Mensaje principal */}
         <div
           style={{
             color: '#ffffff',
-            fontSize: '20px',
+            fontSize: 'clamp(14px, 3.8vw, 20px)',
             fontWeight: 'normal',
             textAlign: 'center',
-            marginBottom: '20px',
+            marginBottom: 'clamp(12px, 3vw, 20px)',
             fontFamily: '"Cinzel", "Trajan Pro", "Times New Roman", serif',
             letterSpacing: '1px',
             lineHeight: '1.6',
@@ -108,7 +111,7 @@ export default function QuetzalcoatlDialogue({
           style={{
             marginTop: '20px',
             padding: '10px 30px',
-            fontSize: '16px',
+            fontSize: 'clamp(14px, 3.5vw, 16px)',
             color: '#7cfc00',
             background: 'transparent',
             border: '2px solid #7cfc00',
@@ -118,7 +121,8 @@ export default function QuetzalcoatlDialogue({
             fontFamily: '"Cinzel", "Trajan Pro", "Times New Roman", serif',
             letterSpacing: '2px',
             display: 'block',
-            margin: '20px auto 0'
+            margin: '20px auto 0',
+            minHeight: '44px'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = '#7cfc00'

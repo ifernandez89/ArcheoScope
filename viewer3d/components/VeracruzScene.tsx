@@ -188,33 +188,35 @@ export function OlmecDialogue({ onClose }: { onClose: () => void }) {
           background: 'rgba(20, 15, 10, 0.95)',
           border: '2px solid #c8860a',
           borderRadius: '12px',
-          padding: '30px 40px',
+          padding: 'clamp(18px, 5vw, 36px)',
           maxWidth: '600px',
           width: '90%',
+          maxHeight: '85vh',
+          overflowY: 'auto',
           boxShadow: '0 0 30px rgba(200, 134, 10, 0.6)',
           animation: 'scaleIn 0.3s ease-out'
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '20px', fontSize: '48px' }}>🗿</div>
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(12px, 3vw, 20px)', fontSize: 'clamp(36px, 9vw, 48px)' }}>🗿</div>
 
         <div style={{
           color: '#c8860a',
-          fontSize: '26px',
+          fontSize: 'clamp(18px, 5.5vw, 26px)',
           fontWeight: 'bold',
           textAlign: 'center',
-          marginBottom: '20px',
+          marginBottom: 'clamp(12px, 3vw, 20px)',
           fontFamily: '"Cinzel", "Trajan Pro", serif',
           letterSpacing: '3px',
           textShadow: '0 0 10px rgba(200, 134, 10, 0.8)',
         }}>
-          
+          Olmeca
         </div>
 
         <div style={{
           color: '#ffffff',
-          fontSize: '20px',
+          fontSize: 'clamp(14px, 3.8vw, 20px)',
           textAlign: 'center',
-          marginBottom: '20px',
+          marginBottom: 'clamp(12px, 3vw, 20px)',
           fontFamily: '"Cinzel", serif',
           letterSpacing: '1px',
           lineHeight: '1.6',
@@ -228,7 +230,7 @@ export function OlmecDialogue({ onClose }: { onClose: () => void }) {
           style={{
             marginTop: '10px',
             padding: '10px 30px',
-            fontSize: '16px',
+            fontSize: 'clamp(14px, 3.5vw, 16px)',
             color: '#c8860a',
             background: 'transparent',
             border: '2px solid #c8860a',
@@ -238,6 +240,7 @@ export function OlmecDialogue({ onClose }: { onClose: () => void }) {
             letterSpacing: '2px',
             display: 'block',
             margin: '10px auto 0',
+            minHeight: '44px',
             transition: 'all 0.3s ease'
           }}
           onMouseEnter={(e) => { e.currentTarget.style.background = '#c8860a'; e.currentTarget.style.color = '#000' }}

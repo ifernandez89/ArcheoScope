@@ -160,6 +160,37 @@ function getStormWeather(siteName?: string | null): WeatherState {
   return _isMobileDevice ? MOBILE_STORM_WEATHER : DEFAULT_STORM_WEATHER
 }
 
+// 🌍 Mapear estado del juego → escena de World Resonance (frecuencia simbólica)
+type WRScene = import('@/systems/WorldResonanceSystem').ResonanceScene
+function resonanceSceneFromState(
+  mode: string,
+  site: ArchaeologicalSite | null,
+  location: { lat: number, lon: number } | null
+): WRScene {
+  if (mode === 'globe' || mode === 'transition') return 'exploration'
+
+  // Detectar sitio por id o por coordenadas
+  const id = site?.id || ''
+  if (id === 'pyramids-giza' || id === 'giza') return 'giza'
+  if (id === 'teotihuacan') return 'teotihuacan'
+  if (id === 'moai-easter-island' || id === 'easter-island') return 'easter-island'
+  if (id === 'puma-punku' || id === 'pumaPunku') return 'puma-punku'
+  if (id === 'tres-zapotes' || id === 'veracruz') return 'veracruz'
+  if (id === 'gobekli-tepe') return 'gobekli-tepe'
+
+  if (location) {
+    const { lat, lon } = location
+    if (Math.abs(lat - 29.9792) < 0.1 && Math.abs(lon - 31.1342) < 0.1) return 'giza'
+    if (Math.abs(lat - 19.6925) < 0.1 && Math.abs(lon - (-98.8438)) < 0.1) return 'teotihuacan'
+    if (Math.abs(lat - (-27.1254)) < 0.2 && Math.abs(lon - (-109.2778)) < 0.2) return 'easter-island'
+    if (Math.abs(lat - (-16.5616)) < 0.2 && Math.abs(lon - (-68.6795)) < 0.2) return 'puma-punku'
+    if (lat > -16.5 && lat < -15.5 && lon > -70 && lon < -68.5) return 'puma-punku'
+    if (Math.abs(lat - 18.4667) < 0.1 && Math.abs(lon - (-95.4500)) < 0.1) return 'veracruz'
+    if (Math.abs(lat - 37.2231) < 0.1 && Math.abs(lon - 38.9225) < 0.1) return 'gobekli-tepe'
+  }
+  return 'discovery' // sitio terrestre sin identificar → descubrimiento
+}
+
 export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeChange, spaceUfoActive = false, spaceUfoNumber = 1 }: ImmersiveSceneProps) {
   // Detectar mobile
   const [isMobile, setIsMobile] = useState(false)
@@ -255,6 +286,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         const engine = new SolarEngine(selectedLocation.lat, selectedLocation.lon)
         const state = engine.calculateSolarState()
         setIsDay(state.isDay)
+        // 🌍 World Resonance — resonancia temporal según altura solar
+        import('@/systems/WorldResonanceSystem').then(({ getWorldResonance }) => {
+          const wr = getWorldResonance()
+          if (wr.isEnabled() && state.solarAltitude !== undefined) {
+            // solarAltitude ya viene en radianes
+            wr.setTimeOfDay(state.solarAltitude)
+          }
+        }).catch(() => {})
       } catch {}
     }
     update() // inmediato
@@ -265,11 +304,34 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [cameraRotation, setCameraRotation] = useState(0) // Rotación de la cámara para la brújula
   const [nearestHelpZone, setNearestHelpZone] = useState<HelpZone | null>(null)
 
+  // 🌍 World Resonance — actualizar escena al cambiar de sitio/modo
+  useEffect(() => {
+    import('@/systems/WorldResonanceSystem').then(({ getWorldResonance }) => {
+      const wr = getWorldResonance()
+      if (wr.isEnabled()) {
+        wr.setScene(resonanceSceneFromState(mode, selectedSite, selectedLocation))
+      }
+    }).catch(() => {})
+  }, [mode, selectedSite?.id, selectedLocation?.lat, selectedLocation?.lon])
+
   // ── Help zones por sitio ─────────────────────────────────────────────────
   const helpZones = useMemo<HelpZone[]>(() => {
     if (mode !== 'model') return []
     const tips = helpTipsData as Record<string, { icon: string; title: string; tip: string }>
-    const siteId = selectedSite?.id || ''
+
+    // Detectar sitio por id O por coordenadas (cuando se navega por coordenadas selectedSite es null)
+    let siteId = selectedSite?.id || ''
+    if (!siteId && selectedLocation) {
+      const { lat, lon } = selectedLocation
+      if (Math.abs(lat - 29.9792) < 0.1 && Math.abs(lon - 31.1342) < 0.1) siteId = 'giza'
+      else if (Math.abs(lat - (-16.5616)) < 0.2 && Math.abs(lon - (-68.6795)) < 0.2) siteId = 'puma-punku'
+      else if (lat > -16.5 && lat < -15.5 && lon > -70 && lon < -68.5) siteId = 'puma-punku' // Titicaca
+      else if (Math.abs(lat - 19.6925) < 0.1 && Math.abs(lon - (-98.8438)) < 0.1) siteId = 'teotihuacan'
+      else if (Math.abs(lat - (-27.1254)) < 0.2 && Math.abs(lon - (-109.2778)) < 0.2) siteId = 'easter-island'
+      else if (Math.abs(lat - 18.4667) < 0.1 && Math.abs(lon - (-95.4500)) < 0.1) siteId = 'tres-zapotes'
+      else if (Math.abs(lat - 37.2231) < 0.1 && Math.abs(lon - 38.9225) < 0.1) siteId = 'gobekli-tepe'
+    }
+
     const zones: HelpZone[] = []
 
     if (siteId === 'pyramids-giza' || siteId === 'giza') {
@@ -280,25 +342,38 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         { id: 'akhenaten',       position: [0, 0, 0],      radius: 20, tip: tips.akhenaten },
         { id: 'mummy',           position: [-72, 0, -2],   radius: 20, tip: tips.mummy },
         { id: 'geoglifo-arana',  position: [-83, 0, -67],  radius: 18, tip: tips.geoglifo },
+        { id: 'piramide',        position: [0, 0, 0],      radius: 60, tip: tips.monument },
       )
     } else if (siteId === 'puma-punku' || siteId === 'pumaPunku') {
       zones.push(
-        { id: 'viracocha',    position: [14.5, 0, 0.83], radius: 22, tip: tips.viracocha },
-        { id: 'fuenteMagna',  position: [0, 0, 0],       radius: 20, tip: tips.fuenteMagna },
-        { id: 'condor',       position: [-83, 0, -67],   radius: 18, tip: tips.geoglifo },
-        { id: 'portal-pp',    position: [0, 0, 30],      radius: 12, tip: tips.puertaDelSol },
+        { id: 'viracocha',    position: [14.5, 0, 0.83], radius: 25, tip: tips.viracocha },
+        { id: 'estructura',   position: [8, 0, -8],      radius: 22, tip: tips.megalith },
+        { id: 'sunGate',      position: [70, 8, 60],     radius: 28, tip: tips.sunGate },
+        { id: 'condor',       position: [-83, 0, -67],   radius: 22, tip: tips.geoglifo },
+        // Bloques megalíticos — radio aumentado para compensar diferencia de altura Y
+        { id: 'pp-block-c',   position: [0, 0, 0],       radius: 12, tip: tips.ppBlock },
+        { id: 'pp-b1',        position: [-12, 0, 8],     radius: 10, tip: tips.ppBlock },
+        { id: 'pp-b2',        position: [15, 0, -6],     radius: 10, tip: tips.ppBlock },
+        { id: 'pp-b3',        position: [-8, 0, -18],    radius: 10, tip: tips.ppBlock },
+        { id: 'pp-b4',        position: [20, 0, 14],     radius: 10, tip: tips.ppBlock },
+        { id: 'pp-b5',        position: [-20, 0, -10],   radius: 10, tip: tips.ppBlock },
+        { id: 'pp-b6',        position: [6, 0, 22],      radius: 10, tip: tips.ppBlock },
+        { id: 'pp-b7',        position: [-16, 0, 18],    radius: 10, tip: tips.ppBlock },
+        { id: 'pp-b8',        position: [10, 0, -22],    radius: 10, tip: tips.ppBlock },
       )
     } else if (siteId === 'moai-easter-island' || siteId === 'easter-island') {
       zones.push(
         { id: 'hotuMatua', position: [0, 0, 0],    radius: 25, tip: tips.hotuMatua },
         { id: 'merkaba',   position: [0, 0, 0],    radius: 18, tip: tips.merkaba },
         { id: 'ballena',   position: [-55, 0, 55], radius: 18, tip: tips.geoglifo },
+        { id: 'moai',      position: [0, 0, 0],    radius: 40, tip: tips.monument },
       )
     } else if (siteId === 'teotihuacan') {
       zones.push(
         { id: 'quetzalcoatl',    position: [0, 0, 0],     radius: 25, tip: tips.quetzalcoatl },
-        { id: 'calendarioMaya',  position: [0, 0, -20],   radius: 20, tip: tips.calendarioMaya },
+        { id: 'calendarioMaya',  position: [0, 10, -20],  radius: 20, tip: tips.calendarioMaya },
         { id: 'colibri',         position: [-83, 0, -67], radius: 18, tip: tips.geoglifo },
+        { id: 'piramide-teo',    position: [0, 0, -20],   radius: 40, tip: tips.monument },
       )
     } else if (siteId === 'tres-zapotes') {
       zones.push(
@@ -313,13 +388,30 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       )
     }
 
-    // Portal genérico (todos los sitios excepto Puma Punku que ya lo tiene)
-    if (siteId !== 'puma-punku' && siteId !== 'pumaPunku') {
+    // Portal genérico (solo si no es un sitio con portal propio)
+    if (siteId !== 'puma-punku' && siteId !== 'pumaPunku' && siteId !== '') {
       zones.push({ id: 'portal-generic', position: [0, 0, 30], radius: 10, tip: tips.portal })
     }
 
+    // Árboles del entorno — EnvironmentElements los genera proceduralmente en radio 15-60.
+    // Usamos zonas grandes que cubren el anillo completo donde aparecen los árboles.
+    // Radio 18 por zona + posiciones en anillo interior/exterior = cobertura total.
+    if (siteId !== '') {
+      const treeZones: Array<[number, number, number]> = [
+        // Anillo interior (radio ~20)
+        [20, 0, 0], [-20, 0, 0], [0, 0, 20], [0, 0, -20],
+        [14, 0, 14], [-14, 0, 14], [14, 0, -14], [-14, 0, -14],
+        // Anillo exterior (radio ~40)
+        [40, 0, 0], [-40, 0, 0], [0, 0, 40], [0, 0, -40],
+        [28, 0, 28], [-28, 0, 28], [28, 0, -28], [-28, 0, -28],
+      ]
+      treeZones.forEach((pos, i) => {
+        zones.push({ id: `tree-env-${i}`, position: pos, radius: 18, tip: tips.tree })
+      })
+    }
+
     return zones
-  }, [mode, selectedSite?.id])
+  }, [mode, selectedSite?.id, selectedLocation?.lat, selectedLocation?.lon])
   const [showSphinxDialogue, setShowSphinxDialogue] = useState(false)
   const [showAkhenatonDialogue, setShowAkhenatonDialogue] = useState(false)
 
@@ -401,6 +493,11 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
         const harmonia = getHarmoniaMundi()
         harmonia.setMasterVolume(volume)
+      })
+
+      // 🌍 World Resonance (capa subconsciente)
+      import('@/systems/WorldResonanceSystem').then(({ getWorldResonance }) => {
+        getWorldResonance().setMasterVolume(volume)
       })
 
       console.log('🔊 Volumen aplicado a todos los sistemas:', volume)
@@ -1135,6 +1232,13 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           harmonia.unlockMissionLayer(`earth_mission_${i}`)
         }
         loggers.world.info(`🎵 ${totalCompleted} capas de misión restauradas`)
+
+        // 🌍 World Resonance — capa subconsciente por escena/sitio
+        const { getWorldResonance } = await import('@/systems/WorldResonanceSystem')
+        const wr = getWorldResonance()
+        await wr.enable(resonanceSceneFromState(mode, selectedSiteRef.current, selectedLocationRef.current))
+        wr.setMasterVolume(vol)
+        loggers.world.info('🌍 World Resonance habilitado')
 
         window.removeEventListener('click', enableAudioOnInteraction)
         window.removeEventListener('keydown', enableAudioOnInteraction)
@@ -2234,6 +2338,7 @@ function GlobeScene({
   spaceUfoActive?: boolean
   spaceUfoNumber?: number
 }) {
+  const globeOrbitRef = useRef<any>(null)
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <CelestialOverlayHUD />
@@ -2249,14 +2354,16 @@ function GlobeScene({
 
         <PerspectiveCamera makeDefault position={[0, 0, 15]} fov={50} />
         <OrbitControls
-          enableDamping={false}
+          ref={globeOrbitRef}
+          enableDamping={true}
+          dampingFactor={0.08}
           minDistance={8}
           maxDistance={8000} // Neptuno está a ~6010 unidades (30.05 AU × 200)
           autoRotate={false}
         />
 
         {/* 🎯 Controlador de foco en cuerpos celestes */}
-        <CelestialFocusController />
+        <CelestialFocusController orbitRef={globeOrbitRef} />
 
         {/* Sistema de Zoom Narrativo */}
         <NarrativeZoomContent
@@ -2279,14 +2386,15 @@ function GlobeScene({
 /**
  * CelestialFocusController — componente dentro del Canvas que escucha
  * el evento 'celestial-focus-internal' y anima la cámara suavemente
- * hacia el cuerpo celeste seleccionado.
+ * hacia el cuerpo celeste seleccionado, actualizando también el target
+ * del OrbitControls para que la cámara quede mirando al planeta.
  */
-function CelestialFocusController() {
+function CelestialFocusController({ orbitRef }: { orbitRef?: React.RefObject<any> }) {
   const { camera } = useThree()
   const targetPos = useRef<THREE.Vector3 | null>(null)
   const targetLook = useRef<THREE.Vector3 | null>(null)
   const animating = useRef(false)
-  const tmpVec = useRef(new THREE.Vector3())
+  const tmpLook = useRef(new THREE.Vector3())
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -2305,16 +2413,24 @@ function CelestialFocusController() {
   useFrame((_, delta) => {
     if (!animating.current || !targetPos.current || !targetLook.current) return
 
-    // Interpolación suave hacia la posición objetivo
     const speed = Math.min(delta * 3, 0.12)
+
+    // Mover cámara hacia la posición objetivo
     camera.position.lerp(targetPos.current, speed)
 
-    // Orientar la cámara hacia el objetivo
-    tmpVec.current.copy(targetLook.current)
-    camera.lookAt(tmpVec.current)
+    // Interpolar el target del OrbitControls hacia el planeta
+    const controls = orbitRef?.current
+    if (controls && controls.target) {
+      controls.target.lerp(targetLook.current, speed)
+      controls.update()
+    } else {
+      // Sin OrbitControls: orientar cámara manualmente
+      tmpLook.current.copy(targetLook.current)
+      camera.lookAt(tmpLook.current)
+    }
 
     // Detener cuando está suficientemente cerca
-    if (camera.position.distanceTo(targetPos.current) < 0.5) {
+    if (camera.position.distanceTo(targetPos.current) < 1.0) {
       animating.current = false
     }
   })

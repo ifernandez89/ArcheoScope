@@ -437,6 +437,15 @@ function InfoContent() {
             text: "Motor de audio procedural basado en frecuencias cósmicas reales. Cada misión completada desbloquea una nueva capa sonora construida sobre la frecuencia orbital de la Tierra (136.10 Hz). Los sitios arqueológicos actúan como amplificadores: filtros de resonancia únicos que modifican el espectro sonoro en tiempo real. Al completar Göbekli Tepe, el sistema activa el sonido del escarabajo sagrado — tres capas de síntesis (wingbeat, modulación LFO, armónicos aerodinámicos) que evocan a Khepri, el dios del renacimiento solar.",
           },
           {
+            icon: "🌍",
+            title: "World Resonance",
+            pcOnly: false,
+            color: "#818cf8",
+            border: "rgba(129, 140, 248, 0.3)",
+            bg: "rgba(129, 140, 248, 0.06)",
+            text: "Capa de resonancia subconsciente única por escena y sitio arqueológico. Diseñada para sentirse, no escucharse — el objetivo es que el jugador sienta que cada lugar tiene una identidad sonora diferente sin poder identificar exactamente por qué. Volumen extremadamente bajo (5-7%). Cada sitio tiene su frecuencia simbólica: Giza 111 Hz (monumentalidad), Teotihuacán 104 Hz (aérea), Isla de Pascua 63 Hz (oceánica), Puma Punku 432 Hz (sagrada), Veracruz 55 Hz (subterránea), Göbekli Tepe 45 Hz (primordial). La frecuencia varía imperceptiblemente con la hora del día — el mundo respira.",
+          },
+          {
             icon: "⭐",
             title: "Sistema de Cálculo Estelar",
             pcOnly: false,

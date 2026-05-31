@@ -79,9 +79,11 @@ export default function SphinxInteractiveDialogue({
           background: 'rgba(20, 20, 40, 0.95)',
           border: '2px solid #ffd700',
           borderRadius: '12px',
-          padding: '30px 40px',
+          padding: 'clamp(18px, 5vw, 36px)',
           maxWidth: '600px',
           width: '90%',
+          maxHeight: '85vh',
+          overflowY: 'auto',
           boxShadow: '0 0 30px rgba(255, 215, 0, 0.6)',
           animation: 'scaleIn 0.3s ease-out'
         }}
@@ -90,12 +92,13 @@ export default function SphinxInteractiveDialogue({
         <div
           style={{
             color: '#ffffff',
-            fontSize: '24px',
+            fontSize: 'clamp(15px, 4vw, 24px)',
             fontWeight: 'normal',
             textAlign: 'center',
-            marginBottom: showOptions ? '30px' : '0',
+            marginBottom: showOptions ? 'clamp(18px, 5vw, 30px)' : '0',
             fontFamily: '"Cinzel", "Trajan Pro", "Times New Roman", serif',
             letterSpacing: '2px',
+            lineHeight: '1.6',
             textShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
           }}
         >
@@ -108,7 +111,7 @@ export default function SphinxInteractiveDialogue({
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '15px'
+              gap: 'clamp(10px, 2.5vw, 15px)'
             }}
           >
             {sphinxDialogues.menu.options.map((option) => (
@@ -116,8 +119,8 @@ export default function SphinxInteractiveDialogue({
                 key={option.id}
                 onClick={() => handleOptionClick(option.id, option.response)}
                 style={{
-                  padding: '15px 25px',
-                  fontSize: '18px',
+                  padding: 'clamp(12px, 3vw, 15px) clamp(16px, 4vw, 25px)',
+                  fontSize: 'clamp(13px, 3.5vw, 18px)',
                   color: '#ffd700',
                   background: 'rgba(255, 215, 0, 0.1)',
                   border: '2px solid #ffd700',
@@ -150,7 +153,7 @@ export default function SphinxInteractiveDialogue({
             style={{
               marginTop: '20px',
               padding: '10px 30px',
-              fontSize: '16px',
+              fontSize: 'clamp(14px, 3.5vw, 16px)',
               color: '#ffd700',
               background: 'transparent',
               border: '2px solid #ffd700',
@@ -160,7 +163,8 @@ export default function SphinxInteractiveDialogue({
               fontFamily: '"Cinzel", "Trajan Pro", "Times New Roman", serif',
               letterSpacing: '2px',
               display: 'block',
-              margin: '20px auto 0'
+              margin: '20px auto 0',
+              minHeight: '44px'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = '#ffd700'

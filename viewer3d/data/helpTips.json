@@ -153,5 +153,20 @@
     "icon": "🕳️",
     "title": "Cueva",
     "tip": "Una entrada oculta. Explorá su interior con cuidado."
+  },
+  "megalith": {
+    "icon": "🧱",
+    "title": "Estructura Megalítica",
+    "tip": "Construcción de piedra ensamblada con precisión imposible. Mové un bloque cercano para revelar sus secretos."
+  },
+  "ppBlock": {
+    "icon": "🪨",
+    "title": "Bloque de Puma Punku",
+    "tip": "Piedra tallada con ángulos perfectos. Hacé click para seleccionarlo y muévelo a otro sitio para revelar la estructura."
+  },
+  "sunGate": {
+    "icon": "🚪",
+    "title": "Puerta del Sol",
+    "tip": "Portal sagrado tiwanaku. Ten cuidado — si lo atravesás, viajarás a otro lugar."
   }
 }

@@ -24,6 +24,7 @@ interface ProximityHelpDetectorProps {
 
 /**
  * Runs inside the Canvas — checks every frame which help zone the avatar is nearest to.
+ * Uses XZ-only distance (ignores Y/height) so flying avatars still trigger ground zones.
  * Calls onNearestChange with the closest zone within radius, or null if none.
  */
 export default function ProximityHelpDetector({
@@ -32,24 +33,26 @@ export default function ProximityHelpDetector({
   onNearestChange,
 }: ProximityHelpDetectorProps) {
   const lastIdRef = useRef<string | null>(null)
-  const tmpVec = useRef(new THREE.Vector3())
   const frameSkip = useRef(0)
 
   useFrame(() => {
-    // Check every 10 frames (~6 times/sec at 60fps) — enough for proximity
+    // Check every 8 frames (~7.5 times/sec at 60fps)
     frameSkip.current++
-    if (frameSkip.current < 10) return
+    if (frameSkip.current < 8) return
     frameSkip.current = 0
 
     if (!avatarPositionRef.current) return
-    const avatarPos = avatarPositionRef.current
+    const av = avatarPositionRef.current
 
     let nearest: HelpZone | null = null
     let nearestDist = Infinity
 
     for (const zone of zones) {
-      tmpVec.current.set(zone.position[0], zone.position[1], zone.position[2])
-      const dist = avatarPos.distanceTo(tmpVec.current)
+      // XZ-only distance — ignores height so flying avatars trigger ground zones
+      const dx = av.x - zone.position[0]
+      const dz = av.z - zone.position[2]
+      const dist = Math.sqrt(dx * dx + dz * dz)
+
       if (dist < zone.radius && dist < nearestDist) {
         nearestDist = dist
         nearest = zone

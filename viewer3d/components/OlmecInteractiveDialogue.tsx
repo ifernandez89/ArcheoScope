@@ -108,29 +108,32 @@ export default function OlmecInteractiveDialogue({
           background: 'rgba(20, 15, 10, 0.95)',
           border: `2px solid ${accentColor}`,
           borderRadius: '12px',
-          padding: '30px 40px',
+          padding: 'clamp(18px, 5vw, 36px)',
           maxWidth: '620px',
           width: '90%',
+          maxHeight: '85vh',
+          overflowY: 'auto',
           boxShadow: `0 0 30px rgba(200, 134, 10, 0.6)`,
           animation: 'scaleIn 0.3s ease-out'
         }}
       >
         {/* Icono */}
-        <div style={{ textAlign: 'center', marginBottom: '15px', fontSize: '42px' }}></div>
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(8px, 2vw, 15px)', fontSize: 'clamp(32px, 8vw, 42px)' }}>🗿</div>
 
         {/* Título */}
         <div style={{
-          color: accentColor, fontSize: '22px', fontWeight: 'bold',
-          textAlign: 'center', marginBottom: '20px',
+          color: accentColor, fontSize: 'clamp(18px, 5vw, 22px)', fontWeight: 'bold',
+          textAlign: 'center', marginBottom: 'clamp(12px, 3vw, 20px)',
           fontFamily: '"Cinzel", serif', letterSpacing: '3px',
           textShadow: `0 0 10px rgba(200, 134, 10, 0.8)`,
         }}>
+          Olmeca
         </div>
 
         {/* Mensaje */}
         <div style={{
-          color: '#fff', fontSize: '18px', textAlign: 'center',
-          marginBottom: showOptions ? '25px' : '0',
+          color: '#fff', fontSize: 'clamp(14px, 3.5vw, 18px)', textAlign: 'center',
+          marginBottom: showOptions ? 'clamp(16px, 4vw, 25px)' : '0',
           fontFamily: '"Cinzel", serif', letterSpacing: '1px',
           lineHeight: '1.6', textShadow: `0 0 5px rgba(200, 134, 10, 0.3)`,
         }}>
@@ -139,7 +142,7 @@ export default function OlmecInteractiveDialogue({
 
         {/* Opciones */}
         {showOptions && !selectedResponse && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 2vw, 12px)' }}>
             {/* Opción especial: entregar jade */}
             {hasJadeMask && (
               <button
@@ -150,7 +153,7 @@ export default function OlmecInteractiveDialogue({
                   // ✅ Sin auto-close — el usuario cierra cuando quiera
                 }}
                 style={{
-                  padding: '14px 22px', fontSize: '16px',
+                  padding: 'clamp(11px, 3vw, 14px) clamp(14px, 4vw, 22px)', fontSize: 'clamp(13px, 3.5vw, 16px)',
                   color: '#00ff88',
                   background: 'rgba(0, 255, 136, 0.1)',
                   border: '2px solid #00ff88',
@@ -170,7 +173,7 @@ export default function OlmecInteractiveDialogue({
                 key={opt.id}
                 onClick={() => handleOptionClick(opt.id, opt.response)}
                 style={{
-                  padding: '14px 22px', fontSize: '16px',
+                  padding: 'clamp(11px, 3vw, 14px) clamp(14px, 4vw, 22px)', fontSize: 'clamp(13px, 3.5vw, 16px)',
                   color: accentColor,
                   background: `rgba(200, 134, 10, 0.1)`,
                   border: `2px solid ${accentColor}`,
@@ -199,11 +202,12 @@ export default function OlmecInteractiveDialogue({
           <button
             onClick={onClose}
             style={{
-              marginTop: '20px', padding: '10px 30px', fontSize: '15px',
+              marginTop: '20px', padding: '10px 30px', fontSize: 'clamp(14px, 3.5vw, 16px)',
               color: accentColor, background: 'transparent',
               border: `2px solid ${accentColor}`, borderRadius: '8px',
               cursor: 'pointer', fontFamily: '"Cinzel", serif',
               letterSpacing: '2px', display: 'block', margin: '20px auto 0',
+              minHeight: '44px',
               transition: 'all 0.3s ease'
             }}
             onMouseEnter={(e) => { e.currentTarget.style.background = accentColor; e.currentTarget.style.color = '#000' }}

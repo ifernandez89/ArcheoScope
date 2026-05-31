@@ -13,109 +13,20 @@ interface CoordinateInputProps {
   weatherCode?: number
 }
 
-// Cuerpos celestes con posición 3D aproximada en el sistema solar (escala visual)
-// Estas posiciones son las "vistas sugeridas" — la cámara se mueve cerca del planeta
+// Cuerpos celestes — solo necesitan id, nombre y metadata.
+// La posición de cámara se calcula dinámicamente desde la posición real del planeta.
 const CELESTIAL_BODIES = [
-  {
-    id: 'sun',
-    name: 'Sol',
-    emoji: '☀️',
-    color: '#fbbf24',
-    // El sol está en el centro [0,0,0] — cámara a distancia segura
-    cameraPos: { x: 0, y: 15, z: 35 },
-    target: { x: 0, y: 0, z: 0 },
-    description: 'Estrella central · 1.4M km diámetro',
-  },
-  {
-    id: 'mercury',
-    name: 'Mercurio',
-    emoji: '⚫',
-    color: '#9c9c9c',
-    cameraPos: { x: 18, y: 6, z: 18 },
-    target: { x: 14, y: 0, z: 14 },
-    description: 'Planeta rocoso · 88 días/órbita',
-  },
-  {
-    id: 'venus',
-    name: 'Venus',
-    emoji: '🟡',
-    color: '#f5e6d3',
-    cameraPos: { x: 28, y: 8, z: 28 },
-    target: { x: 22, y: 0, z: 22 },
-    description: 'Planeta rocoso · 225 días/órbita',
-  },
-  {
-    id: 'earth',
-    name: 'Tierra',
-    emoji: '🌍',
-    color: '#4A90E2',
-    cameraPos: { x: 38, y: 10, z: 38 },
-    target: { x: 30, y: 0, z: 30 },
-    description: 'Nuestro hogar · 365 días/órbita',
-  },
-  {
-    id: 'moon',
-    name: 'Luna',
-    emoji: '🌕',
-    color: '#e2e8f0',
-    cameraPos: { x: 34, y: 8, z: 34 },
-    target: { x: 31, y: 0, z: 31 },
-    description: 'Satélite natural · 27 días/órbita',
-  },
-  {
-    id: 'mars',
-    name: 'Marte',
-    emoji: '🔴',
-    color: '#E27B58',
-    cameraPos: { x: 52, y: 12, z: 52 },
-    target: { x: 44, y: 0, z: 44 },
-    description: 'Planeta rojo · 687 días/órbita',
-  },
-  {
-    id: 'jupiter',
-    name: 'Júpiter',
-    emoji: '🟠',
-    color: '#D4A574',
-    cameraPos: { x: 90, y: 20, z: 90 },
-    target: { x: 75, y: 0, z: 75 },
-    description: 'Gigante gaseoso · 12 años/órbita',
-  },
-  {
-    id: 'saturn',
-    name: 'Saturno',
-    emoji: '🪐',
-    color: '#FAD5A5',
-    cameraPos: { x: 120, y: 25, z: 120 },
-    target: { x: 100, y: 0, z: 100 },
-    description: 'Anillos icónicos · 29 años/órbita',
-  },
-  {
-    id: 'uranus',
-    name: 'Urano',
-    emoji: '🔵',
-    color: '#4FD0E7',
-    cameraPos: { x: 155, y: 30, z: 155 },
-    target: { x: 130, y: 0, z: 130 },
-    description: 'Gigante de hielo · 84 años/órbita',
-  },
-  {
-    id: 'neptune',
-    name: 'Neptuno',
-    emoji: '💙',
-    color: '#4166F5',
-    cameraPos: { x: 185, y: 35, z: 185 },
-    target: { x: 155, y: 0, z: 155 },
-    description: 'Vientos más rápidos · 165 años/órbita',
-  },
-  {
-    id: 'pluto',
-    name: 'Plutón',
-    emoji: '⚪',
-    color: '#A0826D',
-    cameraPos: { x: 210, y: 40, z: 210 },
-    target: { x: 175, y: 0, z: 175 },
-    description: 'Planeta enano · 248 años/órbita',
-  },
+  { id: 'sun',     name: 'Sol',      emoji: '☀️', color: '#fbbf24', description: 'Estrella central · 1.4M km diámetro' },
+  { id: 'mercury', name: 'Mercurio', emoji: '⚫', color: '#9c9c9c', description: 'Planeta rocoso · 88 días/órbita' },
+  { id: 'venus',   name: 'Venus',    emoji: '🟡', color: '#f5e6d3', description: 'Planeta rocoso · 225 días/órbita' },
+  { id: 'earth',   name: 'Tierra',   emoji: '🌍', color: '#4A90E2', description: 'Nuestro hogar · 365 días/órbita' },
+  { id: 'moon',    name: 'Luna',     emoji: '🌕', color: '#e2e8f0', description: 'Satélite natural · 27 días/órbita' },
+  { id: 'mars',    name: 'Marte',    emoji: '🔴', color: '#E27B58', description: 'Planeta rojo · 687 días/órbita' },
+  { id: 'jupiter', name: 'Júpiter',  emoji: '🟠', color: '#D4A574', description: 'Gigante gaseoso · 12 años/órbita' },
+  { id: 'saturn',  name: 'Saturno',  emoji: '🪐', color: '#FAD5A5', description: 'Anillos icónicos · 29 años/órbita' },
+  { id: 'uranus',  name: 'Urano',    emoji: '🔵', color: '#4FD0E7', description: 'Gigante de hielo · 84 años/órbita' },
+  { id: 'neptune', name: 'Neptuno',  emoji: '💙', color: '#4166F5', description: 'Vientos más rápidos · 165 años/órbita' },
+  { id: 'pluto',   name: 'Plutón',   emoji: '⚪', color: '#A0826D', description: 'Planeta enano · 248 años/órbita' },
 ]
 
 // Sitios arqueológicos con nombre
@@ -141,6 +52,7 @@ export default function CoordinateInput({
   const [lon, setLon] = useState(currentLocation?.lon.toFixed(4) || '')
   const [pulse, setPulse] = useState(false)
   const [missionsCompleted, setMissionsCompleted] = useState(0)
+  const [zoomToast, setZoomToast] = useState<string | null>(null)
 
   const isMobile = typeof window !== 'undefined' &&
     (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
@@ -174,16 +86,15 @@ export default function CoordinateInput({
     setIsOpen(false)
   }
 
-  // Enfocar cuerpo celeste — emite evento para que RealisticSolarSystem mueva la cámara
+  // Enfocar cuerpo celeste — emite evento; RealisticSolarSystem calcula la posición real
   const focusCelestialBody = (body: typeof CELESTIAL_BODIES[0]) => {
     window.dispatchEvent(new CustomEvent('celestial-focus', {
-      detail: {
-        id: body.id,
-        cameraPos: body.cameraPos,
-        target: body.target,
-      }
+      detail: { id: body.id }
     }))
     setIsOpen(false)
+    // Mostrar mensaje orientativo de zoom unos segundos
+    setZoomToast(`${body.emoji} Viajando a ${body.name} · usá la rueda del mouse para acercar/alejar 🔍`)
+    setTimeout(() => setZoomToast(null), 5000)
   }
 
   // Color reactivo del botón según estado del juego
@@ -437,7 +348,8 @@ export default function CoordinateInput({
             </div>
           </div>
 
-          {/* ── Cuerpos celestes ── */}
+          {/* ── Cuerpos celestes — solo en modo globo (espacio) ── */}
+          {(mode === 'globe' || mode === 'transition') && (
           <div>
             <div style={{
               color: 'rgba(255,255,255,0.45)', fontSize: '10px',
@@ -484,8 +396,10 @@ export default function CoordinateInput({
               ))}
             </div>
           </div>
+          )}
 
-          {/* Nota */}
+          {/* Nota — solo en modo globo */}
+          {(mode === 'globe' || mode === 'transition') && (
           <div style={{
             marginTop: '14px', padding: '10px 12px',
             background: 'rgba(255,255,255,0.03)',
@@ -494,8 +408,44 @@ export default function CoordinateInput({
           }}>
             💡 Los cuerpos celestes mueven la cámara a una vista cercana en el Sistema Solar
           </div>
+          )}
         </div>
       )}
+
+      {/* Toast orientativo de zoom — aparece al viajar a un cuerpo celeste */}
+      {zoomToast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '40px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1002,
+          background: 'rgba(5,5,15,0.92)',
+          backdropFilter: 'blur(12px)',
+          border: '1.5px solid rgba(102,126,234,0.5)',
+          borderRadius: '14px',
+          padding: '14px 24px',
+          color: 'white',
+          fontSize: '14px',
+          fontWeight: 500,
+          letterSpacing: '0.3px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(102,126,234,0.2)',
+          maxWidth: '90vw',
+          textAlign: 'center',
+          animation: 'zoomToastIn 0.35s ease-out',
+          pointerEvents: 'none',
+        }}>
+          {zoomToast}
+        </div>
+      )}
+
+      {/* Animaciones del toast */}
+      <style>{`
+        @keyframes zoomToastIn {
+          from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+      `}</style>
 
       {/* Scrollbar personalizada */}
       <style>{`
