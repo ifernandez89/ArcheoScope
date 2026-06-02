@@ -5,6 +5,38 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-05-31
+
+### Fixed — Veracidad de datos (auditoría de integridad)
+- **Conteo de estrellas Yale corregido**: la info decía "~250" en una sección y "~130" en otra; el número real es **148 estrellas** en `bright-stars.ts`. Corregido en `bright-stars.ts`, `Stars.tsx` e Información
+- **Total de estrellas corregido**: 83,130 → **83,148** (80,000 procedurales + 3,000 brillantes + 148 reales del catálogo Yale)
+- Auditoría completa confirmó que el resto de claims son verídicos: 27 constelaciones ✓, Rayleigh scattering real (Sky shader) ✓, Geometría Sagrada (6 generadores Lissajous/Hilbert/etc.) ✓, Arte Generativo Orbital (curvas de Lissajous con posiciones planetarias reales) ✓, Panel Científico (azimut/elevación/declinación con SolarEngine) ✓, Alineaciones Solares (fórmula cos(Az)=sin(δ)/cos(φ)) ✓
+
+### Added — Toasts de descubrimiento (minimalistas, no intrusivos)
+- **`discoveryToasts.ts`** + **`DiscoveryToast.tsx`**: mensajes contextuales breves que aparecen UNA sola vez por vida del juego cuando el jugador experimenta un sistema:
+  - 🎨 Al entrar al globo: "El sistema dibuja arte único con las posiciones reales de los planetas"
+  - 🌍 Al entrar a un sitio: "Cada lugar tiene una frecuencia que lo hace sentir distinto"
+  - 🎵 Al completar misión: "Una nueva capa de la música cósmica despertó"
+  - ✦ En constelaciones: "El cielo que ves es real: cada estrella está en su posición exacta"
+- **UX responsable**: respetan el toggle de Ayuda (OFF = no aparecen), cooldown de 30s entre toasts, localStorage permanente (no se repiten), texto inmersivo no técnico, auto-dismiss a 7s, tocables para cerrar
+- Se resetean al iniciar nueva partida
+
+## [1.2.1] - 2026-05-31
+
+### Changed
+- **Pantalla principal**: eliminado botón "Entrar" — toda la pantalla (imagen) es ahora clickeable/tocable. Indicador sutil pulsante "toca / click para continuar" en la parte inferior. El logo tiene cursor `pointer` y feedback de opacidad al hacer click
+
+### Added — Tips contextuales de arquitectura (ayuda in-game)
+- **6 tips específicos** para estructuras megalíticas por sitio, visibles al acercarse con la ayuda encendida:
+  - 🔺 Gran Pirámide de Giza: 144k bloques, alineación 0.05° al norte, solsticio 62.5° NE
+  - 🏛️ Pirámide del Sol (Teo): base 220×220m, orientada al 13 de agosto, resonancia 104 Hz
+  - 🧱 Puma Punku: tolerancias de 0.5mm, ensambles en H únicos, resonancia 432 Hz
+  - 🗿 Pilares de Göbekli Tepe: 12,000 años, registro astronómico de 10,900 a.C., 45 Hz
+  - 🗿 Moáis de Rapa Nui: 900 estatuas, "caminaban" con cuerdas, resonancia oceánica 63 Hz
+  - 🗿 Cabeza Colosal Olmeca (Tres Zapotes): retratos de gobernantes, 6-50 ton, geometría estelar
+- **Tips genéricos reemplazados**: las zonas `monument` ahora usan el tip específico del sitio
+- Göbekli Tepe: el monolito ahora usa `gobekliMonolith` (datos arqueológicos reales)
+
 ## [1.2.0] - 2026-05-31
 
 ### Fixed

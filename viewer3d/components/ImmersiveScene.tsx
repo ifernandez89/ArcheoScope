@@ -103,6 +103,7 @@ const CelestialOverlayHUD = dynamic(() => import('./CelestialOverlay').then(m =>
 const BackgroundMountains = dynamic(() => import('./BackgroundMountains'), { ssr: false, loading: () => null })
 const EnhancedMoon = dynamic(() => import('./EnhancedMoon'), { ssr: false })
 const HelpBubble = dynamic(() => import('./HelpBubble'), { ssr: false })
+const DiscoveryToast = dynamic(() => import('./DiscoveryToast'), { ssr: false })
 import helpTipsData from '@/data/helpTips.json'
 import type { HelpZone } from './ProximityHelpDetector'
 import ProximityHelpDetector from './ProximityHelpDetector'
@@ -303,6 +304,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
   const [weather, setWeather] = useState<WeatherState>(_isMobileDevice ? MOBILE_STORM_WEATHER : DEFAULT_STORM_WEATHER)
   const [cameraRotation, setCameraRotation] = useState(0) // Rotación de la cámara para la brújula
   const [nearestHelpZone, setNearestHelpZone] = useState<HelpZone | null>(null)
+  const [discoveryToast, setDiscoveryToast] = useState<import('@/systems/discoveryToasts').DiscoveryToast | null>(null)
 
   // 🌍 World Resonance — actualizar escena al cambiar de sitio/modo
   useEffect(() => {
@@ -313,6 +315,27 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       }
     }).catch(() => {})
   }, [mode, selectedSite?.id, selectedLocation?.lat, selectedLocation?.lon])
+
+  // ✦ Disparar toast de descubrimiento al completar una misión
+  const notifyMissionDiscovery = useCallback(() => {
+    import('@/systems/discoveryToasts').then(({ tryTriggerDiscovery }) => {
+      const toast = tryTriggerDiscovery('mission')
+      if (toast) setDiscoveryToast(toast)
+    }).catch(() => {})
+  }, [])
+
+  // ✦ Toasts de descubrimiento — globo (arte orbital) y sitio (resonancia)
+  useEffect(() => {
+    const id = mode === 'globe' ? 'globe' : mode === 'model' ? 'site' : null
+    if (!id) return
+    const t = setTimeout(() => {
+      import('@/systems/discoveryToasts').then(({ tryTriggerDiscovery }) => {
+        const toast = tryTriggerDiscovery(id as 'globe' | 'site')
+        if (toast) setDiscoveryToast(toast)
+      }).catch(() => {})
+    }, 2500) // esperar a que la escena cargue
+    return () => clearTimeout(t)
+  }, [mode])
 
   // ── Help zones por sitio ─────────────────────────────────────────────────
   const helpZones = useMemo<HelpZone[]>(() => {
@@ -342,15 +365,14 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         { id: 'akhenaten',       position: [0, 0, 0],      radius: 20, tip: tips.akhenaten },
         { id: 'mummy',           position: [-72, 0, -2],   radius: 20, tip: tips.mummy },
         { id: 'geoglifo-arana',  position: [-83, 0, -67],  radius: 18, tip: tips.geoglifo },
-        { id: 'piramide',        position: [0, 0, 0],      radius: 60, tip: tips.monument },
+        { id: 'piramide',        position: [0, 0, 0],      radius: 60, tip: tips.gizaPyramid },
       )
     } else if (siteId === 'puma-punku' || siteId === 'pumaPunku') {
       zones.push(
         { id: 'viracocha',    position: [14.5, 0, 0.83], radius: 25, tip: tips.viracocha },
-        { id: 'estructura',   position: [8, 0, -8],      radius: 22, tip: tips.megalith },
+        { id: 'estructura',   position: [8, 0, -8],      radius: 22, tip: tips.pumaPunkuStructure },
         { id: 'sunGate',      position: [70, 8, 60],     radius: 28, tip: tips.sunGate },
         { id: 'condor',       position: [-83, 0, -67],   radius: 22, tip: tips.geoglifo },
-        // Bloques megalíticos — radio aumentado para compensar diferencia de altura Y
         { id: 'pp-block-c',   position: [0, 0, 0],       radius: 12, tip: tips.ppBlock },
         { id: 'pp-b1',        position: [-12, 0, 8],     radius: 10, tip: tips.ppBlock },
         { id: 'pp-b2',        position: [15, 0, -6],     radius: 10, tip: tips.ppBlock },
@@ -366,24 +388,25 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         { id: 'hotuMatua', position: [0, 0, 0],    radius: 25, tip: tips.hotuMatua },
         { id: 'merkaba',   position: [0, 0, 0],    radius: 18, tip: tips.merkaba },
         { id: 'ballena',   position: [-55, 0, 55], radius: 18, tip: tips.geoglifo },
-        { id: 'moai',      position: [0, 0, 0],    radius: 40, tip: tips.monument },
+        { id: 'moai',      position: [0, 0, 0],    radius: 40, tip: tips.easterIslandMoai },
       )
     } else if (siteId === 'teotihuacan') {
       zones.push(
         { id: 'quetzalcoatl',    position: [0, 0, 0],     radius: 25, tip: tips.quetzalcoatl },
         { id: 'calendarioMaya',  position: [0, 10, -20],  radius: 20, tip: tips.calendarioMaya },
         { id: 'colibri',         position: [-83, 0, -67], radius: 18, tip: tips.geoglifo },
-        { id: 'piramide-teo',    position: [0, 0, -20],   radius: 40, tip: tips.monument },
+        { id: 'piramide-teo',    position: [0, 0, -20],   radius: 40, tip: tips.teotihuacanPyramid },
       )
     } else if (siteId === 'tres-zapotes') {
       zones.push(
         { id: 'atlante',         position: [0, 0, 0],     radius: 25, tip: tips.atlante },
         { id: 'mictlantecuhtli', position: [0, 0, 0],     radius: 20, tip: tips.mictlantecuhtli },
         { id: 'perro',           position: [-83, 0, -67], radius: 18, tip: tips.geoglifo },
+        { id: 'cabeza-olmeca',   position: [0, 0, 0],     radius: 35, tip: tips.veracruzHead },
       )
     } else if (siteId === 'gobekli-tepe') {
       zones.push(
-        { id: 'monolito',   position: [0, 0, 0],     radius: 22, tip: tips.monolitoGobekli },
+        { id: 'monolito',   position: [0, 0, 0],     radius: 22, tip: tips.gobekliMonolith },
         { id: 'astronauta', position: [-55, 0, -55], radius: 20, tip: tips.astronauta },
       )
     }
@@ -538,6 +561,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
 
     // Completar misión de Puma Punku para que la lógica secuencial funcione correctamente
     completeMission('pumaPunku', 'reveal_structure')
+    notifyMissionDiscovery()
 
     // Limpiar clima de Puma Punku
     clearWeather('pumaPunku')
@@ -1079,6 +1103,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       setCornInInventory(false)
       setCornOnGround(false)
       completeMission('teotihuacan', 'plant_corn')
+      notifyMissionDiscovery()
       clearWeather('teotihuacan')
       setWeather(CALM_WEATHER)
     } else {
@@ -1788,6 +1813,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         <HelpBubble tip={nearestHelpZone.tip} />
       )}
 
+      {/* ✦ Toast de descubrimiento — minimalista, no intrusivo */}
+      <DiscoveryToast toast={discoveryToast} onDismiss={() => setDiscoveryToast(null)} />
+
       {/* 📱 Controles touch para mobile — D-pad + rotación */}
       {mode === 'model' && isMobile && (
         <MobileTouchControls visible={true} />
@@ -2053,6 +2081,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onMerkabaActivate={() => {
             console.log('✡️ Merkaba activado! 5ta mision - ¡Sincronización Planetaria Completada!')
             completeMission('easterIsland', 'activate_merkaba')
+            notifyMissionDiscovery()
 
             // Limpiar clima de TODOS los sitios del planeta permanentemente
             const sites: (keyof MissionState['sites'])[] = ['pumaPunku', 'giza', 'easterIsland', 'teotihuacan', 'veracruz', 'angkorWat']
@@ -2165,6 +2194,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
 
               // ✅ MARCAR MISIÓN COMO COMPLETADA
               completeMission('giza', 'return_pyramidion')
+              notifyMissionDiscovery()
               console.log('✅ Misión "Devolver el Piramidión" COMPLETADA')
 
               // ☀️ LIMPIAR EL CLIMA - De malo a bueno
@@ -2224,6 +2254,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           onDeliverJade={() => {
             collectItem('veracruz', 'jade_mask')
             completeMission('veracruz', 'deliver_jade_mask')
+            notifyMissionDiscovery()
             clearWeather('veracruz')
             setWeather(CALM_WEATHER) // Buen clima inmediato
             setJadeMaskInInventory(false)

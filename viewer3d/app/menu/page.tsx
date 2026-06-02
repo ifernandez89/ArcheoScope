@@ -88,6 +88,10 @@ export default function MenuPage() {
           try { getWorldResonance().dispose() } catch {}
         }).catch(() => {})
 
+        import('@/systems/discoveryToasts').then(({ resetDiscoveries }) => {
+          try { resetDiscoveries() } catch {}
+        }).catch(() => {})
+
         // Fallback: suspender todos los AudioContext del navegador
         // @ts-ignore — acceso a propiedad no estándar pero funcional
         if (window.AudioContext || (window as any).webkitAudioContext) {

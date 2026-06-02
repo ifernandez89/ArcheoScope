@@ -1,6 +1,6 @@
 /**
  * Catálogo de estrellas brillantes — Yale Bright Star Catalogue (subset)
- * ~250 estrellas con magnitud visual < 3.5
+ * 148 estrellas con magnitud visual < 3.5
  *
  * Formato: [RA_horas, Dec_grados, magnitud, tipo_espectral, nombre?]
  * RA en horas decimales (0-24), Dec en grados (-90 a +90)

@@ -29,6 +29,7 @@ const CompassTracker = dynamic(() => import('./CompassTracker'), { ssr: false })
 const AmbientAudio = dynamic(() => import('./AmbientAudio'), { ssr: false })
 const Tree3DModel = dynamic(() => import('./Tree3DModel'), { ssr: false, loading: () => null })
 const Rock3DModel = dynamic(() => import('./Rock3DModel'), { ssr: false, loading: () => null })
+const DiscoveryToast = dynamic(() => import('./DiscoveryToast'), { ssr: false })
 
 // ─── Banda de Vía Láctea procedimental ───────────────────────────────────────
 function MilkyWayBand() {
@@ -312,6 +313,18 @@ export default function ConstellationsScene() {
   )
   const [cameraRotation, setCameraRotation] = useState(0)
 
+  // ✦ Toast de descubrimiento — constelaciones (cielo real)
+  const [discoveryToast, setDiscoveryToast] = useState<import('@/systems/discoveryToasts').DiscoveryToast | null>(null)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      import('@/systems/discoveryToasts').then(({ tryTriggerDiscovery }) => {
+        const toast = tryTriggerDiscovery('constellations')
+        if (toast) setDiscoveryToast(toast)
+      }).catch(() => {})
+    }, 3000)
+    return () => clearTimeout(t)
+  }, [])
+
   // Pitch controlado por zona táctil izquierda (mobile) y rueda del mouse (PC)
   const pitchRef = useRef(0)
   const touchStartY = useRef(0)
@@ -478,6 +491,9 @@ export default function ConstellationsScene() {
           WASD mover · SHIFT+mouse subir/bajar · Q/E rotar · 🖱️ rueda = inclinar cielo
         </div>
       )}
+
+      {/* ✦ Toast de descubrimiento */}
+      <DiscoveryToast toast={discoveryToast} onDismiss={() => setDiscoveryToast(null)} />
     </div>
   )
 }

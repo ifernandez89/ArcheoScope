@@ -168,5 +168,36 @@
     "icon": "🚪",
     "title": "Puerta del Sol",
     "tip": "Portal sagrado tiwanaku. Ten cuidado — si lo atravesás, viajarás a otro lugar."
+  },
+
+  "gizaPyramid": {
+    "icon": "🔺",
+    "title": "Gran Pirámide de Giza",
+    "tip": "144,000 bloques de caliza, cada uno de 2.5 toneladas. Alineada con precisión de 0.05° al norte geográfico. El sistema 3D calcula sus alineaciones solares exactas para el solsticio de verano — el sol sale a 62.5° NE, orientación de la Gran Galería. La geometría sagrada Lissajous de Giza está activa en el terreno."
+  },
+  "teotihuacanPyramid": {
+    "icon": "🏛️",
+    "title": "Pirámide del Sol — Teotihuacán",
+    "tip": "Tercera pirámide más grande del mundo. Su base mide 220m × 220m, casi idéntica a la Gran Pirámide. Orientada al punto donde el Sol se pone el 13 de agosto — fecha del inicio del calendario mesoamericano. Aquí la resonancia orbital es 104 Hz — más aérea y brillante que Giza."
+  },
+  "pumaPunkuStructure": {
+    "icon": "🧱",
+    "title": "Estructura de Puma Punku",
+    "tip": "Bloques de andesita tallados con tolerancias de 0.5mm — precisión que normalmente requiere maquinaria moderna. Los ensambles en H son únicos en el mundo antiguo. La resonancia sagrada de 432 Hz impregna este sitio. Usá la nave Titan (UFO 5) para activar la respuesta del terreno."
+  },
+  "gobekliMonolith": {
+    "icon": "🗿",
+    "title": "Pilares en T de Göbekli Tepe",
+    "tip": "12,000 años de antigüedad — 6,000 años antes que las pirámides. Cada pilar pesa entre 10 y 20 toneladas. Los animales tallados en relieve son un registro astronómico del cielo de 10,900 a.C. La frecuencia de 45 Hz aquí es la más antigua del sistema — la misma que el escarabajo sagrado Khepri."
+  },
+  "easterIslandMoai": {
+    "icon": "🗿",
+    "title": "Moáis de Rapa Nui",
+    "tip": "900 estatuas de hasta 21 metros y 80 toneladas, talladas en toba volcánica. 'Caminaban' hacia sus plataformas usando cuerdas y movimiento pendular. Sus espaldas dan al océano — sus ojos de coral miran hacia el interior de la isla, vigilando a los vivos. La resonancia oceánica de 63 Hz resuena con las olas del Pacífico."
+  },
+  "veracruzHead": {
+    "icon": "🗿",
+    "title": "Cabeza Colosal Olmeca",
+    "tip": "Las 17 cabezas colosales olmecas son retratos individuales de gobernantes. Cada una pesa entre 6 y 50 toneladas, transportadas desde canteras a 80km de distancia. El sistema Sacred Geometry Engine asigna a Tres Zapotes el Polígono Estelar — figura de poder y conexión entre mundos. Frecuencia 55 Hz: subterránea y oscura."
   }
 }

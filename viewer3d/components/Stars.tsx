@@ -11,7 +11,7 @@ import { CONSTELLATION_LINES } from '@/data/constellations'
  * Estrellas optimizadas para Mobile GPU:
  *  - Capa base: 80k (fondo galáctico), tamaño reducido (2.5) y opacidad baja (0.6).
  *  - Capa brillante: 3k con Twinkle Shader y full opacity.
- *  - Capa real: ~250 estrellas escaladas por magnitud real.
+ *  - Capa real: 148 estrellas escaladas por magnitud real.
  *  - Constelaciones: Líneas con gradiente y labels adaptativos.
  */
 export default function Stars() {
