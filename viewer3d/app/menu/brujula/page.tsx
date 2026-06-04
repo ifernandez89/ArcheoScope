@@ -51,11 +51,47 @@ export default function BrujulaPage() {
     return smoothRef.current
   }, [])
 
-  // ─── Iniciar brújula ──────────────────────────────────────────────────────
+  // Ref para el handler activo — permite removerlo correctamente al desmontar
+  const handlerRef = useRef<((e: DeviceOrientationEvent) => void) | null>(null)
+
+  const attachListeners = useCallback(() => {
+    if (typeof window === 'undefined') return
+
+    if (!window.DeviceOrientationEvent) {
+      setPermission('unsupported')
+      return
+    }
+
+    const handler = (e: DeviceOrientationEvent) => {
+      let raw: number | null = null
+
+      if ((e as any).webkitCompassHeading !== undefined) {
+        // iOS — webkitCompassHeading ya es el rumbo magnético real (0=Norte, CW)
+        raw = (e as any).webkitCompassHeading
+        const acc = (e as any).webkitCompassAccuracy
+        if (acc !== undefined && acc >= 0) setAccuracy(acc)
+      } else if (e.alpha !== null) {
+        // Android — alpha es la rotación del dispositivo; invertir para obtener rumbo
+        raw = (360 - e.alpha) % 360
+      }
+
+      if (raw !== null) {
+        setHeading(smooth(raw))
+      }
+    }
+
+    handlerRef.current = handler
+    // deviceorientationabsolute da el norte magnético real en Android (más preciso)
+    window.addEventListener('deviceorientationabsolute', handler as EventListener, true)
+    window.addEventListener('deviceorientation', handler as EventListener, true)
+    setPermission('granted')
+  }, [smooth])
+
+  // ─── Iniciar brújula (llamado por botón en iOS) ───────────────────────────
   const startCompass = useCallback(async () => {
     if (typeof window === 'undefined') return
 
-    // iOS requiere requestPermission()
+    // iOS requiere requestPermission() explícito (gesto del usuario)
     if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
       try {
         const result = await (DeviceOrientationEvent as any).requestPermission()
@@ -69,47 +105,26 @@ export default function BrujulaPage() {
       }
     }
 
-    if (!window.DeviceOrientationEvent) {
-      setPermission('unsupported')
-      return
-    }
-
-    setPermission('granted')
-
-    const handler = (e: DeviceOrientationEvent) => {
-      let raw: number | null = null
-
-      if ((e as any).webkitCompassHeading !== undefined) {
-        raw = (e as any).webkitCompassHeading
-        const acc = (e as any).webkitCompassAccuracy
-        if (acc !== undefined && acc >= 0) setAccuracy(acc)
-      } else if (e.alpha !== null) {
-        raw = (360 - e.alpha) % 360
-      }
-
-      if (raw !== null) {
-        setHeading(smooth(raw))
-      }
-    }
-
-    window.addEventListener('deviceorientationabsolute', handler as EventListener, true)
-    window.addEventListener('deviceorientation', handler as EventListener, true)
-
-    return () => {
-      window.removeEventListener('deviceorientationabsolute', handler as EventListener, true)
-      window.removeEventListener('deviceorientation', handler as EventListener, true)
-    }
-  }, [smooth])
+    attachListeners()
+  }, [attachListeners])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    // En Android no hace falta pedir permiso — intentar directamente
+    // Android: no requiere permiso explícito — iniciar automáticamente
     if (typeof (DeviceOrientationEvent as any).requestPermission !== 'function') {
-      const cleanup = startCompass()
-      return () => { cleanup?.then(fn => fn?.()) }
+      attachListeners()
     }
-    // iOS: esperar tap del usuario
-  }, [startCompass])
+    // iOS: esperar tap del usuario (botón "Activar brújula")
+
+    return () => {
+      // Cleanup correcto: remover siempre el handler al desmontar
+      if (handlerRef.current) {
+        window.removeEventListener('deviceorientationabsolute', handlerRef.current as EventListener, true)
+        window.removeEventListener('deviceorientation', handlerRef.current as EventListener, true)
+        handlerRef.current = null
+      }
+    }
+  }, [attachListeners])
 
   const cardinal = heading !== null ? getCardinalDirection(heading) : null
   const cardinalLabel = cardinal ? getCardinalLabel(cardinal) : null

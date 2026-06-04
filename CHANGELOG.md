@@ -5,6 +5,14 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-06-04
+
+### Fixed — Brújula mobile (memory leak de event listeners)
+- **Bug crítico**: los listeners `deviceorientationabsolute` y `deviceorientation` no se removían al navegar fuera de la página — quedaban vivos en memoria durante toda la sesión
+- **Fix**: agregado `handlerRef` para guardar referencia al handler activo; el `useEffect` cleanup ahora remueve correctamente ambos listeners al desmontar el componente
+- **Refactor**: extraída función `attachListeners()` separada de `startCompass()` para que el cleanup funcione tanto en Android (auto-inicio) como en iOS (inicio manual por botón)
+- Comportamiento funcional sin cambios: iOS pide permiso, Android inicia automático, suavizado exponencial, wrap-around 359°→0°, precisión del sensor
+
 ## [1.2.2] - 2026-05-31
 
 ### Fixed — Veracidad de datos (auditoría de integridad)
