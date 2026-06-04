@@ -5,6 +5,26 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2026-06-04
+
+### Fixed — Diálogos NPC: auto-close eliminado + sistema tipográfico unificado
+
+#### Bugs corregidos
+- **`SphinxInteractiveDialogue`**: eliminados 2 timers de `setTimeout` que cerraban el diálogo automáticamente (3s en mensaje de gratitud, 4s tras seleccionar opción) — ahora solo cierra con botón "Cerrar"
+- El resto de diálogos interactivos (Akhenaton, Quetzalcoatl, Viracocha, Olmeca) ya estaban sin auto-close ✓
+
+#### Tipografía — sistema unificado en todos los diálogos NPC
+- **Icono NPC**: `clamp(32px, 8vw, 42px)` uniforme en todos (antes: hardcoded `28px`/`44px` con ternario `isMobile`)
+- **Nombre NPC**: `clamp(18px, 5vw, 22px)` · `letterSpacing: 3px` uniforme (antes: Quetzalcoatl usaba `clamp(20,6vw,28)` — más grande que el resto)
+- **Mensaje body**: `clamp(14px, 3.5vw, 18px)` uniforme (antes: `clamp(14,3.8vw,20)` / `clamp(15,4vw,24)` variables)
+- **Line-height**: `1.8` uniforme en todos (antes: `1.5` / `1.6` / `1.9` inconsistentes)
+- **Opciones de diálogo**: `clamp(13px, 3.5vw, 16px)` uniforme (antes: Akhenaton hardcodeaba `12px`/`15px` con ternario)
+- **Botón Cerrar**: `clamp(13px, 3.2vw, 15px)` · `minHeight: 44px` WCAG uniforme (antes: Akhenaton usaba `14px` fijo)
+- **Akhenaton**: eliminado patrón `isMobile` ternario — reemplazado por `clamp()` CSS puro como el resto de los diálogos
+- **SphinxInteractiveDialogue**: agregados icono 🦁 y nombre "La Esfinge" en el header — antes era el único diálogo sin identificación del NPC
+- **Padding del contenedor**: `clamp(18px, 5vw, 36px)` uniforme en todos (Akhenaton usaba valores hardcoded)
+- Touch targets: `minHeight: 44px` en todos los botones de opción (WCAG AA)
+
 ## [1.2.3] - 2026-06-04
 
 ### Fixed — Brújula mobile (memory leak de event listeners)

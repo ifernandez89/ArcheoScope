@@ -76,7 +76,7 @@ export default function QuetzalcoatlDialogue({
         <div
           style={{
             color: '#7cfc00',
-            fontSize: 'clamp(20px, 6vw, 28px)',
+            fontSize: 'clamp(18px, 5vw, 22px)',
             fontWeight: 'bold',
             textAlign: 'center',
             marginBottom: 'clamp(12px, 3vw, 20px)',
@@ -92,13 +92,13 @@ export default function QuetzalcoatlDialogue({
         <div
           style={{
             color: '#ffffff',
-            fontSize: 'clamp(14px, 3.8vw, 20px)',
+            fontSize: 'clamp(14px, 3.5vw, 18px)',
             fontWeight: 'normal',
             textAlign: 'center',
             marginBottom: 'clamp(12px, 3vw, 20px)',
             fontFamily: '"Cinzel", "Trajan Pro", "Times New Roman", serif',
             letterSpacing: '1px',
-            lineHeight: '1.6',
+            lineHeight: '1.8',
             textShadow: '0 0 5px rgba(124, 252, 0, 0.3)',
           }}
         >

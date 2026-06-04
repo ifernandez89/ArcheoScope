@@ -30,17 +30,13 @@ export default function SphinxInteractiveDialogue({
       // Primera vez que hablas después de recoger el piramidón
       setCurrentMessage(sphinxDialogues.gratitude.text)
       setShowOptions(false)
-      
-      // Después de 3 segundos, cerrar automáticamente
-      setTimeout(() => {
-        onClose()
-      }, 3000)
+      // ✅ Sin auto-close — el usuario cierra cuando quiera
     } else {
       // Ya le diste el piramidón, mostrar menú de opciones
       setCurrentMessage(sphinxDialogues.menu.text)
       setShowOptions(true)
     }
-  }, [pyramidionCollected, hasReceivedPyramidion, onClose])
+  }, [pyramidionCollected, hasReceivedPyramidion])
 
   const handleOptionClick = (optionId: number, response: string) => {
     setSelectedResponse(response)
@@ -49,11 +45,7 @@ export default function SphinxInteractiveDialogue({
     if (onOptionSelected) {
       onOptionSelected(optionId)
     }
-
-    // Después de 4 segundos, cerrar el diálogo
-    setTimeout(() => {
-      onClose()
-    }, 4000)
+    // ✅ Sin auto-close — el usuario cierra cuando quiera
   }
 
   return (
@@ -88,17 +80,40 @@ export default function SphinxInteractiveDialogue({
           animation: 'scaleIn 0.3s ease-out'
         }}
       >
+        {/* Icono */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: 'clamp(8px, 2vw, 14px)',
+          fontSize: 'clamp(32px, 8vw, 42px)',
+        }}>
+          🦁
+        </div>
+
+        {/* Nombre */}
+        <div style={{
+          color: '#ffd700',
+          fontSize: 'clamp(18px, 5vw, 22px)',
+          fontWeight: 'bold',
+          textAlign: 'center',
+          marginBottom: 'clamp(12px, 3vw, 20px)',
+          fontFamily: '"Cinzel", "Trajan Pro", "Times New Roman", serif',
+          letterSpacing: '3px',
+          textShadow: '0 0 12px rgba(255, 215, 0, 0.7)',
+        }}>
+          La Esfinge
+        </div>
+
         {/* Mensaje principal */}
         <div
           style={{
             color: '#ffffff',
-            fontSize: 'clamp(15px, 4vw, 24px)',
+            fontSize: 'clamp(14px, 3.5vw, 18px)',
             fontWeight: 'normal',
             textAlign: 'center',
-            marginBottom: showOptions ? 'clamp(18px, 5vw, 30px)' : '0',
+            marginBottom: showOptions ? 'clamp(16px, 4vw, 25px)' : '0',
             fontFamily: '"Cinzel", "Trajan Pro", "Times New Roman", serif',
-            letterSpacing: '2px',
-            lineHeight: '1.6',
+            letterSpacing: '1px',
+            lineHeight: '1.8',
             textShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
           }}
         >

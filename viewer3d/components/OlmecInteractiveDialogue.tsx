@@ -135,7 +135,7 @@ export default function OlmecInteractiveDialogue({
           color: '#fff', fontSize: 'clamp(14px, 3.5vw, 18px)', textAlign: 'center',
           marginBottom: showOptions ? 'clamp(16px, 4vw, 25px)' : '0',
           fontFamily: '"Cinzel", serif', letterSpacing: '1px',
-          lineHeight: '1.6', textShadow: `0 0 5px rgba(200, 134, 10, 0.3)`,
+          lineHeight: '1.8', textShadow: `0 0 5px rgba(200, 134, 10, 0.3)`,
         }}>
           {selectedResponse || currentMessage}
         </div>

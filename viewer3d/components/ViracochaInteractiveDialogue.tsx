@@ -113,7 +113,7 @@ export default function ViracochaInteractiveDialogue({
           marginBottom: showOptions && !selectedResponse ? 'clamp(16px, 4vw, 25px)' : '0',
           fontFamily: '"Cinzel", serif',
           letterSpacing: '1px',
-          lineHeight: '1.6',
+          lineHeight: '1.8',
           textShadow: `0 0 5px rgba(255, 215, 0, 0.3)`,
         }}>
           {selectedResponse || '¿Qué deseas saber, viajero?'}

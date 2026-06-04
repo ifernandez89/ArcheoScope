@@ -29,9 +29,6 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
   const [showOptions, setShowOptions] = useState(true)
   const [pilotName, setPilotName] = useState('Archeoscope')
 
-  const isMobile = typeof window !== 'undefined' &&
-    (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768)
-
   useEffect(() => {
     try {
       const saved = localStorage.getItem('player_state')
@@ -63,7 +60,7 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
         background: 'rgba(0, 0, 0, 0.80)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 2000, animation: 'fadeIn 0.3s ease-out'
+        zIndex: 2000, animation: 'fadeIn 0.3s ease-out',
       }}
       onClick={onClose}
     >
@@ -73,27 +70,33 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
           background: 'rgba(18, 12, 6, 0.97)',
           border: `2px solid ${ACCENT}`,
           borderRadius: '12px',
-          padding: isMobile ? '16px 18px' : '32px 44px',
-          maxWidth: isMobile ? '95vw' : '640px',
-          width: '92%',
-          maxHeight: isMobile ? '85vh' : 'auto',
-          overflowY: isMobile ? 'auto' : 'visible',
+          padding: 'clamp(18px, 5vw, 36px)',
+          maxWidth: '640px',
+          width: '90%',
+          maxHeight: '85vh',
+          overflowY: 'auto',
           boxShadow: `0 0 40px rgba(232, 201, 122, 0.4)`,
-          animation: 'scaleIn 0.3s ease-out'
+          animation: 'scaleIn 0.3s ease-out',
         }}
       >
         {/* Icono */}
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? '4px' : '10px', fontSize: isMobile ? '28px' : '44px' }}>𓂀</div>
+        <div style={{
+          textAlign: 'center',
+          marginBottom: 'clamp(8px, 2vw, 14px)',
+          fontSize: 'clamp(32px, 8vw, 42px)',
+        }}>
+          𓂀
+        </div>
 
         {/* Nombre */}
         <div style={{
           color: ACCENT,
-          fontSize: isMobile ? '15px' : '22px',
+          fontSize: 'clamp(18px, 5vw, 22px)',
           fontWeight: 'bold',
           textAlign: 'center',
-          marginBottom: isMobile ? '10px' : '22px',
+          marginBottom: 'clamp(12px, 3vw, 20px)',
           fontFamily: '"Cinzel", serif',
-          letterSpacing: isMobile ? '2px' : '4px',
+          letterSpacing: '3px',
           textShadow: `0 0 12px rgba(232, 201, 122, 0.7)`,
         }}>
           Akhenaton
@@ -103,14 +106,14 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
         {selectedResponse && (
           <div style={{
             color: '#f0e8d0',
-            fontSize: isMobile ? '12px' : '16px',
+            fontSize: 'clamp(14px, 3.5vw, 18px)',
             textAlign: 'center',
             fontFamily: '"Cinzel", serif',
             letterSpacing: '0.5px',
-            lineHeight: isMobile ? '1.5' : '1.9',
+            lineHeight: '1.8',
             whiteSpace: 'pre-line',
             textShadow: `0 0 6px rgba(232, 201, 122, 0.2)`,
-            marginBottom: isMobile ? '12px' : '24px',
+            marginBottom: 'clamp(16px, 4vw, 24px)',
           }}>
             {selectedResponse}
           </div>
@@ -121,22 +124,22 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
           <>
             <div style={{
               color: 'rgba(240, 232, 208, 0.7)',
-              fontSize: isMobile ? '12px' : '15px',
+              fontSize: 'clamp(13px, 3.2vw, 15px)',
               textAlign: 'center',
               fontFamily: '"Cinzel", serif',
-              marginBottom: isMobile ? '10px' : '20px',
+              marginBottom: 'clamp(12px, 3vw, 20px)',
               letterSpacing: '1px',
             }}>
               ¿Qué deseas saber, viajero?
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 2vw, 12px)' }}>
               {options.map((opt) => (
                 <button
                   key={opt.id}
                   onClick={() => handleOption(opt.id)}
                   style={{
-                    padding: isMobile ? '10px 14px' : '14px 22px',
-                    fontSize: isMobile ? '12px' : '15px',
+                    padding: 'clamp(11px, 3vw, 14px) clamp(14px, 4vw, 22px)',
+                    fontSize: 'clamp(13px, 3.5vw, 16px)',
                     color: opt.id === 4 ? '#88ddff' : ACCENT,
                     background: opt.id === 4 ? 'rgba(136, 221, 255, 0.08)' : `rgba(232, 201, 122, 0.08)`,
                     border: `1px solid ${opt.id === 4 ? 'rgba(136,221,255,0.4)' : 'rgba(232,201,122,0.4)'}`,
@@ -146,6 +149,7 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
                     letterSpacing: '0.5px',
                     textAlign: 'left',
                     transition: 'all 0.25s ease',
+                    minHeight: '44px',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = opt.id === 4 ? 'rgba(136,221,255,0.2)' : 'rgba(232,201,122,0.2)'
@@ -166,16 +170,20 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
         )}
 
         {/* Botones inferiores */}
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: isMobile ? '12px' : '24px' }}>
+        <div style={{
+          display: 'flex', gap: '12px', justifyContent: 'center',
+          marginTop: 'clamp(16px, 4vw, 24px)',
+        }}>
           {selectedResponse && (
             <button
               onClick={handleBack}
               style={{
-                padding: '10px 24px', fontSize: '14px',
+                padding: 'clamp(10px, 2.5vw, 12px) clamp(20px, 5vw, 28px)',
+                fontSize: 'clamp(13px, 3.2vw, 15px)',
                 color: 'rgba(232,201,122,0.6)', background: 'transparent',
                 border: `1px solid rgba(232,201,122,0.3)`, borderRadius: '8px',
                 cursor: 'pointer', fontFamily: '"Cinzel", serif', letterSpacing: '1px',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease', minHeight: '44px',
               }}
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.color = ACCENT }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(232,201,122,0.3)'; e.currentTarget.style.color = 'rgba(232,201,122,0.6)' }}
@@ -186,11 +194,12 @@ export default function AkhenatonDialogue({ onClose, hasSeenGeoglyphs = false }:
           <button
             onClick={onClose}
             style={{
-              padding: '10px 28px', fontSize: '14px',
+              padding: 'clamp(10px, 2.5vw, 12px) clamp(24px, 6vw, 32px)',
+              fontSize: 'clamp(13px, 3.2vw, 15px)',
               color: ACCENT, background: 'transparent',
               border: `1px solid ${ACCENT}`, borderRadius: '8px',
               cursor: 'pointer', fontFamily: '"Cinzel", serif', letterSpacing: '2px',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease', minHeight: '44px',
             }}
             onMouseEnter={(e) => { e.currentTarget.style.background = ACCENT; e.currentTarget.style.color = '#000' }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = ACCENT }}
