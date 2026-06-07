@@ -3,6 +3,9 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { resetPlayerState } from '@/types/player'
+import dynamic from 'next/dynamic'
+
+const IntroAmbientAudio = dynamic(() => import('@/components/IntroAmbientAudio'), { ssr: false })
 
 // Ruta del logo resuelta en cliente para evitar problemas SSR
 const LOGO_PATH = process.env.NODE_ENV === 'production'
@@ -39,6 +42,9 @@ export default function Home() {
   const handleEnter = () => router.push('/menu')
 
   return (
+    <>
+    {/* 🎵 Audio ambiental de intro — drone cósmico suave */}
+    <IntroAmbientAudio volume={0.15} />
     <main style={{
       width: '100vw', height: '100vh',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -101,5 +107,6 @@ export default function Home() {
         main:active { opacity: 0.9; }
       `}</style>
     </main>
+    </>
   )
 }

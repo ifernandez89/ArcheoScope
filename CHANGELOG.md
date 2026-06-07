@@ -5,6 +5,16 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.5] - 2026-06-07
+
+### Added
+- **IntroAmbientAudio**: nuevo sistema de audio espacial puramente Web Audio API con dron Om (136.10 Hz) para landing page y menú, evitando el silencio inicial. Fade in/out suave.
+
+### Fixed
+- **CoordinateInput**: al hacer click en un sitio arqueológico en PC, ahora el jugador viaja directamente a la ubicación (comportamiento unificado con mobile) sin necesidad de presionar el botón "Viajar" manualmente.
+- **DiscoveryToast congelado**: agregado timeout de seguridad `safetyTimer` para evitar el bug donde el cartel descriptivo "El sistema dibuja arte único..." quedaba congelado permanentemente en la pantalla al perder la referencia de desmontaje entre renders de la escena Solar realista.
+- **Cámara Training Room**: la cámara ahora inicia correctamente posicionada enfocando la nave espacial elevada (`Y=10`). Se reseteó `idleTimer=0` al montar para que siga al UFO inmediatamente en lugar de arrancar congelada enfocando al vacío.
+
 ## [1.2.4] - 2026-06-04
 
 ### Fixed — Diálogos NPC: auto-close eliminado + sistema tipográfico unificado

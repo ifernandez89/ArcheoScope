@@ -7,6 +7,9 @@ import { resetMissionState } from '@/types/missionState'
 import { resetGameSettings } from '@/types/gameSettings'
 import { getAssetPath } from '@/lib/paths'
 import { isHelpEnabled, toggleHelp } from '@/systems/helpSystem'
+import dynamic from 'next/dynamic'
+
+const IntroAmbientAudio = dynamic(() => import('@/components/IntroAmbientAudio'), { ssr: false })
 
 const LOGO_MAIN = process.env.NODE_ENV === 'production'
   ? '/ArcheoScope/branding/logo/logo-main.png'
@@ -170,7 +173,10 @@ export default function MenuPage() {
   }
 
   return (
-    <main style={{
+    <>
+      {/* 🎵 Audio ambiental del menú — drone cósmico suave (persiste desde el landing) */}
+      <IntroAmbientAudio volume={0.12} />
+      <main style={{
       width: '100vw',
       minHeight: '100vh',
       display: 'flex',
@@ -307,5 +313,6 @@ export default function MenuPage() {
         )}
       </div>
     </main>
+    </>
   )
 }

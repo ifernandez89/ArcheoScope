@@ -508,7 +508,7 @@ export default function TrainingRoom() {
       <ObjectSelectionProvider>
         <Canvas
           shadows
-          camera={{ position: [8, 4, 8], fov: 60 }}
+          camera={{ position: [0, 14, -14], fov: 60 }}
           dpr={[1, 2]}
           gl={{
             antialias: true,
@@ -518,7 +518,7 @@ export default function TrainingRoom() {
             toneMappingExposure: 1.2
           }}
         >
-          <PerspectiveCamera makeDefault position={[8, 4, 8]} fov={60} />
+          {/* Sin PerspectiveCamera duplicada — WalkableAvatar controla la cámara via useFrame */}
           <TrainingScene />
         </Canvas>
       </ObjectSelectionProvider>

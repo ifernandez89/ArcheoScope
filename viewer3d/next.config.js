@@ -28,8 +28,9 @@ const nextConfig = {
   },
   
   // Optimizaciones de performance
+  transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
   experimental: {
-    optimizePackageImports: ['three', '@react-three/fiber', '@react-three/drei'],
+    optimizePackageImports: ['three'],
   },
   
   webpack: (config, { isServer }) => {

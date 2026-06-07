@@ -48,8 +48,6 @@ export default function CoordinateInput({
   weatherCode = 0,
 }: CoordinateInputProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [lat, setLat] = useState(currentLocation?.lat.toFixed(4) || '')
-  const [lon, setLon] = useState(currentLocation?.lon.toFixed(4) || '')
   const [pulse, setPulse] = useState(false)
   const [missionsCompleted, setMissionsCompleted] = useState(0)
   const [zoomToast, setZoomToast] = useState<string | null>(null)
@@ -74,17 +72,6 @@ export default function CoordinateInput({
     }, 4000)
     return () => clearInterval(interval)
   }, [mode, isOpen, disabled])
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const latitude = parseFloat(lat)
-    const longitude = parseFloat(lon)
-    if (isNaN(latitude) || isNaN(longitude)) { alert('Por favor ingresa coordenadas válidas'); return }
-    if (latitude < -90 || latitude > 90) { alert('Latitud debe estar entre -90 y 90'); return }
-    if (longitude < -180 || longitude > 180) { alert('Longitud debe estar entre -180 y 180'); return }
-    onCoordinateSubmit(latitude, longitude)
-    setIsOpen(false)
-  }
 
   // Enfocar cuerpo celeste — emite evento; RealisticSolarSystem calcula la posición real
   const focusCelestialBody = (body: typeof CELESTIAL_BODIES[0]) => {
@@ -247,56 +234,6 @@ export default function CoordinateInput({
             </div>
           )}
 
-          {/* Formulario manual — solo PC */}
-          {!isMobile && (
-            <form onSubmit={handleSubmit} style={{ marginBottom: '20px' }}>
-              <div style={{ marginBottom: '10px' }}>
-                <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', marginBottom: '4px', letterSpacing: '0.5px' }}>
-                  LATITUD (-90 a 90)
-                </label>
-                <input
-                  type="text" value={lat} onChange={(e) => setLat(e.target.value)}
-                  placeholder="-13.1631"
-                  style={{
-                    width: '100%', padding: '9px 12px',
-                    background: 'rgba(255,255,255,0.07)',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: '7px', color: 'white', fontSize: '14px', outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                />
-              </div>
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', marginBottom: '4px', letterSpacing: '0.5px' }}>
-                  LONGITUD (-180 a 180)
-                </label>
-                <input
-                  type="text" value={lon} onChange={(e) => setLon(e.target.value)}
-                  placeholder="-72.5450"
-                  style={{
-                    width: '100%', padding: '9px 12px',
-                    background: 'rgba(255,255,255,0.07)',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: '7px', color: 'white', fontSize: '14px', outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                />
-              </div>
-              <button
-                type="submit"
-                style={{
-                  width: '100%', padding: '11px',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  border: 'none', borderRadius: '8px', color: 'white',
-                  fontSize: '14px', fontWeight: 'bold', cursor: 'pointer',
-                  letterSpacing: '0.5px',
-                }}
-              >
-                🌍 Viajar
-              </button>
-            </form>
-          )}
-
           {/* ── Sitios arqueológicos ── */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{
@@ -310,13 +247,9 @@ export default function CoordinateInput({
                 <button
                   key={i}
                   onClick={() => {
-                    if (isMobile) {
-                      onCoordinateSubmit(site.lat, site.lon)
-                      setIsOpen(false)
-                    } else {
-                      setLat(site.lat.toFixed(4))
-                      setLon(site.lon.toFixed(4))
-                    }
+                    // Viaje directo al seleccionar — tanto mobile como PC
+                    onCoordinateSubmit(site.lat, site.lon)
+                    setIsOpen(false)
                   }}
                   style={{
                     padding: '8px 12px',

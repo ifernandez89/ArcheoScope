@@ -126,10 +126,29 @@ export default function WalkableAvatar({
       group.current.rotation.set(0, 0, 0)
     }
     
-    // Resetear timer de idle para forzar reposicionamiento de cámara
-    idleTimer.current = 2.0  // Forzar reposicionamiento inmediato
+    // ✅ FIX: idleTimer = 0 para que la cámara pueda seguir al avatar inmediatamente.
+    // ANTES: 2.0 → followSpeed = 0 → cámara congelada en posición incorrecta al iniciar.
+    idleTimer.current = 0
     
-  }, [modelPath, avatarType]) // Removido initialPosition de las dependencias
+    // ✅ FIX: Si el avatar inicia elevado (ej: UFO en training a Y=10), snap de cámara directo.
+    // Esto evita que la cámara quede mirando al suelo mientras el UFO flota arriba.
+    if (!disableCameraControl) {
+      const initY = initialPosition[1] ?? 0
+      if (initY > 2) {
+        // Posicionar la cámara detrás y arriba del avatar inmediatamente
+        const camDistance = 6
+        const camHeight = 3
+        camera.position.set(
+          initialPosition[0],
+          initY + camHeight,
+          initialPosition[2] - camDistance
+        )
+        camera.lookAt(initialPosition[0], initY + 1.5, initialPosition[2])
+      }
+    }
+    
+  }, [modelPath, avatarType]) // eslint-disable-line react-hooks/exhaustive-deps
+  // initialPosition y camera excluidos — son estables en el ciclo de vida del componente
   
   // Configurar controles de teclado
   useEffect(() => {

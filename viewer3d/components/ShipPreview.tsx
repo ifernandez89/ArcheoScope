@@ -32,9 +32,8 @@ export default function ShipPreview({ shipModel }: ShipPreviewProps) {
       borderRadius: '8px',
       overflow: 'hidden'
     }}>
-      {/* key={shipModel} fuerza remount del Canvas al cambiar nave */}
+      {/* El Canvas no debe desmontarse completo para evitar crashes de R3F/Webpack */}
       <Canvas
-        key={shipModel}
         camera={{ position: [0, 2, 8], fov: 50 }}
         style={{ background: '#0a0a0a' }}
       >

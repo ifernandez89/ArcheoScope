@@ -20,11 +20,18 @@ export default function DiscoveryToast({ toast, onDismiss }: DiscoveryToastProps
     setVisible(true)
     const fadeTimer = setTimeout(() => setVisible(false), 6500)
     const removeTimer = setTimeout(() => onDismiss(), 7000)
+    // ⛑️ Timeout de seguridad: fuerza dismiss si algo falla (ej: re-render congelado)
+    const safetyTimer = setTimeout(() => {
+      setVisible(false)
+      onDismiss()
+    }, 8500)
     return () => {
       clearTimeout(fadeTimer)
       clearTimeout(removeTimer)
+      clearTimeout(safetyTimer)
     }
-  }, [toast, onDismiss])
+  }, [toast]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Nota: onDismiss excluido intencionalmente para evitar re-triggers por cambio de referencia
 
   if (!toast) return null
 

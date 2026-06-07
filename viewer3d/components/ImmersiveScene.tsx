@@ -1814,7 +1814,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       )}
 
       {/* ✦ Toast de descubrimiento — minimalista, no intrusivo */}
-      <DiscoveryToast toast={discoveryToast} onDismiss={() => setDiscoveryToast(null)} />
+      <DiscoveryToast key={discoveryToast?.id ?? 'empty'} toast={discoveryToast} onDismiss={() => setDiscoveryToast(null)} />
 
       {/* 📱 Controles touch para mobile — D-pad + rotación */}
       {mode === 'model' && isMobile && (
