@@ -5,6 +5,103 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.6] - 2026-06-07
+
+### Added — Cinemática Final Épica + Progresión de Audio Perceptible + Anillos de Saturno Realistas
+
+#### 🎬 Cinemática Final de Göbekli Tepe
+- **Secuencia épica mejorada**: Al completar los 4 elementos (Tonatiuh, Escarabajo, Calavera, Fuente Magna), el sistema ahora espera a que el jugador mueva la nave antes de activar la secuencia final
+- **Detección de movimiento**: El sistema monitorea la posición de la nave y dispara la cinemática cuando detecta un movimiento >5 unidades desde la posición inicial
+- **Lerp fluido**: La nave se teletransporta automáticamente a una posición épica `[0, 25, 80]` con transición suave de 5 segundos usando easing cubic
+- **Control de cámara cinemático**: La cámara se posiciona en `[0, 30, 120]` con lerp independiente, enfocando el centro `[0, 10, 0]` para apreciar el ascenso de la esfera cristalina
+- **Desactivación de controles**: Durante la cinemática, los controles de teclado quedan deshabilitados para no interrumpir la secuencia
+- **Mensaje "Archeoscope Regresará..."**: aparece a los 8 segundos (mientras la esfera asciende), con fade in y escala suave
+- **Redirección automática**: a los 38 segundos redirige a los créditos (`/menu/info?credits=true`)
+
+#### 🎵 Progresión de Audio Harmonia Mundi — Perceptible
+**Problema**: El sistema previo usaba frecuencias infrasonoras (<20 Hz) y volúmenes muy bajos (0.08-0.12) que resultaban imperceptibles para un usuario estándar, reduciendo el impacto épico de la progresión
+**Solución implementada**:
+
+- **Frecuencias audibles mejoradas**:
+  - Misión 1: 34 Hz (rumble grave perceptible, antes 8.51 Hz infrasónico)
+  - Misión 2: 68 Hz (pulso grave notable, antes 0.002 Hz imperceptible)
+  - Misión 3: 136.10 Hz (frecuencia base de la Tierra "Om cósmico", antes 17 Hz)
+  - Misión 4: 204 Hz (quinta perfecta, antes 25 Hz demasiado grave)
+  - Misión 5: 272 Hz (octava alta, antes 34 Hz)
+  
+- **Intensidades incrementadas progresivamente**:
+  - Misión 1: 0.20 (antes 0.15)
+  - Misión 2: 0.25 (antes 0.10)
+  - Misión 3: 0.30 (antes 0.08)
+  - Misión 4: 0.35 (antes 0.06)
+  - Misión 5: 0.40 (antes 0.12 — ahora es el pico sonoro)
+  
+- **Capas armónicas adicionales por misión**:
+  - **Drone**: agrega quinta perfecta (1.5x frecuencia base)
+  - **Pulse**: agrega tercera (1.2x) + LFO rítmico a 2 Hz (perceptible)
+  - **Harmonic**: agrega tercera mayor (1.25x) + octava (2x)
+  - **Texture**: agrega quinta (1.5x) + octava (2x) + LFO "respiración" 0.5 Hz
+  - **Resonance**: agrega octava (2x) + quinta (1.5x) + tercera mayor (1.25x) + LFO épico 0.8 Hz
+  
+- **Osciladores LFO dinámicos**: cada tipo de capa suma osciladores de modulación que crean "respiración sonora" perceptible (0.5-2 Hz según tipo)
+
+- **Resultado**: Ahora un usuario estándar con volumen medio escuchará claramente:
+  1. Silencio inicial → rumble grave (misión 1)
+  2. Pulso rítmico notable (misión 2)
+  3. Armónicos cristalinos (misión 3)
+  4. Quinta espacial + respiración (misión 4)
+  5. Campo de resonancia épico completo (misión 5)
+  6. Zumbidos del escarabajo sagrado Khepri (Göbekli Tepe)
+
+#### 🪐 Anillos de Saturno — Realismo Mejorado
+**Problema**: Los anillos originales eran un disco uniforme sin la estructura característica de Saturno (División de Cassini, bandas diferenciadas, variación de opacidad)
+
+**Mejoras implementadas**:
+
+- **⭐ División de Cassini visible** (gap entre anillos A y B): característica visual más reconocible de Saturno — ahora claramente visible como separación oscura entre los anillos brillantes
+- **Múltiples bandas diferenciadas**:
+  - Ring D (interior, tenue): 1.11-1.23 radios
+  - Ring C (traslúcido gris): 1.23-1.52 radios
+  - Ring B (brillante, denso): 1.52-1.95 radios — 90% opacidad
+  - **Cassini Division** (gap vacío): 1.95-2.02 radios — 0% opacidad
+  - Ring A (brillante): 2.02-2.27 radios — 80% opacidad
+  - Encke Gap (mini gap en A): banda tenue a 0.68-0.70
+  - Ring F (exterior, tenue): 2.32 radios — 15% opacidad
+
+- **Textura radial procedural** (2048px): generada dinámicamente con gradient radial + variación estocástica + turbulencia sinusoidal → elimina apariencia de "disco plano uniforme"
+
+- **Opacidad variable por región**:
+  - Ring B: 85-90% (denso, brillante)
+  - Ring A: 75-80% (brillante post-Cassini)
+  - Ring C: 15-25% (traslúcido)
+  - Ring D: 5-8% (casi invisible)
+  - Ring F: 15-20% (fino, exterior)
+  - **Cassini Division: 0%** (completamente vacío)
+
+- **Propiedades físicas realistas** (hielo):
+  - `roughness: 0.7` — hielo mate pero reflectante
+  - `metalness: 0.0` — no metálico
+  - Color base: `#ffffff` para que el mapa de color domine
+  - Cara inferior con opacidad 0.6 para profundidad
+
+- **Geometría mejorada**: 256 segmentos (antes: 128) para suavidad de bandas
+
+- **Resultado visual**:
+  ```
+  ANTES:  ████████████████████████  (disco uniforme)
+  AHORA:  ██████░░░████████░░░░███  (bandas + Cassini gap)
+  ```
+
+### Fixed
+- **MissionState type**: agregado `gobekliTepe: SiteProgress` al tipo de sitios para evitar error de compilación con `getSiteNameFromCoordinates`
+- **WalkableAvatar**: corregida posición de la función helper `getAvatarType` que quedó dentro del componente causando error de sintaxis
+- **Webpack + React Three Fiber**: resuelto error crítico `Cannot read properties of undefined (reading 'call')` causado por falta de módulo `scheduler`:
+  - Instalado `scheduler@0.27.0` como dependencia explícita (bun no lo instalaba automáticamente como peer dependency de React 18)
+  - Agregado alias de webpack para resolver `scheduler` correctamente en cliente y servidor
+  - Agregado `scheduler` a `transpilePackages` en `next.config.js`
+  - Deshabilitado chunk splitting de React Three Fiber en desarrollo para evitar problemas de resolución de módulos CommonJS/ESM
+  - Fix crítico para desarrollo - sin este fix, cualquier componente Three.js falla al cargar con error de webpack
+
 ## [1.2.5] - 2026-06-07
 
 ### Added

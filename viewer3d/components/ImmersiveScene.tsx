@@ -887,13 +887,32 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
       if (currentUfo === 4 && newState) {
         const currentSite = selectedSiteRef.current
         const currentLocation = selectedLocationRef.current
-        const siteId = currentSite?.id || ''
+        let siteId = currentSite?.id || ''
         let foundNPC: string | null = null
 
-        if (siteId === 'puma-punku' || siteId === 'pumaPunku') {
+        // Normalizar siteId si venimos navegando por coordenadas directas
+        if (!siteId && currentLocation) {
+          const { lat, lon } = currentLocation
+          const resolved = getSiteNameFromCoordinates(lat, lon)
+          if (resolved === 'pumaPunku') siteId = 'pumaPunku'
+          else if (resolved === 'giza') siteId = 'giza'
+          else if (resolved === 'easterIsland') siteId = 'easter-island'
+          else if (resolved === 'teotihuacan') siteId = 'teotihuacan'
+          else if (resolved === 'veracruz') siteId = 'tres-zapotes'
+          else if (resolved === 'gobekliTepe') siteId = 'gobekli-tepe'
+        }
+
+        const px = mainAvatarPositionRef.current.x
+        const pz = mainAvatarPositionRef.current.z
+
+        // Titicaca es un caso especial por coordenadas dentro de la región de Puma Punku
+        const isTiticaca = currentLocation && currentLocation.lat > -16.5 && currentLocation.lat < -15.5 && currentLocation.lon > -70 && currentLocation.lon < -68.5
+
+        if (isTiticaca) {
+          const distMonos = (px + 83) ** 2 + (pz + 67) ** 2
+          foundNPC = distMonos < 400 ? 'Monos' : 'FuenteMagna'
+        } else if (siteId === 'puma-punku' || siteId === 'pumaPunku') {
           // Puma Punku: Viracocha, Fuente Magna o Cóndor según proximidad
-          const px = mainAvatarPositionRef.current.x
-          const pz = mainAvatarPositionRef.current.z
           const distCondor = (px + 83) ** 2 + (pz + 67) ** 2
           const distFuente = px ** 2 + pz ** 2
           const distViracocha = (px - 14.5) ** 2 + (pz - 0.83) ** 2
@@ -909,8 +928,6 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             { name: 'Mummy', x: -72, z: -2 }
           ]
           let minDistSq = Infinity
-          const px = mainAvatarPositionRef.current.x
-          const pz = mainAvatarPositionRef.current.z
           // Geoglifo araña en [-83, 3, -67]
           const distArana = (px + 83) ** 2 + (pz + 67) ** 2
           if (distArana < 400) { foundNPC = 'Araña' } else {
@@ -920,70 +937,27 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
             })
           }
         } else if (siteId === 'moai-easter-island' || siteId === 'easter-island') {
-          const px = mainAvatarPositionRef.current.x
-          const pz = mainAvatarPositionRef.current.z
           const distBallena = (px + 55) ** 2 + (pz - 55) ** 2  // ballena en [-55,1,55]
           const distMerkaba = px ** 2 + pz ** 2
           if (distBallena < 400) foundNPC = 'Ballena'
           else foundNPC = distMerkaba < 400 ? 'Merkaba' : 'Hotu Matua'
         } else if (siteId === 'teotihuacan') {
-          const px = mainAvatarPositionRef.current.x
-          const pz = mainAvatarPositionRef.current.z
           const distColibri = (px + 83) ** 2 + (pz + 67) ** 2  // colibrí en [-83,0.3,-67]
           const distCalendario = px ** 2 + (pz + 20) ** 2
           if (distColibri < 400) foundNPC = 'Colibrí'
           else foundNPC = distCalendario < 625 ? 'CalendarioMaya' : 'Quetzalcoatl'
-        } else if (siteId === 'tres-zapotes') {
-          const px = mainAvatarPositionRef.current.x
-          const pz = mainAvatarPositionRef.current.z
+        } else if (siteId === 'tres-zapotes' || siteId === 'veracruz') {
           const distPerro = (px + 83) ** 2 + (pz + 67) ** 2  // perro en [-83,1,-67]
           if (distPerro < 400) foundNPC = 'Perro'
           else if (currentLocation && Math.abs(currentLocation.lat) < 0.001) foundNPC = 'Mictlantecuhtli'
           else foundNPC = 'Atlante'
-        } else if (currentLocation) {
-          // Fallback por coordenadas GPS (para sitios sin id exacto)
-          const { lat, lon } = currentLocation
-          if (Math.abs(lat - (-16.5616)) < 0.1 && Math.abs(lon - (-68.6795)) < 0.1) foundNPC = 'Viracocha'
-          else if (Math.abs(lat - 29.9792) < 0.1 && Math.abs(lon - 31.1342) < 0.1) {
-            // En Giza por coordenadas: buscar más cercano igual que arriba
-            const gizaNPCs = [
-              { name: 'Sphinx', x: 100, z: 50 },
-              { name: 'Ramesses', x: -20, z: -50 },
-              { name: 'Hatshepsut', x: 20, z: -50 },
-              { name: 'Akhenaten', x: 0, z: 0 },
-              { name: 'Mummy', x: -72, z: -2 }
-            ]
-            let minDistSq = Infinity
-            const px = mainAvatarPositionRef.current.x
-            const pz = mainAvatarPositionRef.current.z
-            gizaNPCs.forEach(npc => {
-              const distSq = (px - npc.x) ** 2 + (pz - npc.z) ** 2
-              if (distSq < minDistSq) {
-                minDistSq = distSq
-                foundNPC = npc.name
-              }
-            })
-          }
-          else if (Math.abs(lat - (-27.1254)) < 0.1) foundNPC = 'Hotu Matua'
-          else if (Math.abs(lat - 19.6925) < 0.1) foundNPC = 'Quetzalcoatl'
-          else if (Math.abs(lat - 18.4667) < 0.1) foundNPC = 'Atlante'
-          else if (Math.abs(lat - 37.2231) < 0.1 && Math.abs(lon - 38.9225) < 0.1) {
-            // Göbekli Tepe: astronauta en [-55,0.1,-55] o monolito central
-            const px = mainAvatarPositionRef.current.x
-            const pz = mainAvatarPositionRef.current.z
-            const distAstro = (px + 55) ** 2 + (pz + 55) ** 2
-            const distMonolito = px ** 2 + pz ** 2  // monolito en [0,0,0]
-            if (distAstro < 400) foundNPC = 'Astronauta'
-            else if (distMonolito < 900) foundNPC = 'MonolitoGobekli'
-            else foundNPC = 'Astronauta' // default Göbekli
-          }
-          else if (lat > -16.5 && lat < -15.5 && lon > -70 && lon < -68.5) {
-            // Titicaca: monos en [-83,0.3,-67]
-            const px = mainAvatarPositionRef.current.x
-            const pz = mainAvatarPositionRef.current.z
-            const distMonos = (px + 83) ** 2 + (pz + 67) ** 2
-            foundNPC = distMonos < 400 ? 'Monos' : 'FuenteMagna'
-          }
+        } else if (siteId === 'gobekli-tepe') {
+          // Göbekli Tepe: astronauta en [-55,0.1,-55] o monolito central
+          const distAstro = (px + 55) ** 2 + (pz + 55) ** 2
+          const distMonolito = px ** 2 + pz ** 2  // monolito en [0,0,0]
+          if (distAstro < 400) foundNPC = 'Astronauta'
+          else if (distMonolito < 900) foundNPC = 'MonolitoGobekli'
+          else foundNPC = 'Astronauta' // default Göbekli
         }
 
         if (foundNPC) {
@@ -1341,6 +1315,10 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
     // Veracruz (Tres Zapotes)
     if (Math.abs(lat - 18.4667) < 0.05 && Math.abs(lon - (-95.4500)) < 0.05) {
       return 'veracruz'
+    }
+    // Göbekli Tepe
+    if (Math.abs(lat - 37.2231) < 0.05 && Math.abs(lon - 38.9225) < 0.05) {
+      return 'gobekliTepe'
     }
     return null
   }

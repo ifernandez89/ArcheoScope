@@ -28,7 +28,7 @@ const nextConfig = {
   },
   
   // Optimizaciones de performance
-  transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
+  transpilePackages: ['three', '@react-three/fiber', '@react-three/drei', 'scheduler'],
   experimental: {
     optimizePackageImports: ['three'],
   },
@@ -40,8 +40,20 @@ const nextConfig = {
       type: 'asset/resource',
     });
     
-    // Optimizaciones de bundle
-    if (!isServer) {
+    // FIX CRÍTICO: React Three Fiber + Next.js 14 scheduler resolution
+    // El problema: R3F intenta importar 'scheduler' dinámicamente pero webpack
+    // no puede resolver la importación en runtime
+    // Solución: Agregar scheduler como alias en cliente Y servidor
+    
+    // Alias para scheduler (requerido por R3F) - aplicar en ambos lados
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      scheduler: require.resolve('scheduler'),
+    };
+    
+    // Optimizaciones de bundle (deshabilitadas temporalmente para debug R3F)
+    // NOTA: El chunk splitting de R3F causa problemas con scheduler en desarrollo
+    if (!isServer && isProd) {
       config.optimization = {
         ...config.optimization,
         splitChunks: {
@@ -53,7 +65,7 @@ const nextConfig = {
               name: 'three',
               priority: 10,
             },
-            // React Three Fiber en chunk separado
+            // React Three Fiber en chunk separado (SOLO EN PRODUCCIÓN)
             r3f: {
               test: /[\\/]node_modules[\\/](@react-three)[\\/]/,
               name: 'react-three',

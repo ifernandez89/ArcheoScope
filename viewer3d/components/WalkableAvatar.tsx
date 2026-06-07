@@ -56,6 +56,14 @@ export default function WalkableAvatar({
   const { actions, names } = useAnimations(animations, group)
   const { camera } = useThree()
   
+  // Estados para cinemática final
+  const [isCinematicEnding, setIsCinematicEnding] = useState(false)
+  const cinematicTargetPos = useRef<THREE.Vector3 | null>(null)
+  const cinematicTargetLookAt = useRef<THREE.Vector3 | null>(null)
+  const cinematicStartTime = useRef<number | null>(null)
+  const cinematicCameraTarget = useRef<THREE.Vector3 | null>(null)
+  const cinematicCameraLookAt = useRef<THREE.Vector3 | null>(null)
+  
   // Convertir solarDirection de objeto plano a Vector3 (memoizado)
   const solarDirectionVec3 = useMemo(() => 
     new THREE.Vector3(solarDirection.x, solarDirection.y, solarDirection.z),
@@ -194,6 +202,29 @@ export default function WalkableAvatar({
       window.removeEventListener('mousemove', handleMouseMove)
     }
   }, [avatarType])
+  
+  // Suscribirse al evento de fin de cinemática (Göbekli Tepe)
+  useEffect(() => {
+    const handleCinematicTrigger = () => {
+      console.log('🎬 WalkableAvatar: trigger-end-cinematic recibido')
+      setIsCinematicEnding(true)
+      cinematicStartTime.current = performance.now()
+      
+      // Posición épica final: atrás, arriba, ángulo dramático
+      cinematicTargetPos.current = new THREE.Vector3(0, 25, 80)
+      cinematicTargetLookAt.current = new THREE.Vector3(0, 0, 0)
+      
+      // Posición de cámara épica
+      cinematicCameraTarget.current = new THREE.Vector3(0, 30, 120)
+      cinematicCameraLookAt.current = new THREE.Vector3(0, 10, 0)
+    }
+    
+    window.addEventListener('trigger-end-cinematic', handleCinematicTrigger)
+    
+    return () => {
+      window.removeEventListener('trigger-end-cinematic', handleCinematicTrigger)
+    }
+  }, [])
   
   // Configurar modelo
   useEffect(() => {
@@ -335,6 +366,36 @@ export default function WalkableAvatar({
     if (!group.current) return
     
     const camera = state.camera
+    
+    // 🎬 CINEMÁTICA FINAL: Lerp fluido hacia posición épica
+    if (isCinematicEnding && cinematicStartTime.current && cinematicTargetPos.current && cinematicCameraTarget.current) {
+      const elapsed = (performance.now() - cinematicStartTime.current) / 1000 // segundos
+      const duration = 5 // 5 segundos para la cinemática
+      const t = Math.min(elapsed / duration, 1) // progreso 0-1
+      
+      // Curva de easing suave (ease-out cubic)
+      const eased = 1 - Math.pow(1 - t, 3)
+      
+      // Lerp de posición de nave
+      group.current.position.lerp(cinematicTargetPos.current, eased * 0.1)
+      
+      // Lerp de posición de cámara
+      camera.position.lerp(cinematicCameraTarget.current, eased * 0.08)
+      
+      // Forzar lookAt hacia el centro
+      if (cinematicCameraLookAt.current) {
+        const currentLookAt = new THREE.Vector3()
+        camera.getWorldDirection(currentLookAt)
+        currentLookAt.add(camera.position)
+        currentLookAt.lerp(cinematicCameraLookAt.current, eased * 0.12)
+        camera.lookAt(currentLookAt)
+      }
+      
+      // Desactivar controles de teclado
+      Object.keys(keys.current).forEach(k => keys.current[k] = false)
+      
+      return // Salir del frame normal
+    }
     
     // MODO VUELO LIBRE: SHIFT presionado (solo para Avenger)
     if (avatarType === 'flying' && isShiftPressed.current) {

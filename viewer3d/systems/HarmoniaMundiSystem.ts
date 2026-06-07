@@ -141,6 +141,7 @@ export class HarmoniaMundiSystem {
   ])
   
   // 5 Misiones de la Tierra (V1)
+  // PROGRESIÓN MEJORADA: Cada misión suma capas AUDIBLES (armónicos + volumen creciente)
   private earthMissionLayers: Map<string, MissionLayer> = new Map([
     ['earth_base_ambient', {
       id: 'earth_base_ambient',
@@ -154,46 +155,46 @@ export class HarmoniaMundiSystem {
     ['earth_mission_1', {
       id: 'earth_mission_1',
       name: 'Despertar Terrestre',
-      description: 'Drone fundamental de la Tierra',
-      frequency: 136.10 / 16, // 4 octavas abajo = 8.51 Hz (subgrave)
+      description: 'Drone fundamental de la Tierra + quinta armónica',
+      frequency: 136.10 / 4, // 2 octavas abajo = 34 Hz (audible como rumble)
       type: 'drone',
-      intensity: 0.15,
+      intensity: 0.20, // Incrementado para ser perceptible
       unlocked: false
     }],
     ['earth_mission_2', {
       id: 'earth_mission_2',
       name: 'Pulso Vital',
-      description: 'Pulso orbital sutil',
-      frequency: 1 / 365.25, // Muy lento (1 ciclo por año simulado)
+      description: 'Pulso rítmico + tercera mayor',
+      frequency: 136.10 / 2, // 1 octava abajo = 68 Hz (grave notable)
       type: 'pulse',
-      intensity: 0.1,
+      intensity: 0.25, // Incrementado
       unlocked: false
     }],
     ['earth_mission_3', {
       id: 'earth_mission_3',
       name: 'Primer Armónico',
-      description: 'Armónico cristalino',
-      frequency: (136.10 / 16) * 2, // Primera octava arriba
+      description: 'Armónico cristalino + coro espacial',
+      frequency: 136.10, // Frecuencia base de la Tierra (audible)
       type: 'harmonic',
-      intensity: 0.08,
+      intensity: 0.30, // Incrementado
       unlocked: false
     }],
     ['earth_mission_4', {
       id: 'earth_mission_4',
       name: 'Textura Atmosférica',
-      description: 'Capa de textura ambiental',
-      frequency: (136.10 / 16) * 3, // Quinta perfecta
+      description: 'Quinta perfecta + oscilación LFO',
+      frequency: 136.10 * 1.5, // Quinta perfecta = 204 Hz
       type: 'texture',
-      intensity: 0.06,
+      intensity: 0.35, // Incrementado
       unlocked: false
     }],
     ['earth_mission_5', {
       id: 'earth_mission_5',
       name: 'Resonancia Completa',
-      description: 'Campo de resonancia total',
-      frequency: (136.10 / 16) * 4, // Segunda octava
+      description: 'Octava alta + campo de resonancia total',
+      frequency: 136.10 * 2, // Octava arriba = 272 Hz
       type: 'resonance',
-      intensity: 0.12,
+      intensity: 0.40, // Incrementado — cúspide sonora
       unlocked: false
     }],
     ['earth_mission_6', {
@@ -403,7 +404,7 @@ export class HarmoniaMundiSystem {
   
   /**
    * Crear oscilador para una capa
-   * AJUSTADO: Transpone frecuencias al límite audible (20 Hz mínimo)
+   * MEJORADO: Agrega armónicos perceptibles (quintas, octavas, terceras) + LFO dinámico
    */
   private createLayerOscillator(layer: MissionLayer): void {
     if (!this.context) return
@@ -424,6 +425,9 @@ export class HarmoniaMundiSystem {
       finalFreq /= 2
     }
     
+    // ✨ ARMÓNICOS ADICIONALES según tipo de capa
+    const harmonics: Array<{ freq: number, type: OscillatorType, intensity: number }> = []
+    
     // Configurar según tipo
     switch (layer.type) {
       case 'drone':
@@ -431,6 +435,9 @@ export class HarmoniaMundiSystem {
         osc.frequency.value = finalFreq
         gain.gain.value = 0
         gain.connect(this.planetaryGain!)
+        
+        // Agregar quinta perfecta (1.5x)
+        harmonics.push({ freq: finalFreq * 1.5, type: 'sine', intensity: layer.intensity * 0.6 })
         break
         
       case 'harmonic':
@@ -438,31 +445,38 @@ export class HarmoniaMundiSystem {
         osc.frequency.value = finalFreq
         gain.gain.value = 0
         gain.connect(this.harmonicGain!)
+        
+        // Agregar tercera mayor (1.25x) y octava (2x)
+        harmonics.push({ freq: finalFreq * 1.25, type: 'triangle', intensity: layer.intensity * 0.5 })
+        harmonics.push({ freq: finalFreq * 2, type: 'sine', intensity: layer.intensity * 0.4 })
         break
         
       case 'pulse':
         osc.type = 'sine'
         // Para pulsos, asegurar que sea audible
-        let pulseFreq = layer.frequency * 100
+        let pulseFreq = layer.frequency
         while (pulseFreq < 40) {
           pulseFreq *= 2
         }
         osc.frequency.value = pulseFreq
         gain.gain.value = 0
         
-        // LFO para pulso
+        // LFO para pulso rítmico
         const lfo = this.context.createOscillator()
-        lfo.frequency.value = Math.max(0.1, layer.frequency) // Mínimo 0.1 Hz para LFO
+        lfo.frequency.value = 2.0 // 2 Hz = pulso perceptible
         lfo.type = 'sine'
         
         const lfoGain = this.context.createGain()
-        lfoGain.gain.value = layer.intensity * 0.5
+        lfoGain.gain.value = layer.intensity * 0.8 // Incrementado para ser notable
         
         lfo.connect(lfoGain)
         lfoGain.connect(gain.gain)
         lfo.start()
         
         gain.connect(this.pulseGain!)
+        
+        // Agregar tercera (1.2x) para riqueza
+        harmonics.push({ freq: pulseFreq * 1.2, type: 'sine', intensity: layer.intensity * 0.5 })
         
         this.activeOscillators.set(layer.id, { osc, gain, lfo, lfoGain })
         osc.connect(gain)
@@ -474,7 +488,10 @@ export class HarmoniaMundiSystem {
           this.context.currentTime + 3
         )
         
-        console.log(`🎵 Pulso creado: ${finalFreq.toFixed(2)} Hz (original: ${layer.frequency.toFixed(4)} Hz)`)
+        console.log(`🎵 Pulso creado: ${pulseFreq.toFixed(2)} Hz con LFO 2 Hz`)
+        
+        // Crear armónicos adicionales
+        this.createHarmonics(harmonics, layer.id)
         return
         
       case 'texture':
@@ -482,6 +499,24 @@ export class HarmoniaMundiSystem {
         osc.frequency.value = finalFreq
         gain.gain.value = 0
         gain.connect(this.harmonicGain!)
+        
+        // LFO de "respiración" para textura orgánica
+        const textureLfo = this.context.createOscillator()
+        textureLfo.frequency.value = 0.5 // Oscilación lenta
+        textureLfo.type = 'sine'
+        
+        const textureLfoGain = this.context.createGain()
+        textureLfoGain.gain.value = layer.intensity * 0.4
+        
+        textureLfo.connect(textureLfoGain)
+        textureLfoGain.connect(gain.gain)
+        textureLfo.start()
+        
+        // Agregar quinta y octava para espacialidad
+        harmonics.push({ freq: finalFreq * 1.5, type: 'triangle', intensity: layer.intensity * 0.6 })
+        harmonics.push({ freq: finalFreq * 2, type: 'sine', intensity: layer.intensity * 0.3 })
+        
+        this.activeOscillators.set(layer.id + '_texture_lfo', { osc: textureLfo, gain: textureLfoGain })
         break
         
       case 'resonance':
@@ -489,6 +524,25 @@ export class HarmoniaMundiSystem {
         osc.frequency.value = finalFreq
         gain.gain.value = 0
         gain.connect(this.planetaryGain!)
+        
+        // Resonancia potente: octava + quinta + tercera
+        harmonics.push({ freq: finalFreq * 2, type: 'sine', intensity: layer.intensity * 0.7 })
+        harmonics.push({ freq: finalFreq * 1.5, type: 'triangle', intensity: layer.intensity * 0.6 })
+        harmonics.push({ freq: finalFreq * 1.25, type: 'sine', intensity: layer.intensity * 0.5 })
+        
+        // LFO de intensidad para "respiración épica"
+        const resLfo = this.context.createOscillator()
+        resLfo.frequency.value = 0.8 // Respiración notable
+        resLfo.type = 'sine'
+        
+        const resLfoGain = this.context.createGain()
+        resLfoGain.gain.value = layer.intensity * 0.6
+        
+        resLfo.connect(resLfoGain)
+        resLfoGain.connect(gain.gain)
+        resLfo.start()
+        
+        this.activeOscillators.set(layer.id + '_res_lfo', { osc: resLfo, gain: resLfoGain })
         break
     }
     
@@ -502,12 +556,46 @@ export class HarmoniaMundiSystem {
     )
     
     // Log para debug
-    if (finalFreq !== layer.frequency) {
-      console.log(`🎵 Frecuencia ajustada: ${layer.frequency.toFixed(2)} Hz → ${finalFreq.toFixed(2)} Hz (${layer.type})`)
-    }
+    console.log(`🎵 Capa creada: ${layer.name} — ${finalFreq.toFixed(2)} Hz (${layer.type}) + ${harmonics.length} armónicos`)
     
     // Guardar referencia
     this.activeOscillators.set(layer.id, { osc, gain })
+    
+    // Crear armónicos adicionales
+    if (harmonics.length > 0) {
+      this.createHarmonics(harmonics, layer.id)
+    }
+  }
+  
+  /**
+   * 🎼 Crear armónicos adicionales para enriquecer el sonido
+   */
+  private createHarmonics(harmonics: Array<{ freq: number, type: OscillatorType, intensity: number }>, baseId: string): void {
+    if (!this.context) return
+    
+    harmonics.forEach((h, idx) => {
+      const harmOsc = this.context!.createOscillator()
+      const harmGain = this.context!.createGain()
+      
+      harmOsc.type = h.type
+      harmOsc.frequency.value = h.freq
+      harmGain.gain.value = 0
+      
+      harmOsc.connect(harmGain)
+      harmGain.connect(this.harmonicGain!)
+      harmOsc.start()
+      
+      // Fade in
+      harmGain.gain.linearRampToValueAtTime(
+        h.intensity,
+        this.context!.currentTime + 3
+      )
+      
+      // Guardar referencia
+      this.activeOscillators.set(`${baseId}_harmonic_${idx}`, { osc: harmOsc, gain: harmGain })
+      
+      console.log(`  ↳ Armónico ${idx + 1}: ${h.freq.toFixed(2)} Hz (${h.type})`)
+    })
   }
   
   /**

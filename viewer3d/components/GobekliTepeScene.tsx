@@ -103,6 +103,33 @@ function GobekliTepeContent({
   })
 
   const allActivated = activated.tonatiuh && activated.scarab && activated.skull && activated.magna
+  const [cinematicTriggered, setCinematicTriggered] = useState(false)
+  const [shipCinematicPosition, setShipCinematicPosition] = useState<THREE.Vector3 | null>(null)
+  const initialShipPos = useRef<THREE.Vector3 | null>(null)
+  const hasShipMoved = useRef(false)
+
+  // Detectar movimiento de la nave después de activar los 4 elementos
+  useFrame(() => {
+    if (allActivated && !cinematicTriggered && avatarPositionRef?.current) {
+      if (!initialShipPos.current) {
+        initialShipPos.current = avatarPositionRef.current.clone()
+      } else {
+        const dist = initialShipPos.current.distanceTo(avatarPositionRef.current)
+        // Si el usuario mueve la nave más de 5 unidades → disparar cinemática
+        if (dist > 5) {
+          hasShipMoved.current = true
+          setCinematicTriggered(true)
+          // Emitir evento para WalkableAvatar
+          window.dispatchEvent(new CustomEvent('trigger-end-cinematic'))
+        }
+      }
+    }
+  })
+
+  // Posición épica final para la nave (atrás, arriba, ángulo dramático)
+  const cinematicFinalPos = useMemo(() => {
+    return new THREE.Vector3(0, 25, 80)
+  }, [])
 
   // Activar arquitectura de Göbekli Tepe y sonido del escarabajo al completar
   useEffect(() => {
@@ -117,15 +144,15 @@ function GobekliTepeContent({
     }
   }, [])
 
-  // Cuando los 4 altares se activan → secuencia final
+  // Cuando se dispara la cinemática → secuencia final
   useEffect(() => {
-    if (!allActivated) return
+    if (!cinematicTriggered) return
     import('@/systems/HarmoniaMundiSystem').then(({ getHarmoniaMundi }) => {
       const harmonia = getHarmoniaMundi()
       if (!harmonia.isEnabled()) return
       harmonia.unlockMissionLayer('earth_mission_6')
       harmonia.playBeetleSound()
-      console.log('🪲 Göbekli Tepe completado — Khepri despierta!')
+      console.log('🪲 Göbekli Tepe completado — Khepri despierta! Iniciando cinemática')
     })
     // Mostrar mensaje a los 8 segundos (esfera ya visible y subiendo)
     const msgTimer = setTimeout(() => setShowMessage(true), 8000)
@@ -137,7 +164,7 @@ function GobekliTepeContent({
       clearTimeout(msgTimer)
       clearTimeout(redirectTimer)
     }
-  }, [allActivated])
+  }, [cinematicTriggered, router])
 
   return (
     <group>
@@ -154,11 +181,11 @@ function GobekliTepeContent({
         <primitive object={cloned} scale={scale} />
       </group>
 
-      {/* Esfera toroidal — emerge del piso al completar los 4 altares */}
+      {/* Esfera toroidal — emerge del piso en la cinemática */}
       <ToroidalSphere
         position={[0, 0, 0]}
         size={20}
-        visible={allActivated}
+        visible={cinematicTriggered}
       />
 
       {/* Luz central */}
@@ -179,12 +206,12 @@ function GobekliTepeContent({
       {/* 👽 Geoglifo: Astronauta de Nazca */}
       <Geoglyph svgPath="/geoglyphs/astronauta.svg" position={[-55, 0.1, -55]} size={18} />
 
-      {/* Crop Circle Toroide — aparece debajo del modelo cuando los 4 están activados */}
+      {/* Crop Circle Toroide — aparece debajo del modelo en la cinemática */}
       <CropCircle
         type="toroid"
         position={[0, 0.3, 0]}
         scale={2}
-        visible={allActivated}
+        visible={cinematicTriggered}
       />
 
       {/* Mensaje final — overlay HTML centrado */}

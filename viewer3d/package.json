@@ -25,6 +25,7 @@
     "postprocessing": "^6.38.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "scheduler": "^0.27.0",
     "simplex-noise": "^4.0.3",
     "stats.js": "^0.17.0",
     "three": "^0.170.0",
