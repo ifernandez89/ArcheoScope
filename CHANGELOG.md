@@ -5,6 +5,14 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - 2026-06-10
+
+### Changed — Anillos de Saturno v1.2.7
+- Sustituida la textura anterior de anillos por `saturn_rings.png` personalizada para el sistema solar realista.
+- Añadida una capa de 15,000 partículas orbitales para dar volumen y sensación de material disperso.
+- Ajustada la alineación de los anillos para que compartan el mismo grupo y la misma inclinación que el planeta.
+- Corregida la rotación para aplicar la inclinación de 26.7° en el eje correcto.
+
 ## [1.2.6] - 2026-06-07
 
 ### Added — Cinemática Final Épica + Progresión de Audio Perceptible + Anillos de Saturno Realistas

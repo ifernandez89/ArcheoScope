@@ -69,7 +69,7 @@ export default function RealisticSolarSystem({
   const moonTexture = useTexture(getAssetPath('/textures/2k_moon.jpg'))
   const jupiterTexture = useTexture(getAssetPath('/textures/2k_jupiter.jpg'))
   const saturnTexture = useTexture(getAssetPath('/textures/2k_saturn.jpg'))
-  const saturnRingTexture = useTexture(getAssetPath('/textures/2k_saturn_ring_alpha.png'))
+  const saturnRingTexture = useTexture(getAssetPath('/textures/saturn_rings.png'))
   const uranusTexture = useTexture(getAssetPath('/textures/2k_uranus.jpg'))
   const neptuneTexture = useTexture(getAssetPath('/textures/2k_neptune.jpg'))
   const plutoTexture = useTexture(getAssetPath('/textures/1k_pluto.png'))
