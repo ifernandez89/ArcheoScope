@@ -101,9 +101,9 @@ function RingParticles({ saturnRadius, tilt }: { saturnRadius: number; tilt: num
       </bufferGeometry>
       <pointsMaterial
         size={saturnRadius * 0.008}
-        color="#ffeedd"
+        color="#c8a882"  // Tono roca/hielo (marrón cálido, no blanco puro)
         transparent
-        opacity={0.7}
+        opacity={0.55}
         sizeAttenuation
         blending={THREE.AdditiveBlending}
         depthWrite={false}

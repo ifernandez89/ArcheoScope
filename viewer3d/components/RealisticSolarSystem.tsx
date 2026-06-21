@@ -262,9 +262,10 @@ export default function RealisticSolarSystem({
     }
 
     // Radio aproximado de cada cuerpo (para calcular distancia de cámara frente a él)
+    // NOTA: Saturn usa radio de anillos (38 * 2.32 = ~88) para que la cámara quede fuera
     const bodyRadius: Record<string, number> = {
       sun: 12, mercury: 1.2, venus: 2.2, earth: 2.4, moon: 0.8,
-      mars: 1.6, jupiter: 6, saturn: 5.5, uranus: 3.5, neptune: 3.4, pluto: 0.8,
+      mars: 1.6, jupiter: 6, saturn: 90, uranus: 3.5, neptune: 3.4, pluto: 0.8,
     }
 
     const handleCelestialFocus = (e: Event) => {
@@ -306,6 +307,7 @@ export default function RealisticSolarSystem({
         detail: {
           cameraPos: { x: cameraPos.x, y: cameraPos.y, z: cameraPos.z },
           target: { x: bodyPos.x, y: bodyPos.y, z: bodyPos.z },
+          minDistance: Math.max(radius * 2, 8), // minDistance dinámico para no entrar al planeta
         }
       }))
     }

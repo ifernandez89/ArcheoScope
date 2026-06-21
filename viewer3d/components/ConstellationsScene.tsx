@@ -252,9 +252,13 @@ function SkyContent({
     const enableAudio = async () => {
       try {
         const { getHarmoniaMundi } = await import('@/systems/HarmoniaMundiSystem')
+        const { loadGameSettings: loadSettings } = await import('@/types/gameSettings')
         const harmonia = getHarmoniaMundi()
         await harmonia.enable()
-        harmonia.setMasterVolume(0.5)
+        // Usar volumen guardado por el usuario, no hardcodeado
+        const settings = loadSettings()
+        const vol = settings?.audio?.musicVolume ?? settings?.audio?.masterVolume ?? 0.5
+        harmonia.setMasterVolume(vol)
       } catch {}
     }
     const handler = () => { enableAudio(); window.removeEventListener('click', handler) }

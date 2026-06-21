@@ -1218,9 +1218,9 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
         await harmonia.enable()
         loggers.world.info('🎼 Harmonia Mundi habilitado permanentemente')
 
-        // Aplicar volumen guardado
+        // Aplicar volumen guardado — usar musicVolume (clave correcta del menú de audio)
         const settings = loadGameSettings()
-        const vol = settings?.audio?.masterVolume ?? 0.7
+        const vol = settings?.audio?.musicVolume ?? settings?.audio?.masterVolume ?? 0.7
         harmonia.setMasterVolume(vol)
 
         // Activar capas ya desbloqueadas por misiones previas
@@ -2410,14 +2410,22 @@ function CelestialFocusController({ orbitRef }: { orbitRef?: React.RefObject<any
       const detail = (e as CustomEvent).detail as {
         cameraPos: { x: number; y: number; z: number }
         target: { x: number; y: number; z: number }
+        minDistance?: number
       }
       targetPos.current = new THREE.Vector3(detail.cameraPos.x, detail.cameraPos.y, detail.cameraPos.z)
       targetLook.current = new THREE.Vector3(detail.target.x, detail.target.y, detail.target.z)
       animating.current = true
+      
+      // Ajustar minDistance dinámicamente para no entrar dentro del planeta
+      const controls = orbitRef?.current
+      if (controls && detail.minDistance !== undefined) {
+        controls.minDistance = detail.minDistance
+        controls.update()
+      }
     }
     window.addEventListener('celestial-focus-internal', handler)
     return () => window.removeEventListener('celestial-focus-internal', handler)
-  }, [])
+  }, [orbitRef])
 
   useFrame((_, delta) => {
     if (!animating.current || !targetPos.current || !targetLook.current) return
