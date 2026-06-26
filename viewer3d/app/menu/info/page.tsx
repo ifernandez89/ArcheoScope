@@ -90,6 +90,119 @@ function InfoContent() {
           maxHeight: "calc(100vh - 200px)",
         }}
       >
+        {/* ── Sección Apoyo ── */}
+        <section
+          className="info-section"
+          style={{
+            marginBottom: '40px',
+            padding: '28px 24px',
+            background: 'rgba(234,88,12,0.08)',
+            border: '1px solid rgba(234,88,12,0.35)',
+            borderRadius: '12px',
+            textAlign: 'center',
+          }}
+        >
+          <h2
+            style={{
+              fontSize: 'clamp(20px, 5vw, 28px)',
+              marginBottom: '10px',
+              color: '#fb923c',
+              letterSpacing: '2px',
+              fontFamily: 'Archeoscope, serif',
+            }}
+          >
+            ❤️ Apoyar ArcheoScope
+          </h2>
+          <p
+            style={{
+              fontSize: 'clamp(14px, 3.5vw, 17px)',
+              lineHeight: '1.7',
+              color: 'rgba(255,255,255,0.65)',
+              marginBottom: '22px',
+              maxWidth: '480px',
+              margin: '0 auto 22px',
+            }}
+          >
+            Archeoscope es un proyecto independiente, desarrollado por una sola persona.
+            Si lo disfrutás o te resulta útil, tu apoyo hace posible seguir construyendo.
+          </p>
+          <div
+            style={{
+              display: 'flex',
+              gap: '14px',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
+            {/* GitHub Sponsors */}
+            <a
+              href="https://github.com/sponsors/ifernandez89"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: 'clamp(10px,2.5vw,13px) clamp(18px,4vw,26px)',
+                fontSize: 'clamp(13px,3.2vw,16px)',
+                fontWeight: 'bold',
+                color: '#fff',
+                background: 'rgba(234,88,12,0.15)',
+                border: '1.5px solid rgba(234,88,12,0.6)',
+                borderRadius: '10px',
+                textDecoration: 'none',
+                letterSpacing: '1px',
+                transition: 'all 0.2s',
+                minHeight: '44px',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(234,88,12,0.3)'
+                ;(e.currentTarget as HTMLAnchorElement).style.borderColor = '#fb923c'
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(234,88,12,0.15)'
+                ;(e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(234,88,12,0.6)'
+              }}
+            >
+              <span style={{ fontSize: '18px' }}>🐙</span> GitHub Sponsors
+            </a>
+            {/* Ko-fi */}
+            <a
+              href="https://ko-fi.com/ignaciogabrielfernandez"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: 'clamp(10px,2.5vw,13px) clamp(18px,4vw,26px)',
+                fontSize: 'clamp(13px,3.2vw,16px)',
+                fontWeight: 'bold',
+                color: '#fff',
+                background: 'rgba(255,94,91,0.12)',
+                border: '1.5px solid rgba(255,94,91,0.5)',
+                borderRadius: '10px',
+                textDecoration: 'none',
+                letterSpacing: '1px',
+                transition: 'all 0.2s',
+                minHeight: '44px',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(255,94,91,0.28)'
+                ;(e.currentTarget as HTMLAnchorElement).style.borderColor = '#ff5e5b'
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(255,94,91,0.12)'
+                ;(e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(255,94,91,0.5)'
+              }}
+            >
+              <span style={{ fontSize: '18px' }}>☕</span> Ko-fi
+            </a>
+          </div>
+        </section>
+
         {/* Sección de Inspiración */}
         <section
           className="info-section"

@@ -5,6 +5,52 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.9] - 2026-06-26
+
+### Added — Apoyo voluntario + Documentación profesional
+
+#### ❤️ Sección de apoyo en la app
+- **`/menu/info`**: agregada sección "❤️ Apoyar ArcheoScope" al inicio de la página de Información, visible en mobile y PC
+- Dos botones de apoyo voluntario: **GitHub Sponsors** y **Ko-fi** (`ko-fi.com/ignaciogabrielfernandez`)
+- Estilos responsivos con `clamp()`, `min-height: 44px` (WCAG), hover interactivo, `WebkitTapHighlightColor: transparent`
+
+#### 📁 Archivos de repositorio
+- **`.github/FUNDING.yml`**: configuración de botón "Sponsor" oficial de GitHub — activa el botón en la interfaz del repo. Incluye `github: [ifernandez89]` y `ko_fi: ignaciogabrielfernandez`
+- **`README.md`**: reescrito con estructura profesional — badges de deploy/licencia/stack, descripción completa, tabla de features PC y mobile, stack técnico, inicio rápido, estructura del proyecto, sección de apoyo con badges linkados, licencia
+- **`ROADMAP.md`**: nuevo archivo con historial de versiones completadas, en progreso, planificado (hasta v2.0), ideas en evaluación, bugs conocidos y métricas de desarrollo
+- **`MODULES_REPLICATION_GUIDE.md`**: guía técnica para replicar cada módulo como página independiente para IA (clima, astrología, calendarios, brújula, hoy, constelaciones) con algoritmos, implementaciones mínimas y JSONs de salida
+
+## [1.2.8] - 2026-06-13
+
+### Fixed — Bug de volumen de audio + Bug de cámara atrapada en Saturno
+
+**Problema**: Al bajar el volumen de "Música de las Esferas" en el menú de audio (tecla M → Audio → Guardar), el volumen de HarmoniaMundi en el sistema solar y constelaciones no cambiaba.
+
+**Causa raíz (2 bugs)**:
+1. **`ImmersiveScene.tsx`**: Al re-inicializar HarmoniaMundi con `enable()`, usaba `settings.audio.masterVolume` para setear el volumen — pero la página de audio guarda el volumen de HarmoniaMundi en `settings.audio.musicVolume`. Claves distintas → el cambio del usuario se ignoraba
+2. **`ConstellationsScene.tsx`**: El volumen estaba **hardcodeado** a `0.5` (`harmonia.setMasterVolume(0.5)`) — ignoraba completamente el valor guardado por el usuario
+
+**Fix aplicado**:
+- `ImmersiveScene.tsx`: cambiado a leer `settings.audio.musicVolume ?? settings.audio.masterVolume ?? 0.7`
+- `ConstellationsScene.tsx`: eliminado hardcode `0.5`, ahora lee `loadGameSettings()` y aplica `musicVolume ?? masterVolume ?? 0.5`
+
+### Changed — Anillos de Saturno: solo partículas + color realista
+- Removido el anillo PNG (`saturn_rings.png`) — se usaba solo el de partículas
+- Color de partículas corregido: `#ffeedd` (blanco) → `#c8a882` (marrón/roca/hielo) para mayor realismo
+- Opacidad ajustada de `0.7` → `0.55` para que no saturen
+
+### Fixed — Bug cámara atrapada dentro de Saturno al navegar con selector de coordenadas
+**Problema**: Al viajar a Saturno con el selector de coordenadas, la cámara se posicionaba DENTRO del planeta y el jugador quedaba atrapado sin poder salir.
+
+**Causa raíz (2 bugs en `RealisticSolarSystem.tsx`)**:
+1. `bodyRadius.saturn = 5.5` — valor incorrecto. La cámara se calculaba a `5.5 × 4 = 22` unidades de distancia, pero el planeta tiene radio real **38** y los anillos llegan a **88 unidades**. La cámara quedaba embebida dentro del sólido.
+2. `minDistance` del OrbitControls era fijo a `8` — permitía al usuario hacer zoom-in hasta entrar dentro de cualquier planeta grande.
+
+**Fix aplicado**:
+- `bodyRadius.saturn` corregido de `5.5` → `90` (radio de anillos exteriores + margen), para que la cámara se posicione visiblemente fuera del sistema de anillos
+- `CelestialFocusController` actualizado para recibir `minDistance` dinámico por evento y aplicarlo al OrbitControls al enfocar cada planeta — evita que el usuario entre dentro del planeta haciendo zoom
+- Fórmula genérica: `minDistance = max(radius * 2, 8)` aplicada a todos los planetas al hacer foco
+
 ## [1.2.7] - 2026-06-10
 
 ### Changed — Anillos de Saturno v1.2.7
