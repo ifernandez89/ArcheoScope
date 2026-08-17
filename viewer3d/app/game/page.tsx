@@ -4,10 +4,9 @@ import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import UI from '@/components/UI'
 import { useProgress } from '@react-three/drei'
+import { getAssetPath } from '@/lib/paths'
 
-const LOGO_LOADING = process.env.NODE_ENV === 'production'
-  ? '/ArcheoScope/branding/loading/logo-loading.png'
-  : '/branding/loading/logo-loading.png'
+const LOGO_LOADING = getAssetPath('/branding/loading/logo-loading.png')
 
 function LoadingScreen() {
   const { progress, active } = useProgress()

@@ -11,9 +11,7 @@ import dynamic from 'next/dynamic'
 
 const IntroAmbientAudio = dynamic(() => import('@/components/IntroAmbientAudio'), { ssr: false })
 
-const LOGO_MAIN = process.env.NODE_ENV === 'production'
-  ? '/ArcheoScope/branding/logo/logo-main.png'
-  : '/branding/logo/logo-main.png'
+const LOGO_MAIN = getAssetPath('/branding/logo/logo-main.png')
 
 /**
  * Detecta mobile de forma síncrona en el cliente.

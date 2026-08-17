@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
+    "build:itch": "node scripts/package-itch.js",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",

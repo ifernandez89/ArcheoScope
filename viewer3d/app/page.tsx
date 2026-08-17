@@ -3,14 +3,13 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { resetPlayerState } from '@/types/player'
+import { getAssetPath } from '@/lib/paths'
 import dynamic from 'next/dynamic'
 
 const IntroAmbientAudio = dynamic(() => import('@/components/IntroAmbientAudio'), { ssr: false })
 
-// Ruta del logo resuelta en cliente para evitar problemas SSR
-const LOGO_PATH = process.env.NODE_ENV === 'production'
-  ? '/ArcheoScope/branding/icons/logo-pixel.png'
-  : '/branding/icons/logo-pixel.png'
+// Ruta del logo resuelta con helper de paths
+const LOGO_PATH = getAssetPath('/branding/icons/logo-pixel.png')
 
 export default function Home() {
   const router = useRouter()

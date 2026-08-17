@@ -8,5 +8,9 @@ tsconfig.tsbuildinfo
 # Dependencies
 node_modules/
 
+# Releases / ZIPs de empaquetado
+releases/
+*.zip
+
 # Environment
 .env.local

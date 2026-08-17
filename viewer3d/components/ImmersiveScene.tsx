@@ -1624,9 +1624,7 @@ export default function ImmersiveScene({ onModelLoaded, onCameraReady, onModeCha
           }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={process.env.NODE_ENV === 'production'
-                ? '/ArcheoScope/branding/icons/logo-simple-3.png'
-                : '/branding/icons/logo-simple-3.png'}
+              src={getAssetPath('/branding/icons/logo-simple-3.png')}
               alt="Archeoscope"
               style={{ width: '120px', height: '120px', objectFit: 'contain' }}
             />

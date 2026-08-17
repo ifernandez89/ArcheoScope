@@ -21,7 +21,8 @@ const inter = Inter({
   weight: ['400', '500', '600', '700'],
 })
 
-const BASE_PATH = process.env.NODE_ENV === 'production' ? '/ArcheoScope' : ''
+const isItch = process.env.NEXT_PUBLIC_DEPLOY_TARGET === 'itch'
+const BASE_PATH = isItch ? '' : (process.env.NODE_ENV === 'production' ? '/ArcheoScope' : '')
 const BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://ifernandez89.github.io/ArcheoScope'
   : 'http://localhost:3000'
@@ -78,7 +79,8 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: `
           if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-              navigator.serviceWorker.register('/ArcheoScope/sw.js').catch(() => {})
+              const swUrl = '${BASE_PATH}' ? '${BASE_PATH}/sw.js' : '/sw.js';
+              navigator.serviceWorker.register(swUrl).catch(() => {})
             })
           }
         `}} />

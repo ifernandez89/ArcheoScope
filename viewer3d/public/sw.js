@@ -4,12 +4,13 @@
  */
 
 const CACHE_NAME = 'archeoscope-v1'
+const BASE = self.location.pathname.includes('/ArcheoScope') ? '/ArcheoScope' : ''
 const STATIC_ASSETS = [
-  '/ArcheoScope/',
-  '/ArcheoScope/menu',
-  '/ArcheoScope/manifest.json',
-  '/ArcheoScope/branding/logo/logo-main.png',
-  '/ArcheoScope/branding/loading/logo-loading.png',
+  `${BASE}/`,
+  `${BASE}/menu`,
+  `${BASE}/manifest.json`,
+  `${BASE}/branding/logo/logo-main.png`,
+  `${BASE}/branding/loading/logo-loading.png`,
 ]
 
 // Install: cache static assets

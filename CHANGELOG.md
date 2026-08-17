@@ -5,6 +5,20 @@ All notable changes to Archeoscope: The Forgotten Relics will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-08-17
+
+### Added — Soporte y Empaquetador Automatizado para itch.io (HTML5 Web)
+
+#### 📦 Empaquetador y Build Multi-Target
+- **`viewer3d/scripts/package-itch.js`**: nuevo script automatizado que compila la versión web estática con `DEPLOY_TARGET=itch`, audita los límites de itch.io (< 1.000 archivos, < 500 MB descomprimidos, sin archivos > 200 MB, rutas < 240 caracteres, `index.html` en la raíz) y genera el archivo ZIP `viewer3d/releases/ArcheoScope_Web.zip` listo para publicar.
+- **`viewer3d/package.json`**: añadido script `"build:itch": "node scripts/package-itch.js"`.
+- **`itch_assets/ITCH_IO_CONFIG_GUIDE.md`**: guía completa de configuración para la ficha de itch.io con metadata, etiquetas, descripción formateada, controles y dimensiones de viewport (1280x720).
+
+#### 🔧 Configuración Dinámica de Rutas
+- **`next.config.js`**: soporte dinámico de `basePath` y `assetPrefix` para compilar con base raíz (`''`) en itch.io manteniendo `/ArcheoScope` para GitHub Pages.
+- **`lib/paths.ts`**: helper `getAssetPath()` mejorado para detectar entornos sin prefijo (`NEXT_PUBLIC_DEPLOY_TARGET=itch`, localhost, y hosts independientes).
+- **`sw.js` & `layout.tsx`**: resolución dinámica del Service Worker y metadata según el entorno de despliegue.
+
 ## [1.2.9] - 2026-06-26
 
 ### Added — Apoyo voluntario + Documentación profesional

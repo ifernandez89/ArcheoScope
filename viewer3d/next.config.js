@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const isProd = process.env.NODE_ENV === 'production';
+const isItch = process.env.NEXT_PUBLIC_DEPLOY_TARGET === 'itch' || process.env.DEPLOY_TARGET === 'itch';
 
 // Bundle Analyzer (solo si está instalado)
 let withBundleAnalyzer = (config) => config
@@ -15,8 +16,8 @@ try {
 
 const nextConfig = {
   output: 'export',
-  basePath: isProd ? '/ArcheoScope' : '',
-  assetPrefix: isProd ? '/ArcheoScope' : '',
+  basePath: (isProd && !isItch) ? '/ArcheoScope' : '',
+  assetPrefix: (isProd && !isItch) ? '/ArcheoScope' : '',
   reactStrictMode: true,
   images: {
     unoptimized: true,
